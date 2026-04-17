@@ -1,0 +1,20 @@
+{
+  "name": "@itguy614/clean-ui-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @itguy614/clean-ui-docs dev",
+    "build": "pnpm --filter @itguy614/clean-ui build",
+    "build:docs": "pnpm --filter @itguy614/clean-ui-docs build",
+    "test": "pnpm --filter @itguy614/clean-ui test",
+    "lint": "pnpm -r lint"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

@@ -1,0 +1,601 @@
+@import "tailwindcss";
+@import "./themes.css";
+
+/* ============================================================
+   COLOR SYSTEM
+   Indigo-blue base, WCAG AA compliant.
+   Override any --cui-* token on :root or a container.
+   ============================================================ */
+
+@theme {
+  /* --- Primary (Indigo-Blue, hue 270) — full scale for Tailwind utilities --- */
+  --color-primary-50:  oklch(0.97 0.02 270);
+  --color-primary-100: oklch(0.93 0.04 270);
+  --color-primary-200: oklch(0.86 0.08 270);
+  --color-primary-300: oklch(0.74 0.13 270);
+  --color-primary-400: oklch(0.62 0.17 270);
+  --color-primary-500: oklch(0.45 0.18 270);
+  --color-primary-600: oklch(0.40 0.16 270);
+  --color-primary-700: oklch(0.35 0.14 270);
+  --color-primary-800: oklch(0.28 0.11 270);
+  --color-primary-900: oklch(0.22 0.08 270);
+  --color-primary-950: oklch(0.17 0.06 270);
+
+  /* --- Secondary (Muted Indigo, hue 270, low chroma) — condensed --- */
+  --color-secondary-100: oklch(0.94 0.015 270);
+  --color-secondary-300: oklch(0.74 0.04 270);
+  --color-secondary-500: oklch(0.52 0.06 270);
+  --color-secondary-700: oklch(0.38 0.05 270);
+  --color-secondary-900: oklch(0.25 0.03 270);
+
+  /* --- Success (Green, hue 150) — condensed --- */
+  --color-success-100: oklch(0.95 0.04 150);
+  --color-success-300: oklch(0.76 0.14 150);
+  --color-success-500: oklch(0.52 0.15 150);
+  --color-success-700: oklch(0.42 0.12 150);
+  --color-success-900: oklch(0.28 0.08 150);
+
+  /* --- Error (Red, hue 25) — condensed --- */
+  --color-error-100: oklch(0.95 0.04 25);
+  --color-error-300: oklch(0.76 0.12 25);
+  --color-error-500: oklch(0.55 0.20 25);
+  --color-error-700: oklch(0.42 0.16 25);
+  --color-error-900: oklch(0.28 0.10 25);
+
+  /* --- Warning (Amber, hue 80) — condensed --- */
+  --color-warning-100: oklch(0.96 0.04 80);
+  --color-warning-300: oklch(0.84 0.12 80);
+  --color-warning-500: oklch(0.75 0.15 80);
+  --color-warning-700: oklch(0.55 0.12 80);
+  --color-warning-900: oklch(0.35 0.08 80);
+
+  /* --- Info (Cyan, hue 230) — condensed --- */
+  --color-info-100: oklch(0.95 0.03 230);
+  --color-info-300: oklch(0.76 0.09 230);
+  --color-info-500: oklch(0.52 0.13 230);
+  --color-info-700: oklch(0.42 0.10 230);
+  --color-info-900: oklch(0.28 0.07 230);
+
+  /* --- Surface (Access lightness curve, hue 270 indigo tint) — full scale --- */
+  --color-surface-50:  oklch(0.983 0.005 270);
+  --color-surface-100: oklch(0.971 0.005 270);
+  --color-surface-200: oklch(0.941 0.006 270);
+  --color-surface-300: oklch(0.905 0.008 270);
+  --color-surface-400: oklch(0.862 0.008 270);
+  --color-surface-500: oklch(0.843 0.008 270);
+  --color-surface-600: oklch(0.742 0.010 270);
+  --color-surface-700: oklch(0.608 0.010 270);
+  --color-surface-800: oklch(0.435 0.010 270);
+  --color-surface-900: oklch(0.270 0.010 270);
+  --color-surface-950: oklch(0.196 0.010 270);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   SEMANTIC COLOR SLOTS — Light Mode
+   9 slots per role. Override any --cui-* on :root or a container.
+   ============================================================ */
+
+:root {
+  /* --- Primary --- */
+  --cui-primary:            var(--color-primary-500);
+  --cui-primary-hover:      var(--color-primary-700);
+  --cui-primary-active:     var(--color-primary-800);
+  --cui-primary-bg:         var(--color-primary-100);
+  --cui-primary-border:     var(--color-primary-300);
+  --cui-primary-text:       white;
+  --cui-primary-focus-ring: color-mix(in srgb, var(--color-primary-500) 40%, transparent);
+  --cui-primary-subtle:     color-mix(in srgb, var(--color-primary-100) 60%, transparent);
+  --cui-primary-muted:      var(--color-primary-300);
+
+  /* --- Secondary --- */
+  --cui-secondary:            var(--color-secondary-500);
+  --cui-secondary-hover:      var(--color-secondary-700);
+  --cui-secondary-active:     var(--color-secondary-900);
+  --cui-secondary-bg:         var(--color-secondary-100);
+  --cui-secondary-border:     var(--color-secondary-300);
+  --cui-secondary-text:       white;
+  --cui-secondary-focus-ring: color-mix(in srgb, var(--color-secondary-500) 40%, transparent);
+  --cui-secondary-subtle:     color-mix(in srgb, var(--color-secondary-100) 60%, transparent);
+  --cui-secondary-muted:      var(--color-secondary-300);
+
+  /* --- Success --- */
+  --cui-success:            var(--color-success-500);
+  --cui-success-hover:      var(--color-success-700);
+  --cui-success-active:     var(--color-success-900);
+  --cui-success-bg:         var(--color-success-100);
+  --cui-success-border:     var(--color-success-300);
+  --cui-success-text:       white;
+  --cui-success-focus-ring: oklch(0.52 0.15 150 / 0.4);
+  --cui-success-subtle:     oklch(0.95 0.04 150 / 0.6);
+  --cui-success-muted:      oklch(0.76 0.06 150);
+
+  /* --- Error --- */
+  --cui-error:            var(--color-error-500);
+  --cui-error-hover:      var(--color-error-700);
+  --cui-error-active:     var(--color-error-900);
+  --cui-error-bg:         var(--color-error-100);
+  --cui-error-border:     var(--color-error-300);
+  --cui-error-text:       white;
+  --cui-error-focus-ring: oklch(0.55 0.20 25 / 0.4);
+  --cui-error-subtle:     oklch(0.95 0.04 25 / 0.6);
+  --cui-error-muted:      oklch(0.76 0.05 25);
+
+  /* --- Warning --- */
+  --cui-warning:            var(--color-warning-500);
+  --cui-warning-hover:      var(--color-warning-700);
+  --cui-warning-active:     var(--color-warning-900);
+  --cui-warning-bg:         var(--color-warning-100);
+  --cui-warning-border:     var(--color-warning-300);
+  --cui-warning-text:       var(--color-surface-900); /* dark text on bright amber */
+  --cui-warning-focus-ring: oklch(0.75 0.15 80 / 0.4);
+  --cui-warning-subtle:     oklch(0.96 0.04 80 / 0.6);
+  --cui-warning-muted:      oklch(0.84 0.05 80);
+
+  /* --- Info --- */
+  --cui-info:            var(--color-info-500);
+  --cui-info-hover:      var(--color-info-700);
+  --cui-info-active:     var(--color-info-900);
+  --cui-info-bg:         var(--color-info-100);
+  --cui-info-border:     var(--color-info-300);
+  --cui-info-text:       white;
+  --cui-info-focus-ring: oklch(0.52 0.13 230 / 0.4);
+  --cui-info-subtle:     oklch(0.95 0.03 230 / 0.6);
+  --cui-info-muted:      oklch(0.76 0.04 230);
+
+  /* --- Surface base (white in light, dark in dark mode) --- */
+  --cui-surface-base: white;
+
+  /* --- Border color (subtle in both modes) --- */
+  --cui-border: var(--color-surface-200);
+  --cui-border-strong: var(--color-surface-300);
+
+  /* --- Button defaults --- */
+  --cui-button-radius: 0.375rem;
+}
+
+/* ============================================================
+   SEMANTIC COLOR SLOTS — Dark Mode
+   Same hue/saturation, adjusted lightness for dark backgrounds.
+   ============================================================ */
+
+:where(.dark, .dark *) {
+  --cui-surface-base: var(--color-surface-900);
+  --cui-border: var(--color-surface-800);
+  --cui-border-strong: var(--color-surface-700);
+
+  /* --- Primary (references scale so themes override correctly) --- */
+  --cui-primary:            var(--color-primary-400);
+  --cui-primary-hover:      var(--color-primary-300);
+  --cui-primary-active:     var(--color-primary-200);
+  --cui-primary-bg:         var(--color-primary-900);
+  --cui-primary-border:     var(--color-primary-700);
+  --cui-primary-text:       white;
+  --cui-primary-focus-ring: color-mix(in srgb, var(--color-primary-400) 40%, transparent);
+  --cui-primary-subtle:     color-mix(in srgb, var(--color-primary-900) 50%, transparent);
+  --cui-primary-muted:      var(--color-primary-700);
+
+  /* --- Secondary (muted primary — also references scale for theme compat) --- */
+  --cui-secondary:            var(--color-secondary-300);
+  --cui-secondary-hover:      var(--color-secondary-100);
+  --cui-secondary-active:     var(--color-secondary-100);
+  --cui-secondary-bg:         var(--color-secondary-900);
+  --cui-secondary-border:     var(--color-secondary-700);
+  --cui-secondary-text:       white;
+  --cui-secondary-focus-ring: color-mix(in srgb, var(--color-secondary-300) 40%, transparent);
+  --cui-secondary-subtle:     color-mix(in srgb, var(--color-secondary-900) 50%, transparent);
+  --cui-secondary-muted:      var(--color-secondary-700);
+
+  /* --- Success --- */
+  --cui-success:            oklch(0.65 0.15 150);
+  --cui-success-hover:      oklch(0.76 0.14 150);
+  --cui-success-active:     oklch(0.82 0.10 150);
+  --cui-success-bg:         oklch(0.22 0.06 150);
+  --cui-success-border:     oklch(0.42 0.12 150);
+  --cui-success-text:       white;
+  --cui-success-focus-ring: oklch(0.65 0.15 150 / 0.4);
+  --cui-success-subtle:     oklch(0.22 0.06 150 / 0.5);
+  --cui-success-muted:      oklch(0.42 0.05 150);
+
+  /* --- Error --- */
+  --cui-error:            oklch(0.68 0.18 25);
+  --cui-error-hover:      oklch(0.76 0.12 25);
+  --cui-error-active:     oklch(0.82 0.08 25);
+  --cui-error-bg:         oklch(0.22 0.08 25);
+  --cui-error-border:     oklch(0.42 0.16 25);
+  --cui-error-text:       white;
+  --cui-error-focus-ring: oklch(0.68 0.18 25 / 0.4);
+  --cui-error-subtle:     oklch(0.22 0.08 25 / 0.5);
+  --cui-error-muted:      oklch(0.42 0.06 25);
+
+  /* --- Warning --- */
+  --cui-warning:            oklch(0.80 0.14 80);
+  --cui-warning-hover:      oklch(0.84 0.12 80);
+  --cui-warning-active:     oklch(0.88 0.08 80);
+  --cui-warning-bg:         oklch(0.22 0.06 80);
+  --cui-warning-border:     oklch(0.55 0.12 80);
+  --cui-warning-text:       var(--color-surface-950);
+  --cui-warning-focus-ring: oklch(0.80 0.14 80 / 0.4);
+  --cui-warning-subtle:     oklch(0.22 0.06 80 / 0.5);
+  --cui-warning-muted:      oklch(0.55 0.05 80);
+
+  /* --- Info --- */
+  --cui-info:            oklch(0.65 0.11 230);
+  --cui-info-hover:      oklch(0.76 0.09 230);
+  --cui-info-active:     oklch(0.82 0.06 230);
+  --cui-info-bg:         oklch(0.22 0.05 230);
+  --cui-info-border:     oklch(0.42 0.10 230);
+  --cui-info-text:       white;
+  --cui-info-focus-ring: oklch(0.65 0.11 230 / 0.4);
+  --cui-info-subtle:     oklch(0.22 0.05 230 / 0.5);
+  --cui-info-muted:      oklch(0.42 0.04 230);
+}
+
+/* ============================================================
+   TYPOGRAPHY — CSS Custom Properties
+   Override --cui-font-* on :root or any container to customize.
+   ============================================================ */
+
+:root {
+  /* --- Font families (system stack, overridable) --- */
+  --cui-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --cui-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* --- Base body --- */
+  --cui-body-font-size: 1rem;       /* 16px */
+  --cui-body-font-weight: 400;
+  --cui-body-line-height: 1.6;
+
+  /* --- Heading weight & line-height --- */
+  --cui-heading-font-weight: 600;
+  --cui-heading-line-height: 1.25;
+
+  /* --- Tightened type scale --- */
+  --cui-font-size-h1: 2.25rem;      /* 36px */
+  --cui-font-size-h2: 1.75rem;      /* 28px */
+  --cui-font-size-h3: 1.5rem;       /* 24px */
+  --cui-font-size-h4: 1.25rem;      /* 20px */
+  --cui-font-size-h5: 1.1rem;       /* ~17.6px */
+  --cui-font-size-h6: 0.95rem;      /* ~15.2px */
+
+  /* --- Display headings (hero/marketing) --- */
+  --cui-font-size-display-1: 4rem;   /* 64px */
+  --cui-font-size-display-2: 3.25rem;/* 52px */
+  --cui-font-size-display-3: 2.5rem; /* 40px */
+  --cui-display-font-weight: 300;
+  --cui-display-line-height: 1.15;
+
+  /* --- Lead text --- */
+  --cui-font-size-lead: 1.2rem;     /* ~19.2px */
+  --cui-lead-font-weight: 400;
+
+  /* --- Small / code --- */
+  --cui-font-size-small: 0.875rem;  /* 14px */
+  --cui-font-size-code: 0.875em;
+
+  /* --- Text color semantics (light mode) --- */
+  --cui-text-body: var(--color-surface-900);
+  --cui-text-secondary: var(--color-surface-500);
+  --cui-text-tertiary: var(--color-surface-400);
+  --cui-text-emphasis: var(--color-surface-950);
+  --cui-text-link: var(--cui-primary);
+  --cui-text-link-hover: var(--cui-primary-hover);
+  --cui-text-code: var(--color-primary-700);
+
+  /* --- Spacing for typography --- */
+  --cui-heading-margin-bottom: 0.5em;
+  --cui-paragraph-margin-bottom: 1rem;
+  --cui-blockquote-margin: 1.5rem 0;
+  --cui-blockquote-padding: 0 0 0 1rem;
+}
+
+/* --- Dark mode text color overrides --- */
+:where(.dark, .dark *) {
+  --cui-text-body: var(--color-surface-200);
+  --cui-text-secondary: var(--color-surface-400);
+  --cui-text-tertiary: var(--color-surface-500);
+  --cui-text-emphasis: var(--color-surface-50);
+  --cui-text-link: var(--cui-primary);
+  --cui-text-link-hover: var(--cui-primary-hover);
+  --cui-text-code: var(--color-primary-300);
+}
+
+/* ============================================================
+   BASE ELEMENT STYLES
+   ============================================================ */
+
+/* --- Body defaults --- */
+.cui-typography,
+.cui-typography * {
+  font-family: var(--cui-font-sans);
+}
+
+/* --- Headings (h1–h6) --- */
+
+.cui-typography h1,
+.cui-typography h2,
+.cui-typography h3,
+.cui-typography h4,
+.cui-typography h5,
+.cui-typography h6 {
+  font-weight: var(--cui-heading-font-weight);
+  line-height: var(--cui-heading-line-height);
+  margin-top: 0;
+  margin-bottom: var(--cui-heading-margin-bottom);
+  color: var(--cui-text-emphasis);
+}
+
+.cui-typography h1 { font-size: var(--cui-font-size-h1); }
+.cui-typography h2 { font-size: var(--cui-font-size-h2); }
+.cui-typography h3 { font-size: var(--cui-font-size-h3); }
+.cui-typography h4 { font-size: var(--cui-font-size-h4); }
+.cui-typography h5 { font-size: var(--cui-font-size-h5); }
+.cui-typography h6 { font-size: var(--cui-font-size-h6); }
+
+/* --- Responsive heading sizes (breakpoint-based, scales down on mobile) --- */
+@media (max-width: 767px) {
+  .cui-typography h1 { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
+  .cui-typography h2 { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
+  .cui-typography h3 { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+}
+
+/* --- Paragraphs --- */
+.cui-typography p {
+  margin-top: 0;
+  margin-bottom: var(--cui-paragraph-margin-bottom);
+  color: var(--cui-text-body);
+}
+
+/* --- Display headings --- */
+.cui-display-1,
+.cui-display-2,
+.cui-display-3 {
+  font-weight: var(--cui-display-font-weight);
+  line-height: var(--cui-display-line-height);
+  color: var(--cui-text-emphasis);
+}
+
+.cui-display-1 { font-size: var(--cui-font-size-display-1); }
+.cui-display-2 { font-size: var(--cui-font-size-display-2); }
+.cui-display-3 { font-size: var(--cui-font-size-display-3); }
+
+@media (max-width: 767px) {
+  .cui-display-1 { font-size: calc(var(--cui-font-size-display-1) * 0.6); }
+  .cui-display-2 { font-size: calc(var(--cui-font-size-display-2) * 0.65); }
+  .cui-display-3 { font-size: calc(var(--cui-font-size-display-3) * 0.72); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cui-display-1 { font-size: calc(var(--cui-font-size-display-1) * 0.8); }
+  .cui-display-2 { font-size: calc(var(--cui-font-size-display-2) * 0.82); }
+  .cui-display-3 { font-size: calc(var(--cui-font-size-display-3) * 0.88); }
+}
+
+/* --- Lead text --- */
+.cui-lead {
+  font-size: var(--cui-font-size-lead);
+  font-weight: var(--cui-lead-font-weight);
+  line-height: 1.6;
+  color: var(--cui-text-secondary);
+}
+
+/* --- Small text --- */
+.cui-small,
+.cui-typography small {
+  font-size: var(--cui-font-size-small);
+}
+
+/* --- Text color utilities --- */
+.cui-text-body { color: var(--cui-text-body); }
+.cui-text-secondary { color: var(--cui-text-secondary); }
+.cui-text-tertiary { color: var(--cui-text-tertiary); }
+.cui-text-emphasis { color: var(--cui-text-emphasis); }
+
+/* --- Links --- */
+.cui-typography a {
+  color: var(--cui-text-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.cui-typography a:hover {
+  color: var(--cui-text-link-hover);
+}
+
+/* --- Blockquote --- */
+.cui-typography blockquote,
+.cui-blockquote {
+  margin: var(--cui-blockquote-margin);
+  padding: var(--cui-blockquote-padding);
+  border-left: 3px solid var(--cui-primary-border);
+  font-size: 1.1rem;
+  color: var(--cui-text-body);
+}
+
+.cui-typography blockquote p:last-child,
+.cui-blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.cui-typography blockquote footer,
+.cui-blockquote-footer {
+  font-size: var(--cui-font-size-small);
+  color: var(--cui-text-secondary);
+  margin-top: 0.5rem;
+}
+
+.cui-typography blockquote footer::before,
+.cui-blockquote-footer::before {
+  content: "\2014\00A0"; /* em-dash + non-breaking space */
+}
+
+/* --- Inline code --- */
+.cui-typography code,
+.cui-code {
+  font-family: var(--cui-font-mono);
+  font-size: var(--cui-font-size-code);
+  color: var(--cui-text-code);
+  background: var(--color-surface-100);
+  padding: 0.125em 0.35em;
+  border-radius: 0.25rem;
+}
+
+:where(.dark, .dark *) .cui-typography code,
+:where(.dark, .dark *) .cui-code {
+  background: var(--color-surface-800);
+}
+
+/* Don't double-style code inside pre */
+.cui-typography pre code,
+.cui-pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* --- Keyboard input --- */
+.cui-typography kbd,
+.cui-kbd {
+  font-family: var(--cui-font-mono);
+  font-size: var(--cui-font-size-code);
+  background: var(--color-surface-800);
+  color: var(--color-surface-100);
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-surface-600);
+  box-shadow: inset 0 -1px 0 var(--color-surface-700);
+}
+
+:where(.dark, .dark *) .cui-typography kbd,
+:where(.dark, .dark *) .cui-kbd {
+  background: var(--color-surface-700);
+  border-color: var(--color-surface-500);
+  box-shadow: inset 0 -1px 0 var(--color-surface-600);
+}
+
+/* --- Preformatted / code blocks --- */
+.cui-typography pre,
+.cui-pre {
+  font-family: var(--cui-font-mono);
+  font-size: var(--cui-font-size-small);
+  line-height: 1.6;
+  background: var(--color-surface-50);
+  color: var(--cui-text-body);
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-surface-200);
+  overflow-x: auto;
+  margin: 0 0 var(--cui-paragraph-margin-bottom);
+}
+
+:where(.dark, .dark *) .cui-typography pre,
+:where(.dark, .dark *) .cui-pre {
+  background: var(--color-surface-900);
+  border-color: var(--color-surface-700);
+}
+
+/* --- Lists --- */
+.cui-typography ul,
+.cui-typography ol {
+  margin-top: 0;
+  margin-bottom: var(--cui-paragraph-margin-bottom);
+  padding-left: 1.5rem;
+}
+
+.cui-typography li {
+  margin-bottom: 0.25rem;
+}
+
+/* Unstyled list */
+.cui-list-unstyled {
+  list-style: none;
+  padding-left: 0;
+}
+
+.cui-list-unstyled li {
+  margin-bottom: 0.25rem;
+}
+
+/* Inline list */
+.cui-list-inline {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+/* --- Horizontal rule --- */
+.cui-typography hr {
+  border: none;
+  border-top: 1px solid var(--color-surface-200);
+  margin: 1.5rem 0;
+}
+
+:where(.dark, .dark *) .cui-typography hr {
+  border-top-color: var(--color-surface-700);
+}
+
+/* --- Mark / highlight --- */
+.cui-typography mark,
+.cui-mark {
+  background: var(--cui-warning-bg);
+  padding: 0.1em 0.2em;
+  border-radius: 0.15rem;
+}
+
+:where(.dark, .dark *) .cui-typography mark,
+:where(.dark, .dark *) .cui-mark {
+  background: oklch(0.45 0.1 80);
+  color: var(--color-surface-100);
+}
+
+/* ============================================================
+   SHARED KEYFRAMES — Used by multiple components
+   ============================================================ */
+
+@keyframes cui-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cui-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes cui-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--_cui-glow-color, transparent); }
+  50% { box-shadow: 0 0 12px 2px var(--_cui-glow-color, transparent); }
+}
+
+@keyframes cui-shake {
+  0%, 10%, 100% { transform: translateX(0); }
+  2% { transform: translateX(-4px); }
+  4% { transform: translateX(4px); }
+  6% { transform: translateX(-3px); }
+  8% { transform: translateX(2px); }
+}
+
+@keyframes cui-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-3px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-1.5px); }
+}
+
+@keyframes cui-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cui-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

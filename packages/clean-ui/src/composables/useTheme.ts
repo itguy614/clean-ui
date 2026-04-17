@@ -1,0 +1,81 @@
+import { ref, watch } from "vue";
+
+export interface ThemePreset {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const THEME_PRESETS: ThemePreset[] = [
+  { id: "default", label: "Labels", description: "Navy blue — default theme" },
+  { id: "stock", label: "Stock", description: "Natural green" },
+  { id: "access", label: "Access", description: "Warm orange with warm grays" },
+  { id: "temp", label: "Temp", description: "Vibrant blue" },
+  { id: "dayton", label: "Dayton", description: "Cool teal" },
+  { id: "stat", label: "Stat", description: "Professional teal" },
+  { id: "ruby", label: "Ruby", description: "Bold red" },
+];
+
+const STORAGE_KEY = "cui-theme";
+const CLASS_PREFIX = "cui-theme-";
+
+// Shared reactive state
+const activeTheme = ref<string>(loadTheme());
+
+function loadTheme(): string {
+  if (typeof window === "undefined") return "default";
+  return localStorage.getItem(STORAGE_KEY) ?? "default";
+}
+
+function applyTheme(themeId: string) {
+  if (typeof document === "undefined") return;
+
+  // Remove all theme classes
+  const root = document.documentElement;
+  for (const cls of Array.from(root.classList)) {
+    if (cls.startsWith(CLASS_PREFIX)) {
+      root.classList.remove(cls);
+    }
+  }
+
+  // Apply new theme (default = no class needed, uses @theme values)
+  if (themeId !== "default") {
+    root.classList.add(`${CLASS_PREFIX}${themeId}`);
+  }
+
+  // Persist
+  localStorage.setItem(STORAGE_KEY, themeId);
+}
+
+// Apply on init
+applyTheme(activeTheme.value);
+
+// Watch for changes
+watch(activeTheme, (newTheme) => {
+  applyTheme(newTheme);
+});
+
+/**
+ * Theme management composable.
+ * Shared singleton — all components see the same theme.
+ */
+export function useTheme() {
+  function setTheme(themeId: string) {
+    activeTheme.value = themeId;
+  }
+
+  function getTheme(): string {
+    return activeTheme.value;
+  }
+
+  return {
+    /** Current theme ID (reactive) */
+    theme: activeTheme,
+    /** List of available theme presets */
+    presets: THEME_PRESETS,
+    /** Set the active theme by ID */
+    setTheme,
+    /** Get the current theme ID */
+    getTheme,
+  };
+}

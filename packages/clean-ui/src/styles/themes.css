@@ -1,0 +1,286 @@
+/* ============================================================
+   THEME PRESETS
+   Apply a theme class to any ancestor element to swap palettes.
+
+   Surface lightness curve based on the Access warm gray distribution.
+   Each theme applies its own hue tint to this shared curve.
+
+   Success, error, warning, info stay consistent across themes.
+   ============================================================ */
+
+/* --- Labels (default — indigo, hue 270) --- */
+/* Light mode: @theme already defines surfaces. Override with Access-curve tint. */
+/* (Default theme keeps @theme values for backwards compat — only non-default themes get the Access curve) */
+
+/* Dark mode surface tint for default (indigo) */
+:where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.008 270);
+  --color-surface-100: oklch(0.971 0.008 270);
+  --color-surface-200: oklch(0.941 0.008 270);
+  --color-surface-300: oklch(0.905 0.010 270);
+  --color-surface-400: oklch(0.862 0.010 270);
+  --color-surface-500: oklch(0.843 0.010 270);
+  --color-surface-600: oklch(0.742 0.012 270);
+  --color-surface-700: oklch(0.608 0.012 270);
+  --color-surface-800: oklch(0.435 0.014 270);
+  --color-surface-900: oklch(0.270 0.016 270);
+  --color-surface-950: oklch(0.196 0.016 270);
+}
+
+/* --- Stock: natural green primary (hue 150) --- */
+.cui-theme-stock {
+  --color-primary-50:  #D7EDDE;
+  --color-primary-100: #C0E2CB;
+  --color-primary-200: #93CDA7;
+  --color-primary-300: #65B884;
+  --color-primary-400: #459665;
+  --color-primary-500: #306948;
+  --color-primary-600: #2D6244;
+  --color-primary-700: #2A5B41;
+  --color-primary-800: #27543D;
+  --color-primary-900: #234D39;
+  --color-primary-950: #224936;
+
+  /* Light mode: Access curve with green tint */
+  --color-surface-50:  oklch(0.983 0.005 150);
+  --color-surface-100: oklch(0.971 0.005 150);
+  --color-surface-200: oklch(0.941 0.006 150);
+  --color-surface-300: oklch(0.905 0.008 150);
+  --color-surface-400: oklch(0.862 0.008 150);
+  --color-surface-500: oklch(0.843 0.008 150);
+  --color-surface-600: oklch(0.742 0.010 150);
+  --color-surface-700: oklch(0.608 0.010 150);
+  --color-surface-800: oklch(0.435 0.010 150);
+  --color-surface-900: oklch(0.270 0.010 150);
+  --color-surface-950: oklch(0.196 0.010 150);
+}
+
+:where(.dark, .dark *) .cui-theme-stock,
+.cui-theme-stock :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 150);
+  --color-surface-100: oklch(0.971 0.006 150);
+  --color-surface-200: oklch(0.941 0.008 150);
+  --color-surface-300: oklch(0.905 0.008 150);
+  --color-surface-400: oklch(0.862 0.008 150);
+  --color-surface-500: oklch(0.843 0.010 150);
+  --color-surface-600: oklch(0.742 0.010 150);
+  --color-surface-700: oklch(0.608 0.012 150);
+  --color-surface-800: oklch(0.435 0.012 150);
+  --color-surface-900: oklch(0.270 0.015 150);
+  --color-surface-950: oklch(0.196 0.015 150);
+}
+
+/* --- Access: warm orange primary (hue 60) + warm gray surface --- */
+.cui-theme-access {
+  --color-primary-50:  #FFA269;
+  --color-primary-100: #FF9A5C;
+  --color-primary-200: #FF8C42;
+  --color-primary-300: #FF7E29;
+  --color-primary-400: #FF710F;
+  --color-primary-500: #F56600;
+  --color-primary-600: #EB6400;
+  --color-primary-700: #E06100;
+  --color-primary-800: #D65F00;
+  --color-primary-900: #CC5C00;
+  --color-primary-950: #C75A00;
+
+  /* Light mode: original warm gray (the reference curve) */
+  --color-surface-50:  #FBFAF9;
+  --color-surface-100: #F7F5F4;
+  --color-surface-200: #EFECE9;
+  --color-surface-300: #E5E1DD;
+  --color-surface-400: #D9D4CF;
+  --color-surface-500: #D4CEC8;
+  --color-surface-600: #B5ACA3;
+  --color-surface-700: #918680;
+  --color-surface-800: #655C56;
+  --color-surface-900: #3A3430;
+  --color-surface-950: #221F1C;
+}
+
+:where(.dark, .dark *) .cui-theme-access,
+.cui-theme-access :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 60);
+  --color-surface-100: oklch(0.971 0.006 60);
+  --color-surface-200: oklch(0.941 0.008 60);
+  --color-surface-300: oklch(0.905 0.008 60);
+  --color-surface-400: oklch(0.862 0.008 60);
+  --color-surface-500: oklch(0.843 0.010 60);
+  --color-surface-600: oklch(0.742 0.010 60);
+  --color-surface-700: oklch(0.608 0.012 60);
+  --color-surface-800: oklch(0.435 0.012 60);
+  --color-surface-900: oklch(0.270 0.015 60);
+  --color-surface-950: oklch(0.196 0.015 60);
+}
+
+/* --- Temp: vibrant blue primary (hue 250) --- */
+.cui-theme-temp {
+  --color-primary-50:  #EEF2FE;
+  --color-primary-100: #D8E1FC;
+  --color-primary-200: #AEC1F9;
+  --color-primary-300: #83A0F6;
+  --color-primary-400: #587FF3;
+  --color-primary-500: #2D5EF0;
+  --color-primary-600: #154CEE;
+  --color-primary-700: #1043DA;
+  --color-primary-800: #0E3BC3;
+  --color-primary-900: #0C34AB;
+  --color-primary-950: #0B309F;
+
+  /* Light mode: Access curve with blue tint */
+  --color-surface-50:  oklch(0.983 0.005 250);
+  --color-surface-100: oklch(0.971 0.005 250);
+  --color-surface-200: oklch(0.941 0.006 250);
+  --color-surface-300: oklch(0.905 0.008 250);
+  --color-surface-400: oklch(0.862 0.008 250);
+  --color-surface-500: oklch(0.843 0.008 250);
+  --color-surface-600: oklch(0.742 0.010 250);
+  --color-surface-700: oklch(0.608 0.010 250);
+  --color-surface-800: oklch(0.435 0.010 250);
+  --color-surface-900: oklch(0.270 0.010 250);
+  --color-surface-950: oklch(0.196 0.010 250);
+}
+
+:where(.dark, .dark *) .cui-theme-temp,
+.cui-theme-temp :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 250);
+  --color-surface-100: oklch(0.971 0.006 250);
+  --color-surface-200: oklch(0.941 0.008 250);
+  --color-surface-300: oklch(0.905 0.008 250);
+  --color-surface-400: oklch(0.862 0.008 250);
+  --color-surface-500: oklch(0.843 0.010 250);
+  --color-surface-600: oklch(0.742 0.010 250);
+  --color-surface-700: oklch(0.608 0.012 250);
+  --color-surface-800: oklch(0.435 0.012 250);
+  --color-surface-900: oklch(0.270 0.015 250);
+  --color-surface-950: oklch(0.196 0.015 250);
+}
+
+/* --- Dayton: cool teal primary (hue 210) --- */
+.cui-theme-dayton {
+  --color-primary-50:  #BEE5F5;
+  --color-primary-100: #A6DBF2;
+  --color-primary-200: #75C7EA;
+  --color-primary-300: #44B3E3;
+  --color-primary-400: #1F9BD0;
+  --color-primary-500: #18779F;
+  --color-primary-600: #156789;
+  --color-primary-700: #115673;
+  --color-primary-800: #0E465D;
+  --color-primary-900: #0B3546;
+  --color-primary-950: #092D3B;
+
+  /* Light mode: Access curve with teal tint */
+  --color-surface-50:  oklch(0.983 0.005 210);
+  --color-surface-100: oklch(0.971 0.005 210);
+  --color-surface-200: oklch(0.941 0.006 210);
+  --color-surface-300: oklch(0.905 0.008 210);
+  --color-surface-400: oklch(0.862 0.008 210);
+  --color-surface-500: oklch(0.843 0.008 210);
+  --color-surface-600: oklch(0.742 0.010 210);
+  --color-surface-700: oklch(0.608 0.010 210);
+  --color-surface-800: oklch(0.435 0.010 210);
+  --color-surface-900: oklch(0.270 0.010 210);
+  --color-surface-950: oklch(0.196 0.010 210);
+}
+
+:where(.dark, .dark *) .cui-theme-dayton,
+.cui-theme-dayton :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 210);
+  --color-surface-100: oklch(0.971 0.006 210);
+  --color-surface-200: oklch(0.941 0.008 210);
+  --color-surface-300: oklch(0.905 0.008 210);
+  --color-surface-400: oklch(0.862 0.008 210);
+  --color-surface-500: oklch(0.843 0.010 210);
+  --color-surface-600: oklch(0.742 0.010 210);
+  --color-surface-700: oklch(0.608 0.012 210);
+  --color-surface-800: oklch(0.435 0.012 210);
+  --color-surface-900: oklch(0.270 0.015 210);
+  --color-surface-950: oklch(0.196 0.015 210);
+}
+
+/* --- Stat: professional teal (hue 210, cool gray surface from original config) --- */
+.cui-theme-stat {
+  --color-primary-50:  #BEE5F5;
+  --color-primary-100: #A6DBF2;
+  --color-primary-200: #75C7EA;
+  --color-primary-300: #44B3E3;
+  --color-primary-400: #1F9BD0;
+  --color-primary-500: #18779F;
+  --color-primary-600: #156789;
+  --color-primary-700: #115673;
+  --color-primary-800: #0E465D;
+  --color-primary-900: #0B3546;
+  --color-primary-950: #092D3B;
+
+  /* Light mode: original cool gray from config (already has nice distribution) */
+  --color-surface-50:  #F6F7F8;
+  --color-surface-100: #EEF0F2;
+  --color-surface-200: #DDE0E4;
+  --color-surface-300: #CCD0D7;
+  --color-surface-400: #BAC1C9;
+  --color-surface-500: #A9B1BC;
+  --color-surface-600: #818C9C;
+  --color-surface-700: #5E6878;
+  --color-surface-800: #3F4550;
+  --color-surface-900: #1F2328;
+  --color-surface-950: #101114;
+}
+
+:where(.dark, .dark *) .cui-theme-stat,
+.cui-theme-stat :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 210);
+  --color-surface-100: oklch(0.971 0.006 210);
+  --color-surface-200: oklch(0.941 0.008 210);
+  --color-surface-300: oklch(0.905 0.008 210);
+  --color-surface-400: oklch(0.862 0.008 210);
+  --color-surface-500: oklch(0.843 0.010 210);
+  --color-surface-600: oklch(0.742 0.010 210);
+  --color-surface-700: oklch(0.608 0.012 210);
+  --color-surface-800: oklch(0.435 0.012 210);
+  --color-surface-900: oklch(0.270 0.015 210);
+  --color-surface-950: oklch(0.196 0.015 210);
+}
+
+/* --- Ruby: bold red primary (hue 25) --- */
+.cui-theme-ruby {
+  --color-primary-50:  #FADFE0;
+  --color-primary-100: #F6CBCD;
+  --color-primary-200: #F0A4A6;
+  --color-primary-300: #E97D80;
+  --color-primary-400: #E35559;
+  --color-primary-500: #DC2E33;
+  --color-primary-600: #CE2227;
+  --color-primary-700: #B81F23;
+  --color-primary-800: #A21B1F;
+  --color-primary-900: #8C181B;
+  --color-primary-950: #821619;
+
+  /* Light mode: Access curve with warm red tint */
+  --color-surface-50:  oklch(0.983 0.005 25);
+  --color-surface-100: oklch(0.971 0.005 25);
+  --color-surface-200: oklch(0.941 0.006 25);
+  --color-surface-300: oklch(0.905 0.008 25);
+  --color-surface-400: oklch(0.862 0.008 25);
+  --color-surface-500: oklch(0.843 0.008 25);
+  --color-surface-600: oklch(0.742 0.010 25);
+  --color-surface-700: oklch(0.608 0.010 25);
+  --color-surface-800: oklch(0.435 0.010 25);
+  --color-surface-900: oklch(0.270 0.010 25);
+  --color-surface-950: oklch(0.196 0.010 25);
+}
+
+:where(.dark, .dark *) .cui-theme-ruby,
+.cui-theme-ruby :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.006 25);
+  --color-surface-100: oklch(0.971 0.006 25);
+  --color-surface-200: oklch(0.941 0.008 25);
+  --color-surface-300: oklch(0.905 0.008 25);
+  --color-surface-400: oklch(0.862 0.008 25);
+  --color-surface-500: oklch(0.843 0.010 25);
+  --color-surface-600: oklch(0.742 0.010 25);
+  --color-surface-700: oklch(0.608 0.012 25);
+  --color-surface-800: oklch(0.435 0.012 25);
+  --color-surface-900: oklch(0.270 0.015 25);
+  --color-surface-950: oklch(0.196 0.015 25);
+}
