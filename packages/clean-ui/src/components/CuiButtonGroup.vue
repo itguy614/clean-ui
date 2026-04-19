@@ -90,9 +90,13 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
   margin-top: -1px;
 }
 
-/* Ensure hovered/focused button appears above siblings */
+/* Ensure hovered/focused/active button appears above siblings so borders aren't hidden */
 .cui-button-group > :deep(.cui-button:hover),
 .cui-button-group > :deep(.cui-button:focus-visible),
+.cui-button-group > :deep(.cui-button[aria-pressed="true"]),
+.cui-button-group > :deep(.cui-button.cui-button--active),
+.cui-button-group > :deep(.cui-radio-button--active),
+.cui-button-group > :deep([aria-checked="true"]),
 .cui-button-group > :deep(.cui-dropdown .cui-button:hover),
 .cui-button-group > :deep(.cui-dropdown .cui-button:focus-visible) {
   z-index: 1;

@@ -51,7 +51,7 @@ const dynamicField = ref({
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
           { name: 'direction', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout direction (auto: horizontal ≤2, vertical 3+)' },
           { name: 'variant', type: 'default | buttons', default: 'default', description: 'Visual variant — default radios or segmented button group' },
-          { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size when variant="buttons"' },
+          { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size (used when variant is buttons)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all radios' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Make all radios readonly' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Show error state' },

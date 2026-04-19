@@ -43,11 +43,11 @@
 - For focus-ring and subtle (transparency needed): use `color-mix(in srgb, var(--color-primary-500) 40%, transparent)` — NOT oklch alpha syntax with var()
 
 ## Theme System
-- 7 presets: Labels (default/indigo), Stock (green), Access (orange/warm), Temp (blue), Dayton (teal), Stat (teal/cool gray), Ruby (red)
+- 8 presets: Mono (monochrome), Navy (default/indigo), Forest (green), Amber (orange/warm), Azure (blue), Teal (cool teal), Violet (purple), Ruby (red)
 - Themes are CSS classes (`cui-theme-stock`, etc.) that override `--color-primary-*` and `--color-surface-*`
-- Apply to any ancestor: `<html class="cui-theme-stock">` or scoped `<div class="cui-theme-dayton">`
+- Apply to any ancestor: `<html class="cui-theme-stock">` or scoped `<div class="cui-theme-stat">`
 - `useTheme()` composable: `setTheme(id)`, reactive `theme` ref, persists to localStorage
-- Surface lightness curve based on Access warm gray distribution (0.983 → 0.196) — ALL themes use this curve
+- Surface lightness curve based on Amber warm gray distribution (0.983 → 0.196) — ALL themes use this curve
 - Light mode surfaces have a very subtle primary tint (chroma 0.005-0.010)
 - Dark mode surfaces have a slightly stronger tint (chroma 0.006-0.015)
 - Semantic colors (success/error/warning/info) stay consistent across themes

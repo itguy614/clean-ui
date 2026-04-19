@@ -313,6 +313,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   background: var(--_rb-bg);
   color: var(--_rb-color);
   border-color: var(--_rb-border);
+  position: relative;
+  z-index: 1;
 }
 
 .cui-radio-button--active:hover:not(:disabled) {

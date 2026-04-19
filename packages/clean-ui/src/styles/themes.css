@@ -2,15 +2,15 @@
    THEME PRESETS
    Apply a theme class to any ancestor element to swap palettes.
 
-   Surface lightness curve based on the Access warm gray distribution.
+   Surface lightness curve based on the Amber warm gray distribution.
    Each theme applies its own hue tint to this shared curve.
 
    Success, error, warning, info stay consistent across themes.
    ============================================================ */
 
 /* --- Navy (default — indigo, hue 270) --- */
-/* Light mode: @theme already defines surfaces. Override with Access-curve tint. */
-/* (Default theme keeps @theme values for backwards compat — only non-default themes get the Access curve) */
+/* Light mode: @theme already defines surfaces. Override with Amber-curve tint. */
+/* (Default theme keeps @theme values for backwards compat — only non-default themes get the Amber curve) */
 
 /* Dark mode surface tint for default (indigo) */
 :where(.dark, .dark *) {
@@ -41,7 +41,7 @@
   --color-primary-900: #17331F;
   --color-primary-950: #142C1B;
 
-  /* Light mode: Access curve with green tint */
+  /* Light mode: Amber curve with green tint */
   --color-surface-50:  oklch(0.983 0.005 150);
   --color-surface-100: oklch(0.960 0.005 150);
   --color-surface-200: oklch(0.900 0.006 150);
@@ -127,7 +127,7 @@
   --color-primary-900: #0F266B;
   --color-primary-950: #0C2060;
 
-  /* Light mode: Access curve with blue tint */
+  /* Light mode: Amber curve with blue tint */
   --color-surface-50:  oklch(0.983 0.005 250);
   --color-surface-100: oklch(0.960 0.005 250);
   --color-surface-200: oklch(0.900 0.006 250);
@@ -170,7 +170,7 @@
   --color-primary-900: #082D39;
   --color-primary-950: #062630;
 
-  /* Light mode: Access curve with teal tint */
+  /* Light mode: Amber curve with teal tint */
   --color-surface-50:  oklch(0.983 0.005 210);
   --color-surface-100: oklch(0.960 0.005 210);
   --color-surface-200: oklch(0.900 0.006 210);
@@ -257,7 +257,7 @@
   --color-primary-900: #541013;
   --color-primary-950: #480E11;
 
-  /* Light mode: Access curve with warm red tint */
+  /* Light mode: Amber curve with warm red tint */
   --color-surface-50:  oklch(0.983 0.005 25);
   --color-surface-100: oklch(0.960 0.005 25);
   --color-surface-200: oklch(0.900 0.006 25);
