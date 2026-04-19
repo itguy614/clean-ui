@@ -16,8 +16,8 @@
 :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.008 270);
   --color-surface-100: oklch(0.960 0.008 270);
-  --color-surface-200: oklch(0.900 0.008 270);
-  --color-surface-300: oklch(0.850 0.010 270);
+  --color-surface-200: oklch(0.800 0.008 270);
+  --color-surface-300: oklch(0.650 0.010 270);
   --color-surface-400: oklch(0.780 0.010 270);
   --color-surface-500: oklch(0.720 0.010 270);
   --color-surface-600: oklch(0.620 0.012 270);
@@ -44,8 +44,8 @@
   /* Light mode: Amber curve with green tint */
   --color-surface-50:  oklch(0.983 0.005 150);
   --color-surface-100: oklch(0.960 0.005 150);
-  --color-surface-200: oklch(0.900 0.006 150);
-  --color-surface-300: oklch(0.850 0.008 150);
+  --color-surface-200: oklch(0.800 0.006 150);
+  --color-surface-300: oklch(0.650 0.008 150);
   --color-surface-400: oklch(0.780 0.008 150);
   --color-surface-500: oklch(0.720 0.008 150);
   --color-surface-600: oklch(0.620 0.010 150);
@@ -84,11 +84,11 @@
   --color-primary-900: #4D2900;
   --color-primary-950: #3D2100;
 
-  /* Light mode: original warm gray (the reference curve) */
+  /* Light mode: original warm gray (the reference curve) — 200/300 darkened for border visibility */
   --color-surface-50:  #FBFAF9;
-  --color-surface-100: #F7F5F4;
-  --color-surface-200: #EFECE9;
-  --color-surface-300: #E5E1DD;
+  --color-surface-100: #F3F1EF;
+  --color-surface-200: #CFC9C2;
+  --color-surface-300: #968D84;
   --color-surface-400: #D9D4CF;
   --color-surface-500: #D4CEC8;
   --color-surface-600: #B5ACA3;
@@ -130,8 +130,8 @@
   /* Light mode: Amber curve with blue tint */
   --color-surface-50:  oklch(0.983 0.005 250);
   --color-surface-100: oklch(0.960 0.005 250);
-  --color-surface-200: oklch(0.900 0.006 250);
-  --color-surface-300: oklch(0.850 0.008 250);
+  --color-surface-200: oklch(0.800 0.006 250);
+  --color-surface-300: oklch(0.650 0.008 250);
   --color-surface-400: oklch(0.780 0.008 250);
   --color-surface-500: oklch(0.720 0.008 250);
   --color-surface-600: oklch(0.620 0.010 250);
@@ -173,8 +173,8 @@
   /* Light mode: Amber curve with teal tint */
   --color-surface-50:  oklch(0.983 0.005 210);
   --color-surface-100: oklch(0.960 0.005 210);
-  --color-surface-200: oklch(0.900 0.006 210);
-  --color-surface-300: oklch(0.850 0.008 210);
+  --color-surface-200: oklch(0.800 0.006 210);
+  --color-surface-300: oklch(0.650 0.008 210);
   --color-surface-400: oklch(0.780 0.008 210);
   --color-surface-500: oklch(0.720 0.008 210);
   --color-surface-600: oklch(0.620 0.010 210);
@@ -213,11 +213,11 @@
   --color-primary-900: #33134E;
   --color-primary-950: #2A1042;
 
-  /* Light mode: cool gray with subtle purple tint */
+  /* Light mode: cool gray with subtle purple tint — 200/300 darkened for border visibility */
   --color-surface-50:  #F8F7FA;
-  --color-surface-100: #F0EEF4;
-  --color-surface-200: #E0DCE8;
-  --color-surface-300: #CFCAD9;
+  --color-surface-100: #EDEAF2;
+  --color-surface-200: #C5BFCF;
+  --color-surface-300: #8A8199;
   --color-surface-400: #BDB7CA;
   --color-surface-500: #ACA5BC;
   --color-surface-600: #857D98;
@@ -231,8 +231,8 @@
 .cui-theme-stat :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.008 285);
   --color-surface-100: oklch(0.960 0.008 285);
-  --color-surface-200: oklch(0.900 0.010 285);
-  --color-surface-300: oklch(0.850 0.010 285);
+  --color-surface-200: oklch(0.800 0.010 285);
+  --color-surface-300: oklch(0.650 0.010 285);
   --color-surface-400: oklch(0.780 0.010 285);
   --color-surface-500: oklch(0.720 0.012 285);
   --color-surface-600: oklch(0.620 0.012 285);
@@ -260,8 +260,8 @@
   /* Light mode: Amber curve with warm red tint */
   --color-surface-50:  oklch(0.983 0.005 25);
   --color-surface-100: oklch(0.960 0.005 25);
-  --color-surface-200: oklch(0.900 0.006 25);
-  --color-surface-300: oklch(0.850 0.008 25);
+  --color-surface-200: oklch(0.800 0.006 25);
+  --color-surface-300: oklch(0.650 0.008 25);
   --color-surface-400: oklch(0.780 0.008 25);
   --color-surface-500: oklch(0.720 0.008 25);
   --color-surface-600: oklch(0.620 0.010 25);

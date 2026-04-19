@@ -4,7 +4,8 @@
  * WCAG AA Contrast Checker for Clean UI themes.
  * Run: node scripts/check-contrast.mjs
  *
- * Reads theme hex colors from themes.css and checks critical color pairs.
+ * Checks all semantic color roles (primary, secondary, success, error, warning, info)
+ * plus border visibility against theme backgrounds.
  * WCAG AA: 4.5:1 normal text, 3:1 large text, 3:1 non-text (borders/icons)
  */
 
@@ -18,11 +19,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function hexToRgb(hex) {
   hex = hex.replace("#", "");
   if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-  return {
-    r: parseInt(hex.slice(0, 2), 16),
-    g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16),
-  };
+  return { r: parseInt(hex.slice(0, 2), 16), g: parseInt(hex.slice(2, 4), 16), b: parseInt(hex.slice(4, 6), 16) };
 }
 
 function linearize(c) {
@@ -35,148 +32,129 @@ function luminance(r, g, b) {
 }
 
 function contrastRatio(hex1, hex2) {
-  const c1 = hexToRgb(hex1);
-  const c2 = hexToRgb(hex2);
-  const l1 = luminance(c1.r, c1.g, c1.b);
-  const l2 = luminance(c2.r, c2.g, c2.b);
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
+  if (!hex1?.startsWith("#") || !hex2?.startsWith("#")) return NaN;
+  const c1 = hexToRgb(hex1), c2 = hexToRgb(hex2);
+  const l1 = luminance(c1.r, c1.g, c1.b), l2 = luminance(c2.r, c2.g, c2.b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-function grade(ratio) {
-  if (ratio >= 4.5) return "✅ AA";
-  if (ratio >= 3.0) return "⚠️  lg only";
+function grade(ratio, threshold) {
+  if (isNaN(ratio)) return "⬜ SKIP";
+  if (ratio >= threshold) return "✅ PASS";
+  if (ratio >= 3.0 && threshold > 3.0) return "⚠️  ~LG ";
   return "❌ FAIL";
 }
 
-// --- Parse themes ---
+// --- Semantic role colors (consistent across themes — from main.css oklch, converted to hex) ---
+const semanticRoles = {
+  secondary: { "100": "#EFECF4", "300": "#7B6E96", "500": "#5A4C76", "700": "#443564", "900": "#302440" },
+  success:   { "100": "#E8F5EA", "300": "#3D8A54", "500": "#276E38", "700": "#1E5A2C", "900": "#134422" },
+  error:     { "100": "#FAE5E5", "300": "#BA4E4E", "500": "#9E2E2E", "700": "#822424", "900": "#6B1C1C" },
+  warning:   { "100": "#FBF0DA", "300": "#917030", "500": "#6E5420", "700": "#554016", "900": "#3A2C0C" },
+  info:      { "100": "#E5EEF7", "300": "#3D7BA6", "500": "#275F88", "700": "#1E4D6E", "900": "#123A58" },
+};
+
+// --- Parse theme primary + surface colors ---
 function parseThemes() {
-  const themesPath = resolve(__dirname, "../packages/clean-ui/src/styles/themes.css");
-  const css = readFileSync(themesPath, "utf-8");
-
+  const css = readFileSync(resolve(__dirname, "../packages/clean-ui/src/styles/themes.css"), "utf-8");
   const themes = [];
-
-  // Match theme blocks: .cui-theme-{id} { ... }
   const blockRe = /\.cui-theme-(\w+)\s*\{([^}]+)\}/g;
-  let match;
-  while ((match = blockRe.exec(css))) {
-    const id = match[1];
-    const body = match[2];
-
-    // Skip dark mode blocks
-    if (css.slice(Math.max(0, match.index - 50), match.index).includes("dark")) continue;
-
-    const colors = {};
-    const propRe = /--color-primary-(\d+)\s*:\s*([^;]+);/g;
-    let pm;
-    while ((pm = propRe.exec(body))) {
-      colors[pm[1]] = pm[2].trim();
+  let m;
+  while ((m = blockRe.exec(css))) {
+    if (css.slice(Math.max(0, m.index - 50), m.index).includes("dark")) continue;
+    const id = m[1], body = m[2], colors = {};
+    for (const [, step, val] of body.matchAll(/--color-(primary|surface)-(\d+)\s*:\s*(#[^;]+);/g)) {
+      colors[(step === "surface" ? "surface-" : "") + val.trim()] = ""; // wrong key
     }
-
-    // Only add if colors are hex (skip oklch-only themes parsed from dark blocks)
-    const hasHex = Object.values(colors).some(v => v.startsWith("#"));
-    if (Object.keys(colors).length > 0 && hasHex) {
-      themes.push({ id, colors });
+    // Redo properly
+    const c = {};
+    for (const [, kind, step, val] of body.matchAll(/--color-(primary|surface)-(\d+)\s*:\s*(#[^;]+);/g)) {
+      c[(kind === "surface" ? "s" : "") + step] = val.trim();
     }
+    if (Object.keys(c).length > 0) themes.push({ id, c });
   }
 
-  // Add default (Navy) — hardcoded since it uses oklch in @theme
-  // These are approximate hex conversions of the oklch values
-  themes.unshift({
-    id: "default (Navy)",
-    colors: {
-      "50":  "#F5F3FF",
-      "100": "#E8E4FC",
-      "200": "#C9BFF7",
-      "300": "#9B85ED",
-      "400": "#6F4FDB",
-      "500": "#4527A0",
-      "600": "#3B2092",
-      "700": "#301A7D",
-      "800": "#231363",
-      "900": "#180D4A",
-      "950": "#0F0833",
-    },
-  });
+  // Default (Navy) — approximate hex from oklch
+  themes.unshift({ id: "default", c: {
+    "50": "#F5F3FF", "100": "#E8E4FC", "200": "#C9BFF7", "300": "#9B85ED",
+    "400": "#6F4FDB", "500": "#4527A0", "600": "#3B2092", "700": "#301A7D",
+    "800": "#231363", "900": "#180D4A", "950": "#0F0833",
+    "s50": "#F6F5FA", "s100": "#EDEBF3", "s200": "#B5B0C8", "s300": "#857D98",
+  }});
 
-  // Add Mono (hardcoded hex approximations of oklch values)
-  themes.push({
-    id: "mono (Mono)",
-    colors: {
-      "50":  "#F5F5F5",
-      "100": "#E8E8E8",
-      "200": "#C9C9C9",
-      "300": "#888888",
-      "400": "#6F6F6F",
-      "500": "#3A3A3A",
-      "600": "#333333",
-      "700": "#2B2B2B",
-      "800": "#1F1F1F",
-      "900": "#171717",
-      "950": "#0D0D0D",
-    },
-  });
+  // Mono
+  themes.push({ id: "mono", c: {
+    "50": "#F5F5F5", "100": "#E8E8E8", "200": "#C9C9C9", "300": "#888888",
+    "400": "#6F6F6F", "500": "#3A3A3A", "600": "#333333", "700": "#2B2B2B",
+    "800": "#1F1F1F", "900": "#171717", "950": "#0D0D0D",
+    "s50": "#F3F3F3", "s100": "#E8E8E8", "s200": "#B0B0B0", "s300": "#888888",
+  }});
 
   return themes;
 }
 
-// --- Map theme IDs to display names ---
 const nameMap = {
-  "default (Navy)": "Navy",
-  "stock": "Forest",
-  "access": "Amber",
-  "temp": "Azure",
-  "dayton": "Teal",
-  "stat": "Violet",
-  "ruby": "Ruby",
-  "mono (Mono)": "Mono",
+  "default": "Navy", "stock": "Forest", "access": "Amber", "temp": "Azure",
+  "dayton": "Teal", "stat": "Violet", "ruby": "Ruby", "mono": "Mono",
 };
 
-// --- Run checks ---
-const themes = parseThemes();
 const WHITE = "#FFFFFF";
+const themes = parseThemes();
 
-console.log("╔══════════════════════════════════════════════════════════════════════════════╗");
-console.log("║               WCAG AA Contrast Analysis — Clean UI Themes                   ║");
-console.log("║  AA normal text: 4.5:1  |  AA large text: 3:1  |  Non-text (borders): 3:1  ║");
-console.log("╚══════════════════════════════════════════════════════════════════════════════╝");
-console.log("");
+console.log("╔═══════════════════════════════════════════════════════════════════════════════════╗");
+console.log("║                    WCAG AA Contrast Analysis — Clean UI                           ║");
+console.log("║    Text: 4.5:1  |  Large text: 3:1  |  Non-text (borders/UI): 3:1                ║");
+console.log("╚═══════════════════════════════════════════════════════════════════════════════════╝\n");
 
 let totalFails = 0;
 
+function check(label, fg, bg, threshold) {
+  const r = contrastRatio(fg, bg);
+  const s = grade(r, threshold);
+  if (!isNaN(r) && r < threshold) totalFails++;
+  const rStr = isNaN(r) ? "N/A   " : (r.toFixed(2) + ":1").padEnd(8);
+  console.log(`│    ${s}  ${rStr}  ${label.padEnd(44)} ${(fg||"?").padEnd(8)} on ${bg||"?"}`);
+}
+
 for (const theme of themes) {
   const name = nameMap[theme.id] || theme.id;
-  const c = theme.colors;
+  const p = theme.c;
+  const sBg = p["s50"] || "#F5F5F5";
+  const sBorder = p["s200"] || "#B8B8B8";       // oklch(0.800) ≈ this
+  const sBorderStrong = p["s300"] || "#888888";  // oklch(0.650) ≈ this
 
-  const checks = [
-    { label: "White on solid (500)",       fg: WHITE,  bg: c["500"], type: "text" },
-    { label: "Primary (500) on subtle bg (100)", fg: c["500"], bg: c["100"], type: "text" },
-    { label: "Primary (500) on white",     fg: c["500"], bg: WHITE,   type: "text" },
-    { label: "Primary (700) on white",     fg: c["700"], bg: WHITE,   type: "text" },
-    { label: "Border (300) on white",      fg: c["300"], bg: WHITE,   type: "non-text" },
-    { label: "Primary (500) on subtle bg (200)", fg: c["500"], bg: c["200"], type: "text" },
-  ];
+  console.log(`┌─ ${name} ${"─".repeat(Math.max(0, 80 - name.length))}┐`);
 
-  console.log(`┌─ ${name} ${"─".repeat(Math.max(0, 72 - name.length))}┐`);
+  // Primary
+  console.log("│  PRIMARY");
+  check("White on solid (500)",            WHITE,  p["500"], 4.5);
+  check("Text (500) on subtle bg (100)",   p["500"], p["100"], 4.5);
+  check("Text (500) on white",             p["500"], WHITE, 4.5);
+  check("Border (300) on white",           p["300"], WHITE, 3.0);
+  check("Border (300) on surface-50",      p["300"], sBg, 3.0);
+  check("Outline btn border (300) on s-50", p["300"], sBg, 3.0);
 
-  for (const check of checks) {
-    if (!check.fg || !check.bg) { console.log(`│  ${check.label}: SKIPPED (missing color)`); continue; }
-    const ratio = contrastRatio(check.fg, check.bg);
-    const threshold = check.type === "non-text" ? 3.0 : 4.5;
-    const status = ratio >= threshold ? "✅ PASS" : ratio >= 3.0 ? "⚠️  LARGE" : "❌ FAIL";
-    if (ratio < threshold) totalFails++;
-    console.log(`│  ${status}  ${ratio.toFixed(2)}:1  ${check.label.padEnd(38)} ${check.fg} on ${check.bg}`);
+  // Each semantic role
+  for (const [role, sh] of Object.entries(semanticRoles)) {
+    console.log(`│  ${role.toUpperCase()}`);
+    check("White on solid (500)",            WHITE,   sh["500"], 4.5);
+    check("Text (500) on subtle bg (100)",   sh["500"], sh["100"], 4.5);
+    check("Text (500) on white",             sh["500"], WHITE, 4.5);
+    check("Text (500) on surface-50",        sh["500"], sBg, 4.5);
+    check("Border (300) on white",           sh["300"], WHITE, 3.0);
+    check("Border (300) on surface-50",      sh["300"], sBg, 3.0);
   }
 
-  console.log(`└${"─".repeat(76)}┘`);
-  console.log("");
+  // Generic borders
+  console.log("│  BORDERS (surface tokens)");
+  check("cui-border (s-200) on white",          sBorder, WHITE, 3.0);
+  check("cui-border (s-200) on surface-50",     sBorder, sBg, 3.0);
+  check("cui-border-strong (s-300) on white",   sBorderStrong, WHITE, 3.0);
+  check("cui-border-strong (s-300) on s-50",    sBorderStrong, sBg, 3.0);
+
+  console.log(`└${"─".repeat(82)}┘\n`);
 }
 
-console.log("═".repeat(78));
-if (totalFails === 0) {
-  console.log("🎉 All checks pass!");
-} else {
-  console.log(`⚠️  ${totalFails} check(s) below threshold. Review and fix.`);
-}
+console.log("═".repeat(84));
+console.log(totalFails === 0 ? "🎉 All checks pass!" : `⚠️  ${totalFails} check(s) below threshold.`);
 console.log("");
