@@ -199,47 +199,47 @@
   --color-surface-950: oklch(0.196 0.015 210);
 }
 
-/* --- Slate Teal: professional teal (hue 210, cool gray surface) --- */
+/* --- Violet: rich purple primary (hue 285) + cool gray surface --- */
 .cui-theme-stat {
-  --color-primary-50:  #EDF7FB;
-  --color-primary-100: #D5EDF6;
-  --color-primary-200: #A8D9EC;
-  --color-primary-300: #3D98B8;
-  --color-primary-400: #1A7D9E;
-  --color-primary-500: #136480;
-  --color-primary-600: #10566E;
-  --color-primary-700: #0D485C;
-  --color-primary-800: #0A3A4A;
-  --color-primary-900: #082D39;
-  --color-primary-950: #062630;
+  --color-primary-50:  #F5F0FA;
+  --color-primary-100: #E8DDF4;
+  --color-primary-200: #D1BAE9;
+  --color-primary-300: #9B6CC4;
+  --color-primary-400: #8240B5;
+  --color-primary-500: #6A28A0;
+  --color-primary-600: #5C228C;
+  --color-primary-700: #4E1D77;
+  --color-primary-800: #401862;
+  --color-primary-900: #33134E;
+  --color-primary-950: #2A1042;
 
-  /* Light mode: original cool gray from config (already has nice distribution) */
-  --color-surface-50:  #F6F7F8;
-  --color-surface-100: #EEF0F2;
-  --color-surface-200: #DDE0E4;
-  --color-surface-300: #CCD0D7;
-  --color-surface-400: #BAC1C9;
-  --color-surface-500: #A9B1BC;
-  --color-surface-600: #818C9C;
-  --color-surface-700: #5E6878;
-  --color-surface-800: #3F4550;
-  --color-surface-900: #1F2328;
-  --color-surface-950: #101114;
+  /* Light mode: cool gray with subtle purple tint */
+  --color-surface-50:  #F8F7FA;
+  --color-surface-100: #F0EEF4;
+  --color-surface-200: #E0DCE8;
+  --color-surface-300: #CFCAD9;
+  --color-surface-400: #BDB7CA;
+  --color-surface-500: #ACA5BC;
+  --color-surface-600: #857D98;
+  --color-surface-700: #625B74;
+  --color-surface-800: #423D50;
+  --color-surface-900: #22202A;
+  --color-surface-950: #121116;
 }
 
 :where(.dark, .dark *) .cui-theme-stat,
 .cui-theme-stat :where(.dark, .dark *) {
-  --color-surface-50:  oklch(0.983 0.006 210);
-  --color-surface-100: oklch(0.960 0.006 210);
-  --color-surface-200: oklch(0.900 0.008 210);
-  --color-surface-300: oklch(0.850 0.008 210);
-  --color-surface-400: oklch(0.780 0.008 210);
-  --color-surface-500: oklch(0.720 0.010 210);
-  --color-surface-600: oklch(0.620 0.010 210);
-  --color-surface-700: oklch(0.500 0.012 210);
-  --color-surface-800: oklch(0.380 0.012 210);
-  --color-surface-900: oklch(0.270 0.015 210);
-  --color-surface-950: oklch(0.196 0.015 210);
+  --color-surface-50:  oklch(0.983 0.008 285);
+  --color-surface-100: oklch(0.960 0.008 285);
+  --color-surface-200: oklch(0.900 0.010 285);
+  --color-surface-300: oklch(0.850 0.010 285);
+  --color-surface-400: oklch(0.780 0.010 285);
+  --color-surface-500: oklch(0.720 0.012 285);
+  --color-surface-600: oklch(0.620 0.012 285);
+  --color-surface-700: oklch(0.500 0.014 285);
+  --color-surface-800: oklch(0.380 0.014 285);
+  --color-surface-900: oklch(0.270 0.016 285);
+  --color-surface-950: oklch(0.196 0.016 285);
 }
 
 /* --- Ruby: bold red primary (hue 25) --- */

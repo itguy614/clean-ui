@@ -128,7 +128,7 @@ const nameMap = {
   "access": "Amber",
   "temp": "Azure",
   "dayton": "Teal",
-  "stat": "Slate Teal",
+  "stat": "Violet",
   "ruby": "Ruby",
   "mono (Mono)": "Mono",
 };

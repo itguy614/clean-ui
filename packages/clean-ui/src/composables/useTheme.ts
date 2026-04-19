@@ -13,7 +13,7 @@ export const THEME_PRESETS: ThemePreset[] = [
   { id: "access", label: "Amber", description: "Warm orange with warm grays" },
   { id: "temp", label: "Azure", description: "Vibrant blue" },
   { id: "dayton", label: "Teal", description: "Cool teal" },
-  { id: "stat", label: "Slate Teal", description: "Professional teal" },
+  { id: "stat", label: "Violet", description: "Rich purple" },
   { id: "ruby", label: "Ruby", description: "Bold red" },
 ];
 
