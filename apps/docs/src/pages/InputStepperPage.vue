@@ -7,6 +7,8 @@ import Example from "../components/Example.vue";
 const qty = ref(1);
 const price = ref(9.99);
 const temp = ref(72);
+const hours = ref(9);
+const minutes = ref(30);
 </script>
 
 <template>
@@ -15,7 +17,8 @@ const temp = ref(72);
       <h1 class="text-4xl font-bold">Input Stepper</h1>
       <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
         A numeric input with increment/decrement buttons — ideal for quantities,
-        counters, and settings that adjust in discrete steps.
+        counters, and settings that adjust in discrete steps. Supports horizontal
+        and vertical orientations, wrap-around, and zero-padded display.
       </p>
     </div>
 
@@ -27,8 +30,11 @@ const temp = ref(72);
           { name: 'min', type: 'number', default: '—', description: 'Minimum value' },
           { name: 'max', type: 'number', default: '—', description: 'Maximum value' },
           { name: 'step', type: 'number', default: '1', description: 'Step increment' },
+          { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Button layout direction' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Button color role' },
+          { name: 'color', type: 'primary | secondary | ...', default: 'primary', description: 'Button color role' },
+          { name: 'pad', type: 'number', default: '—', description: 'Zero-pad display to this width (e.g., 2 shows 05)' },
+          { name: 'wrap', type: 'boolean', default: 'false', description: 'Wrap around from max to min and vice versa' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'label', type: 'string', default: '—', description: 'Label text above the input' },
         ]"
@@ -47,17 +53,47 @@ const temp = ref(72);
           </CuiFlex>
         </Example>
 
+        <!-- Vertical orientation -->
+        <Example title="Vertical Orientation" :code="`<CuiInputStepper orientation=&quot;vertical&quot; />`">
+          <CuiFlex gap="4" class="items-end">
+            <CuiInputStepper v-model="hours" :min="1" :max="12" orientation="vertical" :pad="2" wrap label="Hours" />
+            <span style="font-size: 1.25rem; font-weight: 700; padding-bottom: 1.5rem;">:</span>
+            <CuiInputStepper v-model="minutes" :min="0" :max="59" :step="15" orientation="vertical" :pad="2" wrap label="Minutes" />
+          </CuiFlex>
+        </Example>
+
         <!-- Sizes -->
         <Example title="Sizes">
+          <CuiStack spacing="4">
+            <div>
+              <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Horizontal:</div>
+              <CuiFlex gap="4" class="items-end">
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="sm" label="Small" />
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="md" label="Medium" />
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="lg" label="Large" />
+              </CuiFlex>
+            </div>
+            <div>
+              <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Vertical:</div>
+              <CuiFlex gap="4" class="items-end">
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="sm" orientation="vertical" label="Small" />
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="md" orientation="vertical" label="Medium" />
+                <CuiInputStepper :model-value="5" :min="0" :max="10" size="lg" orientation="vertical" label="Large" />
+              </CuiFlex>
+            </div>
+          </CuiStack>
+        </Example>
+
+        <!-- Wrap around -->
+        <Example title="Wrap Around" :code="`<CuiInputStepper :min=&quot;0&quot; :max=&quot;59&quot; :step=&quot;15&quot; wrap />`">
           <CuiFlex gap="4" class="items-end">
-            <CuiInputStepper :model-value="5" :min="0" :max="10" size="sm" label="Small" />
-            <CuiInputStepper :model-value="5" :min="0" :max="10" size="md" label="Medium" />
-            <CuiInputStepper :model-value="5" :min="0" :max="10" size="lg" label="Large" />
+            <CuiInputStepper v-model="minutes" :min="0" :max="59" :step="15" wrap :pad="2" label="Minutes (15-step wrap)" />
+            <span class="text-sm" style="color: var(--cui-text-secondary); padding-bottom: 0.5rem;">Value: {{ minutes }}</span>
           </CuiFlex>
         </Example>
 
         <!-- Decimal step -->
-        <Example title="Decimal Step" :code="`<CuiInputStepper v-model=&quot;price&quot; :step=&quot;0.50&quot; :min=&quot;0&quot; />`">
+        <Example title="Decimal Step">
           <CuiFlex gap="4" class="items-end">
             <CuiInputStepper v-model="price" :step="0.50" :min="0" label="Price ($)" />
             <span class="text-sm" style="color: var(--cui-text-secondary); padding-bottom: 0.5rem;">${{ price.toFixed(2) }}</span>
@@ -74,7 +110,7 @@ const temp = ref(72);
           </CuiFlex>
         </Example>
 
-        <!-- With min/max constraints -->
+        <!-- Min/Max constraints -->
         <Example title="Min/Max Constraints">
           <CuiFlex gap="4" class="items-end">
             <CuiInputStepper v-model="temp" :min="60" :max="85" label="Temperature (°F)" />
@@ -84,7 +120,10 @@ const temp = ref(72);
 
         <!-- Disabled -->
         <Example title="Disabled">
-          <CuiInputStepper :model-value="3" disabled label="Locked" />
+          <CuiFlex gap="4" class="items-end">
+            <CuiInputStepper :model-value="3" disabled label="Horizontal" />
+            <CuiInputStepper :model-value="7" disabled orientation="vertical" label="Vertical" />
+          </CuiFlex>
         </Example>
 
       </CuiStack>
