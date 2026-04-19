@@ -2,42 +2,35 @@
 export interface CuiModalFooterProps {
   /** Align footer content */
   align?: "left" | "right" | "center" | "between";
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-withDefaults(defineProps<CuiModalFooterProps>(), {
+const props = withDefaults(defineProps<CuiModalFooterProps>(), {
   align: "right",
+  hidden: false,
 });
+
+const justifyMap: Record<string, string> = {
+  left: "flex-start",
+  right: "flex-end",
+  center: "center",
+  between: "space-between",
+};
 </script>
 
 <template>
-  <div class="cui-modal-footer" :class="`cui-modal-footer--${align}`">
+  <div
+    v-show="!hidden"
+    :style="{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.75rem 1.5rem 1.25rem',
+      flexShrink: '0',
+      justifyContent: justifyMap[align],
+    }"
+  >
     <slot />
   </div>
 </template>
-
-<style scoped>
-.cui-modal-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.25rem;
-  border-top: 1px solid var(--cui-border);
-  flex-shrink: 0;
-}
-
-.cui-modal-footer--left {
-  justify-content: flex-start;
-}
-
-.cui-modal-footer--right {
-  justify-content: flex-end;
-}
-
-.cui-modal-footer--center {
-  justify-content: center;
-}
-
-.cui-modal-footer--between {
-  justify-content: space-between;
-}
-</style>

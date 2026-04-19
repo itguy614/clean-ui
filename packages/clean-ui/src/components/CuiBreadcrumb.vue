@@ -5,10 +5,13 @@ import { BreadcrumbContextKey } from "./breadcrumb-context";
 export interface CuiBreadcrumbProps {
   /** Separator character between items */
   separator?: string;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBreadcrumbProps>(), {
   separator: "/",
+  hidden: false,
 });
 
 provide(BreadcrumbContextKey, {
@@ -17,7 +20,7 @@ provide(BreadcrumbContextKey, {
 </script>
 
 <template>
-  <nav aria-label="Breadcrumb" class="cui-breadcrumb">
+  <nav v-show="!hidden" aria-label="Breadcrumb" class="cui-breadcrumb">
     <ol class="cui-breadcrumb__list">
       <slot />
     </ol>

@@ -40,6 +40,8 @@ export interface CuiSelectProps {
   disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSelectProps>(), {
@@ -54,6 +56,7 @@ const props = withDefaults(defineProps<CuiSelectProps>(), {
   error: false,
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -307,7 +310,7 @@ const dims = computed(() => {
 </script>
 
 <template>
-  <div class="cui-select-wrapper">
+  <div v-show="!hidden" class="cui-select-wrapper">
     <div
       class="cui-select"
       :class="{

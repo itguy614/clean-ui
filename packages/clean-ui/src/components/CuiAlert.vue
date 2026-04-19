@@ -25,6 +25,8 @@ export interface CuiAlertProps {
   entrance?: AlertEntrance;
   /** Persistent animation while visible */
   animation?: AlertAnimation;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAlertProps>(), {
@@ -34,6 +36,7 @@ const props = withDefaults(defineProps<CuiAlertProps>(), {
   dismissible: false,
   entrance: "fade",
   animation: "none",
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -110,6 +113,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 <template>
   <div
     v-if="visible"
+    v-show="!hidden"
     class="cui-alert"
     :class="[
       `cui-alert--entrance-${entrance}`,

@@ -28,6 +28,8 @@ export interface CuiInputProps {
   disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiInputProps>(), {
@@ -39,6 +41,7 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   error: false,
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -84,7 +87,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 </script>
 
 <template>
-  <div class="cui-input-wrapper">
+  <div v-show="!hidden" class="cui-input-wrapper">
     <div
       class="cui-input"
       :class="{

@@ -17,6 +17,8 @@ export interface CuiIconProps {
   duotoneColor?: string;
   /** Opacity for duotone secondary layer (0-1) */
   duotoneOpacity?: number;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiIconProps>(), {
@@ -24,6 +26,7 @@ const props = withDefaults(defineProps<CuiIconProps>(), {
   size: "md",
   color: "currentColor",
   duotoneOpacity: 0.2,
+  hidden: false,
 });
 
 // Size mapping
@@ -81,6 +84,7 @@ const wrapperStyle = computed(() => {
 
 <template>
   <span
+    v-show="!hidden"
     class="cui-icon"
     :class="{ 'cui-icon--duotone': weight === 'duotone' }"
     :style="wrapperStyle"

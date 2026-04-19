@@ -22,6 +22,8 @@ export interface CuiToggleGroupProps {
   errorMessage?: string;
   /** Accessible label for the group */
   label?: string;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToggleGroupProps>(), {
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<CuiToggleGroupProps>(), {
   disabled: false,
   readonly: false,
   error: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -75,6 +78,7 @@ provide(ToggleGroupKey, {
 
 <template>
   <div
+    v-show="!hidden"
     role="group"
     :aria-label="label"
     :aria-invalid="error || undefined"

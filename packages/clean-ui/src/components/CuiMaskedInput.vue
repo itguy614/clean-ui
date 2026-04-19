@@ -33,6 +33,8 @@ export interface CuiMaskedInputProps {
   disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiMaskedInputProps>(), {
@@ -44,6 +46,7 @@ const props = withDefaults(defineProps<CuiMaskedInputProps>(), {
   error: false,
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -392,6 +395,7 @@ defineExpose({
 
 <template>
   <CuiInput
+    v-show="!hidden"
     ref="maskedInputRef"
     :model-value="displayValue"
     type="text"

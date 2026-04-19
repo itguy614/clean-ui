@@ -10,12 +10,15 @@ export interface CuiCardMediaProps {
   aspect?: "auto" | "video" | "square" | string;
   /** Position in the card */
   position?: "top" | "bottom";
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCardMediaProps>(), {
   alt: "",
   aspect: "video",
   position: "top",
+  hidden: false,
 });
 
 const aspectMap: Record<string, string> = {
@@ -30,7 +33,7 @@ const aspectStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="cui-card-media" :class="`cui-card-media--${position}`">
+  <div v-show="!hidden" class="cui-card-media" :class="`cui-card-media--${position}`">
     <slot>
       <img
         v-if="src"

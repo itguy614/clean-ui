@@ -9,17 +9,21 @@ export interface CuiStackProps {
   spacing?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode */
   debug?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiStackProps>(), {
   direction: "vertical",
   spacing: "4",
   debug: false,
+  hidden: false,
 });
 </script>
 
 <template>
   <CuiFlex
+    v-show="!hidden"
     :direction="direction === 'vertical' ? 'col' : 'row'"
     :gap="spacing"
     :debug="debug"

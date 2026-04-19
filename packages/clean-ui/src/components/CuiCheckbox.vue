@@ -21,12 +21,15 @@ export interface CuiCheckboxProps {
   disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCheckboxProps>(), {
   indeterminate: false,
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -80,6 +83,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 <template>
   <label
     ref="elRef"
+    v-show="!hidden"
     class="cui-checkbox"
     :style="{ '--_check-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
     :class="{

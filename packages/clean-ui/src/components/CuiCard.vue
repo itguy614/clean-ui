@@ -1,50 +1,43 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 export type CardVariant = "default" | "outline" | "ghost";
 
 export interface CuiCardProps {
   /** Visual style */
   variant?: CardVariant;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-withDefaults(defineProps<CuiCardProps>(), {
+const props = withDefaults(defineProps<CuiCardProps>(), {
   variant: "default",
+  hidden: false,
+});
+
+const cardStyle = computed(() => {
+  const base: Record<string, string> = {
+    borderRadius: "0.5rem",
+    overflow: "clip",
+    background: "var(--cui-surface-base)",
+  };
+
+  if (props.variant === "default") {
+    base.border = "1px solid var(--cui-border)";
+    base.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.03)";
+  } else if (props.variant === "outline") {
+    base.border = "1px solid var(--cui-border)";
+  } else {
+    base.border = "none";
+    base.background = "transparent";
+  }
+
+  return base;
 });
 </script>
 
 <template>
-  <div
-    class="cui-card"
-    :class="`cui-card--${variant}`"
-  >
+  <div v-show="!hidden" :style="cardStyle">
     <slot />
   </div>
 </template>
-
-<style scoped>
-.cui-card {
-  border-radius: var(--cui-button-radius, 0.375rem);
-  overflow: hidden;
-  background: var(--cui-surface-base);
-}
-
-/* Default: border + shadow */
-.cui-card--default {
-  border: 1px solid var(--cui-border);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
-}
-
-:where(.dark, .dark *) .cui-card--default {
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
-}
-
-/* Outline: border only */
-.cui-card--outline {
-  border: 1px solid var(--cui-border);
-}
-
-/* Ghost: no border, no shadow */
-.cui-card--ghost {
-  border: none;
-  background: transparent;
-}
-</style>

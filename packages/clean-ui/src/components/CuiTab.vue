@@ -11,11 +11,14 @@ export interface CuiTabProps {
   disabled?: boolean;
   /** Show close button on this tab */
   closeable?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTabProps>(), {
   disabled: false,
   closeable: false,
+  hidden: false,
 });
 
 const ctx = inject(TabsContextKey);
@@ -77,7 +80,7 @@ function findTabIndex(value: string): number {
   <!-- Keep alive: show/hide with v-show -->
   <div
     v-if="ctx.keepAlive.value"
-    v-show="isActive"
+    v-show="isActive && !hidden"
     class="cui-tab-panel"
     :class="[isActive ? transitionName : '']"
     role="tabpanel"
@@ -89,6 +92,7 @@ function findTabIndex(value: string): number {
   <!-- No keep alive: mount/unmount with v-if -->
   <div
     v-else-if="isActive"
+    v-show="!hidden"
     class="cui-tab-panel"
     :class="transitionName"
     role="tabpanel"

@@ -4,57 +4,53 @@ export interface CuiCardHeaderProps {
   title?: string;
   /** Convenience: subtitle text */
   subtitle?: string;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-defineProps<CuiCardHeaderProps>();
+withDefaults(defineProps<CuiCardHeaderProps>(), {
+  hidden: false,
+});
 </script>
 
 <template>
-  <div class="cui-card-header">
-    <div class="cui-card-header__content">
+  <div
+    v-show="!hidden"
+    :style="{
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: '0.75rem',
+      padding: '1rem 1.125rem 0.375rem',
+    }"
+  >
+    <div :style="{ flex: '1', minWidth: '0' }">
       <slot>
-        <div v-if="title" class="cui-card-header__title">{{ title }}</div>
-        <div v-if="subtitle" class="cui-card-header__subtitle">{{ subtitle }}</div>
+        <div
+          v-if="title"
+          :style="{
+            fontSize: '1.0625rem',
+            fontWeight: '600',
+            lineHeight: '1.4',
+            color: 'var(--cui-text-emphasis)',
+          }"
+        >
+          {{ title }}
+        </div>
+        <div
+          v-if="subtitle"
+          :style="{
+            fontSize: '0.8125rem',
+            color: 'var(--cui-text-secondary)',
+            marginTop: '0.125rem',
+          }"
+        >
+          {{ subtitle }}
+        </div>
       </slot>
     </div>
-    <div v-if="$slots.actions" class="cui-card-header__actions">
+    <div v-if="$slots.actions" :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: '0' }">
       <slot name="actions" />
     </div>
   </div>
 </template>
-
-<style scoped>
-.cui-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--cui-border);
-}
-
-.cui-card-header__content {
-  flex: 1;
-  min-width: 0;
-}
-
-.cui-card-header__title {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--cui-text-emphasis);
-}
-
-.cui-card-header__subtitle {
-  font-size: 0.8125rem;
-  color: var(--cui-text-secondary);
-  margin-top: 0.125rem;
-}
-
-.cui-card-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-</style>

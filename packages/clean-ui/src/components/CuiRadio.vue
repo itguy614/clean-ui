@@ -21,11 +21,14 @@ export interface CuiRadioProps {
   disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRadioProps>(), {
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -89,6 +92,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   <!-- Button variant -->
   <button
     v-if="isButtonVariant"
+    v-show="!hidden"
     ref="elRef"
     type="button"
     class="cui-radio-button cui-button"
@@ -131,6 +135,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   <!-- Default variant -->
   <label
     v-else
+    v-show="!hidden"
     ref="elRef"
     class="cui-radio"
     :style="{ '--_radio-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
@@ -292,7 +297,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  border: 1px solid var(--_rb-border);
+  border: 1px solid var(--cui-border-strong);
   background: transparent;
   color: var(--_rb-color);
   border-radius: var(--cui-button-radius, 0.375rem);
@@ -307,7 +312,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio-button--active {
   background: var(--_rb-bg);
   color: var(--_rb-color);
-  border-color: var(--_rb-color);
+  border-color: var(--_rb-border);
 }
 
 .cui-radio-button--active:hover:not(:disabled) {

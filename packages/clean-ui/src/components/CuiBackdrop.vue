@@ -14,12 +14,17 @@ export interface CuiBackdropProps {
   image?: string;
   /** CSS gradient string */
   gradient?: string;
+  /** External visibility control — when provided, overrides internal fade-in state */
+  visible?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBackdropProps>(), {
   opacity: 0.5,
   blur: "none",
   color: "black",
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -33,13 +38,14 @@ const blurMap: Record<string, string> = {
   lg: "8px",
 };
 
-// Fade-in state
-const visible = ref(false);
+// Fade-in state — when `visible` prop is provided, use it; otherwise self-manage
+const internalVisible = ref(false);
 onMounted(() => {
   requestAnimationFrame(() => {
-    visible.value = true;
+    internalVisible.value = true;
   });
 });
+const isVisible = computed(() => props.visible !== undefined ? props.visible : internalVisible.value);
 
 const backdropStyle = computed(() => {
   const blurValue = blurMap[props.blur] ?? props.blur;
@@ -75,8 +81,9 @@ const backdropStyle = computed(() => {
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-backdrop"
-    :class="{ 'cui-backdrop--visible': visible }"
+    :class="{ 'cui-backdrop--visible': isVisible }"
     :style="{
       ...backdropStyle,
       // When no blur, use element opacity for the fade-in

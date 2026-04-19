@@ -29,6 +29,8 @@ export interface CuiTextareaProps {
   disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTextareaProps>(), {
@@ -40,6 +42,7 @@ const props = withDefaults(defineProps<CuiTextareaProps>(), {
   error: false,
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -123,7 +126,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
 </script>
 
 <template>
-  <div class="cui-textarea-wrapper">
+  <div v-show="!hidden" class="cui-textarea-wrapper">
     <div
       class="cui-textarea"
       :class="{

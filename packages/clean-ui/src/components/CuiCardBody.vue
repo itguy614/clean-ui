@@ -2,25 +2,18 @@
 export interface CuiCardBodyProps {
   /** Remove default padding */
   noPadding?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiCardBodyProps>(), {
   noPadding: false,
+  hidden: false,
 });
 </script>
 
 <template>
-  <div class="cui-card-body" :class="{ 'cui-card-body--no-padding': noPadding }">
+  <div v-show="!hidden" :style="{ padding: noPadding ? '0' : '0.5rem 1.125rem' }">
     <slot />
   </div>
 </template>
-
-<style scoped>
-.cui-card-body {
-  padding: 0.875rem 1rem;
-}
-
-.cui-card-body--no-padding {
-  padding: 0;
-}
-</style>

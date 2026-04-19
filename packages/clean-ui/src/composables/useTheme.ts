@@ -7,7 +7,8 @@ export interface ThemePreset {
 }
 
 export const THEME_PRESETS: ThemePreset[] = [
-  { id: "default", label: "Labels", description: "Navy blue — default theme" },
+  { id: "mono", label: "Mono", description: "Monochrome — default theme" },
+  { id: "default", label: "Labels", description: "Navy blue" },
   { id: "stock", label: "Stock", description: "Natural green" },
   { id: "access", label: "Access", description: "Warm orange with warm grays" },
   { id: "temp", label: "Temp", description: "Vibrant blue" },
@@ -23,8 +24,8 @@ const CLASS_PREFIX = "cui-theme-";
 const activeTheme = ref<string>(loadTheme());
 
 function loadTheme(): string {
-  if (typeof window === "undefined") return "default";
-  return localStorage.getItem(STORAGE_KEY) ?? "default";
+  if (typeof window === "undefined") return "mono";
+  return localStorage.getItem(STORAGE_KEY) ?? "mono";
 }
 
 function applyTheme(themeId: string) {

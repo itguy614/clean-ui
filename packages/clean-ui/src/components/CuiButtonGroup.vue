@@ -4,15 +4,19 @@ export type ButtonGroupOrientation = "horizontal" | "vertical";
 export interface CuiButtonGroupProps {
   /** Layout direction */
   orientation?: ButtonGroupOrientation;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiButtonGroupProps>(), {
   orientation: "horizontal",
+  hidden: false,
 });
 </script>
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-button-group"
     :class="`cui-button-group--${orientation}`"
     role="group"

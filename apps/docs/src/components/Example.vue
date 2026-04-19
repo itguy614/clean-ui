@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { CuiCard, CuiCardHeader, CuiCardBody, CuiButton } from "@itguy614/clean-ui";
 
 defineProps<{
   title?: string;
@@ -10,28 +11,35 @@ const showCode = ref(false);
 </script>
 
 <template>
-  <div class="rounded-lg border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-950">
-    <div v-if="title" class="border-b border-surface-200 px-4 py-3 dark:border-surface-800">
-      <div class="flex items-center justify-between">
-        <h4 class="font-medium">{{ title }}</h4>
-        <button
+  <CuiCard variant="outline">
+    <CuiCardHeader v-if="title" :title="title">
+      <template #actions>
+        <CuiButton
           v-if="code"
+          variant="ghost"
+          size="xs"
           @click="showCode = !showCode"
-          class="rounded px-2 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950"
         >
           {{ showCode ? "Hide Code" : "Show Code" }}
-        </button>
-      </div>
-    </div>
+        </CuiButton>
+      </template>
+    </CuiCardHeader>
 
     <!-- Preview -->
-    <div class="p-6">
+    <CuiCardBody>
       <slot />
-    </div>
+    </CuiCardBody>
 
     <!-- Code -->
-    <div v-if="code && showCode" class="border-t border-surface-200 dark:border-surface-800">
-      <pre class="overflow-x-auto p-4"><code class="text-sm font-mono text-surface-700 dark:text-surface-300">{{ code }}</code></pre>
+    <div
+      v-if="code && showCode"
+      :style="{
+        borderTop: '1px solid var(--cui-border)',
+        padding: '1rem 1.125rem',
+        overflow: 'auto',
+      }"
+    >
+      <pre class="cui-pre" style="margin: 0;"><code class="cui-code" style="font-size: 0.8125rem;">{{ code }}</code></pre>
     </div>
-  </div>
+  </CuiCard>
 </template>

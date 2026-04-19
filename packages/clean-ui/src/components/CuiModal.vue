@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick, useTemplateRef } from "vue";
+import { computed, useTemplateRef } from "vue";
+import { useOverlay } from "../composables/useOverlay";
 import CuiBackdrop from "./CuiBackdrop.vue";
-import CuiIcon from "./CuiIcon.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
@@ -31,6 +31,8 @@ export interface CuiModalProps {
   backdropImage?: string;
   /** Backdrop gradient */
   backdropGradient?: string;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiModalProps>(), {
@@ -42,6 +44,7 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -49,15 +52,16 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-// Track open modals globally for one-at-a-time behavior
-const activeModals = ref<Set<symbol>>(globalActiveModals);
-const modalId = Symbol("modal");
-
-const isVisible = ref(false);
-const isAnimating = ref(false);
-
 const dialogRef = useTemplateRef<HTMLElement>("dialogEl");
-const previousFocus = ref<HTMLElement | null>(null);
+
+const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+  open: () => props.open,
+  dialogRef,
+  persistent: () => props.persistent,
+  allowNested: () => props.allowNested,
+  onUpdateOpen: (v) => emit("update:open", v),
+  onClose: () => emit("close"),
+});
 
 // Size mapping
 const sizeMap: Record<string, string> = {
@@ -70,126 +74,22 @@ const sizeMap: Record<string, string> = {
 
 const maxWidth = computed(() => sizeMap[props.size] ?? props.size);
 
-// Open/close logic
-watch(
-  () => props.open,
-  (newOpen) => {
-    if (newOpen) {
-      openModal();
-    } else {
-      closeModal();
-    }
-  },
-);
-
-function openModal() {
-  // One-at-a-time check
-  if (!props.allowNested && activeModals.value.size > 0) {
-    // Close existing modals
-    activeModals.value.clear();
-  }
-
-  activeModals.value.add(modalId);
-  previousFocus.value = document.activeElement as HTMLElement;
-  isVisible.value = true;
-
-  // Lock body scroll
-  document.body.style.overflow = "hidden";
-
-  nextTick(() => {
-    isAnimating.value = true;
-    // Focus the dialog
-    dialogRef.value?.focus();
-  });
-}
-
-function closeModal() {
-  isAnimating.value = false;
-  activeModals.value.delete(modalId);
-
-  // Wait for exit animation
-  setTimeout(() => {
-    isVisible.value = false;
-    emit("update:open", false);
-    emit("close");
-
-    // Restore body scroll if no other modals
-    if (activeModals.value.size === 0) {
-      document.body.style.overflow = "";
-    }
-
-    // Return focus
-    previousFocus.value?.focus();
-  }, 200);
-}
-
-function requestClose() {
-  if (props.persistent) return;
-  closeModal();
-}
-
-function onBackdropClick() {
-  requestClose();
-}
-
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === "Escape") {
-    e.stopPropagation();
-    requestClose();
-  }
-
-  // Focus trap
-  if (e.key === "Tab" && dialogRef.value) {
-    const focusable = dialogRef.value.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (e.shiftKey) {
-      if (document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      }
-    } else {
-      if (document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    }
-  }
-}
-
-onMounted(() => {
-  if (props.open) openModal();
-});
-
-onUnmounted(() => {
-  activeModals.value.delete(modalId);
-  if (activeModals.value.size === 0) {
-    document.body.style.overflow = "";
-  }
-});
-
 // Generate id for aria-labelledby
 const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
-</script>
-
-<script lang="ts">
-// Global set of active modals shared across all instances
-const globalActiveModals = new Set<symbol>();
 </script>
 
 <template>
   <Teleport to="body">
     <div
       v-if="isVisible"
+      v-show="!hidden"
       class="cui-modal-overlay"
       :class="{ 'cui-modal-overlay--visible': isAnimating }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
       <CuiBackdrop
+        :visible="isAnimating"
         :opacity="backdropOpacity"
         :blur="backdropBlur"
         :color="backdropColor"
@@ -215,7 +115,7 @@ const globalActiveModals = new Set<symbol>();
             <CuiModalHeader
               :title="title"
               :no-close-button="noCloseButton"
-              @close="closeModal"
+              @close="closeOverlay"
             />
             <CuiModalBody>
               <slot />

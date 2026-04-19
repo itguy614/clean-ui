@@ -11,11 +11,14 @@ export interface CuiDropdownItemProps {
   disabled?: boolean;
   /** Close menu on select (default true) */
   closeOnSelect?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownItemProps>(), {
   disabled: false,
   closeOnSelect: true,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -40,6 +43,7 @@ function onKeydown(e: KeyboardEvent) {
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-dropdown-item"
     :class="{ 'cui-dropdown-item--disabled': disabled }"
     role="menuitem"

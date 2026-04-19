@@ -15,14 +15,14 @@
 /* Dark mode surface tint for default (indigo) */
 :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.008 270);
-  --color-surface-100: oklch(0.971 0.008 270);
-  --color-surface-200: oklch(0.941 0.008 270);
-  --color-surface-300: oklch(0.905 0.010 270);
-  --color-surface-400: oklch(0.862 0.010 270);
-  --color-surface-500: oklch(0.843 0.010 270);
-  --color-surface-600: oklch(0.742 0.012 270);
-  --color-surface-700: oklch(0.608 0.012 270);
-  --color-surface-800: oklch(0.435 0.014 270);
+  --color-surface-100: oklch(0.960 0.008 270);
+  --color-surface-200: oklch(0.900 0.008 270);
+  --color-surface-300: oklch(0.850 0.010 270);
+  --color-surface-400: oklch(0.780 0.010 270);
+  --color-surface-500: oklch(0.720 0.010 270);
+  --color-surface-600: oklch(0.620 0.012 270);
+  --color-surface-700: oklch(0.500 0.012 270);
+  --color-surface-800: oklch(0.380 0.014 270);
   --color-surface-900: oklch(0.270 0.016 270);
   --color-surface-950: oklch(0.196 0.016 270);
 }
@@ -43,14 +43,14 @@
 
   /* Light mode: Access curve with green tint */
   --color-surface-50:  oklch(0.983 0.005 150);
-  --color-surface-100: oklch(0.971 0.005 150);
-  --color-surface-200: oklch(0.941 0.006 150);
-  --color-surface-300: oklch(0.905 0.008 150);
-  --color-surface-400: oklch(0.862 0.008 150);
-  --color-surface-500: oklch(0.843 0.008 150);
-  --color-surface-600: oklch(0.742 0.010 150);
-  --color-surface-700: oklch(0.608 0.010 150);
-  --color-surface-800: oklch(0.435 0.010 150);
+  --color-surface-100: oklch(0.960 0.005 150);
+  --color-surface-200: oklch(0.900 0.006 150);
+  --color-surface-300: oklch(0.850 0.008 150);
+  --color-surface-400: oklch(0.780 0.008 150);
+  --color-surface-500: oklch(0.720 0.008 150);
+  --color-surface-600: oklch(0.620 0.010 150);
+  --color-surface-700: oklch(0.500 0.010 150);
+  --color-surface-800: oklch(0.380 0.010 150);
   --color-surface-900: oklch(0.270 0.010 150);
   --color-surface-950: oklch(0.196 0.010 150);
 }
@@ -58,14 +58,14 @@
 :where(.dark, .dark *) .cui-theme-stock,
 .cui-theme-stock :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 150);
-  --color-surface-100: oklch(0.971 0.006 150);
-  --color-surface-200: oklch(0.941 0.008 150);
-  --color-surface-300: oklch(0.905 0.008 150);
-  --color-surface-400: oklch(0.862 0.008 150);
-  --color-surface-500: oklch(0.843 0.010 150);
-  --color-surface-600: oklch(0.742 0.010 150);
-  --color-surface-700: oklch(0.608 0.012 150);
-  --color-surface-800: oklch(0.435 0.012 150);
+  --color-surface-100: oklch(0.960 0.006 150);
+  --color-surface-200: oklch(0.900 0.008 150);
+  --color-surface-300: oklch(0.850 0.008 150);
+  --color-surface-400: oklch(0.780 0.008 150);
+  --color-surface-500: oklch(0.720 0.010 150);
+  --color-surface-600: oklch(0.620 0.010 150);
+  --color-surface-700: oklch(0.500 0.012 150);
+  --color-surface-800: oklch(0.380 0.012 150);
   --color-surface-900: oklch(0.270 0.015 150);
   --color-surface-950: oklch(0.196 0.015 150);
 }
@@ -101,14 +101,14 @@
 :where(.dark, .dark *) .cui-theme-access,
 .cui-theme-access :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 60);
-  --color-surface-100: oklch(0.971 0.006 60);
-  --color-surface-200: oklch(0.941 0.008 60);
-  --color-surface-300: oklch(0.905 0.008 60);
-  --color-surface-400: oklch(0.862 0.008 60);
-  --color-surface-500: oklch(0.843 0.010 60);
-  --color-surface-600: oklch(0.742 0.010 60);
-  --color-surface-700: oklch(0.608 0.012 60);
-  --color-surface-800: oklch(0.435 0.012 60);
+  --color-surface-100: oklch(0.960 0.006 60);
+  --color-surface-200: oklch(0.900 0.008 60);
+  --color-surface-300: oklch(0.850 0.008 60);
+  --color-surface-400: oklch(0.780 0.008 60);
+  --color-surface-500: oklch(0.720 0.010 60);
+  --color-surface-600: oklch(0.620 0.010 60);
+  --color-surface-700: oklch(0.500 0.012 60);
+  --color-surface-800: oklch(0.380 0.012 60);
   --color-surface-900: oklch(0.270 0.015 60);
   --color-surface-950: oklch(0.196 0.015 60);
 }
@@ -129,14 +129,14 @@
 
   /* Light mode: Access curve with blue tint */
   --color-surface-50:  oklch(0.983 0.005 250);
-  --color-surface-100: oklch(0.971 0.005 250);
-  --color-surface-200: oklch(0.941 0.006 250);
-  --color-surface-300: oklch(0.905 0.008 250);
-  --color-surface-400: oklch(0.862 0.008 250);
-  --color-surface-500: oklch(0.843 0.008 250);
-  --color-surface-600: oklch(0.742 0.010 250);
-  --color-surface-700: oklch(0.608 0.010 250);
-  --color-surface-800: oklch(0.435 0.010 250);
+  --color-surface-100: oklch(0.960 0.005 250);
+  --color-surface-200: oklch(0.900 0.006 250);
+  --color-surface-300: oklch(0.850 0.008 250);
+  --color-surface-400: oklch(0.780 0.008 250);
+  --color-surface-500: oklch(0.720 0.008 250);
+  --color-surface-600: oklch(0.620 0.010 250);
+  --color-surface-700: oklch(0.500 0.010 250);
+  --color-surface-800: oklch(0.380 0.010 250);
   --color-surface-900: oklch(0.270 0.010 250);
   --color-surface-950: oklch(0.196 0.010 250);
 }
@@ -144,14 +144,14 @@
 :where(.dark, .dark *) .cui-theme-temp,
 .cui-theme-temp :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 250);
-  --color-surface-100: oklch(0.971 0.006 250);
-  --color-surface-200: oklch(0.941 0.008 250);
-  --color-surface-300: oklch(0.905 0.008 250);
-  --color-surface-400: oklch(0.862 0.008 250);
-  --color-surface-500: oklch(0.843 0.010 250);
-  --color-surface-600: oklch(0.742 0.010 250);
-  --color-surface-700: oklch(0.608 0.012 250);
-  --color-surface-800: oklch(0.435 0.012 250);
+  --color-surface-100: oklch(0.960 0.006 250);
+  --color-surface-200: oklch(0.900 0.008 250);
+  --color-surface-300: oklch(0.850 0.008 250);
+  --color-surface-400: oklch(0.780 0.008 250);
+  --color-surface-500: oklch(0.720 0.010 250);
+  --color-surface-600: oklch(0.620 0.010 250);
+  --color-surface-700: oklch(0.500 0.012 250);
+  --color-surface-800: oklch(0.380 0.012 250);
   --color-surface-900: oklch(0.270 0.015 250);
   --color-surface-950: oklch(0.196 0.015 250);
 }
@@ -172,14 +172,14 @@
 
   /* Light mode: Access curve with teal tint */
   --color-surface-50:  oklch(0.983 0.005 210);
-  --color-surface-100: oklch(0.971 0.005 210);
-  --color-surface-200: oklch(0.941 0.006 210);
-  --color-surface-300: oklch(0.905 0.008 210);
-  --color-surface-400: oklch(0.862 0.008 210);
-  --color-surface-500: oklch(0.843 0.008 210);
-  --color-surface-600: oklch(0.742 0.010 210);
-  --color-surface-700: oklch(0.608 0.010 210);
-  --color-surface-800: oklch(0.435 0.010 210);
+  --color-surface-100: oklch(0.960 0.005 210);
+  --color-surface-200: oklch(0.900 0.006 210);
+  --color-surface-300: oklch(0.850 0.008 210);
+  --color-surface-400: oklch(0.780 0.008 210);
+  --color-surface-500: oklch(0.720 0.008 210);
+  --color-surface-600: oklch(0.620 0.010 210);
+  --color-surface-700: oklch(0.500 0.010 210);
+  --color-surface-800: oklch(0.380 0.010 210);
   --color-surface-900: oklch(0.270 0.010 210);
   --color-surface-950: oklch(0.196 0.010 210);
 }
@@ -187,14 +187,14 @@
 :where(.dark, .dark *) .cui-theme-dayton,
 .cui-theme-dayton :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 210);
-  --color-surface-100: oklch(0.971 0.006 210);
-  --color-surface-200: oklch(0.941 0.008 210);
-  --color-surface-300: oklch(0.905 0.008 210);
-  --color-surface-400: oklch(0.862 0.008 210);
-  --color-surface-500: oklch(0.843 0.010 210);
-  --color-surface-600: oklch(0.742 0.010 210);
-  --color-surface-700: oklch(0.608 0.012 210);
-  --color-surface-800: oklch(0.435 0.012 210);
+  --color-surface-100: oklch(0.960 0.006 210);
+  --color-surface-200: oklch(0.900 0.008 210);
+  --color-surface-300: oklch(0.850 0.008 210);
+  --color-surface-400: oklch(0.780 0.008 210);
+  --color-surface-500: oklch(0.720 0.010 210);
+  --color-surface-600: oklch(0.620 0.010 210);
+  --color-surface-700: oklch(0.500 0.012 210);
+  --color-surface-800: oklch(0.380 0.012 210);
   --color-surface-900: oklch(0.270 0.015 210);
   --color-surface-950: oklch(0.196 0.015 210);
 }
@@ -230,14 +230,14 @@
 :where(.dark, .dark *) .cui-theme-stat,
 .cui-theme-stat :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 210);
-  --color-surface-100: oklch(0.971 0.006 210);
-  --color-surface-200: oklch(0.941 0.008 210);
-  --color-surface-300: oklch(0.905 0.008 210);
-  --color-surface-400: oklch(0.862 0.008 210);
-  --color-surface-500: oklch(0.843 0.010 210);
-  --color-surface-600: oklch(0.742 0.010 210);
-  --color-surface-700: oklch(0.608 0.012 210);
-  --color-surface-800: oklch(0.435 0.012 210);
+  --color-surface-100: oklch(0.960 0.006 210);
+  --color-surface-200: oklch(0.900 0.008 210);
+  --color-surface-300: oklch(0.850 0.008 210);
+  --color-surface-400: oklch(0.780 0.008 210);
+  --color-surface-500: oklch(0.720 0.010 210);
+  --color-surface-600: oklch(0.620 0.010 210);
+  --color-surface-700: oklch(0.500 0.012 210);
+  --color-surface-800: oklch(0.380 0.012 210);
   --color-surface-900: oklch(0.270 0.015 210);
   --color-surface-950: oklch(0.196 0.015 210);
 }
@@ -258,14 +258,14 @@
 
   /* Light mode: Access curve with warm red tint */
   --color-surface-50:  oklch(0.983 0.005 25);
-  --color-surface-100: oklch(0.971 0.005 25);
-  --color-surface-200: oklch(0.941 0.006 25);
-  --color-surface-300: oklch(0.905 0.008 25);
-  --color-surface-400: oklch(0.862 0.008 25);
-  --color-surface-500: oklch(0.843 0.008 25);
-  --color-surface-600: oklch(0.742 0.010 25);
-  --color-surface-700: oklch(0.608 0.010 25);
-  --color-surface-800: oklch(0.435 0.010 25);
+  --color-surface-100: oklch(0.960 0.005 25);
+  --color-surface-200: oklch(0.900 0.006 25);
+  --color-surface-300: oklch(0.850 0.008 25);
+  --color-surface-400: oklch(0.780 0.008 25);
+  --color-surface-500: oklch(0.720 0.008 25);
+  --color-surface-600: oklch(0.620 0.010 25);
+  --color-surface-700: oklch(0.500 0.010 25);
+  --color-surface-800: oklch(0.380 0.010 25);
   --color-surface-900: oklch(0.270 0.010 25);
   --color-surface-950: oklch(0.196 0.010 25);
 }
@@ -273,14 +273,57 @@
 :where(.dark, .dark *) .cui-theme-ruby,
 .cui-theme-ruby :where(.dark, .dark *) {
   --color-surface-50:  oklch(0.983 0.006 25);
-  --color-surface-100: oklch(0.971 0.006 25);
-  --color-surface-200: oklch(0.941 0.008 25);
-  --color-surface-300: oklch(0.905 0.008 25);
-  --color-surface-400: oklch(0.862 0.008 25);
-  --color-surface-500: oklch(0.843 0.010 25);
-  --color-surface-600: oklch(0.742 0.010 25);
-  --color-surface-700: oklch(0.608 0.012 25);
-  --color-surface-800: oklch(0.435 0.012 25);
+  --color-surface-100: oklch(0.960 0.006 25);
+  --color-surface-200: oklch(0.900 0.008 25);
+  --color-surface-300: oklch(0.850 0.008 25);
+  --color-surface-400: oklch(0.780 0.008 25);
+  --color-surface-500: oklch(0.720 0.010 25);
+  --color-surface-600: oklch(0.620 0.010 25);
+  --color-surface-700: oklch(0.500 0.012 25);
+  --color-surface-800: oklch(0.380 0.012 25);
   --color-surface-900: oklch(0.270 0.015 25);
   --color-surface-950: oklch(0.196 0.015 25);
+}
+
+/* --- Mono: near-black primary, pure neutral surface --- */
+.cui-theme-mono {
+  --color-primary-50:  oklch(0.900 0.003 270);
+  --color-primary-100: oklch(0.843 0.003 270);
+  --color-primary-200: oklch(0.742 0.003 270);
+  --color-primary-300: oklch(0.608 0.003 270);
+  --color-primary-400: oklch(0.435 0.003 270);
+  --color-primary-500: oklch(0.270 0.003 270);
+  --color-primary-600: oklch(0.230 0.003 270);
+  --color-primary-700: oklch(0.196 0.003 270);
+  --color-primary-800: oklch(0.170 0.003 270);
+  --color-primary-900: oklch(0.145 0.003 270);
+  --color-primary-950: oklch(0.120 0.003 270);
+
+  /* Light mode: neutral surface with stronger borders for monochrome contrast */
+  --color-surface-50:  oklch(0.983 0.002 270);
+  --color-surface-100: oklch(0.960 0.002 270);
+  --color-surface-200: oklch(0.900 0.002 270);
+  --color-surface-300: oklch(0.850 0.002 270);
+  --color-surface-400: oklch(0.780 0.002 270);
+  --color-surface-500: oklch(0.720 0.002 270);
+  --color-surface-600: oklch(0.620 0.002 270);
+  --color-surface-700: oklch(0.500 0.002 270);
+  --color-surface-800: oklch(0.380 0.002 270);
+  --color-surface-900: oklch(0.270 0.002 270);
+  --color-surface-950: oklch(0.196 0.002 270);
+}
+
+:where(.dark, .dark *) .cui-theme-mono,
+.cui-theme-mono :where(.dark, .dark *) {
+  --color-surface-50:  oklch(0.983 0.003 270);
+  --color-surface-100: oklch(0.960 0.003 270);
+  --color-surface-200: oklch(0.900 0.003 270);
+  --color-surface-300: oklch(0.850 0.003 270);
+  --color-surface-400: oklch(0.780 0.003 270);
+  --color-surface-500: oklch(0.720 0.003 270);
+  --color-surface-600: oklch(0.620 0.003 270);
+  --color-surface-700: oklch(0.500 0.003 270);
+  --color-surface-800: oklch(0.380 0.003 270);
+  --color-surface-900: oklch(0.270 0.003 270);
+  --color-surface-950: oklch(0.196 0.003 270);
 }

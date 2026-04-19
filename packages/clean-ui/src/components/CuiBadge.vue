@@ -20,6 +20,8 @@ export interface CuiBadgeProps {
   removable?: boolean;
   /** Animation */
   animation?: BadgeAnimation;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBadgeProps>(), {
@@ -29,6 +31,7 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
   dot: false,
   removable: false,
   animation: "none",
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -68,6 +71,7 @@ const dotStyle = computed(() => ({
   <!-- Dot mode -->
   <span
     v-if="dot"
+    v-show="!hidden"
     class="cui-badge cui-badge--dot"
     :class="[
       `cui-badge--${size}`,
@@ -81,6 +85,7 @@ const dotStyle = computed(() => ({
   <!-- Standard badge -->
   <span
     v-else
+    v-show="!hidden"
     class="cui-badge"
     :class="[
       `cui-badge--${size}`,

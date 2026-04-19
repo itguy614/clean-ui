@@ -23,6 +23,8 @@ export interface CuiTabsProps {
   keepAlive?: boolean;
   /** Panel transition animation */
   transition?: TabTransition;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTabsProps>(), {
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<CuiTabsProps>(), {
   color: "primary",
   keepAlive: true,
   transition: "fade",
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -142,6 +145,7 @@ const slideDirection = computed(() => {
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-tabs"
     :class="[
       `cui-tabs--${variant}`,

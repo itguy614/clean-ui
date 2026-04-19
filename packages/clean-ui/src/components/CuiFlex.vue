@@ -23,6 +23,8 @@ export interface CuiFlexProps {
   colGap?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode to visualize flex structure */
   debug?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const DIRECTION_CSS: Record<FlexDirection, string> = {
@@ -36,6 +38,7 @@ const props = withDefaults(defineProps<CuiFlexProps>(), {
   direction: "row",
   wrap: "wrap",
   debug: false,
+  hidden: false,
 });
 
 const { context } = useFlexContext();
@@ -75,7 +78,7 @@ const flexStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-flex" :style="flexStyle">
+  <div v-show="!hidden" class="cui-flex" :style="flexStyle">
     <slot />
     <div
       v-if="context.debug"

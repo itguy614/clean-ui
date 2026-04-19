@@ -84,6 +84,16 @@ const router = createRouter({
       component: () => import('../pages/DropdownPage.vue'),
     },
     {
+      path: '/components/accordion',
+      name: 'accordion',
+      component: () => import('../pages/AccordionPage.vue'),
+    },
+    {
+      path: '/components/progress',
+      name: 'progress',
+      component: () => import('../pages/ProgressPage.vue'),
+    },
+    {
       path: '/components/pagination',
       name: 'pagination',
       component: () => import('../pages/PaginationPage.vue'),
@@ -107,6 +117,11 @@ const router = createRouter({
       path: '/components/modal',
       name: 'modal',
       component: () => import('../pages/ModalPage.vue'),
+    },
+    {
+      path: '/components/slideover',
+      name: 'slideover',
+      component: () => import('../pages/SlideoverPage.vue'),
     },
     {
       path: '/components/toast',
@@ -172,6 +187,131 @@ const router = createRouter({
       path: '/components/radio',
       name: 'radio',
       component: () => import('../pages/RadioPage.vue'),
+    },
+    {
+      path: '/components/tag-input',
+      name: 'tag-input',
+      component: () => import('../pages/TagInputPage.vue'),
+    },
+    {
+      path: '/components/time-picker',
+      name: 'time-picker',
+      component: () => import('../pages/TimePickerPage.vue'),
+    },
+    {
+      path: '/components/transfer-list',
+      name: 'transfer-list',
+      component: () => import('../pages/TransferListPage.vue'),
+    },
+    {
+      path: '/components/combobox',
+      name: 'combobox',
+      component: () => import('../pages/ComboboxPage.vue'),
+    },
+    {
+      path: '/components/date-range-picker',
+      name: 'date-range-picker',
+      component: () => import('../pages/DateRangePickerPage.vue'),
+    },
+    {
+      path: '/components/date-picker',
+      name: 'date-picker',
+      component: () => import('../pages/DatePickerPage.vue'),
+    },
+    {
+      path: '/components/color-picker',
+      name: 'color-picker',
+      component: () => import('../pages/ColorPickerPage.vue'),
+    },
+    {
+      path: '/components/kbd',
+      name: 'kbd',
+      component: () => import('../pages/KbdPage.vue'),
+    },
+    {
+      path: '/components/timeline',
+      name: 'timeline',
+      component: () => import('../pages/TimelinePage.vue'),
+    },
+    {
+      path: '/components/confirm-dialog',
+      name: 'confirm-dialog',
+      component: () => import('../pages/ConfirmDialogPage.vue'),
+    },
+    {
+      path: '/components/resizable-panels',
+      name: 'resizable-panels',
+      component: () => import('../pages/ResizablePanelsPage.vue'),
+    },
+    {
+      path: '/components/copy-button',
+      name: 'copy-button',
+      component: () => import('../pages/CopyButtonPage.vue'),
+    },
+    {
+      path: '/components/divider',
+      name: 'divider',
+      component: () => import('../pages/DividerPage.vue'),
+    },
+    {
+      path: '/components/banner',
+      name: 'banner',
+      component: () => import('../pages/BannerPage.vue'),
+    },
+    {
+      path: '/components/spinner',
+      name: 'spinner',
+      component: () => import('../pages/SpinnerPage.vue'),
+    },
+    {
+      path: '/components/slider',
+      name: 'slider',
+      component: () => import('../pages/SliderPage.vue'),
+    },
+    {
+      path: '/components/input-stepper',
+      name: 'input-stepper',
+      component: () => import('../pages/InputStepperPage.vue'),
+    },
+    {
+      path: '/components/stepper',
+      name: 'stepper',
+      component: () => import('../pages/StepperPage.vue'),
+    },
+    {
+      path: '/components/avatar',
+      name: 'avatar',
+      component: () => import('../pages/AvatarPage.vue'),
+    },
+    {
+      path: '/components/data-grid',
+      name: 'data-grid',
+      component: () => import('../pages/DataGridPage.vue'),
+    },
+    {
+      path: '/components/table',
+      name: 'table',
+      component: () => import('../pages/TablePage.vue'),
+    },
+    {
+      path: '/components/empty-state',
+      name: 'empty-state',
+      component: () => import('../pages/EmptyStatePage.vue'),
+    },
+    {
+      path: '/components/context-menu',
+      name: 'context-menu',
+      component: () => import('../pages/ContextMenuPage.vue'),
+    },
+    {
+      path: '/components/popover',
+      name: 'popover',
+      component: () => import('../pages/PopoverPage.vue'),
+    },
+    {
+      path: '/components/skeleton',
+      name: 'skeleton',
+      component: () => import('../pages/SkeletonPage.vue'),
     },
     {
       path: '/:pathMatch(.*)*',

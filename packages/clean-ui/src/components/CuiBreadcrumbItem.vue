@@ -7,9 +7,13 @@ export interface CuiBreadcrumbItemProps {
   href?: string;
   /** Vue Router route (renders as <router-link>) */
   to?: string | object;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-const props = defineProps<CuiBreadcrumbItemProps>();
+const props = withDefaults(defineProps<CuiBreadcrumbItemProps>(), {
+  hidden: false,
+});
 
 const sepCtx = inject(BreadcrumbContextKey, { separator: "/" });
 
@@ -40,7 +44,7 @@ const linkProps = computed(() => {
 </script>
 
 <template>
-  <li ref="elRef" class="cui-breadcrumb-item">
+  <li ref="elRef" v-show="!hidden" class="cui-breadcrumb-item">
     <component
       :is="tag"
       v-bind="linkProps"

@@ -28,6 +28,8 @@ export interface CuiButtonProps {
   loading?: boolean;
   /** Disabled state */
   disabled?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiButtonProps>(), {
@@ -38,6 +40,7 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   type: "button",
   loading: false,
   disabled: false,
+  hidden: false,
 });
 
 const isDisabled = computed(() => props.disabled || props.loading);
@@ -119,7 +122,7 @@ const buttonStyle = computed(() => {
       ...base,
       background: "transparent",
       color: `var(--cui-${c})`,
-      border: `1px solid var(--cui-${c}-border)`,
+      border: `1px solid var(--cui-border-strong)`,
       "--_btn-hover-bg": `var(--cui-${c}-bg)`,
       "--_btn-hover-color": `var(--cui-${c}-hover)`,
       "--_btn-hover-border": `var(--cui-${c})`,
@@ -132,7 +135,7 @@ const buttonStyle = computed(() => {
       ...base,
       background: "transparent",
       color: `var(--cui-${c})`,
-      border: `1px dashed var(--cui-${c}-border)`,
+      border: `1px dashed var(--cui-border-strong)`,
       "--_btn-hover-bg": `var(--cui-${c}-bg)`,
       "--_btn-hover-color": `var(--cui-${c}-hover)`,
       "--_btn-hover-border": `var(--cui-${c})`,
@@ -156,6 +159,7 @@ const buttonStyle = computed(() => {
 <template>
   <component
     :is="tag"
+    v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
     :class="{ 'cui-button--disabled': isDisabled }"

@@ -24,6 +24,8 @@ export interface CuiToggleProps {
   disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToggleProps>(), {
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<CuiToggleProps>(), {
   size: "md",
   disabled: false,
   readonly: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -93,6 +96,7 @@ const dims = computed(() => trackSizes[props.size]);
 <template>
   <label
     ref="elRef"
+    v-show="!hidden"
     class="cui-toggle"
     :style="{ '--_toggle-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
     :class="{
@@ -204,15 +208,15 @@ const dims = computed(() => trackSizes[props.size]);
   flex-shrink: 0;
   border-radius: 9999px;
   background: var(--color-surface-300);
-  transition: background 0.2s ease;
-  padding: 0.125rem;
+  border: 1px solid var(--cui-border-strong);
+  transition: background 0.2s ease, border-color 0.2s ease;
+  padding: calc(0.125rem - 1px);
   margin-top: 0.125rem;
 }
 
 .cui-toggle--checked .cui-toggle__track {
-  background: var(--_toggle-bg);
-  border: 1px solid var(--_toggle-border);
-  padding: calc(0.125rem - 1px);
+  background: var(--_toggle-color);
+  border-color: var(--_toggle-color);
 }
 
 .cui-toggle:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
@@ -220,7 +224,8 @@ const dims = computed(() => trackSizes[props.size]);
 }
 
 .cui-toggle--checked:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--_toggle-border);
+  background: var(--_toggle-hover);
+  border-color: var(--_toggle-hover);
 }
 
 .cui-toggle:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
@@ -228,20 +233,21 @@ const dims = computed(() => trackSizes[props.size]);
 }
 
 .cui-toggle--checked:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--_toggle-color);
+  background: var(--_toggle-active);
+  border-color: var(--_toggle-active);
 }
 
 /* --- Knob --- */
 .cui-toggle__knob {
   border-radius: 50%;
-  background: white;
+  background: var(--cui-text-secondary);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
   transition: transform 0.2s ease, background 0.2s ease;
   z-index: 1;
 }
 
 .cui-toggle--checked .cui-toggle__knob {
-  background: var(--_toggle-color);
+  background: var(--cui-text-secondary);
 }
 
 /* --- Labels inside track --- */
@@ -257,7 +263,7 @@ const dims = computed(() => trackSizes[props.size]);
 }
 
 .cui-toggle__on-label {
-  color: var(--_toggle-color);
+  color: var(--cui-surface-base);
 }
 
 /* --- Label --- */

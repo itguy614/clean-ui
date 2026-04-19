@@ -64,15 +64,28 @@ export function computeDropdownPosition(
     zIndex: "9990",
   };
 
+  // For vertical placements, align to right edge of trigger if it would overflow the viewport
+  const alignRight = placement === "bottom" || placement === "top"
+    ? rect.left + 200 > viewportWidth  // 200px = reasonable min menu width
+    : false;
+
   switch (placement) {
     case "bottom":
       styles.top = `${rect.bottom + gap}px`;
-      styles.left = `${rect.left}px`;
+      if (alignRight) {
+        styles.right = `${viewportWidth - rect.right}px`;
+      } else {
+        styles.left = `${rect.left}px`;
+      }
       styles.maxHeight = `${Math.min(viewportHeight - rect.bottom - gap - 16, 400)}px`;
       break;
     case "top":
       styles.bottom = `${viewportHeight - rect.top + gap}px`;
-      styles.left = `${rect.left}px`;
+      if (alignRight) {
+        styles.right = `${viewportWidth - rect.right}px`;
+      } else {
+        styles.left = `${rect.left}px`;
+      }
       styles.maxHeight = `${Math.min(rect.top - gap - 16, 400)}px`;
       break;
     case "right":

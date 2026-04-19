@@ -22,6 +22,8 @@ export interface CuiFormFieldProps {
   errorMessage?: string;
   /** Disabled state — passed through slot props to the control */
   disabled?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiFormFieldProps>(), {
@@ -29,6 +31,7 @@ const props = withDefaults(defineProps<CuiFormFieldProps>(), {
   required: false,
   error: false,
   disabled: false,
+  hidden: false,
 });
 
 const showError = computed(() => props.error && props.errorMessage);
@@ -39,6 +42,7 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-form-field"
     :class="[
       `cui-form-field--${labelPosition}`,

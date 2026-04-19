@@ -9,10 +9,13 @@ export interface CuiSpacerProps {
   size?: ResponsiveValue<TailwindSpacing>;
   /** Direction: horizontal (width) or vertical (height) */
   direction?: "horizontal" | "vertical";
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSpacerProps>(), {
   direction: "horizontal",
+  hidden: false,
 });
 
 const { breakpoint } = useBreakpoint();
@@ -43,5 +46,5 @@ const spacerStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-spacer" :style="spacerStyle" aria-hidden="true" />
+  <div v-show="!hidden" class="cui-spacer" :style="spacerStyle" aria-hidden="true" />
 </template>

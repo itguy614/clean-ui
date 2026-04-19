@@ -15,12 +15,15 @@ export interface CuiContainerProps {
   py?: ResponsiveValue<TailwindSpacing>;
   /** Center the container */
   centered?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiContainerProps>(), {
   maxWidth: "2xl",
   px: "4",
   centered: true,
+  hidden: false,
 });
 
 const { breakpoint } = useBreakpoint();
@@ -53,7 +56,7 @@ const containerStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-container" :style="containerStyle">
+  <div v-show="!hidden" class="cui-container" :style="containerStyle">
     <slot />
   </div>
 </template>

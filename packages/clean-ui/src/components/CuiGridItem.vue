@@ -9,9 +9,13 @@ export interface CuiGridItemProps {
   colSpan?: ResponsiveValue<GridSpan>;
   /** Number of rows to span */
   rowSpan?: ResponsiveValue<GridSpan>;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-const props = defineProps<CuiGridItemProps>();
+const props = withDefaults(defineProps<CuiGridItemProps>(), {
+  hidden: false,
+});
 const { breakpoint } = useBreakpoint();
 
 const itemStyle = computed(() => {
@@ -33,7 +37,7 @@ const itemStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-grid-item" :style="itemStyle">
+  <div v-show="!hidden" class="cui-grid-item" :style="itemStyle">
     <slot />
   </div>
 </template>

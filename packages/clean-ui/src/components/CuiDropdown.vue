@@ -11,6 +11,8 @@ export interface CuiDropdownProps {
   pinned?: boolean;
   /** Disabled state */
   disabled?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownProps>(), {
@@ -18,6 +20,7 @@ const props = withDefaults(defineProps<CuiDropdownProps>(), {
   placement: "bottom",
   pinned: false,
   disabled: false,
+  hidden: false,
 });
 
 const isOpen = ref(false);
@@ -161,6 +164,7 @@ defineExpose({ open, close, toggle, isOpen });
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-dropdown"
     :data-cui-dropdown-id="dropdownId"
     @mouseenter="onMouseEnter"

@@ -22,6 +22,8 @@ export interface CuiCheckboxGroupProps {
   errorMessage?: string;
   /** Accessible label for the group */
   label?: string;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCheckboxGroupProps>(), {
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<CuiCheckboxGroupProps>(), {
   disabled: false,
   readonly: false,
   error: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -76,6 +79,7 @@ provide(CheckboxGroupKey, {
 
 <template>
   <div
+    v-show="!hidden"
     role="group"
     :aria-label="label"
     :aria-invalid="error || undefined"

@@ -23,11 +23,14 @@ export interface CuiGridProps {
   colGap?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode to visualize grid structure */
   debug?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiGridProps>(), {
   cols: 1,
   debug: false,
+  hidden: false,
 });
 
 const { context } = useGridContext();
@@ -70,7 +73,7 @@ const gridStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-grid" :style="gridStyle">
+  <div v-show="!hidden" class="cui-grid" :style="gridStyle">
     <slot />
     <div
       v-if="context.debug"

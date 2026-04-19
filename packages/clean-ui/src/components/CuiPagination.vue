@@ -38,6 +38,8 @@ export interface CuiPaginationProps {
   size?: PaginationSize;
   /** Max page buttons to show before truncating */
   maxButtons?: number;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiPaginationProps>(), {
@@ -47,6 +49,7 @@ const props = withDefaults(defineProps<CuiPaginationProps>(), {
   color: "primary",
   size: "md",
   maxButtons: 5,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -148,6 +151,7 @@ const perPageSelectOptions = computed(() =>
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-pagination"
     :class="`cui-pagination--${size}`"
   >

@@ -30,6 +30,8 @@ export interface CuiToastProps {
   noIcon?: boolean;
   /** Whether this toast is the topmost (active) — timer only runs when true */
   active?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToastProps>(), {
@@ -41,6 +43,7 @@ const props = withDefaults(defineProps<CuiToastProps>(), {
   animation: "none",
   noIcon: false,
   active: true,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -146,6 +149,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-toast"
     :class="[
       animation !== 'none' ? `cui-toast--${animation}` : '',

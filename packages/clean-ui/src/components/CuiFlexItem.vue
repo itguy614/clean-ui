@@ -11,9 +11,13 @@ export interface CuiFlexItemProps {
   shrink?: ResponsiveValue<0 | 1>;
   /** Flex shorthand (e.g., "1", "auto", "initial", "none") */
   flex?: ResponsiveValue<"1" | "auto" | "initial" | "none">;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
-const props = defineProps<CuiFlexItemProps>();
+const props = withDefaults(defineProps<CuiFlexItemProps>(), {
+  hidden: false,
+});
 const { breakpoint } = useBreakpoint();
 
 const itemStyle = computed(() => {
@@ -35,7 +39,7 @@ const itemStyle = computed(() => {
 </script>
 
 <template>
-  <div class="cui-flex-item" :style="itemStyle">
+  <div v-show="!hidden" class="cui-flex-item" :style="itemStyle">
     <slot />
   </div>
 </template>

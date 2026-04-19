@@ -13,12 +13,15 @@ export interface CuiFieldsetProps {
   expanded?: boolean;
   /** Disable all controls inside */
   disabled?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiFieldsetProps>(), {
   collapsible: false,
   expanded: true,
   disabled: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -43,6 +46,7 @@ function toggle() {
 
 <template>
   <fieldset
+    v-show="!hidden"
     class="cui-fieldset"
     :class="{
       'cui-fieldset--collapsed': collapsible && !isExpanded,

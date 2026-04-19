@@ -76,6 +76,7 @@ const dynamicField = ref({
           <CuiStack spacing="3">
             <CuiToggle v-model="darkMode" label="Dark Mode" />
             <CuiToggle v-model="notifications" label="Notifications" color="success" />
+            <p class="text-xs text-surface-400">Notifications uses <code class="cui-code">color="success"</code> to show a different role color</p>
             <div class="text-sm text-surface-500">Dark: {{ darkMode }}, Notifications: {{ notifications }}</div>
           </CuiStack>
         </Example>

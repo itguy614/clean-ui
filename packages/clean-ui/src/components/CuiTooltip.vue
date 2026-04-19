@@ -24,6 +24,8 @@ export interface CuiTooltipProps {
   visible?: boolean;
   /** Disabled — prevents showing */
   disabled?: boolean;
+  /** Hide the component */
+  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTooltipProps>(), {
@@ -33,6 +35,7 @@ const props = withDefaults(defineProps<CuiTooltipProps>(), {
   hideDelay: 100,
   noArrow: false,
   disabled: false,
+  hidden: false,
 });
 
 const emit = defineEmits<{
@@ -154,6 +157,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
 
 <template>
   <div
+    v-show="!hidden"
     class="cui-tooltip-wrapper"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"

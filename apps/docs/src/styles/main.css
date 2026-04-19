@@ -49,16 +49,16 @@
   --color-info-700: oklch(0.42 0.10 230);
   --color-info-900: oklch(0.28 0.07 230);
 
-  /* --- Surface (Access lightness curve, hue 270 indigo tint) — full scale --- */
+  /* --- Surface (revised curve — stronger borders at 200-300) — full scale --- */
   --color-surface-50:  oklch(0.983 0.005 270);
-  --color-surface-100: oklch(0.971 0.005 270);
-  --color-surface-200: oklch(0.941 0.006 270);
-  --color-surface-300: oklch(0.905 0.008 270);
-  --color-surface-400: oklch(0.862 0.008 270);
-  --color-surface-500: oklch(0.843 0.008 270);
-  --color-surface-600: oklch(0.742 0.010 270);
-  --color-surface-700: oklch(0.608 0.010 270);
-  --color-surface-800: oklch(0.435 0.010 270);
+  --color-surface-100: oklch(0.960 0.005 270);
+  --color-surface-200: oklch(0.900 0.006 270);
+  --color-surface-300: oklch(0.850 0.008 270);
+  --color-surface-400: oklch(0.780 0.008 270);
+  --color-surface-500: oklch(0.720 0.008 270);
+  --color-surface-600: oklch(0.620 0.010 270);
+  --color-surface-700: oklch(0.500 0.010 270);
+  --color-surface-800: oklch(0.380 0.010 270);
   --color-surface-900: oklch(0.270 0.010 270);
   --color-surface-950: oklch(0.196 0.010 270);
 }
