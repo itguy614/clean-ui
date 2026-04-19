@@ -42,6 +42,8 @@ function onReject(payload: { file: File; reason: string }) {
           { name: 'dragText', type: 'string', default: 'Drag and drop files here, or', description: 'Drop zone helper text' },
           { name: 'browseText', type: 'string', default: 'Browse', description: 'Browse button text' },
           { name: 'uploadText', type: 'string', default: 'Upload', description: 'Upload button text (manual mode)' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -96,7 +98,15 @@ function onReject(payload: { file: File; reason: string }) {
         </Example>
 
         <!-- PDF only -->
-        <Example title="PDF Only, Single File">
+        <Example title="PDF Only, Single File" :code="`<CuiFileUpload
+  label=&quot;Resume&quot;
+  accept=&quot;.pdf&quot;
+  :multiple=&quot;false&quot;
+  :max-file-size=&quot;10485760&quot;
+  drag-text=&quot;Drop your resume here, or&quot;
+  @upload=&quot;onUpload&quot;
+  @reject=&quot;onReject&quot;
+/>`">
           <div style="max-width: 28rem;">
             <CuiFileUpload
               label="Resume"
@@ -111,7 +121,7 @@ function onReject(payload: { file: File; reason: string }) {
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled">
+        <Example title="Disabled" :code="`<CuiFileUpload label=&quot;Locked&quot; disabled />`">
           <div style="max-width: 28rem;">
             <CuiFileUpload label="Locked" disabled />
           </div>

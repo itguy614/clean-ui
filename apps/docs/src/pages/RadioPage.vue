@@ -50,11 +50,14 @@ const dynamicField = ref({
           { name: 'name', type: 'string', default: 'auto', description: 'Shared name attribute for form submission' },
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
           { name: 'direction', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout direction (auto: horizontal ≤2, vertical 3+)' },
+          { name: 'variant', type: 'default | buttons', default: 'default', description: 'Visual variant — default radios or segmented button group' },
+          { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size when variant="buttons"' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all radios' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Make all radios readonly' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Show error state' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below group' },
           { name: 'label', type: 'string', default: '-', description: 'Accessible group label (aria-label)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -71,6 +74,7 @@ const dynamicField = ref({
           { name: 'name', type: 'string', default: '-', description: 'Name attribute (standalone mode)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -96,7 +100,10 @@ const dynamicField = ref({
         </Example>
 
         <!-- Auto Direction (≤2 = horizontal) -->
-        <Example title="Auto Direction (≤2 options = horizontal)">
+        <Example title="Auto Direction (≤2 options = horizontal)" :code="`<CuiRadioGroup v-model=&quot;yesNo&quot;>
+  <CuiRadio :value=&quot;true&quot; label=&quot;Yes&quot; />
+  <CuiRadio :value=&quot;false&quot; label=&quot;No&quot; />
+</CuiRadioGroup>`">
           <CuiStack spacing="4">
             <div>
               <div class="mb-1 text-sm font-medium text-surface-600 dark:text-surface-400">Yes/No (2 options → horizontal)</div>
@@ -117,7 +124,11 @@ const dynamicField = ref({
         </Example>
 
         <!-- Forced Direction -->
-        <Example title="Forced Horizontal Direction">
+        <Example title="Forced Horizontal Direction" :code="`<CuiRadioGroup v-model=&quot;color&quot; direction=&quot;horizontal&quot;>
+  <CuiRadio value=&quot;red&quot; label=&quot;Red&quot; />
+  <CuiRadio value=&quot;green&quot; label=&quot;Green&quot; />
+  <CuiRadio value=&quot;blue&quot; label=&quot;Blue&quot; />
+</CuiRadioGroup>`">
           <CuiRadioGroup v-model="color" direction="horizontal" label="Favorite color">
             <CuiRadio value="red" label="Red" />
             <CuiRadio value="green" label="Green" />
@@ -126,7 +137,13 @@ const dynamicField = ref({
         </Example>
 
         <!-- Colors -->
-        <Example title="Color Roles">
+        <Example title="Color Roles" :code="`<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;primary&quot; direction=&quot;horizontal&quot;>
+  <CuiRadio value=&quot;option1&quot; label=&quot;Primary A&quot; />
+  <CuiRadio value=&quot;option2&quot; label=&quot;Primary B&quot; />
+</CuiRadioGroup>
+<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;success&quot; direction=&quot;horizontal&quot;>
+  ...
+</CuiRadioGroup>`">
           <CuiStack spacing="3">
             <CuiRadioGroup v-model="selected" color="primary" direction="horizontal" label="Primary">
               <CuiRadio value="option1" label="Primary A" />
@@ -192,7 +209,10 @@ const dynamicField = ref({
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled State">
+        <Example title="Disabled State" :code="`<CuiRadioGroup v-model=&quot;selected&quot; disabled>
+  <CuiRadio value=&quot;option1&quot; label=&quot;Can't select this&quot; />
+  <CuiRadio value=&quot;option2&quot; label=&quot;Or this one&quot; />
+</CuiRadioGroup>`">
           <CuiRadioGroup v-model="selected" disabled label="Disabled group">
             <CuiRadio value="option1" label="Can't select this" />
             <CuiRadio value="option2" label="Or this one" />
@@ -201,7 +221,10 @@ const dynamicField = ref({
         </Example>
 
         <!-- Readonly -->
-        <Example title="Readonly State">
+        <Example title="Readonly State" :code="`<CuiRadioGroup v-model=&quot;selected&quot; readonly>
+  <CuiRadio value=&quot;option1&quot; label=&quot;Locked option 1&quot; />
+  <CuiRadio value=&quot;option2&quot; label=&quot;Locked option 2 (selected)&quot; />
+</CuiRadioGroup>`">
           <CuiRadioGroup v-model="selected" readonly label="Readonly group">
             <CuiRadio value="option1" label="Locked option 1" />
             <CuiRadio value="option2" label="Locked option 2 (selected)" />

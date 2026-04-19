@@ -56,6 +56,18 @@ const stickyData = [
           { name: 'stickyHeader', type: 'boolean', default: 'false', description: 'Sticky thead' },
           { name: 'fixedLayout', type: 'boolean', default: 'false', description: 'table-layout: fixed for consistent column widths' },
           { name: 'maxHeight', type: 'string', default: '—', description: 'Max height — enables vertical scrolling (e.g., &quot;400px&quot;)' },
+          { name: 'minWidth', type: 'string', default: '—', description: 'Min width — useful for wide tables in scrolling containers' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <!-- CuiTableHead / CuiTableBody / CuiTableFoot props -->
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiTableHead / CuiTableBody / CuiTableFoot Props</h2>
+      <PropTable
+        :props="[
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -66,6 +78,7 @@ const stickyData = [
       <PropTable
         :props="[
           { name: 'selected', type: 'boolean', default: 'false', description: 'Highlight row with primary-bg tint' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -75,12 +88,13 @@ const stickyData = [
       <h2 class="mb-4 text-2xl font-semibold">CuiTableCell Props</h2>
       <PropTable
         :props="[
-          { name: 'header', type: 'boolean', default: '—', description: 'Explicit override: force <th> or <td>. Auto-detects from CuiTableHead context.' },
+          { name: 'header', type: 'boolean', default: '—', description: 'Explicit override: force &lt;th&gt; or &lt;td&gt;. Auto-detects from CuiTableHead context.' },
           { name: 'align', type: 'left | center | right', default: 'left', description: 'Text alignment' },
           { name: 'width', type: 'string', default: '—', description: 'CSS width' },
           { name: 'colspan', type: 'number', default: '—', description: 'HTML colspan' },
           { name: 'rowspan', type: 'number', default: '—', description: 'HTML rowspan' },
           { name: 'nowrap', type: 'boolean', default: 'false', description: 'Prevent text wrapping' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -130,7 +144,9 @@ const stickyData = [
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiTable size=&quot;sm&quot;>...</CuiTable>
+<CuiTable size=&quot;md&quot;>...</CuiTable>
+<CuiTable size=&quot;lg&quot;>...</CuiTable>`">
           <CuiStack spacing="4">
             <div v-for="sz in (['sm', 'md', 'lg'] as const)" :key="sz">
               <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">{{ sz }}:</div>
@@ -287,7 +303,28 @@ const stickyData = [
         </Example>
 
         <!-- With footer -->
-        <Example title="With Footer">
+        <Example title="With Footer" :code="`<CuiTable striped>
+  <CuiTableHead>
+    <CuiTableRow>
+      <CuiTableCell>Name</CuiTableCell>
+      <CuiTableCell>Role</CuiTableCell>
+      <CuiTableCell align=&quot;right&quot;>Salary</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableHead>
+  <CuiTableBody>
+    <CuiTableRow v-for=&quot;emp in employees&quot; :key=&quot;emp.name&quot;>
+      <CuiTableCell>{{ emp.name }}</CuiTableCell>
+      <CuiTableCell>{{ emp.role }}</CuiTableCell>
+      <CuiTableCell align=&quot;right&quot; nowrap>{{ emp.salary }}</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableBody>
+  <CuiTableFoot>
+    <CuiTableRow>
+      <CuiTableCell :colspan=&quot;2&quot;>Total (5 employees)</CuiTableCell>
+      <CuiTableCell align=&quot;right&quot; nowrap>$543,000</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableFoot>
+</CuiTable>`">
           <CuiCard variant="outline">
             <CuiCardBody no-padding>
               <CuiTable striped>
@@ -349,7 +386,26 @@ const stickyData = [
         </Example>
 
         <!-- Combined features -->
-        <Example title="Combined: Striped + Hoverable + Bordered">
+        <Example title="Combined: Striped + Hoverable + Bordered" :code="`<CuiTable striped hoverable bordered size=&quot;sm&quot;>
+  <CuiTableHead>
+    <CuiTableRow>
+      <CuiTableCell>Name</CuiTableCell>
+      <CuiTableCell align=&quot;center&quot;>Status</CuiTableCell>
+      <CuiTableCell align=&quot;right&quot;>Salary</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableHead>
+  <CuiTableBody>
+    <CuiTableRow v-for=&quot;emp in employees&quot; :key=&quot;emp.name&quot;>
+      <CuiTableCell nowrap>{{ emp.name }}</CuiTableCell>
+      <CuiTableCell align=&quot;center&quot;>
+        <CuiBadge :color=&quot;emp.status === 'Active' ? 'success' : 'warning'&quot; size=&quot;sm&quot;>
+          {{ emp.status }}
+        </CuiBadge>
+      </CuiTableCell>
+      <CuiTableCell align=&quot;right&quot; nowrap>{{ emp.salary }}</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableBody>
+</CuiTable>`">
           <CuiCard variant="outline">
             <CuiCardBody no-padding>
               <CuiTable striped hoverable bordered size="sm">

@@ -73,6 +73,7 @@ function onLoadingConfirm() {
           { name: 'confirmPrompt', type: 'string', default: '—', description: 'Custom prompt text above the input (supports HTML)' },
           { name: 'icon', type: 'string', default: '—', description: 'Custom icon (auto-selected by variant if omitted)' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'Loading state on confirm button' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -102,7 +103,14 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Danger -->
-        <Example title="Danger — Delete Item">
+        <Example title="Danger — Delete Item" :code="`<CuiConfirmDialog
+  v-model=&quot;show&quot;
+  title=&quot;Delete account?&quot;
+  message=&quot;This will permanently delete your account and all associated data.&quot;
+  variant=&quot;danger&quot;
+  confirm-text=&quot;Delete Account&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
           <CuiButton variant="solid" color="error" @click="showDanger = true">Delete Account</CuiButton>
           <CuiConfirmDialog
             v-model="showDanger"
@@ -115,7 +123,14 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Warning -->
-        <Example title="Warning Variant">
+        <Example title="Warning Variant" :code="`<CuiConfirmDialog
+  v-model=&quot;show&quot;
+  title=&quot;Reset to defaults?&quot;
+  message=&quot;All your custom settings will be restored to their default values.&quot;
+  variant=&quot;warning&quot;
+  confirm-text=&quot;Reset&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
           <CuiButton variant="outline" color="warning" @click="showWarning = true">Reset Settings</CuiButton>
           <CuiConfirmDialog
             v-model="showWarning"
@@ -145,7 +160,16 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Custom prompt -->
-        <Example title="Custom Typed Prompt">
+        <Example title="Custom Typed Prompt" :code="`<CuiConfirmDialog
+  v-model=&quot;show&quot;
+  title=&quot;Transfer ownership?&quot;
+  message=&quot;You are about to transfer ownership of this organization.&quot;
+  variant=&quot;danger&quot;
+  confirm-text=&quot;Transfer&quot;
+  confirm-word=&quot;transfer&quot;
+  confirm-prompt=&quot;Type &lt;strong&gt;transfer&lt;/strong&gt; to confirm this irreversible action.&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
           <CuiButton variant="outline" color="error" @click="showCustom = true">Transfer Ownership</CuiButton>
           <CuiConfirmDialog
             v-model="showCustom"
@@ -160,7 +184,15 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Loading state -->
-        <Example title="With Loading State">
+        <Example title="With Loading State" :code="`<CuiConfirmDialog
+  v-model=&quot;show&quot;
+  title=&quot;Delete item?&quot;
+  message=&quot;This will remove the item permanently.&quot;
+  variant=&quot;danger&quot;
+  confirm-text=&quot;Delete&quot;
+  :loading=&quot;loadingState&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
           <CuiButton variant="outline" @click="showLoading = true">Delete with Loading</CuiButton>
           <CuiConfirmDialog
             v-model="showLoading"

@@ -30,7 +30,10 @@ const time4 = ref("02:00 PM");
           { name: 'placeholder', type: 'string', default: '—', description: 'Placeholder text' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'minTime', type: 'string', default: '—', description: 'Minimum selectable time (HH:mm)' },
+          { name: 'maxTime', type: 'string', default: '—', description: 'Maximum selectable time (HH:mm)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -65,7 +68,8 @@ const time4 = ref("02:00 PM");
         </Example>
 
         <!-- Side by side -->
-        <Example title="Side by Side: 12h vs 24h">
+        <Example title="Side by Side: 12h vs 24h" :code="`<CuiTimePicker v-model=&quot;time&quot; label=&quot;12-Hour&quot; />
+<CuiTimePicker v-model=&quot;time&quot; format=&quot;24&quot; label=&quot;24-Hour&quot; />`">
           <CuiFlex gap="4" class="items-end">
             <CuiTimePicker v-model="time4" label="12-Hour" />
             <CuiTimePicker v-model="time2" format="24" label="24-Hour" />
@@ -73,7 +77,7 @@ const time4 = ref("02:00 PM");
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled">
+        <Example title="Disabled" :code="`<CuiTimePicker model-value=&quot;10:00 AM&quot; label=&quot;Locked Time&quot; disabled />`">
           <CuiTimePicker model-value="10:00 AM" label="Locked Time" disabled />
         </Example>
 

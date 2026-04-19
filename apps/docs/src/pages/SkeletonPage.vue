@@ -26,6 +26,7 @@ import Example from "../components/Example.vue";
           { name: 'height', type: 'string', default: '1rem', description: 'CSS height (rectangle variant)' },
           { name: 'size', type: 'string', default: '3rem', description: 'Diameter (circle variant)' },
           { name: 'rounded', type: 'none | sm | md | lg | full', default: 'sm', description: 'Border radius (rectangle variant only)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -79,7 +80,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Animation variants -->
-        <Example title="Animation Styles" :code="`<CuiSkeleton animation=&quot;shimmer&quot; />\n<CuiSkeleton animation=&quot;pulse&quot; />\n<CuiSkeleton animation=&quot;none&quot; />`">
+        <Example title="Animation Styles" :code="`<CuiSkeleton animation=&quot;shimmer&quot; />
+<CuiSkeleton animation=&quot;pulse&quot; />
+<CuiSkeleton animation=&quot;none&quot; />`">
           <CuiStack spacing="6" class="max-w-lg">
             <div>
               <div class="mb-2 text-sm font-medium text-surface-600 dark:text-surface-400">Shimmer (default):</div>
@@ -123,7 +126,15 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: Card loading -->
-        <Example title="Real-World: Card Loading">
+        <Example title="Real-World: Card Loading" :code="`<CuiCard variant=&quot;outline&quot;>
+  <CuiCardMedia>
+    <CuiSkeleton variant=&quot;rectangle&quot; height=&quot;10rem&quot; rounded=&quot;none&quot; />
+  </CuiCardMedia>
+  <CuiCardBody>
+    <CuiSkeleton :lines=&quot;1&quot; />
+    <CuiSkeleton :lines=&quot;2&quot; last-line-width=&quot;80%&quot; />
+  </CuiCardBody>
+</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard v-for="i in 3" :key="i" variant="outline">
               <CuiCardMedia>
@@ -140,7 +151,13 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: List items -->
-        <Example title="Real-World: List Items">
+        <Example title="Real-World: List Items" :code="`<CuiFlex v-for=&quot;i in 4&quot; :key=&quot;i&quot; gap=&quot;3&quot; class=&quot;items-center&quot;>
+  <CuiSkeleton variant=&quot;circle&quot; size=&quot;2.5rem&quot; />
+  <div style=&quot;flex: 1;&quot;>
+    <CuiSkeleton :lines=&quot;1&quot; />
+    <CuiSkeleton :lines=&quot;1&quot; last-line-width=&quot;50%&quot; />
+  </div>
+</CuiFlex>`">
           <CuiStack spacing="4" class="max-w-md">
             <CuiFlex v-for="i in 4" :key="i" gap="3" class="items-center">
               <CuiSkeleton variant="circle" size="2.5rem" />
@@ -155,7 +172,20 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: Profile -->
-        <Example title="Real-World: Profile Header">
+        <Example title="Real-World: Profile Header" :code="`<CuiCard variant=&quot;outline&quot;>
+  <CuiCardBody>
+    <CuiFlex gap=&quot;4&quot; class=&quot;items-center&quot;>
+      <CuiSkeleton variant=&quot;circle&quot; size=&quot;4rem&quot; />
+      <div style=&quot;flex: 1;&quot;>
+        <CuiSkeleton :lines=&quot;1&quot; />
+        <CuiSkeleton :lines=&quot;1&quot; last-line-width=&quot;40%&quot; />
+      </div>
+    </CuiFlex>
+    <div class=&quot;mt-4&quot;>
+      <CuiSkeleton :lines=&quot;3&quot; />
+    </div>
+  </CuiCardBody>
+</CuiCard>`">
           <div class="max-w-sm">
             <CuiCard variant="outline">
               <CuiCardBody>

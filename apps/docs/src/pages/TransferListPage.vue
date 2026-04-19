@@ -64,7 +64,11 @@ const selectedSimple = ref<string[]>([]);
           { name: 'targetTitle', type: 'string', default: 'Selected', description: 'Right panel title' },
           { name: 'filterable', type: 'boolean', default: 'true', description: 'Show search filter' },
           { name: 'height', type: 'string', default: '320px', description: 'Panel height' },
+          { name: 'sourcePlaceholder', type: 'string', default: 'Filter...', description: 'Source panel search placeholder' },
+          { name: 'targetPlaceholder', type: 'string', default: 'Filter...', description: 'Target panel search placeholder' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -82,7 +86,12 @@ const selectedSimple = ref<string[]>([]);
         </Example>
 
         <!-- With descriptions -->
-        <Example title="Permissions (with descriptions + disabled)">
+        <Example title="Permissions (with descriptions + disabled)" :code="`<CuiTransferList
+  :items=&quot;permissions&quot;
+  v-model=&quot;selected&quot;
+  source-title=&quot;Available Permissions&quot;
+  target-title=&quot;Granted&quot;
+/>`">
           <CuiTransferList
             :items="permissions"
             v-model="selectedPerms"
@@ -96,7 +105,12 @@ const selectedSimple = ref<string[]>([]);
         </Example>
 
         <!-- Real-world: Column chooser with icons -->
-        <Example title="Real-World: Column Chooser">
+        <Example title="Real-World: Column Chooser" :code="`<CuiTransferList
+  :items=&quot;columns&quot;
+  v-model=&quot;visibleCols&quot;
+  source-title=&quot;Available Columns&quot;
+  target-title=&quot;Visible Columns&quot;
+/>`">
           <CuiTransferList
             :items="columns"
             v-model="selectedCols"
@@ -106,6 +120,11 @@ const selectedSimple = ref<string[]>([]);
           <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
             Visible (in display order): <code class="cui-code">{{ selectedCols }}</code>
           </div>
+        </Example>
+
+        <!-- Disabled -->
+        <Example title="Disabled" :code="`<CuiTransferList :items=&quot;items&quot; v-model=&quot;selected&quot; disabled />`">
+          <CuiTransferList :items="simple" :model-value="['a', 'b']" disabled :filterable="false" height="200px" />
         </Example>
 
       </CuiStack>

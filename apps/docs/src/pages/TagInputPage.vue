@@ -70,6 +70,11 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
           { name: 'createText', type: 'string', default: 'Create', description: 'Text for the create option' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
+          { name: 'errorMessage', type: 'string', default: '—', description: 'Error message text' },
+          { name: 'noSuggestionsText', type: 'string', default: 'No suggestions', description: 'Text when no suggestions match' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -91,14 +96,24 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
         </Example>
 
         <!-- With suggestions -->
-        <Example title="With Suggestions" :code="`<CuiTagInput :suggestions=&quot;options&quot; />`">
+        <Example title="With Suggestions" :code="`<CuiTagInput
+  v-model=&quot;tags&quot;
+  :suggestions=&quot;techSuggestions&quot;
+  label=&quot;Tech Stack&quot;
+  placeholder=&quot;Search or type...&quot;
+/>`">
           <div style="width: 20rem;">
             <CuiTagInput v-model="tags2" :suggestions="techSuggestions" label="Tech Stack" placeholder="Search or type..." />
           </div>
         </Example>
 
         <!-- Colored tags (GitHub labels) -->
-        <Example title="Colored Tags (GitHub Labels)">
+        <Example title="Colored Tags (GitHub Labels)" :code="`<CuiTagInput
+  v-model=&quot;tags&quot;
+  :suggestions=&quot;labelSuggestions&quot;
+  label=&quot;Issue Labels&quot;
+  :allow-create=&quot;false&quot;
+/>`">
           <CuiFlex gap="4" class="items-start">
             <div style="width: 22rem;">
               <CuiTagInput
@@ -129,13 +144,50 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
         </Example>
 
         <!-- Max tags -->
-        <Example title="Max 3 Tags" :code="`<CuiTagInput :max-tags=&quot;3&quot; />`">
+        <Example title="Max 3 Tags" :code="`<CuiTagInput
+  :model-value=&quot;['red', 'green', 'blue']&quot;
+  :max-tags=&quot;3&quot;
+  label=&quot;Favorite Colors (max 3)&quot;
+/>`">
           <div style="width: 20rem;">
             <CuiTagInput
               :model-value="['red', 'green', 'blue']"
               :max-tags="3"
               label="Favorite Colors (max 3)"
               placeholder="Add color..."
+            />
+          </div>
+        </Example>
+
+        <!-- Error state -->
+        <Example title="Error State" :code="`<CuiTagInput
+  v-model=&quot;tags&quot;
+  label=&quot;Required Skills&quot;
+  error
+  error-message=&quot;Please add at least one skill&quot;
+/>`">
+          <div style="width: 20rem;">
+            <CuiTagInput
+              :model-value="[]"
+              label="Required Skills"
+              error
+              error-message="Please add at least one skill"
+              placeholder="Add skill..."
+            />
+          </div>
+        </Example>
+
+        <!-- Disabled -->
+        <Example title="Disabled" :code="`<CuiTagInput
+  :model-value=&quot;['vue', 'typescript']&quot;
+  label=&quot;Skills&quot;
+  disabled
+/>`">
+          <div style="width: 20rem;">
+            <CuiTagInput
+              :model-value="['vue', 'typescript']"
+              label="Skills (read-only)"
+              disabled
             />
           </div>
         </Example>

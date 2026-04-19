@@ -52,6 +52,8 @@ const agree = ref(false);
           { name: 'helpText', type: 'string', default: '-', description: 'Help text below control' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state (left accent bar)' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message (replaces help text)' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state — passed as slot prop to the control' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -81,7 +83,9 @@ const agree = ref(false);
         </Example>
 
         <!-- Required (asterisk) -->
-        <Example title="Required (asterisk)">
+        <Example title="Required (asterisk)" :code="`<CuiFormField label=&quot;Email Address&quot; required help-text=&quot;We will never share your email&quot;>
+  <CuiInput v-model=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;you@example.com&quot; />
+</CuiFormField>`">
           <div class="max-w-md">
             <CuiFormField label="Email Address" required help-text="We will never share your email">
               <CuiInput v-model="email" type="email" placeholder="you@example.com" />
@@ -90,7 +94,9 @@ const agree = ref(false);
         </Example>
 
         <!-- Required (custom text) -->
-        <Example title="Required (custom text)">
+        <Example title="Required (custom text)" :code="`<CuiFormField label=&quot;Phone Number&quot; required required-text=&quot;Required&quot;>
+  <CuiMaskedInput v-model=&quot;phone&quot; mask=&quot;+1 (###) ###-####&quot; />
+</CuiFormField>`">
           <div class="max-w-md">
             <CuiFormField label="Phone Number" required required-text="Required" help-text="Include country code">
               <CuiMaskedInput v-model="phone" mask="+1 (###) ###-####" placeholder="Phone" />
@@ -130,7 +136,15 @@ const agree = ref(false);
         </Example>
 
         <!-- Wrapping different controls -->
-        <Example title="Wrapping Different Controls">
+        <Example title="Wrapping Different Controls" :code="`<CuiFormField label=&quot;Select a Plan&quot; required>
+  <CuiRadioGroup v-model=&quot;plan&quot;>
+    <CuiRadio value=&quot;free&quot; label=&quot;Free&quot; />
+    <CuiRadio value=&quot;pro&quot; label=&quot;Pro&quot; />
+  </CuiRadioGroup>
+</CuiFormField>
+<CuiFormField label=&quot;Newsletter&quot;>
+  <CuiToggle v-model=&quot;newsletter&quot; label=&quot;Send me updates&quot; />
+</CuiFormField>`">
           <CuiStack spacing="4" class="max-w-md">
             <CuiFormField label="Select a Plan" required>
               <CuiRadioGroup v-model="plan">
@@ -159,7 +173,18 @@ const agree = ref(false);
         </Example>
 
         <!-- Real-world form -->
-        <Example title="Real-World: Registration Form">
+        <Example title="Real-World: Registration Form" :code="`<CuiFormField label=&quot;Full Name&quot; required>
+  <CuiInput v-model=&quot;name&quot; placeholder=&quot;John Doe&quot; />
+</CuiFormField>
+<CuiFormField label=&quot;Email&quot; required help-text=&quot;We will send a confirmation link&quot;>
+  <CuiInput v-model=&quot;email&quot; type=&quot;email&quot; />
+</CuiFormField>
+<CuiFormField label=&quot;Plan&quot; required>
+  <CuiRadioGroup v-model=&quot;plan&quot;>
+    <CuiRadio value=&quot;free&quot; label=&quot;Free&quot; />
+    <CuiRadio value=&quot;pro&quot; label=&quot;Pro ($10/mo)&quot; />
+  </CuiRadioGroup>
+</CuiFormField>`">
           <CuiStack spacing="5" class="max-w-lg">
             <CuiFormField label="Full Name" required>
               <CuiInput v-model="name" placeholder="John Doe" />

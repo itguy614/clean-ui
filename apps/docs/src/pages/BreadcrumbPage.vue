@@ -25,6 +25,7 @@ import Example from "../components/Example.vue";
       <PropTable
         :props="[
           { name: 'separator', type: 'string', default: '/', description: 'Separator character between items' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -33,8 +34,9 @@ import Example from "../components/Example.vue";
       <h2 class="mb-4 text-2xl font-semibold">CuiBreadcrumbItem Props</h2>
       <PropTable
         :props="[
-          { name: 'href', type: 'string', default: '-', description: 'Link URL (renders as <a>)' },
-          { name: 'to', type: 'string | object', default: '-', description: 'Vue Router route (renders as <router-link>)' },
+          { name: 'href', type: 'string', default: '—', description: 'Link URL (renders as &lt;a&gt;)' },
+          { name: 'to', type: 'string | object', default: '—', description: 'Vue Router route (renders as &lt;router-link&gt;)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -57,7 +59,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Chevron separator -->
-        <Example title="Chevron Separator">
+        <Example title="Chevron Separator" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Home</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Dashboard</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem>Profile</CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="›">
             <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Dashboard</CuiBreadcrumbItem>
@@ -67,7 +73,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Arrow separator -->
-        <Example title="Arrow Separator">
+        <Example title="Arrow Separator" :code="`<CuiBreadcrumb separator=&quot;→&quot;>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Store</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Electronics</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem>MacBook Pro</CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="→">
             <CuiBreadcrumbItem href="#">Store</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Electronics</CuiBreadcrumbItem>
@@ -77,7 +87,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Dot separator -->
-        <Example title="Dot Separator">
+        <Example title="Dot Separator" :code="`<CuiBreadcrumb separator=&quot;·&quot;>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Blog</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>2024</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem>Building a Component Library</CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="·">
             <CuiBreadcrumbItem href="#">Blog</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">2024</CuiBreadcrumbItem>
@@ -99,7 +113,17 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- With icons in slot -->
-        <Example title="With Icons">
+        <Example title="With Icons" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
+  <CuiBreadcrumbItem href=&quot;#&quot;>
+    <CuiIcon name=&quot;house&quot; size=&quot;sm&quot; />
+  </CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>
+    <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;folder&quot; size=&quot;sm&quot; /> Projects</span>
+  </CuiBreadcrumbItem>
+  <CuiBreadcrumbItem>
+    <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;file&quot; size=&quot;sm&quot; /> CuiButton.vue</span>
+  </CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="›">
             <CuiBreadcrumbItem href="#">
               <CuiIcon name="house" size="sm" />
@@ -117,7 +141,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Long breadcrumbs -->
-        <Example title="Long Path">
+        <Example title="Long Path" :code="`<CuiBreadcrumb>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Home</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Organization</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem href=&quot;#&quot;>Projects</CuiBreadcrumbItem>
+  <CuiBreadcrumbItem>Breadcrumb</CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb>
             <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Organization</CuiBreadcrumbItem>
@@ -130,7 +159,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Single item -->
-        <Example title="Single Item (root)">
+        <Example title="Single Item (root)" :code="`<CuiBreadcrumb>
+  <CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
+</CuiBreadcrumb>`">
           <CuiBreadcrumb>
             <CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
           </CuiBreadcrumb>

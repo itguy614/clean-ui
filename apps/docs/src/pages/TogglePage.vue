@@ -48,6 +48,7 @@ const dynamicField = ref({
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Toggle size' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -63,6 +64,8 @@ const dynamicField = ref({
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Make all toggles readonly' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Show error state' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below group' },
+          { name: 'label', type: 'string', default: '-', description: 'Accessible group label (aria-label)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -82,7 +85,9 @@ const dynamicField = ref({
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiToggle v-model=&quot;val&quot; size=&quot;sm&quot; label=&quot;Small&quot; />
+<CuiToggle v-model=&quot;val&quot; size=&quot;md&quot; label=&quot;Medium (default)&quot; />
+<CuiToggle v-model=&quot;val&quot; size=&quot;lg&quot; label=&quot;Large (mobile-friendly)&quot; />`">
           <CuiFlex gap="6" class="items-center flex-wrap">
             <CuiToggle v-model="darkMode" size="sm" label="Small" />
             <CuiToggle v-model="darkMode" size="md" label="Medium (default)" />
@@ -109,7 +114,9 @@ const dynamicField = ref({
         </Example>
 
         <!-- Colors -->
-        <Example title="Color Roles">
+        <Example title="Color Roles" :code="`<CuiToggle v-model=&quot;notifications&quot; color=&quot;primary&quot; label=&quot;Primary&quot; />
+<CuiToggle v-model=&quot;notifications&quot; color=&quot;success&quot; label=&quot;Success&quot; />
+<CuiToggle v-model=&quot;notifications&quot; color=&quot;error&quot; label=&quot;Error&quot; />`">
           <CuiStack spacing="3">
             <CuiToggle v-model="notifications" color="primary" label="Primary" />
             <CuiToggle v-model="notifications" color="secondary" label="Secondary" />
@@ -121,7 +128,8 @@ const dynamicField = ref({
         </Example>
 
         <!-- With Descriptions -->
-        <Example title="With Descriptions">
+        <Example title="With Descriptions" :code="`<CuiToggle v-model=&quot;darkMode&quot; label=&quot;Dark Mode&quot;
+  description=&quot;Switch between light and dark themes&quot; />`">
           <CuiStack spacing="4">
             <CuiToggle
               v-model="darkMode"
@@ -154,7 +162,14 @@ const dynamicField = ref({
         </Example>
 
         <!-- Dynamic Form -->
-        <Example title="Dynamic Form (JSON-driven)">
+        <Example title="Dynamic Form (JSON-driven)" :code="`<CuiToggleGroup v-model=&quot;field.value&quot; :label=&quot;field.label&quot;>
+  <CuiToggle v-for=&quot;opt in field.options&quot;
+    :key=&quot;opt.value&quot;
+    :value=&quot;opt.value&quot;
+    :label=&quot;opt.label&quot;
+    :description=&quot;opt.description&quot;
+  />
+</CuiToggleGroup>`">
           <CuiStack spacing="2">
             <div class="text-sm font-medium">{{ dynamicField.label }}</div>
             <CuiToggleGroup v-model="dynamicField.value" :label="dynamicField.label">
@@ -171,7 +186,8 @@ const dynamicField = ref({
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled State">
+        <Example title="Disabled State" :code="`<CuiToggle :model-value=&quot;true&quot; disabled label=&quot;On (disabled)&quot; />
+<CuiToggle :model-value=&quot;false&quot; disabled label=&quot;Off (disabled)&quot; />`">
           <CuiFlex gap="6" class="flex-wrap">
             <CuiToggle :model-value="true" disabled label="On (disabled)" />
             <CuiToggle :model-value="false" disabled label="Off (disabled)" />
@@ -179,7 +195,8 @@ const dynamicField = ref({
         </Example>
 
         <!-- Readonly -->
-        <Example title="Readonly State">
+        <Example title="Readonly State" :code="`<CuiToggle :model-value=&quot;true&quot; readonly label=&quot;On (readonly)&quot; />
+<CuiToggle :model-value=&quot;false&quot; readonly label=&quot;Off (readonly)&quot; />`">
           <CuiFlex gap="6" class="flex-wrap">
             <CuiToggle :model-value="true" readonly label="On (readonly)" />
             <CuiToggle :model-value="false" readonly label="Off (readonly)" />

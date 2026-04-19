@@ -53,6 +53,7 @@ const prefsExpanded = ref(false);
           { name: 'collapsible', type: 'boolean', default: 'false', description: 'Allow expand/collapse' },
           { name: 'expanded', type: 'boolean', default: 'true', description: 'Expanded state (v-model:expanded)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all controls inside' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -80,7 +81,12 @@ const prefsExpanded = ref(false);
         </Example>
 
         <!-- With Description -->
-        <Example title="With Description">
+        <Example title="With Description" :code="`<CuiFieldset legend=&quot;Shipping Address&quot;
+  description=&quot;Enter the address for your delivery.&quot;>
+  <CuiFormField label=&quot;Street&quot;>
+    <CuiInput v-model=&quot;street&quot; placeholder=&quot;123 Main St&quot; />
+  </CuiFormField>
+</CuiFieldset>`">
           <div class="max-w-lg">
             <CuiFieldset legend="Shipping Address" description="Enter the address where you would like your order delivered.">
               <CuiFormField label="Street">
@@ -148,7 +154,11 @@ const prefsExpanded = ref(false);
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled">
+        <Example title="Disabled" :code="`<CuiFieldset legend=&quot;Locked Section&quot; disabled>
+  <CuiFormField label=&quot;Name&quot;>
+    <CuiInput model-value=&quot;John Doe&quot; />
+  </CuiFormField>
+</CuiFieldset>`">
           <div class="max-w-lg">
             <CuiFieldset legend="Locked Section" disabled>
               <CuiFormField label="Name">
@@ -162,7 +172,16 @@ const prefsExpanded = ref(false);
         </Example>
 
         <!-- Nested Fieldsets -->
-        <Example title="Nested Fieldsets">
+        <Example title="Nested Fieldsets" :code="`<CuiFieldset legend=&quot;Account Setup&quot;>
+  <CuiFormField label=&quot;Username&quot; required>
+    <CuiInput v-model=&quot;name&quot; />
+  </CuiFormField>
+  <CuiFieldset legend=&quot;Contact Details&quot;>
+    <CuiFormField label=&quot;Email&quot;>
+      <CuiInput v-model=&quot;email&quot; type=&quot;email&quot; />
+    </CuiFormField>
+  </CuiFieldset>
+</CuiFieldset>`">
           <div class="max-w-lg">
             <CuiFieldset legend="Account Setup">
               <CuiFormField label="Username" required>
@@ -182,7 +201,16 @@ const prefsExpanded = ref(false);
         </Example>
 
         <!-- Real-world: Checkout Form -->
-        <Example title="Real-World: Checkout Form">
+        <Example title="Real-World: Checkout Form" :code="`<CuiFieldset legend=&quot;Contact&quot;>
+  <CuiFormField label=&quot;Email&quot; required>
+    <CuiInput v-model=&quot;email&quot; type=&quot;email&quot; />
+  </CuiFormField>
+</CuiFieldset>
+<CuiFieldset legend=&quot;Payment&quot; collapsible>
+  <CuiFormField label=&quot;Card Number&quot; required>
+    <CuiMaskedInput v-model=&quot;cardNumber&quot; mask=&quot;#### #### #### ####&quot; />
+  </CuiFormField>
+</CuiFieldset>`">
           <CuiStack spacing="4" class="max-w-lg">
             <CuiFieldset legend="Contact">
               <CuiFormField label="Email" required>

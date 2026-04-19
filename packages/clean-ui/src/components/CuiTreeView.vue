@@ -111,10 +111,11 @@ const cfg = computed(() => sizeConfig[props.size]);
 <template>
   <div v-show="!hidden" role="tree">
     <CuiTreeNode
-      v-for="node in nodes"
+      v-for="(node, idx) in nodes"
       :key="String(node.id)"
       :node="node"
       :depth="0"
+      :is-last="idx === nodes.length - 1"
       :expanded="expanded"
       :selected-set="selectedSet"
       :selectable="selectable"

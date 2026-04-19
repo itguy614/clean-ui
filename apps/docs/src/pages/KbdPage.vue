@@ -19,6 +19,7 @@ import Example from "../components/Example.vue";
       <PropTable
         :props="[
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -65,7 +66,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiKbd size=&quot;sm&quot;>⌘</CuiKbd>
+<CuiKbd size=&quot;md&quot;>⌘</CuiKbd>
+<CuiKbd size=&quot;lg&quot;>⌘</CuiKbd>`">
           <CuiStack spacing="3">
             <CuiFlex gap="1" class="items-center">
               <CuiKbd size="sm">⌘</CuiKbd><span style="color: var(--cui-text-tertiary); font-size: 0.625rem;">+</span><CuiKbd size="sm">K</CuiKbd>
@@ -83,7 +86,8 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Inline with text -->
-        <Example title="Inline with Text">
+        <Example title="Inline with Text" :code="`<p>Press <CuiKbd size=&quot;sm&quot;>⌘</CuiKbd> <CuiKbd size=&quot;sm&quot;>K</CuiKbd> to open the command palette.</p>
+<p>Press <CuiKbd size=&quot;sm&quot;>Esc</CuiKbd> to close.</p>`">
           <CuiStack spacing="3">
             <p class="text-sm" style="color: var(--cui-text-secondary);">
               Press <CuiKbd size="sm">⌘</CuiKbd> <CuiKbd size="sm">K</CuiKbd> to open the command palette.
@@ -98,7 +102,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Function keys -->
-        <Example title="Function & Special Keys">
+        <Example title="Function & Special Keys" :code="`<CuiKbd>F1</CuiKbd>
+<CuiKbd>F5</CuiKbd>
+<CuiKbd>F12</CuiKbd>
+<CuiKbd>PgUp</CuiKbd>
+<CuiKbd>Home</CuiKbd>
+<CuiKbd>End</CuiKbd>`">
           <CuiFlex gap="2" class="items-center flex-wrap">
             <CuiKbd>F1</CuiKbd>
             <CuiKbd>F5</CuiKbd>

@@ -36,19 +36,31 @@ const theme = ref("system");
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiDropdown Props</h2>
+      <PropTable
+        :props="[
+          { name: 'trigger', type: 'click | hover | hover-focus', default: 'click', description: 'How the dropdown is triggered' },
+          { name: 'placement', type: 'bottom | top | left | right | ...', default: 'bottom', description: 'Preferred placement of the menu' },
+          { name: 'pinned', type: 'boolean', default: 'false', description: 'Keep dropdown anchored to trigger on scroll instead of closing' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state — prevents opening' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Sub-Components</h2>
       <PropTable
         :props="[
-          { name: 'CuiDropdown', type: 'root', default: '-', description: 'Root wrapper. trigger prop: click | hover | hover-focus (default click)' },
-          { name: 'CuiDropdownTrigger', type: 'wrapper', default: '-', description: 'Wraps the element that opens the menu' },
-          { name: 'CuiDropdownMenu', type: 'panel', default: '-', description: 'The floating menu panel. minWidth prop (default 12rem)' },
-          { name: 'CuiDropdownItem', type: 'action', default: '-', description: 'Action item. #icon slot, shortcut + description props, emits select' },
-          { name: 'CuiDropdownCheckItem', type: 'toggle', default: '-', description: 'Toggleable checkbox item. v-model boolean' },
-          { name: 'CuiDropdownRadioGroup', type: 'group', default: '-', description: 'Single-select group. v-model string | number' },
-          { name: 'CuiDropdownRadioItem', type: 'option', default: '-', description: 'Radio item within a group. value prop' },
-          { name: 'CuiDropdownSub', type: 'nested', default: '-', description: 'Sub-menu. Inherits parent trigger, optional trigger override. #menu slot for items.' },
-          { name: 'CuiDropdownDivider', type: 'separator', default: '-', description: 'Horizontal line separator' },
-          { name: 'CuiDropdownHeader', type: 'label', default: '-', description: 'Non-interactive group label' },
+          { name: 'CuiDropdownTrigger', type: 'wrapper', default: '—', description: 'Wraps the element that opens the menu' },
+          { name: 'CuiDropdownMenu', type: 'panel', default: '—', description: 'The floating menu panel. minWidth prop (default 12rem)' },
+          { name: 'CuiDropdownItem', type: 'action', default: '—', description: 'Action item. #icon slot, shortcut + description props, emits select' },
+          { name: 'CuiDropdownCheckItem', type: 'toggle', default: '—', description: 'Toggleable checkbox item. v-model boolean' },
+          { name: 'CuiDropdownRadioGroup', type: 'group', default: '—', description: 'Single-select group. v-model string | number' },
+          { name: 'CuiDropdownRadioItem', type: 'option', default: '—', description: 'Radio item within a group. value prop' },
+          { name: 'CuiDropdownSub', type: 'nested', default: '—', description: 'Sub-menu. Inherits parent trigger, optional trigger override. #menu slot for items.' },
+          { name: 'CuiDropdownDivider', type: 'separator', default: '—', description: 'Horizontal line separator' },
+          { name: 'CuiDropdownHeader', type: 'label', default: '—', description: 'Non-interactive group label' },
         ]"
       />
     </div>
@@ -82,7 +94,21 @@ const theme = ref("system");
         </Example>
 
         <!-- With Icons + Shortcuts -->
-        <Example title="Icons &amp; Keyboard Shortcuts">
+        <Example title="Icons &amp; Keyboard Shortcuts" :code="`<CuiDropdown>
+  <CuiDropdownTrigger>
+    <CuiButton variant=&quot;outline&quot;>Edit Menu</CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu>
+    <CuiDropdownItem shortcut=&quot;Ctrl+Z&quot;>
+      <template #icon><CuiIcon name=&quot;arrow-counter-clockwise&quot; size=&quot;sm&quot; /></template>
+      Undo
+    </CuiDropdownItem>
+    <CuiDropdownItem shortcut=&quot;Ctrl+C&quot;>
+      <template #icon><CuiIcon name=&quot;copy&quot; size=&quot;sm&quot; /></template>
+      Copy
+    </CuiDropdownItem>
+  </CuiDropdownMenu>
+</CuiDropdown>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="outline">
@@ -117,7 +143,12 @@ const theme = ref("system");
         </Example>
 
         <!-- With Descriptions -->
-        <Example title="Items with Descriptions">
+        <Example title="Items with Descriptions" :code="`<CuiDropdownMenu min-width=&quot;16rem&quot;>
+  <CuiDropdownItem description=&quot;Start with an empty canvas&quot;>
+    <template #icon><CuiIcon name=&quot;file-plus&quot; size=&quot;sm&quot; /></template>
+    Blank Project
+  </CuiDropdownItem>
+</CuiDropdownMenu>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="solid">New...</CuiButton>
@@ -140,7 +171,16 @@ const theme = ref("system");
         </Example>
 
         <!-- Check Items -->
-        <Example title="Check Items (toggle)">
+        <Example title="Check Items (toggle)" :code="`<CuiDropdown>
+  <CuiDropdownTrigger>
+    <CuiButton variant=&quot;outline&quot;>View</CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu>
+    <CuiDropdownHeader>Show / Hide</CuiDropdownHeader>
+    <CuiDropdownCheckItem v-model=&quot;showGrid&quot;>Grid Lines</CuiDropdownCheckItem>
+    <CuiDropdownCheckItem v-model=&quot;showSidebar&quot;>Sidebar</CuiDropdownCheckItem>
+  </CuiDropdownMenu>
+</CuiDropdown>`">
           <CuiStack spacing="2">
             <CuiDropdown>
               <CuiDropdownTrigger>
@@ -160,7 +200,14 @@ const theme = ref("system");
         </Example>
 
         <!-- Radio Items -->
-        <Example title="Radio Items (single select)">
+        <Example title="Radio Items (single select)" :code="`<CuiDropdownMenu>
+  <CuiDropdownHeader>Sort By</CuiDropdownHeader>
+  <CuiDropdownRadioGroup v-model=&quot;sortBy&quot;>
+    <CuiDropdownRadioItem value=&quot;name&quot;>Name</CuiDropdownRadioItem>
+    <CuiDropdownRadioItem value=&quot;date&quot;>Date</CuiDropdownRadioItem>
+    <CuiDropdownRadioItem value=&quot;size&quot;>Size</CuiDropdownRadioItem>
+  </CuiDropdownRadioGroup>
+</CuiDropdownMenu>`">
           <CuiStack spacing="2">
             <CuiDropdown>
               <CuiDropdownTrigger>
@@ -181,7 +228,18 @@ const theme = ref("system");
         </Example>
 
         <!-- Sub-menus -->
-        <Example title="Sub-Menus (nested)">
+        <Example title="Sub-Menus (nested)" :code="`<CuiDropdownMenu>
+  <CuiDropdownItem>Profile</CuiDropdownItem>
+  <CuiDropdownSub>
+    Theme
+    <template #menu>
+      <CuiDropdownRadioGroup v-model=&quot;theme&quot;>
+        <CuiDropdownRadioItem value=&quot;light&quot;>Light</CuiDropdownRadioItem>
+        <CuiDropdownRadioItem value=&quot;dark&quot;>Dark</CuiDropdownRadioItem>
+      </CuiDropdownRadioGroup>
+    </template>
+  </CuiDropdownSub>
+</CuiDropdownMenu>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="outline">
@@ -225,7 +283,14 @@ const theme = ref("system");
         </Example>
 
         <!-- Hover trigger -->
-        <Example title="Hover Trigger">
+        <Example title="Hover Trigger" :code="`<CuiDropdown trigger=&quot;hover&quot;>
+  <CuiDropdownTrigger>
+    <CuiButton variant=&quot;outline&quot;>Hover me</CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu>
+    <CuiDropdownItem>Quick action 1</CuiDropdownItem>
+  </CuiDropdownMenu>
+</CuiDropdown>`">
           <CuiFlex gap="3">
             <CuiDropdown trigger="hover">
               <CuiDropdownTrigger>
@@ -250,7 +315,12 @@ const theme = ref("system");
         </Example>
 
         <!-- Disabled items -->
-        <Example title="Disabled Items">
+        <Example title="Disabled Items" :code="`<CuiDropdownMenu>
+  <CuiDropdownItem>Edit</CuiDropdownItem>
+  <CuiDropdownItem disabled>Move (no permission)</CuiDropdownItem>
+  <CuiDropdownDivider />
+  <CuiDropdownItem disabled>Delete (locked)</CuiDropdownItem>
+</CuiDropdownMenu>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="outline">Actions</CuiButton>
@@ -266,7 +336,24 @@ const theme = ref("system");
         </Example>
 
         <!-- Mixed: real-world context menu -->
-        <Example title="Real-World: Context Menu">
+        <Example title="Real-World: Context Menu" :code="`<CuiDropdown>
+  <CuiDropdownTrigger>
+    <CuiButton variant=&quot;ghost&quot; size=&quot;sm&quot;>
+      <CuiIcon name=&quot;dots-three&quot; size=&quot;md&quot; weight=&quot;bold&quot; />
+    </CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu min-width=&quot;14rem&quot;>
+    <CuiDropdownItem shortcut=&quot;Enter&quot;>
+      <template #icon><CuiIcon name=&quot;eye&quot; size=&quot;sm&quot; /></template>
+      Open
+    </CuiDropdownItem>
+    <CuiDropdownDivider />
+    <CuiDropdownItem>
+      <template #icon><CuiIcon name=&quot;trash&quot; size=&quot;sm&quot; /></template>
+      Delete
+    </CuiDropdownItem>
+  </CuiDropdownMenu>
+</CuiDropdown>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="ghost" size="sm">

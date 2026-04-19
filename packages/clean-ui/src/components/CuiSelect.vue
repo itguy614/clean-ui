@@ -266,12 +266,20 @@ function onClickOutside(e: MouseEvent) {
   close();
 }
 
+function onScrollOrResize() {
+  if (isOpen.value) positionDropdown();
+}
+
 onMounted(() => {
   document.addEventListener("mousedown", onClickOutside);
+  window.addEventListener("scroll", onScrollOrResize, true);
+  window.addEventListener("resize", onScrollOrResize);
 });
 
 onUnmounted(() => {
   document.removeEventListener("mousedown", onClickOutside);
+  window.removeEventListener("scroll", onScrollOrResize, true);
+  window.removeEventListener("resize", onScrollOrResize);
 });
 
 // Dropdown positioning
@@ -280,17 +288,20 @@ const dropdownStyle = ref<Record<string, string>>({});
 function positionDropdown() {
   if (!triggerRef.value) return;
   const rect = triggerRef.value.getBoundingClientRect();
-  const spaceBelow = window.innerHeight - rect.bottom;
+  const vh = window.innerHeight;
+  const spaceBelow = vh - rect.bottom;
   const dropAbove = spaceBelow < 200 && rect.top > spaceBelow;
+  const maxH = Math.min(dropAbove ? rect.top - 16 : spaceBelow - 16, 300);
 
   dropdownStyle.value = {
-    position: "absolute",
-    left: "0",
-    right: "0",
+    position: "fixed",
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    maxHeight: `${maxH}px`,
+    zIndex: "9990",
     ...(dropAbove
-      ? { bottom: "calc(100% + 4px)" }
-      : { top: "calc(100% + 4px)" }),
-    maxHeight: `${Math.min(dropAbove ? rect.top - 16 : spaceBelow - 16, 300)}px`,
+      ? { bottom: `${vh - rect.top + 4}px` }
+      : { top: `${rect.bottom + 4}px` }),
   };
 }
 
@@ -393,7 +404,10 @@ const dims = computed(() => {
         </div>
       </div>
 
-      <!-- Dropdown -->
+    </div>
+
+    <!-- Dropdown (teleported to body to escape overflow: clip on ancestors) -->
+    <Teleport to="body">
       <div
         v-if="isOpen"
         ref="dropdownRef"
@@ -449,7 +463,7 @@ const dims = computed(() => {
           </template>
         </template>
       </div>
-    </div>
+    </Teleport>
 
     <!-- Error message -->
     <div v-if="error && errorMessage" class="cui-select__error">

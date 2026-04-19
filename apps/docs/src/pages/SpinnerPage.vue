@@ -23,6 +23,7 @@ import Example from "../components/Example.vue";
           { name: 'variant', type: 'ring | dots | bars', default: 'ring', description: 'Visual variant' },
           { name: 'label', type: 'string', default: 'Loading', description: 'Accessible label (always present for screen readers)' },
           { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show label text below the spinner' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -32,7 +33,9 @@ import Example from "../components/Example.vue";
       <CuiStack spacing="6">
 
         <!-- Variants -->
-        <Example title="Variants">
+        <Example title="Variants" :code="`<CuiSpinner variant=&quot;ring&quot; />
+<CuiSpinner variant=&quot;dots&quot; />
+<CuiSpinner variant=&quot;bars&quot; />`">
           <CuiFlex gap="6" class="items-center">
             <div class="text-center">
               <CuiSpinner variant="ring" size="lg" />
@@ -50,7 +53,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiSpinner size=&quot;xs&quot; />
+<CuiSpinner size=&quot;sm&quot; />
+<CuiSpinner size=&quot;md&quot; />
+<CuiSpinner size=&quot;lg&quot; />
+<CuiSpinner size=&quot;xl&quot; />`">
           <CuiStack spacing="4">
             <div v-for="variant in (['ring', 'dots', 'bars'] as const)" :key="variant">
               <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">{{ variant }}:</div>
@@ -66,7 +73,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiSpinner color=&quot;primary&quot; />
+<CuiSpinner color=&quot;success&quot; />
+<CuiSpinner color=&quot;error&quot; />
+<CuiSpinner color=&quot;warning&quot; />
+<CuiSpinner color=&quot;info&quot; />
+<CuiSpinner color=&quot;secondary&quot; />`">
           <CuiFlex gap="4" class="items-center">
             <CuiSpinner color="primary" size="lg" />
             <CuiSpinner color="secondary" size="lg" />
@@ -87,7 +99,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: Card loading -->
-        <Example title="Real-World: Card Loading State">
+        <Example title="Real-World: Card Loading State" :code="`<CuiCard variant=&quot;outline&quot;>
+  <CuiCardBody style=&quot;display: flex; align-items: center; justify-content: center; min-height: 8rem;&quot;>
+    <CuiSpinner show-label label=&quot;Loading data...&quot; />
+  </CuiCardBody>
+</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard variant="outline">
               <CuiCardBody style="display: flex; align-items: center; justify-content: center; min-height: 8rem;">
@@ -108,7 +124,10 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Inline with text -->
-        <Example title="Inline with Text">
+        <Example title="Inline with Text" :code="`<CuiFlex gap=&quot;2&quot; class=&quot;items-center&quot;>
+  <CuiSpinner size=&quot;xs&quot; />
+  <span>Checking availability...</span>
+</CuiFlex>`">
           <CuiStack spacing="3">
             <CuiFlex gap="2" class="items-center">
               <CuiSpinner size="xs" />

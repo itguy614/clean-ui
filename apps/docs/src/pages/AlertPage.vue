@@ -34,6 +34,7 @@ const showPulse = ref(true);
           { name: 'autoDismiss', type: 'number', default: '-', description: 'Auto-dismiss after N milliseconds' },
           { name: 'entrance', type: 'fade | slide-down | slide-left | none', default: 'fade', description: 'Entrance animation on mount' },
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -54,7 +55,10 @@ const showPulse = ref(true);
       <CuiStack spacing="6">
 
         <!-- All Colors (subtle) -->
-        <Example title="Colors (subtle — default)">
+        <Example title="Colors (subtle — default)" :code="`<CuiAlert color=&quot;success&quot; title=&quot;Success&quot; entrance=&quot;none&quot;>Your changes have been saved.</CuiAlert>
+<CuiAlert color=&quot;error&quot; title=&quot;Error&quot; entrance=&quot;none&quot;>Something went wrong.</CuiAlert>
+<CuiAlert color=&quot;warning&quot; title=&quot;Warning&quot; entrance=&quot;none&quot;>Session expires soon.</CuiAlert>
+<CuiAlert color=&quot;info&quot; title=&quot;Info&quot; entrance=&quot;none&quot;>A new version is available.</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert color="primary" title="Primary" entrance="none">
               This is a primary alert with auto icon.
@@ -78,7 +82,12 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Solid Variant -->
-        <Example title="Solid Variant">
+        <Example title="Solid Variant" :code="`<CuiAlert variant=&quot;solid&quot; color=&quot;success&quot; title=&quot;Payment Received&quot; entrance=&quot;none&quot;>
+  Your payment has been processed.
+</CuiAlert>
+<CuiAlert variant=&quot;solid&quot; color=&quot;error&quot; title=&quot;Connection Lost&quot; entrance=&quot;none&quot;>
+  Unable to reach the server.
+</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert variant="solid" color="success" title="Payment Received" entrance="none">
               Your payment of $49.99 has been processed.
@@ -90,7 +99,9 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Outline Variant -->
-        <Example title="Outline Variant">
+        <Example title="Outline Variant" :code="`<CuiAlert variant=&quot;outline&quot; color=&quot;info&quot; title=&quot;Tip&quot; entrance=&quot;none&quot;>
+  You can use keyboard shortcuts to navigate faster.
+</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert variant="outline" color="info" title="Tip" entrance="none">
               You can use keyboard shortcuts to navigate faster.
@@ -102,14 +113,19 @@ const showPulse = ref(true);
         </Example>
 
         <!-- No Icon -->
-        <Example title="Without Icon">
+        <Example title="Without Icon" :code="`<CuiAlert color=&quot;info&quot; title=&quot;Simple Message&quot; no-icon entrance=&quot;none&quot;>
+  Sometimes you just need text without the icon.
+</CuiAlert>`">
           <CuiAlert color="info" title="Simple Message" no-icon entrance="none">
             Sometimes you just need text without the icon.
           </CuiAlert>
         </Example>
 
         <!-- Custom Icon -->
-        <Example title="Custom Icon Slot">
+        <Example title="Custom Icon Slot" :code="`<CuiAlert color=&quot;primary&quot; title=&quot;Rocket Launched&quot; entrance=&quot;none&quot;>
+  <template #icon>🚀</template>
+  Your deployment is live and serving traffic.
+</CuiAlert>`">
           <CuiAlert color="primary" title="Rocket Launched" entrance="none">
             <template #icon>🚀</template>
             Your deployment is live and serving traffic.
@@ -117,7 +133,10 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Title Only / Description Only -->
-        <Example title="Title Only &amp; Description Only">
+        <Example title="Title Only &amp; Description Only" :code="`<CuiAlert color=&quot;success&quot; title=&quot;File uploaded successfully&quot; entrance=&quot;none&quot; />
+<CuiAlert color=&quot;info&quot; entrance=&quot;none&quot;>
+  Click the button below to get started.
+</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert color="success" title="File uploaded successfully" entrance="none" />
             <CuiAlert color="info" entrance="none">
@@ -152,7 +171,15 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Dismissible -->
-        <Example title="Dismissible">
+        <Example title="Dismissible" :code="`<CuiAlert
+  color=&quot;warning&quot;
+  title=&quot;Heads Up&quot;
+  dismissible
+  entrance=&quot;none&quot;
+  @dismiss=&quot;show = false&quot;
+>
+  This alert can be dismissed.
+</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert
               v-if="showDismissible"
@@ -176,7 +203,15 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Auto-dismiss -->
-        <Example title="Auto-Dismiss (3 seconds)">
+        <Example title="Auto-Dismiss (3 seconds)" :code="`<CuiAlert
+  color=&quot;success&quot;
+  title=&quot;Saved!&quot;
+  :auto-dismiss=&quot;3000&quot;
+  entrance=&quot;slide-down&quot;
+  @dismiss=&quot;show = false&quot;
+>
+  This alert disappears in 3 seconds.
+</CuiAlert>`">
           <CuiStack spacing="3">
             <CuiAlert
               v-if="showAuto"
@@ -200,7 +235,9 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Entrance Animations -->
-        <Example title="Entrance Animations">
+        <Example title="Entrance Animations" :code="`<CuiAlert color=&quot;info&quot; entrance=&quot;fade&quot; title=&quot;Fade&quot; />
+<CuiAlert color=&quot;success&quot; entrance=&quot;slide-down&quot; title=&quot;Slide Down&quot; />
+<CuiAlert color=&quot;warning&quot; entrance=&quot;slide-left&quot; title=&quot;Slide Left&quot; />`">
           <CuiStack spacing="3">
             <CuiFlex gap="3" class="flex-wrap">
               <CuiButton size="sm" variant="outline" @click="showEntrance.fade = !showEntrance.fade">
@@ -241,7 +278,9 @@ const showPulse = ref(true);
         </Example>
 
         <!-- Persistent Animations -->
-        <Example title="Persistent Animations">
+        <Example title="Persistent Animations" :code="`<CuiAlert color=&quot;info&quot; animation=&quot;pulse&quot; title=&quot;Pulse&quot; entrance=&quot;none&quot; />
+<CuiAlert color=&quot;warning&quot; animation=&quot;glow&quot; title=&quot;Glow&quot; entrance=&quot;none&quot; />
+<CuiAlert color=&quot;error&quot; animation=&quot;shake&quot; title=&quot;Shake&quot; entrance=&quot;none&quot; />`">
           <CuiStack spacing="3">
             <CuiAlert
               v-if="showPulse"

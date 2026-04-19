@@ -73,7 +73,8 @@ const verticalStep = ref(1);
           { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Layout direction' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
           { name: 'clickable', type: 'boolean', default: 'true', description: 'Allow clicking completed steps to go back' },
-          { name: 'linear', type: 'boolean', default: 'true', description: 'Linear mode — can only go back, not skip ahead' },
+          { name: 'linear', type: 'boolean', default: 'true', description: 'Linear mode — can only progress forward, no skipping' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -94,7 +95,11 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- With descriptions -->
-        <Example title="With Descriptions">
+        <Example title="With Descriptions" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />
+// steps = [
+//   { label: 'Account Setup', description: 'Create your credentials' },
+//   { label: 'Personal Info', description: 'Name, email, and phone' },
+// ]`">
           <CuiStack spacing="4">
             <CuiStepper :steps="detailSteps" v-model="detailStep" />
             <CuiFlex gap="2">
@@ -105,7 +110,12 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- Custom icons -->
-        <Example title="Custom Icons">
+        <Example title="Custom Icons" :code="`// steps = [
+//   { label: 'Cart', icon: 'shopping-cart' },
+//   { label: 'Shipping', icon: 'truck' },
+//   { label: 'Payment', icon: 'credit-card' },
+// ]
+<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
           <CuiStack spacing="4">
             <CuiStepper :steps="iconSteps" v-model="iconStep" />
             <CuiFlex gap="2">
@@ -116,7 +126,9 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;sm&quot; :clickable=&quot;false&quot; />
+<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;md&quot; :clickable=&quot;false&quot; />
+<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;lg&quot; :clickable=&quot;false&quot; />`">
           <CuiStack spacing="6">
             <div>
               <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Small:</div>
@@ -134,7 +146,12 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- Error state -->
-        <Example title="Error State">
+        <Example title="Error State" :code="`// steps = [
+//   { label: 'Details', description: 'Basic information' },
+//   { label: 'Verification', description: 'Identity check', error: true },
+//   { label: 'Approval', description: 'Final review' },
+// ]
+<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
           <CuiStack spacing="4">
             <CuiStepper :steps="errorSteps" v-model="errorStep" />
             <p class="text-sm" style="color: var(--cui-error);">Verification failed — please try again.</p>
@@ -142,7 +159,7 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- Vertical -->
-        <Example title="Vertical Orientation">
+        <Example title="Vertical Orientation" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; orientation=&quot;vertical&quot; />`">
           <div style="max-width: 24rem;">
             <CuiCard variant="outline">
               <CuiCardBody>
@@ -159,7 +176,7 @@ const verticalStep = ref(1);
         </Example>
 
         <!-- All complete -->
-        <Example title="All Complete">
+        <Example title="All Complete" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;steps.length&quot; :clickable=&quot;false&quot; />`">
           <CuiStepper :steps="basicSteps" :model-value="basicSteps.length" :clickable="false" />
         </Example>
 

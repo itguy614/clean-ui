@@ -37,7 +37,11 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
           { name: 'blockSpanningBlackout', type: 'boolean', default: 'true', description: 'Prevent selecting a range that spans a blackout date' },
           { name: 'separator', type: 'string', default: '→', description: 'Separator between start and end display' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
+          { name: 'startPlaceholder', type: 'string', default: '—', description: 'Placeholder for start input' },
+          { name: 'endPlaceholder', type: 'string', default: '—', description: 'Placeholder for end input' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -58,7 +62,11 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
         </Example>
 
         <!-- Future only -->
-        <Example title="Future Dates Only">
+        <Example title="Future Dates Only" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  label=&quot;Booking Window&quot;
+  :min-date=&quot;new Date().toISOString().slice(0, 10)&quot;
+/>`">
           <CuiDateRangePicker
             v-model="range2"
             label="Booking Window"
@@ -67,7 +75,12 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
         </Example>
 
         <!-- With range constraint -->
-        <Example title="Within 2025 Only">
+        <Example title="Within 2025 Only" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  label=&quot;Fiscal Year 2025&quot;
+  min-date=&quot;2025-01-01&quot;
+  max-date=&quot;2025-12-31&quot;
+/>`">
           <CuiDateRangePicker
             v-model="range3"
             label="Fiscal Year 2025"
@@ -95,7 +108,12 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
         </Example>
 
         <!-- Specific blackout dates -->
-        <Example title="Holiday Blackouts">
+        <Example title="Holiday Blackouts" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  label=&quot;Vacation Request&quot;
+  :disabled-dates=&quot;['2025-07-04', { from: '2025-12-24', to: '2025-12-26' }]&quot;
+  block-spanning-blackout
+/>`">
           <CuiDateRangePicker
             v-model="range5"
             label="Vacation Request"
@@ -109,7 +127,11 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
         </Example>
 
         <!-- EU format -->
-        <Example title="EU Format (DD/MM/YYYY)">
+        <Example title="EU Format (DD/MM/YYYY)" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  format=&quot;DD/MM/YYYY&quot;
+  label=&quot;European Format&quot;
+/>`">
           <CuiDateRangePicker
             :model-value="{ start: '2025-06-01', end: '2025-06-14' }"
             format="DD/MM/YYYY"

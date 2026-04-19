@@ -42,6 +42,7 @@ const commonIcons = [
           { name: 'color', type: 'string', default: 'currentColor', description: 'Icon color (inherits from parent by default)' },
           { name: 'duotoneColor', type: 'string', default: '-', description: 'Secondary color for duotone weight' },
           { name: 'duotoneOpacity', type: 'number', default: '0.2', description: 'Opacity for duotone secondary layer' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -91,7 +92,12 @@ const commonIcons = [
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiIcon name=&quot;star&quot; size=&quot;xs&quot; />
+<CuiIcon name=&quot;star&quot; size=&quot;sm&quot; />
+<CuiIcon name=&quot;star&quot; size=&quot;md&quot; />
+<CuiIcon name=&quot;star&quot; size=&quot;lg&quot; />
+<CuiIcon name=&quot;star&quot; size=&quot;xl&quot; />
+<CuiIcon name=&quot;star&quot; size=&quot;3rem&quot; />`">
           <CuiFlex gap="4" class="items-end">
             <CuiStack spacing="1" class="items-center">
               <CuiIcon name="star" size="xs" />
@@ -121,7 +127,9 @@ const commonIcons = [
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors (inherits from parent)">
+        <Example title="Colors (inherits from parent)" :code="`<span style=&quot;color: var(--cui-primary)&quot;><CuiIcon name=&quot;check-circle&quot; /></span>
+<span style=&quot;color: var(--cui-success)&quot;><CuiIcon name=&quot;check-circle&quot; /></span>
+<span style=&quot;color: var(--cui-error)&quot;><CuiIcon name=&quot;x-circle&quot; /></span>`">
           <CuiFlex gap="4" class="items-center">
             <span style="color: var(--cui-primary)"><CuiIcon name="check-circle" size="lg" /></span>
             <span style="color: var(--cui-success)"><CuiIcon name="check-circle" size="lg" /></span>
@@ -132,7 +140,9 @@ const commonIcons = [
         </Example>
 
         <!-- Explicit Color -->
-        <Example title="Explicit Color Prop">
+        <Example title="Explicit Color Prop" :code="`<CuiIcon name=&quot;heart&quot; weight=&quot;fill&quot; color=&quot;var(--cui-error)&quot; />
+<CuiIcon name=&quot;star&quot; weight=&quot;fill&quot; color=&quot;var(--cui-warning)&quot; />
+<CuiIcon name=&quot;check-circle&quot; weight=&quot;fill&quot; color=&quot;var(--cui-success)&quot; />`">
           <CuiFlex gap="4" class="items-center">
             <CuiIcon name="heart" size="lg" weight="fill" color="var(--cui-error)" />
             <CuiIcon name="star" size="lg" weight="fill" color="var(--cui-warning)" />
@@ -161,7 +171,11 @@ const commonIcons = [
         </Example>
 
         <!-- Role Icons (used internally) -->
-        <Example title="Role Icons (used in Alert, Toast)">
+        <Example title="Role Icons (used in Alert, Toast)" :code="`<!-- Icons are auto-selected by color role in Alert and Toast -->
+<CuiAlert color=&quot;success&quot; title=&quot;Success&quot; />
+<CuiAlert color=&quot;error&quot; title=&quot;Error&quot; />
+<CuiAlert color=&quot;warning&quot; title=&quot;Warning&quot; />
+<CuiAlert color=&quot;info&quot; title=&quot;Info&quot; />`">
           <CuiFlex gap="6" class="items-center">
             <CuiStack spacing="1" class="items-center">
               <span style="color: var(--cui-success)"><CuiIcon name="check-circle" size="lg" /></span>
@@ -183,7 +197,10 @@ const commonIcons = [
         </Example>
 
         <!-- Common Icons Gallery -->
-        <Example title="Common Icons Gallery">
+        <Example title="Common Icons Gallery" :code="`<CuiIcon name=&quot;house&quot; />
+<CuiIcon name=&quot;gear&quot; />
+<CuiIcon name=&quot;user&quot; />
+<!-- Browse all 9,000+ icons at phosphoricons.com -->`">
           <div class="grid grid-cols-6 gap-3 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12">
             <div
               v-for="icon in commonIcons"

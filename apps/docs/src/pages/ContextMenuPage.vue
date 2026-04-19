@@ -37,6 +37,7 @@ const italic = ref(false);
         :props="[
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevents the context menu from opening' },
           { name: 'minWidth', type: 'string', default: '12rem', description: 'Minimum width of the menu panel' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -123,7 +124,21 @@ const italic = ref(false);
         </Example>
 
         <!-- With headers and dividers -->
-        <Example title="Sections with Headers and Dividers">
+        <Example title="Sections with Headers and Dividers" :code="`<CuiContextMenu min-width=&quot;14rem&quot;>
+  <div>Right-click for grouped actions</div>
+  <template #menu>
+    <CuiDropdownHeader>Edit</CuiDropdownHeader>
+    <CuiDropdownItem shortcut=&quot;⌘Z&quot;>
+      <template #icon><CuiIcon name=&quot;arrow-counter-clockwise&quot; /></template>
+      Undo
+    </CuiDropdownItem>
+    <CuiDropdownDivider />
+    <CuiDropdownHeader>View</CuiDropdownHeader>
+    <CuiDropdownItem shortcut=&quot;⌘+&quot;>Zoom In</CuiDropdownItem>
+    <CuiDropdownDivider />
+    <CuiDropdownItem disabled>Delete</CuiDropdownItem>
+  </template>
+</CuiContextMenu>`">
           <CuiContextMenu min-width="14rem">
             <div
               class="flex items-center justify-center rounded-lg border-2 border-dashed p-12"
@@ -161,7 +176,16 @@ const italic = ref(false);
         </Example>
 
         <!-- Checkbox items -->
-        <Example title="With Checkbox Items">
+        <Example title="With Checkbox Items" :code="`<CuiContextMenu>
+  <div>Right-click for formatting options</div>
+  <template #menu>
+    <CuiDropdownHeader>Formatting</CuiDropdownHeader>
+    <CuiDropdownCheckItem v-model=&quot;bold&quot;>Bold</CuiDropdownCheckItem>
+    <CuiDropdownCheckItem v-model=&quot;italic&quot;>Italic</CuiDropdownCheckItem>
+    <CuiDropdownDivider />
+    <CuiDropdownItem>Clear Formatting</CuiDropdownItem>
+  </template>
+</CuiContextMenu>`">
           <CuiContextMenu>
             <div
               class="flex items-center justify-center rounded-lg border-2 border-dashed p-12"
@@ -183,7 +207,30 @@ const italic = ref(false);
         </Example>
 
         <!-- On a card -->
-        <Example title="Real-World: Card Context Menu">
+        <Example title="Real-World: Card Context Menu" :code="`<CuiContextMenu>
+  <CuiCard variant=&quot;outline&quot;>
+    <CuiCardBody>quarterly-report.pdf</CuiCardBody>
+  </CuiCard>
+  <template #menu>
+    <CuiDropdownItem>
+      <template #icon><CuiIcon name=&quot;eye&quot; /></template>
+      Open
+    </CuiDropdownItem>
+    <CuiDropdownItem>
+      <template #icon><CuiIcon name=&quot;download-simple&quot; /></template>
+      Download
+    </CuiDropdownItem>
+    <CuiDropdownItem>
+      <template #icon><CuiIcon name=&quot;share-network&quot; /></template>
+      Share
+    </CuiDropdownItem>
+    <CuiDropdownDivider />
+    <CuiDropdownItem>
+      <template #icon><CuiIcon name=&quot;trash&quot; /></template>
+      Move to Trash
+    </CuiDropdownItem>
+  </template>
+</CuiContextMenu>`">
           <div class="max-w-sm">
             <CuiContextMenu>
               <CuiCard variant="outline">

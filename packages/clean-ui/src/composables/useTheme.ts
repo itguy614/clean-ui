@@ -8,12 +8,12 @@ export interface ThemePreset {
 
 export const THEME_PRESETS: ThemePreset[] = [
   { id: "mono", label: "Mono", description: "Monochrome — default theme" },
-  { id: "default", label: "Labels", description: "Navy blue" },
-  { id: "stock", label: "Stock", description: "Natural green" },
-  { id: "access", label: "Access", description: "Warm orange with warm grays" },
-  { id: "temp", label: "Temp", description: "Vibrant blue" },
-  { id: "dayton", label: "Dayton", description: "Cool teal" },
-  { id: "stat", label: "Stat", description: "Professional teal" },
+  { id: "default", label: "Navy", description: "Navy blue" },
+  { id: "stock", label: "Forest", description: "Natural green" },
+  { id: "access", label: "Amber", description: "Warm orange with warm grays" },
+  { id: "temp", label: "Azure", description: "Vibrant blue" },
+  { id: "dayton", label: "Teal", description: "Cool teal" },
+  { id: "stat", label: "Slate Teal", description: "Professional teal" },
   { id: "ruby", label: "Ruby", description: "Bold red" },
 ];
 

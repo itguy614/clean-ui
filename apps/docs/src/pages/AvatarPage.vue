@@ -35,6 +35,18 @@ import Example from "../components/Example.vue";
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role for initials/icon background' },
           { name: 'status', type: 'online | offline | away | busy', default: '—', description: 'Status indicator dot' },
           { name: 'statusAnimation', type: 'pulse | ping | none', default: 'none', description: 'Animate the status indicator' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiAvatarGroup Props</h2>
+      <PropTable
+        :props="[
+          { name: 'spacing', type: 'string', default: '-0.5rem', description: 'Negative margin overlap between avatars' },
+          { name: 'max', type: 'number', default: '—', description: 'Max avatars to show before +N overflow indicator' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -56,7 +68,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiAvatar name=&quot;Alice Johnson&quot; size=&quot;xs&quot; />
+<CuiAvatar name=&quot;Alice Johnson&quot; size=&quot;sm&quot; />
+<CuiAvatar name=&quot;Alice Johnson&quot; size=&quot;md&quot; />
+<CuiAvatar name=&quot;Alice Johnson&quot; size=&quot;lg&quot; />
+<CuiAvatar name=&quot;Alice Johnson&quot; size=&quot;xl&quot; />`">
           <CuiFlex gap="3" class="items-center">
             <CuiAvatar name="Alice Johnson" size="xs" />
             <CuiAvatar name="Alice Johnson" size="sm" />
@@ -90,7 +106,8 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Shapes -->
-        <Example title="Shapes">
+        <Example title="Shapes" :code="`<CuiAvatar name=&quot;Circle&quot; shape=&quot;circle&quot; />
+<CuiAvatar name=&quot;Rounded&quot; shape=&quot;rounded&quot; />`">
           <CuiFlex gap="3" class="items-center">
             <CuiAvatar name="Circle" shape="circle" size="lg" />
             <CuiAvatar name="Rounded" shape="rounded" size="lg" color="secondary" />
@@ -122,7 +139,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Animated status -->
-        <Example title="Animated Status" :code="`<CuiAvatar name=&quot;Alice&quot; status=&quot;online&quot; status-animation=&quot;ping&quot; />`">
+        <Example title="Animated Status" :code="`<CuiAvatar name=&quot;Alice&quot; status=&quot;online&quot; status-animation=&quot;ping&quot; />
+<CuiAvatar name=&quot;Bob&quot; status=&quot;online&quot; status-animation=&quot;pulse&quot; />
+<CuiAvatar name=&quot;Carol&quot; status=&quot;busy&quot; status-animation=&quot;ping&quot; />`">
           <CuiFlex gap="4" class="items-center">
             <div class="text-center">
               <CuiAvatar name="Alice Johnson" status="online" size="lg" status-animation="ping" />
@@ -198,7 +217,13 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: User profile -->
-        <Example title="Real-World: User Info">
+        <Example title="Real-World: User Info" :code="`<CuiFlex gap=&quot;3&quot; class=&quot;items-center&quot;>
+  <CuiAvatar src=&quot;...&quot; name=&quot;Jane Doe&quot; size=&quot;lg&quot; status=&quot;online&quot; />
+  <div>
+    <div class=&quot;font-semibold&quot;>Jane Doe</div>
+    <div>Product Designer</div>
+  </div>
+</CuiFlex>`">
           <CuiCard variant="outline" style="max-width: 20rem;">
             <CuiCardBody>
               <CuiFlex gap="3" class="items-center">

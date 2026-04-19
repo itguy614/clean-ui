@@ -102,6 +102,7 @@ const dynamicField = ref({
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below select' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -164,7 +165,8 @@ const dynamicField = ref({
         </Example>
 
         <!-- Disabled Options -->
-        <Example title="Disabled Options">
+        <Example title="Disabled Options" :code="`<CuiSelect v-model=&quot;multi&quot; :options=&quot;permissionOptions&quot; multiple />
+<!-- options with disabled: true are greyed out and unselectable -->`">
           <CuiStack spacing="2" class="max-w-sm">
             <CuiSelect
               v-model="multi"
@@ -218,7 +220,7 @@ const dynamicField = ref({
         </Example>
 
         <!-- Loading -->
-        <Example title="Loading State (async data)">
+        <Example title="Loading State (async data)" :code="`<CuiSelect :options=&quot;loadedOptions&quot; :loading=&quot;loading&quot; placeholder=&quot;Loading...&quot; />`">
           <CuiStack spacing="2" class="max-w-sm">
             <CuiSelect
               :options="loadedOptions"
@@ -232,7 +234,11 @@ const dynamicField = ref({
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiSelect size=&quot;xs&quot; placeholder=&quot;Extra small&quot; />
+<CuiSelect size=&quot;sm&quot; placeholder=&quot;Small&quot; />
+<CuiSelect size=&quot;md&quot; placeholder=&quot;Medium (default)&quot; />
+<CuiSelect size=&quot;lg&quot; placeholder=&quot;Large&quot; />
+<CuiSelect size=&quot;xl&quot; placeholder=&quot;Extra large&quot; />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiSelect :options="['Small']" size="xs" placeholder="Extra small" />
             <CuiSelect :options="['Small']" size="sm" placeholder="Small" />
@@ -243,7 +249,9 @@ const dynamicField = ref({
         </Example>
 
         <!-- Colors -->
-        <Example title="Focus Colors (click to see)">
+        <Example title="Focus Colors (click to see)" :code="`<CuiSelect color=&quot;primary&quot; placeholder=&quot;Primary&quot; />
+<CuiSelect color=&quot;success&quot; placeholder=&quot;Success&quot; />
+<CuiSelect color=&quot;error&quot; placeholder=&quot;Error&quot; />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiSelect v-model="colored" :options="['Red', 'Green', 'Blue']" color="primary" placeholder="Primary" />
             <CuiSelect v-model="colored" :options="['Red', 'Green', 'Blue']" color="success" placeholder="Success" />
@@ -252,7 +260,7 @@ const dynamicField = ref({
         </Example>
 
         <!-- Error -->
-        <Example title="Error Validation">
+        <Example title="Error Validation" :code="`<CuiSelect v-model=&quot;errorVal&quot; :options=&quot;fruitOptions&quot; error error-message=&quot;Please select an option&quot; />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiSelect
               v-model="errorVal"
@@ -265,7 +273,8 @@ const dynamicField = ref({
         </Example>
 
         <!-- Disabled / Readonly -->
-        <Example title="Disabled &amp; Readonly">
+        <Example title="Disabled &amp; Readonly" :code="`<CuiSelect model-value=&quot;apple&quot; :options=&quot;fruitOptions&quot; disabled />
+<CuiSelect model-value=&quot;banana&quot; :options=&quot;fruitOptions&quot; readonly />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiSelect model-value="apple" :options="fruitOptions" disabled placeholder="Disabled" />
             <CuiSelect model-value="banana" :options="fruitOptions" readonly placeholder="Readonly" />

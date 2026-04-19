@@ -41,6 +41,8 @@ const dateObj = ref<Date | null>(new Date());
           { name: 'placeholder', type: 'string', default: '—', description: 'Placeholder (auto-generated from format if omitted)' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -60,7 +62,9 @@ const dateObj = ref<Date | null>(new Date());
         </Example>
 
         <!-- Different formats -->
-        <Example title="Custom Formats">
+        <Example title="Custom Formats" :code="`<CuiDatePicker v-model=&quot;date&quot; format=&quot;MM/DD/YYYY&quot; label=&quot;US Format&quot; />
+<CuiDatePicker v-model=&quot;date&quot; format=&quot;DD/MM/YYYY&quot; label=&quot;EU Format&quot; />
+<CuiDatePicker v-model=&quot;date&quot; format=&quot;YYYY-MM-DD&quot; label=&quot;ISO Format&quot; />`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiDatePicker v-model="date2" format="MM/DD/YYYY" label="US Format" />
             <CuiDatePicker v-model="date2" format="DD/MM/YYYY" label="EU Format" />
@@ -79,7 +83,11 @@ const dateObj = ref<Date | null>(new Date());
         </Example>
 
         <!-- No past dates -->
-        <Example title="No Past Dates (Today Onward)">
+        <Example title="No Past Dates (Today Onward)" :code="`<CuiDatePicker
+  v-model=&quot;date&quot;
+  label=&quot;Future Date&quot;
+  :min-date=&quot;new Date().toISOString().slice(0, 10)&quot;
+/>`">
           <CuiDatePicker
             v-model="date4"
             label="Future Date"
@@ -117,7 +125,13 @@ const dateObj = ref<Date | null>(new Date());
         </Example>
 
         <!-- Month-only first day -->
-        <Example title="Month-Only (Fill First Day)">
+        <Example title="Month-Only (Fill First Day)" :code="`<CuiDatePicker
+  v-model=&quot;date&quot;
+  mode=&quot;month&quot;
+  fill-day=&quot;first&quot;
+  format=&quot;MMM YYYY&quot;
+  label=&quot;Billing Start&quot;
+/>`">
           <CuiFlex gap="4" class="items-start">
             <CuiDatePicker
               v-model="date5"
@@ -147,7 +161,9 @@ const dateObj = ref<Date | null>(new Date());
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiDatePicker size=&quot;sm&quot; label=&quot;Small&quot; />
+<CuiDatePicker size=&quot;md&quot; label=&quot;Medium&quot; />
+<CuiDatePicker size=&quot;lg&quot; label=&quot;Large&quot; />`">
           <CuiFlex gap="4" class="items-end flex-wrap">
             <CuiDatePicker :model-value="'2025-06-15'" size="sm" label="Small" />
             <CuiDatePicker :model-value="'2025-06-15'" size="md" label="Medium" />

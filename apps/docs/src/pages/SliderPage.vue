@@ -36,6 +36,7 @@ const temp = ref(72);
           { name: 'formatValue', type: '(v: number) => string', default: '—', description: 'Custom value formatter' },
           { name: 'showRange', type: 'boolean', default: 'false', description: 'Show min/max labels below track' },
           { name: 'thumbIcon', type: 'string', default: '—', description: 'Phosphor icon name for the thumb' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -52,7 +53,8 @@ const temp = ref(72);
         </Example>
 
         <!-- With range labels -->
-        <Example title="With Range Labels">
+        <Example title="With Range Labels" :code="`<CuiSlider v-model=&quot;temp&quot; :min=&quot;60&quot; :max=&quot;85&quot; label=&quot;Temperature&quot;
+  show-value show-range :format-value=&quot;(v) =&gt; v + '°F'&quot; />`">
           <div class="max-w-md">
             <CuiSlider
               v-model="temp"
@@ -94,7 +96,9 @@ const temp = ref(72);
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiSlider :model-value=&quot;40&quot; size=&quot;sm&quot; label=&quot;Small&quot; show-value />
+<CuiSlider :model-value=&quot;60&quot; size=&quot;md&quot; label=&quot;Medium&quot; show-value />
+<CuiSlider :model-value=&quot;80&quot; size=&quot;lg&quot; label=&quot;Large&quot; show-value />`">
           <div class="max-w-md">
             <CuiStack spacing="4">
               <CuiSlider :model-value="40" size="sm" label="Small" show-value />
@@ -105,7 +109,9 @@ const temp = ref(72);
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiSlider :model-value=&quot;70&quot; color=&quot;primary&quot; label=&quot;Primary&quot; show-value />
+<CuiSlider :model-value=&quot;70&quot; color=&quot;success&quot; label=&quot;Success&quot; show-value />
+<CuiSlider :model-value=&quot;70&quot; color=&quot;error&quot; label=&quot;Error&quot; show-value />`">
           <div class="max-w-md">
             <CuiStack spacing="4">
               <CuiSlider :model-value="70" color="primary" label="Primary" show-value />
@@ -145,7 +151,7 @@ const temp = ref(72);
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled">
+        <Example title="Disabled" :code="`<CuiSlider :model-value=&quot;50&quot; disabled label=&quot;Disabled&quot; show-value />`">
           <div class="max-w-md">
             <CuiSlider :model-value="50" disabled label="Disabled" show-value />
           </div>

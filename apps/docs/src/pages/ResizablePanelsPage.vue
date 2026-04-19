@@ -27,6 +27,7 @@ const size1 = ref(50);
           { name: 'minFirst', type: 'number', default: '100', description: 'Minimum first panel size (px)' },
           { name: 'minSecond', type: 'number', default: '100', description: 'Minimum second panel size (px)' },
           { name: 'collapseThreshold', type: 'number', default: '0', description: 'Collapse first panel below this size (px). 0 disables.' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -73,7 +74,10 @@ const size1 = ref(50);
         </Example>
 
         <!-- Vertical -->
-        <Example title="Vertical Split">
+        <Example title="Vertical Split" :code="`<CuiResizablePanels direction=&quot;vertical&quot; :initial-size=&quot;40&quot;>
+  <template #first>Top panel</template>
+  <template #second>Bottom panel</template>
+</CuiResizablePanels>`">
           <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
             <CuiResizablePanels direction="vertical" :initial-size="40">
               <template #first>
@@ -133,7 +137,16 @@ const size1 = ref(50);
         </Example>
 
         <!-- Real-world: Code editor -->
-        <Example title="Real-World: Code Editor Layout">
+        <Example title="Real-World: Code Editor Layout" :code="`<!-- Nested panels for file explorer + editor + terminal -->
+<CuiResizablePanels :initial-size=&quot;35&quot; :min-first=&quot;150&quot;>
+  <template #first><!-- File Explorer --></template>
+  <template #second>
+    <CuiResizablePanels direction=&quot;vertical&quot; :initial-size=&quot;70&quot;>
+      <template #first><!-- Editor --></template>
+      <template #second><!-- Terminal --></template>
+    </CuiResizablePanels>
+  </template>
+</CuiResizablePanels>`">
           <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
             <CuiResizablePanels :initial-size="35" :min-first="150">
               <template #first>

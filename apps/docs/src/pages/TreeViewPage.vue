@@ -182,7 +182,9 @@ const selectedPerson = ref<string | number | null>(null);
           { name: 'expandAll', type: 'boolean', default: 'false', description: 'Expand all nodes by default' },
           { name: 'showLines', type: 'boolean', default: 'true', description: 'Show connecting lines' },
           { name: 'selectable', type: 'boolean', default: 'true', description: 'Allow selection (false = expand-only)' },
+          { name: 'animated', type: 'boolean', default: 'true', description: 'Animate expand/collapse' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -192,7 +194,11 @@ const selectedPerson = ref<string | number | null>(null);
       <CuiStack spacing="6">
 
         <!-- File explorer -->
-        <Example title="File Explorer">
+        <Example title="File Explorer" :code="`<CuiTreeView
+  v-model=&quot;selectedFile&quot;
+  :nodes=&quot;fileTree&quot;
+  :default-expanded=&quot;['src', 'components']&quot;
+/>`">
           <CuiFlex gap="4" class="items-start">
             <CuiCard variant="outline" style="width: 18rem;">
               <CuiCardBody>
@@ -210,7 +216,12 @@ const selectedPerson = ref<string | number | null>(null);
         </Example>
 
         <!-- Org chart with multi-select -->
-        <Example title="Org Chart (Multi-Select)">
+        <Example title="Org Chart (Multi-Select)" :code="`<CuiTreeView
+  v-model=&quot;selectedOrg&quot;
+  :nodes=&quot;orgTree&quot;
+  multiple
+  expand-all
+/>`">
           <CuiFlex gap="4" class="items-start">
             <CuiCard variant="outline" style="width: 20rem;">
               <CuiCardBody>
@@ -229,7 +240,13 @@ const selectedPerson = ref<string | number | null>(null);
         </Example>
 
         <!-- Navigation menu -->
-        <Example title="Navigation Menu (No Lines)">
+        <Example title="Navigation Menu (No Lines)" :code="`<CuiTreeView
+  v-model=&quot;selectedNav&quot;
+  :nodes=&quot;navTree&quot;
+  :show-lines=&quot;false&quot;
+  :default-expanded=&quot;['products', 'orders']&quot;
+  size=&quot;sm&quot;
+/>`">
           <CuiCard variant="outline" style="width: 16rem;">
             <CuiCardBody>
               <CuiTreeView
@@ -244,7 +261,12 @@ const selectedPerson = ref<string | number | null>(null);
         </Example>
 
         <!-- Expand only (no selection) -->
-        <Example title="Expand Only (Not Selectable)">
+        <Example title="Expand Only (Not Selectable)" :code="`<CuiTreeView
+  :nodes=&quot;fileTree&quot;
+  :selectable=&quot;false&quot;
+  expand-all
+  size=&quot;sm&quot;
+/>`">
           <CuiCard variant="outline" style="width: 18rem;">
             <CuiCardBody>
               <CuiTreeView

@@ -22,6 +22,7 @@ import Example from "../components/Example.vue";
           { name: 'description', type: 'string', default: '—', description: 'Supporting text below the title' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Controls icon size, font sizes, and spacing' },
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role for the icon area' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>

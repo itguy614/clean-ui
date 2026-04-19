@@ -194,6 +194,16 @@ const router = createRouter({
       component: () => import('../pages/TagInputPage.vue'),
     },
     {
+      path: '/components/rating',
+      name: 'rating',
+      component: () => import('../pages/RatingPage.vue'),
+    },
+    {
+      path: '/components/code-block',
+      name: 'code-block',
+      component: () => import('../pages/CodeBlockPage.vue'),
+    },
+    {
       path: '/components/tree-view',
       name: 'tree-view',
       component: () => import('../pages/TreeViewPage.vue'),

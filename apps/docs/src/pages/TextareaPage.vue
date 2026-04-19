@@ -37,6 +37,7 @@ const errorVal = ref("");
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below textarea' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -54,7 +55,8 @@ const errorVal = ref("");
         </Example>
 
         <!-- Rows -->
-        <Example title="Custom Row Count">
+        <Example title="Custom Row Count" :code="`<CuiTextarea placeholder=&quot;2 rows&quot; :rows=&quot;2&quot; />
+<CuiTextarea placeholder=&quot;5 rows&quot; :rows=&quot;5&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiTextarea placeholder="2 rows" :rows="2" />
             <CuiTextarea placeholder="5 rows" :rows="5" />
@@ -95,7 +97,11 @@ const errorVal = ref("");
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiTextarea placeholder=&quot;Extra small&quot; size=&quot;xs&quot; />
+<CuiTextarea placeholder=&quot;Small&quot; size=&quot;sm&quot; />
+<CuiTextarea placeholder=&quot;Medium (default)&quot; size=&quot;md&quot; />
+<CuiTextarea placeholder=&quot;Large&quot; size=&quot;lg&quot; />
+<CuiTextarea placeholder=&quot;Extra large&quot; size=&quot;xl&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiTextarea placeholder="Extra small" size="xs" :rows="2" />
             <CuiTextarea placeholder="Small" size="sm" :rows="2" />
@@ -106,7 +112,10 @@ const errorVal = ref("");
         </Example>
 
         <!-- Focus Colors -->
-        <Example title="Focus Colors (click to see)">
+        <Example title="Focus Colors (click to see)" :code="`<CuiTextarea placeholder=&quot;Primary focus&quot; color=&quot;primary&quot; />
+<CuiTextarea placeholder=&quot;Success focus&quot; color=&quot;success&quot; />
+<CuiTextarea placeholder=&quot;Error focus&quot; color=&quot;error&quot; />
+<CuiTextarea placeholder=&quot;Info focus&quot; color=&quot;info&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiTextarea placeholder="Primary focus" color="primary" :rows="2" />
             <CuiTextarea placeholder="Success focus" color="success" :rows="2" />
@@ -116,7 +125,7 @@ const errorVal = ref("");
         </Example>
 
         <!-- Error Validation -->
-        <Example title="Error Validation">
+        <Example title="Error Validation" :code="`<CuiTextarea v-model=&quot;errorVal&quot; error error-message=&quot;Please provide a description&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiTextarea
               v-model="errorVal"
@@ -135,7 +144,8 @@ const errorVal = ref("");
         </Example>
 
         <!-- Disabled / Readonly -->
-        <Example title="Disabled &amp; Readonly">
+        <Example title="Disabled &amp; Readonly" :code="`<CuiTextarea model-value=&quot;This textarea is disabled&quot; disabled />
+<CuiTextarea model-value=&quot;This textarea is read-only.&quot; readonly />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiTextarea model-value="This textarea is disabled" disabled />
             <CuiTextarea model-value="This textarea is read-only. You can select and copy the text but cannot edit it." readonly />

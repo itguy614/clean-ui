@@ -39,6 +39,7 @@ function resetAll() {
           { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show dismiss button' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide default role icon' },
           { name: 'storageKey', type: 'string', default: '—', description: 'Persist dismissal to localStorage under this key' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -61,7 +62,9 @@ function resetAll() {
       <CuiStack spacing="6">
 
         <!-- Basic -->
-        <Example title="Subtle (default)">
+        <Example title="Subtle (default)" :code="`<CuiBanner @dismiss=&quot;show = false&quot;>
+  We've updated our privacy policy.
+</CuiBanner>`">
           <div style="position: relative; overflow: hidden; border-radius: 0.5rem; border: 1px solid var(--cui-border); min-height: 6rem;">
             <CuiBanner v-if="show1" @dismiss="show1 = false">
               We've updated our privacy policy. Please review the changes.
@@ -70,7 +73,9 @@ function resetAll() {
         </Example>
 
         <!-- Solid -->
-        <Example title="Solid Variant">
+        <Example title="Solid Variant" :code="`<CuiBanner variant=&quot;solid&quot; @dismiss=&quot;show = false&quot;>
+  Scheduled maintenance tonight at 11 PM EST.
+</CuiBanner>`">
           <div style="position: relative; overflow: hidden; border-radius: 0.5rem; border: 1px solid var(--cui-border); min-height: 6rem;">
             <CuiBanner v-if="show2" variant="solid" @dismiss="show2 = false">
               Scheduled maintenance tonight at 11 PM EST. Expect brief downtime.
@@ -79,7 +84,11 @@ function resetAll() {
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiBanner color=&quot;primary&quot; :dismissible=&quot;false&quot;>Primary announcement</CuiBanner>
+<CuiBanner color=&quot;success&quot; :dismissible=&quot;false&quot;>Account verified</CuiBanner>
+<CuiBanner color=&quot;warning&quot; :dismissible=&quot;false&quot;>Subscription expires in 3 days</CuiBanner>
+<CuiBanner color=&quot;error&quot; :dismissible=&quot;false&quot;>Payment failed</CuiBanner>
+<CuiBanner color=&quot;info&quot; :dismissible=&quot;false&quot;>Version 2.0 available</CuiBanner>`">
           <CuiStack spacing="2">
             <div style="position: relative; overflow: hidden; border-radius: 0.375rem;">
               <CuiBanner color="primary" :dismissible="false">Primary: New features available!</CuiBanner>
@@ -117,7 +126,8 @@ function resetAll() {
         </Example>
 
         <!-- Solid colors -->
-        <Example title="Solid Colors">
+        <Example title="Solid Colors" :code="`<CuiBanner color=&quot;primary&quot; variant=&quot;solid&quot; :dismissible=&quot;false&quot;>Solid primary</CuiBanner>
+<CuiBanner color=&quot;error&quot; variant=&quot;solid&quot; :dismissible=&quot;false&quot;>Service outage</CuiBanner>`">
           <CuiStack spacing="2">
             <div style="position: relative; overflow: hidden; border-radius: 0.375rem;">
               <CuiBanner color="primary" variant="solid" :dismissible="false">Solid primary announcement.</CuiBanner>
@@ -132,7 +142,9 @@ function resetAll() {
         </Example>
 
         <!-- Bottom position -->
-        <Example title="Bottom Position">
+        <Example title="Bottom Position" :code="`<CuiBanner position=&quot;bottom&quot; color=&quot;info&quot; @dismiss=&quot;show = false&quot;>
+  This banner sticks to the bottom.
+</CuiBanner>`">
           <div style="position: relative; overflow: hidden; border-radius: 0.5rem; border: 1px solid var(--cui-border); min-height: 8rem;">
             <div style="padding: 1rem; color: var(--cui-text-secondary); font-size: 0.875rem;">
               Page content here...

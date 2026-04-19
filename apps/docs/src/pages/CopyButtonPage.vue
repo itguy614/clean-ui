@@ -38,6 +38,7 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
           { name: 'copiedTooltip', type: 'string', default: 'Copied!', description: 'Tooltip after copy' },
           { name: 'resetDelay', type: 'number', default: '2000', description: 'Time in ms before resetting' },
           { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show text label alongside icon' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -57,7 +58,9 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiCopyButton value=&quot;text&quot; size=&quot;xs&quot; show-label />
+<CuiCopyButton value=&quot;text&quot; size=&quot;sm&quot; show-label />
+<CuiCopyButton value=&quot;text&quot; size=&quot;md&quot; show-label />`">
           <CuiFlex gap="3" class="items-center">
             <CuiCopyButton value="test" size="xs" show-label />
             <CuiCopyButton value="test" size="sm" show-label />
@@ -98,7 +101,11 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
         </Example>
 
         <!-- Inline with text -->
-        <Example title="Inline with Text">
+        <Example title="Inline with Text" :code="`<CuiFlex gap=&quot;2&quot; class=&quot;items-center&quot;>
+  <span>Order ID:</span>
+  <code>ORD-2024-8847</code>
+  <CuiCopyButton value=&quot;ORD-2024-8847&quot; size=&quot;xs&quot; />
+</CuiFlex>`">
           <CuiStack spacing="3">
             <CuiFlex gap="2" class="items-center">
               <span class="text-sm font-medium">Order ID:</span>
@@ -114,7 +121,17 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
         </Example>
 
         <!-- Card with copyable content -->
-        <Example title="Real-World: Credentials Card">
+        <Example title="Real-World: Credentials Card" :code="`<CuiCard variant=&quot;outline&quot;>
+  <CuiCardBody>
+    <div>
+      <div>Host</div>
+      <CuiFlex gap=&quot;2&quot; class=&quot;items-center&quot;>
+        <code>db.example.com:5432</code>
+        <CuiCopyButton value=&quot;db.example.com:5432&quot; size=&quot;xs&quot; />
+      </CuiFlex>
+    </div>
+  </CuiCardBody>
+</CuiCard>`">
           <CuiCard variant="outline" style="max-width: 24rem;">
             <CuiCardBody>
               <CuiStack spacing="3">

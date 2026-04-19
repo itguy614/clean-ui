@@ -31,6 +31,17 @@ import Example from "../components/Example.vue";
           { name: 'title', type: 'string', default: '—', description: 'Title text' },
           { name: 'timestamp', type: 'string', default: '—', description: 'Timestamp or meta text' },
           { name: 'last', type: 'boolean', default: 'false', description: 'Hide the connector line (use on last item)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiTimeline Props</h2>
+      <PropTable
+        :props="[
+          { name: 'compact', type: 'boolean', default: 'false', description: 'Compact mode — less spacing between items' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -64,7 +75,14 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- With icons -->
-        <Example title="With Icons">
+        <Example title="With Icons" :code="`<CuiTimeline>
+  <CuiTimelineItem icon=&quot;shopping-cart&quot; title=&quot;Order placed&quot; timestamp=&quot;10:30 AM&quot; color=&quot;primary&quot;>
+    Order confirmed.
+  </CuiTimelineItem>
+  <CuiTimelineItem icon=&quot;check-circle&quot; title=&quot;Delivered&quot; timestamp=&quot;Next day&quot; color=&quot;success&quot; last>
+    Left at front door.
+  </CuiTimelineItem>
+</CuiTimeline>`">
           <div class="max-w-lg">
             <CuiTimeline>
               <CuiTimelineItem icon="shopping-cart" title="Order placed" timestamp="10:30 AM" color="primary">

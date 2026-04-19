@@ -35,6 +35,7 @@ function resetTags() {
           { name: 'dot', type: 'boolean', default: 'false', description: 'Render as a small colored dot (no text)' },
           { name: 'removable', type: 'boolean', default: 'false', description: 'Show X button, emits remove event (tag mode)' },
           { name: 'animation', type: 'pulse | bounce | ping | none', default: 'none', description: 'Attention animation' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -55,7 +56,12 @@ function resetTags() {
         </Example>
 
         <!-- Colors — Subtle -->
-        <Example title="Colors (subtle)">
+        <Example title="Colors (subtle)" :code="`<CuiBadge color=&quot;primary&quot;>Primary</CuiBadge>
+<CuiBadge color=&quot;secondary&quot;>Secondary</CuiBadge>
+<CuiBadge color=&quot;success&quot;>Success</CuiBadge>
+<CuiBadge color=&quot;error&quot;>Error</CuiBadge>
+<CuiBadge color=&quot;warning&quot;>Warning</CuiBadge>
+<CuiBadge color=&quot;info&quot;>Info</CuiBadge>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiBadge color="primary">Primary</CuiBadge>
             <CuiBadge color="secondary">Secondary</CuiBadge>
@@ -67,7 +73,9 @@ function resetTags() {
         </Example>
 
         <!-- Colors — Solid -->
-        <Example title="Colors (solid)">
+        <Example title="Colors (solid)" :code="`<CuiBadge variant=&quot;solid&quot; color=&quot;primary&quot;>Primary</CuiBadge>
+<CuiBadge variant=&quot;solid&quot; color=&quot;success&quot;>Success</CuiBadge>
+<CuiBadge variant=&quot;solid&quot; color=&quot;error&quot;>Error</CuiBadge>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiBadge variant="solid" color="primary">Primary</CuiBadge>
             <CuiBadge variant="solid" color="secondary">Secondary</CuiBadge>
@@ -79,7 +87,9 @@ function resetTags() {
         </Example>
 
         <!-- Colors — Outline -->
-        <Example title="Colors (outline)">
+        <Example title="Colors (outline)" :code="`<CuiBadge variant=&quot;outline&quot; color=&quot;primary&quot;>Primary</CuiBadge>
+<CuiBadge variant=&quot;outline&quot; color=&quot;success&quot;>Success</CuiBadge>
+<CuiBadge variant=&quot;outline&quot; color=&quot;error&quot;>Error</CuiBadge>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiBadge variant="outline" color="primary">Primary</CuiBadge>
             <CuiBadge variant="outline" color="secondary">Secondary</CuiBadge>
@@ -91,7 +101,8 @@ function resetTags() {
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiBadge size=&quot;sm&quot;>Small</CuiBadge>
+<CuiBadge size=&quot;md&quot;>Medium</CuiBadge>`">
           <CuiFlex gap="3" class="items-center">
             <CuiBadge size="sm">Small</CuiBadge>
             <CuiBadge size="md">Medium</CuiBadge>
@@ -140,7 +151,9 @@ function resetTags() {
         </Example>
 
         <!-- Removable in different variants -->
-        <Example title="Removable Variants">
+        <Example title="Removable Variants" :code="`<CuiBadge removable variant=&quot;subtle&quot; color=&quot;primary&quot;>Subtle</CuiBadge>
+<CuiBadge removable variant=&quot;solid&quot; color=&quot;success&quot;>Solid</CuiBadge>
+<CuiBadge removable variant=&quot;outline&quot; color=&quot;error&quot;>Outline</CuiBadge>`">
           <CuiFlex gap="2" class="flex-wrap">
             <CuiBadge removable variant="subtle" color="primary">Subtle</CuiBadge>
             <CuiBadge removable variant="solid" color="success">Solid</CuiBadge>
@@ -174,7 +187,13 @@ function resetTags() {
         </Example>
 
         <!-- Use cases -->
-        <Example title="Real-World Usage">
+        <Example title="Real-World Usage" :code="`<!-- Status labels -->
+<CuiBadge color=&quot;success&quot;>Active</CuiBadge>
+<CuiBadge color=&quot;warning&quot;>Pending</CuiBadge>
+<CuiBadge color=&quot;error&quot;>Expired</CuiBadge>
+
+<!-- With ping dot for online status -->
+<CuiBadge dot color=&quot;success&quot; animation=&quot;ping&quot; />`">
           <CuiStack spacing="4">
             <!-- Status labels -->
             <div>

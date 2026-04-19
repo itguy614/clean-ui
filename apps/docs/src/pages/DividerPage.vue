@@ -24,6 +24,7 @@ import Example from "../components/Example.vue";
           { name: 'variant', type: 'solid | dashed | dotted', default: 'solid', description: 'Line style' },
           { name: 'spacing', type: 'string', default: '0', description: 'Margin above/below (horizontal) or left/right (vertical)' },
           { name: 'color', type: 'string', default: '—', description: 'Custom line/label color (CSS value)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -33,7 +34,7 @@ import Example from "../components/Example.vue";
       <CuiStack spacing="6">
 
         <!-- Basic -->
-        <Example title="Basic Horizontal">
+        <Example title="Basic Horizontal" :code="`<CuiDivider />`">
           <CuiStack spacing="3">
             <p class="text-sm" style="color: var(--cui-text-secondary);">Content above the divider</p>
             <CuiDivider />
@@ -51,7 +52,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Label positions -->
-        <Example title="Label Positions">
+        <Example title="Label Positions" :code="`<CuiDivider label=&quot;Start&quot; label-position=&quot;start&quot; />
+<CuiDivider label=&quot;Center&quot; label-position=&quot;center&quot; />
+<CuiDivider label=&quot;End&quot; label-position=&quot;end&quot; />`">
           <CuiStack spacing="4">
             <CuiDivider label="Start" label-position="start" />
             <CuiDivider label="Center" label-position="center" />
@@ -60,7 +63,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Variants -->
-        <Example title="Line Styles">
+        <Example title="Line Styles" :code="`<CuiDivider variant=&quot;solid&quot; />
+<CuiDivider variant=&quot;dashed&quot; />
+<CuiDivider variant=&quot;dotted&quot; />`">
           <CuiStack spacing="4">
             <div>
               <div class="mb-1 text-xs" style="color: var(--cui-text-tertiary);">Solid:</div>
@@ -78,7 +83,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Custom color -->
-        <Example title="Custom Colors">
+        <Example title="Custom Colors" :code="`<CuiDivider label=&quot;Primary&quot; color=&quot;var(--cui-primary)&quot; />
+<CuiDivider label=&quot;Success&quot; color=&quot;var(--cui-success)&quot; />
+<CuiDivider label=&quot;Error&quot; color=&quot;var(--cui-error)&quot; variant=&quot;dashed&quot; />`">
           <CuiStack spacing="4">
             <CuiDivider label="Primary" color="var(--cui-primary)" />
             <CuiDivider label="Success" color="var(--cui-success)" />
@@ -104,7 +111,13 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Vertical -->
-        <Example title="Vertical">
+        <Example title="Vertical" :code="`<CuiFlex gap=&quot;0&quot; class=&quot;items-center&quot;>
+  <span>Home</span>
+  <CuiDivider orientation=&quot;vertical&quot; spacing=&quot;0.75rem&quot; />
+  <span>Products</span>
+  <CuiDivider orientation=&quot;vertical&quot; spacing=&quot;0.75rem&quot; />
+  <span>About</span>
+</CuiFlex>`">
           <CuiFlex gap="0" class="items-center" style="height: 3rem;">
             <span class="text-sm" style="color: var(--cui-text-secondary);">Home</span>
             <CuiDivider orientation="vertical" spacing="0.75rem" />
@@ -117,7 +130,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: Login form -->
-        <Example title="Real-World: Login Form Separator">
+        <Example title="Real-World: Login Form Separator" :code="`<CuiButton variant=&quot;outline&quot;>
+  <template #prefix><CuiIcon name=&quot;google-logo&quot; /></template>
+  Continue with Google
+</CuiButton>
+<CuiDivider label=&quot;OR&quot; />
+<CuiButton variant=&quot;solid&quot;>Sign in with Email</CuiButton>`">
           <div style="max-width: 20rem;">
             <CuiStack spacing="3">
               <CuiButton variant="outline" class="w-full">

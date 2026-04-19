@@ -105,6 +105,10 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
           { name: 'errorMessage', type: 'string', default: '—', description: 'Error message' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'loading', type: 'boolean', default: 'false', description: 'External loading state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -138,14 +142,25 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
         </Example>
 
         <!-- Rich options with icons -->
-        <Example title="Rich Options (Icons + Descriptions)">
+        <Example title="Rich Options (Icons + Descriptions)" :code="`<CuiCombobox
+  v-model=&quot;selected&quot;
+  :options=&quot;techStack&quot;
+  multiple
+  label=&quot;Tech Stack&quot;
+  placeholder=&quot;Search technologies...&quot;
+/>`">
           <div style="width: 22rem;">
             <CuiCombobox v-model="selectedTech" :options="techStack" multiple label="Tech Stack" placeholder="Search technologies..." />
           </div>
         </Example>
 
         <!-- Users with avatars -->
-        <Example title="User Select (Images)">
+        <Example title="User Select (Images)" :code="`<CuiCombobox
+  v-model=&quot;user&quot;
+  :options=&quot;users&quot;
+  label=&quot;Assign To&quot;
+  placeholder=&quot;Search users...&quot;
+/>`">
           <CuiFlex gap="4" class="items-start flex-wrap">
             <div style="width: 18rem;">
               <CuiCombobox v-model="selectedUser" :options="users" label="Assign To" placeholder="Search users..." />
@@ -200,7 +215,13 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
         </Example>
 
         <!-- Error state -->
-        <Example title="Error State">
+        <Example title="Error State" :code="`<CuiCombobox
+  v-model=&quot;value&quot;
+  :options=&quot;fruits&quot;
+  label=&quot;Required Field&quot;
+  error
+  error-message=&quot;Please select a fruit&quot;
+/>`">
           <div style="width: 16rem;">
             <CuiCombobox v-model="selectedFruit" :options="fruits" label="Required Field" error error-message="Please select a fruit" placeholder="Pick a fruit..." />
           </div>

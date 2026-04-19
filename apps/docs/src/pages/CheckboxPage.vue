@@ -62,6 +62,7 @@ const dynamicField = ref({
           { name: 'error', type: 'boolean', default: 'false', description: 'Show error state (left accent bar)' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below group' },
           { name: 'label', type: 'string', default: '-', description: 'Accessible group label' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -78,6 +79,7 @@ const dynamicField = ref({
           { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Shows dash indicator (e.g. select-all partial)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -139,7 +141,9 @@ const dynamicField = ref({
         </Example>
 
         <!-- Colors -->
-        <Example title="Color Roles">
+        <Example title="Color Roles" :code="`<CuiCheckbox v-model=&quot;agree&quot; color=&quot;primary&quot; label=&quot;Primary&quot; />
+<CuiCheckbox v-model=&quot;agree&quot; color=&quot;success&quot; label=&quot;Success&quot; />
+<CuiCheckbox v-model=&quot;agree&quot; color=&quot;error&quot; label=&quot;Error&quot; />`">
           <CuiStack spacing="3">
             <CuiCheckbox v-model="agree" color="primary" label="Primary" />
             <CuiCheckbox v-model="agree" color="secondary" label="Secondary" />
@@ -151,7 +155,11 @@ const dynamicField = ref({
         </Example>
 
         <!-- With Descriptions -->
-        <Example title="With Descriptions">
+        <Example title="With Descriptions" :code="`<CuiCheckboxGroup v-model=&quot;permissions&quot;>
+  <CuiCheckbox value=&quot;read&quot; label=&quot;Read&quot; description=&quot;View files and folders&quot; />
+  <CuiCheckbox value=&quot;write&quot; label=&quot;Write&quot; description=&quot;Create and edit files&quot; />
+  <CuiCheckbox value=&quot;delete&quot; label=&quot;Delete&quot; description=&quot;Remove files permanently&quot; color=&quot;error&quot; />
+</CuiCheckboxGroup>`">
           <CuiCheckboxGroup v-model="permissions" label="Permissions">
             <CuiCheckbox value="read" label="Read" description="View files and folders" />
             <CuiCheckbox value="write" label="Write" description="Create and edit files" />
@@ -182,7 +190,10 @@ const dynamicField = ref({
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled State">
+        <Example title="Disabled State" :code="`<CuiCheckboxGroup v-model=&quot;toppings&quot; disabled>
+  <CuiCheckbox value=&quot;cheese&quot; label=&quot;Cheese&quot; />
+  <CuiCheckbox value=&quot;pepperoni&quot; label=&quot;Pepperoni&quot; />
+</CuiCheckboxGroup>`">
           <CuiCheckboxGroup v-model="toppings" disabled label="Disabled group">
             <CuiCheckbox value="cheese" label="Cheese" />
             <CuiCheckbox value="pepperoni" label="Pepperoni" />
@@ -190,7 +201,10 @@ const dynamicField = ref({
         </Example>
 
         <!-- Readonly -->
-        <Example title="Readonly State">
+        <Example title="Readonly State" :code="`<CuiCheckboxGroup v-model=&quot;toppings&quot; readonly>
+  <CuiCheckbox value=&quot;cheese&quot; label=&quot;Cheese (locked)&quot; />
+  <CuiCheckbox value=&quot;pepperoni&quot; label=&quot;Pepperoni (locked)&quot; />
+</CuiCheckboxGroup>`">
           <CuiCheckboxGroup v-model="toppings" readonly label="Readonly group">
             <CuiCheckbox value="cheese" label="Cheese (locked)" />
             <CuiCheckbox value="pepperoni" label="Pepperoni (locked)" />

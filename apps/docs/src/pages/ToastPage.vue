@@ -132,6 +132,7 @@ function floodTest() {
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
           { name: 'icon', type: 'string', default: '-', description: 'Custom icon (emoji/text)' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the auto-icon' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -169,7 +170,14 @@ dismissAll()</code></pre>
       <CuiStack spacing="6">
 
         <!-- Basic Colors -->
-        <Example title="Color Roles">
+        <Example title="Color Roles" :code="`import { useToast } from '@itguy614/clean-ui'
+const { toast } = useToast()
+
+toast({ title: 'Hello!', color: 'primary' })
+toast.success('Saved successfully')
+toast.error('Upload failed')
+toast.warning('Session expiring')
+toast.info('Update available')`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="solid" color="primary" size="sm" @click="basicToast">Primary</CuiButton>
             <CuiButton variant="solid" color="success" size="sm" @click="successToast">Success</CuiButton>
@@ -185,7 +193,11 @@ dismissAll()</code></pre>
         </Example>
 
         <!-- No Progress / Persistent -->
-        <Example title="Progress Bar Control">
+        <Example title="Progress Bar Control" :code="`// No progress bar
+toast({ title: 'No progress bar', showProgress: false, autoDismiss: 3000 })
+
+// Persistent (no auto-dismiss)
+toast({ title: 'Sticky', autoDismiss: 0, showProgress: false })`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="noProgressToast">No Progress Bar</CuiButton>
             <CuiButton variant="outline" size="sm" color="error" @click="persistentToast">Persistent (no auto-dismiss)</CuiButton>
@@ -193,7 +205,9 @@ dismissAll()</code></pre>
         </Example>
 
         <!-- Animations -->
-        <Example title="Persistent Animations">
+        <Example title="Persistent Animations" :code="`toast({ title: 'Pulsing!', color: 'info', animation: 'pulse' })
+toast({ title: 'Glowing!', color: 'warning', animation: 'glow' })
+toast({ title: 'Urgent!', color: 'error', animation: 'shake' })`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="pulseToast">Pulse</CuiButton>
             <CuiButton variant="outline" size="sm" color="warning" @click="glowToast">Glow</CuiButton>
@@ -202,7 +216,13 @@ dismissAll()</code></pre>
         </Example>
 
         <!-- Stacking -->
-        <Example title="Stacking">
+        <Example title="Stacking" :code="`toast.success('Toast 1')
+toast.info('Toast 2')
+toast.warning('Toast 3')
+toast.error('Toast 4')
+
+// Clear all
+dismissAll()`">
           <CuiStack spacing="3">
             <CuiFlex gap="3" class="flex-wrap">
               <CuiButton variant="solid" size="sm" @click="stackTest">Fire 5 Toasts</CuiButton>

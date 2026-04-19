@@ -139,6 +139,13 @@ const wideData: DataGridRow[] = data.map((row) => ({
           { name: 'hideSearch', type: 'boolean', default: 'false', description: 'Hide search' },
           { name: 'hideColumnManager', type: 'boolean', default: 'false', description: 'Hide column manager' },
           { name: 'hideFilterPanel', type: 'boolean', default: 'false', description: 'Hide filter toggle' },
+          { name: 'showSelectAll', type: 'boolean', default: 'true', description: 'Show select-all checkbox in header' },
+          { name: 'striped', type: 'boolean', default: 'false', description: 'Alternating row background stripes' },
+          { name: 'hoverable', type: 'boolean', default: 'true', description: 'Highlight rows on hover' },
+          { name: 'bordered', type: 'boolean', default: 'false', description: 'Show borders between cells' },
+          { name: 'perPageOptions', type: 'number[]', default: '[10, 25, 50, 100]', description: 'Per-page selector options' },
+          { name: 'viewAdapter', type: 'DataGridViewAdapter', default: '—', description: 'Custom adapter for saving/loading views' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -148,7 +155,16 @@ const wideData: DataGridRow[] = data.map((row) => ({
       <CuiStack spacing="6">
 
         <!-- Simple -->
-        <Example title="Simple Data Grid">
+        <Example title="Simple Data Grid" :code="`<CuiDataGrid
+  :columns=&quot;[
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'email', label: 'Email' },
+    { key: 'role', label: 'Role', sortable: true },
+  ]&quot;
+  :data=&quot;rows&quot;
+  hide-column-manager
+  hide-filter-panel
+/>`">
           <CuiDataGrid
             :columns="simpleColumns"
             :data="simpleData"
@@ -158,7 +174,26 @@ const wideData: DataGridRow[] = data.map((row) => ({
         </Example>
 
         <!-- Full-featured with filters -->
-        <Example title="Full-Featured: Sorting, Filtering, Selection, Row Actions">
+        <Example title="Full-Featured: Sorting, Filtering, Selection, Row Actions" :code="`<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;data&quot;
+  :bulk-actions=&quot;[
+    { key: 'export', label: 'Export' },
+    { key: 'delete', label: 'Delete', variant: 'destructive' },
+  ]&quot;
+  max-height=&quot;420px&quot;
+  size=&quot;sm&quot;
+  grid-id=&quot;my-grid&quot;
+  @row-click=&quot;onRowClick&quot;
+  @row-action=&quot;onRowAction&quot;
+  @bulk-action=&quot;onBulkAction&quot;
+>
+  <template #cell-status=&quot;{ value }&quot;>
+    <CuiBadge :color=&quot;value === 'Active' ? 'success' : 'secondary'&quot; size=&quot;sm&quot;>
+      {{ value }}
+    </CuiBadge>
+  </template>
+</CuiDataGrid>`">
           <CuiDataGrid
             :columns="columns"
             :data="data"
@@ -185,7 +220,16 @@ const wideData: DataGridRow[] = data.map((row) => ({
         </Example>
 
         <!-- Card view -->
-        <Example title="Card View Toggle">
+        <Example title="Card View Toggle" :code="`<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot;>
+  <template #card=&quot;{ row }&quot;>
+    <CuiCard variant=&quot;outline&quot;>
+      <CuiCardBody>
+        <div class=&quot;font-semibold text-sm&quot;>{{ row.name }}</div>
+        <div class=&quot;text-xs&quot; style=&quot;color: var(--cui-text-secondary)&quot;>{{ row.role }}</div>
+      </CuiCardBody>
+    </CuiCard>
+  </template>
+</CuiDataGrid>`">
           <CuiDataGrid
             :columns="columns"
             :data="data.slice(0, 9)"
@@ -241,7 +285,13 @@ const wideData: DataGridRow[] = data.map((row) => ({
         </Example>
 
         <!-- Striped + bordered -->
-        <Example title="Striped + Bordered">
+        <Example title="Striped + Bordered" :code="`<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;data&quot;
+  striped
+  bordered
+  hide-toolbar
+/>`">
           <CuiDataGrid
             :columns="simpleColumns"
             :data="simpleData"

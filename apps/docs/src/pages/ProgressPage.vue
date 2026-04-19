@@ -45,6 +45,7 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
           { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show percentage label' },
           { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Unknown progress — animated indicator' },
           { name: 'animation', type: 'none | stripe | shimmer', default: 'none', description: 'Fill animation (bar variant only)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -64,7 +65,9 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Sizes -->
-        <Example title="Bar Sizes">
+        <Example title="Bar Sizes" :code="`<CuiProgress :value=&quot;60&quot; size=&quot;sm&quot; />
+<CuiProgress :value=&quot;60&quot; size=&quot;md&quot; />
+<CuiProgress :value=&quot;60&quot; size=&quot;lg&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiProgress :value="60" size="sm" />
             <CuiProgress :value="60" size="md" />
@@ -73,7 +76,11 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiProgress :value=&quot;70&quot; color=&quot;primary&quot; />
+<CuiProgress :value=&quot;70&quot; color=&quot;success&quot; />
+<CuiProgress :value=&quot;70&quot; color=&quot;error&quot; />
+<CuiProgress :value=&quot;70&quot; color=&quot;warning&quot; />
+<CuiProgress :value=&quot;70&quot; color=&quot;info&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiProgress :value="70" color="primary" />
             <CuiProgress :value="70" color="secondary" />
@@ -130,7 +137,9 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Indeterminate bar -->
-        <Example title="Indeterminate Bar">
+        <Example title="Indeterminate Bar" :code="`<CuiProgress indeterminate />
+<CuiProgress indeterminate color=&quot;success&quot; size=&quot;sm&quot; />
+<CuiProgress indeterminate color=&quot;warning&quot; size=&quot;lg&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiProgress indeterminate />
             <CuiProgress indeterminate color="success" size="sm" />
@@ -139,7 +148,7 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Animated value change -->
-        <Example title="Animated Value Change">
+        <Example title="Animated Value Change" :code="`<CuiProgress :value=&quot;animated&quot; show-label color=&quot;success&quot; size=&quot;lg&quot; />`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiProgress :value="animated" show-label color="success" size="lg" />
             <CuiButton size="sm" variant="outline" @click="startAnimation">Restart</CuiButton>
@@ -157,7 +166,9 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Circle sizes -->
-        <Example title="Circle Sizes">
+        <Example title="Circle Sizes" :code="`<CuiProgress variant=&quot;circle&quot; :value=&quot;65&quot; size=&quot;sm&quot; show-label />
+<CuiProgress variant=&quot;circle&quot; :value=&quot;65&quot; size=&quot;md&quot; show-label />
+<CuiProgress variant=&quot;circle&quot; :value=&quot;65&quot; size=&quot;lg&quot; show-label />`">
           <CuiFlex gap="6" class="items-center flex-wrap">
             <CuiProgress variant="circle" :value="65" size="sm" show-label />
             <CuiProgress variant="circle" :value="65" size="md" show-label />
@@ -166,7 +177,9 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Circle colors -->
-        <Example title="Circle Colors">
+        <Example title="Circle Colors" :code="`<CuiProgress variant=&quot;circle&quot; :value=&quot;70&quot; color=&quot;primary&quot; show-label />
+<CuiProgress variant=&quot;circle&quot; :value=&quot;70&quot; color=&quot;success&quot; show-label />
+<CuiProgress variant=&quot;circle&quot; :value=&quot;70&quot; color=&quot;warning&quot; show-label />`">
           <CuiFlex gap="4" class="items-center flex-wrap">
             <CuiProgress variant="circle" :value="70" color="primary" show-label size="sm" />
             <CuiProgress variant="circle" :value="70" color="success" show-label size="sm" />
@@ -177,7 +190,9 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Circle indeterminate -->
-        <Example title="Circle Indeterminate">
+        <Example title="Circle Indeterminate" :code="`<CuiProgress variant=&quot;circle&quot; indeterminate />
+<CuiProgress variant=&quot;circle&quot; indeterminate color=&quot;success&quot; />
+<CuiProgress variant=&quot;circle&quot; indeterminate color=&quot;error&quot; size=&quot;lg&quot; />`">
           <CuiFlex gap="6" class="items-center flex-wrap">
             <CuiProgress variant="circle" indeterminate size="sm" />
             <CuiProgress variant="circle" indeterminate color="success" />
@@ -186,7 +201,11 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Circle custom label -->
-        <Example title="Circle with Custom Label">
+        <Example title="Circle with Custom Label" :code="`<CuiProgress variant=&quot;circle&quot; :value=&quot;animated&quot; size=&quot;lg&quot; color=&quot;success&quot;>
+  <template #label=&quot;{ percent }&quot;>
+    {{ Math.round(percent) }}
+  </template>
+</CuiProgress>`">
           <CuiFlex gap="6" class="items-center flex-wrap">
             <CuiProgress variant="circle" :value="animated" size="lg" color="success">
               <template #label="{ percent }">
@@ -202,7 +221,12 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         </Example>
 
         <!-- Real-world: dashboard cards -->
-        <Example title="Real-World: Dashboard Stats">
+        <Example title="Real-World: Dashboard Stats" :code="`<CuiCard variant=&quot;outline&quot;>
+  <CuiCardBody class=&quot;text-center&quot;>
+    <CuiProgress variant=&quot;circle&quot; :value=&quot;87&quot; color=&quot;success&quot; show-label size=&quot;lg&quot; />
+    <div class=&quot;mt-2 text-sm font-medium&quot;>Uptime</div>
+  </CuiCardBody>
+</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard variant="outline">
               <CuiCardBody class="text-center">

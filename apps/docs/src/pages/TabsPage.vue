@@ -51,12 +51,13 @@ function resetTabs() {
       <h2 class="mb-4 text-2xl font-semibold">CuiTabs Props</h2>
       <PropTable
         :props="[
-          { name: 'v-model', type: 'string', default: '-', description: 'Active tab value' },
+          { name: 'v-model', type: 'string', default: '—', description: 'Active tab value' },
           { name: 'variant', type: 'underline | segmented', default: 'underline', description: 'Tab bar style' },
           { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Layout direction' },
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Active indicator color' },
           { name: 'keepAlive', type: 'boolean', default: 'true', description: 'Keep inactive panels in DOM' },
           { name: 'transition', type: 'fade | slide | none', default: 'fade', description: 'Panel transition animation' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -65,10 +66,11 @@ function resetTabs() {
       <h2 class="mb-4 text-2xl font-semibold">CuiTab Props</h2>
       <PropTable
         :props="[
-          { name: 'value', type: 'string', default: '-', description: 'Unique tab identifier (required)' },
-          { name: 'label', type: 'string', default: '-', description: 'Tab label text (required)' },
+          { name: 'value', type: 'string', default: '—', description: 'Unique tab identifier (required)' },
+          { name: 'label', type: 'string', default: '—', description: 'Tab label text (required)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable this tab' },
           { name: 'closeable', type: 'boolean', default: 'false', description: 'Show close button' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -100,7 +102,11 @@ function resetTabs() {
         </Example>
 
         <!-- Segmented -->
-        <Example title="Segmented Variant">
+        <Example title="Segmented Variant" :code="`<CuiTabs v-model=&quot;active&quot; variant=&quot;segmented&quot;>
+  <CuiTab value=&quot;overview&quot; label=&quot;Overview&quot;>Overview content.</CuiTab>
+  <CuiTab value=&quot;activity&quot; label=&quot;Activity&quot;>Activity content.</CuiTab>
+  <CuiTab value=&quot;settings&quot; label=&quot;Settings&quot;>Settings content.</CuiTab>
+</CuiTabs>`">
           <CuiTabs v-model="segmented" variant="segmented">
             <CuiTab value="overview" label="Overview">
               <p>Overview of the project with key metrics and status indicators.</p>
@@ -115,7 +121,9 @@ function resetTabs() {
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiTabs v-model=&quot;active&quot; color=&quot;primary&quot;>...</CuiTabs>
+<CuiTabs v-model=&quot;active&quot; color=&quot;success&quot;>...</CuiTabs>
+<CuiTabs v-model=&quot;active&quot; color=&quot;error&quot; variant=&quot;segmented&quot;>...</CuiTabs>`">
           <CuiStack spacing="4">
             <CuiTabs v-model="colored" color="primary">
               <CuiTab value="tab1" label="Primary">
@@ -139,7 +147,10 @@ function resetTabs() {
         </Example>
 
         <!-- Vertical -->
-        <Example title="Vertical Orientation">
+        <Example title="Vertical Orientation" :code="`<CuiTabs v-model=&quot;active&quot; orientation=&quot;vertical&quot;>
+  <CuiTab value=&quot;profile&quot; label=&quot;Profile&quot;>Profile settings.</CuiTab>
+  <CuiTab value=&quot;security&quot; label=&quot;Security&quot;>Security settings.</CuiTab>
+</CuiTabs>`">
           <CuiTabs v-model="vertical" orientation="vertical">
             <CuiTab value="profile" label="Profile">
               <CuiStack spacing="3">
@@ -178,7 +189,10 @@ function resetTabs() {
         </Example>
 
         <!-- Vertical Segmented -->
-        <Example title="Vertical + Segmented">
+        <Example title="Vertical + Segmented" :code="`<CuiTabs v-model=&quot;active&quot; orientation=&quot;vertical&quot; variant=&quot;segmented&quot; color=&quot;info&quot;>
+  <CuiTab value=&quot;profile&quot; label=&quot;Profile&quot;>Profile content.</CuiTab>
+  <CuiTab value=&quot;security&quot; label=&quot;Security&quot;>Security content.</CuiTab>
+</CuiTabs>`">
           <CuiTabs v-model="vertical" orientation="vertical" variant="segmented" color="info">
             <CuiTab value="profile" label="Profile">
               <p>Profile content here.</p>
@@ -193,7 +207,17 @@ function resetTabs() {
         </Example>
 
         <!-- Closeable -->
-        <Example title="Closeable Tabs">
+        <Example title="Closeable Tabs" :code="`<CuiTabs v-model=&quot;active&quot; @close=&quot;removeTab&quot;>
+  <CuiTab
+    v-for=&quot;tab in tabs&quot;
+    :key=&quot;tab&quot;
+    :value=&quot;tab&quot;
+    :label=&quot;tab&quot;
+    closeable
+  >
+    Content of {{ tab }}
+  </CuiTab>
+</CuiTabs>`">
           <CuiStack spacing="3">
             <CuiTabs v-model="closeable" @close="removeTab">
               <CuiTab
@@ -211,7 +235,10 @@ function resetTabs() {
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled Tab">
+        <Example title="Disabled Tab" :code="`<CuiTabs v-model=&quot;active&quot;>
+  <CuiTab value=&quot;tab1&quot; label=&quot;Active&quot;>Active content.</CuiTab>
+  <CuiTab value=&quot;tab3&quot; label=&quot;Disabled&quot; disabled>Hidden content.</CuiTab>
+</CuiTabs>`">
           <CuiTabs v-model="basic">
             <CuiTab value="tab1" label="Active">
               <p>This tab is active and working.</p>
@@ -226,7 +253,9 @@ function resetTabs() {
         </Example>
 
         <!-- Transitions -->
-        <Example title="Panel Transitions">
+        <Example title="Panel Transitions" :code="`<CuiTabs v-model=&quot;active&quot; transition=&quot;fade&quot;>...</CuiTabs>
+<CuiTabs v-model=&quot;active&quot; transition=&quot;slide&quot;>...</CuiTabs>
+<CuiTabs v-model=&quot;active&quot; transition=&quot;none&quot;>...</CuiTabs>`">
           <CuiStack spacing="4">
             <CuiFlex gap="3" class="flex-wrap">
               <CuiButton size="xs" :variant="transitionTab === 'fade' ? 'solid' : 'outline'" @click="transitionTab = 'fade'">Fade</CuiButton>
@@ -251,7 +280,10 @@ function resetTabs() {
         </Example>
 
         <!-- Keep Alive: false -->
-        <Example title="keepAlive: false (lazy panels)">
+        <Example title="keepAlive: false (lazy panels)" :code="`<CuiTabs v-model=&quot;active&quot; :keep-alive=&quot;false&quot;>
+  <CuiTab value=&quot;tab1&quot; label=&quot;Eager Tab&quot;>Mounted on switch.</CuiTab>
+  <CuiTab value=&quot;tab2&quot; label=&quot;Lazy Data&quot;>Data fetched on mount.</CuiTab>
+</CuiTabs>`">
           <CuiStack spacing="2">
             <CuiTabs v-model="lazyTab" :keep-alive="false">
               <CuiTab value="tab1" label="Eager Tab">

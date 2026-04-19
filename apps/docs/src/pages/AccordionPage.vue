@@ -38,8 +38,9 @@ const faq = ref<string[]>([]);
         :props="[
           { name: 'v-model', type: 'string[]', default: '[]', description: 'Array of open item values' },
           { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple items open at once' },
-          { name: 'color', type: 'ButtonColor', default: 'primary', description: 'Active header color' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role for active indicator' },
           { name: 'noAnimation', type: 'boolean', default: 'false', description: 'Disable expand/collapse animation' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -48,10 +49,11 @@ const faq = ref<string[]>([]);
       <h2 class="mb-4 text-2xl font-semibold">CuiAccordionItem Props</h2>
       <PropTable
         :props="[
-          { name: 'value', type: 'string', default: '-', description: 'Unique identifier (required)' },
-          { name: 'label', type: 'string', default: '-', description: 'Header text (or use #header slot)' },
-          { name: 'defaultOpen', type: 'boolean', default: 'false', description: 'Start expanded' },
+          { name: 'value', type: 'string', default: '—', description: 'Unique identifier (required)' },
+          { name: 'label', type: 'string', default: '—', description: 'Header text (or use #header slot)' },
+          { name: 'defaultOpen', type: 'boolean', default: 'false', description: 'Start expanded (uncontrolled mode)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Cannot toggle' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -103,7 +105,14 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- Default Open -->
-        <Example title="Default Open">
+        <Example title="Default Open" :code="`<CuiAccordion multiple>
+  <CuiAccordionItem value=&quot;open1&quot; label=&quot;I start open&quot; default-open>
+    This item was expanded by default when the page loaded.
+  </CuiAccordionItem>
+  <CuiAccordionItem value=&quot;closed1&quot; label=&quot;I start closed&quot;>
+    Click to expand me.
+  </CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion multiple>
               <CuiAccordionItem value="open1" label="I start open" default-open>
@@ -117,7 +126,10 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled Item">
+        <Example title="Disabled Item" :code="`<CuiAccordion>
+  <CuiAccordionItem value=&quot;a&quot; label=&quot;Enabled item&quot;>...</CuiAccordionItem>
+  <CuiAccordionItem value=&quot;b&quot; label=&quot;Disabled item&quot; disabled>...</CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion>
               <CuiAccordionItem value="a" label="Enabled item">
@@ -134,7 +146,18 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- Custom Header -->
-        <Example title="Custom Header Slot">
+        <Example title="Custom Header Slot" :code="`<CuiAccordion multiple>
+  <CuiAccordionItem value=&quot;notifications&quot;>
+    <template #header>
+      <CuiFlex gap=&quot;2&quot; class=&quot;items-center&quot;>
+        <CuiIcon name=&quot;bell&quot; size=&quot;sm&quot; />
+        Notifications
+        <CuiBadge variant=&quot;solid&quot; color=&quot;error&quot; size=&quot;sm&quot;>3</CuiBadge>
+      </CuiFlex>
+    </template>
+    Content here.
+  </CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion multiple>
               <CuiAccordionItem value="notifications">
@@ -162,7 +185,9 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiAccordion color=&quot;primary&quot;>...</CuiAccordion>
+<CuiAccordion color=&quot;success&quot;>...</CuiAccordion>
+<CuiAccordion color=&quot;error&quot;>...</CuiAccordion>`">
           <CuiStack spacing="3" class="max-w-lg">
             <CuiAccordion color="primary">
               <CuiAccordionItem value="a" label="Primary" default-open>Primary colored header when open.</CuiAccordionItem>
@@ -177,7 +202,11 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- No Animation -->
-        <Example title="No Animation">
+        <Example title="No Animation" :code="`<CuiAccordion no-animation>
+  <CuiAccordionItem value=&quot;a&quot; label=&quot;Instant toggle&quot;>
+    No smooth height transition.
+  </CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion no-animation>
               <CuiAccordionItem value="a" label="Instant toggle">
@@ -191,7 +220,15 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- Rich Content -->
-        <Example title="Rich Content (form inside accordion)">
+        <Example title="Rich Content (form inside accordion)" :code="`<CuiAccordion v-model=&quot;controlled&quot; multiple>
+  <CuiAccordionItem value=&quot;general&quot; label=&quot;General Settings&quot;>
+    <CuiStack spacing=&quot;3&quot;>
+      <CuiFormField label=&quot;Display Name&quot;>
+        <CuiInput placeholder=&quot;John Doe&quot; />
+      </CuiFormField>
+    </CuiStack>
+  </CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion v-model="controlled" multiple>
               <CuiAccordionItem value="general" label="General Settings">
@@ -216,7 +253,14 @@ const faq = ref<string[]>([]);
         </Example>
 
         <!-- FAQ Pattern -->
-        <Example title="Real-World: FAQ">
+        <Example title="Real-World: FAQ" :code="`<CuiAccordion v-model=&quot;faq&quot;>
+  <CuiAccordionItem value=&quot;q1&quot; label=&quot;Is Clean UI free to use?&quot;>
+    Yes, Clean UI is open source.
+  </CuiAccordionItem>
+  <CuiAccordionItem value=&quot;q2&quot; label=&quot;Does it work with Nuxt?&quot;>
+    Yes! It works with any Vue 3 framework.
+  </CuiAccordionItem>
+</CuiAccordion>`">
           <div class="max-w-lg">
             <CuiAccordion v-model="faq">
               <CuiAccordionItem value="q1" label="Is Clean UI free to use?">

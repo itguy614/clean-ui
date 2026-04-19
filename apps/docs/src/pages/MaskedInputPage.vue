@@ -35,6 +35,7 @@ const phoneFormatted = ref("");
         :props="[
           { name: 'v-model', type: 'string', default: 'empty string', description: 'Raw value (no separators)' },
           { name: 'mask', type: 'string', default: '-', description: 'Mask pattern: # = digit, A = letter, * = alphanumeric' },
+          { name: 'placeholder', type: 'string', default: '-', description: 'Placeholder text shown when empty and unfocused' },
           { name: 'tokens', type: 'Record<string, { pattern: RegExp }>', default: '-', description: 'Custom token definitions' },
           { name: 'fillChar', type: 'string', default: '_', description: 'Character for unfilled positions' },
           { name: 'color', type: 'ButtonColor', default: 'primary', description: 'Focus border color' },
@@ -44,6 +45,7 @@ const phoneFormatted = ref("");
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -158,7 +160,7 @@ const phoneFormatted = ref("");
         </Example>
 
         <!-- ZIP Code -->
-        <Example title="ZIP Code (5+4)">
+        <Example title="ZIP Code (5+4)" :code="`<CuiMaskedInput v-model=&quot;zip&quot; mask=&quot;#####-####&quot; placeholder=&quot;ZIP code&quot; />`">
           <CuiStack spacing="2" class="max-w-xs">
             <CuiMaskedInput
               v-model="zip"
@@ -202,7 +204,9 @@ const phoneFormatted = ref("");
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiMaskedInput mask=&quot;###-##-####&quot; size=&quot;sm&quot; placeholder=&quot;Small&quot; />
+<CuiMaskedInput mask=&quot;###-##-####&quot; size=&quot;md&quot; placeholder=&quot;Medium&quot; />
+<CuiMaskedInput mask=&quot;###-##-####&quot; size=&quot;lg&quot; placeholder=&quot;Large&quot; />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiMaskedInput mask="###-##-####" size="sm" placeholder="Small" />
             <CuiMaskedInput mask="###-##-####" size="md" placeholder="Medium" />
@@ -211,7 +215,12 @@ const phoneFormatted = ref("");
         </Example>
 
         <!-- With Attached Button -->
-        <Example title="With Attached Button">
+        <Example title="With Attached Button" :code="`<CuiMaskedInput v-model=&quot;phone&quot; mask=&quot;+1 (###) ###-####&quot; clearable>
+  <template #prefix>📞</template>
+  <template #suffix-button>
+    <CuiButton variant=&quot;solid&quot; color=&quot;success&quot;>Verify</CuiButton>
+  </template>
+</CuiMaskedInput>`">
           <CuiStack spacing="2" class="max-w-md">
             <CuiMaskedInput v-model="phone" mask="+1 (###) ###-####" clearable placeholder="Phone">
               <template #prefix>📞</template>
@@ -223,7 +232,8 @@ const phoneFormatted = ref("");
         </Example>
 
         <!-- Error -->
-        <Example title="Error Validation">
+        <Example title="Error Validation" :code="`<CuiMaskedInput v-model=&quot;errorVal&quot; mask=&quot;###-##-####&quot;
+  error error-message=&quot;SSN is required&quot; placeholder=&quot;SSN&quot; />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiMaskedInput
               v-model="errorVal"
@@ -236,7 +246,8 @@ const phoneFormatted = ref("");
         </Example>
 
         <!-- Disabled / Readonly -->
-        <Example title="Disabled &amp; Readonly">
+        <Example title="Disabled &amp; Readonly" :code="`<CuiMaskedInput model-value=&quot;123456789&quot; mask=&quot;###-##-####&quot; disabled />
+<CuiMaskedInput model-value=&quot;5551234567&quot; mask=&quot;+1 (###) ###-####&quot; readonly />`">
           <CuiStack spacing="3" class="max-w-sm">
             <CuiMaskedInput model-value="123456789" mask="###-##-####" disabled />
             <CuiMaskedInput model-value="5551234567" mask="+1 (###) ###-####" readonly />

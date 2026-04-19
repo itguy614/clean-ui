@@ -45,17 +45,18 @@ const sizePage = ref(1);
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'meta', type: 'LaravelPaginatorMeta', default: '-', description: 'Laravel paginator object (current_page, last_page, per_page, total, from, to)' },
+          { name: 'meta', type: 'LaravelPaginatorMeta', default: '—', description: 'Laravel paginator object (current_page, last_page, per_page, total, from, to)' },
           { name: 'currentPage', type: 'number', default: '1', description: 'Current page (override or standalone)' },
           { name: 'totalPages', type: 'number', default: '1', description: 'Total pages (override or standalone)' },
           { name: 'perPage', type: 'number', default: '15', description: 'Items per page (override or standalone)' },
           { name: 'total', type: 'number', default: '0', description: 'Total item count' },
           { name: 'perPageOptions', type: 'number[]', default: '[10,15,25,50,100]', description: 'Options for per-page selector' },
           { name: 'hidePerPage', type: 'boolean', default: 'false', description: 'Hide the per-page selector' },
-          { name: 'hideInfo', type: 'boolean', default: 'false', description: 'Hide the info text' },
-          { name: 'color', type: 'ButtonColor', default: 'primary', description: 'Active page button color' },
+          { name: 'hideInfo', type: 'boolean', default: 'false', description: 'Hide the &quot;Showing X to Y of Z&quot; info text' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Active page button color' },
           { name: 'size', type: 'sm | md', default: 'md', description: 'Button size' },
-          { name: 'maxButtons', type: 'number', default: '5', description: 'Max page buttons before truncating' },
+          { name: 'maxButtons', type: 'number', default: '5', description: 'Max page buttons before truncating with ellipsis' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -101,7 +102,14 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Large page count -->
-        <Example title="Large Page Count (100 pages)">
+        <Example title="Large Page Count (100 pages)" :code="`<CuiPagination
+  :current-page=&quot;page&quot;
+  :total-pages=&quot;100&quot;
+  :total=&quot;1500&quot;
+  :per-page=&quot;15&quot;
+  hide-per-page
+  @update:current-page=&quot;page = $event&quot;
+/>`">
           <CuiPagination
             :current-page="largePage"
             :total-pages="100"
@@ -113,7 +121,13 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Small page count -->
-        <Example title="Small Page Count (3 pages)">
+        <Example title="Small Page Count (3 pages)" :code="`<CuiPagination
+  :current-page=&quot;page&quot;
+  :total-pages=&quot;3&quot;
+  :total=&quot;42&quot;
+  hide-per-page
+  @update:current-page=&quot;page = $event&quot;
+/>`">
           <CuiPagination
             :current-page="smallPage"
             :total-pages="3"
@@ -125,7 +139,7 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Hide info -->
-        <Example title="Hidden Info Text">
+        <Example title="Hidden Info Text" :code="`<CuiPagination :current-page=&quot;page&quot; :total-pages=&quot;10&quot; hide-info />`">
           <CuiPagination
             :current-page="basicPage"
             :total-pages="10"
@@ -137,7 +151,7 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Hide per-page -->
-        <Example title="Hidden Per-Page Selector">
+        <Example title="Hidden Per-Page Selector" :code="`<CuiPagination :current-page=&quot;page&quot; :total-pages=&quot;10&quot; hide-per-page />`">
           <CuiPagination
             :current-page="basicPage"
             :total-pages="10"
@@ -149,7 +163,13 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Minimal (no info, no per-page) -->
-        <Example title="Minimal (buttons only)">
+        <Example title="Minimal (buttons only)" :code="`<CuiPagination
+  :current-page=&quot;page&quot;
+  :total-pages=&quot;10&quot;
+  hide-info
+  hide-per-page
+  @update:current-page=&quot;page = $event&quot;
+/>`">
           <CuiPagination
             :current-page="basicPage"
             :total-pages="10"
@@ -160,7 +180,9 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Colors -->
-        <Example title="Colors">
+        <Example title="Colors" :code="`<CuiPagination :current-page=&quot;3&quot; :total-pages=&quot;5&quot; hide-info hide-per-page color=&quot;primary&quot; />
+<CuiPagination :current-page=&quot;3&quot; :total-pages=&quot;5&quot; hide-info hide-per-page color=&quot;success&quot; />
+<CuiPagination :current-page=&quot;3&quot; :total-pages=&quot;5&quot; hide-info hide-per-page color=&quot;error&quot; />`">
           <CuiStack spacing="3">
             <CuiPagination :current-page="3" :total-pages="5" hide-info hide-per-page color="primary" />
             <CuiPagination :current-page="3" :total-pages="5" hide-info hide-per-page color="success" />
@@ -170,7 +192,8 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiPagination :current-page=&quot;page&quot; :total-pages=&quot;10&quot; size=&quot;sm&quot; />
+<CuiPagination :current-page=&quot;page&quot; :total-pages=&quot;10&quot; size=&quot;md&quot; />`">
           <CuiStack spacing="3">
             <CuiPagination
               :current-page="sizePage"
@@ -192,7 +215,15 @@ const sizePage = ref(1);
         </Example>
 
         <!-- Inertia Integration -->
-        <Example title="Inertia Integration">
+        <Example title="Inertia Integration" :code="`import { router } from '@inertiajs/vue3'
+
+// props.users comes from Laravel: User::paginate(15)
+function onPageChange(page: number) {
+  router.get(route('users.index'), { page }, { preserveState: true })
+}
+
+// Template:
+// &lt;CuiPagination :meta=&quot;users.meta&quot; @update:current-page=&quot;onPageChange&quot; /&gt;`">
           <div class="rounded-lg border border-surface-200 bg-surface-50 p-6 dark:border-surface-800 dark:bg-surface-900">
             <p class="mb-3 text-surface-600 dark:text-surface-400">
               With Inertia, pass the paginator meta directly and use

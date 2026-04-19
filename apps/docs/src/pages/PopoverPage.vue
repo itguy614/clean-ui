@@ -29,6 +29,7 @@ import Example from "../components/Example.vue";
           { name: 'visible', type: 'boolean', default: '—', description: 'Manual v-model:visible control' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevents showing' },
           { name: 'closable', type: 'boolean', default: 'true', description: 'Show close button in header (when title is set)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -80,7 +81,14 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Placements -->
-        <Example title="Placements">
+        <Example title="Placements" :code="`<CuiPopover placement=&quot;top&quot; title=&quot;Top&quot;>
+  <CuiButton variant=&quot;outline&quot; size=&quot;sm&quot;>Top</CuiButton>
+  <template #content>Placed above the trigger.</template>
+</CuiPopover>
+<CuiPopover placement=&quot;right&quot; title=&quot;Right&quot;>
+  <CuiButton variant=&quot;outline&quot; size=&quot;sm&quot;>Right</CuiButton>
+  <template #content>Placed to the right.</template>
+</CuiPopover>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiPopover placement="top" title="Top">
               <CuiButton variant="outline" size="sm">Top</CuiButton>
@@ -164,7 +172,15 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Rich content -->
-        <Example title="Real-World: User Card">
+        <Example title="Real-World: User Card" :code="`<CuiPopover trigger=&quot;hover&quot; :show-delay=&quot;300&quot; width=&quot;280px&quot;>
+  <span class=&quot;cursor-pointer font-medium&quot; style=&quot;color: var(--cui-primary);&quot;>@janedoe</span>
+  <template #content>
+    <CuiStack spacing=&quot;3&quot;>
+      <div class=&quot;font-semibold text-sm&quot;>Jane Doe</div>
+      <p class=&quot;text-xs&quot;>Building beautiful interfaces. Based in San Francisco.</p>
+    </CuiStack>
+  </template>
+</CuiPopover>`">
           <CuiPopover trigger="hover" :show-delay="300" width="280px">
             <span class="cursor-pointer font-medium" style="color: var(--cui-primary);">@janedoe</span>
             <template #content>
@@ -191,7 +207,26 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Real-world: Notification bell -->
-        <Example title="Real-World: Notification Bell">
+        <Example title="Real-World: Notification Bell" :code="`<CuiPopover title=&quot;Notifications&quot; width=&quot;320px&quot; placement=&quot;bottom&quot;>
+  <CuiButton variant=&quot;ghost&quot; size=&quot;sm&quot;>
+    <template #prefix><CuiIcon name=&quot;bell&quot; /></template>
+    <CuiBadge color=&quot;error&quot; size=&quot;sm&quot;>3</CuiBadge>
+  </CuiButton>
+  <template #content>
+    <CuiStack spacing=&quot;3&quot;>
+      <CuiFlex gap=&quot;3&quot; class=&quot;items-start&quot;>
+        <CuiIcon name=&quot;chat-circle-text&quot; size=&quot;1.25rem&quot; />
+        <div>
+          <div class=&quot;text-sm font-medium&quot;>New comment on your post</div>
+          <div class=&quot;text-xs&quot;>2 minutes ago</div>
+        </div>
+      </CuiFlex>
+    </CuiStack>
+  </template>
+  <template #footer>
+    <CuiButton size=&quot;xs&quot; variant=&quot;ghost&quot; class=&quot;w-full&quot;>View all notifications</CuiButton>
+  </template>
+</CuiPopover>`">
           <CuiPopover title="Notifications" width="320px" placement="bottom">
             <CuiButton variant="ghost" size="sm">
               <template #prefix><CuiIcon name="bell" /></template>

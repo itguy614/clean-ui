@@ -31,18 +31,51 @@ import Example from "../components/Example.vue";
       <PropTable
         :props="[
           { name: 'variant', type: 'default | outline | ghost', default: 'default', description: 'Visual style (default: border + shadow, outline: border only, ghost: none)' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
 
     <div>
-      <h2 class="mb-4 text-2xl font-semibold">Sub-Components</h2>
+      <h2 class="mb-4 text-2xl font-semibold">CuiCardHeader Props</h2>
       <PropTable
         :props="[
-          { name: 'CuiCardHeader', type: 'component', default: '-', description: 'Header with title/subtitle props, default + #actions slots' },
-          { name: 'CuiCardBody', type: 'component', default: '-', description: 'Padded content area. noPadding prop available.' },
-          { name: 'CuiCardFooter', type: 'component', default: '-', description: 'Footer with align prop (left/right/center/between)' },
-          { name: 'CuiCardMedia', type: 'component', default: '-', description: 'Image/video area. src, alt, aspect (auto/video/square/custom), position (top/bottom)' },
+          { name: 'title', type: 'string', default: '—', description: 'Convenience title text' },
+          { name: 'subtitle', type: 'string', default: '—', description: 'Convenience subtitle text' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiCardBody Props</h2>
+      <PropTable
+        :props="[
+          { name: 'noPadding', type: 'boolean', default: 'false', description: 'Remove default padding' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiCardFooter Props</h2>
+      <PropTable
+        :props="[
+          { name: 'align', type: 'left | right | center | between', default: 'right', description: 'Align footer content' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">CuiCardMedia Props</h2>
+      <PropTable
+        :props="[
+          { name: 'src', type: 'string', default: '—', description: 'Image URL' },
+          { name: 'alt', type: 'string', default: '\'\'', description: 'Alt text for the image' },
+          { name: 'aspect', type: 'auto | video | square | string', default: 'video', description: 'Aspect ratio (video = 16:9, square = 1:1, or custom e.g. &quot;4 / 3&quot;)' },
+          { name: 'position', type: 'top | bottom', default: 'top', description: 'Position in the card' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -76,7 +109,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Variants -->
-        <Example title="Variants">
+        <Example title="Variants" :code="`<CuiCard variant=&quot;default&quot;>...</CuiCard>
+<CuiCard variant=&quot;outline&quot;>...</CuiCard>
+<CuiCard variant=&quot;ghost&quot;>...</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard variant="default">
               <CuiCardHeader title="Default" subtitle="Border + shadow" />
@@ -100,7 +135,15 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Header with Actions -->
-        <Example title="Header with Actions Slot">
+        <Example title="Header with Actions Slot" :code="`<CuiCard>
+  <CuiCardHeader title=&quot;Notifications&quot; subtitle=&quot;3 unread&quot;>
+    <template #actions>
+      <CuiBadge variant=&quot;solid&quot; color=&quot;error&quot;>3</CuiBadge>
+      <CuiButton size=&quot;xs&quot; variant=&quot;ghost&quot;>Mark all read</CuiButton>
+    </template>
+  </CuiCardHeader>
+  <CuiCardBody>...</CuiCardBody>
+</CuiCard>`">
           <div class="max-w-md">
             <CuiCard>
               <CuiCardHeader title="Notifications" subtitle="3 unread">
@@ -130,7 +173,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- With Media -->
-        <Example title="Card with Media">
+        <Example title="Card with Media" :code="`<CuiCard>
+  <CuiCardMedia src=&quot;...&quot; alt=&quot;Mountain landscape&quot; />
+  <CuiCardBody>
+    <h3>Mountain Vista</h3>
+  </CuiCardBody>
+</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard>
               <CuiCardMedia
@@ -166,7 +214,9 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Media Aspect Ratios -->
-        <Example title="Media Aspect Ratios">
+        <Example title="Media Aspect Ratios" :code="`<CuiCardMedia aspect=&quot;video&quot; src=&quot;...&quot; />
+<CuiCardMedia aspect=&quot;square&quot; src=&quot;...&quot; />
+<CuiCardMedia aspect=&quot;4 / 3&quot; src=&quot;...&quot; />`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard variant="outline">
               <CuiCardMedia aspect="video" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=225&fit=crop" alt="16:9" />
@@ -184,7 +234,12 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Footer Alignment -->
-        <Example title="Footer Alignment">
+        <Example title="Footer Alignment" :code="`<CuiCardFooter>
+  <!-- right (default) -->
+</CuiCardFooter>
+<CuiCardFooter align=&quot;between&quot;>
+  <!-- space-between -->
+</CuiCardFooter>`">
           <CuiGrid :cols="{ sm: 1, md: 2 }" gap="4">
             <CuiCard variant="outline">
               <CuiCardHeader title="Right (default)" />
@@ -209,7 +264,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Body Only -->
-        <Example title="Body Only (minimal card)">
+        <Example title="Body Only (minimal card)" :code="`<CuiCard>
+  <CuiCardBody>
+    <p>A card with just a body — no header or footer needed.</p>
+  </CuiCardBody>
+</CuiCard>`">
           <div class="max-w-sm">
             <CuiCard>
               <CuiCardBody>
@@ -223,7 +282,17 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Product Card -->
-        <Example title="Real-World: Product Card">
+        <Example title="Real-World: Product Card" :code="`<CuiCard>
+  <CuiCardMedia src=&quot;...&quot; alt=&quot;Product&quot; />
+  <CuiCardBody>
+    <CuiBadge color=&quot;success&quot;>In Stock</CuiBadge>
+    <h3>Classic Watch</h3>
+    <p>$129.99</p>
+  </CuiCardBody>
+  <CuiCardFooter>
+    <CuiButton variant=&quot;solid&quot;>Add to Cart</CuiButton>
+  </CuiCardFooter>
+</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
             <CuiCard>
               <CuiCardMedia
@@ -247,7 +316,17 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Profile Card -->
-        <Example title="Real-World: Profile Card">
+        <Example title="Real-World: Profile Card" :code="`<CuiCard>
+  <CuiCardBody class=&quot;text-center&quot;>
+    <div>...</div>
+    <h3>Kurt Wolf</h3>
+    <p>Full Stack Developer</p>
+  </CuiCardBody>
+  <CuiCardFooter align=&quot;center&quot;>
+    <CuiButton variant=&quot;outline&quot;>View Profile</CuiButton>
+    <CuiButton variant=&quot;solid&quot;>Message</CuiButton>
+  </CuiCardFooter>
+</CuiCard>`">
           <div class="max-w-xs">
             <CuiCard>
               <CuiCardBody class="text-center">

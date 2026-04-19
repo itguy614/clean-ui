@@ -37,6 +37,7 @@ const sized = ref("Hello");
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below input' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>

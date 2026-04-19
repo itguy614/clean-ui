@@ -53,6 +53,7 @@ function onHexInput(val: string | number) {
           { name: 'swatchOnly', type: 'boolean', default: 'false', description: 'Only show swatches, no gradient picker' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -91,12 +92,12 @@ function onHexInput(val: string | number) {
         </Example>
 
         <!-- Basic palette -->
-        <Example title="Basic Palette">
+        <Example title="Basic Palette" :code="`<CuiColorPicker v-model=&quot;color&quot; preset-palette=&quot;basic&quot; />`">
           <CuiColorPicker v-model="color2" preset-palette="basic" />
         </Example>
 
         <!-- Material palette -->
-        <Example title="Material Palette">
+        <Example title="Material Palette" :code="`<CuiColorPicker v-model=&quot;color&quot; preset-palette=&quot;material&quot; />`">
           <CuiColorPicker v-model="color3" preset-palette="material" />
         </Example>
 
@@ -187,7 +188,9 @@ function onHexInput(val: string | number) {
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiColorPicker size=&quot;sm&quot; />
+<CuiColorPicker size=&quot;md&quot; />
+<CuiColorPicker size=&quot;lg&quot; />`">
           <CuiFlex gap="4" class="items-start flex-wrap">
             <div>
               <div class="text-xs font-medium mb-2" style="color: var(--cui-text-secondary);">Small:</div>

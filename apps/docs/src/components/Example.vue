@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiCard, CuiCardHeader, CuiCardBody, CuiButton } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardHeader, CuiCardBody, CuiButton, CuiCodeBlock } from "@itguy614/clean-ui";
 
 defineProps<{
   title?: string;
@@ -31,15 +31,13 @@ const showCode = ref(false);
     </CuiCardBody>
 
     <!-- Code -->
-    <div
+    <CuiCodeBlock
       v-if="code && showCode"
-      :style="{
-        borderTop: '1px solid var(--cui-border)',
-        padding: '1rem 1.125rem',
-        overflow: 'auto',
-      }"
-    >
-      <pre class="cui-pre" style="margin: 0;"><code class="cui-code" style="font-size: 0.8125rem;">{{ code }}</code></pre>
-    </div>
+      :code="code"
+      language="vue"
+      :copyable="true"
+      size="sm"
+      :style="{ borderRadius: '0', borderLeft: 'none', borderRight: 'none', borderBottom: 'none' }"
+    />
   </CuiCard>
 </template>

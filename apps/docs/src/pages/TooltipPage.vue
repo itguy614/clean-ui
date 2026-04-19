@@ -31,6 +31,7 @@ const manualVisible = ref(false);
           { name: 'color', type: 'primary | secondary | success | error | warning | info', default: '-', description: 'Semantic color (default is dark neutral)' },
           { name: 'v-model:visible', type: 'boolean', default: '-', description: 'Manual visibility control' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevent tooltip from showing' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
     </div>
@@ -85,7 +86,10 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- Triggers -->
-        <Example title="Trigger Modes">
+        <Example title="Trigger Modes" :code="`<CuiTooltip text=&quot;Hover only&quot; trigger=&quot;hover&quot;>...</CuiTooltip>
+<CuiTooltip text=&quot;Focus only&quot; trigger=&quot;focus&quot;>...</CuiTooltip>
+<CuiTooltip text=&quot;Click to toggle&quot; trigger=&quot;click&quot;>...</CuiTooltip>
+<CuiTooltip text=&quot;Hover + focus&quot; trigger=&quot;hover-focus&quot;>...</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap">
             <CuiTooltip text="Hover only" trigger="hover">
               <CuiButton variant="outline" size="sm">Hover</CuiButton>
@@ -103,7 +107,9 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- No Arrow -->
-        <Example title="Without Arrow">
+        <Example title="Without Arrow" :code="`<CuiTooltip text=&quot;No arrow&quot; no-arrow>
+  <CuiButton>No arrow</CuiButton>
+</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap">
             <CuiTooltip text="No arrow here" no-arrow>
               <CuiButton variant="outline" size="sm">No arrow</CuiButton>
@@ -152,7 +158,12 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- Colors -->
-        <Example title="Semantic Colors">
+        <Example title="Semantic Colors" :code="`<CuiTooltip text=&quot;Primary tooltip&quot; color=&quot;primary&quot;>
+  <CuiButton color=&quot;primary&quot;>Primary</CuiButton>
+</CuiTooltip>
+<CuiTooltip text=&quot;Success!&quot; color=&quot;success&quot;>
+  <CuiButton color=&quot;success&quot;>Success</CuiButton>
+</CuiTooltip>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiTooltip text="Default (dark)" placement="bottom">
               <CuiButton variant="outline" size="sm">Default</CuiButton>
@@ -176,7 +187,12 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- Delays -->
-        <Example title="Custom Delays">
+        <Example title="Custom Delays" :code="`<CuiTooltip text=&quot;Instant!&quot; :show-delay=&quot;0&quot; :hide-delay=&quot;0&quot;>
+  <CuiButton>No delay</CuiButton>
+</CuiTooltip>
+<CuiTooltip text=&quot;Slow to appear...&quot; :show-delay=&quot;800&quot;>
+  <CuiButton>800ms delay</CuiButton>
+</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap">
             <CuiTooltip text="Instant!" :show-delay="0" :hide-delay="0">
               <CuiButton variant="outline" size="sm">No delay</CuiButton>
@@ -191,7 +207,9 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- Manual control -->
-        <Example title="Manual Control (v-model:visible)">
+        <Example title="Manual Control (v-model:visible)" :code="`<CuiTooltip text=&quot;I am manually controlled&quot; v-model:visible=&quot;visible&quot; placement=&quot;right&quot;>
+  <CuiBadge>Target</CuiBadge>
+</CuiTooltip>`">
           <CuiStack spacing="3">
             <CuiFlex gap="3">
               <CuiButton size="sm" variant="solid" @click="manualVisible = !manualVisible">
@@ -205,7 +223,12 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- On different elements -->
-        <Example title="On Various Elements">
+        <Example title="On Various Elements" :code="`<CuiTooltip text=&quot;This button does something important&quot;>
+  <CuiButton variant=&quot;solid&quot; color=&quot;primary&quot;>Action</CuiButton>
+</CuiTooltip>
+<CuiTooltip text=&quot;3 unread notifications&quot;>
+  <CuiBadge variant=&quot;solid&quot; color=&quot;error&quot;>3</CuiBadge>
+</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap items-center">
             <CuiTooltip text="This button does something important">
               <CuiButton variant="solid" color="primary">Action</CuiButton>
@@ -228,7 +251,9 @@ const manualVisible = ref(false);
         </Example>
 
         <!-- Disabled -->
-        <Example title="Disabled">
+        <Example title="Disabled" :code="`<CuiTooltip text=&quot;You won't see me&quot; disabled>
+  <CuiButton>Disabled tooltip</CuiButton>
+</CuiTooltip>`">
           <CuiFlex gap="4">
             <CuiTooltip text="You won't see me" disabled>
               <CuiButton variant="outline" size="sm">Disabled tooltip</CuiButton>

@@ -63,15 +63,16 @@ const formAgree = ref(false);
         :props="[
           { name: 'v-model:open', type: 'boolean', default: 'false', description: 'Controls visibility' },
           { name: 'size', type: 'sm | md | lg | xl | full | string', default: 'md', description: 'Modal width (named or custom CSS value)' },
-          { name: 'title', type: 'string', default: '-', description: 'Header title text' },
+          { name: 'title', type: 'string', default: '—', description: 'Header title text (simple mode)' },
           { name: 'persistent', type: 'boolean', default: 'false', description: 'Disable Escape and backdrop click closing' },
           { name: 'noCloseButton', type: 'boolean', default: 'false', description: 'Hide the X close button' },
           { name: 'allowNested', type: 'boolean', default: 'false', description: 'Allow stacking on top of another modal' },
-          { name: 'backdropOpacity', type: 'number', default: '0.5', description: 'Backdrop darkness' },
-          { name: 'backdropBlur', type: 'none | sm | md | lg | string', default: 'none', description: 'Backdrop blur' },
+          { name: 'backdropOpacity', type: 'number', default: '0.5', description: 'Backdrop darkness (0–1)' },
+          { name: 'backdropBlur', type: 'none | sm | md | lg | string', default: 'none', description: 'Backdrop blur amount' },
           { name: 'backdropColor', type: 'string', default: 'black', description: 'Backdrop color' },
-          { name: 'backdropImage', type: 'string', default: '-', description: 'Backdrop image URL' },
-          { name: 'backdropGradient', type: 'string', default: '-', description: 'Backdrop CSS gradient' },
+          { name: 'backdropImage', type: 'string', default: '—', description: 'Backdrop image URL' },
+          { name: 'backdropGradient', type: 'string', default: '—', description: 'Backdrop CSS gradient' },
+          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
     </div>
@@ -102,7 +103,9 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes">
+        <Example title="Sizes" :code="`<CuiModal v-model:open=&quot;show&quot; title=&quot;Small Modal&quot; size=&quot;sm&quot;>...</CuiModal>
+<CuiModal v-model:open=&quot;show&quot; title=&quot;Large Modal&quot; size=&quot;lg&quot;>...</CuiModal>
+<CuiModal v-model:open=&quot;show&quot; title=&quot;Custom Width&quot; size=&quot;700px&quot;>...</CuiModal>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="sized.sm = true">Small (24rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="withFooter = true">Medium (default)</CuiButton>
@@ -151,7 +154,15 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Scrolling Body -->
-        <Example title="Scrolling Body">
+        <Example title="Scrolling Body" :code="`<CuiModal v-model:open=&quot;show&quot;>
+  <CuiModalHeader title=&quot;Terms of Service&quot; @close=&quot;show = false&quot; />
+  <CuiModalBody>
+    <p v-for=&quot;i in 20&quot; :key=&quot;i&quot;>Long content paragraph {{ i }}...</p>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;solid&quot; color=&quot;success&quot; @click=&quot;show = false&quot;>Accept</CuiButton>
+  </CuiModalFooter>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="scrolling = true">Open Long Content</CuiButton>
           <CuiModal v-model:open="scrolling">
             <CuiModalHeader title="Terms of Service" @close="scrolling = false" />
@@ -172,7 +183,16 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Persistent -->
-        <Example title="Persistent (no Escape/backdrop close)">
+        <Example title="Persistent (no Escape/backdrop close)" :code="`<CuiModal v-model:open=&quot;show&quot; persistent>
+  <CuiModalHeader title=&quot;Delete Account&quot; no-close-button />
+  <CuiModalBody>
+    <p>This action is permanent and cannot be undone.</p>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;ghost&quot; @click=&quot;show = false&quot;>Keep Account</CuiButton>
+    <CuiButton variant=&quot;solid&quot; color=&quot;error&quot; @click=&quot;show = false&quot;>Delete Forever</CuiButton>
+  </CuiModalFooter>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" color="warning" @click="persistent = true">Open Persistent</CuiButton>
           <CuiModal v-model:open="persistent" persistent>
             <CuiModalHeader title="Delete Account" no-close-button />
@@ -187,7 +207,15 @@ const formAgree = ref(false);
         </Example>
 
         <!-- No Close Button -->
-        <Example title="No Close Button">
+        <Example title="No Close Button" :code="`<CuiModal v-model:open=&quot;show&quot;>
+  <CuiModalHeader title=&quot;Wizard Step 1&quot; no-close-button />
+  <CuiModalBody>
+    <p>No X button — use footer actions or Escape to close.</p>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;solid&quot; @click=&quot;show = false&quot;>Next Step</CuiButton>
+  </CuiModalFooter>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="noClose = true">Open (no X)</CuiButton>
           <CuiModal v-model:open="noClose">
             <CuiModalHeader title="Wizard Step 1" no-close-button />
@@ -201,7 +229,9 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Light Blur -->
-        <Example title="Backdrop: Light Blur">
+        <Example title="Backdrop: Light Blur" :code="`<CuiModal v-model:open=&quot;show&quot; title=&quot;Light Blur&quot; backdrop-blur=&quot;sm&quot; :backdrop-opacity=&quot;0.15&quot;>
+  <p>A subtle blur with low opacity.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="blurLight = true">Light Blur</CuiButton>
           <CuiModal v-model:open="blurLight" title="Light Blur" backdrop-blur="sm" :backdrop-opacity="0.15">
             <p>A subtle blur with very low opacity. The page content is softly out of focus behind the modal.</p>
@@ -209,7 +239,9 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Heavy Blur -->
-        <Example title="Backdrop: Heavy Blur">
+        <Example title="Backdrop: Heavy Blur" :code="`<CuiModal v-model:open=&quot;show&quot; title=&quot;Heavy Blur&quot; backdrop-blur=&quot;lg&quot; :backdrop-opacity=&quot;0.3&quot;>
+  <p>A strong blur with moderate opacity.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="blurHeavy = true">Heavy Blur</CuiButton>
           <CuiModal v-model:open="blurHeavy" title="Heavy Blur" backdrop-blur="lg" :backdrop-opacity="0.3">
             <p>A strong blur with moderate opacity. Page content is fully obscured. Good for focusing attention.</p>
@@ -217,7 +249,15 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Blur + Tint -->
-        <Example title="Backdrop: Blur + Color Tint">
+        <Example title="Backdrop: Blur + Color Tint" :code="`<CuiModal
+  v-model:open=&quot;show&quot;
+  title=&quot;Blurred &amp; Tinted&quot;
+  backdrop-blur=&quot;md&quot;
+  :backdrop-opacity=&quot;0.4&quot;
+  backdrop-color=&quot;oklch(0.20 0.12 270)&quot;
+>
+  <p>Combines blur with a brand-colored tint.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="blurred = true">Blur + Tint</CuiButton>
           <CuiModal v-model:open="blurred" title="Blurred &amp; Tinted" backdrop-blur="md" :backdrop-opacity="0.4" backdrop-color="oklch(0.20 0.12 270)">
             <p>Combines blur with a brand-colored tint for a premium feel.</p>
@@ -225,7 +265,14 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Branded Color -->
-        <Example title="Backdrop: Brand Color">
+        <Example title="Backdrop: Brand Color" :code="`<CuiModal
+  v-model:open=&quot;show&quot;
+  title=&quot;Branded Backdrop&quot;
+  backdrop-color=&quot;oklch(0.25 0.15 270)&quot;
+  :backdrop-opacity=&quot;0.8&quot;
+>
+  <p>Deep brand-colored overlay, no blur.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" color="primary" @click="colored = true">Brand Overlay</CuiButton>
           <CuiModal
             v-model:open="colored"
@@ -238,7 +285,14 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Gradient -->
-        <Example title="Backdrop: Gradient">
+        <Example title="Backdrop: Gradient" :code="`<CuiModal
+  v-model:open=&quot;show&quot;
+  title=&quot;Gradient Backdrop&quot;
+  backdrop-gradient=&quot;linear-gradient(135deg, oklch(0.25 0.15 270) 0%, oklch(0.20 0.10 200) 100%)&quot;
+  :backdrop-opacity=&quot;0.85&quot;
+>
+  <p>A gradient backdrop for a dramatic feel.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" color="info" @click="gradient = true">Gradient Overlay</CuiButton>
           <CuiModal
             v-model:open="gradient"
@@ -251,7 +305,15 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Image (SVG grid) -->
-        <Example title="Backdrop: SVG Grid Image">
+        <Example title="Backdrop: SVG Grid Image" :code="`<CuiModal
+  v-model:open=&quot;show&quot;
+  title=&quot;Image Backdrop&quot;
+  :backdrop-image=&quot;gridSvg&quot;
+  backdrop-color=&quot;oklch(0.18 0.05 270)&quot;
+  :backdrop-opacity=&quot;0.85&quot;
+>
+  <p>An SVG grid pattern over a dark background.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="imageBackdrop = true">Grid Image</CuiButton>
           <CuiModal
             v-model:open="imageBackdrop"
@@ -265,7 +327,16 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Image + Blur -->
-        <Example title="Backdrop: Image + Blur (combined)">
+        <Example title="Backdrop: Image + Blur (combined)" :code="`<CuiModal
+  v-model:open=&quot;show&quot;
+  title=&quot;Image + Blur&quot;
+  :backdrop-image=&quot;dotSvg&quot;
+  backdrop-blur=&quot;sm&quot;
+  backdrop-color=&quot;oklch(0.22 0.06 270)&quot;
+  :backdrop-opacity=&quot;0.5&quot;
+>
+  <p>Dot-grid, brand tint, and medium blur combined.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="imageBlur = true">Image + Blur</CuiButton>
           <CuiModal
             v-model:open="imageBlur"
@@ -280,7 +351,9 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Backdrop: Nearly Transparent -->
-        <Example title="Backdrop: Nearly Transparent">
+        <Example title="Backdrop: Nearly Transparent" :code="`<CuiModal v-model:open=&quot;show&quot; title=&quot;Light Overlay&quot; :backdrop-opacity=&quot;0.1&quot;>
+  <p>Very subtle backdrop — page is mostly visible.</p>
+</CuiModal>`">
           <CuiButton variant="outline" size="sm" @click="transparent = true">Transparent</CuiButton>
           <CuiModal
             v-model:open="transparent"
@@ -292,7 +365,23 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Form in Modal -->
-        <Example title="Form in Modal">
+        <Example title="Form in Modal" :code="`<CuiModal v-model:open=&quot;show&quot; size=&quot;lg&quot;>
+  <CuiModalHeader title=&quot;Create User&quot; @close=&quot;show = false&quot; />
+  <CuiModalBody>
+    <CuiStack spacing=&quot;4&quot;>
+      <CuiFormField label=&quot;Full Name&quot; required>
+        <CuiInput v-model=&quot;formName&quot; placeholder=&quot;John Doe&quot; />
+      </CuiFormField>
+      <CuiFormField label=&quot;Role&quot;>
+        <CuiSelect v-model=&quot;formRole&quot; :options=&quot;['Admin', 'Editor', 'Viewer']&quot; />
+      </CuiFormField>
+    </CuiStack>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;ghost&quot; @click=&quot;show = false&quot;>Cancel</CuiButton>
+    <CuiButton variant=&quot;solid&quot; color=&quot;success&quot; @click=&quot;show = false&quot;>Create User</CuiButton>
+  </CuiModalFooter>
+</CuiModal>`">
           <CuiButton variant="solid" size="sm" @click="formModal = true">Open Form</CuiButton>
           <CuiModal v-model:open="formModal" size="lg">
             <CuiModalHeader title="Create User" @close="formModal = false" />
@@ -323,7 +412,16 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Confirm Dialog Pattern -->
-        <Example title="Confirm Dialog Pattern">
+        <Example title="Confirm Dialog Pattern" :code="`<CuiModal v-model:open=&quot;show&quot; size=&quot;sm&quot; persistent>
+  <CuiModalHeader title=&quot;Confirm Deletion&quot; no-close-button />
+  <CuiModalBody>
+    <p>Are you sure you want to delete <strong>Project Alpha</strong>?</p>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;ghost&quot; @click=&quot;show = false&quot;>Cancel</CuiButton>
+    <CuiButton variant=&quot;solid&quot; color=&quot;error&quot; @click=&quot;show = false&quot;>Delete</CuiButton>
+  </CuiModalFooter>
+</CuiModal>`">
           <CuiButton variant="solid" size="sm" color="error" @click="confirmModal = true">Delete Item</CuiButton>
           <CuiModal v-model:open="confirmModal" size="sm" persistent>
             <CuiModalHeader title="Confirm Deletion" no-close-button />

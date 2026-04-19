@@ -6,6 +6,7 @@ import type { TreeNode } from "./CuiTreeView.vue";
 const props = defineProps<{
   node: TreeNode;
   depth: number;
+  isLast: boolean;
   expanded: Set<string | number>;
   selectedSet: Set<string | number>;
   selectable: boolean;
@@ -66,10 +67,65 @@ function onNodeClick() {
     emit("select-node", props.node);
   }
 }
+
+// Line positioning helpers
+const pad = computed(() => props.cfg.padding.split(' ')[1] || props.cfg.padding.split(' ')[0]);
+const lineColor = "var(--cui-border-strong, var(--cui-border))";
 </script>
 
 <template>
-  <div role="treeitem" :aria-expanded="hasChildren ? isExpanded : undefined">
+  <div
+    role="treeitem"
+    :aria-expanded="hasChildren ? isExpanded : undefined"
+    :style="{ position: 'relative' }"
+  >
+    <!--
+      Parent's vertical continuation line — extends full height of this treeitem
+      so siblings appear connected. Last sibling doesn't draw this.
+    -->
+    <div
+      v-if="showLines && depth > 0 && !isLast"
+      :style="{
+        position: 'absolute',
+        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
+        top: '0',
+        bottom: '0',
+        width: '0',
+        borderLeft: `1px solid ${lineColor}`,
+        zIndex: '0',
+      }"
+    />
+
+    <!--
+      L-connector for last sibling — vertical line stops at row midpoint
+    -->
+    <div
+      v-if="showLines && depth > 0 && isLast"
+      :style="{
+        position: 'absolute',
+        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
+        top: '0',
+        height: `calc(${cfg.padding.split(' ')[0]} + 0.625em)`,
+        width: '0',
+        borderLeft: `1px solid ${lineColor}`,
+        zIndex: '0',
+      }"
+    />
+
+    <!-- Horizontal branch connecting to parent's vertical line -->
+    <div
+      v-if="showLines && depth > 0"
+      :style="{
+        position: 'absolute',
+        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
+        top: `calc(${cfg.padding.split(' ')[0]} + 0.625em)`,
+        width: `calc(${parseFloat(cfg.indent) * 0.5}rem)`,
+        height: '0',
+        borderTop: `1px solid ${lineColor}`,
+        zIndex: '0',
+      }"
+    />
+
     <!-- Node row -->
     <div
       :style="{
@@ -79,7 +135,7 @@ function onNodeClick() {
         paddingTop: cfg.padding.split(' ')[0],
         paddingRight: cfg.padding.split(' ')[1] || cfg.padding.split(' ')[0],
         paddingBottom: cfg.padding.split(' ')[0],
-        paddingLeft: `calc(${cfg.padding.split(' ')[1] || cfg.padding.split(' ')[0]} + ${depth * parseFloat(cfg.indent)}rem)`,
+        paddingLeft: `calc(${pad} + ${depth * parseFloat(cfg.indent)}rem)`,
         fontSize: cfg.fontSize,
         cursor: node.disabled ? 'default' : 'pointer',
         borderRadius: '0.25rem',
@@ -89,33 +145,10 @@ function onNodeClick() {
         opacity: node.disabled ? '0.5' : '1',
         transition: 'background 0.1s ease',
         position: 'relative',
+        zIndex: '1',
       }"
       @click="onNodeClick"
     >
-      <!-- Connecting line -->
-      <div
-        v-if="showLines && depth > 0"
-        :style="{
-          position: 'absolute',
-          left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${cfg.padding.split(' ')[1] || cfg.padding} + 0.5rem)`,
-          top: '0',
-          bottom: '50%',
-          width: '0',
-          borderLeft: '1px solid var(--cui-border)',
-        }"
-      />
-      <div
-        v-if="showLines && depth > 0"
-        :style="{
-          position: 'absolute',
-          left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${cfg.padding.split(' ')[1] || cfg.padding} + 0.5rem)`,
-          top: '50%',
-          width: `calc(${parseFloat(cfg.indent) * 0.5}rem)`,
-          height: '0',
-          borderTop: '1px solid var(--cui-border)',
-        }"
-      />
-
       <!-- Expand/collapse chevron -->
       <div
         :style="{
@@ -160,23 +193,12 @@ function onNodeClick() {
         transition: animated ? 'max-height 0.25s ease' : undefined,
       }"
     >
-      <!-- Vertical line connecting children -->
-      <div
-        v-if="showLines"
-        :style="{
-          position: 'absolute',
-          left: `calc(${depth * parseFloat(cfg.indent)}rem + ${cfg.padding.split(' ')[1] || cfg.padding} + 0.5rem)`,
-          top: '0',
-          bottom: '0',
-          width: '0',
-          borderLeft: '1px solid var(--cui-border)',
-        }"
-      />
       <CuiTreeNode
-        v-for="child in node.children"
+        v-for="(child, idx) in node.children"
         :key="String(child.id)"
         :node="child"
         :depth="depth + 1"
+        :is-last="idx === (node.children!.length - 1)"
         :expanded="expanded"
         :selected-set="selectedSet"
         :selectable="selectable"
