@@ -109,11 +109,11 @@ const buttonStyle = computed(() => {
   if (v === "solid") {
     return {
       ...base,
-      background: `var(--cui-${c})`,
+      background: `var(--cui-${c}-solid, var(--cui-${c}))`,
       color: `var(--cui-${c}-text)`,
       border: "1px solid transparent",
-      "--_btn-hover-bg": `var(--cui-${c}-hover)`,
-      "--_btn-active-bg": `var(--cui-${c}-active)`,
+      "--_btn-hover-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
+      "--_btn-active-bg": `var(--cui-${c}-solid-active, var(--cui-${c}-active))`,
     };
   }
 

@@ -56,11 +56,11 @@
   --color-info-700: oklch(0.36 0.10 230);
   --color-info-900: oklch(0.28 0.07 230);
 
-  /* --- Surface (visible borders at 200-300 for WCAG 3:1 on white) — full scale --- */
+  /* --- Surface (smooth monotonic scale) — full scale --- */
   --color-surface-50:  oklch(0.975 0.005 270);
   --color-surface-100: oklch(0.945 0.005 270);
-  --color-surface-200: oklch(0.800 0.006 270);
-  --color-surface-300: oklch(0.650 0.008 270);
+  --color-surface-200: oklch(0.900 0.006 270);
+  --color-surface-300: oklch(0.850 0.008 270);
   --color-surface-400: oklch(0.780 0.008 270);
   --color-surface-500: oklch(0.720 0.008 270);
   --color-surface-600: oklch(0.620 0.010 270);
@@ -128,7 +128,7 @@
   --cui-warning-active:     var(--color-warning-900);
   --cui-warning-bg:         var(--color-warning-100);
   --cui-warning-border:     var(--color-warning-300);
-  --cui-warning-text:       var(--color-surface-900); /* dark text on bright amber */
+  --cui-warning-text:       white;
   --cui-warning-focus-ring: oklch(0.75 0.15 80 / 0.4);
   --cui-warning-subtle:     oklch(0.96 0.04 80 / 0.6);
   --cui-warning-muted:      oklch(0.84 0.05 80);
@@ -153,9 +153,9 @@
   /* --- Table header background --- */
   --cui-table-head-bg: var(--color-surface-50);
 
-  /* --- Border color (subtle in both modes) --- */
-  --cui-border: var(--color-surface-200);
-  --cui-border-strong: var(--color-surface-300);
+  /* --- Border color — uses 500/600 for visible borders on white --- */
+  --cui-border: var(--color-surface-500);
+  --cui-border-strong: var(--color-surface-600);
 
   /* --- Button defaults --- */
   --cui-button-radius: 0.375rem;
@@ -170,54 +170,71 @@
   --cui-surface-base: var(--color-surface-900);
   --cui-scroll-shadow: rgba(0, 0, 0, 0.25);
   --cui-table-head-bg: var(--color-surface-800);
-  --cui-border: var(--color-surface-800);
-  --cui-border-strong: var(--color-surface-700);
+  --cui-border: var(--color-surface-600);
+  --cui-border-strong: var(--color-surface-500);
 
   /* --- Primary (references scale so themes override correctly) --- */
-  --cui-primary:            var(--color-primary-400);
-  --cui-primary-hover:      var(--color-primary-300);
-  --cui-primary-active:     var(--color-primary-200);
+  --cui-primary:            var(--color-primary-300);
+  --cui-primary-hover:      var(--color-primary-200);
+  --cui-primary-active:     var(--color-primary-100);
   --cui-primary-bg:         var(--color-primary-900);
-  --cui-primary-border:     var(--color-primary-700);
+  --cui-primary-border:     var(--color-primary-400);
   --cui-primary-text:       white;
-  --cui-primary-focus-ring: color-mix(in srgb, var(--color-primary-400) 40%, transparent);
+  --cui-primary-focus-ring: color-mix(in srgb, var(--color-primary-300) 40%, transparent);
   --cui-primary-subtle:     color-mix(in srgb, var(--color-primary-900) 50%, transparent);
-  --cui-primary-muted:      var(--color-primary-700);
+  --cui-primary-muted:      var(--color-primary-600);
+
+  /* Solid-specific: darker shades for white text on colored bg */
+  --cui-primary-solid:        var(--color-primary-600);
+  --cui-primary-solid-hover:  var(--color-primary-700);
+  --cui-primary-solid-active: var(--color-primary-800);
 
   /* --- Secondary (muted primary — also references scale for theme compat) --- */
   --cui-secondary:            var(--color-secondary-300);
   --cui-secondary-hover:      var(--color-secondary-100);
   --cui-secondary-active:     var(--color-secondary-100);
   --cui-secondary-bg:         var(--color-secondary-900);
-  --cui-secondary-border:     var(--color-secondary-700);
+  --cui-secondary-border:     var(--color-secondary-300);
   --cui-secondary-text:       white;
   --cui-secondary-focus-ring: color-mix(in srgb, var(--color-secondary-300) 40%, transparent);
   --cui-secondary-subtle:     color-mix(in srgb, var(--color-secondary-900) 50%, transparent);
   --cui-secondary-muted:      var(--color-secondary-700);
+
+  --cui-secondary-solid:        var(--color-secondary-500);
+  --cui-secondary-solid-hover:  var(--color-secondary-700);
+  --cui-secondary-solid-active: var(--color-secondary-900);
 
   /* --- Success --- */
   --cui-success:            oklch(0.65 0.15 150);
   --cui-success-hover:      oklch(0.76 0.14 150);
   --cui-success-active:     oklch(0.82 0.10 150);
   --cui-success-bg:         oklch(0.22 0.06 150);
-  --cui-success-border:     oklch(0.42 0.12 150);
+  --cui-success-border:     oklch(0.60 0.12 150);
   --cui-success-text:       white;
   --cui-success-focus-ring: oklch(0.65 0.15 150 / 0.4);
   --cui-success-subtle:     oklch(0.22 0.06 150 / 0.5);
   --cui-success-muted:      oklch(0.42 0.05 150);
+
+  --cui-success-solid:        var(--color-success-500);
+  --cui-success-solid-hover:  var(--color-success-700);
+  --cui-success-solid-active: var(--color-success-900);
 
   /* --- Error --- */
   --cui-error:            oklch(0.68 0.18 25);
   --cui-error-hover:      oklch(0.76 0.12 25);
   --cui-error-active:     oklch(0.82 0.08 25);
   --cui-error-bg:         oklch(0.22 0.08 25);
-  --cui-error-border:     oklch(0.42 0.16 25);
+  --cui-error-border:     oklch(0.60 0.16 25);
   --cui-error-text:       white;
   --cui-error-focus-ring: oklch(0.68 0.18 25 / 0.4);
   --cui-error-subtle:     oklch(0.22 0.08 25 / 0.5);
   --cui-error-muted:      oklch(0.42 0.06 25);
 
-  /* --- Warning --- */
+  --cui-error-solid:        var(--color-error-500);
+  --cui-error-solid-hover:  var(--color-error-700);
+  --cui-error-solid-active: var(--color-error-900);
+
+  /* --- Warning (dark text on bright amber — no solid override needed) --- */
   --cui-warning:            oklch(0.80 0.14 80);
   --cui-warning-hover:      oklch(0.84 0.12 80);
   --cui-warning-active:     oklch(0.88 0.08 80);
@@ -233,11 +250,15 @@
   --cui-info-hover:      oklch(0.76 0.09 230);
   --cui-info-active:     oklch(0.82 0.06 230);
   --cui-info-bg:         oklch(0.22 0.05 230);
-  --cui-info-border:     oklch(0.42 0.10 230);
+  --cui-info-border:     oklch(0.60 0.10 230);
   --cui-info-text:       white;
   --cui-info-focus-ring: oklch(0.65 0.11 230 / 0.4);
   --cui-info-subtle:     oklch(0.22 0.05 230 / 0.5);
   --cui-info-muted:      oklch(0.42 0.04 230);
+
+  --cui-info-solid:        var(--color-info-500);
+  --cui-info-solid-hover:  var(--color-info-700);
+  --cui-info-solid-active: var(--color-info-900);
 }
 
 /* ============================================================

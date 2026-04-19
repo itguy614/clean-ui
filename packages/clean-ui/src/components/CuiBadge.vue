@@ -45,7 +45,7 @@ const badgeStyle = computed(() => {
   const base: Record<string, string> = {};
 
   if (v === "solid") {
-    base.background = `var(--cui-${c})`;
+    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
     base.color = `var(--cui-${c}-text)`;
     base.border = "1px solid transparent";
   } else if (v === "outline") {

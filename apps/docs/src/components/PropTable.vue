@@ -29,10 +29,10 @@ defineProps<{
           <code class="cui-code" style="font-size: 0.8125rem;">{{ prop.name }}</code>
         </CuiTableCell>
         <CuiTableCell>
-          <code style="font-size: 0.75rem; font-family: var(--cui-font-mono, monospace); color: var(--cui-text-secondary);">{{ prop.type }}</code>
+          <code class="cui-code" style="font-size: 0.8125rem;">{{ prop.type }}</code>
         </CuiTableCell>
         <CuiTableCell>
-          <code v-if="prop.default" style="font-size: 0.75rem; font-family: var(--cui-font-mono, monospace); color: var(--cui-text-secondary);">{{ prop.default }}</code>
+          <code v-if="prop.default" class="cui-code" style="font-size: 0.8125rem;">{{ prop.default }}</code>
           <span v-else style="color: var(--cui-text-tertiary);">—</span>
         </CuiTableCell>
         <CuiTableCell>{{ prop.description }}</CuiTableCell>

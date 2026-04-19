@@ -84,7 +84,7 @@ const alertStyle = computed(() => {
   };
 
   if (v === "solid") {
-    base.background = `var(--cui-${c})`;
+    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
     base.color = `var(--cui-${c}-text)`;
     base.border = "1px solid transparent";
     base["--_alert-icon-color"] = `var(--cui-${c}-text)`;

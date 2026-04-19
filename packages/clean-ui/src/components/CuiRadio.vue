@@ -107,6 +107,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       '--_rb-bg': `var(--cui-${resolvedColor}-bg)`,
       '--_rb-text': `var(--cui-${resolvedColor}-text)`,
       '--_rb-border': `var(--cui-${resolvedColor}-border)`,
+      '--_rb-solid': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
       '--_rb-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`,
       height: buttonSizeStyles.height,
       paddingLeft: buttonSizeStyles.px,
@@ -318,7 +319,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 }
 
 .cui-radio-button--active:hover:not(:disabled) {
-  background: var(--_rb-border);
+  background: var(--_rb-solid);
+  color: var(--_rb-text);
 }
 
 .cui-radio-button:focus-visible {

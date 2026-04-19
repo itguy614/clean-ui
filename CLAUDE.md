@@ -29,7 +29,7 @@
 - **CSS custom properties must be on the element that uses them** — focus ring variables must be set on the root element (via `:style`), not a child, if the `:focus-visible` rule is on the root.
 - **Always use semantic color slots for hover/active states** — `--cui-{color}-hover` for hover, `--cui-{color}-active` for pressed. Never use `-muted`, `-border`, or ad-hoc colors for interaction states.
 - **Subtle-first color principle** — resting/selected states use `--cui-{color}-bg` (tinted background) + `--cui-{color}-border` + `--cui-{color}` (colored text/icons). The hero color is NEVER a default background. Applies to: toggles, checkboxes, radios, pagination, alerts, toasts, badges, and all future components.
-- **Semantic border token** — use `var(--cui-border)` for borders, not `var(--color-surface-200)` directly. The token auto-swaps in dark mode. `var(--cui-border-strong)` for input/form control borders.
+- **Semantic border token** — use `var(--cui-border)` for borders, not surface scale steps directly. The token auto-swaps: light=s-500, dark=s-600. `var(--cui-border-strong)` for input/form control borders: light=s-600, dark=s-500. Both modes use 500+600, just swapped.
 - **Semantic surface token** — use `var(--cui-surface-base)` for component backgrounds, not `white`. Auto-swaps in dark mode.
 - **All semantic slots must reference the scale** — `--cui-primary` must be `var(--color-primary-500)`, NOT a hardcoded oklch value. This is critical for theme compatibility. Both light and dark mode slots must reference `--color-primary-*` variables so theme class overrides propagate correctly.
 
@@ -37,9 +37,10 @@
 - 7 roles: primary, secondary, success, error, warning, info + surface (neutral)
 - Primary & surface: full 50–950 scale. Others: condensed 100/300/500/700/900.
 - 9 semantic slots per role: `--cui-{role}`, `-hover`, `-active`, `-bg`, `-border`, `-text`, `-focus-ring`, `-subtle`, `-muted`
-- Dark mode: `:where(.dark, .dark *)` overrides with adjusted lightness (same hue/saturation)
-- Warning role uses dark text on bright amber: `--cui-warning-text: var(--color-surface-900)`
-- WCAG AA compliance target (4.5:1 normal text, 3:1 large text)
+- 3 solid-specific dark-mode slots: `--cui-{role}-solid`, `-solid-hover`, `-solid-active` — darker shades for white-text-on-colored-bg. In light mode these are undefined (components fall back to `--cui-{role}`). Use pattern: `var(--cui-${c}-solid, var(--cui-${c}))` in solid variant backgrounds.
+- Dark mode: `:where(.dark, .dark *)` overrides with adjusted lightness (same hue/saturation). Primary text uses 300 (was 400) for better outline contrast; solid buttons use 600+ via `-solid` tokens.
+- Light + dark mode: Warning role uses white text on amber: `--cui-warning-text: white` (light) / `var(--color-surface-950)` (dark, dark text on bright amber)
+- WCAG AA compliance target (4.5:1 normal text, 3:1 large text). Run `node scripts/check-contrast.mjs` to audit all themes.
 - For focus-ring and subtle (transparency needed): use `color-mix(in srgb, var(--color-primary-500) 40%, transparent)` — NOT oklch alpha syntax with var()
 
 ## Theme System

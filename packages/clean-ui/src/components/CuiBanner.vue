@@ -69,7 +69,7 @@ const containerStyle = computed(() => {
   s[props.position] = "0";
 
   if (props.variant === "solid") {
-    s.background = `var(--cui-${props.color})`;
+    s.background = `var(--cui-${props.color}-solid, var(--cui-${props.color}))`;
     s.color = `var(--cui-${props.color}-text, white)`;
   } else {
     s.background = `var(--cui-${props.color}-bg)`;
