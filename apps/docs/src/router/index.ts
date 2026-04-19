@@ -194,6 +194,16 @@ const router = createRouter({
       component: () => import('../pages/TagInputPage.vue'),
     },
     {
+      path: '/components/tree-view',
+      name: 'tree-view',
+      component: () => import('../pages/TreeViewPage.vue'),
+    },
+    {
+      path: '/components/file-upload',
+      name: 'file-upload',
+      component: () => import('../pages/FileUploadPage.vue'),
+    },
+    {
       path: '/components/time-picker',
       name: 'time-picker',
       component: () => import('../pages/TimePickerPage.vue'),
