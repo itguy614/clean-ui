@@ -45,8 +45,8 @@
 
 ## Theme System
 - 8 presets: Mono (monochrome), Navy (default/indigo), Forest (green), Amber (orange/warm), Azure (blue), Teal (cool teal), Violet (purple), Ruby (red)
-- Themes are CSS classes (`cui-theme-stock`, etc.) that override `--color-primary-*` and `--color-surface-*`
-- Apply to any ancestor: `<html class="cui-theme-stock">` or scoped `<div class="cui-theme-stat">`
+- Themes are CSS classes (`cui-theme-forest`, etc.) that override `--color-primary-*` and `--color-surface-*`
+- Apply to any ancestor: `<html class="cui-theme-forest">` or scoped `<div class="cui-theme-violet">`
 - `useTheme()` composable: `setTheme(id)`, reactive `theme` ref, persists to localStorage
 - Surface lightness curve based on Amber warm gray distribution (0.983 → 0.196) — ALL themes use this curve
 - Light mode surfaces have a very subtle primary tint (chroma 0.005-0.010)

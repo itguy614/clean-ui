@@ -158,11 +158,11 @@ function parseAllThemes() {
   });
 
   const themeConfigs = [
-    { id: "stock", name: "Forest" },
-    { id: "access", name: "Amber" },
-    { id: "temp", name: "Azure" },
-    { id: "dayton", name: "Teal" },
-    { id: "stat", name: "Violet" },
+    { id: "forest", name: "Forest" },
+    { id: "amber", name: "Amber" },
+    { id: "azure", name: "Azure" },
+    { id: "teal", name: "Teal" },
+    { id: "violet", name: "Violet" },
     { id: "ruby", name: "Ruby" },
     { id: "mono", name: "Mono" },
   ];

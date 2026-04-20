@@ -9,11 +9,11 @@ export interface ThemePreset {
 export const THEME_PRESETS: ThemePreset[] = [
   { id: "mono", label: "Mono", description: "Monochrome — default theme" },
   { id: "default", label: "Navy", description: "Navy blue" },
-  { id: "stock", label: "Forest", description: "Natural green" },
-  { id: "access", label: "Amber", description: "Warm orange with warm grays" },
-  { id: "temp", label: "Azure", description: "Vibrant blue" },
-  { id: "dayton", label: "Teal", description: "Cool teal" },
-  { id: "stat", label: "Violet", description: "Rich purple" },
+  { id: "forest", label: "Forest", description: "Natural green" },
+  { id: "amber", label: "Amber", description: "Warm orange with warm grays" },
+  { id: "azure", label: "Azure", description: "Vibrant blue" },
+  { id: "teal", label: "Teal", description: "Cool teal" },
+  { id: "violet", label: "Violet", description: "Rich purple" },
   { id: "ruby", label: "Ruby", description: "Bold red" },
 ];
 
@@ -23,9 +23,19 @@ const CLASS_PREFIX = "cui-theme-";
 // Shared reactive state
 const activeTheme = ref<string>(loadTheme());
 
+// Migrate old product-based IDs → color-based IDs
+const LEGACY_IDS: Record<string, string> = {
+  stock: "forest",
+  access: "amber",
+  temp: "azure",
+  dayton: "teal",
+  stat: "violet",
+};
+
 function loadTheme(): string {
   if (typeof window === "undefined") return "mono";
-  return localStorage.getItem(STORAGE_KEY) ?? "mono";
+  const stored = localStorage.getItem(STORAGE_KEY) ?? "mono";
+  return LEGACY_IDS[stored] ?? stored;
 }
 
 function applyTheme(themeId: string) {
