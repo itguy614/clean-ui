@@ -29,6 +29,7 @@ const justifyMap: Record<string, string> = {
       padding: '0.75rem 1.5rem 1.25rem',
       flexShrink: '0',
       justifyContent: justifyMap[align],
+      background: 'var(--cui-surface-base)',
     }"
   >
     <slot />

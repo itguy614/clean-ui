@@ -29,6 +29,7 @@ const emit = defineEmits<{
       gap: '0.75rem',
       padding: '1.25rem 1.5rem 0.25rem',
       flexShrink: '0',
+      background: 'var(--cui-surface-base)',
     }"
   >
     <div style="flex: 1; min-width: 0;">
