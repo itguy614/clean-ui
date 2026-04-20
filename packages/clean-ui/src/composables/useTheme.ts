@@ -23,19 +23,9 @@ const CLASS_PREFIX = "cui-theme-";
 // Shared reactive state
 const activeTheme = ref<string>(loadTheme());
 
-// Migrate old product-based IDs → color-based IDs
-const LEGACY_IDS: Record<string, string> = {
-  stock: "forest",
-  access: "amber",
-  temp: "azure",
-  dayton: "teal",
-  stat: "violet",
-};
-
 function loadTheme(): string {
   if (typeof window === "undefined") return "mono";
-  const stored = localStorage.getItem(STORAGE_KEY) ?? "mono";
-  return LEGACY_IDS[stored] ?? stored;
+  return localStorage.getItem(STORAGE_KEY) ?? "mono";
 }
 
 function applyTheme(themeId: string) {
