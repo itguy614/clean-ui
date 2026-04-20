@@ -17,6 +17,7 @@ import {
   CuiStack,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const showGrid = ref(true);
@@ -61,6 +62,15 @@ const theme = ref("system");
           { name: 'CuiDropdownSub', type: 'nested', default: '—', description: 'Sub-menu. Inherits parent trigger, optional trigger override. #menu slot for items.' },
           { name: 'CuiDropdownDivider', type: 'separator', default: '—', description: 'Horizontal line separator' },
           { name: 'CuiDropdownHeader', type: 'label', default: '—', description: 'Non-interactive group label' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'select', payload: '\u2014', description: 'Fires when a dropdown item is selected' },
         ]"
       />
     </div>

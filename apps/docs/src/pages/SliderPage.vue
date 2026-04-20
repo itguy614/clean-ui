@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiFlex, CuiIcon, CuiSlider, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const volume = ref(65);
 const price = ref(250);
@@ -40,6 +42,31 @@ const temp = ref(72);
         ]"
       />
     </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'number', description: 'Fires when the slider value changes (v-model)' },
+      ]" />
+    </div>
+
+    <Playground
+      :component="CuiSlider"
+      component-name="CuiSlider"
+      :props="{
+        min: { type: 'number', default: 0 },
+        max: { type: 'number', default: 100 },
+        step: { type: 'number', default: 1 },
+        size: { type: 'select', options: ['sm', 'md', 'lg'], default: 'md' },
+        color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+        label: { type: 'string', default: '' },
+        showValue: { type: 'boolean', default: false },
+        showRange: { type: 'boolean', default: false },
+        thumbIcon: { type: 'string', default: '' },
+        disabled: { type: 'boolean', default: false },
+      }"
+    />
 
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>

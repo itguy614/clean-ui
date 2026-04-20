@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiBadge, CuiButton, CuiFlex, CuiInput, CuiStack, CuiTooltip } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const manualVisible = ref(false);
@@ -42,6 +43,15 @@ const manualVisible = ref(false);
         :props="[
           { name: 'default', type: 'slot', default: '-', description: 'The trigger element' },
           { name: '#content', type: 'slot', default: '-', description: 'Rich tooltip content (overrides text prop)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:visible', payload: 'boolean', description: 'Controls tooltip visibility (v-model:visible)' },
         ]"
       />
     </div>

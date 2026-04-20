@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiBadge, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiTreeView, type TreeNode } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const fileTree: TreeNode[] = [
@@ -185,6 +186,17 @@ const selectedPerson = ref<string | number | null>(null);
           { name: 'animated', type: 'boolean', default: 'true', description: 'Animate expand/collapse' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string | number | Array | null', description: 'Fires when selection changes (v-model)' },
+          { name: 'node-click', payload: 'TreeNode', description: 'Fires when a selectable node is clicked' },
+          { name: 'node-expand', payload: 'TreeNode, boolean', description: 'Fires when a node is expanded or collapsed' },
         ]"
       />
     </div>

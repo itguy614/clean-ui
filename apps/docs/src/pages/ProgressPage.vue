@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiGrid, CuiProgress, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const animated = ref(0);
 let animInterval: ReturnType<typeof setInterval> | null = null;
@@ -49,6 +50,21 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
         ]"
       />
     </div>
+
+    <Playground
+      :component="CuiProgress"
+      component-name="CuiProgress"
+      :props="{
+        value: { type: 'number', default: 65 },
+        max: { type: 'number', default: 100 },
+        variant: { type: 'select', options: ['bar', 'circle'], default: 'bar' },
+        color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+        size: { type: 'select', options: ['sm', 'md', 'lg'], default: 'md' },
+        showLabel: { type: 'boolean', default: false },
+        indeterminate: { type: 'boolean', default: false },
+        animation: { type: 'select', options: ['none', 'stripe', 'shimmer'], default: 'none' },
+      }"
+    />
 
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>

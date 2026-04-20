@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiDateRangePicker, CuiFlex, CuiStack, type DateRangeValue } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const range1 = ref<DateRangeValue>({ start: "2025-04-01", end: "2025-04-15" });
@@ -42,6 +43,15 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: '{ start, end }', description: 'Fires when the selected range changes (v-model)' },
         ]"
       />
     </div>

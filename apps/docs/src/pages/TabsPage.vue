@@ -13,6 +13,7 @@ import {
   CuiToggle,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const basic = ref("tab1");
@@ -71,6 +72,16 @@ function resetTabs() {
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable this tab' },
           { name: 'closeable', type: 'boolean', default: 'false', description: 'Show close button' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string', description: 'Fires when the active tab changes (v-model)' },
+          { name: 'close', payload: 'string', description: 'Fires when a closeable tab is closed; payload is the tab value' },
         ]"
       />
     </div>

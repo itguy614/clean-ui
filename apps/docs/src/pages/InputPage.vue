@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiButton, CuiFlex, CuiInput, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const text = ref("");
 const email = ref("");
@@ -51,6 +53,35 @@ const sized = ref("Hello");
           { name: '#prefix-button', type: 'slot', default: '-', description: 'Button merged into the left border' },
           { name: '#suffix-button', type: 'slot', default: '-', description: 'Button merged into the right border' },
         ]"
+      />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'string', description: 'Fires when the input value changes (v-model)' },
+        { name: 'clear', payload: '—', description: 'Fires when the clear button is clicked' },
+      ]" />
+    </div>
+
+    <!-- Playground -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
+      <Playground
+        :component="CuiInput"
+        component-name="CuiInput"
+        :props="{
+          type: { type: 'select', options: ['text', 'password', 'email', 'url', 'tel', 'search'], default: 'text' },
+          size: { type: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], default: 'md' },
+          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+          placeholder: { type: 'string', default: 'Enter text...' },
+          clearable: { type: 'boolean', default: false },
+          error: { type: 'boolean', default: false },
+          errorMessage: { type: 'string', default: '' },
+          disabled: { type: 'boolean', default: false },
+          readonly: { type: 'boolean', default: false },
+        }"
       />
     </div>
 

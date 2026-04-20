@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiStack, CuiTextarea } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const text = ref("");
@@ -40,6 +41,14 @@ const errorVal = ref("");
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'string', description: 'Fires when the textarea value changes (v-model)' },
+      ]" />
     </div>
 
     <div>

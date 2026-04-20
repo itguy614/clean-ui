@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiFlex, CuiRating, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const rating1 = ref(3);
 const rating2 = ref(3.5);
@@ -40,6 +42,32 @@ const rating4 = ref(2);
         ]"
       />
     </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'number', description: 'Fires when the rating value changes (v-model)' },
+        ]"
+      />
+    </div>
+
+    <Playground
+      :component="CuiRating"
+      component-name="CuiRating"
+      :props="{
+        max: { type: 'number', default: 5 },
+        size: { type: 'select', options: ['sm', 'md', 'lg', 'xl'], default: 'md' },
+        color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'warning' },
+        icon: { type: 'string', default: 'star' },
+        half: { type: 'boolean', default: false },
+        showValue: { type: 'boolean', default: false },
+        clearable: { type: 'boolean', default: true },
+        label: { type: 'string', default: '' },
+        readonly: { type: 'boolean', default: false },
+        disabled: { type: 'boolean', default: false },
+      }"
+    />
 
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>

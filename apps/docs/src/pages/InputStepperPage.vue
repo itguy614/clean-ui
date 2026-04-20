@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiFlex, CuiInputStepper, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const qty = ref(1);
@@ -38,6 +39,15 @@ const minutes = ref(30);
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'label', type: 'string', default: '—', description: 'Label text above the input' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'number', description: 'Fires when the value changes (v-model)' },
         ]"
       />
     </div>

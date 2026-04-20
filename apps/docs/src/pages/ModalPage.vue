@@ -15,6 +15,7 @@ import {
   CuiTextarea,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const basic = ref(false);
@@ -84,6 +85,16 @@ const formAgree = ref(false);
           { name: '#header', type: 'slot', default: '-', description: 'Custom header (overrides title prop)' },
           { name: 'default', type: 'slot', default: '-', description: 'Body content (scrollable)' },
           { name: '#footer', type: 'slot', default: '-', description: 'Footer actions' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:open', payload: 'boolean', description: 'Controls modal visibility (v-model:open)' },
+          { name: 'close', payload: '—', description: 'Fires when the modal is closed' },
         ]"
       />
     </div>

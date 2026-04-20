@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiDatePicker, CuiFlex, CuiGrid, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const date1 = ref("2025-01-15");
@@ -43,6 +44,15 @@ const dateObj = ref<Date | null>(new Date());
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string | Date | null', description: 'Fires when the selected date changes (v-model)' },
         ]"
       />
     </div>

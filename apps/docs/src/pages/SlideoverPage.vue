@@ -15,6 +15,7 @@ import {
   CuiTextarea,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const basic = ref(false);
@@ -67,6 +68,16 @@ const formAgree = ref(false);
           { name: 'backdropImage', type: 'string', default: '—', description: 'Backdrop image URL' },
           { name: 'backdropGradient', type: 'string', default: '—', description: 'Backdrop CSS gradient' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:open', payload: 'boolean', description: 'Controls slideover visibility (v-model:open)' },
+          { name: 'close', payload: '—', description: 'Fires when the slideover is closed' },
         ]"
       />
     </div>

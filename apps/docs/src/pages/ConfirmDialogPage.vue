@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiButton, CuiConfirmDialog, CuiFlex, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const showBasic = ref(false);
@@ -74,6 +75,17 @@ function onLoadingConfirm() {
           { name: 'icon', type: 'string', default: '—', description: 'Custom icon (auto-selected by variant if omitted)' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'Loading state on confirm button' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'boolean', description: 'Controls dialog visibility (v-model)' },
+          { name: 'confirm', payload: '—', description: 'Fires when the confirm button is clicked' },
+          { name: 'cancel', payload: '—', description: 'Fires when the cancel button is clicked' },
         ]"
       />
     </div>

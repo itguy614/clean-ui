@@ -2,6 +2,7 @@
 import { CuiCard, CuiCardBody, CuiFlex, CuiGrid, CuiSpinner, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 </script>
 
 <template>
@@ -27,6 +28,18 @@ import Example from "../components/Example.vue";
         ]"
       />
     </div>
+
+    <Playground
+      :component="CuiSpinner"
+      component-name="CuiSpinner"
+      :props="{
+        size: { type: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], default: 'md' },
+        color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+        variant: { type: 'select', options: ['ring', 'dots', 'bars'], default: 'ring' },
+        label: { type: 'string', default: 'Loading' },
+        showLabel: { type: 'boolean', default: false },
+      }"
+    />
 
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>

@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiBadge, CuiButton, CuiFlex, CuiInput, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const tags = ref(["Vue", "TypeScript", "Tailwind", "Vite"]);
 
@@ -37,6 +39,32 @@ function resetTags() {
           { name: 'animation', type: 'pulse | bounce | ping | none', default: 'none', description: 'Attention animation' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
+      />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'remove', payload: '—', description: 'Fires when the remove button is clicked' },
+      ]" />
+    </div>
+
+    <!-- Playground -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
+      <Playground
+        :component="CuiBadge"
+        component-name="CuiBadge"
+        :props="{
+          variant: { type: 'select', options: ['subtle', 'solid', 'outline'], default: 'subtle' },
+          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+          size: { type: 'select', options: ['sm', 'md'], default: 'sm' },
+          dot: { type: 'boolean', default: false },
+          removable: { type: 'boolean', default: false },
+          animation: { type: 'select', options: ['pulse', 'bounce', 'ping', 'none'], default: 'none' },
+        }"
+        slot-content="Badge"
       />
     </div>
 

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { CuiPagination, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 // Basic
@@ -57,6 +58,16 @@ const sizePage = ref(1);
           { name: 'size', type: 'sm | md', default: 'md', description: 'Button size' },
           { name: 'maxButtons', type: 'number', default: '5', description: 'Max page buttons before truncating with ellipsis' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:currentPage', payload: 'number', description: 'Fires when the page changes (v-model:currentPage)' },
+          { name: 'update:perPage', payload: 'number', description: 'Fires when items per page changes (v-model:perPage)' },
         ]"
       />
     </div>

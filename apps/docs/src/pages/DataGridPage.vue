@@ -13,6 +13,7 @@ import {
   type DataGridBulkAction,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const columns: DataGridColumn[] = [
@@ -146,6 +147,19 @@ const wideData: DataGridRow[] = data.map((row) => ({
           { name: 'perPageOptions', type: 'number[]', default: '[10, 25, 50, 100]', description: 'Per-page selector options' },
           { name: 'viewAdapter', type: 'DataGridViewAdapter', default: '—', description: 'Custom adapter for saving/loading views' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'navigate', payload: 'DataGridQueryParams', description: 'Fires in server-side mode when sort, filter, search, or page changes' },
+          { name: 'row-click', payload: '{ row: DataGridRow }', description: 'Fires when a table row is clicked' },
+          { name: 'row-action', payload: '{ action, row }', description: 'Fires when a row action is triggered' },
+          { name: 'bulk-action', payload: '{ action, rows }', description: 'Fires when a bulk action is triggered on selected rows' },
+          { name: 'selection-change', payload: 'string[]', description: 'Fires when selected row IDs change' },
         ]"
       />
     </div>

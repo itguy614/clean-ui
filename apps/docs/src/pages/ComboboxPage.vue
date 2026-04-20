@@ -10,6 +10,7 @@ import {
   type ComboboxOption,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 // Simple options
@@ -109,6 +110,16 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'External loading state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string | number | Array | null', description: 'Fires when the selection changes (v-model)' },
+          { name: 'search', payload: 'string', description: 'Fires on input change with the current search query' },
         ]"
       />
     </div>

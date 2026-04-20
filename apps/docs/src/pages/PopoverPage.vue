@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiGrid, CuiPopover, CuiStack, CuiBadge, CuiIcon } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 </script>
 
@@ -42,6 +43,15 @@ import Example from "../components/Example.vue";
           { name: 'content', type: 'slot', default: '—', description: 'Popover body content' },
           { name: 'header', type: 'slot', default: '—', description: 'Override entire header (replaces title + close button)' },
           { name: 'footer', type: 'slot', default: '—', description: 'Optional footer area' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:visible', payload: 'boolean', description: 'Controls popover visibility (v-model:visible)' },
         ]"
       />
     </div>

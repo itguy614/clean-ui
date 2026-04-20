@@ -11,6 +11,7 @@ import {
   type StepDef,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const basicSteps: StepDef[] = [
@@ -75,6 +76,15 @@ const verticalStep = ref(1);
           { name: 'clickable', type: 'boolean', default: 'true', description: 'Allow clicking completed steps to go back' },
           { name: 'linear', type: 'boolean', default: 'true', description: 'Linear mode — can only progress forward, no skipping' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'number', description: 'Fires when the active step changes (v-model)' },
         ]"
       />
     </div>

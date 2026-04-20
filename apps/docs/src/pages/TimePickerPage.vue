@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiFlex, CuiStack, CuiTimePicker } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const time1 = ref("09:30 AM");
@@ -34,6 +35,15 @@ const time4 = ref("02:00 PM");
           { name: 'maxTime', type: 'string', default: '—', description: 'Maximum selectable time (HH:mm)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string', description: 'Fires when the selected time changes (v-model)' },
         ]"
       />
     </div>

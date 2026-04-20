@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiButton, CuiFlex, CuiMaskedInput, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const ssn = ref("");
@@ -46,6 +47,16 @@ const phoneFormatted = ref("");
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string', description: 'Fires with the raw value without separators (v-model)' },
+          { name: 'update:formattedValue', payload: 'string', description: 'Fires with the display value including mask formatting (v-model:formattedValue)' },
         ]"
       />
     </div>

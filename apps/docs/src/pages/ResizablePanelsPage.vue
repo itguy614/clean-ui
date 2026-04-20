@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiCard, CuiCardBody, CuiResizablePanels, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const size1 = ref(50);
@@ -38,6 +39,16 @@ const size1 = ref(50);
         :props="[
           { name: 'first', type: 'slot', default: '—', description: 'First (left or top) panel content' },
           { name: 'second', type: 'slot', default: '—', description: 'Second (right or bottom) panel content' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'resize', payload: 'number', description: 'Fires during drag with the first panel size as a percentage' },
+          { name: 'collapse', payload: 'boolean', description: 'Fires when the first panel crosses the collapse threshold' },
         ]"
       />
     </div>

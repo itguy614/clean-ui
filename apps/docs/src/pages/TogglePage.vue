@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiButton, CuiFlex, CuiStack, CuiToggle, CuiToggleGroup } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const darkMode = ref(false);
 const notifications = ref(true);
@@ -53,6 +55,14 @@ const dynamicField = ref({
       />
     </div>
 
+    <!-- CuiToggle Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">CuiToggle Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'boolean', description: 'Fires when toggled on/off (v-model, standalone mode)' },
+      ]" />
+    </div>
+
     <div>
       <h2 class="mb-4 text-2xl font-semibold">CuiToggleGroup Props</h2>
       <PropTable
@@ -67,6 +77,32 @@ const dynamicField = ref({
           { name: 'label', type: 'string', default: '-', description: 'Accessible group label (aria-label)' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
+      />
+    </div>
+
+    <!-- CuiToggleGroup Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">CuiToggleGroup Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'Array<string | number>', description: 'Fires when selections change (v-model)' },
+      ]" />
+    </div>
+
+    <!-- Playground -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
+      <Playground
+        :component="CuiToggle"
+        component-name="CuiToggle"
+        :props="{
+          label: { type: 'string', default: 'Enable feature' },
+          description: { type: 'string', default: '' },
+          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+          size: { type: 'select', options: ['sm', 'md', 'lg'], default: 'md' },
+          showLabels: { type: 'boolean', default: false },
+          disabled: { type: 'boolean', default: false },
+          readonly: { type: 'boolean', default: false },
+        }"
       />
     </div>
 

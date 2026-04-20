@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const isLoading = ref(false);
 
@@ -38,6 +39,25 @@ function simulateLoad() {
           { name: 'loading', type: 'boolean', default: 'false', description: 'Shows spinner and disables interaction' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state (uses aria-disabled for links)' },
         ]"
+      />
+    </div>
+
+    <!-- Playground -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
+      <Playground
+        :component="CuiButton"
+        component-name="CuiButton"
+        :props="{
+          variant: { type: 'select', options: ['solid', 'outline', 'dash', 'ghost'], default: 'outline' },
+          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
+          size: { type: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], default: 'md' },
+          rounded: { type: 'select', options: ['sm', 'md', 'lg', 'full'], default: 'md' },
+          type: { type: 'select', options: ['button', 'submit', 'reset'], default: 'button' },
+          loading: { type: 'boolean', default: false },
+          disabled: { type: 'boolean', default: false },
+        }"
+        slot-content="Click Me"
       />
     </div>
 

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiFlex, CuiStack, CuiTagInput, type TagOption } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const tags1 = ref<string[]>(["vue", "typescript"]);
@@ -75,6 +76,15 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
           { name: 'noSuggestionsText', type: 'string', default: 'No suggestions', description: 'Text when no suggestions match' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'update:modelValue', payload: 'string[]', description: 'Fires when tags change (v-model)' },
         ]"
       />
     </div>

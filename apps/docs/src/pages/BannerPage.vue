@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiBanner, CuiButton, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const show1 = ref(true);
@@ -50,6 +51,15 @@ function resetAll() {
         :props="[
           { name: 'default', type: 'slot', default: '—', description: 'Banner message content' },
           { name: 'actions', type: 'slot', default: '—', description: 'Action buttons (e.g., Learn More, Accept)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'dismiss', payload: '—', description: 'Fires when the banner is dismissed' },
         ]"
       />
     </div>

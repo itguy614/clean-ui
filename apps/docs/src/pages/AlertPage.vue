@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import { CuiAlert, CuiButton, CuiFlex, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
+import Playground from "../components/Playground.vue";
 
 const showDismissible = ref(true);
 const showAuto = ref(false);
@@ -47,6 +49,33 @@ const showPulse = ref(true);
           { name: '#icon', type: 'slot', default: '-', description: 'Custom icon (overrides auto-icon)' },
           { name: '#actions', type: 'slot', default: '-', description: 'Action buttons in the footer' },
         ]"
+      />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'dismiss', payload: '—', description: 'Fires when the alert is dismissed' },
+      ]" />
+    </div>
+
+    <!-- Playground -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
+      <Playground
+        :component="CuiAlert"
+        component-name="CuiAlert"
+        :props="{
+          variant: { type: 'select', options: ['subtle', 'solid', 'outline'], default: 'subtle' },
+          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'info' },
+          title: { type: 'string', default: '' },
+          noIcon: { type: 'boolean', default: false },
+          dismissible: { type: 'boolean', default: false },
+          entrance: { type: 'select', options: ['fade', 'slide-down', 'slide-left', 'none'], default: 'fade' },
+          animation: { type: 'select', options: ['pulse', 'glow', 'shake', 'none'], default: 'none' },
+        }"
+        slot-content="This is an alert message."
       />
     </div>
 

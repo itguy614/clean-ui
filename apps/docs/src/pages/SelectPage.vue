@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiBadge, CuiButton, CuiFlex, CuiIcon, CuiSelect, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const fruit = ref<string | null>(null);
@@ -17,6 +18,12 @@ setTimeout(() => {
   loadedOptions.value = ["Loaded Option A", "Loaded Option B", "Loaded Option C"];
   loading.value = false;
 }, 3000);
+
+function reloadOptions() {
+  loading.value = true;
+  loadedOptions.value = [];
+  setTimeout(() => { loadedOptions.value = ["A", "B", "C"]; loading.value = false; }, 2000);
+}
 
 const fruitOptions = [
   { value: "apple", label: "Apple" },
@@ -105,6 +112,14 @@ const dynamicField = ref({
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'string | number | null | Array', description: 'Fires when the selected value changes (v-model)' },
+      ]" />
     </div>
 
     <div>
@@ -206,7 +221,7 @@ const dynamicField = ref({
               clearable
             >
               <template #option="{ option }">
-                <CuiIcon :name="option.icon" size="sm" />
+                <CuiIcon :name="(option as any).icon" size="sm" />
                 {{ option.label }}
                 <CuiBadge v-if="option.value === 'active'" color="success" size="sm">Live</CuiBadge>
               </template>
@@ -227,7 +242,7 @@ const dynamicField = ref({
               :loading="loading"
               placeholder="Loading options..."
             />
-            <CuiButton v-if="!loading" size="sm" variant="ghost" @click="loading = true; loadedOptions = []; setTimeout(() => { loadedOptions = ['A', 'B', 'C']; loading = false; }, 2000)">
+            <CuiButton v-if="!loading" size="sm" variant="ghost" @click="reloadOptions">
               Reload
             </CuiButton>
           </CuiStack>

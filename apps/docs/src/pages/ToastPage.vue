@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiToastProvider, useToast } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const collapsedToasts = ref<Array<{ id: string; title: string; color: string }>>([]);
@@ -163,6 +164,15 @@ dismiss(id)
 dismissAll()</code></pre>
         </CuiCardBody>
       </CuiCard>
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'dismiss', payload: '—', description: 'Fires when the toast is dismissed' },
+        ]"
+      />
     </div>
 
     <div>

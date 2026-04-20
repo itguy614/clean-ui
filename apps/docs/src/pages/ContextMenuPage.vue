@@ -12,6 +12,7 @@ import {
   CuiStack,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const lastAction = ref("(right-click the area above)");
@@ -48,6 +49,15 @@ const italic = ref(false);
         :props="[
           { name: 'default', type: 'slot', default: '—', description: 'Content area that triggers the context menu on right-click' },
           { name: 'menu', type: 'slot', default: '—', description: 'Menu items (CuiDropdownItem, CuiDropdownDivider, etc.)' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
+      <EventTable
+        :events="[
+          { name: 'select', payload: '\u2014', description: 'Fires when a menu item is selected' },
         ]"
       />
     </div>

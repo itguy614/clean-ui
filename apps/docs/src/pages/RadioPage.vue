@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiButton, CuiFlex, CuiRadio, CuiRadioGroup, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const selected = ref("option2");
@@ -77,6 +78,14 @@ const dynamicField = ref({
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
+    </div>
+
+    <!-- Events -->
+    <div>
+      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
+      <EventTable :events="[
+        { name: 'update:modelValue', payload: 'string | number | boolean', description: 'Fires when a radio option is selected (v-model)' },
+      ]" />
     </div>
 
     <div>

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { CuiFileUpload, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const lastUpload = ref<string>("(no upload yet)");
@@ -50,11 +51,11 @@ function onReject(payload: { file: File; reason: string }) {
 
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <PropTable
-        :props="[
-          { name: '@upload', type: '(files: File[]) => void', default: '—', description: 'Emitted when files are ready' },
-          { name: '@reject', type: '({ file, reason }) => void', default: '—', description: 'Emitted when a file is rejected' },
-          { name: '@change', type: '(files: FileEntry[]) => void', default: '—', description: 'Emitted when file list changes' },
+      <EventTable
+        :events="[
+          { name: 'upload', payload: 'File[]', description: 'Fires when files are ready for upload' },
+          { name: 'reject', payload: '{ file: File, reason: string }', description: 'Fires when a file is rejected (size, type, or count)' },
+          { name: 'change', payload: 'FileEntry[]', description: 'Fires when the file list changes' },
         ]"
       />
     </div>

@@ -1,0 +1,61 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build the component library first (docs imports from source, but
+      # the build ensures type-checking passes)
+      - name: Build library
+        run: pnpm --filter @itguy614/clean-ui build
+
+      # Build docs with the GitHub Pages base path
+      - name: Build docs
+        env:
+          VITE_BASE: /clean-ui/
+        run: pnpm --filter @itguy614/clean-ui-docs build
+
+      # Copy index.html → 404.html for SPA client-side routing
+      - name: Create 404 fallback
+        run: cp apps/docs/dist/index.html apps/docs/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/docs/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
