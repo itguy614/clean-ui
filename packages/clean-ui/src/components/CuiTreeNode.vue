@@ -208,7 +208,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
         @toggle-expand="emit('toggle-expand', $event)"
         @select-node="emit('select-node', $event)"
       >
-        <template #node="slotProps">
+        <template #node="slotProps: any">
           <slot name="node" v-bind="slotProps" />
         </template>
       </CuiTreeNode>
