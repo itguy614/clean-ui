@@ -1,3 +1,6 @@
+.playwright-mcp
+.playwright-mcp/
+
 # Dependencies
 node_modules
 
