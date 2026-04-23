@@ -28,6 +28,7 @@ jobs:
         run: pnpm --filter @itguy614/clean-ui build
 
       - name: Publish to npm
-        run: npm publish --access public -w packages/clean-ui
+        working-directory: packages/clean-ui
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
