@@ -30,6 +30,8 @@ const justifyMap: Record<string, string> = {
       flexShrink: '0',
       justifyContent: justifyMap[align],
       background: 'var(--cui-surface-base)',
+      position: 'relative',
+      zIndex: '1',
     }"
   >
     <slot />
