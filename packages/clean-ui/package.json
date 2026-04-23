@@ -14,7 +14,7 @@
       "import": "./dist/clean-ui.js",
       "require": "./dist/clean-ui.umd.cjs"
     },
-    "./styles": "./dist/style.css"
+    "./styles": "./dist/clean-ui.css"
   },
   "files": [
     "dist"
