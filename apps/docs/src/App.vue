@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, provide } from "vue";
+import { ref, provide, watch } from "vue";
+import { useRoute } from "vue-router";
 import {
   CuiButton,
   CuiDropdown,
@@ -8,9 +9,8 @@ import {
   CuiDropdownRadioGroup,
   CuiDropdownRadioItem,
   CuiDropdownHeader,
-  CuiGrid,
-  CuiGridItem,
   CuiIcon,
+  CuiSlideover,
   CuiToastProvider,
   useTheme,
 } from "@itguy614/clean-ui";
@@ -19,9 +19,16 @@ import { ShowDebugKey } from "./keys";
 
 const isDark = ref(false);
 const showDebug = ref(false);
+const mobileNavOpen = ref(false);
 const { theme, presets, setTheme } = useTheme();
 
 provide(ShowDebugKey, showDebug);
+
+// Close mobile nav on route change
+const route = useRoute();
+watch(() => route.path, () => {
+  mobileNavOpen.value = false;
+});
 
 function toggleDark() {
   isDark.value = !isDark.value;
@@ -32,23 +39,54 @@ function toggleDark() {
 <template>
   <CuiToastProvider>
   <div
-    :class="[
-      'min-h-screen transition-colors duration-300',
-      isDark ? 'bg-surface-950 text-surface-100' : 'bg-white text-surface-900',
-    ]"
+    :style="{
+      minHeight: '100vh',
+      transition: 'background 0.3s ease, color 0.3s ease',
+      background: isDark ? 'var(--color-surface-950)' : 'white',
+      color: isDark ? 'var(--color-surface-100)' : 'var(--color-surface-900)',
+    }"
   >
-    <CuiGrid :cols="{ sm: 1, lg: 12 }" class="min-h-screen">
-      <!-- Sidebar Navigation -->
-      <CuiGridItem :col-span="{ sm: 'full', lg: 2 }" class="lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-        <Navigation />
-      </CuiGridItem>
+    <!-- Desktop layout: sidebar + content -->
+    <div :style="{ display: 'flex', minHeight: '100vh' }">
 
-      <!-- Main Content -->
-      <CuiGridItem :col-span="{ sm: 'full', lg: 10 }">
+      <!-- Sidebar: hidden on mobile -->
+      <aside :style="{
+        width: '16rem',
+        flexShrink: '0',
+        position: 'sticky',
+        top: '0',
+        height: '100vh',
+        overflowY: 'auto',
+        display: 'none',
+      }" class="lg:!block">
+        <Navigation />
+      </aside>
+
+      <!-- Main column -->
+      <div :style="{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column' }">
+
         <!-- Header -->
-        <header class="sticky top-0 z-10 border-b border-surface-200 bg-white/80 backdrop-blur-sm dark:border-surface-800 dark:bg-surface-950/80">
-          <div class="mx-auto w-full px-6 py-4">
-            <div class="flex items-center justify-end gap-3">
+        <header :style="{
+          position: 'sticky',
+          top: '0',
+          zIndex: '10',
+          background: isDark ? 'color-mix(in srgb, var(--color-surface-950) 80%, transparent)' : 'color-mix(in srgb, white 80%, transparent)',
+          backdropFilter: 'blur(8px)',
+        }">
+          <div :style="{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
+
+            <!-- Left: hamburger (mobile only) -->
+            <div class="lg:hidden">
+              <CuiButton variant="ghost" size="sm" @click="mobileNavOpen = true">
+                <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
+              </CuiButton>
+            </div>
+
+            <!-- Spacer on desktop where hamburger would be -->
+            <div class="hidden lg:block" />
+
+            <!-- Right: theme / debug / dark toggle -->
+            <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem' }">
               <CuiDropdown>
                 <CuiDropdownTrigger>
                   <CuiButton variant="ghost" size="sm">
@@ -77,13 +115,23 @@ function toggleDark() {
         </header>
 
         <!-- Page Content -->
-        <main class="cui-typography p-6 lg:p-12">
-          <div class="mx-auto w-full">
+        <main class="cui-typography" :style="{ flex: '1', padding: '1.5rem' }" style="padding: 1.5rem;">
+          <div class="lg:px-6 lg:py-6">
             <router-view />
           </div>
         </main>
-      </CuiGridItem>
-    </CuiGrid>
+      </div>
+    </div>
+
+    <!-- Mobile nav slideover -->
+    <CuiSlideover
+      v-model:open="mobileNavOpen"
+      side="left"
+      size="sm"
+      :no-header="true"
+    >
+      <Navigation @navigate="mobileNavOpen = false" />
+    </CuiSlideover>
   </div>
   </CuiToastProvider>
 </template>
