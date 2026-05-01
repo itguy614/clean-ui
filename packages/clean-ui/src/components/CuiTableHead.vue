@@ -20,7 +20,7 @@ const headStyle = computed(() => {
   return {
     position: "sticky" as const,
     top: "0",
-    zIndex: 10,
+    zIndex: 2,
     background: "var(--cui-table-head-bg, var(--color-surface-50))",
   };
 });
