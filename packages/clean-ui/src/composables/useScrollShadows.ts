@@ -2,7 +2,7 @@ import { ref } from "vue";
 
 /**
  * Tracks scroll position and exposes booleans for whether content
- * overflows in each direction. Use with shadow overlay elements.
+ * overflows in each direction. Use with fade overlay elements.
  */
 export function useScrollShadows() {
   const canScrollUp = ref(false);
@@ -38,46 +38,42 @@ export function useScrollShadows() {
   };
 }
 
-// Use a semantic shadow color that works in both light and dark mode
-// --cui-scroll-shadow resolves to black in light mode, white in dark mode
-const shadowColor = "var(--cui-scroll-shadow, rgba(0,0,0,0.08))";
-const edgeColor = "var(--cui-border)";
+// Fade-to-background gradient — text dissolves into the surface color.
+// Works in both light and dark mode via --cui-surface-base.
+const fadeTo = "var(--cui-surface-base, white)";
 
-/** Inline style for a top edge shadow */
+/** Inline style for a top edge fade */
 export const scrollShadowTopStyle = {
   position: "absolute" as const,
   top: "0",
   left: "0",
   right: "0",
-  height: "20px",
+  height: "36px",
   pointerEvents: "none" as const,
   zIndex: "5",
-  borderTop: `1px solid ${edgeColor}`,
-  background: `linear-gradient(to bottom, ${shadowColor}, transparent)`,
+  background: `linear-gradient(to bottom, ${fadeTo}, transparent)`,
 };
 
-/** Inline style for a bottom edge shadow */
+/** Inline style for a bottom edge fade */
 export const scrollShadowBottomStyle = {
   position: "absolute" as const,
   bottom: "0",
   left: "0",
   right: "0",
-  height: "20px",
+  height: "36px",
   pointerEvents: "none" as const,
   zIndex: "5",
-  borderBottom: `1px solid ${edgeColor}`,
-  background: `linear-gradient(to top, ${shadowColor}, transparent)`,
+  background: `linear-gradient(to top, ${fadeTo}, transparent)`,
 };
 
-/** Inline style for a right edge shadow */
+/** Inline style for a right edge fade */
 export const scrollShadowRightStyle = {
   position: "absolute" as const,
   right: "0",
   top: "0",
   bottom: "0",
-  width: "20px",
+  width: "36px",
   pointerEvents: "none" as const,
   zIndex: "20",
-  borderRight: `1px solid ${edgeColor}`,
-  background: `linear-gradient(to left, ${shadowColor}, transparent)`,
+  background: `linear-gradient(to left, ${fadeTo}, transparent)`,
 };

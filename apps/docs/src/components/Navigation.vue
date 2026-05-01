@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineEmits<{ navigate: [] }>();
+
 const sections = [
   // Getting Started
   { id: "overview", label: "Overview", path: "/", group: "Getting Started" },
@@ -95,18 +97,18 @@ const groupedSections = sections.reduce((acc, section) => {
 </script>
 
 <template>
-  <nav class="h-full overflow-y-auto border-r border-surface-200 bg-surface-50 p-6 dark:border-surface-800 dark:bg-surface-900">
-    <div class="mb-6">
-      <h2 class="text-xl font-bold">Clean UI</h2>
-      <p class="mt-1 text-sm text-surface-600 dark:text-surface-400">Vue Component Library</p>
+  <nav :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem', background: 'var(--color-surface-50)' }">
+    <div style="margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 700;">Clean UI</h2>
+      <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
     </div>
 
-    <div class="space-y-6">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       <div v-for="(items, group) in groupedSections" :key="group">
-        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-surface-500 dark:text-surface-400">
+        <h3 :style="{ marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--cui-text-tertiary)' }">
           {{ group }}
         </h3>
-        <ul class="space-y-1">
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.125rem;">
           <li v-for="section in items" :key="section.id">
             <router-link
               :to="section.path"
@@ -115,6 +117,7 @@ const groupedSections = sections.reduce((acc, section) => {
                 'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
               ]"
               active-class="text-white [background:var(--cui-primary)] hover:[background:var(--cui-primary-hover)]"
+              @click="$emit('navigate')"
             >
               {{ section.label }}
             </router-link>
