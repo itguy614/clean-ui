@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, toRef } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
 export type TooltipTrigger = "hover" | "focus" | "click" | "hover-focus";
 
-export interface CuiTooltipProps {
+export interface CuiTooltipProps extends HideableProps, ColorableProps, DisableableProps {
   /** Simple text content */
   text?: string;
   /** Preferred placement */
@@ -18,14 +18,8 @@ export interface CuiTooltipProps {
   hideDelay?: number;
   /** Hide the arrow */
   noArrow?: boolean;
-  /** Color role (default: dark neutral) */
-  color?: ButtonColor;
   /** Manual visibility control */
   visible?: boolean;
-  /** Disabled — prevents showing */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTooltipProps>(), {

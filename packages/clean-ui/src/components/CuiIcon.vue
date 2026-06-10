@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, type Component } from "vue";
+import type { CuiSize, CuiColorOrCss, HideableProps } from "../types/common";
+import { resolveColor } from "../utils/color";
 
 export type IconWeight = "thin" | "light" | "regular" | "bold" | "fill" | "duotone";
-export type IconSize = "xs" | "sm" | "md" | "lg" | "xl" | string;
+export type IconSize = CuiSize | (string & {});
 
-export interface CuiIconProps {
+export interface CuiIconProps extends HideableProps {
   /** Phosphor icon name in kebab-case (e.g. "check", "warning-circle", "eye-slash") */
   name: string;
   /** Icon weight/style */
   weight?: IconWeight;
-  /** Icon size — named or custom CSS value */
+  /** Icon size — named scale (xs–xl) or custom CSS value */
   size?: IconSize;
-  /** Icon color (default: currentColor, inherits from parent) */
-  color?: string;
+  /** Icon color — a color role (mapped to its token) or any CSS color */
+  color?: CuiColorOrCss;
   /** Secondary color for duotone weight */
   duotoneColor?: string;
   /** Opacity for duotone secondary layer (0-1) */
   duotoneOpacity?: number;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiIconProps>(), {
@@ -93,7 +93,7 @@ const wrapperStyle = computed(() => {
       :is="iconComponent"
       :weight="weight"
       :size="resolvedSize"
-      :color="color"
+      :color="resolveColor(color)"
     />
   </span>
 </template>

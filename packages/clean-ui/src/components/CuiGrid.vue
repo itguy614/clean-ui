@@ -9,8 +9,9 @@ import type {
   ResponsiveValue,
   TailwindSpacing,
 } from "../types/grid";
+import type { HideableProps } from "../types/common";
 
-export interface CuiGridProps {
+export interface CuiGridProps extends HideableProps {
   /** Number of columns (1-12) or responsive object */
   cols?: ResponsiveValue<GridColumns>;
   /** Number of rows (optional) */
@@ -23,8 +24,6 @@ export interface CuiGridProps {
   colGap?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode to visualize grid structure */
   debug?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiGridProps>(), {

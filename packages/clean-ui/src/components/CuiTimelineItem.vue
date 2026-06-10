@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 
-export interface CuiTimelineItemProps {
-  /** Color role for the dot/icon */
-  color?: ButtonColor;
+export interface CuiTimelineItemProps extends HideableProps, ColorableProps {
   /** Icon name (replaces the dot) */
   icon?: string;
   /** Title text */
@@ -14,8 +12,6 @@ export interface CuiTimelineItemProps {
   timestamp?: string;
   /** Hide the connector line (use on last item) */
   last?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTimelineItemProps>(), {

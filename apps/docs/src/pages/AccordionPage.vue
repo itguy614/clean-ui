@@ -39,7 +39,7 @@ const faq = ref<string[]>([]);
         :props="[
           { name: 'v-model', type: 'string[]', default: '[]', description: 'Array of open item values' },
           { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple items open at once' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role for active indicator' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role for active indicator' },
           { name: 'noAnimation', type: 'boolean', default: 'false', description: 'Disable expand/collapse animation' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"

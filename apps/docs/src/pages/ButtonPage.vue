@@ -29,7 +29,7 @@ function simulateLoad() {
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role from the color system' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role from the color system' },
           { name: 'variant', type: 'solid | outline | dash | ghost', default: 'outline', description: 'Visual variant' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size (md matches 1rem body text)' },
           { name: 'rounded', type: 'sm | md | lg | full', default: 'md', description: 'Border radius (md uses --cui-button-radius)' },

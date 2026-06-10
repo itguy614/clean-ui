@@ -30,8 +30,8 @@ const slots = [
     <div>
       <h1 class="text-4xl font-bold">Colors</h1>
       <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        WCAG AA accessible color system with 6 semantic roles, surface neutrals,
-        condensed scales, and 9 semantic slots per role. All overridable via
+        WCAG AA accessible color system with 6 semantic roles plus 3 neutral
+        surface intensities, condensed scales, and 9 semantic slots per role. All overridable via
         <code class="cui-code">--cui-*</code> custom properties.
       </p>
     </div>
@@ -81,6 +81,31 @@ const slots = [
               >
                 {{ shade }}
               </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Surface role intensities -->
+        <div>
+          <div class="mb-2 flex items-baseline gap-2">
+            <h3 class="text-lg font-semibold">Neutral fills (surface roles)</h3>
+            <span class="text-sm text-surface-500 dark:text-surface-400">
+              <code class="cui-code">color="surface-light | surface | surface-dark"</code> — 3 mode-aware intensity steps
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <div
+              v-for="s in ['surface-light', 'surface', 'surface-dark']"
+              :key="s"
+              class="flex h-20 w-48 flex-col justify-between rounded-lg p-3"
+              :style="{
+                background: `var(--cui-${s}-bg)`,
+                border: `1px solid var(--cui-${s}-border)`,
+                color: `var(--cui-${s})`,
+              }"
+            >
+              <code class="text-xs font-semibold">{{ s }}</code>
+              <span class="text-[0.7rem] opacity-80">-bg · -border · text</span>
             </div>
           </div>
         </div>

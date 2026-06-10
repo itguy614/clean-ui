@@ -30,11 +30,19 @@
 - **Always use semantic color slots for hover/active states** — `--cui-{color}-hover` for hover, `--cui-{color}-active` for pressed. Never use `-muted`, `-border`, or ad-hoc colors for interaction states.
 - **Subtle-first color principle** — resting/selected states use `--cui-{color}-bg` (tinted background) + `--cui-{color}-border` + `--cui-{color}` (colored text/icons). The hero color is NEVER a default background. Applies to: toggles, checkboxes, radios, pagination, alerts, toasts, badges, and all future components.
 - **Semantic border token** — use `var(--cui-border)` for borders, not surface scale steps directly. The token auto-swaps: light=s-500, dark=s-600. `var(--cui-border-strong)` for input/form control borders: light=s-600, dark=s-500. Both modes use 500+600, just swapped.
-- **Semantic surface token** — use `var(--cui-surface-base)` for component backgrounds, not `white`. Auto-swaps in dark mode.
+- **Semantic surface token** — use `var(--cui-surface-base)` for component backgrounds, not `white`. Auto-swaps in dark mode. For a neutral *tinted* fill/border (parallel to the role `-bg`/`-border` slots), use `var(--cui-surface-bg)` / `var(--cui-surface-border)` — these let a component treat `surface` as a 7th neutral color role (e.g. CuiFieldset `color="surface"`).
 - **All semantic slots must reference the scale** — `--cui-primary` must be `var(--color-primary-500)`, NOT a hardcoded oklch value. This is critical for theme compatibility. Both light and dark mode slots must reference `--color-primary-*` variables so theme class overrides propagate correctly.
 
+## Shared Prop Types & Mixins (`types/common.ts`)
+- **All cross-cutting prop types live in `types/common.ts`** — never re-declare them per component. Exports: `CuiColor` (9 roles, below), `CuiSize` (`xs|sm|md|lg|xl`), `CuiRounded` (`none|sm|md|lg|full`), `CuiOrientation` (`horizontal|vertical`), `CuiAutoOrientation` (+`auto`, for form-control groups), `CuiVariant` (`solid|outline|subtle|ghost|dash`), `CuiColorOrCss` (role OR raw CSS string).
+- **Base prop "mixins"** — compose via `extends`: `HideableProps` (`hidden`), `ColorableProps` (`color: CuiColor`), `SizeableProps` (`size: CuiSize`), `DisableableProps` (`disabled`), `FormControlProps` (label/description/error/errorMessage/required/readonly). Pattern: `export interface CuiXProps extends HideableProps, ColorableProps, SizeableProps { /* component-specific only */ }`. `defineProps<Props>()` resolves imported `extends` interfaces (Vue 3.5). `withDefaults` still sets defaults per component.
+- **Size**: every `size` prop is the flat `CuiSize`. Components that only style a subset narrow via `clampSize(props.size, ["sm","md","lg"] as const)` (from `utils/sizing.ts`) before indexing a scale map (type the map `Record<(typeof SUPPORTED)[number], …>`). Width-preset sizes (Modal/Slideover/Container) and raw dimensions (Spacer/Skeleton) are NOT `CuiSize`.
+- **Color**: role-only components use `color: CuiColor`. Paint components (Icon, Divider, Backdrop) use `color: CuiColorOrCss` + `resolveColor(color)` (from `utils/color.ts`) — a role maps to `var(--cui-{role})`, anything else passes through as raw CSS.
+- **Naming conventions** (clean break — no legacy aliases): visibility = `v-model:visible` on overlays (Modal/Slideover/Popover/Tooltip/Backdrop/ConfirmDialog); `expanded` only on collapsibles (Fieldset/Accordion). Layout axis = `orientation` (`horizontal|vertical`) everywhere EXCEPT `CuiFlex` which keeps `direction` (CSS `row|col|row-reverse|col-reverse`). Border radius = `rounded: CuiRounded` with the shared radiusMap (`none:0, sm:.25rem, md:var(--cui-button-radius,.375rem), lg:.5rem, full:9999px`).
+- **Variant vocab**: reuse `solid|outline|subtle|ghost|dash` when the meaning matches (subtle=tinted bg, ghost=no border/bg). Card uses `elevated|outline|ghost`. Structural variants (Progress `bar|circle`, Spinner `ring|dots|bars`, Skeleton `text|rectangle|circle`) stay component-specific.
+
 ## Color System
-- 7 roles: primary, secondary, success, error, warning, info + surface (neutral)
+- 9 `CuiColor` roles: primary, secondary, success, error, warning, info + **surface, surface-light, surface-dark** (neutral, 3 mode-aware intensity steps: light=faintest fill, dark=strongest). All have the full 9-slot set.
 - Primary & surface: full 50–950 scale. Others: condensed 100/300/500/700/900.
 - 9 semantic slots per role: `--cui-{role}`, `-hover`, `-active`, `-bg`, `-border`, `-text`, `-focus-ring`, `-subtle`, `-muted`
 - 3 solid-specific dark-mode slots: `--cui-{role}-solid`, `-solid-hover`, `-solid-active` — darker shades for white-text-on-colored-bg. In light mode these are undefined (components fall back to `--cui-{role}`). Use pattern: `var(--cui-${c}-solid, var(--cui-${c}))` in solid variant backgrounds.
@@ -62,7 +70,9 @@
 - Code text color references primary scale: `--cui-text-code: var(--color-primary-700)` (light) / `var(--color-primary-300)` (dark)
 
 ## Shared Utilities
-- `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`. All components import from here. Never define local size maps.
+- `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
+- `utils/color.ts` — color conversions + `resolveColor()` / `isColorRole()` for the role-or-CSS hybrid (Icon/Divider/Backdrop).
+- `types/common.ts` — shared cross-component prop types + base mixin interfaces (see "Shared Prop Types & Mixins"). Compose component props from these.
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
@@ -95,9 +105,9 @@
 - `MultiSelectGroupContext` shared between CheckboxGroup and ToggleGroup (identical shape)
 - `v-model` on group (managed state) OR on individual (standalone mode)
 - Radio: `v-model` is `string | number | boolean`. Checkbox/Toggle group: `v-model` is `Array<string | number>`. Standalone checkbox/toggle: `v-model` is `boolean`.
-- Auto direction: horizontal for ≤2 options, vertical for 3+, overridable with `direction` prop
+- Auto orientation: horizontal for ≤2 options, vertical for 3+, overridable with `orientation` prop (`horizontal | vertical | auto` — `CuiAutoOrientation`)
 - RadioGroup supports `variant="buttons"` for segmented button-style radios (uses CuiButtonGroup internally)
-- Error validation: red left accent bar on group. Always reserve space with `border-left: 3px solid transparent` + `padding-left: 0.75rem` to prevent layout shift.
+- Error validation: no left accent bar. Single controls (Input, Select, Textarea, etc.) recolor their own border to `--cui-error` + show a red message. Groups (Radio/Checkbox/Toggle) wrap their options in a `__options` div that gets a subtle bordered container on error (`border: 1px solid var(--cui-error-border)` + `background: var(--cui-error-bg)` + `--cui-button-radius`) with the red message below it. No permanent reserved padding — fields/groups sit flush so they align with buttons and other non-field elements.
 - Focus ring: `outline: 2px solid var(--cui-{color}-focus-ring); outline-offset: 2px` on the ROOT label element
 - `label` and `description` as props (not slot-only) for JSON-driven dynamic forms
 - `aria-invalid` on native inputs when error is true

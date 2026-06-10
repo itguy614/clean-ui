@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps } from "../types/common";
 
-export interface CuiCardMediaProps {
+export interface CuiCardMediaProps extends HideableProps {
   /** Image URL */
   src?: string;
   /** Alt text for the image */
@@ -10,8 +11,6 @@ export interface CuiCardMediaProps {
   aspect?: "auto" | "video" | "square" | string;
   /** Position in the card */
   position?: "top" | "bottom";
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCardMediaProps>(), {

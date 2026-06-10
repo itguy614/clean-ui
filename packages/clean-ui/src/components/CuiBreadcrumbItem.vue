@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { inject, computed, useSlots, onMounted, ref } from "vue";
 import { BreadcrumbContextKey } from "./breadcrumb-context";
+import type { HideableProps } from "../types/common";
 
-export interface CuiBreadcrumbItemProps {
+export interface CuiBreadcrumbItemProps extends HideableProps {
   /** Link URL (renders as <a>) */
   href?: string;
   /** Vue Router route (renders as <router-link>) */
   to?: string | object;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBreadcrumbItemProps>(), {

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, inject } from "vue";
 import { TableSectionContextKey } from "./table-context";
+import type { HideableProps } from "../types/common";
 
 export type TableCellAlign = "left" | "center" | "right";
 
-export interface CuiTableCellProps {
+export interface CuiTableCellProps extends HideableProps {
   /** Explicit override: force <th> or <td> */
   header?: boolean;
   /** Text alignment */
@@ -17,8 +18,6 @@ export interface CuiTableCellProps {
   rowspan?: number;
   /** Prevent text wrapping */
   nowrap?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTableCellProps>(), {

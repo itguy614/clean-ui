@@ -32,8 +32,9 @@ function resetTags() {
       <PropTable
         :props="[
           { name: 'variant', type: 'solid | subtle | outline', default: 'subtle', description: 'Visual style' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'size', type: 'sm | md', default: 'sm', description: 'Badge size' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'full', description: 'Border radius' },
           { name: 'dot', type: 'boolean', default: 'false', description: 'Render as a small colored dot (no text)' },
           { name: 'removable', type: 'boolean', default: 'false', description: 'Show X button, emits remove event (tag mode)' },
           { name: 'animation', type: 'pulse | bounce | ping | none', default: 'none', description: 'Attention animation' },
@@ -136,6 +137,17 @@ function resetTags() {
             <CuiBadge size="md">Medium</CuiBadge>
             <CuiBadge variant="solid" size="sm">Small Solid</CuiBadge>
             <CuiBadge variant="solid" size="md">Medium Solid</CuiBadge>
+          </CuiFlex>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiBadge rounded=&quot;none&quot;>Square</CuiBadge>
+<CuiBadge rounded=&quot;md&quot;>Medium</CuiBadge>
+<CuiBadge rounded=&quot;full&quot;>Pill</CuiBadge>`">
+          <CuiFlex gap="3" class="items-center flex-wrap">
+            <CuiBadge rounded="none">Square</CuiBadge>
+            <CuiBadge rounded="md">Medium</CuiBadge>
+            <CuiBadge rounded="full">Pill (default)</CuiBadge>
           </CuiFlex>
         </Example>
 

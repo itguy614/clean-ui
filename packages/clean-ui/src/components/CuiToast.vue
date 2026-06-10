@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps, ColorableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
 
-export interface CuiToastProps {
+export interface CuiToastProps extends HideableProps, ColorableProps {
   /** Internal toast id */
   toastId?: string;
   /** Title text */
   title?: string;
   /** Description text */
   description?: string;
-  /** Color role */
-  color?: ButtonColor;
   /** Visual variant */
   variant?: AlertVariant;
   /** Show dismiss button */
@@ -30,8 +28,6 @@ export interface CuiToastProps {
   noIcon?: boolean;
   /** Whether this toast is the topmost (active) — timer only runs when true */
   active?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToastProps>(), {

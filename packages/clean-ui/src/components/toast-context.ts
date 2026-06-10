@@ -1,5 +1,5 @@
 import { ref, type InjectionKey, type Ref } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor } from "../types/common";
 import type { AlertAnimation } from "./CuiAlert.vue";
 
 export type ToastPosition =
@@ -20,7 +20,7 @@ export interface ToastOptions {
   /** Description text */
   description?: string;
   /** Color role */
-  color?: ButtonColor;
+  color?: CuiColor;
   /** Visual variant */
   variant?: "solid" | "subtle" | "outline";
   /** Show dismiss button */

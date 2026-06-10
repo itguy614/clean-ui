@@ -5,13 +5,14 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
+import type { HideableProps } from "../types/common";
 
 export type SlideoverSide = "right" | "left" | "top" | "bottom";
 export type SlideoverSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiSlideoverProps {
-  /** Controls slideover visibility */
-  open?: boolean;
+export interface CuiSlideoverProps extends HideableProps {
+  /** Controls slideover visibility (v-model:visible) */
+  visible?: boolean;
   /** Which edge the panel slides from */
   side?: SlideoverSide;
   /** Panel size — named size or custom CSS value (e.g. "600px") */
@@ -34,12 +35,10 @@ export interface CuiSlideoverProps {
   backdropImage?: string;
   /** Backdrop gradient */
   backdropGradient?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSlideoverProps>(), {
-  open: false,
+  visible: false,
   side: "right",
   size: "md",
   persistent: false,
@@ -52,19 +51,19 @@ const props = withDefaults(defineProps<CuiSlideoverProps>(), {
 });
 
 const emit = defineEmits<{
-  "update:open": [value: boolean];
+  "update:visible": [value: boolean];
   close: [];
 }>();
 
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
 const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
-  open: () => props.open,
+  open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
   allowNested: () => props.allowNested,
   animationDuration: 250,
-  onUpdateOpen: (v) => emit("update:open", v),
+  onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
 

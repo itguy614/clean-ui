@@ -1,26 +1,18 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { ButtonColor, ButtonSize } from "./CuiButton.vue";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
-export type RadioDirection = "horizontal" | "vertical" | "auto";
-
-export interface CuiRadioGroupProps {
+export interface CuiRadioGroupProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value */
   modelValue?: string | number | boolean;
   /** Shared name attribute for all radios */
   name?: string;
-  /** Color role (inherited by children) */
-  color?: ButtonColor;
-  /** Layout direction — auto: horizontal for ≤2 options, vertical for 3+ */
-  direction?: RadioDirection;
+  /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
+  orientation?: CuiAutoOrientation;
   /** Visual variant — "default" for classic radios, "buttons" for button group */
   variant?: RadioGroupVariant;
-  /** Button size when variant="buttons" */
-  size?: ButtonSize;
-  /** Disable all radios */
-  disabled?: boolean;
   /** Make all radios readonly */
   readonly?: boolean;
   /** Show error state */
@@ -29,13 +21,11 @@ export interface CuiRadioGroupProps {
   errorMessage?: string;
   /** Accessible label for the group */
   label?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRadioGroupProps>(), {
   color: "primary",
-  direction: "auto",
+  orientation: "auto",
   variant: "default",
   size: "md",
   disabled: false,
@@ -64,7 +54,7 @@ const childCount = computed(() => {
 
 const resolvedDirection = computed(() => {
   if (props.variant === "buttons") return "horizontal";
-  if (props.direction !== "auto") return props.direction;
+  if (props.orientation !== "auto") return props.orientation;
   return childCount.value <= 2 ? "horizontal" : "vertical";
 });
 
@@ -123,13 +113,15 @@ function onKeydown(e: KeyboardEvent) {
     ]"
     @keydown="onKeydown"
   >
-    <!-- Button variant wraps in CuiButtonGroup for proper radius merging -->
-    <CuiButtonGroup v-if="variant === 'buttons'">
-      <slot />
-    </CuiButtonGroup>
-    <template v-else>
-      <slot />
-    </template>
+    <div class="cui-radio-group__options">
+      <!-- Button variant wraps in CuiButtonGroup for proper radius merging -->
+      <CuiButtonGroup v-if="variant === 'buttons'">
+        <slot />
+      </CuiButtonGroup>
+      <template v-else>
+        <slot />
+      </template>
+    </div>
     <div v-if="error && errorMessage" class="cui-radio-group__error">
       {{ errorMessage }}
     </div>
@@ -139,46 +131,43 @@ function onKeydown(e: KeyboardEvent) {
 <style scoped>
 .cui-radio-group {
   display: flex;
-  gap: 0.75rem;
-  border-left: 3px solid transparent;
-  padding-left: 0.75rem;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
-.cui-radio-group--vertical {
+.cui-radio-group__options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cui-radio-group--vertical .cui-radio-group__options {
   flex-direction: column;
 }
 
-.cui-radio-group--horizontal {
+.cui-radio-group--horizontal .cui-radio-group__options {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 1.25rem;
 }
 
-/* Button variant: no gap, no accent bar padding */
-.cui-radio-group--buttons {
+/* Button variant: segmented control, hug content rather than stretch */
+.cui-radio-group--buttons .cui-radio-group__options {
   gap: 0;
-  border-left: none;
-  padding-left: 0;
   display: inline-flex;
   flex-wrap: nowrap;
+  align-self: flex-start;
 }
 
-.cui-radio-group--error {
-  border-left-color: var(--cui-error);
-}
-
-.cui-radio-group--buttons.cui-radio-group--error {
-  border-left: 3px solid var(--cui-error);
-  padding-left: 0.75rem;
+/* Error: subtle bordered container around the options */
+.cui-radio-group--error .cui-radio-group__options {
+  border: 1px solid var(--cui-error-border);
+  background: var(--cui-error-bg);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  padding: 0.625rem 0.75rem;
 }
 
 .cui-radio-group__error {
   font-size: 0.8125rem;
-  margin-top: 0.25rem;
   color: var(--cui-error);
-}
-
-.cui-radio-group--horizontal .cui-radio-group__error {
-  flex-basis: 100%;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import CuiTreeNode from "./CuiTreeNode.vue";
+import type { HideableProps } from "../types/common";
 
 export interface TreeNode {
   /** Unique identifier */
@@ -17,7 +18,7 @@ export interface TreeNode {
   [key: string]: unknown;
 }
 
-export interface CuiTreeViewProps {
+export interface CuiTreeViewProps extends HideableProps {
   /** Tree data */
   nodes: TreeNode[];
   /** Selected node id(s) — string/number for single, array for multiple */
@@ -36,8 +37,6 @@ export interface CuiTreeViewProps {
   animated?: boolean;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTreeViewProps>(), {

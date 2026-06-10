@@ -3,21 +3,26 @@ import { computed, ref, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
+import type {
+  CuiColor,
+  CuiRounded,
+  HideableProps,
+  ColorableProps,
+  SizeableProps,
+  DisableableProps,
+} from "../types/common";
 
-export type ButtonColor = "primary" | "secondary" | "success" | "error" | "warning" | "info";
 export type ButtonVariant = "solid" | "outline" | "dash" | "ghost";
-export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
-export type ButtonRounded = "sm" | "md" | "lg" | "full";
 
-export interface CuiButtonProps {
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiButtonProps
+  extends HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps {
   /** Visual variant */
   variant?: ButtonVariant;
-  /** Size */
-  size?: ButtonSize;
   /** Border radius */
-  rounded?: ButtonRounded;
+  rounded?: CuiRounded;
   /** HTML button type */
   type?: "button" | "submit" | "reset";
   /** Render as a link (<a>) with this href */
@@ -26,10 +31,6 @@ export interface CuiButtonProps {
   to?: string | object;
   /** Loading state — shows spinner and disables interaction */
   loading?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiButtonProps>(), {
@@ -84,7 +85,8 @@ function blur() {
 
 defineExpose({ el: elRef, focus, blur });
 
-const radiusMap: Record<ButtonRounded, string> = {
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
   sm: "0.25rem",
   md: "var(--cui-button-radius, 0.375rem)",
   lg: "0.5rem",

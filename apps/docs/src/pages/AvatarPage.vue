@@ -33,7 +33,7 @@ import Playground from "../components/Playground.vue";
           { name: 'icon', type: 'string', default: 'user', description: 'Fallback icon when no image or initials' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Size' },
           { name: 'shape', type: 'circle | rounded', default: 'circle', description: 'Shape' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role for initials/icon background' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role for initials/icon background' },
           { name: 'status', type: 'online | offline | away | busy', default: '—', description: 'Status indicator dot' },
           { name: 'statusAnimation', type: 'pulse | ping | none', default: 'none', description: 'Animate the status indicator' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },

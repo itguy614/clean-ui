@@ -1,30 +1,24 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 
 export type ProgressVariant = "bar" | "circle";
-export type ProgressSize = "sm" | "md" | "lg";
 export type ProgressAnimation = "none" | "stripe" | "shimmer";
 
-export interface CuiProgressProps {
+export interface CuiProgressProps extends HideableProps, ColorableProps, SizeableProps {
   /** Current value (0 to max) */
   value?: number;
   /** Maximum value */
   max?: number;
   /** Visual variant */
   variant?: ProgressVariant;
-  /** Color role */
-  color?: ButtonColor;
-  /** Size */
-  size?: ProgressSize;
   /** Show percentage label */
   showLabel?: boolean;
   /** Unknown progress — animated indicator */
   indeterminate?: boolean;
   /** Fill animation (bar variant only) */
   animation?: ProgressAnimation;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiProgressProps>(), {
@@ -46,29 +40,32 @@ const percent = computed(() => {
 
 const percentLabel = computed(() => `${Math.round(percent.value)}%`);
 
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+
 // Bar sizes
-const barHeight: Record<ProgressSize, string> = {
+const barHeight: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   sm: "0.375rem",
   md: "0.625rem",
   lg: "1rem",
 };
 
 // Circle sizes
-const circleSize: Record<ProgressSize, number> = {
+const circleSize: Record<(typeof SUPPORTED_SIZES)[number], number> = {
   sm: 40,
   md: 64,
   lg: 96,
 };
 
-const circleStroke: Record<ProgressSize, number> = {
+const circleStroke: Record<(typeof SUPPORTED_SIZES)[number], number> = {
   sm: 4,
   md: 5,
   lg: 6,
 };
 
 const circleDims = computed(() => {
-  const size = circleSize[props.size];
-  const stroke = circleStroke[props.size];
+  const size = circleSize[clampedSize.value];
+  const stroke = circleStroke[clampedSize.value];
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (percent.value / 100) * circumference;
@@ -76,7 +73,7 @@ const circleDims = computed(() => {
   return { size, stroke, radius, circumference, dashOffset };
 });
 
-const circleLabelSize: Record<ProgressSize, string> = {
+const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   sm: "0.625rem",
   md: "0.875rem",
   lg: "1.25rem",
@@ -97,7 +94,7 @@ const circleLabelSize: Record<ProgressSize, string> = {
   >
     <div
       class="cui-progress-bar__track"
-      :style="{ height: barHeight[size] }"
+      :style="{ height: barHeight[clampedSize] }"
     >
       <div
         class="cui-progress-bar__fill"
@@ -165,7 +162,7 @@ const circleLabelSize: Record<ProgressSize, string> = {
     <div
       v-if="(showLabel || $slots.label) && !indeterminate"
       class="cui-progress-circle__label"
-      :style="{ fontSize: circleLabelSize[size] }"
+      :style="{ fontSize: circleLabelSize[clampedSize] }"
     >
       <slot name="label" :value="value" :max="max" :percent="percent">
         {{ percentLabel }}

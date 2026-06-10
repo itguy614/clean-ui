@@ -1,9 +1,9 @@
 <script setup lang="ts">
-export interface CuiCardBodyProps {
+import type { HideableProps } from "../types/common";
+
+export interface CuiCardBodyProps extends HideableProps {
   /** Remove default padding */
   noPadding?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiCardBodyProps>(), {

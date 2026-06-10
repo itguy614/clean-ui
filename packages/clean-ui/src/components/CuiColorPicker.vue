@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef } from "vue";
+import type { CuiSize, HideableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
@@ -8,10 +10,11 @@ import {
   type ColorFormat,
 } from "../utils/color";
 
-export type ColorPickerSize = "sm" | "md" | "lg";
 export type PresetPalette = "theme" | "basic" | "material" | "tailwind";
 
-export interface CuiColorPickerProps {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+
+export interface CuiColorPickerProps extends HideableProps, SizeableProps, DisableableProps {
   /** Color value (any supported format) */
   modelValue?: string;
   /** Output format */
@@ -28,12 +31,6 @@ export interface CuiColorPickerProps {
   showFormatToggle?: boolean;
   /** Only show swatches, no gradient picker */
   swatchOnly?: boolean;
-  /** Size */
-  size?: ColorPickerSize;
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiColorPickerProps>(), {
@@ -61,12 +58,12 @@ const activeFormat = ref<ColorFormat>(props.format);
 const textInput = ref("");
 
 // Size config
-const sizeConfig: Record<ColorPickerSize, { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; fontSize: string }> = {
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; fontSize: string }> = {
   sm: { width: "220px", gradientHeight: "130px", sliderHeight: "10px", thumbSize: "14px", swatchSize: "20px", fontSize: "0.75rem" },
   md: { width: "280px", gradientHeight: "160px", sliderHeight: "12px", thumbSize: "16px", swatchSize: "24px", fontSize: "0.8125rem" },
   lg: { width: "340px", gradientHeight: "200px", sliderHeight: "14px", thumbSize: "18px", swatchSize: "28px", fontSize: "0.875rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Computed RGB from HSV
 const currentRgb = computed(() => hsvToRgb(hue.value, sat.value, val.value));
@@ -256,10 +253,27 @@ const hueColor = computed(() => {
 
 // Checkerboard for alpha
 const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50%) 0 0 / 12px 12px";
+
+// Expose imperative handle — focus the text input if shown, else the root
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const inputRef = useTemplateRef<HTMLInputElement>("inputEl");
+
+function focus(opts?: FocusOptions) {
+  if (inputRef.value) inputRef.value.focus(opts);
+  else rootEl.value?.focus(opts);
+}
+
+function blur() {
+  if (inputRef.value) inputRef.value.blur();
+  else rootEl.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
   <div
+    ref="rootEl"
     v-show="!hidden"
     :style="{
       width: cfg.width,
@@ -415,6 +429,7 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
           }"
         />
         <input
+          ref="inputEl"
           v-model="textInput"
           :style="{
             flex: '1',

@@ -8,23 +8,19 @@ import {
   type TabOrientation,
   type TabTransition,
 } from "./tabs-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps } from "../types/common";
 
-export interface CuiTabsProps {
+export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
   modelValue?: string;
   /** Tab bar style */
   variant?: TabVariant;
   /** Layout orientation */
   orientation?: TabOrientation;
-  /** Color role for active indicator */
-  color?: ButtonColor;
   /** Keep inactive tab panels in DOM */
   keepAlive?: boolean;
   /** Panel transition animation */
   transition?: TabTransition;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTabsProps>(), {

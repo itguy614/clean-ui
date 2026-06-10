@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { ref, provide, toRef, onMounted, onUnmounted } from "vue";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiDropdownProps {
+export interface CuiDropdownProps extends HideableProps, DisableableProps {
   /** How the dropdown is triggered */
   trigger?: DropdownTrigger;
   /** Preferred placement */
   placement?: DropdownPlacement;
   /** Keep dropdown anchored to trigger on scroll instead of closing */
   pinned?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownProps>(), {

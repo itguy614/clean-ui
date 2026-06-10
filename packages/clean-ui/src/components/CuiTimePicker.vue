@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
 import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps {
+export interface CuiTimePickerProps extends HideableProps, DisableableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -23,12 +24,8 @@ export interface CuiTimePickerProps {
   placeholder?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
   /** Label */
   label?: string;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTimePickerProps>(), {
@@ -145,10 +142,23 @@ function onApply() {
 watch(popoverVisible, (open) => {
   if (open) parseTime(props.modelValue);
 });
+
+// Expose imperative handle — the trigger is a non-input div, so focus the root
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+
+function focus(opts?: FocusOptions) {
+  rootEl.value?.focus(opts);
+}
+
+function blur() {
+  rootEl.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{

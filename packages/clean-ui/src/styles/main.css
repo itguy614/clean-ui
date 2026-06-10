@@ -147,6 +147,37 @@
   /* --- Surface base (white in light, dark in dark mode) --- */
   --cui-surface-base: white;
 
+  /* --- Neutral color role — 3 intensity steps (surface-light < surface < surface-dark) --- */
+  --cui-surface:               var(--color-surface-500);
+  --cui-surface-hover:         var(--color-surface-600);
+  --cui-surface-active:        var(--color-surface-700);
+  --cui-surface-bg:            var(--color-surface-100);
+  --cui-surface-border:        var(--color-surface-300);
+  --cui-surface-text:          white;
+  --cui-surface-focus-ring:    color-mix(in srgb, var(--color-surface-500) 40%, transparent);
+  --cui-surface-subtle:        color-mix(in srgb, var(--color-surface-100) 60%, transparent);
+  --cui-surface-muted:         var(--color-surface-400);
+
+  --cui-surface-light:            var(--color-surface-400);
+  --cui-surface-light-hover:      var(--color-surface-500);
+  --cui-surface-light-active:     var(--color-surface-600);
+  --cui-surface-light-bg:         var(--color-surface-50);
+  --cui-surface-light-border:     var(--color-surface-200);
+  --cui-surface-light-text:       var(--color-surface-900);
+  --cui-surface-light-focus-ring: color-mix(in srgb, var(--color-surface-400) 40%, transparent);
+  --cui-surface-light-subtle:     color-mix(in srgb, var(--color-surface-50) 60%, transparent);
+  --cui-surface-light-muted:      var(--color-surface-200);
+
+  --cui-surface-dark:            var(--color-surface-700);
+  --cui-surface-dark-hover:      var(--color-surface-800);
+  --cui-surface-dark-active:     var(--color-surface-900);
+  --cui-surface-dark-bg:         var(--color-surface-200);
+  --cui-surface-dark-border:     var(--color-surface-400);
+  --cui-surface-dark-text:       white;
+  --cui-surface-dark-focus-ring: color-mix(in srgb, var(--color-surface-700) 40%, transparent);
+  --cui-surface-dark-subtle:     color-mix(in srgb, var(--color-surface-200) 60%, transparent);
+  --cui-surface-dark-muted:      var(--color-surface-400);
+
   /* --- Table header background --- */
   --cui-table-head-bg: var(--color-surface-50);
 
@@ -165,6 +196,38 @@
 
 :where(.dark, .dark *) {
   --cui-surface-base: var(--color-surface-900);
+
+  /* Neutral color role — dark mode (intensity = contrast against the dark base) */
+  --cui-surface:               var(--color-surface-400);
+  --cui-surface-hover:         var(--color-surface-300);
+  --cui-surface-active:        var(--color-surface-200);
+  --cui-surface-bg:            var(--color-surface-800);
+  --cui-surface-border:        var(--color-surface-700);
+  --cui-surface-text:          var(--color-surface-950);
+  --cui-surface-focus-ring:    color-mix(in srgb, var(--color-surface-400) 40%, transparent);
+  --cui-surface-subtle:        color-mix(in srgb, var(--color-surface-800) 50%, transparent);
+  --cui-surface-muted:         var(--color-surface-600);
+
+  --cui-surface-light:            var(--color-surface-500);
+  --cui-surface-light-hover:      var(--color-surface-400);
+  --cui-surface-light-active:     var(--color-surface-300);
+  --cui-surface-light-bg:         color-mix(in srgb, var(--color-surface-800) 55%, var(--color-surface-900));
+  --cui-surface-light-border:     var(--color-surface-700);
+  --cui-surface-light-text:       var(--color-surface-950);
+  --cui-surface-light-focus-ring: color-mix(in srgb, var(--color-surface-500) 40%, transparent);
+  --cui-surface-light-subtle:     color-mix(in srgb, var(--color-surface-800) 35%, transparent);
+  --cui-surface-light-muted:      var(--color-surface-700);
+
+  --cui-surface-dark:            var(--color-surface-300);
+  --cui-surface-dark-hover:      var(--color-surface-200);
+  --cui-surface-dark-active:     var(--color-surface-100);
+  --cui-surface-dark-bg:         var(--color-surface-700);
+  --cui-surface-dark-border:     var(--color-surface-600);
+  --cui-surface-dark-text:       var(--color-surface-950);
+  --cui-surface-dark-focus-ring: color-mix(in srgb, var(--color-surface-300) 40%, transparent);
+  --cui-surface-dark-subtle:     color-mix(in srgb, var(--color-surface-700) 50%, transparent);
+  --cui-surface-dark-muted:      var(--color-surface-500);
+
   --cui-table-head-bg: var(--color-surface-800);
   --cui-border: var(--color-surface-600);
   --cui-border-strong: var(--color-surface-500);
@@ -271,9 +334,9 @@
     "Liberation Mono", "Courier New", monospace;
 
   /* --- Base body --- */
-  --cui-body-font-size: 1rem;       /* 16px */
+  --cui-body-font-size: 0.875rem;   /* 14px */
   --cui-body-font-weight: 400;
-  --cui-body-line-height: 1.6;
+  --cui-body-line-height: 1.5;
 
   /* --- Heading weight & line-height --- */
   --cui-heading-font-weight: 600;
@@ -337,6 +400,11 @@
 .cui-typography,
 .cui-typography * {
   font-family: var(--cui-font-sans);
+}
+
+.cui-typography {
+  font-size: var(--cui-body-font-size);
+  line-height: var(--cui-body-line-height);
 }
 
 /* --- Headings (h1–h6) --- */

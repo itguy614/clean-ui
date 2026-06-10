@@ -32,8 +32,9 @@ const sized = ref("Hello");
           { name: 'v-model', type: 'string', default: 'empty string', description: 'Input value' },
           { name: 'type', type: 'text | password | email | url | tel | search', default: 'text', description: 'HTML input type' },
           { name: 'placeholder', type: 'string', default: '-', description: 'Placeholder text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Focus border color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Focus border color role' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Input size (matches button scale)' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'clearable', type: 'boolean', default: 'false', description: 'Show clear button when input has value' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Red border error state' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below input' },
@@ -105,6 +106,17 @@ const sized = ref("Hello");
             <CuiInput v-model="sized" size="md" placeholder="Medium (default)" />
             <CuiInput v-model="sized" size="lg" placeholder="Large" />
             <CuiInput v-model="sized" size="xl" placeholder="Extra large" />
+          </CuiStack>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiInput rounded=&quot;none&quot; placeholder=&quot;Square&quot; />
+<CuiInput rounded=&quot;lg&quot; placeholder=&quot;Large radius&quot; />
+<CuiInput rounded=&quot;full&quot; placeholder=&quot;Pill&quot; />`">
+          <CuiStack spacing="3" class="max-w-md">
+            <CuiInput rounded="none" placeholder="Square (none)" />
+            <CuiInput rounded="lg" placeholder="Large radius" />
+            <CuiInput rounded="full" placeholder="Pill (full)" />
           </CuiStack>
         </Example>
 

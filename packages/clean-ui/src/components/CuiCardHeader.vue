@@ -1,11 +1,11 @@
 <script setup lang="ts">
-export interface CuiCardHeaderProps {
+import type { HideableProps } from "../types/common";
+
+export interface CuiCardHeaderProps extends HideableProps {
   /** Convenience: title text */
   title?: string;
   /** Convenience: subtitle text */
   subtitle?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiCardHeaderProps>(), {

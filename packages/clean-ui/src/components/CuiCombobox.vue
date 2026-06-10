@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -22,7 +23,7 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps {
+export interface CuiComboboxProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -39,12 +40,6 @@ export interface CuiComboboxProps {
   minChars?: number;
   /** Maximum visible items before scrolling (controls dropdown height) */
   maxVisible?: number;
-  /** Size */
-  size?: "sm" | "md" | "lg";
-  /** Color */
-  color?: ButtonColor;
-  /** Disabled */
-  disabled?: boolean;
   /** Loading state (external) */
   loading?: boolean;
   /** Label */
@@ -55,8 +50,8 @@ export interface CuiComboboxProps {
   errorMessage?: string;
   /** No results text */
   noResultsText?: string;
-  /** Hidden */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiComboboxProps>(), {
@@ -72,8 +67,17 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   loading: false,
   error: false,
   noResultsText: "No results found",
+  rounded: "md",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
@@ -139,12 +143,13 @@ const filteredOptions = computed(() => {
 const isLoading = computed(() => props.loading || internalLoading.value);
 
 // Size config
-const sizeConfig: Record<string, { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
   sm: { fontSize: "0.8125rem", padding: "0.25rem 0.5rem", tagSize: "sm", itemPadding: "0.375rem 0.625rem", inputHeight: "2rem" },
   md: { fontSize: "0.875rem", padding: "0.3125rem 0.625rem", tagSize: "sm", itemPadding: "0.5rem 0.75rem", inputHeight: "2.375rem" },
   lg: { fontSize: "0.9375rem", padding: "0.4375rem 0.75rem", tagSize: "md", itemPadding: "0.625rem 0.875rem", inputHeight: "2.75rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Dropdown positioning
 function updateDropdownPosition() {
@@ -305,6 +310,17 @@ watch(isOpen, (open) => {
   if (open) nextTick(updateDropdownPosition);
 });
 
+// Expose imperative handle
+function focus(opts?: FocusOptions) {
+  inputRef.value?.focus(opts);
+}
+
+function blur() {
+  inputRef.value?.blur();
+}
+
+defineExpose({ el: wrapperRef, focus, blur });
+
 // Option styling
 function optionStyle(index: number, option: ComboboxOption) {
   const selected = selectedSet.value.has(option.value);
@@ -341,7 +357,7 @@ function optionStyle(index: number, option: ComboboxOption) {
         gap: '0.25rem',
         padding: cfg.padding,
         border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
-        borderRadius: 'var(--cui-button-radius, 0.375rem)',
+        borderRadius: radiusMap[rounded],
         background: 'var(--cui-surface-base, white)',
         cursor: disabled ? 'default' : 'text',
         opacity: disabled ? '0.5' : '1',

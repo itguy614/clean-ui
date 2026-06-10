@@ -49,8 +49,8 @@ const dynamicField = ref({
         :props="[
           { name: 'v-model', type: 'string | number | boolean', default: '-', description: 'Selected value' },
           { name: 'name', type: 'string', default: 'auto', description: 'Shared name attribute for form submission' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
-          { name: 'direction', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout direction (auto: horizontal ≤2, vertical 3+)' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role inherited by children' },
+          { name: 'orientation', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout orientation (auto: horizontal ≤2, vertical 3+)' },
           { name: 'variant', type: 'default | buttons', default: 'default', description: 'Visual variant — default radios or segmented button group' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size (used when variant is buttons)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all radios' },
@@ -71,7 +71,7 @@ const dynamicField = ref({
           { name: 'v-model', type: 'string | number | boolean', default: '-', description: 'Standalone mode binding' },
           { name: 'label', type: 'string', default: '-', description: 'Label text (or use default slot)' },
           { name: 'description', type: 'string', default: '-', description: 'Description below label (or use #description slot)' },
-          { name: 'color', type: 'ButtonColor', default: '-', description: 'Overrides group color' },
+          { name: 'color', type: 'CuiColor', default: '-', description: 'Overrides group color' },
           { name: 'name', type: 'string', default: '-', description: 'Name attribute (standalone mode)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
@@ -133,12 +133,12 @@ const dynamicField = ref({
         </Example>
 
         <!-- Forced Direction -->
-        <Example title="Forced Horizontal Direction" :code="`<CuiRadioGroup v-model=&quot;color&quot; direction=&quot;horizontal&quot;>
+        <Example title="Forced Horizontal Direction" :code="`<CuiRadioGroup v-model=&quot;color&quot; orientation=&quot;horizontal&quot;>
   <CuiRadio value=&quot;red&quot; label=&quot;Red&quot; />
   <CuiRadio value=&quot;green&quot; label=&quot;Green&quot; />
   <CuiRadio value=&quot;blue&quot; label=&quot;Blue&quot; />
 </CuiRadioGroup>`">
-          <CuiRadioGroup v-model="color" direction="horizontal" label="Favorite color">
+          <CuiRadioGroup v-model="color" orientation="horizontal" label="Favorite color">
             <CuiRadio value="red" label="Red" />
             <CuiRadio value="green" label="Green" />
             <CuiRadio value="blue" label="Blue" />
@@ -146,31 +146,31 @@ const dynamicField = ref({
         </Example>
 
         <!-- Colors -->
-        <Example title="Color Roles" :code="`<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;primary&quot; direction=&quot;horizontal&quot;>
+        <Example title="Color Roles" :code="`<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;primary&quot; orientation=&quot;horizontal&quot;>
   <CuiRadio value=&quot;option1&quot; label=&quot;Primary A&quot; />
   <CuiRadio value=&quot;option2&quot; label=&quot;Primary B&quot; />
 </CuiRadioGroup>
-<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;success&quot; direction=&quot;horizontal&quot;>
+<CuiRadioGroup v-model=&quot;selected&quot; color=&quot;success&quot; orientation=&quot;horizontal&quot;>
   ...
 </CuiRadioGroup>`">
           <CuiStack spacing="3">
-            <CuiRadioGroup v-model="selected" color="primary" direction="horizontal" label="Primary">
+            <CuiRadioGroup v-model="selected" color="primary" orientation="horizontal" label="Primary">
               <CuiRadio value="option1" label="Primary A" />
               <CuiRadio value="option2" label="Primary B" />
             </CuiRadioGroup>
-            <CuiRadioGroup v-model="selected" color="success" direction="horizontal" label="Success">
+            <CuiRadioGroup v-model="selected" color="success" orientation="horizontal" label="Success">
               <CuiRadio value="option1" label="Success A" />
               <CuiRadio value="option2" label="Success B" />
             </CuiRadioGroup>
-            <CuiRadioGroup v-model="selected" color="error" direction="horizontal" label="Error">
+            <CuiRadioGroup v-model="selected" color="error" orientation="horizontal" label="Error">
               <CuiRadio value="option1" label="Error A" />
               <CuiRadio value="option2" label="Error B" />
             </CuiRadioGroup>
-            <CuiRadioGroup v-model="selected" color="warning" direction="horizontal" label="Warning">
+            <CuiRadioGroup v-model="selected" color="warning" orientation="horizontal" label="Warning">
               <CuiRadio value="option1" label="Warning A" />
               <CuiRadio value="option2" label="Warning B" />
             </CuiRadioGroup>
-            <CuiRadioGroup v-model="selected" color="info" direction="horizontal" label="Info">
+            <CuiRadioGroup v-model="selected" color="info" orientation="horizontal" label="Info">
               <CuiRadio value="option1" label="Info A" />
               <CuiRadio value="option2" label="Info B" />
             </CuiRadioGroup>

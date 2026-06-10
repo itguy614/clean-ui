@@ -24,6 +24,8 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
         :props="[
           { name: 'direction', type: 'ResponsiveValue<FlexDirection>', default: 'row', description: 'Flex direction: row, row-reverse, col, col-reverse' },
           { name: 'wrap', type: 'ResponsiveValue<FlexWrap>', default: 'wrap', description: 'Wrap behavior: wrap, wrap-reverse, nowrap' },
+          { name: 'align', type: 'ResponsiveValue<FlexAlign>', default: '-', description: 'Cross-axis alignment (align-items): start, center, end, stretch, baseline' },
+          { name: 'justify', type: 'ResponsiveValue<FlexJustify>', default: '-', description: 'Main-axis distribution (justify-content): start, center, end, between, around, evenly' },
           { name: 'gap', type: 'ResponsiveValue<TailwindSpacing>', default: '-', description: 'Gap between items' },
           { name: 'debug', type: 'boolean', default: 'false', description: 'Enable debug visualization' },
         ]"
@@ -46,6 +48,22 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
             <div class="rounded-lg bg-info-500 p-4 text-white">Item 1</div>
             <div class="rounded-lg bg-info-500 p-4 text-white">Item 2</div>
             <div class="rounded-lg bg-info-500 p-4 text-white">Item 3</div>
+          </CuiFlex>
+        </Example>
+
+        <Example title="Cross-axis alignment (align)">
+          <CuiFlex align="center" gap="4" :debug="showDebug">
+            <div class="rounded-lg bg-success-500 p-2 text-white">Short</div>
+            <div class="rounded-lg bg-success-500 p-6 text-white">Tall item</div>
+            <div class="rounded-lg bg-success-500 p-4 text-white">Medium</div>
+          </CuiFlex>
+        </Example>
+
+        <Example title="Main-axis distribution (justify)">
+          <CuiFlex justify="between" gap="4" :debug="showDebug">
+            <div class="rounded-lg bg-warning-500 p-4 text-white">Item 1</div>
+            <div class="rounded-lg bg-warning-500 p-4 text-white">Item 2</div>
+            <div class="rounded-lg bg-warning-500 p-4 text-white">Item 3</div>
           </CuiFlex>
         </Example>
       </CuiStack>
