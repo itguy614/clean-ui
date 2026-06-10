@@ -105,7 +105,7 @@
 - `MultiSelectGroupContext` shared between CheckboxGroup and ToggleGroup (identical shape)
 - `v-model` on group (managed state) OR on individual (standalone mode)
 - Radio: `v-model` is `string | number | boolean`. Checkbox/Toggle group: `v-model` is `Array<string | number>`. Standalone checkbox/toggle: `v-model` is `boolean`.
-- Auto direction: horizontal for ≤2 options, vertical for 3+, overridable with `direction` prop
+- Auto orientation: horizontal for ≤2 options, vertical for 3+, overridable with `orientation` prop (`horizontal | vertical | auto` — `CuiAutoOrientation`)
 - RadioGroup supports `variant="buttons"` for segmented button-style radios (uses CuiButtonGroup internally)
 - Error validation: no left accent bar. Single controls (Input, Select, Textarea, etc.) recolor their own border to `--cui-error` + show a red message. Groups (Radio/Checkbox/Toggle) wrap their options in a `__options` div that gets a subtle bordered container on error (`border: 1px solid var(--cui-error-border)` + `background: var(--cui-error-bg)` + `--cui-button-radius`) with the red message below it. No permanent reserved padding — fields/groups sit flush so they align with buttons and other non-field elements.
 - Focus ring: `outline: 2px solid var(--cui-{color}-focus-ring); outline-offset: 2px` on the ROOT label element

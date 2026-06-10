@@ -64,8 +64,8 @@ const circleStroke: Record<(typeof SUPPORTED_SIZES)[number], number> = {
 };
 
 const circleDims = computed(() => {
-  const size = circleSize[clampSize(props.size, SUPPORTED_SIZES)];
-  const stroke = circleStroke[clampSize(props.size, SUPPORTED_SIZES)];
+  const size = circleSize[clampedSize.value];
+  const stroke = circleStroke[clampedSize.value];
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (percent.value / 100) * circumference;

@@ -64,7 +64,7 @@ function onLoadingConfirm() {
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'visible', type: 'boolean', default: 'false', description: 'Control visibility (v-model:visible) (v-model:visible)' },
+          { name: 'visible', type: 'boolean', default: 'false', description: 'Control visibility (v-model:visible)' },
           { name: 'title', type: 'string', default: 'Are you sure?', description: 'Dialog title' },
           { name: 'message', type: 'string', default: '—', description: 'Confirmation message' },
           { name: 'variant', type: 'danger | warning | info', default: 'danger', description: 'Affects icon and confirm button color' },
