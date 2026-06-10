@@ -46,7 +46,7 @@ const dynamicField = ref({
           { name: 'label', type: 'string', default: '-', description: 'Label text (or default slot)' },
           { name: 'description', type: 'string', default: '-', description: 'Description text (or #description slot)' },
           { name: 'showLabels', type: 'boolean', default: 'false', description: 'Show ON/OFF labels inside track (md and lg only)' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Toggle size' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },

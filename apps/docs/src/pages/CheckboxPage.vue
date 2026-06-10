@@ -56,7 +56,7 @@ const dynamicField = ref({
       <PropTable
         :props="[
           { name: 'v-model', type: 'Array<string | number>', default: '[]', description: 'Array of selected values' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role inherited by children' },
           { name: 'orientation', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout orientation (auto: horizontal ≤2, vertical 3+)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all checkboxes' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Make all checkboxes readonly' },

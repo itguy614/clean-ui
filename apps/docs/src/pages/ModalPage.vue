@@ -34,6 +34,7 @@ const imageBackdrop = ref(false);
 const imageBlur = ref(false);
 const formModal = ref(false);
 const confirmModal = ref(false);
+const rounded = ref({ none: false, lg: false, full: false });
 
 // SVG backdrop images as data URIs (built in script to avoid template encoding issues)
 const gridSvg = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="none"/><path d="M40 0H0v40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/></svg>')}`;
@@ -64,6 +65,7 @@ const formAgree = ref(false);
         :props="[
           { name: 'v-model:visible', type: 'boolean', default: 'false', description: 'Controls visibility' },
           { name: 'size', type: 'sm | md | lg | xl | full | string', default: 'md', description: 'Modal width (named or custom CSS value)' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'title', type: 'string', default: '—', description: 'Header title text (simple mode)' },
           { name: 'persistent', type: 'boolean', default: 'false', description: 'Disable Escape and backdrop click closing' },
           { name: 'noCloseButton', type: 'boolean', default: 'false', description: 'Hide the X close button' },
@@ -139,6 +141,26 @@ const formAgree = ref(false);
           </CuiModal>
           <CuiModal v-model:visible="sized.custom" title="Custom Width" size="700px">
             <p>This modal uses a custom width of 700px.</p>
+          </CuiModal>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiModal v-model:visible=&quot;show&quot; title=&quot;Square Corners&quot; rounded=&quot;none&quot;>...</CuiModal>
+<CuiModal v-model:visible=&quot;show&quot; title=&quot;Large Radius&quot; rounded=&quot;lg&quot;>...</CuiModal>
+<CuiModal v-model:visible=&quot;show&quot; title=&quot;Pill Corners&quot; rounded=&quot;full&quot;>...</CuiModal>`">
+          <CuiFlex gap="3" class="flex-wrap">
+            <CuiButton variant="outline" size="sm" @click="rounded.none = true">None</CuiButton>
+            <CuiButton variant="outline" size="sm" @click="rounded.lg = true">Large</CuiButton>
+            <CuiButton variant="outline" size="sm" @click="rounded.full = true">Full</CuiButton>
+          </CuiFlex>
+          <CuiModal v-model:visible="rounded.none" title="Square Corners" rounded="none">
+            <p>This modal has square corners (rounded="none").</p>
+          </CuiModal>
+          <CuiModal v-model:visible="rounded.lg" title="Large Radius" rounded="lg">
+            <p>This modal has a large corner radius (rounded="lg").</p>
+          </CuiModal>
+          <CuiModal v-model:visible="rounded.full" title="Pill Corners" rounded="full">
+            <p>This modal uses the fully rounded radius (rounded="full").</p>
           </CuiModal>
         </Example>
 

@@ -31,6 +31,7 @@ import Example from "../components/Example.vue";
       <PropTable
         :props="[
           { name: 'variant', type: 'elevated | outline | ghost', default: 'default', description: 'Visual style (default: border + shadow, outline: border only, ghost: none)' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'lg', description: 'Border radius' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
@@ -129,6 +130,32 @@ import Example from "../components/Example.vue";
               <CuiCardHeader title="Ghost" subtitle="No border or shadow" />
               <CuiCardBody>
                 <p class="text-sm text-surface-500">Invisible container, groups content visually.</p>
+              </CuiCardBody>
+            </CuiCard>
+          </CuiGrid>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiCard rounded=&quot;none&quot;>...</CuiCard>
+<CuiCard rounded=&quot;lg&quot;>...</CuiCard>
+<CuiCard rounded=&quot;full&quot;>...</CuiCard>`">
+          <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
+            <CuiCard rounded="none">
+              <CuiCardHeader title="None" subtitle="Square corners" />
+              <CuiCardBody>
+                <p class="text-sm text-surface-500">No border radius (rounded="none").</p>
+              </CuiCardBody>
+            </CuiCard>
+            <CuiCard rounded="lg">
+              <CuiCardHeader title="Large" subtitle="Default" />
+              <CuiCardBody>
+                <p class="text-sm text-surface-500">The default large radius (rounded="lg").</p>
+              </CuiCardBody>
+            </CuiCard>
+            <CuiCard rounded="full">
+              <CuiCardHeader title="Full" subtitle="Pill corners" />
+              <CuiCardBody>
+                <p class="text-sm text-surface-500">Maximum corner radius (rounded="full").</p>
               </CuiCardBody>
             </CuiCard>
           </CuiGrid>

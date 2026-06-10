@@ -105,6 +105,7 @@ const dynamicField = ref({
           { name: 'noOptionsText', type: 'string', default: 'No options available', description: 'Text when options list is empty' },
           { name: 'color', type: 'CuiColor', default: 'primary', description: 'Focus/accent color role' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Trigger size' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below select' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
@@ -260,6 +261,17 @@ const dynamicField = ref({
             <CuiSelect :options="['Medium']" size="md" placeholder="Medium (default)" />
             <CuiSelect :options="['Large']" size="lg" placeholder="Large" />
             <CuiSelect :options="['XL']" size="xl" placeholder="Extra large" />
+          </CuiStack>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiSelect rounded=&quot;none&quot; placeholder=&quot;Square&quot; />
+<CuiSelect rounded=&quot;lg&quot; placeholder=&quot;Large radius&quot; />
+<CuiSelect rounded=&quot;full&quot; placeholder=&quot;Pill&quot; />`">
+          <CuiStack spacing="3" class="max-w-sm">
+            <CuiSelect :options="['Apple', 'Banana']" rounded="none" placeholder="Square (none)" />
+            <CuiSelect :options="['Apple', 'Banana']" rounded="lg" placeholder="Large radius" />
+            <CuiSelect :options="['Apple', 'Banana']" rounded="full" placeholder="Pill (full)" />
           </CuiStack>
         </Example>
 

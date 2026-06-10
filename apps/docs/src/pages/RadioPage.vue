@@ -49,7 +49,7 @@ const dynamicField = ref({
         :props="[
           { name: 'v-model', type: 'string | number | boolean', default: '-', description: 'Selected value' },
           { name: 'name', type: 'string', default: 'auto', description: 'Shared name attribute for form submission' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role inherited by children' },
           { name: 'orientation', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout orientation (auto: horizontal ≤2, vertical 3+)' },
           { name: 'variant', type: 'default | buttons', default: 'default', description: 'Visual variant — default radios or segmented button group' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size (used when variant is buttons)' },

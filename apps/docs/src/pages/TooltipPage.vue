@@ -29,7 +29,7 @@ const manualVisible = ref(false);
           { name: 'showDelay', type: 'number', default: '200', description: 'Delay before showing (ms)' },
           { name: 'hideDelay', type: 'number', default: '100', description: 'Delay before hiding (ms)' },
           { name: 'noArrow', type: 'boolean', default: 'false', description: 'Hide the pointing arrow' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: '-', description: 'Semantic color (default is dark neutral)' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: '-', description: 'Semantic color (default is dark neutral)' },
           { name: 'v-model:visible', type: 'boolean', default: '-', description: 'Manual visibility control' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevent tooltip from showing' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },

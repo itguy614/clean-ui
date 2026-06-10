@@ -51,7 +51,7 @@ const prefsExpanded = ref(false);
           { name: 'legend', type: 'string', default: '-', description: 'Legend text (required)' },
           { name: 'description', type: 'string', default: '-', description: 'Description below the legend' },
           { name: 'variant', type: 'outline | subtle | ghost', default: 'outline', description: 'outline = border only, subtle = tinted background, ghost = no border or background' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface', default: 'surface', description: 'Border accent (outline) and background tint (subtle). surface = neutral' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'surface', description: 'Border accent (outline) and background tint (subtle). surface* = neutral intensities' },
           { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius (mirrors CuiButton)' },
           { name: 'collapsible', type: 'boolean', default: 'false', description: 'Allow expand/collapse' },
           { name: 'expanded', type: 'boolean', default: 'true', description: 'Expanded state (v-model:expanded)' },

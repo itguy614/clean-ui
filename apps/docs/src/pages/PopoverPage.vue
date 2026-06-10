@@ -27,6 +27,7 @@ import Example from "../components/Example.vue";
           { name: 'noArrow', type: 'boolean', default: 'false', description: 'Hide the arrow' },
           { name: 'offset', type: 'number', default: '10', description: 'Distance from trigger (px)' },
           { name: 'width', type: 'string', default: '—', description: 'Fixed width (e.g., &quot;320px&quot;)' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'lg', description: 'Border radius' },
           { name: 'visible', type: 'boolean', default: '—', description: 'Manual v-model:visible control' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevents showing' },
           { name: 'closable', type: 'boolean', default: 'true', description: 'Show close button in header (when title is set)' },
@@ -142,6 +143,26 @@ import Example from "../components/Example.vue";
               <p>This popover has no arrow pointing to the trigger.</p>
             </template>
           </CuiPopover>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiPopover rounded=&quot;none&quot; title=&quot;Square&quot;>...</CuiPopover>
+<CuiPopover rounded=&quot;lg&quot; title=&quot;Large&quot;>...</CuiPopover>
+<CuiPopover rounded=&quot;full&quot; title=&quot;Pill&quot;>...</CuiPopover>`">
+          <CuiFlex gap="3" class="flex-wrap">
+            <CuiPopover rounded="none" title="Square">
+              <CuiButton variant="outline" size="sm">None</CuiButton>
+              <template #content>Square corners (rounded="none").</template>
+            </CuiPopover>
+            <CuiPopover rounded="lg" title="Large">
+              <CuiButton variant="outline" size="sm">Large</CuiButton>
+              <template #content>Large corner radius (rounded="lg").</template>
+            </CuiPopover>
+            <CuiPopover rounded="full" title="Pill">
+              <CuiButton variant="outline" size="sm">Full</CuiButton>
+              <template #content>Fully rounded corners (rounded="full").</template>
+            </CuiPopover>
+          </CuiFlex>
         </Example>
 
         <!-- Fixed width -->
