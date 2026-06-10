@@ -73,6 +73,17 @@ export interface CuiDataGridProps {
   hydrateUrl?: boolean;
   /** Hide the component */
   hidden?: boolean;
+  /**
+   * Enable row virtualization for large datasets.
+   * Requires maxHeight to be set.
+   * Recommended for >= 500 rows in client-side mode.
+   */
+  virtualize?: boolean;
+  /**
+   * Fixed row height in px passed to the virtualizer.
+   * Omit to auto-measure from the first rendered row.
+   */
+  virtualRowHeight?: number;
 }
 
 const props = withDefaults(defineProps<CuiDataGridProps>(), {
@@ -94,6 +105,7 @@ const props = withDefaults(defineProps<CuiDataGridProps>(), {
   filterPanelSide: "right",
   hydrateUrl: false,
   hidden: false,
+  virtualize: false,
 });
 
 const emit = defineEmits<{
@@ -222,6 +234,8 @@ defineExpose({
             :hoverable="hoverable"
             :bordered="bordered"
             :size="size"
+            :virtualize="virtualize"
+            :virtual-row-height="virtualRowHeight"
             @row-click="emit('row-click', $event)"
             @row-action="emit('row-action', $event)"
           >

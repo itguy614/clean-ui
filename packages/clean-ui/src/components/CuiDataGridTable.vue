@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
+import { useVirtualScroll } from "../composables/useVirtualScroll";
 import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -27,6 +28,27 @@ export interface CuiDataGridTableProps {
   hoverable?: boolean;
   bordered?: boolean;
   size?: TableSize;
+  /**
+   * Enable row virtualization for large datasets.
+   *
+   * When true the table renders only the rows visible in the viewport plus a
+   * small overscan buffer, keeping the DOM lean regardless of dataset size.
+   *
+   * Requires `maxHeight` to be set so there is a fixed-height scroll container.
+   * Without a bounded height the browser has no viewport to window against and
+   * all rows would always be visible anyway.
+   *
+   * Recommended threshold: enable at >= 500 rows for client-side mode.
+   * Server-side grids paginate at the API layer and rarely need this.
+   */
+  virtualize?: boolean;
+  /**
+   * Fixed row height in px used by the virtualizer.
+   * Omit to let the virtualizer auto-measure from the first rendered row.
+   * Providing an explicit value is slightly more efficient and avoids a
+   * one-frame layout measurement.
+   */
+  virtualRowHeight?: number;
 }
 
 const props = withDefaults(defineProps<CuiDataGridTableProps>(), {
@@ -37,6 +59,7 @@ const props = withDefaults(defineProps<CuiDataGridTableProps>(), {
   bordered: false,
   striped: false,
   size: "md",
+  virtualize: false,
 });
 
 const emit = defineEmits<{
@@ -118,7 +141,7 @@ const stickyColumnOffsets = computed(() => {
 
   // Account for bulk actions checkbox column
   if (hasBulkActions.value) {
-    left += 48; // 3rem ≈ 48px
+    left += 48; // 3rem ~ 48px
   }
 
   for (const col of grid.visibleColumns.value) {
@@ -178,10 +201,62 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
     ...stickyColStyle(col.key),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Virtualization
+// ---------------------------------------------------------------------------
+// The scroll container is CuiTable's internal wrapper div, which only exists
+// when maxHeight is set. We need a ref to it so the virtualizer can listen for
+// scroll events. We obtain it via a template ref on the CuiTable root element
+// and then walk to its first child (the overflow div).
+//
+// Simpler alternative used here: we wrap the whole CuiTable in our own div
+// and pass our own containerRef down — but CuiTable owns its scroll wrapper.
+// Instead, we keep a ref to the CuiTable root element and find the scrollable
+// child after mount.
+
+const tableRootRef   = ref<HTMLElement | null>(null);
+const scrollContainerRef = ref<HTMLElement | null>(null);
+
+// After CuiTable mounts, locate the inner scroll wrapper div.
+// CuiTable renders: <div style="position:relative"><div class="cui-table-wrapper" ...>
+// We grab the second div (the one with overflow:auto).
+function resolveScrollContainer(el: HTMLElement | null) {
+  tableRootRef.value = el;
+  if (!el || !props.virtualize || !props.maxHeight) {
+    scrollContainerRef.value = null;
+    return;
+  }
+  // CuiTable wraps in a relative div > overflow div when maxHeight is given
+  const wrapper = el.querySelector(".cui-table-wrapper") as HTMLElement | null;
+  scrollContainerRef.value = wrapper ?? el;
+}
+
+const vScroll = useVirtualScroll(
+  computed(() => grid.displayData.value),
+  {
+    containerRef: scrollContainerRef,
+    rowHeight: props.virtualRowHeight,
+  },
+);
+
+// The rows we actually render — either the full set or the virtual window
+const renderedRows = computed<DataGridRow[]>(() =>
+  props.virtualize ? vScroll.visibleRows.value : grid.displayData.value,
+);
+
+// Total column count — used for colspan on spacer rows
+const totalCols = computed(() => {
+  let n = grid.visibleColumns.value.length;
+  if (hasBulkActions.value) n += 1;
+  if (hasRowActions.value)  n += 1;
+  return n;
+});
 </script>
 
 <template>
   <CuiTable
+    :ref="(el) => resolveScrollContainer(el as HTMLElement | null)"
     :size="size"
     :striped="striped"
     :hoverable="hoverable"
@@ -229,12 +304,26 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
     </CuiTableHead>
 
     <CuiTableBody>
+      <!--
+        Virtual top spacer — replaces the rows above the render window.
+        A zero-height row with padding-top avoids collapsing border weirdness
+        that a plain <tr style="height:Npx"> can suffer in some browsers.
+      -->
+      <tr
+        v-if="virtualize && vScroll.paddingTop.value > 0"
+        aria-hidden="true"
+        :style="{ height: `${vScroll.paddingTop.value}px`, padding: 0, border: 0 }"
+      >
+        <td :colspan="totalCols" style="padding: 0; border: none;" />
+      </tr>
+
       <CuiContextMenu
-        v-for="row in grid.displayData.value"
+        v-for="(row, idx) in renderedRows"
         :key="getRowId(row)"
         :disabled="rowActions(row).length === 0"
       >
         <CuiTableRow
+          :ref="(el) => { if (virtualize && idx === 0) vScroll.measureRow(el as HTMLElement | null) }"
           :selected="isSelected(row)"
           style="cursor: pointer;"
           @click="emit('row-click', { row })"
@@ -292,6 +381,15 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
           </CuiDropdownItem>
         </template>
       </CuiContextMenu>
+
+      <!-- Virtual bottom spacer -->
+      <tr
+        v-if="virtualize && vScroll.paddingBottom.value > 0"
+        aria-hidden="true"
+        :style="{ height: `${vScroll.paddingBottom.value}px`, padding: 0, border: 0 }"
+      >
+        <td :colspan="totalCols" style="padding: 0; border: none;" />
+      </tr>
     </CuiTableBody>
   </CuiTable>
 </template>
