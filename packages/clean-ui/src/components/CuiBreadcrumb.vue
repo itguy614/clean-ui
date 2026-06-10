@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { provide } from "vue";
 import { BreadcrumbContextKey } from "./breadcrumb-context";
+import type { HideableProps } from "../types/common";
 
-export interface CuiBreadcrumbProps {
+export interface CuiBreadcrumbProps extends HideableProps {
   /** Separator character between items */
   separator?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBreadcrumbProps>(), {

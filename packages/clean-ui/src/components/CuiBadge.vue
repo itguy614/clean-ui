@@ -1,27 +1,25 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
 export type BadgeVariant = "solid" | "subtle" | "outline";
-export type BadgeSize = "sm" | "md";
 export type BadgeAnimation = "pulse" | "bounce" | "ping" | "none";
 
-export interface CuiBadgeProps {
+const SUPPORTED_SIZES = ["sm", "md"] as const;
+
+export interface CuiBadgeProps extends HideableProps, ColorableProps, SizeableProps {
   /** Visual variant */
   variant?: BadgeVariant;
-  /** Color role */
-  color?: ButtonColor;
-  /** Size */
-  size?: BadgeSize;
   /** Render as a small dot with no text */
   dot?: boolean;
   /** Show remove button (tag mode) */
   removable?: boolean;
   /** Animation */
   animation?: BadgeAnimation;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiBadgeProps>(), {
@@ -31,8 +29,17 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
   dot: false,
   removable: false,
   animation: "none",
+  rounded: "full",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   remove: [];
@@ -59,12 +66,16 @@ const badgeStyle = computed(() => {
     base.border = "1px solid transparent";
   }
 
+  base.borderRadius = radiusMap[props.rounded];
+
   return base;
 });
 
 const dotStyle = computed(() => ({
   background: `var(--cui-${props.color})`,
 }));
+
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
@@ -74,7 +85,7 @@ const dotStyle = computed(() => ({
     v-show="!hidden"
     class="cui-badge cui-badge--dot"
     :class="[
-      `cui-badge--${size}`,
+      `cui-badge--${clampedSize}`,
       animation !== 'none' ? `cui-badge--${animation}` : '',
     ]"
   >
@@ -88,7 +99,7 @@ const dotStyle = computed(() => ({
     v-show="!hidden"
     class="cui-badge"
     :class="[
-      `cui-badge--${size}`,
+      `cui-badge--${clampedSize}`,
       animation !== 'none' ? `cui-badge--${animation}` : '',
     ]"
     :style="badgeStyle"
@@ -103,7 +114,7 @@ const dotStyle = computed(() => ({
       aria-label="Remove"
       @click.stop="emit('remove')"
     >
-      <CuiIcon name="x" :size="size === 'sm' ? '0.625rem' : '0.75rem'" />
+      <CuiIcon name="x" :size="clampedSize === 'sm' ? '0.625rem' : '0.75rem'" />
     </button>
   </span>
 </template>
@@ -114,7 +125,6 @@ const dotStyle = computed(() => ({
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  border-radius: 9999px;
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;

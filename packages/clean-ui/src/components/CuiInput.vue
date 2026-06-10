@@ -1,35 +1,36 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 
-export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
+
 export type InputType = "text" | "password" | "email" | "url" | "tel" | "search";
 
-export interface CuiInputProps {
+export interface CuiInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
   modelValue?: string;
   /** Input type */
   type?: InputType;
   /** Placeholder text */
   placeholder?: string;
-  /** Color role — affects focus border */
-  color?: ButtonColor;
-  /** Size */
-  size?: InputSize;
   /** Show clear button when input has value */
   clearable?: boolean;
   /** Show error state (red border + message) */
   error?: boolean;
   /** Error message displayed below the input */
   errorMessage?: string;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiInputProps>(), {
@@ -42,6 +43,7 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   disabled: false,
   readonly: false,
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -98,6 +100,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
         'cui-input--has-suffix-button': $slots['suffix-button'],
       }"
       :style="{
+        borderRadius: radiusMap[rounded],
         '--_input-height': dims.height,
         '--_input-font-size': dims.fontSize,
         '--_input-px': dims.px,
@@ -187,7 +190,6 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 .cui-input {
   display: flex;
   align-items: stretch;
-  border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--_input-border);
   background: var(--cui-surface-base);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;

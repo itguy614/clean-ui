@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle } from "../composables/useScrollShadows";
+import type { HideableProps } from "../types/common";
 
-export interface CuiModalBodyProps {
+export interface CuiModalBodyProps extends HideableProps {
   /** Remove default padding */
   noPadding?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiModalBodyProps>(), {

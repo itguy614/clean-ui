@@ -35,8 +35,8 @@ const agree = ref(false);
       <h1 class="text-4xl font-bold">Form Field</h1>
       <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
         Wrapper that adds label, required indicator, help text, and error
-        display to any form control. Owns all error presentation via a left
-        accent bar.
+        display to any form control. On error it shows a red message; the
+        wrapped control recolors its own border.
       </p>
     </div>
 
@@ -50,7 +50,7 @@ const agree = ref(false);
           { name: 'required', type: 'boolean', default: 'false', description: 'Show required indicator' },
           { name: 'requiredText', type: 'string', default: '-', description: 'Custom required text (replaces asterisk)' },
           { name: 'helpText', type: 'string', default: '-', description: 'Help text below control' },
-          { name: 'error', type: 'boolean', default: 'false', description: 'Error state (left accent bar)' },
+          { name: 'error', type: 'boolean', default: 'false', description: 'Error state (shows red error message)' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message (replaces help text)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state — passed as slot prop to the control' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },

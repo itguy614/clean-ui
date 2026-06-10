@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -8,11 +9,11 @@ import CuiSpinner from "./CuiSpinner.vue";
 export interface TagOption {
   value: string;
   label?: string;
-  color?: ButtonColor;
+  color?: CuiColor;
   [key: string]: unknown;
 }
 
-export interface CuiTagInputProps {
+export interface CuiTagInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected tags */
   modelValue?: string[];
   /** Predefined tag suggestions */
@@ -29,12 +30,6 @@ export interface CuiTagInputProps {
   maxTags?: number;
   /** Placeholder */
   placeholder?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
-  /** Color for tag badges */
-  color?: ButtonColor;
-  /** Disabled */
-  disabled?: boolean;
   /** Label */
   label?: string;
   /** Error state */
@@ -47,6 +42,8 @@ export interface CuiTagInputProps {
   createText?: string;
   /** Hidden */
   hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiTagInputProps>(), {
@@ -63,8 +60,17 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
   error: false,
   noSuggestionsText: "No suggestions",
   createText: "Create",
+  rounded: "md",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string[]];
@@ -90,7 +96,7 @@ function tagLabel(value: string): string {
   return opt?.label ?? value;
 }
 
-function tagColor(value: string): ButtonColor {
+function tagColor(value: string): CuiColor {
   const opt = [...props.suggestions, ...asyncSuggestions.value].find((s) => s.value === value);
   return opt?.color ?? props.color;
 }
@@ -119,12 +125,13 @@ const canCreate = computed(() => {
 const isLoading = computed(() => internalLoading.value);
 
 // Size config
-const sizeConfig: Record<string, { fontSize: string; padding: string; tagSize: "sm" | "md"; inputHeight: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: "sm" | "md"; inputHeight: string }> = {
   sm: { fontSize: "0.8125rem", padding: "0.25rem 0.5rem", tagSize: "sm", inputHeight: "2rem" },
   md: { fontSize: "0.875rem", padding: "0.3125rem 0.625rem", tagSize: "sm", inputHeight: "2.375rem" },
   lg: { fontSize: "0.9375rem", padding: "0.4375rem 0.75rem", tagSize: "md", inputHeight: "2.75rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Dropdown positioning
 function updateDropdownPosition() {
@@ -261,6 +268,18 @@ watch(isOpen, (open) => {
   if (!open) query.value = "";
   if (open) nextTick(updateDropdownPosition);
 });
+
+// Expose imperative handle
+function focus(opts?: FocusOptions) {
+  if (inputRef.value) inputRef.value.focus(opts);
+  else wrapperRef.value?.focus(opts);
+}
+
+function blur() {
+  inputRef.value?.blur();
+}
+
+defineExpose({ el: wrapperRef, focus, blur });
 </script>
 
 <template>
@@ -279,7 +298,7 @@ watch(isOpen, (open) => {
         gap: '0.25rem',
         padding: cfg.padding,
         border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
-        borderRadius: 'var(--cui-button-radius, 0.375rem)',
+        borderRadius: radiusMap[rounded],
         background: 'var(--cui-surface-base, white)',
         cursor: disabled ? 'default' : 'text',
         opacity: disabled ? '0.5' : '1',

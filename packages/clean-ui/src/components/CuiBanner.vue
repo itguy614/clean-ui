@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
@@ -8,9 +8,7 @@ import { COLOR_ICON_MAP } from "../utils/colorIconMap";
 export type BannerPosition = "top" | "bottom";
 export type BannerVariant = "solid" | "subtle";
 
-export interface CuiBannerProps {
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiBannerProps extends HideableProps, ColorableProps {
   /** Visual variant */
   variant?: BannerVariant;
   /** Sticky position */
@@ -21,8 +19,6 @@ export interface CuiBannerProps {
   noIcon?: boolean;
   /** Persist dismissal to localStorage under this key */
   storageKey?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBannerProps>(), {

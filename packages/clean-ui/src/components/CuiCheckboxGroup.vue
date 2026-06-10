@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { CheckboxGroupKey } from "./multi-select-group-context";
 
-export type CheckboxDirection = "horizontal" | "vertical" | "auto";
-
-export interface CuiCheckboxGroupProps {
+export interface CuiCheckboxGroupProps extends HideableProps, ColorableProps, DisableableProps {
   /** Array of selected values */
   modelValue?: Array<string | number>;
-  /** Color role (inherited by children) */
-  color?: ButtonColor;
-  /** Layout direction — auto: horizontal for ≤2 options, vertical for 3+ */
-  direction?: CheckboxDirection;
-  /** Disable all checkboxes */
-  disabled?: boolean;
+  /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
+  orientation?: CuiAutoOrientation;
   /** Make all checkboxes readonly */
   readonly?: boolean;
   /** Show error state */
@@ -22,14 +16,12 @@ export interface CuiCheckboxGroupProps {
   errorMessage?: string;
   /** Accessible label for the group */
   label?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCheckboxGroupProps>(), {
   modelValue: () => [],
   color: "primary",
-  direction: "auto",
+  orientation: "auto",
   disabled: false,
   readonly: false,
   error: false,
@@ -54,7 +46,7 @@ const childCount = computed(() => {
 });
 
 const resolvedDirection = computed(() => {
-  if (props.direction !== "auto") return props.direction;
+  if (props.orientation !== "auto") return props.orientation;
   return childCount.value <= 2 ? "horizontal" : "vertical";
 });
 
@@ -89,7 +81,9 @@ provide(CheckboxGroupKey, {
       { 'cui-checkbox-group--error': error },
     ]"
   >
-    <slot />
+    <div class="cui-checkbox-group__options">
+      <slot />
+    </div>
     <div v-if="error && errorMessage" class="cui-checkbox-group__error">
       {{ errorMessage }}
     </div>
@@ -99,32 +93,35 @@ provide(CheckboxGroupKey, {
 <style scoped>
 .cui-checkbox-group {
   display: flex;
-  gap: 0.75rem;
-  border-left: 3px solid transparent;
-  padding-left: 0.75rem;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
-.cui-checkbox-group--vertical {
+.cui-checkbox-group__options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cui-checkbox-group--vertical .cui-checkbox-group__options {
   flex-direction: column;
 }
 
-.cui-checkbox-group--horizontal {
+.cui-checkbox-group--horizontal .cui-checkbox-group__options {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 1.25rem;
 }
 
-.cui-checkbox-group--error {
-  border-left-color: var(--cui-error);
+/* Error: subtle bordered container around the options */
+.cui-checkbox-group--error .cui-checkbox-group__options {
+  border: 1px solid var(--cui-error-border);
+  background: var(--cui-error-bg);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  padding: 0.625rem 0.75rem;
 }
 
 .cui-checkbox-group__error {
   font-size: 0.8125rem;
-  margin-top: 0.25rem;
   color: var(--cui-error);
-}
-
-.cui-checkbox-group--horizontal .cui-checkbox-group__error {
-  flex-basis: 100%;
 }
 </style>

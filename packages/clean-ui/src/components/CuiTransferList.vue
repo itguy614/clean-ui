@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface TransferListItem {
   value: string | number;
@@ -13,7 +14,7 @@ export interface TransferListItem {
   [key: string]: unknown;
 }
 
-export interface CuiTransferListProps {
+export interface CuiTransferListProps extends HideableProps, DisableableProps {
   /** All available items */
   items: TransferListItem[];
   /** Selected values (right panel) — order is preserved */
@@ -32,10 +33,6 @@ export interface CuiTransferListProps {
   height?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTransferListProps>(), {

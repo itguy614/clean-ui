@@ -3,6 +3,37 @@
  * Single source of truth — all components import from here.
  */
 
+import type { CuiSize } from "../types/common";
+
+/** Canonical ordering of the size scale, smallest → largest. */
+export const SIZE_ORDER: readonly CuiSize[] = ["xs", "sm", "md", "lg", "xl"];
+
+/**
+ * Clamp a requested size to the nearest size a component actually supports.
+ * Components accept the full `CuiSize` union for API uniformity, then narrow
+ * to what they style. Out-of-range sizes map to the closest supported step.
+ *
+ *   clampSize("xl", ["sm", "md"]) // → "md"
+ *   clampSize("xs", ["sm", "md"]) // → "sm"
+ */
+export function clampSize<T extends CuiSize>(
+  size: CuiSize,
+  supported: readonly T[],
+): T {
+  if ((supported as readonly CuiSize[]).includes(size)) return size as unknown as T;
+  const target = SIZE_ORDER.indexOf(size);
+  let best = supported[0];
+  let bestDist = Infinity;
+  for (const s of supported) {
+    const dist = Math.abs(SIZE_ORDER.indexOf(s) - target);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = s;
+    }
+  }
+  return best;
+}
+
 export interface SizeStyle {
   height: string;
   px: string;

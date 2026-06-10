@@ -1,9 +1,9 @@
 <script setup lang="ts">
-export interface CuiModalFooterProps {
+import type { HideableProps } from "../types/common";
+
+export interface CuiModalFooterProps extends HideableProps {
   /** Align footer content */
   align?: "left" | "right" | "center" | "between";
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiModalFooterProps>(), {

@@ -30,7 +30,7 @@ import Example from "../components/Example.vue";
       <h2 class="mb-4 text-2xl font-semibold">CuiCard Props</h2>
       <PropTable
         :props="[
-          { name: 'variant', type: 'default | outline | ghost', default: 'default', description: 'Visual style (default: border + shadow, outline: border only, ghost: none)' },
+          { name: 'variant', type: 'elevated | outline | ghost', default: 'default', description: 'Visual style (default: border + shadow, outline: border only, ghost: none)' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
@@ -109,11 +109,11 @@ import Example from "../components/Example.vue";
         </Example>
 
         <!-- Variants -->
-        <Example title="Variants" :code="`<CuiCard variant=&quot;default&quot;>...</CuiCard>
+        <Example title="Variants" :code="`<CuiCard variant=&quot;elevated&quot;>...</CuiCard>
 <CuiCard variant=&quot;outline&quot;>...</CuiCard>
 <CuiCard variant=&quot;ghost&quot;>...</CuiCard>`">
           <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
-            <CuiCard variant="default">
+            <CuiCard variant="elevated">
               <CuiCardHeader title="Default" subtitle="Border + shadow" />
               <CuiCardBody>
                 <p class="text-sm text-surface-500">The standard card with subtle elevation.</p>

@@ -1,23 +1,29 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import type { CuiRounded, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
-export interface CuiFieldsetProps {
+export type FieldsetVariant = "outline" | "subtle" | "ghost";
+
+export interface CuiFieldsetProps extends HideableProps, ColorableProps, DisableableProps {
   /** Legend text */
   legend: string;
   /** Description text below the legend */
   description?: string;
+  /** Visual variant: bordered outline, tinted subtle fill, or chrome-less ghost */
+  variant?: FieldsetVariant;
+  /** Border radius (mirrors CuiButton) */
+  rounded?: CuiRounded;
   /** Allow collapsing the fieldset content */
   collapsible?: boolean;
   /** Whether the fieldset is expanded (v-model:expanded) */
   expanded?: boolean;
-  /** Disable all controls inside */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiFieldsetProps>(), {
+  variant: "outline",
+  color: "surface",
+  rounded: "md",
   collapsible: false,
   expanded: true,
   disabled: false,
@@ -42,16 +48,53 @@ function toggle() {
   isExpanded.value = !isExpanded.value;
   emit("update:expanded", isExpanded.value);
 }
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
+
+const rootStyle = computed(() => {
+  const c = props.color;
+  const borderToken =
+    c === "surface" ? "var(--cui-border)" : `var(--cui-${c}-border)`;
+  const bgToken =
+    c === "surface" ? "var(--cui-surface-bg)" : `var(--cui-${c}-bg)`;
+
+  const style: Record<string, string> = {
+    borderRadius: radiusMap[props.rounded],
+  };
+
+  if (props.variant === "ghost") {
+    style.border = "none";
+    style.background = "transparent";
+  } else if (props.variant === "subtle") {
+    style.border = `1px solid ${borderToken}`;
+    style.background = bgToken;
+  } else {
+    style.border = `1px solid ${borderToken}`;
+    style.background = "transparent";
+  }
+
+  return style;
+});
 </script>
 
 <template>
   <fieldset
     v-show="!hidden"
     class="cui-fieldset"
-    :class="{
-      'cui-fieldset--collapsed': collapsible && !isExpanded,
-      'cui-fieldset--disabled': disabled,
-    }"
+    :class="[
+      `cui-fieldset--${variant}`,
+      {
+        'cui-fieldset--collapsed': collapsible && !isExpanded,
+        'cui-fieldset--disabled': disabled,
+      },
+    ]"
+    :style="rootStyle"
     :disabled="disabled || undefined"
   >
     <legend
@@ -87,11 +130,22 @@ function toggle() {
 
 <style scoped>
 .cui-fieldset {
-  border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, 0.375rem);
   padding: 1.25rem;
   margin: 0;
   min-width: 0;
+  transition: padding 0.25s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+/* Plain has no chrome — let content sit flush */
+.cui-fieldset--ghost {
+  padding: 0;
+}
+
+/* Collapsed: shrink-wrap the border to a slim bar around the legend
+   (bordered variants only — plain has nothing to wrap) */
+.cui-fieldset--collapsed:not(.cui-fieldset--ghost) {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
 }
 
 .cui-fieldset--disabled {
@@ -108,6 +162,10 @@ function toggle() {
   color: var(--cui-text-emphasis);
   padding: 0 0.375rem;
   line-height: 1.4;
+}
+
+.cui-fieldset--ghost .cui-fieldset__legend {
+  padding-left: 0;
 }
 
 .cui-fieldset__legend--clickable {
@@ -146,6 +204,10 @@ function toggle() {
   margin-top: 0;
   margin-bottom: 0;
   padding: 0 0.375rem;
+}
+
+.cui-fieldset--ghost .cui-fieldset__description {
+  padding-left: 0;
 }
 
 /* --- Content --- */

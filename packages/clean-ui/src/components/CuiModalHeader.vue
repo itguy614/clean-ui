@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import CuiIcon from "./CuiIcon.vue";
+import type { HideableProps } from "../types/common";
 
-export interface CuiModalHeaderProps {
+export interface CuiModalHeaderProps extends HideableProps {
   /** Convenience: title text */
   title?: string;
   /** Hide the close button */
   noCloseButton?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiModalHeaderProps>(), {

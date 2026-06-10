@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiCopyButton from "./CuiCopyButton.vue";
 
-export type CodeBlockSize = "sm" | "md" | "lg";
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiCodeBlockProps {
+export interface CuiCodeBlockProps extends HideableProps, SizeableProps {
   /** Code content */
   code: string;
   /** Language label (displayed in header) */
@@ -21,10 +23,6 @@ export interface CuiCodeBlockProps {
   copyable?: boolean;
   /** Max height before scrolling */
   maxHeight?: string;
-  /** Size */
-  size?: CodeBlockSize;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
@@ -37,12 +35,12 @@ const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
 
 const lines = computed(() => props.code.split("\n"));
 
-const sizeConfig: Record<CodeBlockSize, { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
   sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: "0.75rem", headerFont: "0.6875rem" },
   md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: "1rem", headerFont: "0.75rem" },
   lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: "1.25rem", headerFont: "0.8125rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 const headerLabel = computed(() => props.filename || props.language || "");
 

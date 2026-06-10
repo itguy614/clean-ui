@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
 
-export interface CuiRadioProps {
+export interface CuiRadioProps extends HideableProps, ColorableProps, DisableableProps {
   /** The value this radio represents */
   value: string | number | boolean;
   /** v-model binding (standalone mode) */
@@ -13,16 +13,10 @@ export interface CuiRadioProps {
   label?: string;
   /** Description text (or use #description slot) */
   description?: string;
-  /** Color role — overrides group color if inside a group */
-  color?: ButtonColor;
   /** Name attribute (standalone mode) */
   name?: string;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRadioProps>(), {

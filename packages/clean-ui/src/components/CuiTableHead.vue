@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, inject } from "vue";
 import { TableContextKey, TableSectionContextKey } from "./table-context";
+import type { HideableProps } from "../types/common";
 
-export interface CuiTableHeadProps {
-  /** Hide the component */
-  hidden?: boolean;
+export interface CuiTableHeadProps extends HideableProps {
 }
 
 withDefaults(defineProps<CuiTableHeadProps>(), {

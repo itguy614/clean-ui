@@ -2,12 +2,11 @@
 import { inject } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey } from "./dropdown-context";
+import type { DisableableProps } from "../types/common";
 
-export interface CuiDropdownCheckItemProps {
+export interface CuiDropdownCheckItemProps extends DisableableProps {
   /** v-model boolean */
   modelValue?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownCheckItemProps>(), {

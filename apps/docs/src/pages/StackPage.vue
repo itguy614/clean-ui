@@ -22,7 +22,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'direction', type: 'vertical | horizontal', default: 'vertical', description: 'Stack direction' },
+          { name: 'orientation', type: 'vertical | horizontal', default: 'vertical', description: 'Stack direction' },
           { name: 'spacing', type: 'ResponsiveValue<TailwindSpacing>', default: '4', description: 'Space between items' },
           { name: 'debug', type: 'boolean', default: 'false', description: 'Enable debug visualization' },
         ]"
@@ -41,7 +41,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
         </Example>
 
         <Example title="Horizontal Stack">
-          <CuiStack direction="horizontal" spacing="3" :debug="showDebug">
+          <CuiStack orientation="horizontal" spacing="3" :debug="showDebug">
             <div class="rounded-lg bg-info-500 p-3 text-white">Item 1</div>
             <div class="rounded-lg bg-info-500 p-3 text-white">Item 2</div>
             <div class="rounded-lg bg-info-500 p-3 text-white">Item 3</div>

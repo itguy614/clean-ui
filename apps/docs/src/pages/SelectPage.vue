@@ -103,7 +103,7 @@ const dynamicField = ref({
           { name: 'clearable', type: 'boolean', default: 'false', description: 'Show clear button' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'Show loading spinner in dropdown' },
           { name: 'noOptionsText', type: 'string', default: 'No options available', description: 'Text when options list is empty' },
-          { name: 'color', type: 'ButtonColor', default: 'primary', description: 'Focus/accent color role' },
+          { name: 'color', type: 'CuiColor', default: 'primary', description: 'Focus/accent color role' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Trigger size' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below select' },

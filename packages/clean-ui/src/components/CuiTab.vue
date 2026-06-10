@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { inject, onMounted, onUnmounted, computed, watch } from "vue";
 import { TabsContextKey } from "./tabs-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiTabProps {
+export interface CuiTabProps extends HideableProps, DisableableProps {
   /** Unique tab value (used for v-model matching) */
   value: string;
   /** Tab label text */
   label: string;
-  /** Disable this tab */
-  disabled?: boolean;
   /** Show close button on this tab */
   closeable?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTabProps>(), {

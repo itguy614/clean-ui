@@ -2,18 +2,15 @@
 import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiAccordionItemProps {
+export interface CuiAccordionItemProps extends HideableProps, DisableableProps {
   /** Unique value for this item */
   value: string;
   /** Header label text (or use #header slot) */
   label?: string;
   /** Start expanded (uncontrolled mode) */
   defaultOpen?: boolean;
-  /** Disabled — can't toggle */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAccordionItemProps>(), {
