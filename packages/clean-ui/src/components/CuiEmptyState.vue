@@ -1,23 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export type EmptyStateSize = "sm" | "md" | "lg";
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiEmptyStateProps {
+export interface CuiEmptyStateProps extends HideableProps, ColorableProps, SizeableProps {
   /** Phosphor icon name */
   icon?: string;
   /** Heading text */
   title?: string;
   /** Supporting text below the title */
   description?: string;
-  /** Controls icon size, font sizes, and spacing */
-  size?: EmptyStateSize;
-  /** Color role for the icon area */
-  color?: ButtonColor;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
@@ -26,7 +21,7 @@ const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
   hidden: false,
 });
 
-const sizeConfig: Record<EmptyStateSize, {
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   circle: string;
   icon: string;
   titleFont: string;
@@ -39,7 +34,7 @@ const sizeConfig: Record<EmptyStateSize, {
   lg: { circle: "4.5rem", icon: "2rem", titleFont: "1.25rem", descFont: "1rem", gap: "1.25rem", descMaxWidth: "28rem" },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 const circleStyle = computed(() => ({
   width: cfg.value.circle,

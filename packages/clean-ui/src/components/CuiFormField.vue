@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type LabelPosition = "top" | "left";
 
-export interface CuiFormFieldProps {
+export interface CuiFormFieldProps extends HideableProps, DisableableProps {
   /** Label text */
   label?: string;
   /** Label position */
@@ -20,10 +21,6 @@ export interface CuiFormFieldProps {
   error?: boolean;
   /** Error message below the control (replaces help text when shown) */
   errorMessage?: string;
-  /** Disabled state — passed through slot props to the control */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiFormFieldProps>(), {
@@ -82,8 +79,6 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
 /* --- Base layout --- */
 .cui-form-field {
   display: flex;
-  border-left: 3px solid transparent;
-  padding-left: 0.75rem;
 }
 
 .cui-form-field--top {
@@ -95,11 +90,6 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
   flex-direction: row;
   align-items: flex-start;
   gap: 1rem;
-}
-
-/* --- Error accent bar --- */
-.cui-form-field--error {
-  border-left-color: var(--cui-error);
 }
 
 /* --- Label --- */

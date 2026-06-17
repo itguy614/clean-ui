@@ -11,6 +11,7 @@ import {
   isoToDate, dateToIso, isDateDisabled,
   type DisabledDateRange,
 } from "../utils/date";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -19,7 +20,7 @@ export interface DateRangeValue {
   end: string | Date | null;
 }
 
-export interface CuiDateRangePickerProps {
+export interface CuiDateRangePickerProps extends HideableProps, DisableableProps {
   /** Current range value */
   modelValue?: DateRangeValue;
   /** Display format pattern */
@@ -46,10 +47,6 @@ export interface CuiDateRangePickerProps {
   endPlaceholder?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
   /** Label */
   label?: string;
 }

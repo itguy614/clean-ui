@@ -20,7 +20,7 @@ import Playground from "../components/Playground.vue";
       <PropTable
         :props="[
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Size' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'variant', type: 'ring | dots | bars', default: 'ring', description: 'Visual variant' },
           { name: 'label', type: 'string', default: 'Loading', description: 'Accessible label (always present for screen readers)' },
           { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show label text below the spinner' },

@@ -2,12 +2,11 @@
 import { ref, inject, computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey, computeDropdownPosition, type DropdownTrigger } from "./dropdown-context";
+import type { DisableableProps } from "../types/common";
 
-export interface CuiDropdownSubProps {
+export interface CuiDropdownSubProps extends DisableableProps {
   /** Override parent trigger for this sub-menu */
   trigger?: DropdownTrigger;
-  /** Disabled state */
-  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownSubProps>(), {

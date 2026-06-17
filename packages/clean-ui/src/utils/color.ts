@@ -1,3 +1,38 @@
+import type { CuiColor } from "../types/common";
+
+const COLOR_ROLES = new Set<string>([
+  "primary",
+  "secondary",
+  "success",
+  "error",
+  "warning",
+  "info",
+  "surface",
+  "surface-light",
+  "surface-dark",
+]);
+
+/** True if the string is one of the semantic color roles. */
+export function isColorRole(color: string): color is CuiColor {
+  return COLOR_ROLES.has(color);
+}
+
+/**
+ * Resolve a color value that may be a semantic role OR a raw CSS color.
+ * Roles map to their main token (`var(--cui-{role})`); anything else passes
+ * through unchanged. Used by paint components (Icon, Divider, Backdrop).
+ *
+ *   resolveColor("primary")  // → "var(--cui-primary)"
+ *   resolveColor("#ff0066")  // → "#ff0066"
+ */
+export function resolveColor(
+  color: string | undefined,
+  fallback = "currentColor",
+): string {
+  if (!color) return fallback;
+  return isColorRole(color) ? `var(--cui-${color})` : color;
+}
+
 export interface RGB { r: number; g: number; b: number }
 export interface HSV { h: number; s: number; v: number }
 export interface HSL { h: number; s: number; l: number }

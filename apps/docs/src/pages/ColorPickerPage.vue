@@ -18,7 +18,7 @@ const popoverVisible = ref(false);
 
 function onPickerChange(val: string) {
   inputColor.value = val;
-  popoverVisible.value = false;
+  // Keep the popover open while picking — it closes on click-outside or Escape.
 }
 
 function onHexInput(val: string | number) {

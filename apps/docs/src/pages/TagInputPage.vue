@@ -9,6 +9,7 @@ const tags1 = ref<string[]>(["vue", "typescript"]);
 const tags2 = ref<string[]>([]);
 const tags3 = ref<string[]>(["bug"]);
 const tags4 = ref<string[]>([]);
+const tags5 = ref<string[]>(["vue"]);
 
 const labelSuggestions: TagOption[] = [
   { value: "bug", label: "Bug", color: "error" },
@@ -71,6 +72,7 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
           { name: 'createText', type: 'string', default: 'Create', description: 'Text for the create option' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
           { name: 'errorMessage', type: 'string', default: '—', description: 'Error message text' },
           { name: 'noSuggestionsText', type: 'string', default: 'No suggestions', description: 'Text when no suggestions match' },
@@ -136,6 +138,23 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
             </div>
             <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
               Labels: <code class="cui-code">{{ tags3 }}</code>
+            </div>
+          </CuiFlex>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiTagInput v-model=&quot;tags&quot; rounded=&quot;none&quot; />
+<CuiTagInput v-model=&quot;tags&quot; rounded=&quot;lg&quot; />
+<CuiTagInput v-model=&quot;tags&quot; rounded=&quot;full&quot; />`">
+          <CuiFlex gap="4" class="items-start flex-wrap">
+            <div style="width: 16rem;">
+              <CuiTagInput v-model="tags5" rounded="none" label="None" placeholder="Add tag..." />
+            </div>
+            <div style="width: 16rem;">
+              <CuiTagInput v-model="tags5" rounded="lg" label="Large" placeholder="Add tag..." />
+            </div>
+            <div style="width: 16rem;">
+              <CuiTagInput v-model="tags5" rounded="full" label="Full" placeholder="Add tag..." />
             </div>
           </CuiFlex>
         </Example>

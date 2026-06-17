@@ -101,7 +101,20 @@ import "./styles/main.css";
 export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating };
 
 // Type exports
-export type { CuiButtonProps, ButtonColor, ButtonVariant, ButtonSize, ButtonRounded } from "./components/CuiButton.vue";
+export type {
+  CuiColor,
+  CuiSize,
+  CuiRounded,
+  CuiOrientation,
+  CuiVariant,
+  CuiColorOrCss,
+  HideableProps,
+  ColorableProps,
+  SizeableProps,
+  DisableableProps,
+  FormControlProps,
+} from "./types/common";
+export type { CuiButtonProps, ButtonVariant } from "./components/CuiButton.vue";
 export type { CuiButtonGroupProps, ButtonGroupOrientation } from "./components/CuiButtonGroup.vue";
 export type { CuiGridProps } from "./components/CuiGrid.vue";
 export type { CuiGridItemProps } from "./components/CuiGridItem.vue";
@@ -112,17 +125,17 @@ export type { CuiContainerProps, ContainerSize } from "./components/CuiContainer
 export type { CuiSpacerProps } from "./components/CuiSpacer.vue";
 export type { CuiRadioProps } from "./components/CuiRadio.vue";
 export type { CuiCheckboxProps } from "./components/CuiCheckbox.vue";
-export type { CuiCheckboxGroupProps, CheckboxDirection } from "./components/CuiCheckboxGroup.vue";
+export type { CuiCheckboxGroupProps } from "./components/CuiCheckboxGroup.vue";
 export { CheckboxGroupKey } from "./components/multi-select-group-context";
 export type { CheckboxGroupContext } from "./components/checkbox-context";
-export type { CuiToggleProps, ToggleSize } from "./components/CuiToggle.vue";
-export type { CuiInputProps, InputSize, InputType } from "./components/CuiInput.vue";
+export type { CuiToggleProps } from "./components/CuiToggle.vue";
+export type { CuiInputProps, InputType } from "./components/CuiInput.vue";
 export type { CuiMaskedInputProps, MaskToken } from "./components/CuiMaskedInput.vue";
 export type { CuiTextareaProps } from "./components/CuiTextarea.vue";
 export type { CuiSelectProps, SelectOption } from "./components/CuiSelect.vue";
 export type { CuiFormFieldProps, LabelPosition } from "./components/CuiFormField.vue";
-export type { CuiFieldsetProps } from "./components/CuiFieldset.vue";
-export type { CuiBadgeProps, BadgeVariant, BadgeSize, BadgeAnimation } from "./components/CuiBadge.vue";
+export type { CuiFieldsetProps, FieldsetVariant } from "./components/CuiFieldset.vue";
+export type { CuiBadgeProps, BadgeVariant, BadgeAnimation } from "./components/CuiBadge.vue";
 export type { CuiAlertProps, AlertVariant, AlertEntrance, AlertAnimation } from "./components/CuiAlert.vue";
 export type { CuiTooltipProps, TooltipTrigger } from "./components/CuiTooltip.vue";
 export { usePopover, type PopoverPlacement, type UsePopoverOptions } from "./composables/usePopover";
@@ -150,8 +163,8 @@ export type { CuiModalProps, ModalSize } from "./components/CuiModal.vue";
 export type { CuiModalHeaderProps } from "./components/CuiModalHeader.vue";
 export type { CuiModalBodyProps } from "./components/CuiModalBody.vue";
 export type { CuiModalFooterProps } from "./components/CuiModalFooter.vue";
-export type { CuiProgressProps, ProgressVariant, ProgressSize, ProgressAnimation } from "./components/CuiProgress.vue";
-export type { CuiPaginationProps, LaravelPaginatorMeta, PaginationSize } from "./components/CuiPagination.vue";
+export type { CuiProgressProps, ProgressVariant, ProgressAnimation } from "./components/CuiProgress.vue";
+export type { CuiPaginationProps, LaravelPaginatorMeta } from "./components/CuiPagination.vue";
 export type { CuiBreadcrumbProps } from "./components/CuiBreadcrumb.vue";
 export type { CuiBreadcrumbItemProps } from "./components/CuiBreadcrumbItem.vue";
 export type { CuiCardProps, CardVariant } from "./components/CuiCard.vue";
@@ -165,24 +178,24 @@ export type { CuiSlideoverProps, SlideoverSide, SlideoverSize } from "./componen
 export type { CuiSkeletonProps, SkeletonVariant, SkeletonAnimation, SkeletonRounded } from "./components/CuiSkeleton.vue";
 export type { CuiPopoverProps, PopoverTrigger } from "./components/CuiPopover.vue";
 export type { CuiContextMenuProps } from "./components/CuiContextMenu.vue";
-export type { CuiEmptyStateProps, EmptyStateSize } from "./components/CuiEmptyState.vue";
-export type { CuiAvatarProps, AvatarSize, AvatarShape, AvatarStatus, AvatarStatusAnimation } from "./components/CuiAvatar.vue";
+export type { CuiEmptyStateProps } from "./components/CuiEmptyState.vue";
+export type { CuiAvatarProps, AvatarShape, AvatarStatus, AvatarStatusAnimation } from "./components/CuiAvatar.vue";
 export type { CuiAvatarGroupProps } from "./components/CuiAvatarGroup.vue";
-export type { CuiStepperProps, StepperOrientation, StepperSize, StepStatus, StepDef } from "./components/CuiStepper.vue";
-export type { CuiInputStepperProps, InputStepperSize, InputStepperOrientation } from "./components/CuiInputStepper.vue";
-export type { CuiSliderProps, SliderSize } from "./components/CuiSlider.vue";
-export type { CuiSpinnerProps, SpinnerSize, SpinnerVariant } from "./components/CuiSpinner.vue";
+export type { CuiStepperProps, StepperOrientation, StepStatus, StepDef } from "./components/CuiStepper.vue";
+export type { CuiInputStepperProps, InputStepperOrientation } from "./components/CuiInputStepper.vue";
+export type { CuiSliderProps } from "./components/CuiSlider.vue";
+export type { CuiSpinnerProps, SpinnerVariant } from "./components/CuiSpinner.vue";
 export type { CuiBannerProps, BannerPosition, BannerVariant } from "./components/CuiBanner.vue";
 export type { CuiDividerProps, DividerOrientation, DividerLabelPosition, DividerVariant } from "./components/CuiDivider.vue";
-export type { CuiCopyButtonProps, CopyButtonSize } from "./components/CuiCopyButton.vue";
+export type { CuiCopyButtonProps } from "./components/CuiCopyButton.vue";
 export { useCopyToClipboard } from "./composables/useCopyToClipboard";
 export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle } from "./composables/useScrollShadows";
-export type { CuiResizablePanelsProps, ResizableDirection } from "./components/CuiResizablePanels.vue";
+export type { CuiResizablePanelsProps } from "./components/CuiResizablePanels.vue";
 export type { CuiConfirmDialogProps, ConfirmDialogVariant } from "./components/CuiConfirmDialog.vue";
 export type { CuiTimelineProps } from "./components/CuiTimeline.vue";
 export type { CuiTimelineItemProps } from "./components/CuiTimelineItem.vue";
-export type { CuiKbdProps, KbdSize } from "./components/CuiKbd.vue";
-export type { CuiColorPickerProps, ColorPickerSize, PresetPalette } from "./components/CuiColorPicker.vue";
+export type { CuiKbdProps } from "./components/CuiKbd.vue";
+export type { CuiColorPickerProps, PresetPalette } from "./components/CuiColorPicker.vue";
 export type { CuiDatePickerProps, DatePickerMode, DatePickerValueType, DatePickerFillDay } from "./components/CuiDatePicker.vue";
 export type { DisabledDateRange } from "./utils/date";
 export { formatDate, parseFormattedDate, dateToIso, isoToDate } from "./utils/date";
@@ -193,8 +206,8 @@ export type { CuiTimePickerProps, TimePickerFormat } from "./components/CuiTimeP
 export type { CuiTagInputProps, TagOption } from "./components/CuiTagInput.vue";
 export type { CuiFileUploadProps, FileEntry } from "./components/CuiFileUpload.vue";
 export type { CuiTreeViewProps, TreeNode } from "./components/CuiTreeView.vue";
-export type { CuiCodeBlockProps, CodeBlockSize } from "./components/CuiCodeBlock.vue";
-export type { CuiRatingProps, RatingSize } from "./components/CuiRating.vue";
+export type { CuiCodeBlockProps } from "./components/CuiCodeBlock.vue";
+export type { CuiRatingProps } from "./components/CuiRating.vue";
 export type { RGB, HSV, HSL, RGBA, ColorFormat } from "./utils/color";
 export { parseColor, formatColor, rgbToHex, hexToRgb, rgbToHsl, hslToRgb, hsvToRgb, rgbToHsv, PALETTE_BASIC, PALETTE_MATERIAL, PALETTE_TAILWIND, getThemePalette } from "./utils/color";
 export type { CuiTableProps } from "./components/CuiTable.vue";
@@ -225,10 +238,10 @@ export { useDataGrid, provideDataGrid, useDataGridState } from "./composables/us
 export { useDataGridInertia, type UseDataGridInertiaOptions } from "./composables/useDataGridInertia";
 export { useDataGridViews, localStorageViewAdapter, type UseDataGridViewsOptions } from "./composables/useDataGridViews";
 export { AccordionContextKey } from "./components/accordion-context";
-export type { CuiToggleGroupProps, ToggleDirection } from "./components/CuiToggleGroup.vue";
+export type { CuiToggleGroupProps } from "./components/CuiToggleGroup.vue";
 export { ToggleGroupKey } from "./components/multi-select-group-context";
 export type { ToggleGroupContext } from "./components/toggle-context";
-export type { CuiRadioGroupProps, RadioDirection } from "./components/CuiRadioGroup.vue";
+export type { CuiRadioGroupProps } from "./components/CuiRadioGroup.vue";
 export { RadioGroupKey } from "./components/radio-context";
 export type { RadioGroupContext } from "./components/radio-context";
 export type { CleanUIOptions, CleanUIPlugin } from "./types";
@@ -241,6 +254,8 @@ export type {
   GridSpan,
   FlexDirection,
   FlexWrap,
+  FlexAlign,
+  FlexJustify,
 } from "./types/grid";
 
 // Composable exports

@@ -58,3 +58,15 @@ export type FlexDirection = "row" | "row-reverse" | "col" | "col-reverse";
 
 // Flex wrap
 export type FlexWrap = "wrap" | "wrap-reverse" | "nowrap";
+
+// Flex align-items (cross-axis alignment)
+export type FlexAlign = "start" | "center" | "end" | "stretch" | "baseline";
+
+// Flex justify-content (main-axis distribution)
+export type FlexJustify =
+  | "start"
+  | "center"
+  | "end"
+  | "between"
+  | "around"
+  | "evenly";

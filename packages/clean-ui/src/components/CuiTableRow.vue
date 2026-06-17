@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import type { HideableProps } from "../types/common";
 
-export interface CuiTableRowProps {
+export interface CuiTableRowProps extends HideableProps {
   /** Highlight row with primary-bg tint */
   selected?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiTableRowProps>(), {

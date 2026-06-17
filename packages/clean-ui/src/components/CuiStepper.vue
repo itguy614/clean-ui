@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, provide, ref } from "vue";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
 export type StepperOrientation = "horizontal" | "vertical";
-export type StepperSize = "sm" | "md" | "lg";
 export type StepStatus = "complete" | "current" | "upcoming" | "error";
 
 export interface StepDef {
@@ -17,21 +18,17 @@ export interface StepDef {
   error?: boolean;
 }
 
-export interface CuiStepperProps {
+export interface CuiStepperProps extends HideableProps, SizeableProps {
   /** Step definitions */
   steps: StepDef[];
   /** Current active step (0-based index) */
   modelValue?: number;
   /** Orientation */
   orientation?: StepperOrientation;
-  /** Size */
-  size?: StepperSize;
   /** Allow clicking completed steps to go back */
   clickable?: boolean;
   /** Linear mode — can only progress forward, no skipping */
   linear?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiStepperProps>(), {
@@ -61,7 +58,8 @@ function onStepClick(index: number) {
   emit("update:modelValue", index);
 }
 
-const sizeConfig: Record<StepperSize, {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   circle: string;
   font: string;
   iconSize: string;
@@ -75,7 +73,7 @@ const sizeConfig: Record<StepperSize, {
   lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "1rem" },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 function circleStyle(status: StepStatus) {
   const s: Record<string, string> = {

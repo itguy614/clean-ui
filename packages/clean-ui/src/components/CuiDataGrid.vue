@@ -21,8 +21,9 @@ import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
+import type { HideableProps } from "../types/common";
 
-export interface CuiDataGridProps {
+export interface CuiDataGridProps extends HideableProps {
   /** Column definitions */
   columns: DataGridColumn[];
   /** Data source — array for client-side, PaginatedData for server-side */
@@ -71,8 +72,6 @@ export interface CuiDataGridProps {
   initialView?: DataGridViewConfig;
   /** Hydrate state from URL query params on init */
   hydrateUrl?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
   /**
    * Enable row virtualization for large datasets.
    * Requires maxHeight to be set.

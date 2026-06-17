@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { inject } from "vue";
 import { DropdownContextKey } from "./dropdown-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiDropdownItemProps {
+export interface CuiDropdownItemProps extends HideableProps, DisableableProps {
   /** Keyboard shortcut hint (displayed right-aligned) */
   shortcut?: string;
   /** Description text below the label */
   description?: string;
-  /** Disabled state */
-  disabled?: boolean;
   /** Close menu on select (default true) */
   closeOnSelect?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownItemProps>(), {

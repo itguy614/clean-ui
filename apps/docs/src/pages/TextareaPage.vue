@@ -28,8 +28,9 @@ const errorVal = ref("");
         :props="[
           { name: 'v-model', type: 'string', default: 'empty string', description: 'Textarea value' },
           { name: 'placeholder', type: 'string', default: '-', description: 'Placeholder text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Focus border color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Focus border color role' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Text size (matches input/button scale)' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'rows', type: 'number', default: '3', description: 'Initial/minimum visible rows' },
           { name: 'autoResize', type: 'boolean', default: 'false', description: 'Grow height to fit content' },
           { name: 'maxRows', type: 'number', default: '-', description: 'Max rows when auto-resizing' },
@@ -117,6 +118,15 @@ const errorVal = ref("");
             <CuiTextarea placeholder="Medium (default)" size="md" :rows="2" />
             <CuiTextarea placeholder="Large" size="lg" :rows="2" />
             <CuiTextarea placeholder="Extra large" size="xl" :rows="2" />
+          </CuiStack>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiTextarea rounded=&quot;none&quot; placeholder=&quot;Square&quot; />
+<CuiTextarea rounded=&quot;lg&quot; placeholder=&quot;Large radius&quot; />`">
+          <CuiStack spacing="3" class="max-w-lg">
+            <CuiTextarea rounded="none" placeholder="Square (none)" :rows="2" />
+            <CuiTextarea rounded="lg" placeholder="Large radius" :rows="2" />
           </CuiStack>
         </Example>
 

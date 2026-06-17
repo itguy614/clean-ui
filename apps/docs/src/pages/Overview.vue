@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-  CuiCard, CuiCardBody, CuiGrid, CuiStack, CuiIcon, CuiBadge, CuiFlex,
+  CuiCard, CuiCardHeader, CuiCardBody, CuiGrid, CuiStack, CuiFlex, CuiIcon, CuiBadge,
 } from "@itguy614/clean-ui";
 </script>
 
@@ -17,67 +17,67 @@ import {
       <CuiCardBody>
         <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Key Features</h2>
         <CuiGrid :cols="{ sm: 1, md: 2, lg: 3 }" gap="6">
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="palette" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">Token-Based Design</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              CSS custom properties for all colors, spacing, and typography. Override any
-              <code class="cui-code" style="font-size: 0.8125rem;">--cui-*</code> token at any scope.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="palette" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">Token-Based Design</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                CSS custom properties for all colors, spacing, and typography. Override any
+                <code class="cui-code" style="font-size: 0.8125rem;">--cui-*</code> token at any scope.
+              </p>
+            </CuiStack>
+          </CuiFlex>
 
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="swatches" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">8 Color Themes</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              Mono, Navy, Forest, Amber, Azure, Teal, Violet, and Ruby. Apply to any ancestor via CSS class.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="swatches" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">8 Color Themes</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Mono, Navy, Forest, Amber, Azure, Teal, Violet, and Ruby. Apply to any ancestor via CSS class.
+              </p>
+            </CuiStack>
+          </CuiFlex>
 
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="moon" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">Dark Mode</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              Every component supports dark mode. Semantic tokens auto-swap so themes work in both modes.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="moon" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">Dark Mode</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Every component supports dark mode. Semantic tokens auto-swap so themes work in both modes.
+              </p>
+            </CuiStack>
+          </CuiFlex>
 
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="eye" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">WCAG AA Accessible</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              4.5:1 text contrast, 3:1 non-text contrast, keyboard navigation, ARIA attributes, and focus rings.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="eye" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">WCAG AA Accessible</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                4.5:1 text contrast, 3:1 non-text contrast, keyboard navigation, ARIA attributes, and focus rings.
+              </p>
+            </CuiStack>
+          </CuiFlex>
 
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="code" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">TypeScript</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              Full type definitions with autocomplete for all props, events, and slots.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="code" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">TypeScript</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Full type definitions with autocomplete for all props, events, and slots.
+              </p>
+            </CuiStack>
+          </CuiFlex>
 
-          <CuiStack spacing="1">
-            <CuiFlex align="center" gap="2">
-              <CuiIcon name="puzzle-piece" size="1.25rem" color="var(--cui-primary)" />
-              <h3 style="font-weight: 500;">Tailwind CSS v4 Compatible</h3>
-            </CuiFlex>
-            <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
-              Color scales registered via <code class="cui-code" style="font-size: 0.8125rem;">@theme</code>
-              so Tailwind utilities work alongside CUI components.
-            </p>
-          </CuiStack>
+          <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="puzzle-piece" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">Tailwind CSS v4 Compatible</h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Color scales registered via <code class="cui-code" style="font-size: 0.8125rem;">@theme</code>
+                so Tailwind utilities work alongside CUI components.
+              </p>
+            </CuiStack>
+          </CuiFlex>
         </CuiGrid>
       </CuiCardBody>
     </CuiCard>
@@ -86,11 +86,12 @@ import {
       <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Components</h2>
       <CuiGrid :cols="{ sm: 1, md: 2, lg: 3 }" gap="4">
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Layout</h3>
+          <CuiCardHeader title="Layout">
+            <template #actions>
               <CuiBadge size="sm">7</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Grid, Flex, Stack, Container, Spacer, Divider, Resizable Panels
             </p>
@@ -98,11 +99,12 @@ import {
         </CuiCard>
 
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Form Controls</h3>
+          <CuiCardHeader title="Form Controls">
+            <template #actions>
               <CuiBadge size="sm">16</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Input, Textarea, Select, Checkbox, Radio, Toggle, Slider, Rating, Combobox, Date/Time Pickers, and more
             </p>
@@ -110,11 +112,12 @@ import {
         </CuiCard>
 
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Data Display</h3>
+          <CuiCardHeader title="Data Display">
+            <template #actions>
               <CuiBadge size="sm">9</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Table, DataGrid, Card, Accordion, Badge, Progress, Timeline, Tree View, Code Block
             </p>
@@ -122,11 +125,12 @@ import {
         </CuiCard>
 
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Feedback</h3>
+          <CuiCardHeader title="Feedback">
+            <template #actions>
               <CuiBadge size="sm">7</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Alert, Toast, Banner, Tooltip, Spinner, Skeleton, Empty State
             </p>
@@ -134,11 +138,12 @@ import {
         </CuiCard>
 
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Navigation</h3>
+          <CuiCardHeader title="Navigation">
+            <template #actions>
               <CuiBadge size="sm">5</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Tabs, Breadcrumb, Pagination, Stepper, Dropdown Menu
             </p>
@@ -146,11 +151,12 @@ import {
         </CuiCard>
 
         <CuiCard variant="outline">
-          <CuiCardBody>
-            <CuiFlex align="center" gap="2" style="margin-bottom: 0.5rem;">
-              <h3 style="font-weight: 500;">Overlay</h3>
+          <CuiCardHeader title="Overlay">
+            <template #actions>
               <CuiBadge size="sm">5</CuiBadge>
-            </CuiFlex>
+            </template>
+          </CuiCardHeader>
+          <CuiCardBody>
             <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
               Modal, Slideover, Popover, Context Menu, Confirm Dialog
             </p>

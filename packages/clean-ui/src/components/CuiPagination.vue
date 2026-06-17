@@ -2,7 +2,8 @@
 import { computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiSelect from "./CuiSelect.vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -13,9 +14,7 @@ export interface LaravelPaginatorMeta {
   to: number | null;
 }
 
-export type PaginationSize = "sm" | "md";
-
-export interface CuiPaginationProps {
+export interface CuiPaginationProps extends HideableProps, ColorableProps, SizeableProps {
   /** Laravel paginator meta object */
   meta?: LaravelPaginatorMeta;
   /** Current page (override or standalone) */
@@ -32,14 +31,8 @@ export interface CuiPaginationProps {
   hidePerPage?: boolean;
   /** Hide the "Showing X to Y of Z" info text */
   hideInfo?: boolean;
-  /** Color role for active page */
-  color?: ButtonColor;
-  /** Size */
-  size?: PaginationSize;
   /** Max page buttons to show before truncating */
   maxButtons?: number;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiPaginationProps>(), {
@@ -56,6 +49,9 @@ const emit = defineEmits<{
   "update:currentPage": [value: number];
   "update:perPage": [value: number];
 }>();
+
+const SUPPORTED_SIZES = ["sm", "md"] as const;
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 
 // Resolve values from meta or individual props
 const page = computed(() => props.currentPage ?? props.meta?.current_page ?? 1);
@@ -153,7 +149,7 @@ const perPageSelectOptions = computed(() =>
   <div
     v-show="!hidden"
     class="cui-pagination"
-    :class="`cui-pagination--${size}`"
+    :class="`cui-pagination--${clampedSize}`"
   >
     <!-- Info text -->
     <div v-if="!hideInfo && totalItems > 0" class="cui-pagination__info">
@@ -166,7 +162,7 @@ const perPageSelectOptions = computed(() =>
         <CuiSelect
           :model-value="itemsPerPage"
           :options="perPageSelectOptions"
-          :size="size === 'sm' ? 'xs' : 'sm'"
+          :size="clampedSize === 'sm' ? 'xs' : 'sm'"
           @update:model-value="onPerPageChange"
         />
       </div>
@@ -181,7 +177,7 @@ const perPageSelectOptions = computed(() =>
           aria-label="Previous page"
           @click="goTo(page - 1)"
         >
-          <CuiIcon name="caret-left" :size="size === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon name="caret-left" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
 
         <!-- Page numbers -->
@@ -215,7 +211,7 @@ const perPageSelectOptions = computed(() =>
           aria-label="Next page"
           @click="goTo(page + 1)"
         >
-          <CuiIcon name="caret-right" :size="size === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon name="caret-right" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
       </nav>
     </div>

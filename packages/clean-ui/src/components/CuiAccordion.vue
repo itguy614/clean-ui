@@ -1,19 +1,15 @@
 <script setup lang="ts">
 import { ref, provide, toRef, watch, computed } from "vue";
 import { AccordionContextKey } from "./accordion-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps, ColorableProps } from "../types/common";
 
-export interface CuiAccordionProps {
+export interface CuiAccordionProps extends HideableProps, ColorableProps {
   /** Array of open item values (v-model) */
   modelValue?: string[];
   /** Allow multiple items open at once */
   multiple?: boolean;
-  /** Color role for active indicator */
-  color?: ButtonColor;
   /** Disable expand/collapse animation */
   noAnimation?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAccordionProps>(), {

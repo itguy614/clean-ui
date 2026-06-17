@@ -2,12 +2,11 @@
 import { inject, computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownRadioKey } from "./dropdown-context";
+import type { DisableableProps } from "../types/common";
 
-export interface CuiDropdownRadioItemProps {
+export interface CuiDropdownRadioItemProps extends DisableableProps {
   /** Value for this radio item */
   value: string | number;
-  /** Disabled state */
-  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownRadioItemProps>(), {

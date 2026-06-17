@@ -2,9 +2,9 @@
 import { computed, inject, ref } from "vue";
 import { CheckboxGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
-export interface CuiCheckboxProps {
+export interface CuiCheckboxProps extends HideableProps, ColorableProps, DisableableProps {
   /** The value this checkbox represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
@@ -13,12 +13,8 @@ export interface CuiCheckboxProps {
   label?: string;
   /** Description text (or use #description slot) */
   description?: string;
-  /** Color role — overrides group color */
-  color?: ButtonColor;
   /** Indeterminate state (visual only, e.g. "select all" partial) */
   indeterminate?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
   /** Hide the component */

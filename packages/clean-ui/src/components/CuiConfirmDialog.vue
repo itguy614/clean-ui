@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
@@ -10,9 +10,9 @@ import CuiIcon from "./CuiIcon.vue";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
-export interface CuiConfirmDialogProps {
-  /** Control visibility */
-  modelValue?: boolean;
+export interface CuiConfirmDialogProps extends HideableProps {
+  /** Control visibility (v-model:visible) */
+  visible?: boolean;
   /** Dialog title */
   title?: string;
   /** Confirmation message */
@@ -31,12 +31,10 @@ export interface CuiConfirmDialogProps {
   icon?: string;
   /** Loading state on confirm button */
   loading?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
-  modelValue: false,
+  visible: false,
   title: "Are you sure?",
   variant: "danger",
   confirmText: "Confirm",
@@ -46,7 +44,7 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
 });
 
 const emit = defineEmits<{
-  "update:modelValue": [value: boolean];
+  "update:visible": [value: boolean];
   confirm: [];
   cancel: [];
 }>();
@@ -54,13 +52,13 @@ const emit = defineEmits<{
 const typedWord = ref("");
 
 watch(
-  () => props.modelValue,
+  () => props.visible,
   (open) => {
     if (open) typedWord.value = "";
   },
 );
 
-const variantConfig: Record<ConfirmDialogVariant, { color: ButtonColor; icon: string }> = {
+const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: string }> = {
   danger: { color: "error", icon: "warning-circle" },
   warning: { color: "warning", icon: "warning" },
   info: { color: "info", icon: "info" },
@@ -78,7 +76,7 @@ const defaultPrompt = computed(() =>
 );
 
 function close() {
-  emit("update:modelValue", false);
+  emit("update:visible", false);
 }
 
 function onConfirm() {
@@ -93,7 +91,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal v-show="!hidden" :open="modelValue" size="sm" no-close-button @update:open="emit('update:modelValue', $event)">
+  <CuiModal v-show="!hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
     <!-- Custom header with icon badge -->
     <div
       :style="{

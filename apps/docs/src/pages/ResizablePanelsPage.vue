@@ -23,7 +23,7 @@ const size1 = ref(50);
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'direction', type: 'horizontal | vertical', default: 'horizontal', description: 'Split direction' },
+          { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Split orientation' },
           { name: 'initialSize', type: 'number', default: '50', description: 'Initial first panel size (% of total)' },
           { name: 'minFirst', type: 'number', default: '100', description: 'Minimum first panel size (px)' },
           { name: 'minSecond', type: 'number', default: '100', description: 'Minimum second panel size (px)' },
@@ -85,12 +85,12 @@ const size1 = ref(50);
         </Example>
 
         <!-- Vertical -->
-        <Example title="Vertical Split" :code="`<CuiResizablePanels direction=&quot;vertical&quot; :initial-size=&quot;40&quot;>
+        <Example title="Vertical Split" :code="`<CuiResizablePanels orientation=&quot;vertical&quot; :initial-size=&quot;40&quot;>
   <template #first>Top panel</template>
   <template #second>Bottom panel</template>
 </CuiResizablePanels>`">
           <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
-            <CuiResizablePanels direction="vertical" :initial-size="40">
+            <CuiResizablePanels orientation="vertical" :initial-size="40">
               <template #first>
                 <div style="padding: 1rem; height: 100%;">
                   <div class="text-sm font-semibold">Top Panel</div>
@@ -152,7 +152,7 @@ const size1 = ref(50);
 <CuiResizablePanels :initial-size=&quot;35&quot; :min-first=&quot;150&quot;>
   <template #first><!-- File Explorer --></template>
   <template #second>
-    <CuiResizablePanels direction=&quot;vertical&quot; :initial-size=&quot;70&quot;>
+    <CuiResizablePanels orientation=&quot;vertical&quot; :initial-size=&quot;70&quot;>
       <template #first><!-- Editor --></template>
       <template #second><!-- Terminal --></template>
     </CuiResizablePanels>
@@ -169,7 +169,7 @@ const size1 = ref(50);
                 </div>
               </template>
               <template #second>
-                <CuiResizablePanels direction="vertical" :initial-size="70">
+                <CuiResizablePanels orientation="vertical" :initial-size="70">
                   <template #first>
                     <div style="padding: 0.75rem; height: 100%; font-family: var(--cui-font-mono, monospace); font-size: 0.75rem; overflow: auto;">
                       <div style="color: var(--cui-text-tertiary); margin-bottom: 0.5rem;">// Editor pane</div>

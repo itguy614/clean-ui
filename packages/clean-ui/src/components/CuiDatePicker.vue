@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
 import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
@@ -11,12 +11,13 @@ import {
   isoToDate, dateToIso, isDateDisabled,
   type DisabledDateRange,
 } from "../utils/date";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type DatePickerMode = "date" | "month";
 export type DatePickerValueType = "iso" | "date";
 export type DatePickerFillDay = "first" | "last";
 
-export interface CuiDatePickerProps {
+export interface CuiDatePickerProps extends HideableProps, DisableableProps {
   /** Current value */
   modelValue?: string | Date | null;
   /** Display format pattern (MM/DD/YYYY, DD-MMM-YYYY, etc.) */
@@ -41,10 +42,6 @@ export interface CuiDatePickerProps {
   placeholder?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
   /** Label */
   label?: string;
 }
@@ -268,6 +265,21 @@ function onDayHover(e: MouseEvent) {
   }
 }
 
+// Expose imperative handle
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const maskedInputRef = useTemplateRef<InstanceType<typeof CuiMaskedInput>>("maskedInput");
+
+function focus(opts?: FocusOptions) {
+  if (maskedInputRef.value) maskedInputRef.value.focus();
+  else rootEl.value?.focus(opts);
+}
+
+function blur() {
+  maskedInputRef.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
+
 // Open popover resets view mode
 watch(popoverVisible, (open) => {
   if (open) {
@@ -281,7 +293,7 @@ watch(popoverVisible, (open) => {
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{
@@ -305,6 +317,7 @@ watch(popoverVisible, (open) => {
     >
       <!-- Trigger: masked input -->
       <CuiMaskedInput
+        ref="maskedInput"
         :model-value="inputRaw"
         :mask="mask"
         :placeholder="inputPlaceholder"

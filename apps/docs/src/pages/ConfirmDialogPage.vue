@@ -64,7 +64,7 @@ function onLoadingConfirm() {
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'modelValue', type: 'boolean', default: 'false', description: 'Control visibility (v-model)' },
+          { name: 'visible', type: 'boolean', default: 'false', description: 'Control visibility (v-model:visible)' },
           { name: 'title', type: 'string', default: 'Are you sure?', description: 'Dialog title' },
           { name: 'message', type: 'string', default: '—', description: 'Confirmation message' },
           { name: 'variant', type: 'danger | warning | info', default: 'danger', description: 'Affects icon and confirm button color' },
@@ -83,7 +83,7 @@ function onLoadingConfirm() {
       <h2 class="mb-4 text-2xl font-semibold">Events</h2>
       <EventTable
         :events="[
-          { name: 'update:modelValue', payload: 'boolean', description: 'Controls dialog visibility (v-model)' },
+          { name: 'update:visible', payload: 'boolean', description: 'Controls dialog visibility (v-model:visible)' },
           { name: 'confirm', payload: '—', description: 'Fires when the confirm button is clicked' },
           { name: 'cancel', payload: '—', description: 'Fires when the cancel button is clicked' },
         ]"
@@ -99,14 +99,14 @@ function onLoadingConfirm() {
 
         <!-- Basic -->
         <Example title="Basic Confirmation" :code="`<CuiConfirmDialog
-  v-model=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Discard changes?&quot;
   message=&quot;You have unsaved changes...&quot;
   @confirm=&quot;onConfirm&quot;
 />`">
           <CuiButton variant="outline" @click="showBasic = true">Discard Changes</CuiButton>
           <CuiConfirmDialog
-            v-model="showBasic"
+            v-model:visible="showBasic"
             title="Discard changes?"
             message="You have unsaved changes that will be lost. This action cannot be undone."
             confirm-text="Discard"
@@ -116,7 +116,7 @@ function onLoadingConfirm() {
 
         <!-- Danger -->
         <Example title="Danger — Delete Item" :code="`<CuiConfirmDialog
-  v-model=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Delete account?&quot;
   message=&quot;This will permanently delete your account and all associated data.&quot;
   variant=&quot;danger&quot;
@@ -125,7 +125,7 @@ function onLoadingConfirm() {
 />`">
           <CuiButton variant="solid" color="error" @click="showDanger = true">Delete Account</CuiButton>
           <CuiConfirmDialog
-            v-model="showDanger"
+            v-model:visible="showDanger"
             title="Delete account?"
             message="This will permanently delete your account and all associated data. This action cannot be reversed."
             variant="danger"
@@ -136,7 +136,7 @@ function onLoadingConfirm() {
 
         <!-- Warning -->
         <Example title="Warning Variant" :code="`<CuiConfirmDialog
-  v-model=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Reset to defaults?&quot;
   message=&quot;All your custom settings will be restored to their default values.&quot;
   variant=&quot;warning&quot;
@@ -145,7 +145,7 @@ function onLoadingConfirm() {
 />`">
           <CuiButton variant="outline" color="warning" @click="showWarning = true">Reset Settings</CuiButton>
           <CuiConfirmDialog
-            v-model="showWarning"
+            v-model:visible="showWarning"
             title="Reset to defaults?"
             message="All your custom settings will be restored to their default values."
             variant="warning"
@@ -161,7 +161,7 @@ function onLoadingConfirm() {
 />`">
           <CuiButton variant="solid" color="error" @click="showTyped = true">Delete Project</CuiButton>
           <CuiConfirmDialog
-            v-model="showTyped"
+            v-model:visible="showTyped"
             title="Delete project?"
             message="This will permanently delete the project 'my-app' and all of its resources including databases, deployments, and environment variables."
             variant="danger"
@@ -173,7 +173,7 @@ function onLoadingConfirm() {
 
         <!-- Custom prompt -->
         <Example title="Custom Typed Prompt" :code="`<CuiConfirmDialog
-  v-model=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Transfer ownership?&quot;
   message=&quot;You are about to transfer ownership of this organization.&quot;
   variant=&quot;danger&quot;
@@ -184,7 +184,7 @@ function onLoadingConfirm() {
 />`">
           <CuiButton variant="outline" color="error" @click="showCustom = true">Transfer Ownership</CuiButton>
           <CuiConfirmDialog
-            v-model="showCustom"
+            v-model:visible="showCustom"
             title="Transfer ownership?"
             message="You are about to transfer ownership of this organization. You will lose all admin privileges."
             variant="danger"
@@ -197,7 +197,7 @@ function onLoadingConfirm() {
 
         <!-- Loading state -->
         <Example title="With Loading State" :code="`<CuiConfirmDialog
-  v-model=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Delete item?&quot;
   message=&quot;This will remove the item permanently.&quot;
   variant=&quot;danger&quot;
@@ -207,7 +207,7 @@ function onLoadingConfirm() {
 />`">
           <CuiButton variant="outline" @click="showLoading = true">Delete with Loading</CuiButton>
           <CuiConfirmDialog
-            v-model="showLoading"
+            v-model:visible="showLoading"
             title="Delete item?"
             message="This will remove the item permanently."
             variant="danger"

@@ -31,7 +31,7 @@ const temp = ref(72);
           { name: 'max', type: 'number', default: '100', description: 'Maximum value' },
           { name: 'step', type: 'number', default: '1', description: 'Step increment' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Track and thumb size' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'showValue', type: 'boolean', default: 'false', description: 'Show current value' },

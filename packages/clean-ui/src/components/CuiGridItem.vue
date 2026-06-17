@@ -3,14 +3,13 @@ import { computed } from "vue";
 import { useBreakpoint } from "../composables/useBreakpoint";
 import { resolveResponsive } from "../utils/responsive";
 import type { GridSpan, ResponsiveValue } from "../types/grid";
+import type { HideableProps } from "../types/common";
 
-export interface CuiGridItemProps {
+export interface CuiGridItemProps extends HideableProps {
   /** Number of columns to span */
   colSpan?: ResponsiveValue<GridSpan>;
   /** Number of rows to span */
   rowSpan?: ResponsiveValue<GridSpan>;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiGridItemProps>(), {

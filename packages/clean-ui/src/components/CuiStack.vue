@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import CuiFlex from "./CuiFlex.vue";
 import type { ResponsiveValue, TailwindSpacing } from "../types/grid";
+import type { CuiOrientation, HideableProps } from "../types/common";
 
-export interface CuiStackProps {
-  /** Stack direction: vertical (column) or horizontal (row) */
-  direction?: "vertical" | "horizontal";
+export interface CuiStackProps extends HideableProps {
+  /** Stack orientation: vertical (column) or horizontal (row) */
+  orientation?: CuiOrientation;
   /** Spacing between items (Tailwind spacing scale) */
   spacing?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode */
   debug?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiStackProps>(), {
-  direction: "vertical",
+  orientation: "vertical",
   spacing: "4",
   debug: false,
   hidden: false,
@@ -24,7 +23,7 @@ const props = withDefaults(defineProps<CuiStackProps>(), {
 <template>
   <CuiFlex
     v-show="!hidden"
-    :direction="direction === 'vertical' ? 'col' : 'row'"
+    :direction="orientation === 'vertical' ? 'col' : 'row'"
     :gap="spacing"
     :debug="debug"
     wrap="nowrap"

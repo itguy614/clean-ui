@@ -103,10 +103,11 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           { name: 'placeholder', type: 'string', default: 'Search...', description: 'Placeholder text' },
           { name: 'noResultsText', type: 'string', default: 'No results found', description: 'Text when no options match' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'label', type: 'string', default: '—', description: 'Label text' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
           { name: 'errorMessage', type: 'string', default: '—', description: 'Error message' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'External loading state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
@@ -148,6 +149,23 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
             </div>
             <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
               Selected: <code class="cui-code">{{ selectedFruits }}</code>
+            </div>
+          </CuiFlex>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiCombobox v-model=&quot;value&quot; :options=&quot;fruits&quot; rounded=&quot;none&quot; />
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;fruits&quot; rounded=&quot;lg&quot; />
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;fruits&quot; rounded=&quot;full&quot; />`">
+          <CuiFlex gap="4" class="items-start flex-wrap">
+            <div style="width: 14rem;">
+              <CuiCombobox v-model="selectedFruit" :options="fruits" rounded="none" label="None" placeholder="Pick a fruit..." />
+            </div>
+            <div style="width: 14rem;">
+              <CuiCombobox v-model="selectedFruit" :options="fruits" rounded="lg" label="Large" placeholder="Pick a fruit..." />
+            </div>
+            <div style="width: 14rem;">
+              <CuiCombobox v-model="selectedFruit" :options="fruits" rounded="full" label="Full" placeholder="Pick a fruit..." />
             </div>
           </CuiFlex>
         </Example>

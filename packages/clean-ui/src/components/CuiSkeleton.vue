@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps } from "../types/common";
 
 export type SkeletonVariant = "text" | "rectangle" | "circle";
 export type SkeletonAnimation = "shimmer" | "pulse" | "none";
 export type SkeletonRounded = "none" | "sm" | "md" | "lg" | "full";
 
-export interface CuiSkeletonProps {
+export interface CuiSkeletonProps extends HideableProps {
   /** Shape variant */
   variant?: SkeletonVariant;
   /** Animation style */
@@ -22,8 +23,6 @@ export interface CuiSkeletonProps {
   size?: string;
   /** Border radius (rectangle variant only; circle is always full) */
   rounded?: SkeletonRounded;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSkeletonProps>(), {

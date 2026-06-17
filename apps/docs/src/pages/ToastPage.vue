@@ -126,7 +126,7 @@ function floodTest() {
         :props="[
           { name: 'title', type: 'string', default: '-', description: 'Title text' },
           { name: 'description', type: 'string', default: '-', description: 'Description text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role with auto-icon' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role with auto-icon' },
           { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show X dismiss button' },
           { name: 'autoDismiss', type: 'number', default: '5000', description: 'Auto-dismiss after N ms (0 to disable)' },
           { name: 'showProgress', type: 'boolean', default: 'true', description: 'Show countdown progress bar' },

@@ -26,7 +26,7 @@ import Example from "../components/Example.vue";
       <h2 class="mb-4 text-2xl font-semibold">CuiTimelineItem Props</h2>
       <PropTable
         :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color for the dot/icon' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color for the dot/icon' },
           { name: 'icon', type: 'string', default: '—', description: 'Phosphor icon name (replaces the dot)' },
           { name: 'title', type: 'string', default: '—', description: 'Title text' },
           { name: 'timestamp', type: 'string', default: '—', description: 'Timestamp or meta text' },

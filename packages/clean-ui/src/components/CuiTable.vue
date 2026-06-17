@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, provide, ref, toRef } from "vue";
-import { TableContextKey, type TableSize } from "./table-context";
+import { computed, provide, ref } from "vue";
+import { TableContextKey } from "./table-context";
+import type { SizeableProps, HideableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import { useScrollShadows, scrollShadowBottomStyle, scrollShadowRightStyle } from "../composables/useScrollShadows";
 
-export interface CuiTableProps {
-  /** Cell padding scale */
-  size?: TableSize;
+export interface CuiTableProps extends HideableProps, SizeableProps {
   /** Alternating row backgrounds */
   striped?: boolean;
   /** Row hover highlight */
@@ -20,8 +20,6 @@ export interface CuiTableProps {
   maxHeight?: string;
   /** Min width — forces horizontal scrolling when content overflows (e.g., "1200px") */
   minWidth?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTableProps>(), {
@@ -34,14 +32,17 @@ const props = withDefaults(defineProps<CuiTableProps>(), {
   hidden: false,
 });
 
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+
 provide(TableContextKey, {
-  size: toRef(props, "size"),
-  stickyHeader: toRef(props, "stickyHeader"),
+  size: clampedSize,
+  stickyHeader: computed(() => props.stickyHeader),
 });
 
 const tableClasses = computed(() => [
   "cui-table",
-  `cui-table--${props.size}`,
+  `cui-table--${clampedSize.value}`,
   {
     "cui-table--striped": props.striped,
     "cui-table--hoverable": props.hoverable,

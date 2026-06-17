@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import type { InputSize } from "./CuiInput.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 export interface SelectOption {
   value: string | number;
@@ -13,7 +20,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface CuiSelectProps {
+export interface CuiSelectProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value (single) or values (multiple) */
   modelValue?: string | number | null | Array<string | number>;
   /** Options — array of strings or { value, label, group?, disabled? } objects */
@@ -28,20 +35,14 @@ export interface CuiSelectProps {
   loading?: boolean;
   /** Text shown when no options available */
   noOptionsText?: string;
-  /** Color role */
-  color?: ButtonColor;
-  /** Size */
-  size?: InputSize;
   /** Error state */
   error?: boolean;
   /** Error message */
   errorMessage?: string;
-  /** Disabled */
-  disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiSelectProps>(), {
@@ -57,6 +58,7 @@ const props = withDefaults(defineProps<CuiSelectProps>(), {
   disabled: false,
   readonly: false,
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -343,6 +345,7 @@ const dims = computed(() => {
       <div
         ref="triggerRef"
         class="cui-select__trigger"
+        :style="{ borderRadius: radiusMap[rounded] }"
         role="combobox"
         :aria-expanded="isOpen"
         aria-haspopup="listbox"
@@ -489,7 +492,6 @@ const dims = computed(() => {
   justify-content: space-between;
   min-height: var(--_sel-min-height);
   padding: 0.25rem var(--_sel-px);
-  border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--_sel-border);
   background: var(--cui-surface-base);
   font-size: var(--_sel-font-size);

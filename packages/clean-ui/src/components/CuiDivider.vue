@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, useSlots } from "vue";
+import type { CuiColorOrCss, HideableProps } from "../types/common";
+import { resolveColor } from "../utils/color";
 
 export type DividerOrientation = "horizontal" | "vertical";
 export type DividerLabelPosition = "start" | "center" | "end";
 export type DividerVariant = "solid" | "dashed" | "dotted";
 
-export interface CuiDividerProps {
+export interface CuiDividerProps extends HideableProps {
   /** Orientation */
   orientation?: DividerOrientation;
   /** Label position (when using default slot or label prop) */
@@ -16,10 +18,8 @@ export interface CuiDividerProps {
   variant?: DividerVariant;
   /** Spacing above and below (CSS value, e.g., "1rem") */
   spacing?: string;
-  /** Custom color (CSS value) */
-  color?: string;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Line color — a color role (mapped to its token) or any CSS color */
+  color?: CuiColorOrCss;
 }
 
 const props = withDefaults(defineProps<CuiDividerProps>(), {
@@ -34,7 +34,7 @@ const slots = useSlots();
 const hasLabel = computed(() => !!props.label || !!slots.default);
 
 const borderStyle = computed(() => {
-  const c = props.color || "var(--cui-border)";
+  const c = props.color ? resolveColor(props.color) : "var(--cui-border)";
   return `1px ${props.variant} ${c}`;
 });
 
@@ -77,7 +77,7 @@ const lineStyle = computed(() => {
 const labelStyle = computed(() => ({
   fontSize: "0.75rem",
   fontWeight: "500" as const,
-  color: props.color || "var(--cui-text-tertiary)",
+  color: props.color ? resolveColor(props.color) : "var(--cui-text-tertiary)",
   padding: props.orientation === "horizontal" ? "0 0.75rem" : "0.5rem 0",
   whiteSpace: "nowrap" as const,
   textTransform: "uppercase" as const,

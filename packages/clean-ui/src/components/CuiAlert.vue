@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
 export type AlertAnimation = "pulse" | "glow" | "shake" | "none";
 
-export interface CuiAlertProps {
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiAlertProps extends HideableProps, ColorableProps {
   /** Visual variant */
   variant?: AlertVariant;
   /** Title text */
@@ -25,8 +31,8 @@ export interface CuiAlertProps {
   entrance?: AlertEntrance;
   /** Persistent animation while visible */
   animation?: AlertAnimation;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiAlertProps>(), {
@@ -37,6 +43,7 @@ const props = withDefaults(defineProps<CuiAlertProps>(), {
   entrance: "fade",
   animation: "none",
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -79,6 +86,7 @@ const alertStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const base: Record<string, string> = {
+    borderRadius: radiusMap[props.rounded],
     "--_alert-color": `var(--cui-${c})`,
     "--_alert-focus-ring": `var(--cui-${c}-focus-ring)`,
   };
@@ -160,7 +168,6 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.875rem 1rem;
-  border-radius: var(--cui-button-radius, 0.375rem);
   position: relative;
 }
 

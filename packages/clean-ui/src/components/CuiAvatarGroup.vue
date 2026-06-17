@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { AvatarSize } from "./CuiAvatar.vue";
+import type { HideableProps } from "../types/common";
 
-export interface CuiAvatarGroupProps {
+export interface CuiAvatarGroupProps extends HideableProps {
   /** Negative margin overlap between avatars */
   spacing?: string;
   /** Max avatars to show before "+N" overflow */
   max?: number;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAvatarGroupProps>(), {

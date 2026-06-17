@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
-import type { InputSize } from "./CuiInput.vue";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import { TEXTAREA_SIZE_SCALE } from "../utils/sizing";
 
-export interface CuiTextareaProps {
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
+
+export interface CuiTextareaProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
   modelValue?: string;
   /** Placeholder text */
   placeholder?: string;
-  /** Color role — affects focus border */
-  color?: ButtonColor;
-  /** Size */
-  size?: InputSize;
   /** Initial/minimum number of visible rows */
   rows?: number;
   /** Auto-resize to fit content */
@@ -25,12 +28,10 @@ export interface CuiTextareaProps {
   error?: boolean;
   /** Error message below textarea */
   errorMessage?: string;
-  /** Disabled */
-  disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiTextareaProps>(), {
@@ -43,6 +44,7 @@ const props = withDefaults(defineProps<CuiTextareaProps>(), {
   disabled: false,
   readonly: false,
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -134,6 +136,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         'cui-textarea--disabled': disabled,
       }"
       :style="{
+        borderRadius: radiusMap[rounded],
         '--_ta-px': dims.px,
         '--_ta-py': dims.py,
         '--_ta-font-size': dims.fontSize,
@@ -184,7 +187,6 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
 
 .cui-textarea {
   display: flex;
-  border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--_ta-border);
   background: var(--cui-surface-base);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
