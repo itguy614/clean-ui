@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { CuiColor, HideableProps, ColorableProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion } from "../utils/liveRegion";
 
-export interface CuiToastProps extends HideableProps, ColorableProps {
+export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Internal toast id */
   toastId?: string;
   /** Title text */
@@ -141,6 +142,8 @@ const toastStyle = computed(() => {
 });
 
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 </script>
 
 <template>
@@ -151,7 +154,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       animation !== 'none' ? `cui-toast--${animation}` : '',
     ]"
     :style="toastStyle"
-    role="alert"
+    v-bind="liveAttrs"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
   >

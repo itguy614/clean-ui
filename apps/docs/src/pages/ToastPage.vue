@@ -133,6 +133,7 @@ function floodTest() {
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
           { name: 'icon', type: 'string', default: '-', description: 'Custom icon (emoji/text)' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the auto-icon' },
+          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status).' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />

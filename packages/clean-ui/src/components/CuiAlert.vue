@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import type { HideableProps, ColorableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion } from "../utils/liveRegion";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -16,7 +17,7 @@ export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
 export type AlertAnimation = "pulse" | "glow" | "shake" | "none";
 
-export interface CuiAlertProps extends HideableProps, ColorableProps {
+export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Visual variant */
   variant?: AlertVariant;
   /** Title text */
@@ -116,6 +117,8 @@ const alertStyle = computed(() => {
 });
 
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 </script>
 
 <template>
@@ -129,7 +132,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       animation !== 'none' ? `cui-alert--${animation}` : '',
     ]"
     :style="alertStyle"
-    role="alert"
+    v-bind="liveAttrs"
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-alert__icon">

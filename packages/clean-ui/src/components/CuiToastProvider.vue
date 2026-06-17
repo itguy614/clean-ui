@@ -128,6 +128,7 @@ const visibleToasts = computed(() => {
           :animation="toast.animation"
           :icon="toast.icon"
           :no-icon="toast.noIcon"
+          :live="toast.live"
           :active="index === visibleToasts.length - 1"
           @dismiss="state.dismiss(toast.id)"
         />
