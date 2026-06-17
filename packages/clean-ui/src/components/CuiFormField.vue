@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject, onMounted, onBeforeUnmount } from "vue";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { FormContextKey } from "./form-context";
 
 export type LabelPosition = "top" | "left";
 
@@ -11,15 +12,21 @@ export interface CuiFormFieldProps extends HideableProps, DisableableProps {
   labelPosition?: LabelPosition;
   /** HTML for attribute — ties label to a control by id */
   for?: string;
+  /**
+   * Field name. When set AND nested in a `CuiForm`, the field binds its value
+   * and error to the form automatically (see the scoped-slot bindings). Omit it
+   * to use the field standalone with manual `error` / `errorMessage` props.
+   */
+  name?: string;
   /** Mark field as required */
   required?: boolean;
   /** Custom required indicator text (replaces asterisk) */
   requiredText?: string;
   /** Help text below the control */
   helpText?: string;
-  /** Show error state (left accent bar) */
+  /** Show error state (standalone mode; ignored when form-bound) */
   error?: boolean;
-  /** Error message below the control (replaces help text when shown) */
+  /** Error message below the control (standalone mode; ignored when form-bound) */
   errorMessage?: string;
 }
 
@@ -31,10 +38,45 @@ const props = withDefaults(defineProps<CuiFormFieldProps>(), {
   hidden: false,
 });
 
-const showError = computed(() => props.error && props.errorMessage);
+// Optional form context — null when used standalone (no hard dependency).
+const form = inject(FormContextKey, null);
+const formBound = computed(() => !!props.name && !!form);
+
+// Resolved error/message: from the form when bound, else from props.
+const resolvedError = computed(() =>
+  formBound.value ? !!form!.errors.value[props.name!] : !!props.error,
+);
+const resolvedMessage = computed(() =>
+  formBound.value ? form!.errors.value[props.name!] : props.errorMessage,
+);
+const showError = computed(() => resolvedError.value && resolvedMessage.value);
+
+const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? false));
 
 // Auto-generate a stable id once (not a computed — Math.random() must not re-run on re-render)
 const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)}`;
+
+// Bindings handed to the default slot. `v-bind="f"` on a field component wires
+// v-model + error in one shot. Standalone mode omits the model bindings.
+const slotBindings = computed(() => {
+  const base: Record<string, unknown> = {
+    id: fieldId,
+    error: resolvedError.value,
+    disabled: isDisabled.value,
+  };
+  if (formBound.value) {
+    base.modelValue = form!.getValue(props.name!);
+    base["onUpdate:modelValue"] = (value: unknown) => form!.setValue(props.name!, value);
+  }
+  return base;
+});
+
+onMounted(() => {
+  if (formBound.value) form!.registerField(props.name!);
+});
+onBeforeUnmount(() => {
+  if (props.name && form) form.unregisterField(props.name);
+});
 </script>
 
 <template>
@@ -43,7 +85,7 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
     class="cui-form-field"
     :class="[
       `cui-form-field--${labelPosition}`,
-      { 'cui-form-field--error': error },
+      { 'cui-form-field--error': resolvedError },
     ]"
   >
     <!-- Label -->
@@ -61,12 +103,12 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
     <div class="cui-form-field__body">
       <!-- Control slot -->
       <div class="cui-form-field__control">
-        <slot :id="fieldId" :error="error" :disabled="disabled" />
+        <slot v-bind="slotBindings" />
       </div>
 
       <!-- Footer: help text or error message -->
       <div v-if="showError" class="cui-form-field__error">
-        {{ errorMessage }}
+        {{ resolvedMessage }}
       </div>
       <div v-else-if="helpText" class="cui-form-field__help">
         {{ helpText }}
