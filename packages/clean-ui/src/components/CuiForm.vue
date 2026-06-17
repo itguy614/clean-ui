@@ -40,18 +40,32 @@ const emit = defineEmits<{
 }>();
 
 // --- Value bag ----------------------------------------------------------------
-// Deep-reactive internal copy seeded from modelValue. We keep our own ref so the
-// form works uncontrolled (no v-model) too; when controlled we sync both ways.
-const values = ref<FormValues>({ ...(props.modelValue ?? {}) });
+// Deep-clone the seed so nested objects aren't shared with the parent's object
+// (in-place writes to a dot-path must not mutate the caller's state).
+function seed(source?: FormValues): FormValues {
+  if (!source) return {};
+  try {
+    return structuredClone(source);
+  } catch {
+    return { ...source };
+  }
+}
+
+// Internal source of truth. We keep our own ref so the form works uncontrolled
+// (no v-model) too; when controlled we sync both ways.
+const values = ref<FormValues>(seed(props.modelValue));
 const errors = ref<FormErrors>({});
 const submitted = ref(false);
-const registered = new Set<string>();
+const submitting = ref(false);
+
+// Monotonic token so a slower async validation can't clobber a newer one.
+let validateSeq = 0;
 
 // External modelValue changes flow in (e.g. parent reset/prefill).
 watch(
   () => props.modelValue,
   (next) => {
-    if (next && next !== values.value) values.value = { ...next };
+    if (next && next !== values.value) values.value = seed(next);
   },
   { deep: true },
 );
@@ -83,14 +97,22 @@ async function runResolver(): Promise<FormErrors> {
 
 /** Validate the whole form; sets `errors` and returns the errors map. */
 async function validate(): Promise<FormErrors> {
+  const seq = ++validateSeq;
   const result = await runResolver();
-  errors.value = result;
+  // Only publish to the UI if a newer validation hasn't started meanwhile.
+  if (seq === validateSeq) errors.value = result;
   return result;
 }
 
-/** Validate, but only update the error for a single field (used on change). */
+/**
+ * Re-run validation but update only the changed field's error, leaving untouched
+ * fields pristine. Resolvers validate the whole object, so in `"change"` mode this
+ * expects a cheap/sync resolver (one run per keystroke).
+ */
 async function validateField(name: string): Promise<void> {
+  const seq = ++validateSeq;
   const result = await runResolver();
+  if (seq !== validateSeq) return; // superseded by a newer validation
   const next = { ...errors.value };
   if (result[name]) next[name] = result[name];
   else delete next[name];
@@ -103,31 +125,41 @@ function getValue(name: string): unknown {
 
 function setValue(name: string, value: unknown): void {
   setPath(values.value, name, value);
-  emit("update:modelValue", values.value);
+  // Emit a fresh object so parents using a non-deep watcher still react.
+  emit("update:modelValue", { ...values.value });
   if (props.validateOn === "change" || submitted.value) void validateField(name);
 }
 
-function registerField(name: string): void {
-  registered.add(name);
-}
-
+/**
+ * Drop a field's error when it unmounts (e.g. a conditionally-shown field) so
+ * stale errors for fields the user can no longer fix don't linger in the map.
+ */
 function unregisterField(name: string): void {
-  registered.delete(name);
+  if (!(name in errors.value)) return;
+  const next = { ...errors.value };
+  delete next[name];
+  errors.value = next;
 }
 
 // --- Submit / reset (also exposed) -------------------------------------------
 async function submit(): Promise<void> {
+  if (submitting.value) return; // guard against concurrent double-submit
+  submitting.value = true;
   submitted.value = true;
-  const result = await validate();
-  if (Object.keys(result).length === 0) emit("submit", values.value);
-  else emit("submit-invalid", result);
+  try {
+    const result = await validate();
+    if (Object.keys(result).length === 0) emit("submit", values.value);
+    else emit("submit-invalid", result);
+  } finally {
+    submitting.value = false;
+  }
 }
 
 function reset(next?: FormValues): void {
-  values.value = { ...(next ?? props.modelValue ?? {}) };
+  values.value = seed(next ?? props.modelValue);
   errors.value = {};
   submitted.value = false;
-  emit("update:modelValue", values.value);
+  emit("update:modelValue", { ...values.value });
 }
 
 provide(FormContextKey, {
@@ -139,15 +171,14 @@ provide(FormContextKey, {
   getValue,
   setValue,
   validateField,
-  registerField,
   unregisterField,
 });
 
-defineExpose({ validate, reset, submit, values, errors });
+defineExpose({ validate, reset, submit, values, errors, submitting });
 </script>
 
 <template>
   <form v-show="!hidden" class="cui-form" novalidate @submit.prevent="submit">
-    <slot :values="values" :errors="errors" :submitted="submitted" />
+    <slot :values="values" :errors="errors" :submitted="submitted" :submitting="submitting" />
   </form>
 </template>

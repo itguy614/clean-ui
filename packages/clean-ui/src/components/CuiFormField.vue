@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, onBeforeUnmount } from "vue";
+import { computed, inject, onBeforeUnmount } from "vue";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
 
@@ -67,13 +67,13 @@ const slotBindings = computed(() => {
   if (formBound.value) {
     base.modelValue = form!.getValue(props.name!);
     base["onUpdate:modelValue"] = (value: unknown) => form!.setValue(props.name!, value);
+    base.readonly = form!.readonly.value;
   }
   return base;
 });
 
-onMounted(() => {
-  if (formBound.value) form!.registerField(props.name!);
-});
+// Clear this field's error from the form when it unmounts (e.g. conditionally
+// shown fields) so stale errors don't linger in the aggregated map.
 onBeforeUnmount(() => {
   if (props.name && form) form.unregisterField(props.name);
 });

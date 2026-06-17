@@ -38,9 +38,7 @@ export interface FormContext {
   setValue: (name: string, value: unknown) => void;
   /** Re-run validation and update just this field's error. */
   validateField: (name: string) => void;
-  /** Track a mounted field (for aggregation + pruning stale errors). */
-  registerField: (name: string) => void;
-  /** Stop tracking a field on unmount. */
+  /** Drop a field's error when it unmounts, so stale errors don't linger. */
   unregisterField: (name: string) => void;
 }
 
