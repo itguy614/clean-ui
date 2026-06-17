@@ -145,6 +145,8 @@ export type {
   FormValidateOn,
 } from "./components/form-context";
 export { zodResolver, valibotResolver } from "./utils/resolvers";
+export { resolveLiveRegion } from "./utils/liveRegion";
+export type { LiveRegionMode, LiveRegionAttrs } from "./utils/liveRegion";
 export type { CuiFieldsetProps, FieldsetVariant } from "./components/CuiFieldset.vue";
 export type { CuiBadgeProps, BadgeVariant, BadgeAnimation } from "./components/CuiBadge.vue";
 export type { CuiAlertProps, AlertVariant, AlertEntrance, AlertAnimation } from "./components/CuiAlert.vue";

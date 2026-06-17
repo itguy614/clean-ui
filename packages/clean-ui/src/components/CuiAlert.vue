@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion, type LiveRegionMode } from "../utils/liveRegion";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -33,6 +34,12 @@ export interface CuiAlertProps extends HideableProps, ColorableProps {
   animation?: AlertAnimation;
   /** Border radius */
   rounded?: CuiRounded;
+  /**
+   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
+   * (`role="alert"`), everything else → polite (`role="status"`). Set `"off"`
+   * for purely decorative/static alerts that shouldn't be announced.
+   */
+  live?: LiveRegionMode;
 }
 
 const props = withDefaults(defineProps<CuiAlertProps>(), {
@@ -116,6 +123,8 @@ const alertStyle = computed(() => {
 });
 
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 </script>
 
 <template>
@@ -129,7 +138,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       animation !== 'none' ? `cui-alert--${animation}` : '',
     ]"
     :style="alertStyle"
-    role="alert"
+    v-bind="liveAttrs"
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-alert__icon">

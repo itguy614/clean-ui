@@ -37,6 +37,7 @@ const showPulse = ref(true);
           { name: 'autoDismiss', type: 'number', default: '-', description: 'Auto-dismiss after N milliseconds' },
           { name: 'entrance', type: 'fade | slide-down | slide-left | none', default: 'fade', description: 'Entrance animation on mount' },
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
+          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status). off to silence.' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />

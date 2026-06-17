@@ -4,6 +4,7 @@ import type { CuiColor, HideableProps, ColorableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion, type LiveRegionMode } from "../utils/liveRegion";
 
 export interface CuiToastProps extends HideableProps, ColorableProps {
   /** Internal toast id */
@@ -28,6 +29,11 @@ export interface CuiToastProps extends HideableProps, ColorableProps {
   noIcon?: boolean;
   /** Whether this toast is the topmost (active) — timer only runs when true */
   active?: boolean;
+  /**
+   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
+   * (`role="alert"`), everything else → polite (`role="status"`).
+   */
+  live?: LiveRegionMode;
 }
 
 const props = withDefaults(defineProps<CuiToastProps>(), {
@@ -141,6 +147,8 @@ const toastStyle = computed(() => {
 });
 
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 </script>
 
 <template>
@@ -151,7 +159,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       animation !== 'none' ? `cui-toast--${animation}` : '',
     ]"
     :style="toastStyle"
-    role="alert"
+    v-bind="liveAttrs"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
   >
