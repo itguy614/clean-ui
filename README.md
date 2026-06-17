@@ -46,17 +46,14 @@ This is a pnpm monorepo:
 ```sh
 pnpm install
 
-# build the library (Vite + vue-tsc declarations)
-pnpm --filter @itguy614/clean-ui build
-
-# run the docs site locally
-pnpm --filter docs dev
-
-# audit color contrast across all themes
-node scripts/check-contrast.mjs
+pnpm dev               # run the docs site locally
+pnpm build             # build the library (Vite + vue-tsc declarations)
+pnpm test              # run the test suite
+pnpm new:component Foo --group "Form Controls"   # scaffold a new component
+pnpm check:contrast    # audit color contrast across all themes
 ```
 
-Conventions, architecture, and the component checklist live in [`CLAUDE.md`](./CLAUDE.md).
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full workflow, and [`CLAUDE.md`](./CLAUDE.md) for conventions, architecture, and the component checklist.
 
 ## License
 

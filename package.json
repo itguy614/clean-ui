@@ -7,7 +7,9 @@
     "build": "pnpm --filter @itguy614/clean-ui build",
     "build:docs": "pnpm --filter @itguy614/clean-ui-docs build",
     "test": "pnpm --filter @itguy614/clean-ui test",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "new:component": "node scripts/new-component.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs"
   },
   "engines": {
     "node": ">=20",
