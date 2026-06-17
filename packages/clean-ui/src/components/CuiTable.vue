@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide } from "vue";
+import { computed, provide, ref } from "vue";
 import { TableContextKey } from "./table-context";
 import type { SizeableProps, HideableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
@@ -20,6 +20,12 @@ export interface CuiTableProps extends HideableProps, SizeableProps {
   maxHeight?: string;
   /** Min width — forces horizontal scrolling when content overflows (e.g., "1200px") */
   minWidth?: string;
+  /**
+   * Total row count for windowed/virtualized tables. Sets `aria-rowcount` on the
+   * `<table>` so assistive tech reports the real total even when only a subset of
+   * rows is in the DOM. Omit for non-virtualized tables (native semantics suffice).
+   */
+  ariaRowcount?: number;
 }
 
 const props = withDefaults(defineProps<CuiTableProps>(), {
@@ -67,18 +73,27 @@ const tableStyle = computed(() => ({
 
 const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useScrollShadows();
 
+const scrollWrapper = ref<HTMLElement | null>(null);
+
+function setWrapperRef(el: any) {
+  scrollWrapper.value = el as HTMLElement | null;
+  onWrapperRef(el as HTMLElement | null);
+}
+
+defineExpose({ scrollWrapper });
+
 </script>
 
 <template>
   <!-- Scroll wrapper when maxHeight or minWidth is set -->
   <div v-if="maxHeight || minWidth" v-show="!hidden" style="position: relative;">
     <div
-      :ref="onWrapperRef"
+      :ref="setWrapperRef"
       class="cui-table-wrapper"
       :style="wrapperStyle"
       @scroll="onScroll"
     >
-      <table :class="tableClasses" :style="tableStyle">
+      <table :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
@@ -88,7 +103,7 @@ const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useSc
   </div>
 
   <!-- Bare table -->
-  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;">
+  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;" :aria-rowcount="ariaRowcount">
     <slot />
   </table>
 </template>

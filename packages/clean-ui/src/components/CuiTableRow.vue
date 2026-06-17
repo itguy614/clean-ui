@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import type { HideableProps } from "../types/common";
 
 export interface CuiTableRowProps extends HideableProps {
@@ -10,10 +11,14 @@ withDefaults(defineProps<CuiTableRowProps>(), {
   selected: false,
   hidden: false,
 });
+
+const rowEl = ref<HTMLElement | null>(null);
+
+defineExpose({ rowEl });
 </script>
 
 <template>
-  <tr v-show="!hidden" :class="{ 'cui-table-row--selected': selected }">
+  <tr ref="rowEl" v-show="!hidden" :class="{ 'cui-table-row--selected': selected }">
     <slot />
   </tr>
 </template>
