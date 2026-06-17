@@ -149,6 +149,11 @@ const router = createRouter({
       component: () => import('../pages/FieldsetPage.vue'),
     },
     {
+      path: '/components/form',
+      name: 'form',
+      component: () => import('../pages/FormPage.vue'),
+    },
+    {
       path: '/components/form-field',
       name: 'form-field',
       component: () => import('../pages/FormFieldPage.vue'),

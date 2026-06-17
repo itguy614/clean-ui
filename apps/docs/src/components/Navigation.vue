@@ -31,6 +31,7 @@ const sections = [
   { id: "date-range-picker", label: "Date Range", path: "/components/date-range-picker", group: "Form Controls" },
   { id: "fieldset", label: "Fieldset", path: "/components/fieldset", group: "Form Controls" },
   { id: "file-upload", label: "File Upload", path: "/components/file-upload", group: "Form Controls" },
+  { id: "form", label: "Form", path: "/components/form", group: "Form Controls" },
   { id: "form-field", label: "Form Field", path: "/components/form-field", group: "Form Controls" },
   { id: "input", label: "Input", path: "/components/input", group: "Form Controls" },
   { id: "input-stepper", label: "Input Stepper", path: "/components/input-stepper", group: "Form Controls" },

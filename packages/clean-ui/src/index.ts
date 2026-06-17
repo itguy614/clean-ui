@@ -22,6 +22,7 @@ import CuiMaskedInput from "./components/CuiMaskedInput.vue";
 import CuiTextarea from "./components/CuiTextarea.vue";
 import CuiSelect from "./components/CuiSelect.vue";
 import CuiFormField from "./components/CuiFormField.vue";
+import CuiForm from "./components/CuiForm.vue";
 import CuiFieldset from "./components/CuiFieldset.vue";
 import CuiBadge from "./components/CuiBadge.vue";
 import CuiAlert from "./components/CuiAlert.vue";
@@ -98,7 +99,7 @@ import CuiRating from "./components/CuiRating.vue";
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating };
+export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating };
 
 // Type exports
 export type {
@@ -134,6 +135,16 @@ export type { CuiMaskedInputProps, MaskToken } from "./components/CuiMaskedInput
 export type { CuiTextareaProps } from "./components/CuiTextarea.vue";
 export type { CuiSelectProps, SelectOption } from "./components/CuiSelect.vue";
 export type { CuiFormFieldProps, LabelPosition } from "./components/CuiFormField.vue";
+export type { CuiFormProps } from "./components/CuiForm.vue";
+export { FormContextKey } from "./components/form-context";
+export type {
+  FormContext,
+  FormValues,
+  FormErrors,
+  FormResolver,
+  FormValidateOn,
+} from "./components/form-context";
+export { zodResolver, valibotResolver } from "./utils/resolvers";
 export type { CuiFieldsetProps, FieldsetVariant } from "./components/CuiFieldset.vue";
 export type { CuiBadgeProps, BadgeVariant, BadgeAnimation } from "./components/CuiBadge.vue";
 export type { CuiAlertProps, AlertVariant, AlertEntrance, AlertAnimation } from "./components/CuiAlert.vue";
@@ -291,6 +302,7 @@ export function createCleanUI(_options: CleanUIOptions = {}) {
       app.component("CuiTextarea", CuiTextarea);
       app.component("CuiSelect", CuiSelect);
       app.component("CuiFormField", CuiFormField);
+      app.component("CuiForm", CuiForm);
       app.component("CuiFieldset", CuiFieldset);
       app.component("CuiBadge", CuiBadge);
       app.component("CuiAlert", CuiAlert);
