@@ -19,7 +19,7 @@
  *   // render vScroll.paddingTop spacer, then vScroll.visibleRows, then vScroll.paddingBottom spacer
  */
 
-import { ref, computed, watch, onMounted, onBeforeUnmount, type Ref } from "vue";
+import { ref, computed, watch, onBeforeUnmount, type Ref } from "vue";
 
 export interface UseVirtualScrollOptions {
   /** Estimated row height in px (auto-measured if omitted) */
@@ -33,6 +33,8 @@ export interface UseVirtualScrollOptions {
 export interface VirtualScrollResult<T> {
   /** Slice of rows currently in the render window */
   visibleRows: Ref<T[]>;
+  /** Index of the first rendered row within the full dataset (for aria-rowindex) */
+  firstVisibleIndex: Ref<number>;
   /** px to pad above visible rows (replaces the skipped top rows) */
   paddingTop: Ref<number>;
   /** px to pad below visible rows (replaces the skipped bottom rows) */
@@ -123,7 +125,10 @@ export function useVirtualScroll<T>(
     ro = null;
   }
 
-  // Watch the containerRef — it may be set after mount (e.g. v-if)
+  // Watch the containerRef — it may be set after mount (e.g. v-if), swapped,
+  // or torn down. This single source of truth attaches/detaches listeners;
+  // `immediate` covers the already-present case without a separate onMounted
+  // (which would double-attach and leak a ResizeObserver).
   watch(
     containerRef,
     (el, prev) => {
@@ -132,10 +137,6 @@ export function useVirtualScroll<T>(
     },
     { immediate: true },
   );
-
-  onMounted(() => {
-    if (containerRef.value) attachListeners(containerRef.value);
-  });
 
   onBeforeUnmount(() => {
     if (rafId !== null) cancelAnimationFrame(rafId);
@@ -156,6 +157,7 @@ export function useVirtualScroll<T>(
 
   return {
     visibleRows,
+    firstVisibleIndex,
     paddingTop,
     paddingBottom,
     measureRow,

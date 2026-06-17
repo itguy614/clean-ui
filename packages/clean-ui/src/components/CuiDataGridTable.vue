@@ -205,31 +205,15 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
 // ---------------------------------------------------------------------------
 // Virtualization
 // ---------------------------------------------------------------------------
-// The scroll container is CuiTable's internal wrapper div, which only exists
-// when maxHeight is set. We need a ref to it so the virtualizer can listen for
-// scroll events. We obtain it via a template ref on the CuiTable root element
-// and then walk to its first child (the overflow div).
-//
-// Simpler alternative used here: we wrap the whole CuiTable in our own div
-// and pass our own containerRef down — but CuiTable owns its scroll wrapper.
-// Instead, we keep a ref to the CuiTable root element and find the scrollable
-// child after mount.
-
-const tableRootRef   = ref<HTMLElement | null>(null);
+// The scrollable element is CuiTable's internal wrapper div, which it exposes
+// via defineExpose({ scrollWrapper }) and only exists when maxHeight is set.
+// We capture it through CuiTable's :ref and hand it to the virtualizer so it
+// can listen for scroll events. When virtualization is off (or maxHeight is
+// unset) we leave the container null and the virtualizer stays dormant.
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
-// After CuiTable mounts, locate the inner scroll wrapper div.
-// CuiTable renders: <div style="position:relative"><div class="cui-table-wrapper" ...>
-// We grab the second div (the one with overflow:auto).
-function resolveScrollContainer(el: HTMLElement | null) {
-  tableRootRef.value = el;
-  if (!el || !props.virtualize || !props.maxHeight) {
-    scrollContainerRef.value = null;
-    return;
-  }
-  // CuiTable wraps in a relative div > overflow div when maxHeight is given
-  const wrapper = el.querySelector(".cui-table-wrapper") as HTMLElement | null;
-  scrollContainerRef.value = wrapper ?? el;
+function setScrollContainer(wrapper: HTMLElement | null) {
+  scrollContainerRef.value = props.virtualize && props.maxHeight ? wrapper : null;
 }
 
 const vScroll = useVirtualScroll(
@@ -256,7 +240,7 @@ const totalCols = computed(() => {
 
 <template>
   <CuiTable
-    :ref="(instance: any) => resolveScrollContainer(instance?.scrollWrapper ?? null)"
+    :ref="(instance: any) => setScrollContainer(instance?.scrollWrapper ?? null)"
     :size="size"
     :striped="striped"
     :hoverable="hoverable"
@@ -264,9 +248,11 @@ const totalCols = computed(() => {
     :sticky-header="stickyHeader"
     :max-height="maxHeight"
     :min-width="tableMinWidth"
+    :aria-rowcount="virtualize ? grid.displayData.value.length + 1 : undefined"
   >
     <CuiTableHead>
-      <CuiTableRow>
+      <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
+      <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
         <!-- Bulk selection checkbox -->
         <CuiTableCell v-if="hasBulkActions" width="3rem" align="center">
           <CuiCheckbox
@@ -325,6 +311,7 @@ const totalCols = computed(() => {
         <CuiTableRow
           :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
+          :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"
           style="cursor: pointer;"
           @click="emit('row-click', { row })"
         >

@@ -105,6 +105,18 @@ const wideData: DataGridRow[] = data.map((row) => ({
   startDate: "2024-01-15",
   manager: "Jane Manager",
 }));
+
+// Large dataset to demonstrate virtualization (10,000 rows)
+const roles = ["Engineering", "Design", "Marketing", "Sales", "Support"];
+const statuses = ["Active", "On Leave", "Inactive"];
+const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
+  id: String(i + 1),
+  name: `Employee ${i + 1}`,
+  email: `employee${i + 1}@example.com`,
+  role: roles[i % roles.length],
+  status: statuses[i % statuses.length],
+  salary: `$${(70 + (i % 80)).toString()},000`,
+}));
 </script>
 
 <template>
@@ -128,7 +140,9 @@ const wideData: DataGridRow[] = data.map((row) => ({
           { name: 'rowKey', type: 'string', default: 'id', description: 'Row identifier key' },
           { name: 'bulkActions', type: 'BulkAction[]', default: '[]', description: 'Bulk action definitions' },
           { name: 'stickyHeader', type: 'boolean', default: 'true', description: 'Sticky table header' },
-          { name: 'maxHeight', type: 'string', default: '—', description: 'Max height for scroll' },
+          { name: 'maxHeight', type: 'string', default: '—', description: 'Max height for scroll (required for virtualize)' },
+          { name: 'virtualize', type: 'boolean', default: 'false', description: 'Window rows for large datasets — renders only the visible rows + overscan. Requires maxHeight. Recommended at ≥ 500 client-side rows.' },
+          { name: 'virtualRowHeight', type: 'number', default: 'auto', description: 'Fixed row height in px for the virtualizer. Omit to auto-measure from the first rendered row.' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Table size' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'Loading skeleton' },
           { name: 'filterPanelSide', type: 'left | right', default: 'right', description: 'Filter panel position' },
@@ -296,6 +310,39 @@ const wideData: DataGridRow[] = data.map((row) => ({
             size="sm"
             hide-toolbar
           />
+        </Example>
+
+        <!-- Virtualized -->
+        <Example title="Virtualized (10,000 rows)" :code="`<!-- maxHeight is required: it defines the scroll viewport to window against -->
+<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;largeRows&quot;   <!-- 10,000 rows -->
+  max-height=&quot;420px&quot;
+  virtualize
+  hide-toolbar
+/>`">
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <p class="text-sm" style="color: var(--cui-text-secondary); margin: 0;">
+                <CuiIcon name="info" size="0.875rem" style="vertical-align: -2px;" />
+                Only the rows in the viewport (plus a small overscan buffer) are in the DOM,
+                so scrolling stays smooth regardless of dataset size. <strong>Virtualization
+                requires <code>max-height</code></strong> — it defines the scroll viewport.
+                Enable it at <strong>≥ 500 rows</strong> in client-side mode; server-side grids
+                paginate at the API layer and rarely need it.
+              </p>
+            </CuiCardBody>
+          </CuiCard>
+          <div class="mt-3">
+            <CuiDataGrid
+              :columns="simpleColumns"
+              :data="largeData"
+              max-height="420px"
+              size="sm"
+              virtualize
+              hide-toolbar
+            />
+          </div>
         </Example>
 
         <!-- Striped + bordered -->

@@ -20,6 +20,12 @@ export interface CuiTableProps extends HideableProps, SizeableProps {
   maxHeight?: string;
   /** Min width — forces horizontal scrolling when content overflows (e.g., "1200px") */
   minWidth?: string;
+  /**
+   * Total row count for windowed/virtualized tables. Sets `aria-rowcount` on the
+   * `<table>` so assistive tech reports the real total even when only a subset of
+   * rows is in the DOM. Omit for non-virtualized tables (native semantics suffice).
+   */
+  ariaRowcount?: number;
 }
 
 const props = withDefaults(defineProps<CuiTableProps>(), {
@@ -87,7 +93,7 @@ defineExpose({ scrollWrapper });
       :style="wrapperStyle"
       @scroll="onScroll"
     >
-      <table :class="tableClasses" :style="tableStyle">
+      <table :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
@@ -97,7 +103,7 @@ defineExpose({ scrollWrapper });
   </div>
 
   <!-- Bare table -->
-  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;">
+  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;" :aria-rowcount="ariaRowcount">
     <slot />
   </table>
 </template>
