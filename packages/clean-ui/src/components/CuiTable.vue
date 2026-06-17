@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, toRef } from "vue";
+import { computed, provide, ref, toRef } from "vue";
 import { TableContextKey, type TableSize } from "./table-context";
 import { useScrollShadows, scrollShadowBottomStyle, scrollShadowRightStyle } from "../composables/useScrollShadows";
 
@@ -66,13 +66,22 @@ const tableStyle = computed(() => ({
 
 const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useScrollShadows();
 
+const scrollWrapper = ref<HTMLElement | null>(null);
+
+function setWrapperRef(el: any) {
+  scrollWrapper.value = el as HTMLElement | null;
+  onWrapperRef(el as HTMLElement | null);
+}
+
+defineExpose({ scrollWrapper });
+
 </script>
 
 <template>
   <!-- Scroll wrapper when maxHeight or minWidth is set -->
   <div v-if="maxHeight || minWidth" v-show="!hidden" style="position: relative;">
     <div
-      :ref="onWrapperRef"
+      :ref="setWrapperRef"
       class="cui-table-wrapper"
       :style="wrapperStyle"
       @scroll="onScroll"

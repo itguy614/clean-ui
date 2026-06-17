@@ -256,7 +256,7 @@ const totalCols = computed(() => {
 
 <template>
   <CuiTable
-    :ref="(el) => resolveScrollContainer(el as HTMLElement | null)"
+    :ref="(instance: any) => resolveScrollContainer(instance?.scrollWrapper ?? null)"
     :size="size"
     :striped="striped"
     :hoverable="hoverable"
@@ -323,7 +323,7 @@ const totalCols = computed(() => {
         :disabled="rowActions(row).length === 0"
       >
         <CuiTableRow
-          :ref="(el) => { if (virtualize && idx === 0) vScroll.measureRow(el as HTMLElement | null) }"
+          :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
           style="cursor: pointer;"
           @click="emit('row-click', { row })"
