@@ -735,3 +735,78 @@
   float: left;
   width: 100%;
 }
+
+/* ============================================================
+   REDUCED MOTION
+   Respects the OS "Reduce Motion" accessibility setting.
+   All decorative keyframe animations are disabled.
+   Transitions are collapsed to 1ms so that JS transitionend
+   events still fire and overlays never get stuck.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* 1. Global — collapse all durations library-wide. This is the functional
+        guarantee: with iteration-count 1 + 1ms duration, every animation/
+        transition is effectively neutralized. Sections 2–5 are explicit
+        defense-in-depth for clarity (and to drop the opacity/loading cues). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* 2. Kill decorative infinite/looping animations entirely */
+  [class*="cui-badge--pulse"],
+  [class*="cui-badge--bounce"],
+  [class*="cui-badge__ping"],
+  [class*="cui-alert--pulse"],
+  [class*="cui-alert--glow"],
+  [class*="cui-alert--shake"],
+  [class*="cui-toast--pulse"],
+  [class*="cui-toast--glow"],
+  [class*="cui-toast--shake"],
+  [class*="cui-progress-bar__fill--stripe"],
+  [class*="cui-progress-bar__fill--shimmer"],
+  [class*="cui-skeleton__line--shimmer"],
+  [class*="cui-skeleton__line--pulse"],
+  [class*="cui-skeleton__block--shimmer"],
+  [class*="cui-skeleton__block--pulse"] {
+    animation: none !important;
+  }
+
+  /* 3. Spinners — remove spin but keep opacity as loading cue.
+        `spinner` substring covers CuiSpinner + inline cui-button__spinner /
+        cui-select__spinner. */
+  [class*="spinner"] {
+    animation: none !important;
+    opacity: 0.6;
+  }
+
+  /* 4. Overlays — instant open/close, no stuck states */
+  [class*="cui-modal"],
+  [class*="cui-slideover"] {
+    transition: opacity 1ms ease !important;
+    transform: none !important;
+  }
+
+  [class*="cui-toast-wrapper"],
+  [class*="cui-dropdown"],
+  [class*="cui-tooltip"],
+  [class*="cui-popover"],
+  [class*="cui-context-menu"] {
+    animation: none !important;
+    transition: opacity 1ms ease !important;
+  }
+
+  /* 5. Tab panel transitions */
+  [class*="cui-tab-fade"],
+  [class*="cui-tab-slide"] {
+    animation: none !important;
+  }
+}
