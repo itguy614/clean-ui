@@ -4,7 +4,7 @@
   "type": "module",
   "description": "A clean, dark-mode-ready Vue 3 component library — 100+ token-driven, themeable, accessible components.",
   "license": "MIT",
-  "author": "itguy614",
+  "author": "Kurt Wolf",
   "homepage": "https://itguy614.github.io/clean-ui/",
   "repository": {
     "type": "git",

@@ -113,4 +113,4 @@ Full component reference, props, and live examples: **https://itguy614.github.io
 
 ## License
 
-[MIT](./LICENSE) © itguy614
+[MIT](./LICENSE) © Kurt Wolf

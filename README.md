@@ -60,4 +60,4 @@ Conventions, architecture, and the component checklist live in [`CLAUDE.md`](./C
 
 ## License
 
-[MIT](./LICENSE) © itguy614
+[MIT](./LICENSE) © Kurt Wolf
