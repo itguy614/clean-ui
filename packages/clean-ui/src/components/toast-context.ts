@@ -1,7 +1,6 @@
 import { ref, type InjectionKey, type Ref } from "vue";
-import type { CuiColor } from "../types/common";
+import type { CuiColor, LiveRegionMode } from "../types/common";
 import type { AlertAnimation } from "./CuiAlert.vue";
-import type { LiveRegionMode } from "../utils/liveRegion";
 
 export type ToastPosition =
   | "top-right"

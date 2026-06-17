@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import type { HideableProps, ColorableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
-import { resolveLiveRegion, type LiveRegionMode } from "../utils/liveRegion";
+import { resolveLiveRegion } from "../utils/liveRegion";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -17,7 +17,7 @@ export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
 export type AlertAnimation = "pulse" | "glow" | "shake" | "none";
 
-export interface CuiAlertProps extends HideableProps, ColorableProps {
+export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Visual variant */
   variant?: AlertVariant;
   /** Title text */
@@ -34,12 +34,6 @@ export interface CuiAlertProps extends HideableProps, ColorableProps {
   animation?: AlertAnimation;
   /** Border radius */
   rounded?: CuiRounded;
-  /**
-   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
-   * (`role="alert"`), everything else → polite (`role="status"`). Set `"off"`
-   * for purely decorative/static alerts that shouldn't be announced.
-   */
-  live?: LiveRegionMode;
 }
 
 const props = withDefaults(defineProps<CuiAlertProps>(), {

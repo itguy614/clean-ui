@@ -63,6 +63,25 @@ export interface DisableableProps {
   disabled?: boolean;
 }
 
+/**
+ * Screen-reader live-region mode for ephemeral feedback components
+ * (Toast / Alert / Banner).
+ *  - `"polite"`     — announced when the screen reader is idle (`role="status"`)
+ *  - `"assertive"`  — interrupts immediately (`role="alert"`)
+ *  - `"off"`        — no live region (decorative / static content)
+ */
+export type LiveRegionMode = "off" | "polite" | "assertive";
+
+/** Components that announce to screen readers via an ARIA live region. */
+export interface LiveRegionProps {
+  /**
+   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
+   * (`role="alert"`), everything else → polite (`role="status"`). Set `"off"`
+   * for purely decorative/static feedback that shouldn't be announced.
+   */
+  live?: LiveRegionMode;
+}
+
 /** Shared surface for form controls (label/description/validation/readonly). */
 export interface FormControlProps extends DisableableProps {
   /** Label text */

@@ -1,13 +1,4 @@
-import type { CuiColor } from "../types/common";
-
-/**
- * Live-region announcement mode for ephemeral feedback components
- * (Toast / Alert / Banner).
- *  - `"polite"`     — announced when the screen reader is idle (`role="status"`)
- *  - `"assertive"`  — interrupts the screen reader immediately (`role="alert"`)
- *  - `"off"`        — no live region (decorative / static content)
- */
-export type LiveRegionMode = "off" | "polite" | "assertive";
+import type { CuiColor, LiveRegionMode } from "../types/common";
 
 /** ARIA attributes for a live region — spread onto the root element via `v-bind`. */
 export interface LiveRegionAttrs {

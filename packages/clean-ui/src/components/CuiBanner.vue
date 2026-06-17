@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { HideableProps, ColorableProps } from "../types/common";
+import type { HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
-import { resolveLiveRegion, type LiveRegionMode } from "../utils/liveRegion";
+import { resolveLiveRegion } from "../utils/liveRegion";
 
 export type BannerPosition = "top" | "bottom";
 export type BannerVariant = "solid" | "subtle";
 
-export interface CuiBannerProps extends HideableProps, ColorableProps {
+export interface CuiBannerProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Visual variant */
   variant?: BannerVariant;
   /** Sticky position */
@@ -20,12 +20,6 @@ export interface CuiBannerProps extends HideableProps, ColorableProps {
   noIcon?: boolean;
   /** Persist dismissal to localStorage under this key */
   storageKey?: string;
-  /**
-   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
-   * (`role="alert"`), everything else → polite (`role="status"`). Set `"off"`
-   * for purely promotional banners that shouldn't be announced.
-   */
-  live?: LiveRegionMode;
 }
 
 const props = withDefaults(defineProps<CuiBannerProps>(), {
