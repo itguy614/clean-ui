@@ -678,7 +678,10 @@
 
 @media (prefers-reduced-motion: reduce) {
 
-  /* 1. Global — collapse all durations library-wide */
+  /* 1. Global — collapse all durations library-wide. This is the functional
+        guarantee: with iteration-count 1 + 1ms duration, every animation/
+        transition is effectively neutralized. Sections 2–5 are explicit
+        defense-in-depth for clarity (and to drop the opacity/loading cues). */
   *,
   *::before,
   *::after {
@@ -687,6 +690,7 @@
     animation-delay: 0ms !important;
     transition-duration: 1ms !important;
     transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 
   /* 2. Kill decorative infinite/looping animations entirely */
@@ -708,8 +712,10 @@
     animation: none !important;
   }
 
-  /* 3. Spinner — remove spin but keep opacity as loading cue */
-  [class*="cui-spinner"] {
+  /* 3. Spinners — remove spin but keep opacity as loading cue.
+        `spinner` substring covers CuiSpinner + inline cui-button__spinner /
+        cui-select__spinner. */
+  [class*="spinner"] {
     animation: none !important;
     opacity: 0.6;
   }
@@ -721,8 +727,7 @@
     transform: none !important;
   }
 
-  [class*="cui-toast-item"],
-  [class*="cui-toast-enter"],
+  [class*="cui-toast-wrapper"],
   [class*="cui-dropdown"],
   [class*="cui-tooltip"],
   [class*="cui-popover"],
