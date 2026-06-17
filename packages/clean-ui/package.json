@@ -2,9 +2,30 @@
   "name": "@itguy614/clean-ui",
   "version": "0.3.1",
   "type": "module",
-  "description": "A clean, dark-mode-ready Vue UI component library",
+  "description": "A clean, dark-mode-ready Vue 3 component library — 100+ token-driven, themeable, accessible components.",
   "license": "MIT",
-  "author": "itguy614",
+  "author": "Kurt Wolf",
+  "homepage": "https://itguy614.github.io/clean-ui/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itguy614/clean-ui.git",
+    "directory": "packages/clean-ui"
+  },
+  "bugs": {
+    "url": "https://github.com/itguy614/clean-ui/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "component-library",
+    "components",
+    "ui",
+    "design-system",
+    "tailwindcss",
+    "dark-mode",
+    "typescript",
+    "accessible"
+  ],
   "main": "./dist/clean-ui.umd.cjs",
   "module": "./dist/clean-ui.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +38,9 @@
     "./styles": "./dist/clean-ui.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": [
     "**/*.css"
