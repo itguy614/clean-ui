@@ -162,6 +162,16 @@ function reset(next?: FormValues): void {
   emit("update:modelValue", { ...values.value });
 }
 
+/**
+ * Imperatively set the error map — typically to surface server-side validation
+ * (e.g. a 422 response) on the matching fields. Bumps the validation token so an
+ * in-flight resolver run can't overwrite what the server just told us.
+ */
+function setErrors(next: FormErrors): void {
+  validateSeq++;
+  errors.value = { ...next };
+}
+
 provide(FormContextKey, {
   values,
   errors,
@@ -174,7 +184,7 @@ provide(FormContextKey, {
   unregisterField,
 });
 
-defineExpose({ validate, reset, submit, values, errors, submitting });
+defineExpose({ validate, reset, submit, setErrors, values, errors, submitting });
 </script>
 
 <template>

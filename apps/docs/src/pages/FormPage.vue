@@ -46,6 +46,49 @@ function onSubmit(values: FormValues) {
 function onInvalid(errors: FormErrors) {
   result.value = `❌ Invalid: ${Object.keys(errors).length} field(s) need attention`;
 }
+
+// --- AJAX submit example -----------------------------------------------------
+// Template ref to the form so we can map server errors back onto the fields.
+const ajaxForm = ref<{ setErrors: (e: FormErrors) => void; reset: () => void } | null>(null);
+const ajaxValues = ref<FormValues>({ email: "", username: "" });
+const ajaxResult = ref("(submit to POST — try taken@example.com)");
+
+function ajaxResolver(values: FormValues): FormErrors {
+  const errors: FormErrors = {};
+  if (!values.email) errors.email = "Email is required";
+  if (!values.username) errors.username = "Username is required";
+  return errors;
+}
+
+// Stands in for a real `fetch` — returns 201, or a 422 with field errors when
+// the email is "taken", so the demo works offline.
+function fakePost(values: FormValues): Promise<{ ok: boolean; status: number; errors?: FormErrors }> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (values.email === "taken@example.com") {
+        resolve({ ok: false, status: 422, errors: { email: "That email is already registered" } });
+      } else {
+        resolve({ ok: true, status: 201 });
+      }
+    }, 900);
+  });
+}
+
+async function onAjaxSubmit(values: FormValues) {
+  ajaxResult.value = "⏳ POSTing…";
+  try {
+    const res = await fakePost(values);
+    if (res.ok) {
+      ajaxResult.value = `✅ Created (HTTP ${res.status})`;
+      ajaxForm.value?.reset();
+    } else if (res.status === 422 && res.errors) {
+      ajaxForm.value?.setErrors(res.errors);
+      ajaxResult.value = "❌ Server rejected the form (422) — see the field errors";
+    }
+  } catch {
+    ajaxResult.value = "❌ Network error — please try again";
+  }
+}
 </script>
 
 <template>
@@ -97,8 +140,10 @@ function onInvalid(errors: FormErrors) {
       <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
         Exposes via <code class="cui-code">ref</code>: <code class="cui-code">validate()</code>,
         <code class="cui-code">reset(values?)</code>, <code class="cui-code">submit()</code>,
-        plus reactive <code class="cui-code">values</code> and <code class="cui-code">errors</code>.
-        The default slot also receives <code class="cui-code">{ values, errors, submitted }</code>.
+        <code class="cui-code">setErrors(errors)</code> (for server-side errors),
+        plus reactive <code class="cui-code">values</code>, <code class="cui-code">errors</code>, and
+        <code class="cui-code">submitting</code>. The default slot also receives
+        <code class="cui-code">{ values, errors, submitted, submitting }</code>.
       </p>
     </div>
 
@@ -180,6 +225,75 @@ function onInvalid(errors: FormErrors) {
               <CuiAlert :color="result.startsWith('✅') ? 'success' : result.startsWith('❌') ? 'error' : 'info'" variant="subtle" :title="result" />
             </CuiStack>
           </CuiForm>
+        </Example>
+
+        <Example title="AJAX submit (loading state + server errors)" :code="`<script setup>
+const form = ref()
+const values = ref({ email: '', username: '' })
+
+async function onSubmit(values) {
+  const res = await fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(values),
+  })
+  if (res.ok) {
+    form.value.reset()           // success — toast / navigate / reset
+    return
+  }
+  if (res.status === 422) {
+    // map server-side field errors back onto the form
+    const { errors } = await res.json()   // { email: 'Already registered' }
+    form.value.setErrors(errors)
+  }
+}
+&lt;/script>
+
+<template>
+  <CuiForm ref=&quot;form&quot; :resolver=&quot;resolver&quot; v-model=&quot;values&quot;
+           @submit=&quot;onSubmit&quot; v-slot=&quot;{ submitting }&quot;>
+    <CuiFormField name=&quot;email&quot; label=&quot;Email&quot; required v-slot=&quot;f&quot;>
+      <CuiInput v-bind=&quot;f&quot; type=&quot;email&quot; />
+    </CuiFormField>
+    <CuiFormField name=&quot;username&quot; label=&quot;Username&quot; required v-slot=&quot;f&quot;>
+      <CuiInput v-bind=&quot;f&quot; />
+    </CuiFormField>
+    <!-- submitting comes from the form — no manual loading flag -->
+    <CuiButton type=&quot;submit&quot; :disabled=&quot;submitting&quot;>
+      {{ submitting ? 'Saving…' : 'Create account' }}
+    </CuiButton>
+  </CuiForm>
+</template>`">
+          <CuiForm
+            ref="ajaxForm"
+            :resolver="ajaxResolver"
+            v-model="ajaxValues"
+            @submit="onAjaxSubmit"
+            v-slot="{ submitting }"
+          >
+            <CuiStack spacing="4">
+              <CuiFormField name="email" label="Email" required help-text="Use taken@example.com to see a 422 mapped back" v-slot="f">
+                <CuiInput v-bind="f" type="email" placeholder="you@example.com" />
+              </CuiFormField>
+
+              <CuiFormField name="username" label="Username" required v-slot="f">
+                <CuiInput v-bind="f" placeholder="yourhandle" />
+              </CuiFormField>
+
+              <div>
+                <CuiButton type="submit" variant="solid" color="primary" :disabled="submitting">
+                  {{ submitting ? "Saving…" : "Create account" }}
+                </CuiButton>
+              </div>
+
+              <CuiAlert :color="ajaxResult.startsWith('✅') ? 'success' : ajaxResult.startsWith('❌') ? 'error' : 'info'" variant="subtle" :title="ajaxResult" />
+            </CuiStack>
+          </CuiForm>
+          <p class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
+            The live demo simulates the request (≈900ms) — the submit button is driven by the
+            form's <code class="cui-code">submitting</code> state, and a “taken” email returns a
+            422 that maps onto the Email field via <code class="cui-code">setErrors</code>.
+          </p>
         </Example>
 
         <!-- Validation recipes -->
