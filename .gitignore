@@ -30,3 +30,7 @@ Thumbs.db
 
 # Test coverage
 coverage
+
+# Stray non-pnpm lockfiles (this is a pnpm workspace)
+package-lock.json
+yarn.lock

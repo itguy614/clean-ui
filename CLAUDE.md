@@ -17,7 +17,8 @@
 - Positioning: `@floating-ui/vue` for tooltips; manual `computeDropdownPosition` for dropdowns/select
 
 ## Build & Dev
-- Build library: `cd packages/clean-ui && npm run build`
+- This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
+- Build library: `pnpm build` (root) or `pnpm --filter @itguy614/clean-ui build`
 - After rebuild, clear docs cache: `rm -rf apps/docs/node_modules/.vite`
 - Docs app has its own `@theme` in `apps/docs/src/styles/main.css` that must mirror the library's color tokens
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
@@ -181,4 +182,4 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 10. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
 11. Create a docs page, add route, add nav entry in the correct group.
 12. Use `CuiCard` for example containers in docs, not hand-rolled divs.
-13. Build and verify: `npm run build` must pass with zero TypeScript errors.
+13. Build and verify: `pnpm build` must pass with zero TypeScript errors.

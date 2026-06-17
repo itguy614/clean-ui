@@ -646,7 +646,7 @@ See the docs app (`apps/docs/src/App.vue`) for comprehensive examples of all com
 To run the docs app:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Then open http://localhost:5173 (or next available port).
