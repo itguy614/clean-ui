@@ -180,7 +180,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 .cui-toggle {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -268,7 +268,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0.375rem;
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
   font-weight: 600;
   pointer-events: none;
 }
@@ -281,7 +281,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 .cui-toggle__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-toggle__label {

@@ -273,7 +273,7 @@ const totalCols = computed(() => {
           :style="headerCellStyle(col)"
           @click="col.sortable ? grid.applySort(col.key) : undefined"
         >
-          <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+          <span style="display: inline-flex; align-items: center; gap: calc(0.25rem * var(--cui-density-scale, 1));">
             {{ col.label }}
             <CuiIcon
               v-if="col.sortable"

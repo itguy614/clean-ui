@@ -23,11 +23,11 @@ const props = withDefaults(defineProps<CuiSpinnerProps>(), {
 });
 
 const sizeConfig: Record<CuiSize, { box: string; stroke: string; dotSize: string; barWidth: string; barHeight: string; labelFont: string; gap: string }> = {
-  xs: { box: "0.875rem", stroke: "2px", dotSize: "0.25rem", barWidth: "0.1875rem", barHeight: "0.5rem", labelFont: "0.6875rem", gap: "0.25rem" },
-  sm: { box: "1.25rem", stroke: "2px", dotSize: "0.3125rem", barWidth: "0.1875rem", barHeight: "0.625rem", labelFont: "0.75rem", gap: "0.375rem" },
-  md: { box: "1.75rem", stroke: "3px", dotSize: "0.375rem", barWidth: "0.25rem", barHeight: "0.875rem", labelFont: "0.8125rem", gap: "0.5rem" },
-  lg: { box: "2.5rem", stroke: "3px", dotSize: "0.5rem", barWidth: "0.25rem", barHeight: "1.125rem", labelFont: "0.875rem", gap: "0.5rem" },
-  xl: { box: "3.5rem", stroke: "4px", dotSize: "0.625rem", barWidth: "0.3125rem", barHeight: "1.5rem", labelFont: "1rem", gap: "0.625rem" },
+  xs: { box: "0.875rem", stroke: "2px", dotSize: "0.25rem", barWidth: "0.1875rem", barHeight: "0.5rem", labelFont: "0.6875rem", gap: "calc(0.25rem * var(--cui-density-scale, 1))" },
+  sm: { box: "1.25rem", stroke: "2px", dotSize: "0.3125rem", barWidth: "0.1875rem", barHeight: "0.625rem", labelFont: "0.75rem", gap: "calc(0.375rem * var(--cui-density-scale, 1))" },
+  md: { box: "1.75rem", stroke: "3px", dotSize: "0.375rem", barWidth: "0.25rem", barHeight: "0.875rem", labelFont: "0.8125rem", gap: "calc(0.5rem * var(--cui-density-scale, 1))" },
+  lg: { box: "2.5rem", stroke: "3px", dotSize: "0.5rem", barWidth: "0.25rem", barHeight: "1.125rem", labelFont: "0.875rem", gap: "calc(0.5rem * var(--cui-density-scale, 1))" },
+  xl: { box: "3.5rem", stroke: "4px", dotSize: "0.625rem", barWidth: "0.3125rem", barHeight: "1.5rem", labelFont: "1rem", gap: "calc(0.625rem * var(--cui-density-scale, 1))" },
 };
 
 const cfg = computed(() => sizeConfig[props.size]);

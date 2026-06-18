@@ -78,7 +78,7 @@ const labelStyle = computed(() => ({
   fontSize: "0.75rem",
   fontWeight: "500" as const,
   color: props.color ? resolveColor(props.color) : "var(--cui-text-tertiary)",
-  padding: props.orientation === "horizontal" ? "0 0.75rem" : "0.5rem 0",
+  padding: props.orientation === "horizontal" ? "0 calc(0.75rem * var(--cui-density-scale, 1))" : "calc(0.5rem * var(--cui-density-scale, 1)) 0",
   whiteSpace: "nowrap" as const,
   textTransform: "uppercase" as const,
   letterSpacing: "0.04em",

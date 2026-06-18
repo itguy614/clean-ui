@@ -73,14 +73,14 @@ const activeFilterCount = computed(() => grid.filters.value.length);
 .cui-data-grid-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
   flex-wrap: wrap;
 }
 
 .cui-data-grid-toolbar__start {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
 }
@@ -88,7 +88,7 @@ const activeFilterCount = computed(() => grid.filters.value.length);
 .cui-data-grid-toolbar__end {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   flex-shrink: 0;
 }
 </style>

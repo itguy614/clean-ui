@@ -99,10 +99,10 @@ function selectNode(node: TreeNode) {
   }
 }
 
-const sizeConfig: Record<string, { fontSize: string; iconSize: string; indent: string; padding: string }> = {
-  sm: { fontSize: "0.8125rem", iconSize: "0.75rem", indent: "1rem", padding: "0.1875rem 0.375rem" },
-  md: { fontSize: "0.875rem", iconSize: "0.875rem", indent: "1.25rem", padding: "0.25rem 0.5rem" },
-  lg: { fontSize: "0.9375rem", iconSize: "1rem", indent: "1.5rem", padding: "0.375rem 0.625rem" },
+const sizeConfig: Record<string, { fontSize: string; iconSize: string; indent: string; padY: string; padX: string }> = {
+  sm: { fontSize: "0.8125rem", iconSize: "0.75rem", indent: "calc(1rem * var(--cui-density-scale, 1))", padY: "calc(0.1875rem * var(--cui-density-scale, 1))", padX: "calc(0.375rem * var(--cui-density-scale, 1))" },
+  md: { fontSize: "0.875rem", iconSize: "0.875rem", indent: "calc(1.25rem * var(--cui-density-scale, 1))", padY: "calc(0.25rem * var(--cui-density-scale, 1))", padX: "calc(0.5rem * var(--cui-density-scale, 1))" },
+  lg: { fontSize: "0.9375rem", iconSize: "1rem", indent: "calc(1.5rem * var(--cui-density-scale, 1))", padY: "calc(0.375rem * var(--cui-density-scale, 1))", padX: "calc(0.625rem * var(--cui-density-scale, 1))" },
 };
 const cfg = computed(() => sizeConfig[props.size]);
 </script>

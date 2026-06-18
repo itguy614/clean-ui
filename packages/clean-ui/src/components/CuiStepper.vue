@@ -69,9 +69,9 @@ const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   connectorThickness: string;
   gap: string;
 }> = {
-  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: "0.5rem" },
-  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: "0.75rem" },
-  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "1rem" },
+  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: "calc(0.5rem * var(--cui-density-scale, 1))" },
+  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: "calc(0.75rem * var(--cui-density-scale, 1))" },
+  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "calc(1rem * var(--cui-density-scale, 1))" },
 };
 
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);

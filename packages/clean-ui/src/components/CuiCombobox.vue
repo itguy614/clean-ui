@@ -146,9 +146,9 @@ const isLoading = computed(() => props.loading || internalLoading.value);
 // Size config
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "0.25rem 0.5rem", tagSize: "sm", itemPadding: "0.375rem 0.625rem", inputHeight: "2rem" },
-  md: { fontSize: "0.875rem", padding: "0.3125rem 0.625rem", tagSize: "sm", itemPadding: "0.5rem 0.75rem", inputHeight: "2.375rem" },
-  lg: { fontSize: "0.9375rem", padding: "0.4375rem 0.75rem", tagSize: "md", itemPadding: "0.625rem 0.875rem", inputHeight: "2.75rem" },
+  sm: { fontSize: "0.8125rem", padding: "calc(0.25rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))", tagSize: "sm", itemPadding: "calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", inputHeight: "calc(2rem * var(--cui-density-scale, 1))" },
+  md: { fontSize: "0.875rem", padding: "calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", tagSize: "sm", itemPadding: "calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", inputHeight: "calc(2.375rem * var(--cui-density-scale, 1))" },
+  lg: { fontSize: "0.9375rem", padding: "calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", tagSize: "md", itemPadding: "calc(0.625rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))", inputHeight: "calc(2.75rem * var(--cui-density-scale, 1))" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 

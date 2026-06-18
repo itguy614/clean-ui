@@ -264,7 +264,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio__label {

@@ -54,10 +54,10 @@ const displayValue = computed(() =>
 const SUPPORTED_SIZES = ["sm", "md", "lg", "xl"] as const;
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { iconSize: string; gap: string; valueFont: string; labelFont: string }> = {
-  sm: { iconSize: "1rem", gap: "0.125rem", valueFont: "0.75rem", labelFont: "0.75rem" },
-  md: { iconSize: "1.375rem", gap: "0.1875rem", valueFont: "0.875rem", labelFont: "0.8125rem" },
-  lg: { iconSize: "1.75rem", gap: "0.25rem", valueFont: "1rem", labelFont: "0.875rem" },
-  xl: { iconSize: "2.25rem", gap: "0.375rem", valueFont: "1.125rem", labelFont: "1rem" },
+  sm: { iconSize: "1rem", gap: "calc(0.125rem * var(--cui-density-scale, 1))", valueFont: "0.75rem", labelFont: "0.75rem" },
+  md: { iconSize: "1.375rem", gap: "calc(0.1875rem * var(--cui-density-scale, 1))", valueFont: "0.875rem", labelFont: "0.8125rem" },
+  lg: { iconSize: "1.75rem", gap: "calc(0.25rem * var(--cui-density-scale, 1))", valueFont: "1rem", labelFont: "0.875rem" },
+  xl: { iconSize: "2.25rem", gap: "calc(0.375rem * var(--cui-density-scale, 1))", valueFont: "1.125rem", labelFont: "1rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
