@@ -39,7 +39,7 @@ export interface CuiMessages {
     title: string;
     confirm: string;
     cancel: string;
-    /** Prompt for type-to-confirm dialogs (may contain HTML). */
+    /** Prompt for type-to-confirm dialogs (rendered as plain text). */
     typePrompt: (word: string) => string;
   };
   pagination: {
@@ -88,7 +88,7 @@ export const defaultMessages: CuiMessages = {
     title: "Are you sure?",
     confirm: "Confirm",
     cancel: "Cancel",
-    typePrompt: (word) => `Please type <strong>${word}</strong> to confirm.`,
+    typePrompt: (word) => `Please type "${word}" to confirm.`,
   },
   pagination: {
     summary: ({ from, to, total }) => `Showing ${from} to ${to} of ${total} results`,

@@ -191,8 +191,9 @@ function onCancel() {
             borderRadius: '0.375rem',
             border: `1px solid var(--cui-${cfg.color}-border)`,
           }"
-          v-html="confirmPrompt || defaultPrompt"
-        />
+        >
+          {{ confirmPrompt || defaultPrompt }}
+        </div>
         <CuiInput
           v-model="typedWord"
           :placeholder="confirmWord"
