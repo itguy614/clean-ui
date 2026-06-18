@@ -76,28 +76,13 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 // Size dimensions
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+// Switch dimensions sit inline with a fixed-size label, so they stay fixed —
+// scaling them while the label text doesn't would break vertical alignment.
+// Density scales the spacing around the control instead.
 const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: string; knob: string; travel: string; labelSize: string }> = {
-  sm: {
-    w: "calc(2rem * var(--cui-density-scale, 1))",
-    h: "calc(1.125rem * var(--cui-density-scale, 1))",
-    knob: "calc(0.875rem * var(--cui-density-scale, 1))",
-    travel: "calc(0.875rem * var(--cui-density-scale, 1))",
-    labelSize: "0.5rem",
-  },
-  md: {
-    w: "calc(2.75rem * var(--cui-density-scale, 1))",
-    h: "calc(1.5rem * var(--cui-density-scale, 1))",
-    knob: "calc(1.25rem * var(--cui-density-scale, 1))",
-    travel: "calc(1.25rem * var(--cui-density-scale, 1))",
-    labelSize: "0.625rem",
-  },
-  lg: {
-    w: "calc(3.5rem * var(--cui-density-scale, 1))",
-    h: "calc(1.875rem * var(--cui-density-scale, 1))",
-    knob: "calc(1.5rem * var(--cui-density-scale, 1))",
-    travel: "calc(1.625rem * var(--cui-density-scale, 1))",
-    labelSize: "0.6875rem",
-  },
+  sm: { w: "2rem", h: "1.125rem", knob: "0.875rem", travel: "0.875rem", labelSize: "0.5rem" },
+  md: { w: "2.75rem", h: "1.5rem", knob: "1.25rem", travel: "1.25rem", labelSize: "0.625rem" },
+  lg: { w: "3.5rem", h: "1.875rem", knob: "1.5rem", travel: "1.625rem", labelSize: "0.6875rem" },
 };
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
@@ -268,7 +253,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
+  padding: 0 0.375rem;
   font-weight: 600;
   pointer-events: none;
 }

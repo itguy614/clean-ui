@@ -170,14 +170,16 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(1.25rem * var(--cui-density-scale, 1));
-  height: calc(1.25rem * var(--cui-density-scale, 1));
+  /* Box dimensions are sized to the (unscaled) label text, so they stay fixed —
+     scaling the box while the text doesn't breaks alignment with adjacent text. */
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
   border-radius: 0.25rem;
   border: 2px solid var(--_check-border);
   background: var(--_check-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
-  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
+  margin-top: 0.125rem;
 }
 
 .cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator {
