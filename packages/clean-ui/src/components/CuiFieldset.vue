@@ -130,7 +130,7 @@ const rootStyle = computed(() => {
 
 <style scoped>
 .cui-fieldset {
-  padding: 1.25rem;
+  padding: calc(1.25rem * var(--cui-density-scale, 1));
   margin: 0;
   min-width: 0;
   transition: padding 0.25s ease, background 0.15s ease, border-color 0.15s ease;
@@ -144,8 +144,8 @@ const rootStyle = computed(() => {
 /* Collapsed: shrink-wrap the border to a slim bar around the legend
    (bordered variants only — plain has nothing to wrap) */
 .cui-fieldset--collapsed:not(.cui-fieldset--ghost) {
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
+  padding-top: calc(0.625rem * var(--cui-density-scale, 1));
+  padding-bottom: calc(0.625rem * var(--cui-density-scale, 1));
 }
 
 .cui-fieldset--disabled {
@@ -156,11 +156,11 @@ const rootStyle = computed(() => {
 .cui-fieldset__legend {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   font-size: 1rem;
   font-weight: 600;
   color: var(--cui-text-emphasis);
-  padding: 0 0.375rem;
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
   line-height: 1.4;
 }
 
@@ -172,8 +172,8 @@ const rootStyle = computed(() => {
   cursor: pointer;
   user-select: none;
   border-radius: 0.25rem;
-  padding: 0.125rem 0.375rem;
-  margin: -0.125rem 0;
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) 0;
   transition: background 0.15s ease;
 }
 
@@ -203,7 +203,7 @@ const rootStyle = computed(() => {
   line-height: 1.4;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 0 0.375rem;
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 .cui-fieldset--ghost .cui-fieldset__description {
@@ -214,7 +214,7 @@ const rootStyle = computed(() => {
 .cui-fieldset__content {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: calc(1rem * var(--cui-density-scale, 1));
   margin-top: 0;
   overflow: hidden;
   transition: max-height 0.25s ease, opacity 0.2s ease;

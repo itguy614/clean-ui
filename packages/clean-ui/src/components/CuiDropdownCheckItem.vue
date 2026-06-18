@@ -55,8 +55,8 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-check-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   font-size: 0.8125rem;
   color: var(--cui-text-body);

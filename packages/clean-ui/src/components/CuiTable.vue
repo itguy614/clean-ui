@@ -134,13 +134,13 @@ defineExpose({ scrollWrapper });
 
 .cui-table--sm th,
 .cui-table--sm td {
-  padding: 0.375rem 0.5rem;
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 /* --- Size: md (default) --- */
 .cui-table--md th,
 .cui-table--md td {
-  padding: 0.625rem 0.75rem;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 /* --- Size: lg --- */
@@ -150,7 +150,7 @@ defineExpose({ scrollWrapper });
 
 .cui-table--lg th,
 .cui-table--lg td {
-  padding: 0.75rem 1rem;
+  padding: calc(0.75rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Head row styling --- */

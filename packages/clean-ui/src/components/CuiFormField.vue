@@ -125,20 +125,20 @@ onBeforeUnmount(() => {
 
 .cui-form-field--top {
   flex-direction: column;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 .cui-form-field--left {
   flex-direction: row;
   align-items: flex-start;
-  gap: 1rem;
+  gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Label --- */
 .cui-form-field__label {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--cui-text-body);
@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
 
 .cui-form-field--left .cui-form-field__label {
   min-width: 8rem;
-  padding-top: 0.5rem; /* align with input text */
+  padding-top: calc(0.5rem * var(--cui-density-scale, 1)); /* align with input text */
   flex-shrink: 0;
 }
 
@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--cui-error);
-  padding: 0.0625rem 0.375rem;
+  padding: calc(0.0625rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   background: var(--cui-error-bg);
 }
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 .cui-form-field__body {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
 }

@@ -100,10 +100,10 @@ function onCancel() {
     <!-- Custom header with icon badge -->
     <div
       :style="{
-        padding: '1.25rem 1.5rem 0',
+        padding: 'calc(1.25rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1)) 0',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: '0.875rem',
+        gap: 'calc(0.875rem * var(--cui-density-scale, 1))',
       }"
     >
       <!-- Icon badge -->
@@ -132,7 +132,7 @@ function onCancel() {
             fontWeight: '600',
             lineHeight: '1.3',
             color: 'var(--cui-text-emphasis)',
-            margin: '0.125rem 0 0',
+            margin: 'calc(0.125rem * var(--cui-density-scale, 1)) 0 0',
           }"
         >
           {{ resolvedTitle }}
@@ -145,7 +145,7 @@ function onCancel() {
             fontSize: '0.875rem',
             color: 'var(--cui-text-secondary)',
             lineHeight: '1.55',
-            marginTop: '0.375rem',
+            marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot>{{ message }}</slot>
@@ -167,8 +167,8 @@ function onCancel() {
           color: 'var(--cui-text-tertiary)',
           borderRadius: '0.25rem',
           flexShrink: '0',
-          marginTop: '-0.125rem',
-          marginRight: '-0.25rem',
+          marginTop: 'calc(-0.125rem * var(--cui-density-scale, 1))',
+          marginRight: 'calc(-0.25rem * var(--cui-density-scale, 1))',
         }"
         :aria-label="messages.close"
         @click="onCancel"
@@ -184,9 +184,9 @@ function onCancel() {
           :style="{
             fontSize: '0.8125rem',
             color: 'var(--cui-text-secondary)',
-            marginBottom: '0.5rem',
+            marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))',
             lineHeight: '1.4',
-            padding: '0.625rem 0.75rem',
+            padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
             background: `var(--cui-${cfg.color}-bg)`,
             borderRadius: '0.375rem',
             border: `1px solid var(--cui-${cfg.color}-border)`,
@@ -204,7 +204,7 @@ function onCancel() {
     </CuiModalBody>
 
     <CuiModalFooter>
-      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+      <div style="display: flex; gap: calc(0.5rem * var(--cui-density-scale, 1)); justify-content: flex-end;">
         <CuiButton variant="outline" size="sm" @click="onCancel">
           {{ resolvedCancelText }}
         </CuiButton>

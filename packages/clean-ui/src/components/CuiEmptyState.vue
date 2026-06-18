@@ -86,7 +86,7 @@ const circleStyle = computed(() => ({
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 2rem 1rem;
+  padding: calc(2rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 .cui-empty-state__icon-area {
@@ -116,7 +116,7 @@ const circleStyle = computed(() => ({
 .cui-empty-state__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   flex-wrap: wrap;
   justify-content: center;
 }

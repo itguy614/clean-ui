@@ -64,8 +64,8 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.5rem 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   font-size: 0.8125rem;
   color: var(--cui-text-body);
@@ -97,7 +97,7 @@ function onKeydown(e: KeyboardEvent) {
   display: flex;
   flex-shrink: 0;
   color: var(--cui-text-secondary);
-  margin-top: 0.0625rem;
+  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 
 .cui-dropdown-item__body {
@@ -115,7 +115,7 @@ function onKeydown(e: KeyboardEvent) {
   font-size: 0.75rem;
   color: var(--cui-text-secondary);
   line-height: 1.3;
-  margin-top: 0.125rem;
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-dropdown-item__shortcut {
@@ -123,6 +123,6 @@ function onKeydown(e: KeyboardEvent) {
   font-size: 0.6875rem;
   color: var(--cui-text-tertiary);
   font-family: var(--cui-font-mono, monospace);
-  margin-top: 0.0625rem;
+  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 </style>

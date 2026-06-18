@@ -183,7 +183,7 @@ const messages = useMessages();
           display: 'flex',
           flexDirection: orientation === 'horizontal' ? 'column' : 'row',
           alignItems: orientation === 'horizontal' ? 'center' : 'flex-start',
-          gap: '0.375rem',
+          gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           cursor: stepCursor(index),
           flex: orientation === 'horizontal' ? '0 0 auto' : undefined,
         }"
@@ -216,7 +216,7 @@ const messages = useMessages();
             :style="{
               fontSize: cfg.descFont,
               color: 'var(--cui-text-tertiary)',
-              marginTop: '0.125rem',
+              marginTop: 'calc(0.125rem * var(--cui-density-scale, 1))',
               lineHeight: '1.4',
             }"
           >

@@ -149,7 +149,7 @@ const triggerId = `cui-accordion-trigger-${props.value}`;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.875rem 1.125rem;
+  padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1));
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--cui-text-body);
@@ -211,7 +211,7 @@ const triggerId = `cui-accordion-trigger-${props.value}`;
 }
 
 .cui-accordion-item__content {
-  padding: 0 1.125rem 1rem;
+  padding: 0 calc(1.125rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   color: var(--cui-text-secondary);
   line-height: 1.6;

@@ -52,11 +52,11 @@ const computedInitials = computed(() => {
 });
 
 const sizeConfig: Record<CuiSize, { box: string; font: string; icon: string; statusDot: string; statusOffset: string }> = {
-  xs: { box: "1.5rem", font: "0.5rem", icon: "0.75rem", statusDot: "0.5rem", statusOffset: "-2px" },
-  sm: { box: "2rem", font: "0.625rem", icon: "0.875rem", statusDot: "0.625rem", statusOffset: "-2px" },
-  md: { box: "2.5rem", font: "0.75rem", icon: "1rem", statusDot: "0.625rem", statusOffset: "-1px" },
-  lg: { box: "3.5rem", font: "1rem", icon: "1.25rem", statusDot: "0.75rem", statusOffset: "0px" },
-  xl: { box: "5rem", font: "1.375rem", icon: "1.75rem", statusDot: "1rem", statusOffset: "2px" },
+  xs: { box: "calc(1.5rem * var(--cui-density-scale, 1))", font: "0.5rem", icon: "calc(0.75rem * var(--cui-density-scale, 1))", statusDot: "calc(0.5rem * var(--cui-density-scale, 1))", statusOffset: "calc(-2px * var(--cui-density-scale, 1))" },
+  sm: { box: "calc(2rem * var(--cui-density-scale, 1))", font: "0.625rem", icon: "calc(0.875rem * var(--cui-density-scale, 1))", statusDot: "calc(0.625rem * var(--cui-density-scale, 1))", statusOffset: "calc(-2px * var(--cui-density-scale, 1))" },
+  md: { box: "calc(2.5rem * var(--cui-density-scale, 1))", font: "0.75rem", icon: "calc(1rem * var(--cui-density-scale, 1))", statusDot: "calc(0.625rem * var(--cui-density-scale, 1))", statusOffset: "calc(-1px * var(--cui-density-scale, 1))" },
+  lg: { box: "calc(3.5rem * var(--cui-density-scale, 1))", font: "1rem", icon: "calc(1.25rem * var(--cui-density-scale, 1))", statusDot: "calc(0.75rem * var(--cui-density-scale, 1))", statusOffset: "calc(0px * var(--cui-density-scale, 1))" },
+  xl: { box: "calc(5rem * var(--cui-density-scale, 1))", font: "1.375rem", icon: "calc(1.75rem * var(--cui-density-scale, 1))", statusDot: "calc(1rem * var(--cui-density-scale, 1))", statusOffset: "calc(2px * var(--cui-density-scale, 1))" },
 };
 
 const cfg = computed(() => sizeConfig[props.size]);

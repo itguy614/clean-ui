@@ -13,6 +13,7 @@ import {
   CuiSlideover,
   CuiToastProvider,
   useTheme,
+  useDensity,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
 import { ShowDebugKey } from "./keys";
@@ -21,6 +22,7 @@ const isDark = ref(false);
 const showDebug = ref(false);
 const mobileNavOpen = ref(false);
 const { theme, presets, setTheme } = useTheme();
+const { density, presets: densityPresets, setDensity } = useDensity();
 
 provide(ShowDebugKey, showDebug);
 
@@ -98,6 +100,22 @@ function toggleDark() {
                   <CuiDropdownHeader>Theme</CuiDropdownHeader>
                   <CuiDropdownRadioGroup :model-value="theme" @update:model-value="setTheme($event as string)">
                     <CuiDropdownRadioItem v-for="preset in presets" :key="preset.id" :value="preset.id">
+                      {{ preset.label }}
+                    </CuiDropdownRadioItem>
+                  </CuiDropdownRadioGroup>
+                </CuiDropdownMenu>
+              </CuiDropdown>
+              <CuiDropdown>
+                <CuiDropdownTrigger>
+                  <CuiButton variant="ghost" size="sm">
+                    <template #prefix><CuiIcon name="rows" size="sm" /></template>
+                    {{ densityPresets.find(p => p.id === density)?.label ?? 'Density' }}
+                  </CuiButton>
+                </CuiDropdownTrigger>
+                <CuiDropdownMenu min-width="11rem">
+                  <CuiDropdownHeader>Density</CuiDropdownHeader>
+                  <CuiDropdownRadioGroup :model-value="density" @update:model-value="setDensity($event as 'compact' | 'default' | 'comfortable')">
+                    <CuiDropdownRadioItem v-for="preset in densityPresets" :key="preset.id" :value="preset.id">
                       {{ preset.label }}
                     </CuiDropdownRadioItem>
                   </CuiDropdownRadioGroup>

@@ -25,8 +25,8 @@ const justifyMap: Record<string, string> = {
     :style="{
       display: 'flex',
       alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.375rem 1.125rem 1rem',
+      gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+      padding: 'calc(0.375rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1))',
       justifyContent: justifyMap[align],
     }"
   >

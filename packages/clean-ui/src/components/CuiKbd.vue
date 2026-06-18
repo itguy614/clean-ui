@@ -14,9 +14,9 @@ const props = withDefaults(defineProps<CuiKbdProps>(), {
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; minWidth: string }> = {
-  sm: { fontSize: "0.6875rem", padding: "0.0625rem 0.3125rem", minWidth: "1.125rem" },
-  md: { fontSize: "0.75rem", padding: "0.125rem 0.375rem", minWidth: "1.375rem" },
-  lg: { fontSize: "0.8125rem", padding: "0.1875rem 0.4375rem", minWidth: "1.5rem" },
+  sm: { fontSize: "0.6875rem", padding: "calc(0.0625rem * var(--cui-density-scale, 1)) calc(0.3125rem * var(--cui-density-scale, 1))", minWidth: "1.125rem" },
+  md: { fontSize: "0.75rem", padding: "calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))", minWidth: "1.375rem" },
+  lg: { fontSize: "0.8125rem", padding: "calc(0.1875rem * var(--cui-density-scale, 1)) calc(0.4375rem * var(--cui-density-scale, 1))", minWidth: "1.5rem" },
 };
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));

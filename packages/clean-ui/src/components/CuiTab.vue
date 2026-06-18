@@ -101,7 +101,7 @@ function findTabIndex(value: string): number {
 
 <style scoped>
 .cui-tab-panel {
-  padding: 1rem 0;
+  padding: calc(1rem * var(--cui-density-scale, 1)) 0;
 }
 
 /* --- Fade --- */

@@ -87,7 +87,7 @@ defineExpose({ el: inputRef, focus, blur });
     <!-- Label + value row -->
     <div
       v-if="label || showValue"
-      style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.375rem;"
+      style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(0.375rem * var(--cui-density-scale, 1));"
     >
       <label
         v-if="label"
@@ -180,7 +180,7 @@ defineExpose({ el: inputRef, focus, blur });
     <!-- Min/max range labels -->
     <div
       v-if="showRange"
-      style="display: flex; justify-content: space-between; margin-top: 0.25rem;"
+      style="display: flex; justify-content: space-between; margin-top: calc(0.25rem * var(--cui-density-scale, 1));"
     >
       <span :style="{ fontSize: cfg.valueFont, color: 'var(--cui-text-tertiary)' }">{{ formatValue ? formatValue(min) : min }}</span>
       <span :style="{ fontSize: cfg.valueFont, color: 'var(--cui-text-tertiary)' }">{{ formatValue ? formatValue(max) : max }}</span>

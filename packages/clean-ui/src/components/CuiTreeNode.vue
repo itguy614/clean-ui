@@ -131,7 +131,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       :style="{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
         paddingTop: cfg.padding.split(' ')[0],
         paddingRight: cfg.padding.split(' ')[1] || cfg.padding.split(' ')[0],
         paddingBottom: cfg.padding.split(' ')[0],

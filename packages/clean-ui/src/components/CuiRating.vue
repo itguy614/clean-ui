@@ -144,7 +144,7 @@ defineExpose({ el: rootEl, focus, blur });
   <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <div
@@ -182,7 +182,7 @@ defineExpose({ el: rootEl, focus, blur });
           fontSize: cfg.valueFont,
           fontWeight: '600',
           color: 'var(--cui-text-body)',
-          marginLeft: '0.25rem',
+          marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))',
           fontVariantNumeric: 'tabular-nums',
         }"
       >

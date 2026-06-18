@@ -75,7 +75,9 @@ const SPACING_MAP: Record<TailwindSpacing, string> = {
 };
 
 export function spacingToCss(spacing: TailwindSpacing): string {
-  return SPACING_MAP[spacing] ?? "0";
+  const v = SPACING_MAP[spacing] ?? "0";
+  // Scale layout spacing by the (gentler) density gap scalar. `0` needs no scaling.
+  return v === "0" ? "0" : `calc(${v} * var(--cui-density-gap-scale, 1))`;
 }
 
 /**

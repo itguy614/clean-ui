@@ -227,7 +227,7 @@ const perPageSelectOptions = computed(() =>
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-pagination__info {
@@ -243,7 +243,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination__controls {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-pagination__per-page {
@@ -254,7 +254,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination__nav {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 /* --- Page buttons --- */
@@ -264,7 +264,7 @@ const perPageSelectOptions = computed(() =>
   justify-content: center;
   min-width: 2rem;
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: 0 calc(0.5rem * var(--cui-density-scale, 1));
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--cui-text-body);
@@ -279,7 +279,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination--sm .cui-pagination__btn {
   min-width: 1.625rem;
   height: 1.625rem;
-  padding: 0 0.375rem;
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
   font-size: 0.75rem;
 }
 

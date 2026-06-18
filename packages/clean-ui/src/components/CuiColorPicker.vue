@@ -321,18 +321,18 @@ defineExpose({ el: rootEl, focus, blur });
     <!-- Sliders + controls area -->
     <div
       :style="{
-        padding: '0.75rem',
+        padding: 'calc(0.75rem * var(--cui-density-scale, 1))',
         background: 'var(--cui-surface-base, white)',
         border: '1px solid var(--cui-border)',
         borderTop: swatchOnly ? undefined : 'none',
         borderRadius: swatchOnly ? '0.5rem' : '0 0 0.5rem 0.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.625rem',
+        gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
       }"
     >
       <!-- Preview + sliders row -->
-      <div v-if="!swatchOnly" :style="{ display: 'flex', gap: '0.625rem', alignItems: 'center' }">
+      <div v-if="!swatchOnly" :style="{ display: 'flex', gap: 'calc(0.625rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
         <!-- Color preview circle -->
         <div
           :style="{
@@ -350,7 +350,7 @@ defineExpose({ el: rootEl, focus, blur });
         </div>
 
         <!-- Sliders -->
-        <div :style="{ flex: '1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }">
+        <div :style="{ flex: '1', display: 'flex', flexDirection: 'column', gap: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
           <!-- Hue slider -->
           <div
             ref="hueRef"
@@ -415,7 +415,7 @@ defineExpose({ el: rootEl, focus, blur });
       </div>
 
       <!-- Input + format toggle -->
-      <div v-if="showInput" :style="{ display: 'flex', gap: '0.375rem', alignItems: 'center' }">
+      <div v-if="showInput" :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
         <!-- Swatch-only preview -->
         <div
           v-if="swatchOnly"
@@ -433,7 +433,7 @@ defineExpose({ el: rootEl, focus, blur });
           v-model="textInput"
           :style="{
             flex: '1',
-            padding: '0.3125rem 0.5rem',
+            padding: 'calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))',
             fontSize: cfg.fontSize,
             fontFamily: 'var(--cui-font-mono, monospace)',
             border: '1px solid var(--cui-border-strong, var(--cui-border))',
@@ -458,7 +458,7 @@ defineExpose({ el: rootEl, focus, blur });
       </div>
 
       <!-- Palette swatches -->
-      <div v-if="resolvedPalette.length > 0" :style="{ display: 'flex', flexWrap: 'wrap', gap: '0.3125rem' }">
+      <div v-if="resolvedPalette.length > 0" :style="{ display: 'flex', flexWrap: 'wrap', gap: 'calc(0.3125rem * var(--cui-density-scale, 1))' }">
         <div
           v-for="color in resolvedPalette"
           :key="color"

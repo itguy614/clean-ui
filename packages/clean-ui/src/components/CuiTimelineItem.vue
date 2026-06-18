@@ -42,9 +42,9 @@ const dotStyle = computed(() => ({
     v-show="!hidden"
     :style="{
       display: 'flex',
-      gap: '0.875rem',
+      gap: 'calc(0.875rem * var(--cui-density-scale, 1))',
       position: 'relative',
-      paddingBottom: last ? '0' : '1.5rem',
+      paddingBottom: last ? '0' : 'calc(1.5rem * var(--cui-density-scale, 1))',
     }"
     role="listitem"
   >
@@ -72,16 +72,16 @@ const dotStyle = computed(() => ({
           width: '2px',
           flex: '1',
           background: 'var(--cui-border)',
-          marginTop: '0.375rem',
+          marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))',
           borderRadius: '1px',
         }"
       />
     </div>
 
     <!-- Right column: content -->
-    <div :style="{ flex: '1', minWidth: '0', paddingTop: icon ? '0.125rem' : '0' }">
+    <div :style="{ flex: '1', minWidth: '0', paddingTop: icon ? 'calc(0.125rem * var(--cui-density-scale, 1))' : '0' }">
       <!-- Title + timestamp row -->
-      <div v-if="title || timestamp" :style="{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }">
+      <div v-if="title || timestamp" :style="{ display: 'flex', alignItems: 'baseline', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', flexWrap: 'wrap' }">
         <span
           v-if="title"
           :style="{
@@ -112,7 +112,7 @@ const dotStyle = computed(() => ({
           fontSize: '0.8125rem',
           color: 'var(--cui-text-secondary)',
           lineHeight: '1.55',
-          marginTop: title ? '0.25rem' : '0',
+          marginTop: title ? 'calc(0.25rem * var(--cui-density-scale, 1))' : '0',
         }"
       >
         <slot />

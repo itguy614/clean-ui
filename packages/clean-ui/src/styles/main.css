@@ -810,3 +810,38 @@
     animation: none !important;
   }
 }
+
+/* ============================================================
+   DENSITY
+   Global UI density applied as a class on any ancestor (like themes).
+   Components multiply their spatial values by these scalars via
+   calc(<value> * var(--cui-density-scale, 1)). With no class set the
+   scalars are 1 — pixel-identical to the un-scaled defaults.
+
+   - --cui-density-scale     : control dimensions (padding, control height)
+   - --cui-density-gap-scale : layout gaps (gentler curve; whitespace, not chrome)
+
+   Density moves whitespace, NOT type — font sizes are never scaled.
+   ============================================================ */
+
+:root {
+  --cui-density-scale: 1;
+  --cui-density-gap-scale: 1;
+}
+
+.cui-density-compact {
+  --cui-density-scale: 0.85;
+  --cui-density-gap-scale: 0.92;
+}
+
+/* `default` == :root; present so the switcher can reset and a subtree can
+   opt back to baseline inside a compact/comfortable ancestor. */
+.cui-density-default {
+  --cui-density-scale: 1;
+  --cui-density-gap-scale: 1;
+}
+
+.cui-density-comfortable {
+  --cui-density-scale: 1.15;
+  --cui-density-gap-scale: 1.08;
+}

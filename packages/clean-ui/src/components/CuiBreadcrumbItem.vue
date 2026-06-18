@@ -85,7 +85,7 @@ const linkProps = computed(() => {
 
 .cui-breadcrumb-item__separator {
   color: var(--cui-text-tertiary);
-  margin: 0 0.5rem;
+  margin: 0 calc(0.5rem * var(--cui-density-scale, 1));
   user-select: none;
 }
 </style>

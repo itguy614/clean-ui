@@ -173,7 +173,7 @@ function updateDropdownPosition() {
     border: "1px solid var(--cui-border)",
     borderRadius: "0.5rem",
     boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "0.25rem",
+    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
   };
 
   if (openAbove) {
@@ -329,7 +329,7 @@ function optionStyle(index: number, option: ComboboxOption) {
   return {
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem",
+    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
     padding: cfg.value.itemPadding,
     cursor: option.disabled ? "default" : "pointer",
     fontSize: cfg.value.fontSize,
@@ -347,7 +347,7 @@ const messages = useMessages();
   <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <!-- Input area -->
@@ -356,7 +356,7 @@ const messages = useMessages();
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
         padding: cfg.padding,
         border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
         borderRadius: radiusMap[rounded],
@@ -376,7 +376,7 @@ const messages = useMessages();
         removable
         @remove="removeTag(opt.value)"
       >
-        <img v-if="opt.image" :src="opt.image as string" :style="{ width: '1rem', height: '1rem', borderRadius: '50%', objectFit: 'cover', marginRight: '0.125rem' }" />
+        <img v-if="opt.image" :src="opt.image as string" :style="{ width: '1rem', height: '1rem', borderRadius: '50%', objectFit: 'cover', marginRight: 'calc(0.125rem * var(--cui-density-scale, 1))' }" />
         {{ opt.label }}
       </CuiBadge>
 
@@ -394,7 +394,7 @@ const messages = useMessages();
           background: 'transparent',
           fontSize: cfg.fontSize,
           color: 'var(--cui-text-body)',
-          padding: '0.125rem 0',
+          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
           fontFamily: 'inherit',
         }"
         @input="onInput"
@@ -403,14 +403,14 @@ const messages = useMessages();
       />
 
       <!-- Right icons -->
-      <div :style="{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: '0' }">
+      <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
         <CuiSpinner v-if="isLoading" size="xs" />
         <CuiIcon v-else name="caret-down" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }" />
       </div>
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: '0.25rem' }">
+    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
       {{ errorMessage }}
     </div>
 
@@ -418,14 +418,14 @@ const messages = useMessages();
     <Teleport to="body">
       <div v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
         <!-- Loading -->
-        <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: '1rem', textAlign: 'center' }">
+        <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
         </div>
 
         <!-- No results -->
         <div
           v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)"
-          :style="{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
+          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
         >
           {{ noResultsText }}
         </div>
@@ -433,7 +433,7 @@ const messages = useMessages();
         <!-- Min chars hint -->
         <div
           v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
-          :style="{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
+          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
         >
           {{ messages.combobox.typeMore(minChars - query.length) }}
         </div>
@@ -466,7 +466,7 @@ const messages = useMessages();
               </div>
               <div
                 v-if="option.description"
-                :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: '0.0625rem' }"
+                :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: 'calc(0.0625rem * var(--cui-density-scale, 1))' }"
               >
                 {{ option.description }}
               </div>

@@ -151,7 +151,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: calc(2rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Container (centers the modal, must be above backdrop) --- */
@@ -163,7 +163,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   justify-content: center;
   width: 100%;
   max-height: calc(100vh - 4rem);
-  margin-top: 4rem;
+  margin-top: calc(4rem * var(--cui-density-scale, 1));
 }
 
 /* --- Modal panel --- */

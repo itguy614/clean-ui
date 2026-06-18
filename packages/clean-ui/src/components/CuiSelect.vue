@@ -493,13 +493,13 @@ const messages = useMessages();
   align-items: center;
   justify-content: space-between;
   min-height: var(--_sel-min-height);
-  padding: 0.25rem var(--_sel-px);
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) var(--_sel-px);
   border: 1px solid var(--_sel-border);
   background: var(--cui-surface-base);
   font-size: var(--_sel-font-size);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   user-select: none;
 }
 
@@ -533,7 +533,7 @@ const messages = useMessages();
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
   min-height: calc(var(--_sel-min-height) - 0.75rem);
@@ -542,7 +542,7 @@ const messages = useMessages();
 .cui-select__label {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-text-body);
   white-space: nowrap;
   overflow: hidden;
@@ -557,8 +557,8 @@ const messages = useMessages();
 .cui-select__chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.375rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   background: var(--color-surface-100);
   color: var(--cui-text-body);
@@ -593,7 +593,7 @@ const messages = useMessages();
 .cui-select__actions {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex-shrink: 0;
 }
 
@@ -639,7 +639,7 @@ const messages = useMessages();
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-  padding: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 :where(.dark, .dark *) .cui-select__dropdown {
@@ -652,8 +652,8 @@ const messages = useMessages();
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.75rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   color: var(--cui-text-secondary);
 }
@@ -666,7 +666,7 @@ const messages = useMessages();
 
 /* --- Group header --- */
 .cui-select__group-header {
-  padding: 0.5rem 0.5rem 0.25rem;
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -678,8 +678,8 @@ const messages = useMessages();
 .cui-select__option {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: var(--_sel-font-size);
@@ -730,14 +730,14 @@ const messages = useMessages();
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   min-width: 0;
 }
 
 /* --- Error --- */
 .cui-select__error {
   font-size: 0.8125rem;
-  margin-top: 0.375rem;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-error);
 }
 </style>

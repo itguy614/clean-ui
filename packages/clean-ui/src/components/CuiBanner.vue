@@ -61,8 +61,8 @@ const containerStyle = computed(() => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "0.75rem",
-    padding: "0.625rem 1rem",
+    gap: "calc(0.75rem * var(--cui-density-scale, 1))",
+    padding: "calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1))",
   };
 
   s[props.position] = "0";
@@ -92,7 +92,7 @@ const containerStyle = computed(() => {
     </div>
 
     <!-- Actions slot -->
-    <div v-if="$slots.actions" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;">
+    <div v-if="$slots.actions" style="flex-shrink: 0; display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1));">
       <slot name="actions" />
     </div>
 

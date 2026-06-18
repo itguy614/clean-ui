@@ -241,8 +241,8 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-top: 0.375rem;
-  gap: 1rem;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
+  gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
 .cui-textarea__error {

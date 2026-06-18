@@ -140,7 +140,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-checkbox {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -170,14 +170,14 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: calc(1.25rem * var(--cui-density-scale, 1));
+  height: calc(1.25rem * var(--cui-density-scale, 1));
   flex-shrink: 0;
   border-radius: 0.25rem;
   border: 2px solid var(--_check-border);
   background: var(--_check-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
-  margin-top: 0.125rem;
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator {
@@ -205,7 +205,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-checkbox__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-checkbox__label {

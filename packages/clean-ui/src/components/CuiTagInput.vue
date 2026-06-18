@@ -127,9 +127,9 @@ const isLoading = computed(() => internalLoading.value);
 // Size config
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: "sm" | "md"; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "0.25rem 0.5rem", tagSize: "sm", inputHeight: "2rem" },
-  md: { fontSize: "0.875rem", padding: "0.3125rem 0.625rem", tagSize: "sm", inputHeight: "2.375rem" },
-  lg: { fontSize: "0.9375rem", padding: "0.4375rem 0.75rem", tagSize: "md", inputHeight: "2.75rem" },
+  sm: { fontSize: "0.8125rem", padding: "calc(0.25rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2rem" },
+  md: { fontSize: "0.875rem", padding: "calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2.375rem" },
+  lg: { fontSize: "0.9375rem", padding: "calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", tagSize: "md", inputHeight: "2.75rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
@@ -153,7 +153,7 @@ function updateDropdownPosition() {
     border: "1px solid var(--cui-border)",
     borderRadius: "0.5rem",
     boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "0.25rem",
+    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
   };
 
   if (openAbove) s.bottom = `${vh - rect.top + 4}px`;
@@ -286,7 +286,7 @@ defineExpose({ el: wrapperRef, focus, blur });
   <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <!-- Input area -->
@@ -295,7 +295,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
         padding: cfg.padding,
         border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
         borderRadius: radiusMap[rounded],
@@ -333,7 +333,7 @@ defineExpose({ el: wrapperRef, focus, blur });
           background: 'transparent',
           fontSize: cfg.fontSize,
           color: 'var(--cui-text-body)',
-          padding: '0.125rem 0',
+          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
           fontFamily: 'inherit',
         }"
         @input="onInput"
@@ -343,7 +343,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Error -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: '0.25rem' }">
+    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
       {{ errorMessage }}
     </div>
 
@@ -351,7 +351,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     <Teleport to="body">
       <div v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)" ref="dropdownRef" :style="dropdownStyle">
         <!-- Loading -->
-        <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: '0.75rem', textAlign: 'center' }">
+        <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="xs" show-label label="Searching..." />
         </div>
 
@@ -363,8 +363,8 @@ defineExpose({ el: wrapperRef, focus, blur });
           :style="{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.4375rem 0.625rem',
+            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
             cursor: 'pointer',
             fontSize: cfg.fontSize,
             borderRadius: '0.25rem',
@@ -386,8 +386,8 @@ defineExpose({ el: wrapperRef, focus, blur });
           :style="{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.375rem',
-            padding: '0.4375rem 0.625rem',
+            gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
+            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
             cursor: 'pointer',
             fontSize: cfg.fontSize,
             borderRadius: '0.25rem',
@@ -396,8 +396,8 @@ defineExpose({ el: wrapperRef, focus, blur });
             fontWeight: '500',
             transition: 'background 0.1s ease',
             borderTop: filteredSuggestions.length > 0 ? '1px solid color-mix(in srgb, var(--cui-border) 50%, transparent)' : 'none',
-            marginTop: filteredSuggestions.length > 0 ? '0.125rem' : '0',
-            paddingTop: filteredSuggestions.length > 0 ? '0.5rem' : undefined,
+            marginTop: filteredSuggestions.length > 0 ? 'calc(0.125rem * var(--cui-density-scale, 1))' : '0',
+            paddingTop: filteredSuggestions.length > 0 ? 'calc(0.5rem * var(--cui-density-scale, 1))' : undefined,
           }"
           @click.stop="createTag"
           @mouseenter="focusedIndex = filteredSuggestions.length"

@@ -189,7 +189,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -219,14 +219,14 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: calc(1.25rem * var(--cui-density-scale, 1));
+  height: calc(1.25rem * var(--cui-density-scale, 1));
   flex-shrink: 0;
   border-radius: 50%;
   border: 2px solid var(--_radio-border);
   background: var(--_radio-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
-  margin-top: 0.125rem; /* align with first line of text */
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1)); /* align with first line of text */
 }
 
 .cui-radio:hover:not(.cui-radio--disabled):not(.cui-radio--readonly) .cui-radio__indicator {
@@ -241,8 +241,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 /* --- Inner dot --- */
 .cui-radio__dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: calc(0.5rem * var(--cui-density-scale, 1));
+  height: calc(0.5rem * var(--cui-density-scale, 1));
   border-radius: 50%;
   background: var(--_radio-color);
   animation: cui-radio-pop 0.15s ease;
