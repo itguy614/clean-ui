@@ -18,10 +18,10 @@ const STORAGE_KEY = "cui-density";
 const CLASS_PREFIX = "cui-density-";
 const DEFAULT: DensityId = "default";
 
+const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
+
 // Shared reactive state — all components see the same density.
 const activeDensity = ref<DensityId>(loadDensity());
-
-const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
 
 function loadDensity(): DensityId {
   if (typeof window === "undefined") return DEFAULT;
