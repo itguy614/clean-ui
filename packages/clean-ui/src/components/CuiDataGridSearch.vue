@@ -4,7 +4,9 @@ import { useDataGridState } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
+import { useMessages } from "../composables/useMessages";
 
+const messages = useMessages();
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const grid = useDataGridState();
 const localQuery = ref(grid.searchQuery.value);
@@ -32,7 +34,7 @@ function onClear() {
   <div style="position: relative; max-width: 20rem; flex: 1;">
     <CuiInput
       :model-value="localQuery"
-      placeholder="Search..."
+      :placeholder="messages.dataGrid.search"
       size="sm"
       @update:model-value="onInput"
       @keydown.escape="onClear"

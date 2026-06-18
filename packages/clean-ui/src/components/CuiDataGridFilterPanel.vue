@@ -7,7 +7,9 @@ import CuiSelect from "./CuiSelect.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
+const messages = useMessages();
 const grid = useDataGridState();
 
 // Local filter state — applied on "Apply" button
@@ -107,7 +109,7 @@ const hasAnyValue = computed(() => {
 <template>
   <div v-if="grid.filterPanelOpen.value" class="cui-data-grid-filter-panel">
     <div class="cui-data-grid-filter-panel__header">
-      <span class="cui-data-grid-filter-panel__title">Filters</span>
+      <span class="cui-data-grid-filter-panel__title">{{ messages.dataGrid.filters }}</span>
       <div style="display: flex; gap: 0.25rem;">
         <CuiButton
           variant="ghost"
@@ -135,7 +137,7 @@ const hasAnyValue = computed(() => {
         <CuiInput
           v-if="col.filterType === 'text' || !col.filterType"
           :model-value="getTextValue(col.filterKey ?? col.key)"
-          :placeholder="`Filter ${col.label}...`"
+          :placeholder="messages.dataGrid.filterColumn(col.label)"
           size="sm"
           @update:model-value="setTextValue(col.filterKey ?? col.key, $event)"
         />
@@ -144,7 +146,7 @@ const hasAnyValue = computed(() => {
         <CuiSelect
           v-else-if="col.filterType === 'select'"
           :model-value="getSelectValue(col.filterKey ?? col.key)"
-          :options="[{ label: 'All', value: '' }, ...(col.filterOptions ?? [])]"
+          :options="[{ label: messages.dataGrid.all, value: '' }, ...(col.filterOptions ?? [])]"
           size="sm"
           @update:model-value="(val: unknown) => setSelectValue(col.filterKey ?? col.key, String(val ?? ''))"
         />
@@ -180,8 +182,8 @@ const hasAnyValue = computed(() => {
     </div>
 
     <div class="cui-data-grid-filter-panel__footer">
-      <CuiButton size="xs" variant="solid" @click="applyAll">Apply</CuiButton>
-      <CuiButton size="xs" variant="ghost" :disabled="!hasAnyValue" @click="clearAll">Clear All</CuiButton>
+      <CuiButton size="xs" variant="solid" @click="applyAll">{{ messages.apply }}</CuiButton>
+      <CuiButton size="xs" variant="ghost" :disabled="!hasAnyValue" @click="clearAll">{{ messages.clearAll }}</CuiButton>
     </div>
   </div>
 </template>

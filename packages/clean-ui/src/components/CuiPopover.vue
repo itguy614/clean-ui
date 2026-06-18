@@ -4,6 +4,7 @@ import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 
@@ -165,6 +166,7 @@ const arrowClipPaths: Record<string, string> = {
   left: "polygon(0% 0%, 100% 0%, 100% 100%)",
   right: "polygon(0% 0%, 0% 100%, 100% 100%)",
 };
+const messages = useMessages();
 </script>
 
 <template>
@@ -229,7 +231,7 @@ const arrowClipPaths: Record<string, string> = {
               marginTop: '-0.0625rem',
               marginRight: '-0.125rem',
             }"
-            aria-label="Close"
+            :aria-label="messages.close"
             @click.stop="doHide"
           >
             <CuiIcon name="x" size="0.8125rem" />

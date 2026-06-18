@@ -4,6 +4,9 @@ import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const props = defineProps<{
   actions: DataGridBulkAction[];
@@ -34,7 +37,7 @@ function onAction(action: DataGridBulkAction) {
     <div v-if="isVisible" class="cui-data-grid-bulk-bar">
       <div class="cui-data-grid-bulk-bar__inner">
         <span class="cui-data-grid-bulk-bar__count">
-          {{ selectedCount }} item{{ selectedCount === 1 ? "" : "s" }} selected
+          {{ messages.dataGrid.selected(selectedCount) }}
         </span>
 
         <div class="cui-data-grid-bulk-bar__actions">
@@ -57,7 +60,7 @@ function onAction(action: DataGridBulkAction) {
           style="margin-left: auto;"
         >
           <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
-          Clear
+          {{ messages.clear }}
         </CuiButton>
       </div>
     </div>

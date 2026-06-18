@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export interface CuiModalHeaderProps extends HideableProps {
   /** Convenience: title text */
@@ -17,6 +18,7 @@ const props = withDefaults(defineProps<CuiModalHeaderProps>(), {
 const emit = defineEmits<{
   close: [];
 }>();
+const messages = useMessages();
 </script>
 
 <template>
@@ -72,7 +74,7 @@ const emit = defineEmits<{
         marginRight: '-0.25rem',
         transition: 'color 0.15s ease, background 0.15s ease',
       }"
-      aria-label="Close"
+      :aria-label="messages.close"
       @click="emit('close')"
       @mouseenter="($event.target as HTMLElement).style.color = 'var(--cui-text-body)'; ($event.target as HTMLElement).style.background = 'var(--cui-primary-bg)'"
       @mouseleave="($event.target as HTMLElement).style.color = 'var(--cui-text-tertiary)'; ($event.target as HTMLElement).style.background = 'none'"

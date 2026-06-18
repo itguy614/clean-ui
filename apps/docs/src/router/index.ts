@@ -79,6 +79,11 @@ const router = createRouter({
       component: () => import('../pages/TypographyPage.vue'),
     },
     {
+      path: '/foundations/localization',
+      name: 'localization',
+      component: () => import('../pages/LocalizationPage.vue'),
+    },
+    {
       path: '/components/dropdown',
       name: 'dropdown',
       component: () => import('../pages/DropdownPage.vue'),

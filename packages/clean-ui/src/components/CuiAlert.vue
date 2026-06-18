@@ -4,6 +4,7 @@ import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from 
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
+import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -119,6 +120,7 @@ const alertStyle = computed(() => {
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
+const messages = useMessages();
 </script>
 
 <template>
@@ -157,7 +159,7 @@ const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
       v-if="dismissible"
       type="button"
       class="cui-alert__dismiss"
-      aria-label="Dismiss"
+      :aria-label="messages.dismiss"
       @click="dismiss"
     >
       <CuiIcon name="x" size="0.875rem" />

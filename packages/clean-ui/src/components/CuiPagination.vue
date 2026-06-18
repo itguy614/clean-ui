@@ -4,6 +4,7 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiSelect from "./CuiSelect.vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -139,9 +140,11 @@ function onPerPageChange(val: string | number | null | Array<string | number>) {
   }
 }
 
+const messages = useMessages();
+
 // Per-page select options
 const perPageSelectOptions = computed(() =>
-  props.perPageOptions.map((n) => ({ value: n, label: `${n} / page` })),
+  props.perPageOptions.map((n) => ({ value: n, label: messages.value.pagination.perPage(n) })),
 );
 </script>
 
@@ -153,7 +156,7 @@ const perPageSelectOptions = computed(() =>
   >
     <!-- Info text -->
     <div v-if="!hideInfo && totalItems > 0" class="cui-pagination__info">
-      Showing {{ from }} to {{ to }} of {{ totalItems }} results
+      {{ messages.pagination.summary({ from, to, total: totalItems }) }}
     </div>
 
     <div class="cui-pagination__controls">

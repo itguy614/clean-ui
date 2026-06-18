@@ -22,6 +22,7 @@ import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
 import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export interface CuiDataGridProps extends HideableProps {
   /** Column definitions */
@@ -160,6 +161,7 @@ defineExpose({
   loadConfig: grid.loadConfig,
   resetToDefaults: grid.resetToDefaults,
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -195,8 +197,8 @@ defineExpose({
       <slot name="empty">
         <CuiEmptyState
           icon="magnifying-glass"
-          title="No results found"
-          description="Try adjusting your search or filters."
+          :title="messages.dataGrid.noResultsTitle"
+          :description="messages.dataGrid.noResultsDescription"
           size="md"
           color="secondary"
         />

@@ -9,6 +9,7 @@ import {
   type TabTransition,
 } from "./tabs-context";
 import type { HideableProps, ColorableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -137,6 +138,7 @@ const slideDirection = computed(() => {
   const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
   return currIdx >= prevIdx ? "left" : "right";
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -180,7 +182,7 @@ const slideDirection = computed(() => {
           v-if="tab.closeable"
           type="button"
           class="cui-tabs__tab-close"
-          aria-label="Close tab"
+          :aria-label="messages.tabs.closeTab"
           tabindex="-1"
           @click.stop="close(tab.value)"
         >
