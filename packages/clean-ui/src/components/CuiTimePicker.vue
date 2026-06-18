@@ -163,7 +163,7 @@ defineExpose({ el: rootEl, focus, blur });
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
@@ -183,8 +183,8 @@ defineExpose({ el: rootEl, focus, blur });
         :style="{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.4375rem 0.625rem',
+          gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+          padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, 0.375rem)',
           background: 'var(--cui-surface-base, white)',
@@ -201,7 +201,7 @@ defineExpose({ el: rootEl, focus, blur });
 
       <!-- Time picker popover -->
       <template #content>
-        <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }">
+        <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
           <!-- Hours -->
           <CuiInputStepper
             :model-value="hours"
@@ -232,7 +232,7 @@ defineExpose({ el: rootEl, focus, blur });
           />
 
           <!-- AM/PM toggle (12h only) -->
-          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: '0.125rem', marginLeft: '0.25rem' }">
+          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: 'calc(0.125rem * var(--cui-density-scale, 1))', marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
             <CuiButton
               variant="ghost"
               size="xs"

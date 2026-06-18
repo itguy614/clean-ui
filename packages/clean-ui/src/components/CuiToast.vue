@@ -206,8 +206,8 @@ const messages = useMessages();
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
+  padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   border-radius: var(--cui-button-radius, 0.375rem);
   min-width: 280px;
   max-width: 420px;
@@ -219,7 +219,7 @@ const messages = useMessages();
 .cui-toast__icon {
   display: flex;
   flex-shrink: 0;
-  margin-top: 0.0625rem;
+  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 
 /* --- Body --- */
@@ -238,13 +238,13 @@ const messages = useMessages();
   font-size: 0.8125rem;
   line-height: 1.5;
   opacity: 0.9;
-  margin-top: 0.125rem;
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-toast__actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  margin-top: calc(0.625rem * var(--cui-density-scale, 1));
 }
 
 /* --- Icon --- */
@@ -268,7 +268,7 @@ const messages = useMessages();
   border-radius: 0.25rem;
   opacity: 0.6;
   transition: opacity 0.15s ease;
-  margin: -0.125rem -0.25rem -0.125rem 0;
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
 }
 
 .cui-toast__dismiss:hover {

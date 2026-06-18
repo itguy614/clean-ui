@@ -31,9 +31,9 @@ const grid = useDataGridState();
 .cui-data-grid-view-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
   border: 1px solid var(--cui-border);
   border-radius: var(--cui-button-radius, 0.375rem);
-  padding: 0.125rem;
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
 }
 </style>

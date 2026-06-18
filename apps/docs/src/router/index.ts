@@ -84,6 +84,11 @@ const router = createRouter({
       component: () => import('../pages/LocalizationPage.vue'),
     },
     {
+      path: '/foundations/density',
+      name: 'density',
+      component: () => import('../pages/DensityPage.vue'),
+    },
+    {
       path: '/components/dropdown',
       name: 'dropdown',
       component: () => import('../pages/DropdownPage.vue'),

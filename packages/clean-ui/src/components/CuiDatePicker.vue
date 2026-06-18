@@ -298,7 +298,7 @@ watch(popoverVisible, (open) => {
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
@@ -332,16 +332,16 @@ watch(popoverVisible, (open) => {
 
       <!-- Calendar popover -->
       <template #content>
-        <div :style="{ padding: '0.25rem', minWidth: '260px' }">
+        <div :style="{ padding: 'calc(0.25rem * var(--cui-density-scale, 1))', minWidth: '260px' }">
 
           <!-- DAYS VIEW -->
           <template v-if="viewMode === 'days'">
             <!-- Header: nav + month/year -->
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <div :style="{ display: 'flex', gap: '0.25rem' }">
+              <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="onMonthHeaderClick">
                   {{ MONTH_NAMES_SHORT[viewMonth] }}
                 </CuiButton>
@@ -355,7 +355,7 @@ watch(popoverVisible, (open) => {
             </div>
 
             <!-- Day names -->
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: '0.25rem' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
               <div
                 v-for="name in DAY_NAMES_SHORT"
                 :key="name"
@@ -364,7 +364,7 @@ watch(popoverVisible, (open) => {
                   fontSize: '0.6875rem',
                   fontWeight: '600',
                   color: 'var(--cui-text-tertiary)',
-                  padding: '0.25rem 0',
+                  padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0',
                   textTransform: 'uppercase',
                 }"
               >
@@ -373,7 +373,7 @@ watch(popoverVisible, (open) => {
             </div>
 
             <!-- Day grid -->
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(2px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="(day, i) in calendarDays"
                 :key="i"
@@ -386,7 +386,7 @@ watch(popoverVisible, (open) => {
             </div>
 
             <!-- Today button -->
-            <div v-if="highlightToday" :style="{ marginTop: '0.5rem', textAlign: 'center' }">
+            <div v-if="highlightToday" :style="{ marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
               <CuiButton variant="ghost" size="xs" @click="selectDay({ date: new Date(), disabled: isDisabled(new Date()) })">
                 Today
               </CuiButton>
@@ -395,7 +395,7 @@ watch(popoverVisible, (open) => {
 
           <!-- MONTHS VIEW -->
           <template v-else-if="viewMode === 'months'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="viewYear--">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
@@ -407,12 +407,12 @@ watch(popoverVisible, (open) => {
               </CuiButton>
             </div>
 
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="(name, i) in MONTH_NAMES_SHORT"
                 :key="i"
                 :style="{
-                  padding: '0.5rem',
+                  padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
                   textAlign: 'center',
                   borderRadius: '0.375rem',
                   cursor: 'pointer',
@@ -431,7 +431,7 @@ watch(popoverVisible, (open) => {
 
           <!-- YEARS VIEW -->
           <template v-else-if="viewMode === 'years'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="prevYearRange">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
@@ -443,12 +443,12 @@ watch(popoverVisible, (open) => {
               </CuiButton>
             </div>
 
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="year in yearRange"
                 :key="year"
                 :style="{
-                  padding: '0.5rem',
+                  padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
                   textAlign: 'center',
                   borderRadius: '0.375rem',
                   cursor: 'pointer',

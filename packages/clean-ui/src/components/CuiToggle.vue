@@ -76,6 +76,9 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 // Size dimensions
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+// Switch dimensions sit inline with a fixed-size label, so they stay fixed —
+// scaling them while the label text doesn't would break vertical alignment.
+// Density scales the spacing around the control instead.
 const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: string; knob: string; travel: string; labelSize: string }> = {
   sm: { w: "2rem", h: "1.125rem", knob: "0.875rem", travel: "0.875rem", labelSize: "0.5rem" },
   md: { w: "2.75rem", h: "1.5rem", knob: "1.25rem", travel: "1.25rem", labelSize: "0.625rem" },
@@ -162,7 +165,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 .cui-toggle {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -263,7 +266,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 .cui-toggle__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-toggle__label {

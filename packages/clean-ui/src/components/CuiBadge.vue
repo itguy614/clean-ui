@@ -126,7 +126,7 @@ const messages = useMessages();
 .cui-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;
@@ -135,12 +135,12 @@ const messages = useMessages();
 
 /* --- Sizes --- */
 .cui-badge--sm {
-  padding: 0.125rem 0.5rem;
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
 }
 
 .cui-badge--md {
-  padding: 0.1875rem 0.625rem;
+  padding: calc(0.1875rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   font-size: 0.8125rem;
 }
 
@@ -176,7 +176,7 @@ const messages = useMessages();
   background: none;
   cursor: pointer;
   padding: 0;
-  margin: -0.0625rem -0.125rem -0.0625rem 0;
+  margin: calc(-0.0625rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.0625rem * var(--cui-density-scale, 1)) 0;
   border-radius: 50%;
   color: currentColor;
   opacity: 0.6;
@@ -190,7 +190,7 @@ const messages = useMessages();
 .cui-badge__content {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 /* Animations — use shared keyframes from main.css where possible */

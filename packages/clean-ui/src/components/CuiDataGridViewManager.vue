@@ -102,7 +102,7 @@ function onReset() {
           @select="onLoadView(view.id)"
         >
           <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            <span style="display: flex; align-items: center; gap: 0.375rem;">
+            <span style="display: flex; align-items: center; gap: calc(0.375rem * var(--cui-density-scale, 1));">
               <CuiIcon
                 v-if="viewManager.activeViewId.value === view.id"
                 name="check"
@@ -112,7 +112,7 @@ function onReset() {
               {{ view.name }}
             </span>
             <button
-              style="border: none; background: none; cursor: pointer; padding: 0.125rem; color: var(--cui-text-tertiary); opacity: 0.6;"
+              style="border: none; background: none; cursor: pointer; padding: calc(0.125rem * var(--cui-density-scale, 1)); color: var(--cui-text-tertiary); opacity: 0.6;"
               @click.stop="onRemove(view.id)"
             >
               <CuiIcon name="trash" size="0.75rem" />
@@ -138,7 +138,7 @@ function onReset() {
         Save as...
       </CuiDropdownItem>
 
-      <div v-if="showSaveAs" style="padding: 0.375rem 0.625rem; display: flex; gap: 0.375rem;">
+      <div v-if="showSaveAs" style="padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1)); display: flex; gap: calc(0.375rem * var(--cui-density-scale, 1));">
         <CuiInput
           v-model="newViewName"
           placeholder="View name"

@@ -129,7 +129,7 @@ const messages = useMessages();
 .cui-skeleton__text {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-skeleton__line {

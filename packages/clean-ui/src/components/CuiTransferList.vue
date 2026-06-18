@@ -269,7 +269,7 @@ function itemStyle(selected: boolean, disabled?: boolean) {
   return {
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem",
+    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
     padding: cfg.value.itemPad,
     fontSize: cfg.value.fontSize,
     cursor: disabled ? "default" : "pointer",
@@ -299,25 +299,25 @@ const panelStyle = computed(() => ({
     v-show="!hidden"
     :style="{
       display: 'flex',
-      gap: '0.5rem',
+      gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
       alignItems: 'stretch',
       opacity: disabled ? '0.5' : '1',
     }"
   >
     <!-- Source panel -->
     <div :style="panelStyle">
-      <div :style="{ padding: '0.625rem 0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
+      <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
         <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceTitle }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredSourceItems.length }}</span>
       </div>
-      <div v-if="filterable" :style="{ padding: '0 0.5rem 0.375rem' }">
+      <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
         <CuiInput v-model="sourceSearch" :placeholder="sourcePlaceholder" size="sm">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
         :style="{
-          flex: '1', overflowY: 'auto', padding: '0 0.375rem 0.375rem', maxHeight: height,
+          flex: '1', overflowY: 'auto', padding: '0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))', maxHeight: height,
           outline: dropSide === 'source' && dragItem?.from === 'target' ? '2px dashed var(--cui-primary)' : 'none',
           outlineOffset: '-2px', borderRadius: '0 0 0.5rem 0.5rem',
         }"
@@ -345,14 +345,14 @@ const panelStyle = computed(() => ({
             </div>
           </slot>
         </div>
-        <div v-if="filteredSourceItems.length === 0" :style="{ padding: '1rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
+        <div v-if="filteredSourceItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
           No items
         </div>
       </div>
     </div>
 
     <!-- Action buttons -->
-    <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.25rem', flexShrink: '0' }">
+    <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
       <CuiButton variant="outline" size="xs" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
         <CuiIcon name="caret-right" size="0.875rem" />
       </CuiButton>
@@ -376,18 +376,18 @@ const panelStyle = computed(() => ({
 
     <!-- Target panel -->
     <div :style="panelStyle">
-      <div :style="{ padding: '0.625rem 0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
+      <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
         <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetTitle }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredTargetItems.length }}</span>
       </div>
-      <div v-if="filterable" :style="{ padding: '0 0.5rem 0.375rem' }">
+      <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
         <CuiInput v-model="targetSearch" :placeholder="targetPlaceholder" size="sm">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
         :style="{
-          flex: '1', overflowY: 'auto', padding: '0 0.375rem 0.375rem', maxHeight: height,
+          flex: '1', overflowY: 'auto', padding: '0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))', maxHeight: height,
           outline: dropSide === 'target' && dragItem?.from === 'source' ? '2px dashed var(--cui-primary)' : 'none',
           outlineOffset: '-2px', borderRadius: '0 0 0.5rem 0.5rem',
         }"
@@ -415,7 +415,7 @@ const panelStyle = computed(() => ({
             </div>
           </slot>
         </div>
-        <div v-if="filteredTargetItems.length === 0" :style="{ padding: '1rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
+        <div v-if="filteredTargetItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
           No items
         </div>
       </div>

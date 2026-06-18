@@ -40,7 +40,7 @@ const activeFilters = computed(() =>
 .cui-data-grid-active-filters {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   flex-wrap: wrap;
 }
 </style>

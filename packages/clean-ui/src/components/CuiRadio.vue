@@ -189,7 +189,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -219,6 +219,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Sized to the (unscaled) label text — keep fixed so it stays aligned with adjacent text. */
   width: 1.25rem;
   height: 1.25rem;
   flex-shrink: 0;
@@ -264,7 +265,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio__label {

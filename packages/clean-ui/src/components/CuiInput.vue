@@ -216,7 +216,7 @@ const messages = useMessages();
   min-width: 0;
   height: var(--_input-height);
   padding: 0 var(--_input-px);
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 /* --- Native input --- */
@@ -362,7 +362,7 @@ const messages = useMessages();
 
 .cui-input__error {
   font-size: 0.8125rem;
-  margin-top: 0.375rem;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-error);
 }
 </style>

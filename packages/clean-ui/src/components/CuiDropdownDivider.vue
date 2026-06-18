@@ -6,6 +6,6 @@
 .cui-dropdown-divider {
   height: 1px;
   background: var(--cui-border);
-  margin: 0.25rem 0.375rem;
+  margin: calc(0.25rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
 }
 </style>

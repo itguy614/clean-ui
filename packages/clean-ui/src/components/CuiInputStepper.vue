@@ -119,7 +119,7 @@ defineExpose({ el: rootEl, focus, blur });
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
         fontSize: cfg.font,
@@ -175,7 +175,7 @@ defineExpose({ el: rootEl, focus, blur });
         <CuiIcon name="caret-up" :size="cfg.iconSize" />
       </CuiButton>
       <input ref="inputV" type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
-        :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0.25rem 0', fontFamily: 'inherit' }"
+        :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"
         :style="{ border: 'none', borderRadius: '0', width: '100%' }"

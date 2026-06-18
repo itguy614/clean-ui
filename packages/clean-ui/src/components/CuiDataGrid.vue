@@ -188,7 +188,7 @@ const messages = useMessages();
     <CuiDataGridActiveFilters />
 
     <!-- Loading skeleton -->
-    <div v-if="loading" style="padding: 1rem;">
+    <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
       <CuiSkeleton :lines="8" />
     </div>
 
@@ -277,11 +277,11 @@ const messages = useMessages();
 .cui-data-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid__content {
   display: flex;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 </style>

@@ -179,7 +179,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 .cui-progress-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-progress-bar__track {

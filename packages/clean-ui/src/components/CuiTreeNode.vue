@@ -12,7 +12,7 @@ const props = defineProps<{
   selectable: boolean;
   showLines: boolean;
   animated: boolean;
-  cfg: { fontSize: string; iconSize: string; indent: string; padding: string };
+  cfg: { fontSize: string; iconSize: string; indent: string; padY: string; padX: string };
 }>();
 
 const emit = defineEmits<{
@@ -69,7 +69,7 @@ function onNodeClick() {
 }
 
 // Line positioning helpers
-const pad = computed(() => props.cfg.padding.split(' ')[1] || props.cfg.padding.split(' ')[0]);
+const pad = computed(() => props.cfg.padX);
 const lineColor = "var(--cui-border-strong, var(--cui-border))";
 </script>
 
@@ -87,7 +87,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       v-if="showLines && depth > 0 && !isLast"
       :style="{
         position: 'absolute',
-        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
+        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
         top: '0',
         bottom: '0',
         width: '0',
@@ -103,9 +103,9 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       v-if="showLines && depth > 0 && isLast"
       :style="{
         position: 'absolute',
-        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
+        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
         top: '0',
-        height: `calc(${cfg.padding.split(' ')[0]} + 0.625em)`,
+        height: `calc(${cfg.padY} + 0.625em)`,
         width: '0',
         borderLeft: `1px solid ${lineColor}`,
         zIndex: '0',
@@ -117,9 +117,9 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       v-if="showLines && depth > 0"
       :style="{
         position: 'absolute',
-        left: `calc(${(depth - 1) * parseFloat(cfg.indent)}rem + ${pad} + 0.5rem)`,
-        top: `calc(${cfg.padding.split(' ')[0]} + 0.625em)`,
-        width: `calc(${parseFloat(cfg.indent) * 0.5}rem)`,
+        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
+        top: `calc(${cfg.padY} + 0.625em)`,
+        width: `calc(${cfg.indent} * 0.5)`,
         height: '0',
         borderTop: `1px solid ${lineColor}`,
         zIndex: '0',
@@ -131,11 +131,11 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       :style="{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.25rem',
-        paddingTop: cfg.padding.split(' ')[0],
-        paddingRight: cfg.padding.split(' ')[1] || cfg.padding.split(' ')[0],
-        paddingBottom: cfg.padding.split(' ')[0],
-        paddingLeft: `calc(${pad} + ${depth * parseFloat(cfg.indent)}rem)`,
+        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
+        paddingTop: cfg.padY,
+        paddingRight: cfg.padX,
+        paddingBottom: cfg.padY,
+        paddingLeft: `calc(${pad} + ${depth} * ${cfg.indent})`,
         fontSize: cfg.fontSize,
         cursor: node.disabled ? 'default' : 'pointer',
         borderRadius: '0.25rem',

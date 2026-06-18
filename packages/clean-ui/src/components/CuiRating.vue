@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
 export interface CuiRatingProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
@@ -54,10 +54,10 @@ const displayValue = computed(() =>
 const SUPPORTED_SIZES = ["sm", "md", "lg", "xl"] as const;
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { iconSize: string; gap: string; valueFont: string; labelFont: string }> = {
-  sm: { iconSize: "1rem", gap: "0.125rem", valueFont: "0.75rem", labelFont: "0.75rem" },
-  md: { iconSize: "1.375rem", gap: "0.1875rem", valueFont: "0.875rem", labelFont: "0.8125rem" },
-  lg: { iconSize: "1.75rem", gap: "0.25rem", valueFont: "1rem", labelFont: "0.875rem" },
-  xl: { iconSize: "2.25rem", gap: "0.375rem", valueFont: "1.125rem", labelFont: "1rem" },
+  sm: { iconSize: "1rem", gap: scaleDensity("0.125rem"), valueFont: "0.75rem", labelFont: "0.75rem" },
+  md: { iconSize: "1.375rem", gap: scaleDensity("0.1875rem"), valueFont: "0.875rem", labelFont: "0.8125rem" },
+  lg: { iconSize: "1.75rem", gap: scaleDensity("0.25rem"), valueFont: "1rem", labelFont: "0.875rem" },
+  xl: { iconSize: "2.25rem", gap: scaleDensity("0.375rem"), valueFont: "1.125rem", labelFont: "1rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
@@ -144,7 +144,7 @@ defineExpose({ el: rootEl, focus, blur });
   <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <div
@@ -182,7 +182,7 @@ defineExpose({ el: rootEl, focus, blur });
           fontSize: cfg.valueFont,
           fontWeight: '600',
           color: 'var(--cui-text-body)',
-          marginLeft: '0.25rem',
+          marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))',
           fontVariantNumeric: 'tabular-nums',
         }"
       >

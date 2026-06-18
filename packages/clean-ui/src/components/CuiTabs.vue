@@ -209,7 +209,7 @@ const messages = useMessages();
 
 .cui-tabs--vertical {
   flex-direction: row;
-  gap: 1rem;
+  gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Tab bar --- */
@@ -243,8 +243,8 @@ const messages = useMessages();
 .cui-tabs--segmented .cui-tabs__bar {
   background: var(--color-surface-100);
   border-radius: var(--cui-button-radius, 0.375rem);
-  padding: 0.25rem;
-  gap: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 :where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar {
@@ -255,8 +255,8 @@ const messages = useMessages();
 .cui-tabs__tab {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.625rem 1rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--cui-text-secondary);
@@ -316,9 +316,9 @@ const messages = useMessages();
   background: none;
   cursor: pointer;
   color: var(--cui-text-tertiary);
-  padding: 0.125rem;
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
-  margin: -0.125rem -0.25rem -0.125rem 0;
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
   transition: color 0.15s ease, background 0.15s ease;
 }
 
@@ -334,7 +334,7 @@ const messages = useMessages();
 .cui-tabs__tab-content {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 /* --- Panels --- */

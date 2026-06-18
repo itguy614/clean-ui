@@ -132,12 +132,12 @@ function onKeydown(e: KeyboardEvent) {
 .cui-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio-group__options {
   display: flex;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio-group--vertical .cui-radio-group__options {
@@ -147,7 +147,7 @@ function onKeydown(e: KeyboardEvent) {
 .cui-radio-group--horizontal .cui-radio-group__options {
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: calc(1.25rem * var(--cui-density-scale, 1));
 }
 
 /* Button variant: segmented control, hug content rather than stretch */
@@ -163,7 +163,7 @@ function onKeydown(e: KeyboardEvent) {
   border: 1px solid var(--cui-error-border);
   background: var(--cui-error-bg);
   border-radius: var(--cui-button-radius, 0.375rem);
-  padding: 0.625rem 0.75rem;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio-group__error {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, ref } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 
@@ -69,9 +69,9 @@ const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   connectorThickness: string;
   gap: string;
 }> = {
-  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: "0.5rem" },
-  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: "0.75rem" },
-  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "1rem" },
+  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: scaleDensity("0.5rem") },
+  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: scaleDensity("0.75rem") },
+  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: scaleDensity("1rem") },
 };
 
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
@@ -183,7 +183,7 @@ const messages = useMessages();
           display: 'flex',
           flexDirection: orientation === 'horizontal' ? 'column' : 'row',
           alignItems: orientation === 'horizontal' ? 'center' : 'flex-start',
-          gap: '0.375rem',
+          gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           cursor: stepCursor(index),
           flex: orientation === 'horizontal' ? '0 0 auto' : undefined,
         }"
@@ -216,7 +216,7 @@ const messages = useMessages();
             :style="{
               fontSize: cfg.descFont,
               color: 'var(--cui-text-tertiary)',
-              marginTop: '0.125rem',
+              marginTop: 'calc(0.125rem * var(--cui-density-scale, 1))',
               lineHeight: '1.4',
             }"
           >

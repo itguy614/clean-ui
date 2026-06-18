@@ -41,7 +41,7 @@ const { canScrollUp, canScrollDown, onScroll, onMount } = useScrollShadows();
         flex: '1 1 auto',
         minHeight: '0',
         overflowY: 'auto',
-        padding: noPadding ? '0' : '0.75rem 1.5rem',
+        padding: noPadding ? '0' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         lineHeight: '1.6',
         color: 'var(--cui-text-secondary)',

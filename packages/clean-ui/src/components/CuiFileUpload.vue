@@ -207,7 +207,7 @@ const messages = useMessages();
   <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.375rem', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <!-- Hidden file input -->
@@ -225,7 +225,7 @@ const messages = useMessages();
       :style="{
         border: `2px dashed ${isDragging ? `var(--cui-${color})` : 'var(--cui-border)'}`,
         borderRadius: '0.625rem',
-        padding: '1.5rem',
+        padding: 'calc(1.5rem * var(--cui-density-scale, 1))',
         textAlign: 'center',
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? '0.5' : '1',
@@ -241,7 +241,7 @@ const messages = useMessages();
       <CuiIcon
         name="cloud-arrow-up"
         size="2rem"
-        :style="{ color: isDragging ? `var(--cui-${color})` : 'var(--cui-text-tertiary)', marginBottom: '0.5rem' }"
+        :style="{ color: isDragging ? `var(--cui-${color})` : 'var(--cui-text-tertiary)', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
       />
       <div :style="{ fontSize: '0.875rem', color: 'var(--cui-text-secondary)' }">
         {{ dragText }}
@@ -252,7 +252,7 @@ const messages = useMessages();
       </div>
       <div
         v-if="accept || maxFileSize > 0"
-        :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: '0.375rem' }"
+        :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))' }"
       >
         <span v-if="accept">{{ accept }}</span>
         <span v-if="accept && maxFileSize > 0"> · </span>
@@ -261,18 +261,18 @@ const messages = useMessages();
     </div>
 
     <!-- File list -->
-    <div v-if="files.length > 0" :style="{ marginTop: '0.75rem' }">
+    <div v-if="files.length > 0" :style="{ marginTop: 'calc(0.75rem * var(--cui-density-scale, 1))' }">
       <div
         v-for="entry in files"
         :key="entry.id"
         :style="{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.625rem',
-          padding: '0.5rem 0.625rem',
+          gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
+          padding: 'calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
           borderRadius: '0.375rem',
           border: '1px solid var(--cui-border)',
-          marginBottom: '0.375rem',
+          marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
           background: 'var(--cui-surface-base, white)',
         }"
       >
@@ -307,11 +307,11 @@ const messages = useMessages();
       </div>
 
       <!-- Footer: count + total size + actions -->
-      <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }">
+      <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
         <span :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)' }">
           {{ files.length }} file{{ files.length === 1 ? '' : 's' }} · {{ totalSize }}
         </span>
-        <div :style="{ display: 'flex', gap: '0.375rem' }">
+        <div :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))' }">
           <CuiButton variant="ghost" size="xs" @click="clearAll">{{ messages.clearAll }}</CuiButton>
           <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" @click="onUploadClick">
             <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>

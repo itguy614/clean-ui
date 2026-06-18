@@ -72,14 +72,14 @@ function onAction(action: DataGridBulkAction) {
   position: sticky;
   bottom: 0;
   z-index: 20;
-  padding: 0.5rem;
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid-bulk-bar__inner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
   background: var(--cui-primary);
   color: var(--cui-primary-text);
   border-radius: var(--cui-button-radius, 0.375rem);
@@ -96,7 +96,7 @@ function onAction(action: DataGridBulkAction) {
 
 .cui-data-grid-bulk-bar__actions {
   display: flex;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 /* Transition */

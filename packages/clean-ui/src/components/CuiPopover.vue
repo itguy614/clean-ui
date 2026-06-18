@@ -201,8 +201,8 @@ const messages = useMessages();
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            gap: '0.5rem',
-            padding: '0.75rem 0.875rem 0.25rem',
+            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+            padding: 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot name="header">
@@ -228,8 +228,8 @@ const messages = useMessages();
               color: 'var(--cui-text-tertiary)',
               cursor: 'pointer',
               flexShrink: '0',
-              marginTop: '-0.0625rem',
-              marginRight: '-0.125rem',
+              marginTop: 'calc(-0.0625rem * var(--cui-density-scale, 1))',
+              marginRight: 'calc(-0.125rem * var(--cui-density-scale, 1))',
             }"
             :aria-label="messages.close"
             @click.stop="doHide"
@@ -241,7 +241,7 @@ const messages = useMessages();
         <!-- Body -->
         <div
           :style="{
-            padding: hasHeader ? '0.25rem 0.875rem 0.75rem' : '0.75rem 0.875rem',
+            padding: hasHeader ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
             fontSize: '0.875rem',
             lineHeight: '1.55',
             color: 'var(--cui-text-secondary)',
@@ -254,7 +254,7 @@ const messages = useMessages();
         <div
           v-if="hasFooter"
           :style="{
-            padding: '0 0.875rem 0.75rem',
+            padding: '0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot name="footer" />

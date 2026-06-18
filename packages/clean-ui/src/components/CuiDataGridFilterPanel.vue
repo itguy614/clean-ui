@@ -110,7 +110,7 @@ const hasAnyValue = computed(() => {
   <div v-if="grid.filterPanelOpen.value" class="cui-data-grid-filter-panel">
     <div class="cui-data-grid-filter-panel__header">
       <span class="cui-data-grid-filter-panel__title">{{ messages.dataGrid.filters }}</span>
-      <div style="display: flex; gap: 0.25rem;">
+      <div style="display: flex; gap: calc(0.25rem * var(--cui-density-scale, 1));">
         <CuiButton
           variant="ghost"
           size="xs"
@@ -152,7 +152,7 @@ const hasAnyValue = computed(() => {
         />
 
         <!-- Multi-select filter -->
-        <div v-else-if="col.filterType === 'multi-select'" style="display: flex; flex-direction: column; gap: 0.25rem;">
+        <div v-else-if="col.filterType === 'multi-select'" style="display: flex; flex-direction: column; gap: calc(0.25rem * var(--cui-density-scale, 1));">
           <CuiCheckbox
             v-for="opt in (col.filterOptions ?? [])"
             :key="opt.value"
@@ -164,7 +164,7 @@ const hasAnyValue = computed(() => {
         </div>
 
         <!-- Date range filter -->
-        <div v-else-if="col.filterType === 'date-range'" style="display: flex; gap: 0.5rem;">
+        <div v-else-if="col.filterType === 'date-range'" style="display: flex; gap: calc(0.5rem * var(--cui-density-scale, 1));">
           <input
             type="date"
             class="cui-data-grid-filter-panel__date-input"
@@ -204,7 +204,7 @@ const hasAnyValue = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.625rem 0.75rem;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
   border-bottom: 1px solid var(--cui-border);
 }
 
@@ -215,10 +215,10 @@ const hasAnyValue = computed(() => {
 }
 
 .cui-data-grid-filter-panel__body {
-  padding: 0.75rem;
+  padding: calc(0.75rem * var(--cui-density-scale, 1));
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
   overflow-y: auto;
   max-height: 24rem;
 }
@@ -226,7 +226,7 @@ const hasAnyValue = computed(() => {
 .cui-data-grid-filter-panel__field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid-filter-panel__label {
@@ -237,14 +237,14 @@ const hasAnyValue = computed(() => {
 
 .cui-data-grid-filter-panel__footer {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
   border-top: 1px solid var(--cui-border);
 }
 
 .cui-data-grid-filter-panel__date-input {
   flex: 1;
-  padding: 0.375rem 0.5rem;
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
   font-size: 0.8125rem;
   border: 1px solid var(--cui-border-strong, var(--cui-border));
   border-radius: 0.25rem;
