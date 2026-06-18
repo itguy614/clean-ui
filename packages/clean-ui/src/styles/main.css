@@ -830,8 +830,8 @@
 }
 
 .cui-density-compact {
-  --cui-density-scale: 0.85;
-  --cui-density-gap-scale: 0.92;
+  --cui-density-scale: 0.8;
+  --cui-density-gap-scale: 0.88;
 }
 
 /* `default` == :root; present so the switcher can reset and a subtree can
@@ -842,6 +842,6 @@
 }
 
 .cui-density-comfortable {
-  --cui-density-scale: 1.15;
-  --cui-density-gap-scale: 1.08;
+  --cui-density-scale: 1.2;
+  --cui-density-gap-scale: 1.12;
 }

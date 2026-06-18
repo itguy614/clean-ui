@@ -114,8 +114,8 @@ setDensity("compact");</code></pre>
         ]"
       />
       <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
-        Tokens: <code class="cui-code">--cui-density-scale</code> (0.85 / 1 / 1.15) and
-        <code class="cui-code">--cui-density-gap-scale</code> (0.92 / 1 / 1.08). Override them
+        Tokens: <code class="cui-code">--cui-density-scale</code> (0.8 / 1 / 1.2) and
+        <code class="cui-code">--cui-density-gap-scale</code> (0.88 / 1 / 1.12). Override them
         yourself on any element for a custom density.
       </p>
     </div>
