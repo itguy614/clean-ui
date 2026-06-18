@@ -169,6 +169,16 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 - Code examples use `cui-pre` and `cui-code` classes from typography system
 - Info/customization panels use `CuiCard` + `CuiCardBody`, not hand-rolled bordered divs
 
+## GitHub Workflow
+
+- **Issues**: All bugs, features, and tasks are tracked as GitHub issues at `itguy614/clean-ui`. Use `gh issue create` — do not use Jira or any other tracker.
+- **Pull requests**: When creating a PR, always link it to the relevant issue using a closing keyword in the PR body so the issue closes automatically when the PR is merged:
+  ```
+  Closes #<issue-number>
+  ```
+  Other accepted keywords: `Fixes #N`, `Resolves #N`. Put it in the PR body (not the title).
+- **Branch → issue traceability**: Every PR should reference at least one issue. If no issue exists yet, create one before opening the PR.
+
 ## Adding a New Component — Checklist
 1. Read this file first. Follow established patterns.
 2. Create the `.vue` file in `src/components/`. If it needs shared context, create a `{name}-context.ts` file (NOT exports in the .vue file).
