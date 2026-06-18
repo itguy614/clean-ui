@@ -1,5 +1,5 @@
 import { computed, inject, type ComputedRef } from "vue";
-import { CuiConfigKey } from "./config-context";
+import { CuiConfigKey } from "../components/config-context";
 import { defaultMessages, type CuiMessages } from "../messages";
 
 // Shared fallback for components used outside any CuiConfigProvider — built-in

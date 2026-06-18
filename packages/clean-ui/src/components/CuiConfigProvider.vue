@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, provide } from "vue";
-import { CuiConfigKey } from "../composables/config-context";
+import { CuiConfigKey } from "./config-context";
 import { defaultMessages, mergeMessages, type CuiMessages, type DeepPartialMessages } from "../messages";
 
 export interface CuiConfigProviderProps {
