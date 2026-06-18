@@ -336,11 +336,13 @@
   /* --- Base body --- */
   --cui-body-font-size: 0.875rem;   /* 14px */
   --cui-body-font-weight: 400;
-  --cui-body-line-height: 1.5;
+  /* line-height is leading (vertical whitespace between lines), so it scales with
+     density — gently, via the gap scalar. Font SIZE stays fixed. */
+  --cui-body-line-height: calc(1.5 * var(--cui-density-gap-scale, 1));
 
   /* --- Heading weight & line-height --- */
   --cui-heading-font-weight: 600;
-  --cui-heading-line-height: 1.25;
+  --cui-heading-line-height: calc(1.25 * var(--cui-density-gap-scale, 1));
 
   /* --- Tightened type scale --- */
   --cui-font-size-h1: 2.25rem;      /* 36px */
@@ -355,7 +357,7 @@
   --cui-font-size-display-2: 3.25rem;/* 52px */
   --cui-font-size-display-3: 2.5rem; /* 40px */
   --cui-display-font-weight: 300;
-  --cui-display-line-height: 1.15;
+  --cui-display-line-height: calc(1.15 * var(--cui-density-gap-scale, 1));
 
   /* --- Lead text --- */
   --cui-font-size-lead: 1.2rem;     /* ~19.2px */
@@ -472,7 +474,7 @@
 .cui-lead {
   font-size: var(--cui-font-size-lead);
   font-weight: var(--cui-lead-font-weight);
-  line-height: 1.6;
+  line-height: calc(1.6 * var(--cui-density-gap-scale, 1));
   color: var(--cui-text-secondary);
 }
 
@@ -578,7 +580,7 @@
 .cui-pre {
   font-family: var(--cui-font-mono);
   font-size: var(--cui-font-size-small);
-  line-height: 1.6;
+  line-height: calc(1.6 * var(--cui-density-gap-scale, 1));
   background: var(--color-surface-50);
   color: var(--cui-text-body);
   padding: calc(1rem * var(--cui-density-scale, 1)) calc(1.25rem * var(--cui-density-scale, 1));
