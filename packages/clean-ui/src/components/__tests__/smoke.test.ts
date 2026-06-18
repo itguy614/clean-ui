@@ -13,27 +13,28 @@ import * as CleanUI from "../../index";
  * behaviour tests.
  */
 
+// Sub-components that can't mount standalone (need a parent's injected context).
+// Each is exercised in its parent's behaviour test — referenced here so a "skip"
+// reads as "covered elsewhere", not "untested".
 const SKIP: Record<string, string> = {
-  CuiTab: "requires <CuiTabs> context",
-  CuiAccordionItem: "requires <CuiAccordion> context",
-  CuiBreadcrumbItem: "requires <CuiBreadcrumb> context",
-  // Table sub-components require <CuiTable> table-context
-  CuiTableHead: "requires <CuiTable> context",
-  CuiTableBody: "requires <CuiTable> context",
-  CuiTableFoot: "requires <CuiTable> context",
-  CuiTableRow: "requires <CuiTable> context",
-  CuiTableCell: "requires <CuiTable> context",
-  // Dropdown sub-components require <CuiDropdown> context
-  CuiDropdownTrigger: "requires <CuiDropdown> context",
-  CuiDropdownMenu: "requires <CuiDropdown> context",
-  CuiDropdownItem: "requires <CuiDropdown> context",
-  CuiDropdownCheckItem: "requires <CuiDropdown> context",
-  CuiDropdownRadioGroup: "requires <CuiDropdown> context",
-  CuiDropdownRadioItem: "requires <CuiDropdown> context",
-  CuiDropdownSub: "requires <CuiDropdown> context",
-  CuiDropdownDivider: "requires <CuiDropdown> context",
-  CuiDropdownHeader: "requires <CuiDropdown> context",
-  CuiTimelineItem: "requires <CuiTimeline> context",
+  CuiTab: "needs <CuiTabs> context — covered by CuiTabs.test.ts",
+  CuiAccordionItem: "needs <CuiAccordion> context — covered by CuiAccordion.test.ts",
+  CuiBreadcrumbItem: "needs <CuiBreadcrumb> context — covered by CuiBreadcrumb.test.ts",
+  CuiTableHead: "needs <CuiTable> context — covered by CuiTable.test.ts",
+  CuiTableBody: "needs <CuiTable> context — covered by CuiTable.test.ts",
+  CuiTableFoot: "needs <CuiTable> context — covered by CuiTable.test.ts",
+  CuiTableRow: "needs <CuiTable> context — covered by CuiTable.test.ts",
+  CuiTableCell: "needs <CuiTable> context — covered by CuiTable.test.ts",
+  CuiDropdownTrigger: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownMenu: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownItem: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownCheckItem: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownRadioGroup: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownRadioItem: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownSub: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownDivider: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiDropdownHeader: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
+  CuiTimelineItem: "needs <CuiTimeline> context — covered by CuiTimeline.test.ts",
 };
 
 /** Minimal props for components that need them to render meaningfully. */

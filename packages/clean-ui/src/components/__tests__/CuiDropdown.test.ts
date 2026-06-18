@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
-import { h } from "vue";
+import { defineComponent, h, ref } from "vue";
 import CuiDropdown from "../CuiDropdown.vue";
 import CuiDropdownTrigger from "../CuiDropdownTrigger.vue";
 import CuiDropdownMenu from "../CuiDropdownMenu.vue";
 import CuiDropdownItem from "../CuiDropdownItem.vue";
+import CuiDropdownCheckItem from "../CuiDropdownCheckItem.vue";
+import CuiDropdownRadioGroup from "../CuiDropdownRadioGroup.vue";
+import CuiDropdownRadioItem from "../CuiDropdownRadioItem.vue";
+import CuiDropdownSub from "../CuiDropdownSub.vue";
+import CuiDropdownDivider from "../CuiDropdownDivider.vue";
+import CuiDropdownHeader from "../CuiDropdownHeader.vue";
 
 // The menu teleports to document.body and renders only while open (or closing).
 const menuInBody = () => document.body.querySelector(".cui-dropdown-menu");
@@ -106,6 +112,210 @@ describe("CuiDropdown behavior", () => {
 
     expect(onSelect).not.toHaveBeenCalled();
     expect(menuInBody()).not.toBeNull();
+
+    wrapper.unmount();
+  });
+});
+
+// --- Sub-components that require CuiDropdown's injected context ---
+
+async function openMenu(wrapper: ReturnType<typeof mount>) {
+  await wrapper.find(".cui-dropdown-trigger").trigger("click");
+}
+
+describe("CuiDropdownCheckItem", () => {
+  it("toggles its checked state and emits update:modelValue on click", async () => {
+    const Host = defineComponent({
+      components: { CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownCheckItem },
+      setup() {
+        const checked = ref(false);
+        return { checked };
+      },
+      template: `
+        <CuiDropdown>
+          <CuiDropdownTrigger><button>Menu</button></CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownCheckItem v-model="checked">Show grid</CuiDropdownCheckItem>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      `,
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await openMenu(wrapper);
+
+    const item = document.body.querySelector<HTMLElement>('[role="menuitemcheckbox"]');
+    expect(item).not.toBeNull();
+    expect(item!.getAttribute("aria-checked")).toBe("false");
+
+    item!.click();
+    await wrapper.vm.$nextTick();
+
+    expect((wrapper.vm as unknown as { checked: boolean }).checked).toBe(true);
+    expect(
+      document.body.querySelector('[role="menuitemcheckbox"]')!.getAttribute("aria-checked"),
+    ).toBe("true");
+
+    wrapper.unmount();
+  });
+
+  it("does not toggle when disabled", async () => {
+    const Host = defineComponent({
+      components: { CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownCheckItem },
+      setup() {
+        const checked = ref(false);
+        return { checked };
+      },
+      template: `
+        <CuiDropdown>
+          <CuiDropdownTrigger><button>Menu</button></CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownCheckItem v-model="checked" disabled>Show grid</CuiDropdownCheckItem>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      `,
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await openMenu(wrapper);
+
+    document.body.querySelector<HTMLElement>('[role="menuitemcheckbox"]')!.click();
+    await wrapper.vm.$nextTick();
+
+    expect((wrapper.vm as unknown as { checked: boolean }).checked).toBe(false);
+    wrapper.unmount();
+  });
+});
+
+describe("CuiDropdownRadioGroup + CuiDropdownRadioItem", () => {
+  it("single-selects within the group and reflects aria-checked", async () => {
+    const Host = defineComponent({
+      components: {
+        CuiDropdown,
+        CuiDropdownTrigger,
+        CuiDropdownMenu,
+        CuiDropdownRadioGroup,
+        CuiDropdownRadioItem,
+      },
+      setup() {
+        const sort = ref("name");
+        return { sort };
+      },
+      template: `
+        <CuiDropdown>
+          <CuiDropdownTrigger><button>Menu</button></CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownRadioGroup v-model="sort">
+              <CuiDropdownRadioItem value="name">Name</CuiDropdownRadioItem>
+              <CuiDropdownRadioItem value="date">Date</CuiDropdownRadioItem>
+            </CuiDropdownRadioGroup>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      `,
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await openMenu(wrapper);
+
+    const items = document.body.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+    expect(items).toHaveLength(2);
+    expect(items[0].getAttribute("aria-checked")).toBe("true");
+    expect(items[1].getAttribute("aria-checked")).toBe("false");
+
+    items[1].click();
+    await wrapper.vm.$nextTick();
+
+    expect((wrapper.vm as unknown as { sort: string }).sort).toBe("date");
+    const after = document.body.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+    expect(after[0].getAttribute("aria-checked")).toBe("false");
+    expect(after[1].getAttribute("aria-checked")).toBe("true");
+
+    wrapper.unmount();
+  });
+});
+
+describe("CuiDropdownSub", () => {
+  it("renders a submenu trigger and opens the nested menu on click", async () => {
+    const Host = defineComponent({
+      components: {
+        CuiDropdown,
+        CuiDropdownTrigger,
+        CuiDropdownMenu,
+        CuiDropdownItem,
+        CuiDropdownSub,
+      },
+      template: `
+        <CuiDropdown>
+          <CuiDropdownTrigger><button>Menu</button></CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownSub trigger="click">
+              More
+              <template #menu>
+                <CuiDropdownItem>Nested item</CuiDropdownItem>
+              </template>
+            </CuiDropdownSub>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      `,
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await openMenu(wrapper);
+
+    const subTrigger = document.body.querySelector<HTMLElement>(
+      '.cui-dropdown-sub__trigger',
+    );
+    expect(subTrigger).not.toBeNull();
+    expect(subTrigger!.getAttribute("aria-haspopup")).toBe("true");
+    expect(subTrigger!.getAttribute("aria-expanded")).toBe("false");
+    expect(document.body.querySelector(".cui-dropdown-sub__menu")).toBeNull();
+
+    subTrigger!.click();
+    await wrapper.vm.$nextTick();
+
+    expect(
+      document.body
+        .querySelector(".cui-dropdown-sub__trigger")!
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
+    const subMenu = document.body.querySelector(".cui-dropdown-sub__menu");
+    expect(subMenu).not.toBeNull();
+    expect(subMenu!.textContent).toContain("Nested item");
+
+    wrapper.unmount();
+  });
+});
+
+describe("CuiDropdownDivider + CuiDropdownHeader", () => {
+  it("renders the header and divider inside the open menu", async () => {
+    const Host = defineComponent({
+      components: {
+        CuiDropdown,
+        CuiDropdownTrigger,
+        CuiDropdownMenu,
+        CuiDropdownItem,
+        CuiDropdownDivider,
+        CuiDropdownHeader,
+      },
+      template: `
+        <CuiDropdown>
+          <CuiDropdownTrigger><button>Menu</button></CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownHeader>Account</CuiDropdownHeader>
+            <CuiDropdownItem>Profile</CuiDropdownItem>
+            <CuiDropdownDivider />
+            <CuiDropdownItem>Sign out</CuiDropdownItem>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      `,
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    await openMenu(wrapper);
+
+    const header = document.body.querySelector(".cui-dropdown-header");
+    expect(header).not.toBeNull();
+    expect(header!.textContent).toContain("Account");
+    expect(header!.getAttribute("role")).toBe("presentation");
+
+    const divider = document.body.querySelector(".cui-dropdown-divider");
+    expect(divider).not.toBeNull();
+    expect(divider!.getAttribute("role")).toBe("separator");
 
     wrapper.unmount();
   });
