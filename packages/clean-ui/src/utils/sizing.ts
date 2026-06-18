@@ -50,10 +50,19 @@ export interface ButtonSizeStyle extends SizeStyle {
 // interactive controls additionally clamp to a 24px floor (WCAG 2.5.8 target
 // size). Font sizes are NEVER scaled — density moves whitespace, not type.
 const DS = "var(--cui-density-scale, 1)";
-/** Scale a spatial value (padding, gap). */
-const d = (v: string) => `calc(${v} * ${DS})`;
-/** Scale a control height, floored at the 24px minimum touch target. */
-const dh = (v: string) => `max(24px, calc(${v} * ${DS}))`;
+/**
+ * Scale a single spatial value (padding, gap, indent) by the density scale.
+ * `"0.5rem"` → `"calc(0.5rem * var(--cui-density-scale, 1))"`. Default scale is
+ * 1, so the result is identical to the input when no density class is applied.
+ * Use this in JS-emitted size maps instead of hand-writing the calc() string.
+ */
+export const scaleDensity = (v: string) => `calc(${v} * ${DS})`;
+/** Like {@link scaleDensity} but floored at the 24px minimum touch target (WCAG 2.5.8) — for interactive control heights. */
+export const scaleControlHeight = (v: string) => `max(24px, calc(${v} * ${DS}))`;
+
+// Short local aliases for the dense scale tables below.
+const d = scaleDensity;
+const dh = scaleControlHeight;
 
 export const INPUT_SIZE_SCALE: Record<string, SizeStyle> = {
   xs: { height: dh("1.75rem"), px: d("0.5rem"), fontSize: "0.75rem" },

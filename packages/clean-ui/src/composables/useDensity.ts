@@ -21,12 +21,12 @@ const DEFAULT: DensityId = "default";
 // Shared reactive state — all components see the same density.
 const activeDensity = ref<DensityId>(loadDensity());
 
+const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
+
 function loadDensity(): DensityId {
   if (typeof window === "undefined") return DEFAULT;
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "compact" || stored === "comfortable" || stored === "default"
-    ? stored
-    : DEFAULT;
+  return stored && VALID_IDS.has(stored) ? (stored as DensityId) : DEFAULT;
 }
 
 function applyDensity(id: DensityId) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiCopyButton from "./CuiCopyButton.vue";
 
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
@@ -36,9 +36,9 @@ const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
 const lines = computed(() => props.code.split("\n"));
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
-  sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: "calc(0.75rem * var(--cui-density-scale, 1))", headerFont: "0.6875rem" },
-  md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: "calc(1rem * var(--cui-density-scale, 1))", headerFont: "0.75rem" },
-  lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: "calc(1.25rem * var(--cui-density-scale, 1))", headerFont: "0.8125rem" },
+  sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: scaleDensity("0.75rem"), headerFont: "0.6875rem" },
+  md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: scaleDensity("1rem"), headerFont: "0.75rem" },
+  lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: scaleDensity("1.25rem"), headerFont: "0.8125rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, ref } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 
@@ -69,9 +69,9 @@ const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   connectorThickness: string;
   gap: string;
 }> = {
-  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: "calc(0.5rem * var(--cui-density-scale, 1))" },
-  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: "calc(0.75rem * var(--cui-density-scale, 1))" },
-  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "calc(1rem * var(--cui-density-scale, 1))" },
+  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: scaleDensity("0.5rem") },
+  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: scaleDensity("0.75rem") },
+  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: scaleDensity("1rem") },
 };
 
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);

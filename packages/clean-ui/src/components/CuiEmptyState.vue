@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
@@ -29,9 +29,9 @@ const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   gap: string;
   descMaxWidth: string;
 }> = {
-  sm: { circle: "2.5rem", icon: "1.25rem", titleFont: "1rem", descFont: "0.8125rem", gap: "calc(0.75rem * var(--cui-density-scale, 1))", descMaxWidth: "20rem" },
-  md: { circle: "3.5rem", icon: "1.75rem", titleFont: "1.125rem", descFont: "0.875rem", gap: "calc(1rem * var(--cui-density-scale, 1))", descMaxWidth: "24rem" },
-  lg: { circle: "4.5rem", icon: "2rem", titleFont: "1.25rem", descFont: "1rem", gap: "calc(1.25rem * var(--cui-density-scale, 1))", descMaxWidth: "28rem" },
+  sm: { circle: "2.5rem", icon: "1.25rem", titleFont: "1rem", descFont: "0.8125rem", gap: scaleDensity("0.75rem"), descMaxWidth: "20rem" },
+  md: { circle: "3.5rem", icon: "1.75rem", titleFont: "1.125rem", descFont: "0.875rem", gap: scaleDensity("1rem"), descMaxWidth: "24rem" },
+  lg: { circle: "4.5rem", icon: "2rem", titleFont: "1.25rem", descFont: "1rem", gap: scaleDensity("1.25rem"), descMaxWidth: "28rem" },
 };
 
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);

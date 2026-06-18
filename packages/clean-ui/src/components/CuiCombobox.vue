@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -146,9 +146,9 @@ const isLoading = computed(() => props.loading || internalLoading.value);
 // Size config
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "calc(0.25rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))", tagSize: "sm", itemPadding: "calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", inputHeight: "calc(2rem * var(--cui-density-scale, 1))" },
-  md: { fontSize: "0.875rem", padding: "calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", tagSize: "sm", itemPadding: "calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", inputHeight: "calc(2.375rem * var(--cui-density-scale, 1))" },
-  lg: { fontSize: "0.9375rem", padding: "calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", tagSize: "md", itemPadding: "calc(0.625rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))", inputHeight: "calc(2.75rem * var(--cui-density-scale, 1))" },
+  sm: { fontSize: "0.8125rem", padding: `${scaleDensity("0.25rem")} ${scaleDensity("0.5rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.375rem")} ${scaleDensity("0.625rem")}`, inputHeight: scaleDensity("2rem") },
+  md: { fontSize: "0.875rem", padding: `${scaleDensity("0.3125rem")} ${scaleDensity("0.625rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.5rem")} ${scaleDensity("0.75rem")}`, inputHeight: scaleDensity("2.375rem") },
+  lg: { fontSize: "0.9375rem", padding: `${scaleDensity("0.4375rem")} ${scaleDensity("0.75rem")}`, tagSize: "md", itemPadding: `${scaleDensity("0.625rem")} ${scaleDensity("0.875rem")}`, inputHeight: scaleDensity("2.75rem") },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 

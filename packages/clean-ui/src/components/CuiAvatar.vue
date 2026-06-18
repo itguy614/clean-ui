@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
+import { scaleDensity } from "../utils/sizing";
 
 export type AvatarShape = "circle" | "rounded";
 export type AvatarStatus = "online" | "offline" | "away" | "busy";
@@ -52,11 +53,11 @@ const computedInitials = computed(() => {
 });
 
 const sizeConfig: Record<CuiSize, { box: string; font: string; icon: string; statusDot: string; statusOffset: string }> = {
-  xs: { box: "calc(1.5rem * var(--cui-density-scale, 1))", font: "0.5rem", icon: "calc(0.75rem * var(--cui-density-scale, 1))", statusDot: "calc(0.5rem * var(--cui-density-scale, 1))", statusOffset: "calc(-2px * var(--cui-density-scale, 1))" },
-  sm: { box: "calc(2rem * var(--cui-density-scale, 1))", font: "0.625rem", icon: "calc(0.875rem * var(--cui-density-scale, 1))", statusDot: "calc(0.625rem * var(--cui-density-scale, 1))", statusOffset: "calc(-2px * var(--cui-density-scale, 1))" },
-  md: { box: "calc(2.5rem * var(--cui-density-scale, 1))", font: "0.75rem", icon: "calc(1rem * var(--cui-density-scale, 1))", statusDot: "calc(0.625rem * var(--cui-density-scale, 1))", statusOffset: "calc(-1px * var(--cui-density-scale, 1))" },
-  lg: { box: "calc(3.5rem * var(--cui-density-scale, 1))", font: "1rem", icon: "calc(1.25rem * var(--cui-density-scale, 1))", statusDot: "calc(0.75rem * var(--cui-density-scale, 1))", statusOffset: "calc(0px * var(--cui-density-scale, 1))" },
-  xl: { box: "calc(5rem * var(--cui-density-scale, 1))", font: "1.375rem", icon: "calc(1.75rem * var(--cui-density-scale, 1))", statusDot: "calc(1rem * var(--cui-density-scale, 1))", statusOffset: "calc(2px * var(--cui-density-scale, 1))" },
+  xs: { box: scaleDensity("1.5rem"), font: "0.5rem", icon: scaleDensity("0.75rem"), statusDot: scaleDensity("0.5rem"), statusOffset: scaleDensity("-2px") },
+  sm: { box: scaleDensity("2rem"), font: "0.625rem", icon: scaleDensity("0.875rem"), statusDot: scaleDensity("0.625rem"), statusOffset: scaleDensity("-2px") },
+  md: { box: scaleDensity("2.5rem"), font: "0.75rem", icon: scaleDensity("1rem"), statusDot: scaleDensity("0.625rem"), statusOffset: scaleDensity("-1px") },
+  lg: { box: scaleDensity("3.5rem"), font: "1rem", icon: scaleDensity("1.25rem"), statusDot: scaleDensity("0.75rem"), statusOffset: scaleDensity("0px") },
+  xl: { box: scaleDensity("5rem"), font: "1.375rem", icon: scaleDensity("1.75rem"), statusDot: scaleDensity("1rem"), statusOffset: scaleDensity("2px") },
 };
 
 const cfg = computed(() => sizeConfig[props.size]);
