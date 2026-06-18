@@ -67,6 +67,12 @@ setDensity("compact");</code></pre>
           <code class="cui-code">compact</code> never makes anything untappable. It's orthogonal to
           each component's <code class="cui-code">size</code> prop — they multiply.
         </p>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
+          The <code class="cui-code">.cui-typography</code> prose layer participates too: heading,
+          paragraph, list, and blockquote spacing, code/pre padding, and native
+          <code class="cui-code">&lt;table&gt;</code> cell padding all respond to density — while
+          font sizes stay put.
+        </p>
       </CuiCardBody>
     </CuiCard>
 

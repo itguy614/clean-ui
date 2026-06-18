@@ -375,10 +375,10 @@
   --cui-text-code: var(--color-primary-700);
 
   /* --- Spacing for typography --- */
-  --cui-heading-margin-bottom: 0.5em;
-  --cui-paragraph-margin-bottom: 1rem;
-  --cui-blockquote-margin: 1.5rem 0;
-  --cui-blockquote-padding: 0 0 0 1rem;
+  --cui-heading-margin-bottom: calc(0.5em * var(--cui-density-gap-scale, 1));
+  --cui-paragraph-margin-bottom: calc(1rem * var(--cui-density-gap-scale, 1));
+  --cui-blockquote-margin: calc(1.5rem * var(--cui-density-gap-scale, 1)) 0;
+  --cui-blockquote-padding: 0 0 0 calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Dark mode text color overrides --- */
@@ -534,7 +534,7 @@
   font-size: var(--cui-font-size-code);
   color: var(--cui-text-code);
   background: var(--color-surface-100);
-  padding: 0.125em 0.35em;
+  padding: calc(0.125em * var(--cui-density-scale, 1)) calc(0.35em * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
 }
 
@@ -560,7 +560,7 @@
   font-size: var(--cui-font-size-code);
   background: var(--color-surface-800);
   color: var(--color-surface-100);
-  padding: 0.15em 0.4em;
+  padding: calc(0.15em * var(--cui-density-scale, 1)) calc(0.4em * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   border: 1px solid var(--color-surface-600);
   box-shadow: inset 0 -1px 0 var(--color-surface-700);
@@ -581,7 +581,7 @@
   line-height: 1.6;
   background: var(--color-surface-50);
   color: var(--cui-text-body);
-  padding: 1rem 1.25rem;
+  padding: calc(1rem * var(--cui-density-scale, 1)) calc(1.25rem * var(--cui-density-scale, 1));
   border-radius: 0.5rem;
   border: 1px solid var(--color-surface-200);
   overflow-x: auto;
@@ -599,11 +599,11 @@
 .cui-typography ol {
   margin-top: 0;
   margin-bottom: var(--cui-paragraph-margin-bottom);
-  padding-left: 1.5rem;
+  padding-left: calc(1.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-typography li {
-  margin-bottom: 0.25rem;
+  margin-bottom: calc(0.25rem * var(--cui-density-gap-scale, 1));
 }
 
 /* Unstyled list */
@@ -629,7 +629,28 @@
 .cui-typography hr {
   border: none;
   border-top: 1px solid var(--color-surface-200);
-  margin: 1.5rem 0;
+  margin: calc(1.5rem * var(--cui-density-gap-scale, 1)) 0;
+}
+
+/* --- Native tables in prose (markdown / raw <table>) --- */
+.cui-typography table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--cui-paragraph-margin-bottom);
+  font-size: 0.875rem;
+}
+
+.cui-typography th,
+.cui-typography td {
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+  border-bottom: 1px solid var(--cui-border);
+  text-align: left;
+}
+
+.cui-typography th {
+  font-weight: 600;
+  color: var(--cui-text-secondary);
+  background: var(--cui-table-head-bg, var(--color-surface-50));
 }
 
 :where(.dark, .dark *) .cui-typography hr {
