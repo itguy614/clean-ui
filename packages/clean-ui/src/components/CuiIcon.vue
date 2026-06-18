@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, type Component } from "vue";
+import { ref, computed, onMounted, type Component } from "vue";
 import type { CuiSize, CuiColorOrCss, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
 
@@ -45,26 +45,33 @@ function toPascalCase(name: string): string {
   return "Ph" + name.split("-").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
 
-// Cache async components so they're only created once per icon name
+// Cache resolved icon components so they're only loaded once per icon name
 const iconCache = new Map<string, Component>();
+const iconComponent = ref<Component | null>(null);
 
-const iconComponent = computed(() => {
+onMounted(async () => {
+  // onMounted only runs in the browser — never on the server
+  // This prevents hydration mismatches from async imports
   const pascalName = toPascalCase(props.name);
 
   if (iconCache.has(pascalName)) {
-    return iconCache.get(pascalName)!;
+    iconComponent.value = iconCache.get(pascalName)!;
+    return;
   }
 
-  const comp = defineAsyncComponent(() =>
-    import("@phosphor-icons/vue").then((mod: any) => {
-      if (mod[pascalName]) return mod[pascalName];
+  try {
+    const mod = await import("@phosphor-icons/vue");
+    const resolved = mod[pascalName as keyof typeof mod] as Component | undefined;
+    if (resolved) {
+      iconCache.set(pascalName, resolved);
+      iconComponent.value = resolved;
+    } else {
       console.warn(`[CuiIcon] Icon "${props.name}" (${pascalName}) not found in @phosphor-icons/vue`);
-      return mod.PhQuestion; // Fallback
-    }),
-  );
-
-  iconCache.set(pascalName, comp);
-  return comp;
+      iconComponent.value = mod.PhQuestion as Component;
+    }
+  } catch {
+    console.warn(`[CuiIcon] Failed to load icon "${props.name}"`);
+  }
 });
 
 // Duotone CSS overrides
@@ -90,6 +97,7 @@ const wrapperStyle = computed(() => {
     :style="wrapperStyle"
   >
     <component
+      v-if="iconComponent"
       :is="iconComponent"
       :weight="weight"
       :size="resolvedSize"

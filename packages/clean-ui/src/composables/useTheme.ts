@@ -18,20 +18,38 @@ export const THEME_PRESETS: ThemePreset[] = [
 ];
 
 const STORAGE_KEY = "cui-theme";
+const DARK_STORAGE_KEY = "cui-dark";
 const CLASS_PREFIX = "cui-theme-";
+
+const isBrowser = typeof window !== "undefined";
+
+function loadTheme(): string {
+  if (!isBrowser) return "mono";
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? "mono";
+  } catch {
+    return "mono";
+  }
+}
+
+function loadDarkMode(): boolean {
+  if (!isBrowser) return false;
+  try {
+    const stored = localStorage.getItem(DARK_STORAGE_KEY);
+    if (stored !== null) return stored === "true";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return false;
+  }
+}
 
 // Shared reactive state
 const activeTheme = ref<string>(loadTheme());
-
-function loadTheme(): string {
-  if (typeof window === "undefined") return "mono";
-  return localStorage.getItem(STORAGE_KEY) ?? "mono";
-}
+const isDark = ref<boolean>(loadDarkMode());
 
 function applyTheme(themeId: string) {
   if (typeof document === "undefined") return;
 
-  // Remove all theme classes
   const root = document.documentElement;
   for (const cls of Array.from(root.classList)) {
     if (cls.startsWith(CLASS_PREFIX)) {
@@ -39,21 +57,40 @@ function applyTheme(themeId: string) {
     }
   }
 
-  // Apply new theme (default = no class needed, uses @theme values)
   if (themeId !== "default") {
     root.classList.add(`${CLASS_PREFIX}${themeId}`);
   }
-
-  // Persist
-  localStorage.setItem(STORAGE_KEY, themeId);
 }
 
-// Apply on init
-applyTheme(activeTheme.value);
+function applyDarkMode(dark: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", dark);
+}
 
-// Watch for changes
+// Apply on init (browser only)
+applyTheme(activeTheme.value);
+applyDarkMode(isDark.value);
+
 watch(activeTheme, (newTheme) => {
   applyTheme(newTheme);
+  if (isBrowser) {
+    try {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    } catch {
+      // localStorage unavailable (SSR, private browsing, etc.)
+    }
+  }
+});
+
+watch(isDark, (newDark) => {
+  applyDarkMode(newDark);
+  if (isBrowser) {
+    try {
+      localStorage.setItem(DARK_STORAGE_KEY, String(newDark));
+    } catch {
+      // localStorage unavailable
+    }
+  }
 });
 
 /**
@@ -69,14 +106,28 @@ export function useTheme() {
     return activeTheme.value;
   }
 
+  function toggleDark() {
+    isDark.value = !isDark.value;
+  }
+
+  function setDark(dark: boolean) {
+    isDark.value = dark;
+  }
+
   return {
-    /** Current theme ID (reactive) */
+    /** Current theme preset ID (reactive) */
     theme: activeTheme,
+    /** Whether dark mode is active (reactive) */
+    isDark,
     /** List of available theme presets */
     presets: THEME_PRESETS,
     /** Set the active theme by ID */
     setTheme,
     /** Get the current theme ID */
     getTheme,
+    /** Toggle between dark and light mode */
+    toggleDark,
+    /** Explicitly set dark mode on or off */
+    setDark,
   };
 }

@@ -260,6 +260,7 @@ export type {
 
 // Composable exports
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
+export { ssrThemeInitScript } from "./ssr-theme-init";
 export { useBreakpoint } from "./composables/useBreakpoint";
 export { useGridContext, useFlexContext } from "./composables/useLayoutContext";
 export type { LayoutContext } from "./composables/useLayoutContext";
