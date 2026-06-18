@@ -3,6 +3,7 @@ import { computed } from "vue";
 import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type BadgeVariant = "solid" | "subtle" | "outline";
 export type BadgeAnimation = "pulse" | "bounce" | "ping" | "none";
@@ -76,6 +77,7 @@ const dotStyle = computed(() => ({
 }));
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+const messages = useMessages();
 </script>
 
 <template>
@@ -111,7 +113,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
       v-if="removable"
       type="button"
       class="cui-badge__remove"
-      aria-label="Remove"
+      :aria-label="messages.remove"
       @click.stop="emit('remove')"
     >
       <CuiIcon name="x" :size="clampedSize === 'sm' ? '0.625rem' : '0.75rem'" />

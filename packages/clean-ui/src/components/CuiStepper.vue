@@ -3,6 +3,7 @@ import { computed, provide, ref } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type StepperOrientation = "horizontal" | "vertical";
 export type StepStatus = "complete" | "current" | "upcoming" | "error";
@@ -159,6 +160,7 @@ function stepCursor(index: number) {
   if (props.linear && status === "upcoming") return "default";
   return "pointer";
 }
+const messages = useMessages();
 </script>
 
 <template>
@@ -172,7 +174,7 @@ function stepCursor(index: number) {
       gap: cfg.gap,
     }"
     role="navigation"
-    aria-label="Progress"
+    :aria-label="messages.stepper.label"
   >
     <template v-for="(step, index) in steps" :key="index">
       <!-- Step -->

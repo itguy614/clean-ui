@@ -7,6 +7,7 @@ import CuiModalFooter from "./CuiModalFooter.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
@@ -35,13 +36,17 @@ export interface CuiConfirmDialogProps extends HideableProps {
 
 const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   visible: false,
-  title: "Are you sure?",
   variant: "danger",
-  confirmText: "Confirm",
-  cancelText: "Cancel",
   loading: false,
   hidden: false,
 });
+
+const messages = useMessages();
+
+// Prop override > provider catalog > built-in default.
+const resolvedTitle = computed(() => props.title ?? messages.value.confirmDialog.title);
+const resolvedConfirmText = computed(() => props.confirmText ?? messages.value.confirmDialog.confirm);
+const resolvedCancelText = computed(() => props.cancelText ?? messages.value.confirmDialog.cancel);
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -72,7 +77,7 @@ const confirmDisabled = computed(() => {
 });
 
 const defaultPrompt = computed(() =>
-  `Please type <strong>${props.confirmWord}</strong> to confirm.`,
+  messages.value.confirmDialog.typePrompt(props.confirmWord ?? ""),
 );
 
 function close() {
@@ -130,7 +135,7 @@ function onCancel() {
             margin: '0.125rem 0 0',
           }"
         >
-          {{ title }}
+          {{ resolvedTitle }}
         </h2>
 
         <!-- Message -->
@@ -165,7 +170,7 @@ function onCancel() {
           marginTop: '-0.125rem',
           marginRight: '-0.25rem',
         }"
-        aria-label="Close"
+        :aria-label="messages.close"
         @click="onCancel"
       >
         <CuiIcon name="x" size="1rem" />
@@ -200,7 +205,7 @@ function onCancel() {
     <CuiModalFooter>
       <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
         <CuiButton variant="outline" size="sm" @click="onCancel">
-          {{ cancelText }}
+          {{ resolvedCancelText }}
         </CuiButton>
         <CuiButton
           variant="solid"
@@ -222,7 +227,7 @@ function onCancel() {
               }"
             />
           </template>
-          {{ confirmText }}
+          {{ resolvedConfirmText }}
         </CuiButton>
       </div>
     </CuiModalFooter>

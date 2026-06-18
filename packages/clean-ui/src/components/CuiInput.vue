@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -86,6 +87,7 @@ function blur() {
 defineExpose({ el: inputRef, focus, blur });
 
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
+const messages = useMessages();
 </script>
 
 <template>
@@ -141,7 +143,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
           type="button"
           class="cui-input__clear"
           tabindex="-1"
-          aria-label="Clear input"
+          :aria-label="messages.input.clear"
           @click="clear"
         >
           <CuiIcon name="x" size="0.75rem" />
@@ -153,7 +155,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
           type="button"
           class="cui-input__password-toggle"
           tabindex="-1"
-          :aria-label="passwordVisible ? 'Hide password' : 'Show password'"
+          :aria-label="passwordVisible ? messages.input.hidePassword : messages.input.showPassword"
           @click="passwordVisible = !passwordVisible"
         >
           <!-- Eye open -->

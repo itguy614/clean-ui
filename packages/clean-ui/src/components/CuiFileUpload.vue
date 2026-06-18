@@ -4,6 +4,7 @@ import type { CuiColor, HideableProps, ColorableProps, DisableableProps } from "
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
+import { useMessages } from "../composables/useMessages";
 
 export interface FileEntry {
   file: File;
@@ -199,6 +200,7 @@ function blur() {
 }
 
 defineExpose({ el: rootEl, focus, blur });
+const messages = useMessages();
 </script>
 
 <template>
@@ -310,7 +312,7 @@ defineExpose({ el: rootEl, focus, blur });
           {{ files.length }} file{{ files.length === 1 ? '' : 's' }} · {{ totalSize }}
         </span>
         <div :style="{ display: 'flex', gap: '0.375rem' }">
-          <CuiButton variant="ghost" size="xs" @click="clearAll">Clear All</CuiButton>
+          <CuiButton variant="ghost" size="xs" @click="clearAll">{{ messages.clearAll }}</CuiButton>
           <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" @click="onUploadClick">
             <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>
             {{ uploadText }}

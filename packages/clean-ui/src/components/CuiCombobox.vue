@@ -4,6 +4,7 @@ import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, Cu
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
+import { useMessages } from "../composables/useMessages";
 import CuiSpinner from "./CuiSpinner.vue";
 
 export interface ComboboxOption {
@@ -339,6 +340,7 @@ function optionStyle(index: number, option: ComboboxOption) {
     borderRadius: "0.25rem",
   };
 }
+const messages = useMessages();
 </script>
 
 <template>
@@ -417,7 +419,7 @@ function optionStyle(index: number, option: ComboboxOption) {
       <div v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
         <!-- Loading -->
         <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: '1rem', textAlign: 'center' }">
-          <CuiSpinner size="sm" show-label label="Searching..." />
+          <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
         </div>
 
         <!-- No results -->
@@ -433,7 +435,7 @@ function optionStyle(index: number, option: ComboboxOption) {
           v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
           :style="{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
         >
-          Type {{ minChars - query.length }} more character{{ minChars - query.length === 1 ? '' : 's' }}...
+          {{ messages.combobox.typeMore(minChars - query.length) }}
         </div>
 
         <!-- Options list -->

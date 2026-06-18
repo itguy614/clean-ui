@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -320,6 +321,7 @@ const dims = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return { minHeight: s.height, px: s.px, fontSize: s.fontSize };
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -369,7 +371,7 @@ const dims = computed(() => {
                 type="button"
                 class="cui-select__chip-remove"
                 tabindex="-1"
-                aria-label="Remove"
+                :aria-label="messages.remove"
                 @click.stop="removeChip(val)"
               >
                 <CuiIcon name="x" size="0.75rem" />
@@ -398,7 +400,7 @@ const dims = computed(() => {
             type="button"
             class="cui-select__clear"
             tabindex="-1"
-            aria-label="Clear"
+            :aria-label="messages.clear"
             @click.stop="clear"
           >
             <CuiIcon name="x" size="0.75rem" />
@@ -422,7 +424,7 @@ const dims = computed(() => {
         <!-- Loading -->
         <div v-if="loading" class="cui-select__loading">
           <CuiIcon name="spinner-gap" size="1rem" class="cui-select__spinner" />
-          Loading...
+          {{ messages.loading }}
         </div>
 
         <!-- Empty -->

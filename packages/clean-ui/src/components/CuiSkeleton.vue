@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export type SkeletonVariant = "text" | "rectangle" | "circle";
 export type SkeletonAnimation = "shimmer" | "pulse" | "none";
@@ -65,6 +66,7 @@ function textLineStyle(index: number) {
     borderRadius: "0.25rem",
   };
 }
+const messages = useMessages();
 </script>
 
 <template>
@@ -72,7 +74,7 @@ function textLineStyle(index: number) {
     v-show="!hidden"
     role="status"
     aria-busy="true"
-    aria-label="Loading"
+    :aria-label="messages.skeleton.label"
     class="cui-skeleton"
   >
     <!-- Text variant -->
