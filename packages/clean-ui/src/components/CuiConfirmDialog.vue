@@ -96,7 +96,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal v-show="!hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
+  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
     <!-- Custom header with icon badge -->
     <div
       :style="{
