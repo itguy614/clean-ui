@@ -26,14 +26,13 @@
     "typescript",
     "accessible"
   ],
-  "main": "./dist/clean-ui.umd.cjs",
-  "module": "./dist/clean-ui.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/clean-ui.js",
-      "require": "./dist/clean-ui.umd.cjs"
+      "import": "./dist/index.js"
     },
     "./styles": "./dist/clean-ui.css"
   },
@@ -43,10 +42,13 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "**/*.vue.js",
+    "**/*.vue2.js"
   ],
   "scripts": {
-    "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",
+    "size": "node scripts/postbuild.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -9,17 +9,16 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       name: "CleanUI",
-      formats: ["es", "umd"],
-      fileName: "clean-ui",
+      formats: ["es"],
     },
     rollupOptions: {
       external: ["vue", "@floating-ui/vue", "@floating-ui/dom", "@phosphor-icons/vue"],
       output: {
+        preserveModules: true,
+        preserveModulesRoot: resolve(__dirname, "src"),
+        entryFileNames: "[name].js",
         globals: {
           vue: "Vue",
-          "@floating-ui/vue": "FloatingUIVue",
-          "@floating-ui/dom": "FloatingUIDom",
-          "@phosphor-icons/vue": "PhosphorIconsVue",
         },
       },
     },
