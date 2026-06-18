@@ -81,9 +81,12 @@ describe("smoke: every public component mounts and renders a root", () => {
   }
 });
 
+// Providers render only their slot (no root element), so `hidden` has nowhere to apply.
+const FRAGMENT_ROOT = new Set(["CuiConfigProvider", "CuiToastProvider"]);
+
 describe("smoke: components respect `hidden`", () => {
   for (const [name, comp] of components) {
-    if (SKIP[name]) continue;
+    if (SKIP[name] || FRAGMENT_ROOT.has(name)) continue;
     it(`${name} mounts with hidden=true`, () => {
       const wrapper = mount(comp, { props: { ...(PROPS[name] ?? {}), hidden: true } });
       expect(wrapper.exists()).toBe(true);
