@@ -49,6 +49,10 @@ const PROPS: Record<string, Record<string, unknown>> = {
   CuiCodeBlock: { code: "const x = 1;" },
   CuiDataGrid: { columns: [], data: [] },
   CuiTransferList: { items: [] },
+  CuiRadio: { value: "smoke" },
+  CuiCopyButton: { value: "copy me" },
+  CuiStepper: { steps: [] },
+  CuiTreeView: { nodes: [] },
 };
 
 function isComponent(value: unknown): value is Component {
