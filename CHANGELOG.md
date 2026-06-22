@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-06-22
+
+### Added
+- Per-module, tree-shakeable build (`preserveModules`) and subpath exports (`@itguy614/clean-ui/*`) so bundlers drop unused components and deep imports resolve (#27)
+- `cui-scrollbar` opt-in utility for always-visible custom scrollbars (#33)
+
+### Changed
+- Color scale consolidated into a single source of truth shared by the library and docs — no more drift between them (#37)
+
+### Removed
+- **BREAKING:** the UMD / CommonJS (`require()`) build — the package is now ESM-only; `main`/`module` resolve to `dist/index.js` (#27)
+
+### Fixed
+- WCAG AA contrast across all 8 themes in light & dark mode: secondary/tertiary text, dark-mode code blocks, badges, sidebar nav, and unchecked form controls (#34)
+
 ## [0.9.0] - 2026-06-22
 
 ### Added
