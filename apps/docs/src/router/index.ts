@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../pages/Installation.vue'),
     },
     {
+      path: '/changelog',
+      name: 'changelog',
+      component: () => import('../pages/ChangelogPage.vue'),
+    },
+    {
       path: '/foundations/themes',
       name: 'themes',
       component: () => import('../pages/ThemesPage.vue'),
@@ -87,6 +92,11 @@ const router = createRouter({
       path: '/foundations/density',
       name: 'density',
       component: () => import('../pages/DensityPage.vue'),
+    },
+    {
+      path: '/foundations/utilities',
+      name: 'utilities',
+      component: () => import('../pages/UtilitiesPage.vue'),
     },
     {
       path: '/components/dropdown',

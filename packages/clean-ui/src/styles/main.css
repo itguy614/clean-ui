@@ -1,74 +1,15 @@
 @import "tailwindcss";
 @import "./themes.css";
+/* Color scale (@theme) — single source of truth, shared with the docs app. */
+@import "./theme.css";
 
 /* ============================================================
    COLOR SYSTEM
    Indigo-blue base, WCAG AA compliant.
+   Color scale lives in ./theme.css (the Tailwind @theme).
+   The semantic --cui-* layer below maps that scale to roles.
    Override any --cui-* token on :root or a container.
    ============================================================ */
-
-@theme {
-  /* --- Primary (Indigo-Blue, hue 270) — full scale for Tailwind utilities --- */
-  --color-primary-50:  oklch(0.97 0.02 270);
-  --color-primary-100: oklch(0.93 0.04 270);
-  --color-primary-200: oklch(0.86 0.08 270);
-  --color-primary-300: oklch(0.74 0.13 270);
-  --color-primary-400: oklch(0.62 0.17 270);
-  --color-primary-500: oklch(0.45 0.18 270);
-  --color-primary-600: oklch(0.40 0.16 270);
-  --color-primary-700: oklch(0.35 0.14 270);
-  --color-primary-800: oklch(0.28 0.11 270);
-  --color-primary-900: oklch(0.22 0.08 270);
-  --color-primary-950: oklch(0.17 0.06 270);
-
-  /* --- Secondary (Muted Indigo, hue 270, low chroma) — condensed --- */
-  --color-secondary-100: oklch(0.94 0.015 270);
-  --color-secondary-300: oklch(0.58 0.05 270);
-  --color-secondary-500: oklch(0.45 0.06 270);
-  --color-secondary-700: oklch(0.35 0.05 270);
-  --color-secondary-900: oklch(0.25 0.03 270);
-
-  /* --- Success (Green, hue 150) — condensed --- */
-  --color-success-100: oklch(0.95 0.04 150);
-  --color-success-300: oklch(0.58 0.12 150);
-  --color-success-500: oklch(0.45 0.14 150);
-  --color-success-700: oklch(0.36 0.12 150);
-  --color-success-900: oklch(0.28 0.08 150);
-
-  /* --- Error (Red, hue 25) — condensed --- */
-  --color-error-100: oklch(0.95 0.04 25);
-  --color-error-300: oklch(0.60 0.14 25);
-  --color-error-500: oklch(0.50 0.20 25);
-  --color-error-700: oklch(0.40 0.16 25);
-  --color-error-900: oklch(0.28 0.10 25);
-
-  /* --- Warning (Amber, hue 80) — condensed --- */
-  --color-warning-100: oklch(0.96 0.04 80);
-  --color-warning-300: oklch(0.62 0.12 80);
-  --color-warning-500: oklch(0.52 0.13 80);
-  --color-warning-700: oklch(0.42 0.12 80);
-  --color-warning-900: oklch(0.30 0.08 80);
-
-  /* --- Info (Cyan, hue 230) — condensed --- */
-  --color-info-100: oklch(0.95 0.03 230);
-  --color-info-300: oklch(0.58 0.10 230);
-  --color-info-500: oklch(0.45 0.13 230);
-  --color-info-700: oklch(0.36 0.10 230);
-  --color-info-900: oklch(0.28 0.07 230);
-
-  /* --- Surface (smooth monotonic scale) — full scale --- */
-  --color-surface-50:  oklch(0.975 0.005 270);
-  --color-surface-100: oklch(0.945 0.005 270);
-  --color-surface-200: oklch(0.900 0.006 270);
-  --color-surface-300: oklch(0.850 0.008 270);
-  --color-surface-400: oklch(0.780 0.008 270);
-  --color-surface-500: oklch(0.720 0.008 270);
-  --color-surface-600: oklch(0.620 0.010 270);
-  --color-surface-700: oklch(0.500 0.010 270);
-  --color-surface-800: oklch(0.380 0.010 270);
-  --color-surface-900: oklch(0.270 0.010 270);
-  --color-surface-950: oklch(0.196 0.010 270);
-}
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -233,8 +174,8 @@
   --cui-border-strong: var(--color-surface-500);
 
   /* --- Primary (references scale so themes override correctly) --- */
-  --cui-primary:            var(--color-primary-300);
-  --cui-primary-hover:      var(--color-primary-200);
+  --cui-primary:            var(--color-primary-200);
+  --cui-primary-hover:      var(--color-primary-100);
   --cui-primary-active:     var(--color-primary-100);
   --cui-primary-bg:         var(--color-primary-900);
   --cui-primary-border:     var(--color-primary-400);
@@ -249,7 +190,8 @@
   --cui-primary-solid-active: var(--color-primary-800);
 
   /* --- Secondary (muted primary — also references scale for theme compat) --- */
-  --cui-secondary:            var(--color-secondary-300);
+  /* Brightened from secondary-300 (0.58) for AA on subtle/outline text in dark. */
+  --cui-secondary:            oklch(0.72 0.05 270);
   --cui-secondary-hover:      var(--color-secondary-100);
   --cui-secondary-active:     var(--color-secondary-100);
   --cui-secondary-bg:         var(--color-secondary-900);
@@ -369,8 +311,10 @@
 
   /* --- Text color semantics (light mode) --- */
   --cui-text-body: var(--color-surface-900);
-  --cui-text-secondary: var(--color-surface-500);
-  --cui-text-tertiary: var(--color-surface-400);
+  --cui-text-secondary: var(--color-surface-700);
+  /* Custom step (~5:1 on white): lighter than secondary for hierarchy, but the
+     surface scale has no step between 600 (fails AA) and 700 that passes. */
+  --cui-text-tertiary: oklch(0.55 0.012 270);
   --cui-text-emphasis: var(--color-surface-950);
   --cui-text-link: var(--cui-primary);
   --cui-text-link-hover: var(--cui-primary-hover);
@@ -391,7 +335,7 @@
   --cui-text-emphasis: var(--color-surface-50);
   --cui-text-link: var(--cui-primary);
   --cui-text-link-hover: var(--cui-primary-hover);
-  --cui-text-code: var(--color-primary-300);
+  --cui-text-code: var(--color-primary-200);
 }
 
 /* ============================================================
@@ -597,11 +541,25 @@
 }
 
 /* --- Lists --- */
+/* Restore list markers — Tailwind's preflight resets ul/ol to list-style: none. */
 .cui-typography ul,
 .cui-typography ol {
   margin-top: 0;
   margin-bottom: var(--cui-paragraph-margin-bottom);
   padding-left: calc(1.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-typography ul {
+  list-style: disc;
+}
+
+.cui-typography ol {
+  list-style: decimal;
+}
+
+/* Nested unordered lists use a hollow marker, as in standard prose. */
+.cui-typography ul ul {
+  list-style: circle;
 }
 
 .cui-typography li {
@@ -867,4 +825,62 @@
 .cui-density-comfortable {
   --cui-density-scale: 1.2;
   --cui-density-gap-scale: 1.12;
+}
+
+/* ============================================================
+   SCROLLBAR UTILITY (opt-in)
+   Add `.cui-scrollbar` to any scroll container to render a
+   persistent, themed scrollbar instead of the OS overlay bar
+   (which on macOS only appears while scrolling). Add
+   `.cui-scrollbar-thin` for a slimmer variant. Tokens are
+   theme-aware and overridable per scope.
+   ============================================================ */
+.cui-scrollbar {
+  --_cui-scrollbar-size: 10px;
+  --_cui-scrollbar-thumb: var(--cui-border);
+  --_cui-scrollbar-thumb-hover: var(--cui-border-strong);
+  --_cui-scrollbar-track: transparent;
+}
+
+.cui-scrollbar-thin {
+  --_cui-scrollbar-size: 6px;
+}
+
+/* Firefox (and any engine WITHOUT ::-webkit-scrollbar). Scoped here on purpose:
+   when `scrollbar-width` is set, modern Chromium/Edge switch to the standard
+   scrollbar and IGNORE the ::-webkit-scrollbar rules below — which on macOS
+   means the OS overlay bar that hides when idle. Keeping the standard props out
+   of WebKit engines lets the pseudo-elements drive a persistent bar there. */
+@supports not selector(::-webkit-scrollbar) {
+  .cui-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--_cui-scrollbar-thumb) var(--_cui-scrollbar-track);
+  }
+}
+
+/* WebKit / Chromium (Chrome, Safari, Edge): styling these pseudo-elements forces
+   a persistent, non-overlay scrollbar in place of the macOS overlay bar. */
+.cui-scrollbar::-webkit-scrollbar {
+  width: var(--_cui-scrollbar-size);
+  height: var(--_cui-scrollbar-size);
+}
+
+.cui-scrollbar::-webkit-scrollbar-track {
+  background: var(--_cui-scrollbar-track);
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--_cui-scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--_cui-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }

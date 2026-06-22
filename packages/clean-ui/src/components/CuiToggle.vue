@@ -128,7 +128,6 @@ const dims = computed(() => trackSizes[clampedSize.value]);
         height: dims.h,
         '--_toggle-color': `var(--cui-${resolvedColor})`,
         '--_toggle-bg': `var(--cui-${resolvedColor}-bg)`,
-        '--_toggle-border': `var(--cui-${resolvedColor}-border)`,
         '--_toggle-hover': `var(--cui-${resolvedColor}-hover)`,
         '--_toggle-active': `var(--cui-${resolvedColor}-active)`,
       }"
@@ -203,7 +202,9 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   align-items: center;
   flex-shrink: 0;
   border-radius: 9999px;
-  background: var(--color-surface-300);
+  /* Subtle-first, mirroring the checkbox: no fill when off, light-primary tint
+     when on. The knob is the primary "dot" in both states. */
+  background: transparent;
   border: 1px solid var(--cui-border-strong);
   transition: background 0.2s ease, border-color 0.2s ease;
   padding: calc(0.125rem - 1px);
@@ -211,39 +212,29 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 }
 
 .cui-toggle--checked .cui-toggle__track {
-  background: var(--_toggle-color);
+  background: var(--_toggle-bg);
   border-color: var(--_toggle-color);
 }
 
 .cui-toggle:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--color-surface-400);
+  border-color: var(--_toggle-color);
 }
 
 .cui-toggle--checked:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--_toggle-hover);
   border-color: var(--_toggle-hover);
 }
 
 .cui-toggle:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--color-surface-500);
-}
-
-.cui-toggle--checked:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  background: var(--_toggle-active);
   border-color: var(--_toggle-active);
 }
 
-/* --- Knob --- */
+/* --- Knob (primary "dot" in both states) --- */
 .cui-toggle__knob {
   border-radius: 50%;
-  background: var(--cui-text-secondary);
+  background: var(--_toggle-color);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
   transition: transform 0.2s ease, background 0.2s ease;
   z-index: 1;
-}
-
-.cui-toggle--checked .cui-toggle__knob {
-  background: var(--cui-text-secondary);
 }
 
 /* --- Labels inside track --- */
@@ -259,7 +250,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
 }
 
 .cui-toggle__on-label {
-  color: var(--cui-surface-base);
+  color: var(--_toggle-color);
 }
 
 /* --- Label --- */
