@@ -165,7 +165,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       class="cui-radio__indicator"
       :style="{
         '--_radio-color': `var(--cui-${resolvedColor})`,
-        '--_radio-border': isChecked ? `var(--cui-${resolvedColor}-border)` : `var(--color-surface-400)`,
+        '--_radio-border': isChecked ? `var(--cui-${resolvedColor}-border)` : `var(--cui-border-strong)`,
         '--_radio-bg': isChecked ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
     >
