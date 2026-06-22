@@ -34,7 +34,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles": "./dist/clean-ui.css"
+    "./styles": "./dist/clean-ui.css",
+    "./*": "./dist/*"
   },
   "files": [
     "dist",
