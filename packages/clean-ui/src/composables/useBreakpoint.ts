@@ -31,6 +31,9 @@ const cleanups: (() => void)[] = [];
 function init() {
   shared = ref<ActiveBreakpoint>(detectBreakpoint());
 
+  // Skip event listeners during SSR (no window.matchMedia)
+  if (typeof window === "undefined") return;
+
   for (const bp of BREAKPOINT_ORDER) {
     const mql = window.matchMedia(`(min-width: ${BREAKPOINTS[bp]}px)`);
     const handler = () => {

@@ -281,6 +281,7 @@ export type {
 // Composable exports
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
+export { ssrThemeInitScript } from "./ssr-theme-init";
 export { useBreakpoint } from "./composables/useBreakpoint";
 export { useGridContext, useFlexContext } from "./composables/useLayoutContext";
 export type { LayoutContext } from "./composables/useLayoutContext";
