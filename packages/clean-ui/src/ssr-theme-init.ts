@@ -20,7 +20,10 @@
  *
  * Keys read:
  *   - "cui-theme"  → adds "cui-theme-{id}" class (theme preset)
- *   - "cui-dark"   → adds "dark" class when "true"
+ *
+ * Dark mode is class-based (`.dark`) but the library doesn't own a persistence
+ * key for it — if your app persists a dark preference, add a matching line here
+ * (read your own key and toggle the "dark" class) to also avoid a dark FOUC.
  */
 export const ssrThemeInitScript = `
 (function() {
@@ -28,10 +31,6 @@ export const ssrThemeInitScript = `
     var theme = localStorage.getItem('cui-theme');
     if (theme && theme !== 'default') {
       document.documentElement.classList.add('cui-theme-' + theme);
-    }
-    var dark = localStorage.getItem('cui-dark');
-    if (dark === 'true') {
-      document.documentElement.classList.add('dark');
     }
   } catch(e) {}
 })();

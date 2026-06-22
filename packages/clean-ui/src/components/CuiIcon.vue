@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, type Component } from "vue";
+import { ref, computed, onMounted, watch, type Component } from "vue";
 import type { CuiSize, CuiColorOrCss, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
 
@@ -49,10 +49,12 @@ function toPascalCase(name: string): string {
 const iconCache = new Map<string, Component>();
 const iconComponent = ref<Component | null>(null);
 
-onMounted(async () => {
-  // onMounted only runs in the browser — never on the server
-  // This prevents hydration mismatches from async imports
-  const pascalName = toPascalCase(props.name);
+// Resolve the icon for a given name. Runs in the browser only (called from
+// onMounted + a watcher) so the Phosphor import never executes on the server —
+// avoiding hydration mismatches. The `requested`/guard handles a reactive
+// `name` change whose async import resolves out of order.
+async function resolveIcon(name: string) {
+  const pascalName = toPascalCase(name);
 
   if (iconCache.has(pascalName)) {
     iconComponent.value = iconCache.get(pascalName)!;
@@ -61,18 +63,22 @@ onMounted(async () => {
 
   try {
     const mod = await import("@phosphor-icons/vue");
-    const resolved = mod[pascalName as keyof typeof mod] as Component | undefined;
-    if (resolved) {
-      iconCache.set(pascalName, resolved);
-      iconComponent.value = resolved;
-    } else {
-      console.warn(`[CuiIcon] Icon "${props.name}" (${pascalName}) not found in @phosphor-icons/vue`);
-      iconComponent.value = mod.PhQuestion as Component;
+    let resolved = mod[pascalName as keyof typeof mod] as Component | undefined;
+    if (!resolved) {
+      console.warn(`[CuiIcon] Icon "${name}" (${pascalName}) not found in @phosphor-icons/vue`);
+      resolved = mod.PhQuestion as Component;
     }
+    iconCache.set(pascalName, resolved);
+    // Ignore a stale resolution if `name` changed while we were importing.
+    if (props.name === name) iconComponent.value = resolved;
   } catch {
-    console.warn(`[CuiIcon] Failed to load icon "${props.name}"`);
+    console.warn(`[CuiIcon] Failed to load icon "${name}"`);
   }
-});
+}
+
+onMounted(() => resolveIcon(props.name));
+// Re-resolve when the name prop changes (browser-only; onMounted has run).
+watch(() => props.name, (name) => resolveIcon(name));
 
 // Duotone CSS overrides
 const wrapperStyle = computed(() => {
@@ -103,6 +109,14 @@ const wrapperStyle = computed(() => {
       :size="resolvedSize"
       :color="resolveColor(color)"
     />
+    <!-- Placeholder reserves the icon's box before it resolves (SSR + first
+         client tick) so there's no layout shift when it appears. -->
+    <span
+      v-else
+      class="cui-icon__placeholder"
+      :style="{ width: resolvedSize, height: resolvedSize }"
+      aria-hidden="true"
+    />
   </span>
 </template>
 
@@ -113,6 +127,11 @@ const wrapperStyle = computed(() => {
   justify-content: center;
   flex-shrink: 0;
   line-height: 0;
+}
+
+/* Sized blank box so the icon's footprint is reserved before it resolves. */
+.cui-icon__placeholder {
+  display: inline-block;
 }
 
 /* Duotone overrides — target the secondary layer rendered by Phosphor */

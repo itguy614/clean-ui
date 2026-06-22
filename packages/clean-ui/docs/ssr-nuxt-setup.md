@@ -21,8 +21,13 @@ export default defineNuxtConfig({
 })
 ```
 
-This reads `cui-theme` and `cui-dark` from `localStorage` and applies the
-correct classes to `<html>` before the first paint — no flash.
+This reads `cui-theme` from `localStorage` and applies the correct theme class
+to `<html>` before the first paint — no flash.
+
+> Dark mode is class-based (toggle `.dark` on `<html>`). The library doesn't
+> persist a dark preference itself, so if your app stores one, add a matching
+> line to the init script (read your key, toggle the `dark` class) to avoid a
+> dark-mode flash too.
 
 ## 2. Icon rendering under SSR
 
