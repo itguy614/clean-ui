@@ -100,7 +100,7 @@ const groupedSections = sections.reduce((acc, section) => {
 </script>
 
 <template>
-  <nav :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem', background: 'var(--color-surface-50)' }">
+  <nav class="bg-surface-50 dark:bg-surface-900" :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem' }">
     <div style="margin-bottom: 1.5rem;">
       <h2 style="font-size: 1.25rem; font-weight: 700;">Clean UI</h2>
       <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
@@ -119,7 +119,7 @@ const groupedSections = sections.reduce((acc, section) => {
                 'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
                 'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
               ]"
-              active-class="text-white [background:var(--cui-primary)] hover:[background:var(--cui-primary-hover)]"
+              active-class="[color:var(--cui-primary-text)] [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
               @click="$emit('navigate')"
             >
               {{ section.label }}
