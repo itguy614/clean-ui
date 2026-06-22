@@ -49,6 +49,23 @@ import {
           </CuiFlex>
 
           <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="rows" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">
+                Global Density
+                <CuiBadge color="primary" size="sm" style="margin-left: 0.375rem; vertical-align: middle;">rare</CuiBadge>
+              </h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Switch the whole UI between <strong>compact</strong>, <strong>default</strong>, and
+                <strong>comfortable</strong> spacing with one class — like a theme, but for whitespace.
+                Scales padding, gaps, and line-height (never type), with WCAG touch-target floors.
+                Seldom found in other component libraries. See
+                <RouterLink to="/foundations/density" style="color: var(--cui-primary); font-weight: 500;">Density</RouterLink>.
+              </p>
+            </CuiStack>
+          </CuiFlex>
+
+          <CuiFlex align="start" gap="3" wrap="nowrap">
             <CuiIcon name="eye" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
             <CuiStack spacing="1" class="min-w-0 flex-1">
               <h3 style="font-size: 1rem; font-weight: 500;">WCAG AA Accessible</h3>

@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import { CuiBadge } from "@itguy614/clean-ui";
+import versionRaw from "../../../../VERSION?raw";
+
 defineEmits<{ navigate: [] }>();
+
+const version = versionRaw.trim();
 
 const sections = [
   // Getting Started
   { id: "overview", label: "Overview", path: "/", group: "Getting Started" },
   { id: "installation", label: "Installation", path: "/installation", group: "Getting Started" },
+  { id: "changelog", label: "Changelog", path: "/changelog", group: "Getting Started" },
 
   // Foundations (alphabetical)
   { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations" },
@@ -13,6 +19,7 @@ const sections = [
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations" },
   { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
   { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
+  { id: "utilities", label: "Utilities", path: "/foundations/utilities", group: "Foundations" },
 
   // Layout (alphabetical)
   { id: "container", label: "Container", path: "/components/container", group: "Layout" },
@@ -100,9 +107,15 @@ const groupedSections = sections.reduce((acc, section) => {
 </script>
 
 <template>
-  <nav :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem', background: 'var(--color-surface-50)' }">
+  <nav
+    class="cui-scrollbar bg-surface-50 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800"
+    :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem' }"
+  >
     <div style="margin-bottom: 1.5rem;">
-      <h2 style="font-size: 1.25rem; font-weight: 700;">Clean UI</h2>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cui-text-emphasis);">Clean UI</h2>
+        <CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge>
+      </div>
       <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
     </div>
 
@@ -119,7 +132,7 @@ const groupedSections = sections.reduce((acc, section) => {
                 'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
                 'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
               ]"
-              active-class="text-white [background:var(--cui-primary)] hover:[background:var(--cui-primary-hover)]"
+              active-class="[color:var(--cui-primary-text)] [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
               @click="$emit('navigate')"
             >
               {{ section.label }}

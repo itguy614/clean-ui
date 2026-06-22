@@ -80,7 +80,9 @@ function onAction(action: DataGridBulkAction) {
   align-items: center;
   gap: calc(0.75rem * var(--cui-density-scale, 1));
   padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
-  background: var(--cui-primary);
+  /* Use the solid token (darker in dark mode) so the white text stays readable —
+     plain --cui-primary is lightened in dark mode for accent text/borders. */
+  background: var(--cui-primary-solid, var(--cui-primary));
   color: var(--cui-primary-text);
   border-radius: var(--cui-button-radius, 0.375rem);
   box-shadow: 0 -2px 12px rgb(0 0 0 / 0.15);
