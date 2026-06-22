@@ -419,7 +419,13 @@ const messages = useMessages();
         class="cui-select__dropdown"
         role="listbox"
         :aria-multiselectable="multiple || undefined"
-        :style="dropdownStyle"
+        :style="[
+          dropdownStyle,
+          {
+            '--_sel-color': `var(--cui-${color})`,
+            '--_sel-font-size': dims.fontSize,
+          },
+        ]"
       >
         <!-- Loading -->
         <div v-if="loading" class="cui-select__loading">
