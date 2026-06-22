@@ -20,7 +20,7 @@
 - This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
 - Build library: `pnpm build` (root) or `pnpm --filter @itguy614/clean-ui build`
 - After rebuild, clear docs cache: `rm -rf apps/docs/node_modules/.vite`
-- Docs app has its own `@theme` in `apps/docs/src/styles/main.css` that must mirror the library's color tokens
+- Color scale (`@theme`) is single-source in `packages/clean-ui/src/styles/theme.css`; both the library `main.css` and the docs `apps/docs/src/styles/main.css` `@import` it (no mirroring). The contrast audit reads the scale from `theme.css` too.
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
 
 ## Critical Gotchas
