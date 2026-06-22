@@ -14,6 +14,7 @@ const sections = [
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations" },
   { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
   { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
+  { id: "utilities", label: "Utilities", path: "/foundations/utilities", group: "Foundations" },
 
   // Layout (alphabetical)
   { id: "container", label: "Container", path: "/components/container", group: "Layout" },

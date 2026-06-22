@@ -94,6 +94,11 @@ const router = createRouter({
       component: () => import('../pages/DensityPage.vue'),
     },
     {
+      path: '/foundations/utilities',
+      name: 'utilities',
+      component: () => import('../pages/UtilitiesPage.vue'),
+    },
+    {
       path: '/components/dropdown',
       name: 'dropdown',
       component: () => import('../pages/DropdownPage.vue'),

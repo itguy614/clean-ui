@@ -234,26 +234,5 @@ app.use(createCleanUI())</code></pre>
         </CuiStack>
       </CuiCardBody>
     </CuiCard>
-
-    <CuiCard>
-      <CuiCardBody>
-        <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 600;">Scrollbar utility</h2>
-        <p style="font-size: 0.9375rem; color: var(--cui-text-secondary); margin-bottom: 1rem;">
-          Opt in to a persistent, themed scrollbar with the <code class="cui-code">cui-scrollbar</code>
-          class (add <code class="cui-code">cui-scrollbar-thin</code> for a slimmer bar). Useful where
-          the OS hides overlay scrollbars until you scroll — e.g. on macOS. It's not applied by
-          default; add it to any scroll container you choose.
-        </p>
-        <div
-          class="cui-scrollbar"
-          style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius); padding: 0.75rem;"
-        >
-          <p v-for="n in 12" :key="n" style="font-size: 0.875rem; margin: 0 0 0.5rem;">
-            Scrollable row {{ n }} — the scrollbar stays visible while this box overflows.
-          </p>
-        </div>
-        <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">&lt;div class="cui-scrollbar" style="max-height: 8rem; overflow-y: auto"&gt;…&lt;/div&gt;</code></pre>
-      </CuiCardBody>
-    </CuiCard>
   </CuiStack>
 </template>
