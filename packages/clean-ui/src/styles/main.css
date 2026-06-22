@@ -600,11 +600,25 @@
 }
 
 /* --- Lists --- */
+/* Restore list markers — Tailwind's preflight resets ul/ol to list-style: none. */
 .cui-typography ul,
 .cui-typography ol {
   margin-top: 0;
   margin-bottom: var(--cui-paragraph-margin-bottom);
   padding-left: calc(1.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-typography ul {
+  list-style: disc;
+}
+
+.cui-typography ol {
+  list-style: decimal;
+}
+
+/* Nested unordered lists use a hollow marker, as in standard prose. */
+.cui-typography ul ul {
+  list-style: circle;
 }
 
 .cui-typography li {
@@ -870,4 +884,62 @@
 .cui-density-comfortable {
   --cui-density-scale: 1.2;
   --cui-density-gap-scale: 1.12;
+}
+
+/* ============================================================
+   SCROLLBAR UTILITY (opt-in)
+   Add `.cui-scrollbar` to any scroll container to render a
+   persistent, themed scrollbar instead of the OS overlay bar
+   (which on macOS only appears while scrolling). Add
+   `.cui-scrollbar-thin` for a slimmer variant. Tokens are
+   theme-aware and overridable per scope.
+   ============================================================ */
+.cui-scrollbar {
+  --_cui-scrollbar-size: 10px;
+  --_cui-scrollbar-thumb: var(--cui-border);
+  --_cui-scrollbar-thumb-hover: var(--cui-border-strong);
+  --_cui-scrollbar-track: transparent;
+}
+
+.cui-scrollbar-thin {
+  --_cui-scrollbar-size: 6px;
+}
+
+/* Firefox (and any engine WITHOUT ::-webkit-scrollbar). Scoped here on purpose:
+   when `scrollbar-width` is set, modern Chromium/Edge switch to the standard
+   scrollbar and IGNORE the ::-webkit-scrollbar rules below — which on macOS
+   means the OS overlay bar that hides when idle. Keeping the standard props out
+   of WebKit engines lets the pseudo-elements drive a persistent bar there. */
+@supports not selector(::-webkit-scrollbar) {
+  .cui-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--_cui-scrollbar-thumb) var(--_cui-scrollbar-track);
+  }
+}
+
+/* WebKit / Chromium (Chrome, Safari, Edge): styling these pseudo-elements forces
+   a persistent, non-overlay scrollbar in place of the macOS overlay bar. */
+.cui-scrollbar::-webkit-scrollbar {
+  width: var(--_cui-scrollbar-size);
+  height: var(--_cui-scrollbar-size);
+}
+
+.cui-scrollbar::-webkit-scrollbar-track {
+  background: var(--_cui-scrollbar-track);
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--_cui-scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--_cui-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
