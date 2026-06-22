@@ -308,9 +308,17 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio-button--active {
   background: var(--_rb-bg);
   color: var(--_rb-color);
-  border-color: var(--_rb-border);
+  /* Keep the neutral border on the active segment so the group stays visually
+     connected — only the fill and text change. */
+  border-color: var(--cui-border-strong);
   position: relative;
   z-index: 1;
+}
+
+/* Dark mode: restore the colored border (segments read as connected there
+   against the darker surface). */
+:where(.dark, .dark *) .cui-radio-button--active {
+  border-color: var(--_rb-border);
 }
 
 .cui-radio-button--active:hover:not(:disabled) {
