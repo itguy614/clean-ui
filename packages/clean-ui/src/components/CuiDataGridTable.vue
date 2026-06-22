@@ -165,21 +165,6 @@ const lastStickyKey = computed(() => {
   return null;
 });
 
-function stickyColStyle(colKey: string): Record<string, string | number> | undefined {
-  const leftVal = stickyColumnOffsets.value.get(colKey);
-  if (!leftVal) return undefined;
-  const style: Record<string, string | number> = {
-    position: "sticky",
-    left: leftVal,
-    zIndex: 5,
-    background: "var(--cui-table-head-bg, var(--color-surface-50))",
-  };
-  if (colKey === lastStickyKey.value) {
-    style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
-  }
-  return style;
-}
-
 function stickyBodyColStyle(colKey: string): Record<string, string | number> | undefined {
   const leftVal = stickyColumnOffsets.value.get(colKey);
   if (!leftVal) return undefined;
@@ -195,12 +180,48 @@ function stickyBodyColStyle(colKey: string): Record<string, string | number> | u
   return style;
 }
 
+// Header cells pin at the CELL level (never via a sticky <thead> — that nests
+// same-axis sticky and detaches sticky-column headers). Every header cell gets
+// `top: 0` when stickyHeader is on; sticky columns additionally get `left`. A
+// cell that's both (the top-left corner) sits above the regular header row (10)
+// and the sticky body column (4) at z-index 11.
 function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
-  return {
-    ...(col.sortable ? { cursor: "pointer", userSelect: "none" as const } : {}),
-    ...stickyColStyle(col.key),
-  };
+  const leftVal = stickyColumnOffsets.value.get(col.key);
+  const stickyCol = !!leftVal;
+  const stickyTop = props.stickyHeader;
+
+  const style: Record<string, string | number> = col.sortable
+    ? { cursor: "pointer", userSelect: "none" }
+    : {};
+
+  if (stickyCol || stickyTop) {
+    style.position = "sticky";
+    style.background = "var(--cui-table-head-bg, var(--color-surface-50))";
+    style.zIndex = stickyCol && stickyTop ? 11 : stickyCol ? 5 : 10;
+  }
+  if (stickyTop) style.top = 0;
+  if (stickyCol) {
+    style.left = leftVal!;
+    if (col.key === lastStickyKey.value) {
+      style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
+    }
+  }
+  return style;
 }
+
+// Top-pin style for the non-column header cells (bulk-select checkbox, row
+// actions). They aren't in visibleColumns so they don't get headerCellStyle,
+// but they still need to ride the sticky header rather than scroll away.
+const auxHeaderCellStyle = computed(() =>
+  props.stickyHeader
+    ? {
+        position: "sticky" as const,
+        top: 0,
+        zIndex: 10,
+        background: "var(--cui-table-head-bg, var(--color-surface-50))",
+      }
+    : {},
+);
 
 // ---------------------------------------------------------------------------
 // Virtualization
@@ -254,7 +275,7 @@ const totalCols = computed(() => {
       <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
       <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
         <!-- Bulk selection checkbox -->
-        <CuiTableCell v-if="hasBulkActions" width="3rem" align="center">
+        <CuiTableCell v-if="hasBulkActions" width="3rem" align="center" :style="auxHeaderCellStyle">
           <CuiCheckbox
             v-if="showSelectAll"
             :model-value="selectAllState === true"
@@ -285,7 +306,7 @@ const totalCols = computed(() => {
         </CuiTableCell>
 
         <!-- Row actions column -->
-        <CuiTableCell v-if="hasRowActions" width="3rem" />
+        <CuiTableCell v-if="hasRowActions" width="3rem" :style="auxHeaderCellStyle" />
       </CuiTableRow>
     </CuiTableHead>
 

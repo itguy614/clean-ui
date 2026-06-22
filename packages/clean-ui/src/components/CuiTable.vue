@@ -210,7 +210,10 @@ defineExpose({ scrollWrapper });
 .cui-table--sticky-header thead th {
   position: sticky !important;
   top: 0 !important;
-  z-index: 10 !important;
+  /* z-index intentionally NOT !important: a cell that is BOTH a sticky header
+     and a sticky column (the top-left "corner") needs to layer above its
+     neighbours, which it does by setting a higher z-index inline. */
+  z-index: 10;
   background: var(--color-surface-50) !important;
 }
 
