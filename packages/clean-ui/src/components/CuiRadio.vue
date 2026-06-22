@@ -224,7 +224,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 2px solid var(--_radio-border);
+  border: 1px solid var(--_radio-border);
   background: var(--_radio-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
   margin-top: 0.125rem; /* align with first line of text */

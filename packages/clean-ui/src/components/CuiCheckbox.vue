@@ -176,7 +176,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 0.25rem;
-  border: 2px solid var(--_check-border);
+  border: 1px solid var(--_check-border);
   background: var(--_check-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
   margin-top: 0.125rem;
