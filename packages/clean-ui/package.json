@@ -43,9 +43,7 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css",
-    "**/*.vue.js",
-    "**/*.vue2.js"
+    "**/*.css"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",
