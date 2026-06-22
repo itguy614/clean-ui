@@ -868,3 +868,53 @@
   --cui-density-scale: 1.2;
   --cui-density-gap-scale: 1.12;
 }
+
+/* ============================================================
+   SCROLLBAR UTILITY (opt-in)
+   Add `.cui-scrollbar` to any scroll container to render a
+   persistent, themed scrollbar instead of the OS overlay bar
+   (which on macOS only appears while scrolling). Add
+   `.cui-scrollbar-thin` for a slimmer variant. Tokens are
+   theme-aware and overridable per scope.
+   ============================================================ */
+.cui-scrollbar {
+  --_cui-scrollbar-size: 10px;
+  --_cui-scrollbar-thumb: var(--cui-border);
+  --_cui-scrollbar-thumb-hover: var(--cui-border-strong);
+  --_cui-scrollbar-track: transparent;
+
+  /* Firefox + standard */
+  scrollbar-width: thin;
+  scrollbar-color: var(--_cui-scrollbar-thumb) var(--_cui-scrollbar-track);
+}
+
+.cui-scrollbar-thin {
+  --_cui-scrollbar-size: 6px;
+}
+
+/* WebKit (Chrome / Safari / Edge): defining these forces a persistent
+   bar in place of the macOS overlay scrollbar. */
+.cui-scrollbar::-webkit-scrollbar {
+  width: var(--_cui-scrollbar-size);
+  height: var(--_cui-scrollbar-size);
+}
+
+.cui-scrollbar::-webkit-scrollbar-track {
+  background: var(--_cui-scrollbar-track);
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--_cui-scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--_cui-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+
+.cui-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}

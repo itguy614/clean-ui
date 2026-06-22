@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../pages/Installation.vue'),
     },
     {
+      path: '/changelog',
+      name: 'changelog',
+      component: () => import('../pages/ChangelogPage.vue'),
+    },
+    {
       path: '/foundations/themes',
       name: 'themes',
       component: () => import('../pages/ThemesPage.vue'),

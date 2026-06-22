@@ -5,6 +5,7 @@ const sections = [
   // Getting Started
   { id: "overview", label: "Overview", path: "/", group: "Getting Started" },
   { id: "installation", label: "Installation", path: "/installation", group: "Getting Started" },
+  { id: "changelog", label: "Changelog", path: "/changelog", group: "Getting Started" },
 
   // Foundations (alphabetical)
   { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations" },

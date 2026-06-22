@@ -49,6 +49,23 @@ import {
           </CuiFlex>
 
           <CuiFlex align="start" gap="3" wrap="nowrap">
+            <CuiIcon name="rows" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
+            <CuiStack spacing="1" class="min-w-0 flex-1">
+              <h3 style="font-size: 1rem; font-weight: 500;">
+                Global Density
+                <CuiBadge color="primary" size="sm" style="margin-left: 0.375rem; vertical-align: middle;">rare</CuiBadge>
+              </h3>
+              <p style="font-size: 0.875rem; color: var(--cui-text-secondary);">
+                Switch the whole UI between <strong>compact</strong>, <strong>default</strong>, and
+                <strong>comfortable</strong> spacing with one class — like a theme, but for whitespace.
+                Scales padding, gaps, and line-height (never type), with WCAG touch-target floors.
+                Seldom found in other component libraries. See
+                <RouterLink to="/foundations/density" style="color: var(--cui-primary); font-weight: 500;">Density</RouterLink>.
+              </p>
+            </CuiStack>
+          </CuiFlex>
+
+          <CuiFlex align="start" gap="3" wrap="nowrap">
             <CuiIcon name="eye" size="1.25rem" color="var(--cui-primary)" style="flex-shrink: 0; margin-top: 0.125rem;" />
             <CuiStack spacing="1" class="min-w-0 flex-1">
               <h3 style="font-size: 1rem; font-weight: 500;">WCAG AA Accessible</h3>
@@ -215,6 +232,27 @@ app.use(createCleanUI())</code></pre>
             alongside CUI components.
           </p>
         </CuiStack>
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard>
+      <CuiCardBody>
+        <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 600;">Scrollbar utility</h2>
+        <p style="font-size: 0.9375rem; color: var(--cui-text-secondary); margin-bottom: 1rem;">
+          Opt in to a persistent, themed scrollbar with the <code class="cui-code">cui-scrollbar</code>
+          class (add <code class="cui-code">cui-scrollbar-thin</code> for a slimmer bar). Useful where
+          the OS hides overlay scrollbars until you scroll — e.g. on macOS. It's not applied by
+          default; add it to any scroll container you choose.
+        </p>
+        <div
+          class="cui-scrollbar"
+          style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius); padding: 0.75rem;"
+        >
+          <p v-for="n in 12" :key="n" style="font-size: 0.875rem; margin: 0 0 0.5rem;">
+            Scrollable row {{ n }} — the scrollbar stays visible while this box overflows.
+          </p>
+        </div>
+        <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">&lt;div class="cui-scrollbar" style="max-height: 8rem; overflow-y: auto"&gt;…&lt;/div&gt;</code></pre>
       </CuiCardBody>
     </CuiCard>
   </CuiStack>

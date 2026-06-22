@@ -15,4 +15,8 @@ export default defineConfig({
       ),
     },
   },
+  server: {
+    // Allow importing repo-root files (VERSION, CHANGELOG.md) via ?raw in dev.
+    fs: { allow: [resolve(__dirname, "../..")] },
+  },
 });
