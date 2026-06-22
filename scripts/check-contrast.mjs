@@ -390,6 +390,14 @@ for (const theme of themes) {
     check("light", theme.name, "Border 300 on surface-50", sh["300"], sBg, 3.0);
   }
 
+  console.log("│  TEXT & CODE");
+  check("light", theme.name, "Body text (s-900) on white", sf["900"], WHITE, 4.5);
+  check("light", theme.name, "Secondary text (s-700) on white", sf["700"], WHITE, 4.5);
+  check("light", theme.name, "Secondary text (s-700) on surface-50", sf["700"], sBg, 4.5);
+  check("light", theme.name, "Tertiary text (s-600) on white", sf["600"] || sf["700"], WHITE, 4.5);
+  check("light", theme.name, "Code text (p-700) on code bg (s-100)", p["700"], sf["100"] || sBg, 4.5);
+  check("light", theme.name, "Kbd (s-100 on s-800)", sf["100"] || WHITE, sf["800"] || "#333", 4.5);
+
   console.log("│  BORDERS (surface tokens)");
   check("light", theme.name, "cui-border (s-500) on white", sBorder, WHITE, 3.0);
   check("light", theme.name, "cui-border (s-500) on surface-50", sBorder, sBg, 3.0);
@@ -411,7 +419,7 @@ for (const theme of themes) {
   check("dark", theme.name, "Solid btn hover: white on p-700", WHITE, p["700"], 4.5);
   check("dark", theme.name, "Outline text: p-300 on s-900", p["300"], dsBg, 4.5);
   check("dark", theme.name, "Outline hover: p-200 on s-900", p["200"], dsBg, 4.5);
-  check("dark", theme.name, "Text p-300 on s-800 (table head)", p["300"], dsTableHead, 4.5);
+  check("dark", theme.name, "Table head text (s-400) on s-800", ds["400"] || "#999", dsTableHead, 4.5);
   check("dark", theme.name, "Text on subtle bg: p-300 on p-900", p["300"], p["900"], 4.5);
   check("dark", theme.name, "Border p-400 on s-900", p["400"], dsBg, 3.0);
   check("dark", theme.name, "Border p-400 on s-800", p["400"], dsTableHead, 3.0);
@@ -431,6 +439,13 @@ for (const theme of themes) {
     check("dark", theme.name, "Text on subtle bg", dk.color, dk.bg, 4.5);
     check("dark", theme.name, "Border on s-900", dk.border, dsBg, 3.0);
   }
+
+  console.log("│  TEXT & CODE");
+  check("dark", theme.name, "Body text (s-200) on s-900", ds["200"] || "#ccc", dsBg, 4.5);
+  check("dark", theme.name, "Secondary text (s-400) on s-900", ds["400"] || "#999", dsBg, 4.5);
+  check("dark", theme.name, "Tertiary text (s-500) on s-900", ds["500"] || "#777", dsBg, 4.5);
+  check("dark", theme.name, "Code text (p-200) on code bg (s-800)", p["200"], dsTableHead, 4.5);
+  check("dark", theme.name, "Kbd (s-100 on s-700)", ds["100"] || "#eee", ds["700"] || "#444", 4.5);
 
   console.log("│  BORDERS (surface tokens)");
   check("dark", theme.name, "cui-border (s-600) on s-900", dsBorder, dsBg, 3.0);
