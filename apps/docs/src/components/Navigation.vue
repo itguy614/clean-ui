@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { CuiBadge } from "@itguy614/clean-ui";
+import versionRaw from "../../../../VERSION?raw";
+
 defineEmits<{ navigate: [] }>();
+
+const version = versionRaw.trim();
 
 const sections = [
   // Getting Started
@@ -102,9 +107,15 @@ const groupedSections = sections.reduce((acc, section) => {
 </script>
 
 <template>
-  <nav :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem', background: 'var(--color-surface-50)' }">
+  <nav
+    class="cui-scrollbar bg-surface-50 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800"
+    :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem' }"
+  >
     <div style="margin-bottom: 1.5rem;">
-      <h2 style="font-size: 1.25rem; font-weight: 700;">Clean UI</h2>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cui-text-emphasis);">Clean UI</h2>
+        <CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge>
+      </div>
       <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
     </div>
 

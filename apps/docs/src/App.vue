@@ -10,7 +10,6 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
-  CuiBadge,
   CuiSlideover,
   CuiToastProvider,
   useTheme,
@@ -18,9 +17,6 @@ import {
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
 import { ShowDebugKey } from "./keys";
-import versionRaw from "../../../VERSION?raw";
-
-const version = versionRaw.trim();
 
 const isDark = ref(false);
 const showDebug = ref(false);
@@ -88,14 +84,8 @@ function toggleDark() {
               </CuiButton>
             </div>
 
-            <!-- Brand + version (links to changelog) -->
-            <RouterLink
-              to="/changelog"
-              :style="{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--cui-text-body)' }"
-            >
-              <span :style="{ fontWeight: '600', fontSize: '0.9375rem' }">clean-ui</span>
-              <CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge>
-            </RouterLink>
+            <!-- Spacer on desktop where hamburger would be -->
+            <div class="hidden lg:block" />
 
             <!-- Right: theme / debug / dark toggle -->
             <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem' }">
