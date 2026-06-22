@@ -114,7 +114,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       class="cui-checkbox__indicator"
       :style="{
         '--_check-color': `var(--cui-${resolvedColor})`,
-        '--_check-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--color-surface-400)`,
+        '--_check-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--cui-border-strong)`,
         '--_check-bg': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
     >
