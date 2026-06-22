@@ -55,7 +55,7 @@ function resetTabs() {
           { name: 'v-model', type: 'string', default: '—', description: 'Active tab value' },
           { name: 'variant', type: 'underline | segmented', default: 'underline', description: 'Tab bar style' },
           { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Layout direction' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Active indicator color' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Active indicator color' },
           { name: 'keepAlive', type: 'boolean', default: 'true', description: 'Keep inactive panels in DOM' },
           { name: 'transition', type: 'fade | slide | none', default: 'fade', description: 'Panel transition animation' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },

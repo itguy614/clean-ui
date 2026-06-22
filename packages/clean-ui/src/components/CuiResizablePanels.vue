@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import type { CuiOrientation, HideableProps } from "../types/common";
 
-export type ResizableDirection = "horizontal" | "vertical";
-
-export interface CuiResizablePanelsProps {
-  /** Split direction */
-  direction?: ResizableDirection;
+export interface CuiResizablePanelsProps extends HideableProps {
+  /** Split orientation */
+  orientation?: CuiOrientation;
   /** Initial size of the first panel as a percentage (0-100) */
   initialSize?: number;
   /** Minimum size of the first panel in px */
@@ -15,12 +14,10 @@ export interface CuiResizablePanelsProps {
   minSecond?: number;
   /** Collapse the first panel below this threshold (px). 0 disables. */
   collapseThreshold?: number;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiResizablePanelsProps>(), {
-  direction: "horizontal",
+  orientation: "horizontal",
   initialSize: 50,
   minFirst: 100,
   minSecond: 100,
@@ -38,7 +35,7 @@ const firstPercent = ref(props.initialSize);
 const dragging = ref(false);
 const collapsed = ref(false);
 
-const isHorizontal = computed(() => props.direction === "horizontal");
+const isHorizontal = computed(() => props.orientation === "horizontal");
 
 const containerStyle = computed(() => ({
   display: "flex",
@@ -99,7 +96,8 @@ const handleLineStyle = computed(() => {
       position: "absolute" as const,
       top: "0",
       bottom: "0",
-      left: "3px",
+      left: "50%",
+      transform: "translateX(-50%)",
       width: active ? "3px" : "1px",
       background: active ? "var(--cui-primary)" : "var(--cui-border)",
       borderRadius: "1px",
@@ -110,7 +108,8 @@ const handleLineStyle = computed(() => {
     position: "absolute" as const,
     left: "0",
     right: "0",
-    top: "3px",
+    top: "50%",
+    transform: "translateY(-50%)",
     height: active ? "3px" : "1px",
     background: active ? "var(--cui-primary)" : "var(--cui-border)",
     borderRadius: "1px",
@@ -133,7 +132,7 @@ const gripStyle = computed(() => {
     transition: "opacity 0.15s ease",
     background: "var(--cui-surface-base, white)",
     borderRadius: "3px",
-    padding: isHorizontal.value ? "4px 1px" : "1px 4px",
+    padding: "2px",
   };
 });
 
@@ -224,10 +223,7 @@ onUnmounted(() => {
     >
       <div :style="handleLineStyle" />
       <div :style="gripStyle">
-        <CuiIcon
-          :name="isHorizontal ? 'dots-six-vertical' : 'dots-six'"
-          size="1.25rem"
-        />
+        <CuiIcon name="dots-nine" size="1.25rem" />
       </div>
     </div>
 

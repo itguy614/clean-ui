@@ -1,5 +1,5 @@
 import type { InjectionKey, Ref } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor } from "../types/common";
 
 export type TabVariant = "underline" | "segmented";
 export type TabOrientation = "horizontal" | "vertical";
@@ -16,7 +16,7 @@ export interface TabsContext {
   activeTab: Ref<string>;
   variant: Ref<TabVariant>;
   orientation: Ref<TabOrientation>;
-  color: Ref<ButtonColor>;
+  color: Ref<CuiColor>;
   keepAlive: Ref<boolean>;
   transition: Ref<TabTransition>;
   previousTab: Ref<string>;

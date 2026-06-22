@@ -1,37 +1,28 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import { ref, computed, useTemplateRef } from "vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export type RatingSize = "sm" | "md" | "lg" | "xl";
-
-export interface CuiRatingProps {
+export interface CuiRatingProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
   modelValue?: number;
   /** Maximum rating */
   max?: number;
   /** Allow half-star values */
   half?: boolean;
-  /** Size */
-  size?: RatingSize;
-  /** Color role */
-  color?: ButtonColor;
   /** Icon name */
   icon?: string;
   /** Icon for half state (only used when half=true) */
   halfIcon?: string;
   /** Readonly (display only, no interaction) */
   readonly?: boolean;
-  /** Disabled */
-  disabled?: boolean;
   /** Show the numeric value */
   showValue?: boolean;
   /** Label */
   label?: string;
   /** Allow clearing to 0 by clicking current value */
   clearable?: boolean;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRatingProps>(), {
@@ -60,13 +51,15 @@ const displayValue = computed(() =>
   isHovering.value && !props.readonly && !props.disabled ? hoverValue.value : props.modelValue,
 );
 
-const sizeConfig: Record<RatingSize, { iconSize: string; gap: string; valueFont: string; labelFont: string }> = {
-  sm: { iconSize: "1rem", gap: "0.125rem", valueFont: "0.75rem", labelFont: "0.75rem" },
-  md: { iconSize: "1.375rem", gap: "0.1875rem", valueFont: "0.875rem", labelFont: "0.8125rem" },
-  lg: { iconSize: "1.75rem", gap: "0.25rem", valueFont: "1rem", labelFont: "0.875rem" },
-  xl: { iconSize: "2.25rem", gap: "0.375rem", valueFont: "1.125rem", labelFont: "1rem" },
+const SUPPORTED_SIZES = ["sm", "md", "lg", "xl"] as const;
+
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { iconSize: string; gap: string; valueFont: string; labelFont: string }> = {
+  sm: { iconSize: "1rem", gap: scaleDensity("0.125rem"), valueFont: "0.75rem", labelFont: "0.75rem" },
+  md: { iconSize: "1.375rem", gap: scaleDensity("0.1875rem"), valueFont: "0.875rem", labelFont: "0.8125rem" },
+  lg: { iconSize: "1.75rem", gap: scaleDensity("0.25rem"), valueFont: "1rem", labelFont: "0.875rem" },
+  xl: { iconSize: "2.25rem", gap: scaleDensity("0.375rem"), valueFont: "1.125rem", labelFont: "1rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 function getStarState(index: number): "filled" | "half" | "empty" {
   const val = displayValue.value;
@@ -132,13 +125,26 @@ function starColor(state: "filled" | "half" | "empty"): string {
   if (state === "empty") return "var(--cui-text-tertiary)";
   return `var(--cui-${props.color})`;
 }
+
+// Expose imperative handle — no native input, so focus the root
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+
+function focus(opts?: FocusOptions) {
+  rootEl.value?.focus(opts);
+}
+
+function blur() {
+  rootEl.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <div
@@ -176,7 +182,7 @@ function starColor(state: "filled" | "half" | "empty"): string {
           fontSize: cfg.valueFont,
           fontWeight: '600',
           color: 'var(--cui-text-body)',
-          marginLeft: '0.25rem',
+          marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))',
           fontVariantNumeric: 'tabular-nums',
         }"
       >

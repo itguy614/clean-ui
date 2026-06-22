@@ -4,6 +4,9 @@ import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const props = defineProps<{
   actions: DataGridBulkAction[];
@@ -34,7 +37,7 @@ function onAction(action: DataGridBulkAction) {
     <div v-if="isVisible" class="cui-data-grid-bulk-bar">
       <div class="cui-data-grid-bulk-bar__inner">
         <span class="cui-data-grid-bulk-bar__count">
-          {{ selectedCount }} item{{ selectedCount === 1 ? "" : "s" }} selected
+          {{ messages.dataGrid.selected(selectedCount) }}
         </span>
 
         <div class="cui-data-grid-bulk-bar__actions">
@@ -57,7 +60,7 @@ function onAction(action: DataGridBulkAction) {
           style="margin-left: auto;"
         >
           <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
-          Clear
+          {{ messages.clear }}
         </CuiButton>
       </div>
     </div>
@@ -69,14 +72,14 @@ function onAction(action: DataGridBulkAction) {
   position: sticky;
   bottom: 0;
   z-index: 20;
-  padding: 0.5rem;
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid-bulk-bar__inner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
   background: var(--cui-primary);
   color: var(--cui-primary-text);
   border-radius: var(--cui-button-radius, 0.375rem);
@@ -93,7 +96,7 @@ function onAction(action: DataGridBulkAction) {
 
 .cui-data-grid-bulk-bar__actions {
   display: flex;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 /* Transition */

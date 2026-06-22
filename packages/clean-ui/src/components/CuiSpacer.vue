@@ -3,18 +3,17 @@ import { computed } from "vue";
 import { useBreakpoint } from "../composables/useBreakpoint";
 import { resolveResponsive, spacingToCss } from "../utils/responsive";
 import type { ResponsiveValue, TailwindSpacing } from "../types/grid";
+import type { CuiOrientation, HideableProps } from "../types/common";
 
-export interface CuiSpacerProps {
+export interface CuiSpacerProps extends HideableProps {
   /** Fixed size (Tailwind spacing scale). If not provided, uses flex-grow to fill available space */
   size?: ResponsiveValue<TailwindSpacing>;
-  /** Direction: horizontal (width) or vertical (height) */
-  direction?: "horizontal" | "vertical";
-  /** Hide the component */
-  hidden?: boolean;
+  /** Orientation: horizontal (width) or vertical (height) */
+  orientation?: CuiOrientation;
 }
 
 const props = withDefaults(defineProps<CuiSpacerProps>(), {
-  direction: "horizontal",
+  orientation: "horizontal",
   hidden: false,
 });
 
@@ -27,14 +26,14 @@ const spacerStyle = computed(() => {
 
   if (size) {
     const cssSize = spacingToCss(size);
-    if (props.direction === "horizontal") {
+    if (props.orientation === "horizontal") {
       style.width = cssSize;
     } else {
       style.height = cssSize;
     }
   } else {
     style.flexGrow = "1";
-    if (props.direction === "horizontal") {
+    if (props.orientation === "horizontal") {
       style.width = "0";
     } else {
       style.height = "0";

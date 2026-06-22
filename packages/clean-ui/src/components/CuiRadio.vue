@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
 
-export interface CuiRadioProps {
+export interface CuiRadioProps extends HideableProps, ColorableProps, DisableableProps {
   /** The value this radio represents */
   value: string | number | boolean;
   /** v-model binding (standalone mode) */
@@ -13,16 +13,10 @@ export interface CuiRadioProps {
   label?: string;
   /** Description text (or use #description slot) */
   description?: string;
-  /** Color role — overrides group color if inside a group */
-  color?: ButtonColor;
   /** Name attribute (standalone mode) */
   name?: string;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRadioProps>(), {
@@ -195,7 +189,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -225,6 +219,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Sized to the (unscaled) label text — keep fixed so it stays aligned with adjacent text. */
   width: 1.25rem;
   height: 1.25rem;
   flex-shrink: 0;
@@ -270,7 +265,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-radio__label {

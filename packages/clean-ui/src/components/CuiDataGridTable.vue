@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
+import { useVirtualScroll } from "../composables/useVirtualScroll";
 import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -27,6 +28,27 @@ export interface CuiDataGridTableProps {
   hoverable?: boolean;
   bordered?: boolean;
   size?: TableSize;
+  /**
+   * Enable row virtualization for large datasets.
+   *
+   * When true the table renders only the rows visible in the viewport plus a
+   * small overscan buffer, keeping the DOM lean regardless of dataset size.
+   *
+   * Requires `maxHeight` to be set so there is a fixed-height scroll container.
+   * Without a bounded height the browser has no viewport to window against and
+   * all rows would always be visible anyway.
+   *
+   * Recommended threshold: enable at >= 500 rows for client-side mode.
+   * Server-side grids paginate at the API layer and rarely need this.
+   */
+  virtualize?: boolean;
+  /**
+   * Fixed row height in px used by the virtualizer.
+   * Omit to let the virtualizer auto-measure from the first rendered row.
+   * Providing an explicit value is slightly more efficient and avoids a
+   * one-frame layout measurement.
+   */
+  virtualRowHeight?: number;
 }
 
 const props = withDefaults(defineProps<CuiDataGridTableProps>(), {
@@ -37,6 +59,7 @@ const props = withDefaults(defineProps<CuiDataGridTableProps>(), {
   bordered: false,
   striped: false,
   size: "md",
+  virtualize: false,
 });
 
 const emit = defineEmits<{
@@ -118,7 +141,7 @@ const stickyColumnOffsets = computed(() => {
 
   // Account for bulk actions checkbox column
   if (hasBulkActions.value) {
-    left += 48; // 3rem ≈ 48px
+    left += 48; // 3rem ~ 48px
   }
 
   for (const col of grid.visibleColumns.value) {
@@ -142,21 +165,6 @@ const lastStickyKey = computed(() => {
   return null;
 });
 
-function stickyColStyle(colKey: string): Record<string, string | number> | undefined {
-  const leftVal = stickyColumnOffsets.value.get(colKey);
-  if (!leftVal) return undefined;
-  const style: Record<string, string | number> = {
-    position: "sticky",
-    left: leftVal,
-    zIndex: 5,
-    background: "var(--cui-table-head-bg, var(--color-surface-50))",
-  };
-  if (colKey === lastStickyKey.value) {
-    style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
-  }
-  return style;
-}
-
 function stickyBodyColStyle(colKey: string): Record<string, string | number> | undefined {
   const leftVal = stickyColumnOffsets.value.get(colKey);
   if (!leftVal) return undefined;
@@ -172,16 +180,88 @@ function stickyBodyColStyle(colKey: string): Record<string, string | number> | u
   return style;
 }
 
+// Header cells pin at the CELL level (never via a sticky <thead> — that nests
+// same-axis sticky and detaches sticky-column headers). Every header cell gets
+// `top: 0` when stickyHeader is on; sticky columns additionally get `left`. A
+// cell that's both (the top-left corner) sits above the regular header row (10)
+// and the sticky body column (4) at z-index 11.
 function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
-  return {
-    ...(col.sortable ? { cursor: "pointer", userSelect: "none" as const } : {}),
-    ...stickyColStyle(col.key),
-  };
+  const leftVal = stickyColumnOffsets.value.get(col.key);
+  const stickyCol = !!leftVal;
+  const stickyTop = props.stickyHeader;
+
+  const style: Record<string, string | number> = col.sortable
+    ? { cursor: "pointer", userSelect: "none" }
+    : {};
+
+  if (stickyCol || stickyTop) {
+    style.position = "sticky";
+    style.background = "var(--cui-table-head-bg, var(--color-surface-50))";
+    style.zIndex = stickyCol && stickyTop ? 11 : stickyCol ? 5 : 10;
+  }
+  if (stickyTop) style.top = 0;
+  if (stickyCol) {
+    style.left = leftVal!;
+    if (col.key === lastStickyKey.value) {
+      style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
+    }
+  }
+  return style;
 }
+
+// Top-pin style for the non-column header cells (bulk-select checkbox, row
+// actions). They aren't in visibleColumns so they don't get headerCellStyle,
+// but they still need to ride the sticky header rather than scroll away.
+const auxHeaderCellStyle = computed(() =>
+  props.stickyHeader
+    ? {
+        position: "sticky" as const,
+        top: 0,
+        zIndex: 10,
+        background: "var(--cui-table-head-bg, var(--color-surface-50))",
+      }
+    : {},
+);
+
+// ---------------------------------------------------------------------------
+// Virtualization
+// ---------------------------------------------------------------------------
+// The scrollable element is CuiTable's internal wrapper div, which it exposes
+// via defineExpose({ scrollWrapper }) and only exists when maxHeight is set.
+// We capture it through CuiTable's :ref and hand it to the virtualizer so it
+// can listen for scroll events. When virtualization is off (or maxHeight is
+// unset) we leave the container null and the virtualizer stays dormant.
+const scrollContainerRef = ref<HTMLElement | null>(null);
+
+function setScrollContainer(wrapper: HTMLElement | null) {
+  scrollContainerRef.value = props.virtualize && props.maxHeight ? wrapper : null;
+}
+
+const vScroll = useVirtualScroll(
+  computed(() => grid.displayData.value),
+  {
+    containerRef: scrollContainerRef,
+    rowHeight: props.virtualRowHeight,
+  },
+);
+
+// The rows we actually render — either the full set or the virtual window
+const renderedRows = computed<DataGridRow[]>(() =>
+  props.virtualize ? vScroll.visibleRows.value : grid.displayData.value,
+);
+
+// Total column count — used for colspan on spacer rows
+const totalCols = computed(() => {
+  let n = grid.visibleColumns.value.length;
+  if (hasBulkActions.value) n += 1;
+  if (hasRowActions.value)  n += 1;
+  return n;
+});
 </script>
 
 <template>
   <CuiTable
+    :ref="(instance: any) => setScrollContainer(instance?.scrollWrapper ?? null)"
     :size="size"
     :striped="striped"
     :hoverable="hoverable"
@@ -189,11 +269,13 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
     :sticky-header="stickyHeader"
     :max-height="maxHeight"
     :min-width="tableMinWidth"
+    :aria-rowcount="virtualize ? grid.displayData.value.length + 1 : undefined"
   >
     <CuiTableHead>
-      <CuiTableRow>
+      <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
+      <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
         <!-- Bulk selection checkbox -->
-        <CuiTableCell v-if="hasBulkActions" width="3rem" align="center">
+        <CuiTableCell v-if="hasBulkActions" width="3rem" align="center" :style="auxHeaderCellStyle">
           <CuiCheckbox
             v-if="showSelectAll"
             :model-value="selectAllState === true"
@@ -212,7 +294,7 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
           :style="headerCellStyle(col)"
           @click="col.sortable ? grid.applySort(col.key) : undefined"
         >
-          <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+          <span style="display: inline-flex; align-items: center; gap: calc(0.25rem * var(--cui-density-scale, 1));">
             {{ col.label }}
             <CuiIcon
               v-if="col.sortable"
@@ -224,18 +306,33 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
         </CuiTableCell>
 
         <!-- Row actions column -->
-        <CuiTableCell v-if="hasRowActions" width="3rem" />
+        <CuiTableCell v-if="hasRowActions" width="3rem" :style="auxHeaderCellStyle" />
       </CuiTableRow>
     </CuiTableHead>
 
     <CuiTableBody>
+      <!--
+        Virtual top spacer — replaces the rows above the render window.
+        A zero-height row with padding-top avoids collapsing border weirdness
+        that a plain <tr style="height:Npx"> can suffer in some browsers.
+      -->
+      <tr
+        v-if="virtualize && vScroll.paddingTop.value > 0"
+        aria-hidden="true"
+        :style="{ height: `${vScroll.paddingTop.value}px`, padding: 0, border: 0 }"
+      >
+        <td :colspan="totalCols" style="padding: 0; border: none;" />
+      </tr>
+
       <CuiContextMenu
-        v-for="row in grid.displayData.value"
+        v-for="(row, idx) in renderedRows"
         :key="getRowId(row)"
         :disabled="rowActions(row).length === 0"
       >
         <CuiTableRow
+          :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
+          :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"
           style="cursor: pointer;"
           @click="emit('row-click', { row })"
         >
@@ -292,6 +389,15 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
           </CuiDropdownItem>
         </template>
       </CuiContextMenu>
+
+      <!-- Virtual bottom spacer -->
+      <tr
+        v-if="virtualize && vScroll.paddingBottom.value > 0"
+        aria-hidden="true"
+        :style="{ height: `${vScroll.paddingBottom.value}px`, padding: 0, border: 0 }"
+      >
+        <td :colspan="totalCols" style="padding: 0; border: none;" />
+      </tr>
     </CuiTableBody>
   </CuiTable>
 </template>

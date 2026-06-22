@@ -1,5 +1,5 @@
 import { ref, type InjectionKey, type Ref } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, LiveRegionMode } from "../types/common";
 import type { AlertAnimation } from "./CuiAlert.vue";
 
 export type ToastPosition =
@@ -20,7 +20,7 @@ export interface ToastOptions {
   /** Description text */
   description?: string;
   /** Color role */
-  color?: ButtonColor;
+  color?: CuiColor;
   /** Visual variant */
   variant?: "solid" | "subtle" | "outline";
   /** Show dismiss button */
@@ -35,12 +35,18 @@ export interface ToastOptions {
   icon?: string;
   /** Hide the default role icon */
   noIcon?: boolean;
+  /**
+   * Screen-reader live-region mode. Defaults from `color`: `error` → assertive
+   * (`role="alert"`), everything else → polite (`role="status"`).
+   */
+  live?: LiveRegionMode;
 }
 
 export interface ToastInstance extends Required<Pick<ToastOptions, "id" | "color" | "variant" | "dismissible" | "autoDismiss" | "showProgress" | "animation" | "noIcon">> {
   title?: string;
   description?: string;
   icon?: string;
+  live?: LiveRegionMode;
   createdAt: number;
 }
 
@@ -80,6 +86,7 @@ export function createToastState(
       animation: options.animation ?? "none",
       icon: options.icon,
       noIcon: options.noIcon ?? false,
+      live: options.live,
       createdAt: Date.now(),
     };
 

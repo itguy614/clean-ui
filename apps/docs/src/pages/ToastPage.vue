@@ -126,13 +126,14 @@ function floodTest() {
         :props="[
           { name: 'title', type: 'string', default: '-', description: 'Title text' },
           { name: 'description', type: 'string', default: '-', description: 'Description text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role with auto-icon' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role with auto-icon' },
           { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show X dismiss button' },
           { name: 'autoDismiss', type: 'number', default: '5000', description: 'Auto-dismiss after N ms (0 to disable)' },
           { name: 'showProgress', type: 'boolean', default: 'true', description: 'Show countdown progress bar' },
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
           { name: 'icon', type: 'string', default: '-', description: 'Custom icon (emoji/text)' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the auto-icon' },
+          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status).' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />

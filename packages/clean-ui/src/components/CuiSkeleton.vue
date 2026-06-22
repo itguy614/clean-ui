@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export type SkeletonVariant = "text" | "rectangle" | "circle";
 export type SkeletonAnimation = "shimmer" | "pulse" | "none";
 export type SkeletonRounded = "none" | "sm" | "md" | "lg" | "full";
 
-export interface CuiSkeletonProps {
+export interface CuiSkeletonProps extends HideableProps {
   /** Shape variant */
   variant?: SkeletonVariant;
   /** Animation style */
@@ -22,8 +24,6 @@ export interface CuiSkeletonProps {
   size?: string;
   /** Border radius (rectangle variant only; circle is always full) */
   rounded?: SkeletonRounded;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSkeletonProps>(), {
@@ -66,6 +66,7 @@ function textLineStyle(index: number) {
     borderRadius: "0.25rem",
   };
 }
+const messages = useMessages();
 </script>
 
 <template>
@@ -73,7 +74,7 @@ function textLineStyle(index: number) {
     v-show="!hidden"
     role="status"
     aria-busy="true"
-    aria-label="Loading"
+    :aria-label="messages.skeleton.label"
     class="cui-skeleton"
   >
     <!-- Text variant -->
@@ -128,7 +129,7 @@ function textLineStyle(index: number) {
 .cui-skeleton__text {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-skeleton__line {

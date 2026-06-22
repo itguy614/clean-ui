@@ -1,35 +1,37 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
-export type InputSize = "xs" | "sm" | "md" | "lg" | "xl";
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
+
 export type InputType = "text" | "password" | "email" | "url" | "tel" | "search";
 
-export interface CuiInputProps {
+export interface CuiInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
   modelValue?: string;
   /** Input type */
   type?: InputType;
   /** Placeholder text */
   placeholder?: string;
-  /** Color role — affects focus border */
-  color?: ButtonColor;
-  /** Size */
-  size?: InputSize;
   /** Show clear button when input has value */
   clearable?: boolean;
   /** Show error state (red border + message) */
   error?: boolean;
   /** Error message displayed below the input */
   errorMessage?: string;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiInputProps>(), {
@@ -42,6 +44,7 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   disabled: false,
   readonly: false,
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -84,6 +87,7 @@ function blur() {
 defineExpose({ el: inputRef, focus, blur });
 
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
+const messages = useMessages();
 </script>
 
 <template>
@@ -98,6 +102,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
         'cui-input--has-suffix-button': $slots['suffix-button'],
       }"
       :style="{
+        borderRadius: radiusMap[rounded],
         '--_input-height': dims.height,
         '--_input-font-size': dims.fontSize,
         '--_input-px': dims.px,
@@ -138,7 +143,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
           type="button"
           class="cui-input__clear"
           tabindex="-1"
-          aria-label="Clear input"
+          :aria-label="messages.input.clear"
           @click="clear"
         >
           <CuiIcon name="x" size="0.75rem" />
@@ -150,7 +155,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
           type="button"
           class="cui-input__password-toggle"
           tabindex="-1"
-          :aria-label="passwordVisible ? 'Hide password' : 'Show password'"
+          :aria-label="passwordVisible ? messages.input.hidePassword : messages.input.showPassword"
           @click="passwordVisible = !passwordVisible"
         >
           <!-- Eye open -->
@@ -187,7 +192,6 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 .cui-input {
   display: flex;
   align-items: stretch;
-  border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--_input-border);
   background: var(--cui-surface-base);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -212,7 +216,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
   min-width: 0;
   height: var(--_input-height);
   padding: 0 var(--_input-px);
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 /* --- Native input --- */
@@ -358,7 +362,7 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 
 .cui-input__error {
   font-size: 0.8125rem;
-  margin-top: 0.375rem;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-error);
 }
 </style>

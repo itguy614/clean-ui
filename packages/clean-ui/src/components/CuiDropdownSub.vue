@@ -2,12 +2,11 @@
 import { ref, inject, computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey, computeDropdownPosition, type DropdownTrigger } from "./dropdown-context";
+import type { DisableableProps } from "../types/common";
 
-export interface CuiDropdownSubProps {
+export interface CuiDropdownSubProps extends DisableableProps {
   /** Override parent trigger for this sub-menu */
   trigger?: DropdownTrigger;
-  /** Disabled state */
-  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownSubProps>(), {
@@ -134,8 +133,8 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__trigger {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   font-size: 0.8125rem;
   color: var(--cui-text-body);
@@ -180,7 +179,7 @@ function onKeydown(e: KeyboardEvent) {
 /* --- Sub-menu panel --- */
 .cui-dropdown-sub__menu {
   min-width: 10rem;
-  padding: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
   border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);

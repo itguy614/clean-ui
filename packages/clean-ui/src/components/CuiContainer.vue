@@ -3,10 +3,11 @@ import { computed } from "vue";
 import { useBreakpoint } from "../composables/useBreakpoint";
 import { resolveResponsive, spacingToCss, CONTAINER_WIDTHS } from "../utils/responsive";
 import type { ResponsiveValue, TailwindSpacing } from "../types/grid";
+import type { HideableProps } from "../types/common";
 
 export type ContainerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 
-export interface CuiContainerProps {
+export interface CuiContainerProps extends HideableProps {
   /** Max-width size (sm: 640px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1536px, full: 100%) */
   maxWidth?: ResponsiveValue<ContainerSize>;
   /** Horizontal padding (Tailwind spacing scale) */
@@ -15,8 +16,6 @@ export interface CuiContainerProps {
   py?: ResponsiveValue<TailwindSpacing>;
   /** Center the container */
   centered?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiContainerProps>(), {

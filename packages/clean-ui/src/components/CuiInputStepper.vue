@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import { computed, useTemplateRef } from "vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 
-export type InputStepperSize = "sm" | "md" | "lg";
-
 export type InputStepperOrientation = "horizontal" | "vertical";
 
-export interface CuiInputStepperProps {
+export interface CuiInputStepperProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -17,22 +16,14 @@ export interface CuiInputStepperProps {
   max?: number;
   /** Step increment */
   step?: number;
-  /** Size */
-  size?: InputStepperSize;
   /** Orientation */
   orientation?: InputStepperOrientation;
-  /** Color role */
-  color?: ButtonColor;
-  /** Disabled state */
-  disabled?: boolean;
   /** Label displayed above */
   label?: string;
   /** Pad value with leading zeros to this width */
   pad?: number;
   /** Wrap around from max to min and vice versa */
   wrap?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiInputStepperProps>(), {
@@ -94,22 +85,41 @@ function onInput(e: Event) {
   emit("update:modelValue", clamped);
 }
 
-const sizeConfig: Record<InputStepperSize, { height: string; inputWidth: string; font: string; buttonSize: "xs" | "sm" | "md"; iconSize: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { height: string; inputWidth: string; font: string; buttonSize: "xs" | "sm" | "md"; iconSize: string }> = {
   sm: { height: "1.75rem", inputWidth: "2.5rem", font: "0.8125rem", buttonSize: "xs", iconSize: "0.75rem" },
   md: { height: "2.25rem", inputWidth: "3rem", font: "0.875rem", buttonSize: "sm", iconSize: "0.875rem" },
   lg: { height: "2.75rem", inputWidth: "3.5rem", font: "1rem", buttonSize: "md", iconSize: "1rem" },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+
+// Expose imperative handle
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const inputH = useTemplateRef<HTMLInputElement>("inputH");
+const inputV = useTemplateRef<HTMLInputElement>("inputV");
+
+function focus(opts?: FocusOptions) {
+  const input = inputH.value ?? inputV.value;
+  if (input) input.focus(opts);
+  else rootEl.value?.focus(opts);
+}
+
+function blur() {
+  (inputH.value ?? inputV.value)?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
         fontSize: cfg.font,
@@ -136,7 +146,7 @@ const cfg = computed(() => sizeConfig[props.size]);
         @click="decrement">
         <CuiIcon name="minus" :size="cfg.iconSize" />
       </CuiButton>
-      <input type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+      <input ref="inputH" type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
         :style="{ width: cfg.inputWidth, height: '100%', textAlign: 'center', border: 'none', borderLeft: '1px solid var(--cui-border-strong, var(--cui-border))', borderRight: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canIncrement" :color="color"
@@ -164,8 +174,8 @@ const cfg = computed(() => sizeConfig[props.size]);
         @click="increment">
         <CuiIcon name="caret-up" :size="cfg.iconSize" />
       </CuiButton>
-      <input type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
-        :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0.25rem 0', fontFamily: 'inherit' }"
+      <input ref="inputV" type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+        :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"
         :style="{ border: 'none', borderRadius: '0', width: '100%' }"

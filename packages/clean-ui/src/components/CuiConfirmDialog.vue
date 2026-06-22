@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, HideableProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
-export interface CuiConfirmDialogProps {
-  /** Control visibility */
-  modelValue?: boolean;
+export interface CuiConfirmDialogProps extends HideableProps {
+  /** Control visibility (v-model:visible) */
+  visible?: boolean;
   /** Dialog title */
   title?: string;
   /** Confirmation message */
@@ -31,22 +32,24 @@ export interface CuiConfirmDialogProps {
   icon?: string;
   /** Loading state on confirm button */
   loading?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
-  modelValue: false,
-  title: "Are you sure?",
+  visible: false,
   variant: "danger",
-  confirmText: "Confirm",
-  cancelText: "Cancel",
   loading: false,
   hidden: false,
 });
 
+const messages = useMessages();
+
+// Prop override > provider catalog > built-in default.
+const resolvedTitle = computed(() => props.title ?? messages.value.confirmDialog.title);
+const resolvedConfirmText = computed(() => props.confirmText ?? messages.value.confirmDialog.confirm);
+const resolvedCancelText = computed(() => props.cancelText ?? messages.value.confirmDialog.cancel);
+
 const emit = defineEmits<{
-  "update:modelValue": [value: boolean];
+  "update:visible": [value: boolean];
   confirm: [];
   cancel: [];
 }>();
@@ -54,13 +57,13 @@ const emit = defineEmits<{
 const typedWord = ref("");
 
 watch(
-  () => props.modelValue,
+  () => props.visible,
   (open) => {
     if (open) typedWord.value = "";
   },
 );
 
-const variantConfig: Record<ConfirmDialogVariant, { color: ButtonColor; icon: string }> = {
+const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: string }> = {
   danger: { color: "error", icon: "warning-circle" },
   warning: { color: "warning", icon: "warning" },
   info: { color: "info", icon: "info" },
@@ -74,11 +77,11 @@ const confirmDisabled = computed(() => {
 });
 
 const defaultPrompt = computed(() =>
-  `Please type <strong>${props.confirmWord}</strong> to confirm.`,
+  messages.value.confirmDialog.typePrompt(props.confirmWord ?? ""),
 );
 
 function close() {
-  emit("update:modelValue", false);
+  emit("update:visible", false);
 }
 
 function onConfirm() {
@@ -93,14 +96,14 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal v-show="!hidden" :open="modelValue" size="sm" no-close-button @update:open="emit('update:modelValue', $event)">
+  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
     <!-- Custom header with icon badge -->
     <div
       :style="{
-        padding: '1.25rem 1.5rem 0',
+        padding: 'calc(1.25rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1)) 0',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: '0.875rem',
+        gap: 'calc(0.875rem * var(--cui-density-scale, 1))',
       }"
     >
       <!-- Icon badge -->
@@ -129,10 +132,10 @@ function onCancel() {
             fontWeight: '600',
             lineHeight: '1.3',
             color: 'var(--cui-text-emphasis)',
-            margin: '0.125rem 0 0',
+            margin: 'calc(0.125rem * var(--cui-density-scale, 1)) 0 0',
           }"
         >
-          {{ title }}
+          {{ resolvedTitle }}
         </h2>
 
         <!-- Message -->
@@ -142,7 +145,7 @@ function onCancel() {
             fontSize: '0.875rem',
             color: 'var(--cui-text-secondary)',
             lineHeight: '1.55',
-            marginTop: '0.375rem',
+            marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot>{{ message }}</slot>
@@ -164,10 +167,10 @@ function onCancel() {
           color: 'var(--cui-text-tertiary)',
           borderRadius: '0.25rem',
           flexShrink: '0',
-          marginTop: '-0.125rem',
-          marginRight: '-0.25rem',
+          marginTop: 'calc(-0.125rem * var(--cui-density-scale, 1))',
+          marginRight: 'calc(-0.25rem * var(--cui-density-scale, 1))',
         }"
-        aria-label="Close"
+        :aria-label="messages.close"
         @click="onCancel"
       >
         <CuiIcon name="x" size="1rem" />
@@ -181,15 +184,16 @@ function onCancel() {
           :style="{
             fontSize: '0.8125rem',
             color: 'var(--cui-text-secondary)',
-            marginBottom: '0.5rem',
+            marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))',
             lineHeight: '1.4',
-            padding: '0.625rem 0.75rem',
+            padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
             background: `var(--cui-${cfg.color}-bg)`,
             borderRadius: '0.375rem',
             border: `1px solid var(--cui-${cfg.color}-border)`,
           }"
-          v-html="confirmPrompt || defaultPrompt"
-        />
+        >
+          {{ confirmPrompt || defaultPrompt }}
+        </div>
         <CuiInput
           v-model="typedWord"
           :placeholder="confirmWord"
@@ -200,9 +204,9 @@ function onCancel() {
     </CuiModalBody>
 
     <CuiModalFooter>
-      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+      <div style="display: flex; gap: calc(0.5rem * var(--cui-density-scale, 1)); justify-content: flex-end;">
         <CuiButton variant="outline" size="sm" @click="onCancel">
-          {{ cancelText }}
+          {{ resolvedCancelText }}
         </CuiButton>
         <CuiButton
           variant="solid"
@@ -224,7 +228,7 @@ function onCancel() {
               }"
             />
           </template>
-          {{ confirmText }}
+          {{ resolvedConfirmText }}
         </CuiButton>
       </div>
     </CuiModalFooter>

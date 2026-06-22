@@ -54,12 +54,12 @@ function onDragEnd() {
       Columns
     </CuiButton>
     <template #content>
-      <div style="display: flex; flex-direction: column; gap: 0.125rem;">
+      <div style="display: flex; flex-direction: column; gap: calc(0.125rem * var(--cui-density-scale, 1));">
         <div
           v-for="(cs, index) in grid.columnState.value"
           :key="cs.key"
           draggable="true"
-          style="display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0; border-radius: 0.25rem; cursor: grab;"
+          style="display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1)); padding: calc(0.375rem * var(--cui-density-scale, 1)) 0; border-radius: 0.25rem; cursor: grab;"
           :style="{
             opacity: dragIndex === index ? 0.5 : 1,
             borderTop: dropIndex === index ? '2px solid var(--cui-primary)' : '2px solid transparent',

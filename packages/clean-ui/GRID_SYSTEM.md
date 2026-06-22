@@ -219,7 +219,7 @@ Convenience wrapper for simple vertical/horizontal spacing. Built on top of `Cui
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `direction` | `"vertical" \| "horizontal"` | `"vertical"` | Stack direction |
+| `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | Stack orientation |
 | `spacing` | `ResponsiveValue<TailwindSpacing>` | `"4"` | Space between items |
 | `debug` | `boolean` | `false` | Enable debug visualization |
 
@@ -234,7 +234,7 @@ Convenience wrapper for simple vertical/horizontal spacing. Built on top of `Cui
 </CuiStack>
 
 <!-- Horizontal stack -->
-<CuiStack direction="horizontal" spacing="3">
+<CuiStack orientation="horizontal" spacing="3">
   <Button>Button 1</Button>
   <Button>Button 2</Button>
 </CuiStack>
@@ -318,7 +318,7 @@ Flexible spacer for pushing items apart in flex layouts, or fixed spacing.
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `size` | `ResponsiveValue<TailwindSpacing>` | - | Fixed size (if not provided, uses flex-grow) |
-| `direction` | `"horizontal" \| "vertical"` | `"horizontal"` | Spacer direction (width vs height) |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | Spacer orientation (width vs height) |
 
 ### Examples
 
@@ -340,7 +340,7 @@ Flexible spacer for pushing items apart in flex layouts, or fixed spacing.
 <!-- Vertical spacer -->
 <CuiFlex direction="col">
   <Card>Top</Card>
-  <CuiSpacer direction="vertical" />
+  <CuiSpacer orientation="vertical" />
   <Card>Bottom</Card>
 </CuiFlex>
 ```
@@ -646,7 +646,7 @@ See the docs app (`apps/docs/src/App.vue`) for comprehensive examples of all com
 To run the docs app:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Then open http://localhost:5173 (or next available port).

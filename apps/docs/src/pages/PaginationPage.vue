@@ -54,7 +54,7 @@ const sizePage = ref(1);
           { name: 'perPageOptions', type: 'number[]', default: '[10,15,25,50,100]', description: 'Options for per-page selector' },
           { name: 'hidePerPage', type: 'boolean', default: 'false', description: 'Hide the per-page selector' },
           { name: 'hideInfo', type: 'boolean', default: 'false', description: 'Hide the &quot;Showing X to Y of Z&quot; info text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Active page button color' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Active page button color' },
           { name: 'size', type: 'sm | md', default: 'md', description: 'Button size' },
           { name: 'maxButtons', type: 'number', default: '5', description: 'Max page buttons before truncating with ellipsis' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },

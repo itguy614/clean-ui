@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { provide } from "vue";
 import { BreadcrumbContextKey } from "./breadcrumb-context";
+import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
-export interface CuiBreadcrumbProps {
+export interface CuiBreadcrumbProps extends HideableProps {
   /** Separator character between items */
   separator?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBreadcrumbProps>(), {
@@ -17,10 +17,12 @@ const props = withDefaults(defineProps<CuiBreadcrumbProps>(), {
 provide(BreadcrumbContextKey, {
   separator: props.separator,
 });
+
+const messages = useMessages();
 </script>
 
 <template>
-  <nav v-show="!hidden" aria-label="Breadcrumb" class="cui-breadcrumb">
+  <nav v-show="!hidden" :aria-label="messages.breadcrumb.label" class="cui-breadcrumb">
     <ol class="cui-breadcrumb__list">
       <slot />
     </ol>

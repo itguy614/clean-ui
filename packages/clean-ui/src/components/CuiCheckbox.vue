@@ -2,9 +2,9 @@
 import { computed, inject, ref } from "vue";
 import { CheckboxGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
-export interface CuiCheckboxProps {
+export interface CuiCheckboxProps extends HideableProps, ColorableProps, DisableableProps {
   /** The value this checkbox represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
@@ -13,12 +13,8 @@ export interface CuiCheckboxProps {
   label?: string;
   /** Description text (or use #description slot) */
   description?: string;
-  /** Color role — overrides group color */
-  color?: ButtonColor;
   /** Indeterminate state (visual only, e.g. "select all" partial) */
   indeterminate?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
   /** Hide the component */
@@ -144,7 +140,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-checkbox {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -174,6 +170,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Box dimensions are sized to the (unscaled) label text, so they stay fixed —
+     scaling the box while the text doesn't breaks alignment with adjacent text. */
   width: 1.25rem;
   height: 1.25rem;
   flex-shrink: 0;
@@ -209,7 +207,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-checkbox__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-checkbox__label {

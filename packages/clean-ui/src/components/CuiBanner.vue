@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion } from "../utils/liveRegion";
 
 export type BannerPosition = "top" | "bottom";
 export type BannerVariant = "solid" | "subtle";
 
-export interface CuiBannerProps {
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiBannerProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Visual variant */
   variant?: BannerVariant;
   /** Sticky position */
@@ -21,8 +20,6 @@ export interface CuiBannerProps {
   noIcon?: boolean;
   /** Persist dismissal to localStorage under this key */
   storageKey?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBannerProps>(), {
@@ -53,6 +50,8 @@ function dismiss() {
 
 const iconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
+
 const containerStyle = computed(() => {
   const s: Record<string, string> = {
     position: "sticky",
@@ -62,8 +61,8 @@ const containerStyle = computed(() => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "0.75rem",
-    padding: "0.625rem 1rem",
+    gap: "calc(0.75rem * var(--cui-density-scale, 1))",
+    padding: "calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1))",
   };
 
   s[props.position] = "0";
@@ -83,7 +82,7 @@ const containerStyle = computed(() => {
 </script>
 
 <template>
-  <div v-if="!dismissed" v-show="!hidden" :style="containerStyle" role="alert">
+  <div v-if="!dismissed" v-show="!hidden" :style="containerStyle" v-bind="liveAttrs">
     <!-- Icon -->
     <CuiIcon v-if="!noIcon" :name="iconName" size="1.125rem" style="flex-shrink: 0;" />
 
@@ -93,7 +92,7 @@ const containerStyle = computed(() => {
     </div>
 
     <!-- Actions slot -->
-    <div v-if="$slots.actions" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;">
+    <div v-if="$slots.actions" style="flex-shrink: 0; display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1));">
       <slot name="actions" />
     </div>
 

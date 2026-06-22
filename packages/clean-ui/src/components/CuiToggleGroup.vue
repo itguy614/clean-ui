@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { ToggleGroupKey } from "./multi-select-group-context";
 
-export type ToggleDirection = "horizontal" | "vertical" | "auto";
-
-export interface CuiToggleGroupProps {
+export interface CuiToggleGroupProps extends HideableProps, ColorableProps, DisableableProps {
   /** Array of selected values */
   modelValue?: Array<string | number>;
-  /** Color role (inherited by children) */
-  color?: ButtonColor;
-  /** Layout direction — auto: horizontal for ≤2 options, vertical for 3+ */
-  direction?: ToggleDirection;
-  /** Disable all toggles */
-  disabled?: boolean;
+  /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
+  orientation?: CuiAutoOrientation;
   /** Make all toggles readonly */
   readonly?: boolean;
   /** Show error state */
@@ -22,14 +16,12 @@ export interface CuiToggleGroupProps {
   errorMessage?: string;
   /** Accessible label for the group */
   label?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToggleGroupProps>(), {
   modelValue: () => [],
   color: "primary",
-  direction: "auto",
+  orientation: "auto",
   disabled: false,
   readonly: false,
   error: false,
@@ -53,7 +45,7 @@ const childCount = computed(() => {
 });
 
 const resolvedDirection = computed(() => {
-  if (props.direction !== "auto") return props.direction;
+  if (props.orientation !== "auto") return props.orientation;
   return childCount.value <= 2 ? "horizontal" : "vertical";
 });
 
@@ -88,7 +80,9 @@ provide(ToggleGroupKey, {
       { 'cui-toggle-group--error': error },
     ]"
   >
-    <slot />
+    <div class="cui-toggle-group__options">
+      <slot />
+    </div>
     <div v-if="error && errorMessage" class="cui-toggle-group__error">
       {{ errorMessage }}
     </div>
@@ -98,32 +92,35 @@ provide(ToggleGroupKey, {
 <style scoped>
 .cui-toggle-group {
   display: flex;
-  gap: 0.75rem;
-  border-left: 3px solid transparent;
-  padding-left: 0.75rem;
+  flex-direction: column;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
-.cui-toggle-group--vertical {
+.cui-toggle-group__options {
+  display: flex;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
+}
+
+.cui-toggle-group--vertical .cui-toggle-group__options {
   flex-direction: column;
 }
 
-.cui-toggle-group--horizontal {
+.cui-toggle-group--horizontal .cui-toggle-group__options {
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: calc(1.25rem * var(--cui-density-scale, 1));
 }
 
-.cui-toggle-group--error {
-  border-left-color: var(--cui-error);
+/* Error: subtle bordered container around the options */
+.cui-toggle-group--error .cui-toggle-group__options {
+  border: 1px solid var(--cui-error-border);
+  background: var(--cui-error-bg);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-toggle-group__error {
   font-size: 0.8125rem;
-  margin-top: 0.25rem;
   color: var(--cui-error);
-}
-
-.cui-toggle-group--horizontal .cui-toggle-group__error {
-  flex-basis: 100%;
 }
 </style>

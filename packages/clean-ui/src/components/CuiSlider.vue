@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import { computed, ref, useTemplateRef } from "vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export type SliderSize = "sm" | "md" | "lg";
-
-export interface CuiSliderProps {
+export interface CuiSliderProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -14,12 +13,6 @@ export interface CuiSliderProps {
   max?: number;
   /** Step increment */
   step?: number;
-  /** Size */
-  size?: SliderSize;
-  /** Color role */
-  color?: ButtonColor;
-  /** Disabled state */
-  disabled?: boolean;
   /** Label text */
   label?: string;
   /** Show the current value */
@@ -30,8 +23,6 @@ export interface CuiSliderProps {
   showRange?: boolean;
   /** Icon to display inside the thumb (Phosphor icon name) */
   thumbIcon?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSliderProps>(), {
@@ -66,15 +57,29 @@ function onInput(e: Event) {
   emit("update:modelValue", val);
 }
 
-const sizeConfig: Record<SliderSize, { trackHeight: string; thumbSize: string; thumbIcon: string; labelFont: string; valueFont: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { trackHeight: string; thumbSize: string; thumbIcon: string; labelFont: string; valueFont: string }> = {
   sm: { trackHeight: "4px", thumbSize: "16px", thumbIcon: "0.5rem", labelFont: "0.8125rem", valueFont: "0.75rem" },
   md: { trackHeight: "6px", thumbSize: "20px", thumbIcon: "0.625rem", labelFont: "0.875rem", valueFont: "0.8125rem" },
   lg: { trackHeight: "8px", thumbSize: "26px", thumbIcon: "0.75rem", labelFont: "1rem", valueFont: "0.875rem" },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 const thumbColor = computed(() => props.disabled ? "var(--cui-text-tertiary)" : `var(--cui-${props.color})`);
 const fillColor = computed(() => props.disabled ? "var(--cui-text-tertiary)" : `var(--cui-${props.color})`);
+
+// Expose imperative handle — the native range input is the interactive element
+const inputRef = useTemplateRef<HTMLInputElement>("inputEl");
+
+function focus(opts?: FocusOptions) {
+  inputRef.value?.focus(opts);
+}
+
+function blur() {
+  inputRef.value?.blur();
+}
+
+defineExpose({ el: inputRef, focus, blur });
 </script>
 
 <template>
@@ -82,7 +87,7 @@ const fillColor = computed(() => props.disabled ? "var(--cui-text-tertiary)" : `
     <!-- Label + value row -->
     <div
       v-if="label || showValue"
-      style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.375rem;"
+      style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(0.375rem * var(--cui-density-scale, 1));"
     >
       <label
         v-if="label"
@@ -147,6 +152,7 @@ const fillColor = computed(() => props.disabled ? "var(--cui-text-tertiary)" : `
 
       <!-- Invisible native range input on top for interaction -->
       <input
+        ref="inputEl"
         type="range"
         :value="modelValue"
         :min="min"
@@ -174,7 +180,7 @@ const fillColor = computed(() => props.disabled ? "var(--cui-text-tertiary)" : `
     <!-- Min/max range labels -->
     <div
       v-if="showRange"
-      style="display: flex; justify-content: space-between; margin-top: 0.25rem;"
+      style="display: flex; justify-content: space-between; margin-top: calc(0.25rem * var(--cui-density-scale, 1));"
     >
       <span :style="{ fontSize: cfg.valueFont, color: 'var(--cui-text-tertiary)' }">{{ formatValue ? formatValue(min) : min }}</span>
       <span :style="{ fontSize: cfg.valueFont, color: 'var(--cui-text-tertiary)' }">{{ formatValue ? formatValue(max) : max }}</span>

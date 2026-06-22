@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { ToggleGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 
-export type ToggleSize = "sm" | "md" | "lg";
-
-export interface CuiToggleProps {
+export interface CuiToggleProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** The value this toggle represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
@@ -16,16 +15,8 @@ export interface CuiToggleProps {
   description?: string;
   /** Show ON/OFF labels inside the track (only visible at md and lg sizes) */
   showLabels?: boolean;
-  /** Color role — overrides group color */
-  color?: ButtonColor;
-  /** Size */
-  size?: ToggleSize;
-  /** Disabled state */
-  disabled?: boolean;
   /** Readonly state */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToggleProps>(), {
@@ -84,13 +75,18 @@ function onKeydown(e: KeyboardEvent) {
 defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 // Size dimensions
-const trackSizes: Record<ToggleSize, { w: string; h: string; knob: string; travel: string; labelSize: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+// Switch dimensions sit inline with a fixed-size label, so they stay fixed —
+// scaling them while the label text doesn't would break vertical alignment.
+// Density scales the spacing around the control instead.
+const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: string; knob: string; travel: string; labelSize: string }> = {
   sm: { w: "2rem", h: "1.125rem", knob: "0.875rem", travel: "0.875rem", labelSize: "0.5rem" },
   md: { w: "2.75rem", h: "1.5rem", knob: "1.25rem", travel: "1.25rem", labelSize: "0.625rem" },
   lg: { w: "3.5rem", h: "1.875rem", knob: "1.5rem", travel: "1.625rem", labelSize: "0.6875rem" },
 };
 
-const dims = computed(() => trackSizes[props.size]);
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+const dims = computed(() => trackSizes[clampedSize.value]);
 </script>
 
 <template>
@@ -138,7 +134,7 @@ const dims = computed(() => trackSizes[props.size]);
       }"
     >
       <!-- ON label inside track (md and lg only) -->
-      <span v-if="showLabels && size !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ fontSize: dims.labelSize }">
+      <span v-if="showLabels && clampedSize !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ fontSize: dims.labelSize }">
         <span class="cui-toggle__on-label">ON</span>
       </span>
 
@@ -169,7 +165,7 @@ const dims = computed(() => trackSizes[props.size]);
 .cui-toggle {
   display: inline-flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   user-select: none;
   position: relative;
@@ -270,7 +266,7 @@ const dims = computed(() => trackSizes[props.size]);
 .cui-toggle__label-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-toggle__label {

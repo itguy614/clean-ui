@@ -2,12 +2,11 @@
 import { inject } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey } from "./dropdown-context";
+import type { DisableableProps } from "../types/common";
 
-export interface CuiDropdownCheckItemProps {
+export interface CuiDropdownCheckItemProps extends DisableableProps {
   /** v-model boolean */
   modelValue?: boolean;
-  /** Disabled state */
-  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiDropdownCheckItemProps>(), {
@@ -56,8 +55,8 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-check-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   font-size: 0.8125rem;
   color: var(--cui-text-body);

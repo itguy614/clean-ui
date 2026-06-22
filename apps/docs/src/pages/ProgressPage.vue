@@ -41,7 +41,7 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
           { name: 'value', type: 'number', default: '0', description: 'Current value (0 to max)' },
           { name: 'max', type: 'number', default: '100', description: 'Maximum value' },
           { name: 'variant', type: 'bar | circle', default: 'bar', description: 'Visual variant' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size (bar thickness or circle diameter)' },
           { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show percentage label' },
           { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Unknown progress — animated indicator' },

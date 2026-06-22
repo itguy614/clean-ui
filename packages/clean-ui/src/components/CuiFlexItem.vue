@@ -3,16 +3,15 @@ import { computed } from "vue";
 import { useBreakpoint } from "../composables/useBreakpoint";
 import { resolveResponsive } from "../utils/responsive";
 import type { ResponsiveValue } from "../types/grid";
+import type { HideableProps } from "../types/common";
 
-export interface CuiFlexItemProps {
+export interface CuiFlexItemProps extends HideableProps {
   /** Flex grow value (0-1) */
   grow?: ResponsiveValue<0 | 1>;
   /** Flex shrink value (0-1) */
   shrink?: ResponsiveValue<0 | 1>;
   /** Flex shorthand (e.g., "1", "auto", "initial", "none") */
   flex?: ResponsiveValue<"1" | "auto" | "initial" | "none">;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiFlexItemProps>(), {

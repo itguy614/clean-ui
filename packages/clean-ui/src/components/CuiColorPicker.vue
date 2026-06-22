@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef } from "vue";
+import type { CuiSize, HideableProps, SizeableProps, DisableableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
@@ -8,10 +10,11 @@ import {
   type ColorFormat,
 } from "../utils/color";
 
-export type ColorPickerSize = "sm" | "md" | "lg";
 export type PresetPalette = "theme" | "basic" | "material" | "tailwind";
 
-export interface CuiColorPickerProps {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+
+export interface CuiColorPickerProps extends HideableProps, SizeableProps, DisableableProps {
   /** Color value (any supported format) */
   modelValue?: string;
   /** Output format */
@@ -28,12 +31,6 @@ export interface CuiColorPickerProps {
   showFormatToggle?: boolean;
   /** Only show swatches, no gradient picker */
   swatchOnly?: boolean;
-  /** Size */
-  size?: ColorPickerSize;
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiColorPickerProps>(), {
@@ -61,12 +58,12 @@ const activeFormat = ref<ColorFormat>(props.format);
 const textInput = ref("");
 
 // Size config
-const sizeConfig: Record<ColorPickerSize, { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; fontSize: string }> = {
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; fontSize: string }> = {
   sm: { width: "220px", gradientHeight: "130px", sliderHeight: "10px", thumbSize: "14px", swatchSize: "20px", fontSize: "0.75rem" },
   md: { width: "280px", gradientHeight: "160px", sliderHeight: "12px", thumbSize: "16px", swatchSize: "24px", fontSize: "0.8125rem" },
   lg: { width: "340px", gradientHeight: "200px", sliderHeight: "14px", thumbSize: "18px", swatchSize: "28px", fontSize: "0.875rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Computed RGB from HSV
 const currentRgb = computed(() => hsvToRgb(hue.value, sat.value, val.value));
@@ -256,10 +253,27 @@ const hueColor = computed(() => {
 
 // Checkerboard for alpha
 const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50%) 0 0 / 12px 12px";
+
+// Expose imperative handle — focus the text input if shown, else the root
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const inputRef = useTemplateRef<HTMLInputElement>("inputEl");
+
+function focus(opts?: FocusOptions) {
+  if (inputRef.value) inputRef.value.focus(opts);
+  else rootEl.value?.focus(opts);
+}
+
+function blur() {
+  if (inputRef.value) inputRef.value.blur();
+  else rootEl.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
   <div
+    ref="rootEl"
     v-show="!hidden"
     :style="{
       width: cfg.width,
@@ -307,18 +321,18 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
     <!-- Sliders + controls area -->
     <div
       :style="{
-        padding: '0.75rem',
+        padding: 'calc(0.75rem * var(--cui-density-scale, 1))',
         background: 'var(--cui-surface-base, white)',
         border: '1px solid var(--cui-border)',
         borderTop: swatchOnly ? undefined : 'none',
         borderRadius: swatchOnly ? '0.5rem' : '0 0 0.5rem 0.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.625rem',
+        gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
       }"
     >
       <!-- Preview + sliders row -->
-      <div v-if="!swatchOnly" :style="{ display: 'flex', gap: '0.625rem', alignItems: 'center' }">
+      <div v-if="!swatchOnly" :style="{ display: 'flex', gap: 'calc(0.625rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
         <!-- Color preview circle -->
         <div
           :style="{
@@ -336,7 +350,7 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
         </div>
 
         <!-- Sliders -->
-        <div :style="{ flex: '1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }">
+        <div :style="{ flex: '1', display: 'flex', flexDirection: 'column', gap: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
           <!-- Hue slider -->
           <div
             ref="hueRef"
@@ -401,7 +415,7 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
       </div>
 
       <!-- Input + format toggle -->
-      <div v-if="showInput" :style="{ display: 'flex', gap: '0.375rem', alignItems: 'center' }">
+      <div v-if="showInput" :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
         <!-- Swatch-only preview -->
         <div
           v-if="swatchOnly"
@@ -415,10 +429,11 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
           }"
         />
         <input
+          ref="inputEl"
           v-model="textInput"
           :style="{
             flex: '1',
-            padding: '0.3125rem 0.5rem',
+            padding: 'calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))',
             fontSize: cfg.fontSize,
             fontFamily: 'var(--cui-font-mono, monospace)',
             border: '1px solid var(--cui-border-strong, var(--cui-border))',
@@ -443,7 +458,7 @@ const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50
       </div>
 
       <!-- Palette swatches -->
-      <div v-if="resolvedPalette.length > 0" :style="{ display: 'flex', flexWrap: 'wrap', gap: '0.3125rem' }">
+      <div v-if="resolvedPalette.length > 0" :style="{ display: 'flex', flexWrap: 'wrap', gap: 'calc(0.3125rem * var(--cui-density-scale, 1))' }">
         <div
           v-for="color in resolvedPalette"
           :key="color"

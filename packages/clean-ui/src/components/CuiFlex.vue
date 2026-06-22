@@ -6,15 +6,22 @@ import { resolveResponsive, spacingToCss } from "../utils/responsive";
 import type {
   FlexDirection,
   FlexWrap,
+  FlexAlign,
+  FlexJustify,
   ResponsiveValue,
   TailwindSpacing,
 } from "../types/grid";
+import type { HideableProps } from "../types/common";
 
-export interface CuiFlexProps {
+export interface CuiFlexProps extends HideableProps {
   /** Flex direction */
   direction?: ResponsiveValue<FlexDirection>;
   /** Flex wrap behavior */
   wrap?: ResponsiveValue<FlexWrap>;
+  /** Cross-axis alignment (align-items) */
+  align?: ResponsiveValue<FlexAlign>;
+  /** Main-axis distribution (justify-content) */
+  justify?: ResponsiveValue<FlexJustify>;
   /** Gap between flex items (Tailwind spacing scale) */
   gap?: ResponsiveValue<TailwindSpacing>;
   /** Row gap (for wrapped flex containers) */
@@ -23,8 +30,6 @@ export interface CuiFlexProps {
   colGap?: ResponsiveValue<TailwindSpacing>;
   /** Enable debug mode to visualize flex structure */
   debug?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const DIRECTION_CSS: Record<FlexDirection, string> = {
@@ -32,6 +37,23 @@ const DIRECTION_CSS: Record<FlexDirection, string> = {
   "row-reverse": "row-reverse",
   col: "column",
   "col-reverse": "column-reverse",
+};
+
+const ALIGN_CSS: Record<FlexAlign, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  stretch: "stretch",
+  baseline: "baseline",
+};
+
+const JUSTIFY_CSS: Record<FlexJustify, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  between: "space-between",
+  around: "space-around",
+  evenly: "space-evenly",
 };
 
 const props = withDefaults(defineProps<CuiFlexProps>(), {
@@ -56,6 +78,8 @@ const flexStyle = computed(() => {
   const bp = breakpoint.value;
   const dir = resolveResponsive(props.direction, "row" as FlexDirection, bp);
   const wrap = resolveResponsive(props.wrap, "wrap" as FlexWrap, bp);
+  const align = resolveResponsive(props.align, undefined, bp);
+  const justify = resolveResponsive(props.justify, undefined, bp);
   const gap = resolveResponsive(props.gap, undefined, bp);
   const rGap = resolveResponsive(props.rowGap, undefined, bp);
   const cGap = resolveResponsive(props.colGap, undefined, bp);
@@ -65,6 +89,9 @@ const flexStyle = computed(() => {
     flexDirection: DIRECTION_CSS[dir] ?? "row",
     flexWrap: wrap,
   };
+
+  if (align) style.alignItems = ALIGN_CSS[align] ?? align;
+  if (justify) style.justifyContent = JUSTIFY_CSS[justify] ?? justify;
 
   if (rGap || cGap) {
     if (rGap) style.rowGap = spacingToCss(rGap);

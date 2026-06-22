@@ -21,8 +21,10 @@ import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
+import type { HideableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
-export interface CuiDataGridProps {
+export interface CuiDataGridProps extends HideableProps {
   /** Column definitions */
   columns: DataGridColumn[];
   /** Data source — array for client-side, PaginatedData for server-side */
@@ -71,8 +73,17 @@ export interface CuiDataGridProps {
   initialView?: DataGridViewConfig;
   /** Hydrate state from URL query params on init */
   hydrateUrl?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /**
+   * Enable row virtualization for large datasets.
+   * Requires maxHeight to be set.
+   * Recommended for >= 500 rows in client-side mode.
+   */
+  virtualize?: boolean;
+  /**
+   * Fixed row height in px passed to the virtualizer.
+   * Omit to auto-measure from the first rendered row.
+   */
+  virtualRowHeight?: number;
 }
 
 const props = withDefaults(defineProps<CuiDataGridProps>(), {
@@ -94,6 +105,7 @@ const props = withDefaults(defineProps<CuiDataGridProps>(), {
   filterPanelSide: "right",
   hydrateUrl: false,
   hidden: false,
+  virtualize: false,
 });
 
 const emit = defineEmits<{
@@ -149,6 +161,7 @@ defineExpose({
   loadConfig: grid.loadConfig,
   resetToDefaults: grid.resetToDefaults,
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -175,7 +188,7 @@ defineExpose({
     <CuiDataGridActiveFilters />
 
     <!-- Loading skeleton -->
-    <div v-if="loading" style="padding: 1rem;">
+    <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
       <CuiSkeleton :lines="8" />
     </div>
 
@@ -184,8 +197,8 @@ defineExpose({
       <slot name="empty">
         <CuiEmptyState
           icon="magnifying-glass"
-          title="No results found"
-          description="Try adjusting your search or filters."
+          :title="messages.dataGrid.noResultsTitle"
+          :description="messages.dataGrid.noResultsDescription"
           size="md"
           color="secondary"
         />
@@ -222,6 +235,8 @@ defineExpose({
             :hoverable="hoverable"
             :bordered="bordered"
             :size="size"
+            :virtualize="virtualize"
+            :virtual-row-height="virtualRowHeight"
             @row-click="emit('row-click', $event)"
             @row-action="emit('row-action', $event)"
           >
@@ -262,11 +277,11 @@ defineExpose({
 .cui-data-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid__content {
   display: flex;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 </style>

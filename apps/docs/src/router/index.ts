@@ -79,6 +79,16 @@ const router = createRouter({
       component: () => import('../pages/TypographyPage.vue'),
     },
     {
+      path: '/foundations/localization',
+      name: 'localization',
+      component: () => import('../pages/LocalizationPage.vue'),
+    },
+    {
+      path: '/foundations/density',
+      name: 'density',
+      component: () => import('../pages/DensityPage.vue'),
+    },
+    {
       path: '/components/dropdown',
       name: 'dropdown',
       component: () => import('../pages/DropdownPage.vue'),
@@ -147,6 +157,11 @@ const router = createRouter({
       path: '/components/fieldset',
       name: 'fieldset',
       component: () => import('../pages/FieldsetPage.vue'),
+    },
+    {
+      path: '/components/form',
+      name: 'form',
+      component: () => import('../pages/FormPage.vue'),
     },
     {
       path: '/components/form-field',

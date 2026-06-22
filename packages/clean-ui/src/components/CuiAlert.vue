@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveLiveRegion } from "../utils/liveRegion";
+import { useMessages } from "../composables/useMessages";
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
 export type AlertAnimation = "pulse" | "glow" | "shake" | "none";
 
-export interface CuiAlertProps {
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegionProps {
   /** Visual variant */
   variant?: AlertVariant;
   /** Title text */
@@ -25,8 +33,8 @@ export interface CuiAlertProps {
   entrance?: AlertEntrance;
   /** Persistent animation while visible */
   animation?: AlertAnimation;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiAlertProps>(), {
@@ -37,6 +45,7 @@ const props = withDefaults(defineProps<CuiAlertProps>(), {
   entrance: "fade",
   animation: "none",
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -79,6 +88,7 @@ const alertStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const base: Record<string, string> = {
+    borderRadius: radiusMap[props.rounded],
     "--_alert-color": `var(--cui-${c})`,
     "--_alert-focus-ring": `var(--cui-${c}-focus-ring)`,
   };
@@ -108,6 +118,9 @@ const alertStyle = computed(() => {
 });
 
 const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
+const messages = useMessages();
 </script>
 
 <template>
@@ -121,7 +134,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       animation !== 'none' ? `cui-alert--${animation}` : '',
     ]"
     :style="alertStyle"
-    role="alert"
+    v-bind="liveAttrs"
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-alert__icon">
@@ -146,7 +159,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
       v-if="dismissible"
       type="button"
       class="cui-alert__dismiss"
-      aria-label="Dismiss"
+      :aria-label="messages.dismiss"
       @click="dismiss"
     >
       <CuiIcon name="x" size="0.875rem" />
@@ -158,9 +171,8 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 .cui-alert {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border-radius: var(--cui-button-radius, 0.375rem);
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
+  padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   position: relative;
 }
 
@@ -169,7 +181,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
   display: flex;
   flex-shrink: 0;
   color: var(--_alert-icon-color);
-  margin-top: 0.0625rem;
+  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 
 /* --- Body --- */
@@ -182,7 +194,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
   font-weight: 600;
   font-size: 0.9375rem;
   line-height: 1.4;
-  margin-bottom: 0.125rem;
+  margin-bottom: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-alert__description {
@@ -193,8 +205,8 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
 
 .cui-alert__actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.625rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  margin-top: calc(0.625rem * var(--cui-density-scale, 1));
 }
 
 /* --- Dismiss --- */
@@ -213,7 +225,7 @@ const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
   border-radius: 0.25rem;
   opacity: 0.6;
   transition: opacity 0.15s ease;
-  margin: -0.125rem -0.25rem -0.125rem 0;
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
 }
 
 .cui-alert__dismiss:hover {

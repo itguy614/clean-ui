@@ -39,8 +39,8 @@ const containerStyle = computed(() => {
     zIndex: "9998",
     display: "flex",
     flexDirection: "column",
-    gap: "0.5rem",
-    padding: "1rem",
+    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
+    padding: "calc(1rem * var(--cui-density-scale, 1))",
     pointerEvents: "none",
     maxHeight: "100vh",
     overflow: "hidden",
@@ -128,6 +128,7 @@ const visibleToasts = computed(() => {
           :animation="toast.animation"
           :icon="toast.icon"
           :no-icon="toast.noIcon"
+          :live="toast.live"
           :active="index === visibleToasts.length - 1"
           @dismiss="state.dismiss(toast.id)"
         />

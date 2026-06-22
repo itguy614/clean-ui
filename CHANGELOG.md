@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-22
+
+### Added
+- Row virtualization for `CuiDataGrid` — opt-in `virtualize` prop that windows rows for large datasets (#15)
+- `CuiForm` form-level abstraction with submit handling and library-agnostic validation; ships `zodResolver` and `valibotResolver` adapters (#19)
+- Localization: `CuiConfigProvider` + `useMessages` message catalog to override every built-in string, with documented zod/valibot recipes (#23)
+- Global UI density — `compact` / `default` / `comfortable` via a `useDensity` composable and `cui-density-*` classes; scales spacing (never type), with WCAG touch-target floors (#25)
+- Live-region semantics (`role` / `aria-live`) on Toast, Alert, and Banner so screen readers announce them (#21)
+- SSR/Nuxt support — SSR-safe DOM guards, `ssrThemeInitScript` to prevent FOUC, and hydration-safe `CuiIcon` (#28)
+- Test suite (smoke coverage + interactive behavior tests) and a CI gate running type-check + tests on every PR (#24)
+
+### Fixed
+- `CuiDataGrid` sticky-column headers and the select-all / row-action header cells no longer scroll away on vertical scroll (#22)
+
 ## [0.3.1] - 2026-04-23
 
 ### Fixed

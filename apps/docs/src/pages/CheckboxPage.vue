@@ -56,11 +56,11 @@ const dynamicField = ref({
       <PropTable
         :props="[
           { name: 'v-model', type: 'Array<string | number>', default: '[]', description: 'Array of selected values' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role inherited by children' },
-          { name: 'direction', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout direction (auto: horizontal ≤2, vertical 3+)' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role inherited by children' },
+          { name: 'orientation', type: 'horizontal | vertical | auto', default: 'auto', description: 'Layout orientation (auto: horizontal ≤2, vertical 3+)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all checkboxes' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Make all checkboxes readonly' },
-          { name: 'error', type: 'boolean', default: 'false', description: 'Show error state (left accent bar)' },
+          { name: 'error', type: 'boolean', default: 'false', description: 'Show error state (bordered container + message)' },
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below group' },
           { name: 'label', type: 'string', default: '-', description: 'Accessible group label' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
@@ -76,7 +76,7 @@ const dynamicField = ref({
           { name: 'v-model', type: 'boolean', default: '-', description: 'Standalone boolean binding' },
           { name: 'label', type: 'string', default: '-', description: 'Label text (or default slot)' },
           { name: 'description', type: 'string', default: '-', description: 'Description text (or #description slot)' },
-          { name: 'color', type: 'ButtonColor', default: '-', description: 'Overrides group color' },
+          { name: 'color', type: 'CuiColor', default: '-', description: 'Overrides group color' },
           { name: 'indeterminate', type: 'boolean', default: 'false', description: 'Shows dash indicator (e.g. select-all partial)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },

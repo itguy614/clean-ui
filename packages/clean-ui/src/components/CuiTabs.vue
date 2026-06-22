@@ -8,23 +8,20 @@ import {
   type TabOrientation,
   type TabTransition,
 } from "./tabs-context";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
-export interface CuiTabsProps {
+export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
   modelValue?: string;
   /** Tab bar style */
   variant?: TabVariant;
   /** Layout orientation */
   orientation?: TabOrientation;
-  /** Color role for active indicator */
-  color?: ButtonColor;
   /** Keep inactive tab panels in DOM */
   keepAlive?: boolean;
   /** Panel transition animation */
   transition?: TabTransition;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTabsProps>(), {
@@ -141,6 +138,7 @@ const slideDirection = computed(() => {
   const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
   return currIdx >= prevIdx ? "left" : "right";
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -184,7 +182,7 @@ const slideDirection = computed(() => {
           v-if="tab.closeable"
           type="button"
           class="cui-tabs__tab-close"
-          aria-label="Close tab"
+          :aria-label="messages.tabs.closeTab"
           tabindex="-1"
           @click.stop="close(tab.value)"
         >
@@ -211,7 +209,7 @@ const slideDirection = computed(() => {
 
 .cui-tabs--vertical {
   flex-direction: row;
-  gap: 1rem;
+  gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Tab bar --- */
@@ -245,8 +243,8 @@ const slideDirection = computed(() => {
 .cui-tabs--segmented .cui-tabs__bar {
   background: var(--color-surface-100);
   border-radius: var(--cui-button-radius, 0.375rem);
-  padding: 0.25rem;
-  gap: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 :where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar {
@@ -257,8 +255,8 @@ const slideDirection = computed(() => {
 .cui-tabs__tab {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.625rem 1rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--cui-text-secondary);
@@ -318,9 +316,9 @@ const slideDirection = computed(() => {
   background: none;
   cursor: pointer;
   color: var(--cui-text-tertiary);
-  padding: 0.125rem;
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
-  margin: -0.125rem -0.25rem -0.125rem 0;
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
   transition: color 0.15s ease, background 0.15s ease;
 }
 
@@ -336,7 +334,7 @@ const slideDirection = computed(() => {
 .cui-tabs__tab-content {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 /* --- Panels --- */

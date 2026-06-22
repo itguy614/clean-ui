@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, provide, ref } from "vue";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type StepperOrientation = "horizontal" | "vertical";
-export type StepperSize = "sm" | "md" | "lg";
 export type StepStatus = "complete" | "current" | "upcoming" | "error";
 
 export interface StepDef {
@@ -17,21 +19,17 @@ export interface StepDef {
   error?: boolean;
 }
 
-export interface CuiStepperProps {
+export interface CuiStepperProps extends HideableProps, SizeableProps {
   /** Step definitions */
   steps: StepDef[];
   /** Current active step (0-based index) */
   modelValue?: number;
   /** Orientation */
   orientation?: StepperOrientation;
-  /** Size */
-  size?: StepperSize;
   /** Allow clicking completed steps to go back */
   clickable?: boolean;
   /** Linear mode — can only progress forward, no skipping */
   linear?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiStepperProps>(), {
@@ -61,7 +59,8 @@ function onStepClick(index: number) {
   emit("update:modelValue", index);
 }
 
-const sizeConfig: Record<StepperSize, {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   circle: string;
   font: string;
   iconSize: string;
@@ -70,12 +69,12 @@ const sizeConfig: Record<StepperSize, {
   connectorThickness: string;
   gap: string;
 }> = {
-  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: "0.5rem" },
-  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: "0.75rem" },
-  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: "1rem" },
+  sm: { circle: "1.5rem", font: "0.6875rem", iconSize: "0.75rem", labelFont: "0.8125rem", descFont: "0.6875rem", connectorThickness: "2px", gap: scaleDensity("0.5rem") },
+  md: { circle: "2rem", font: "0.75rem", iconSize: "0.875rem", labelFont: "0.875rem", descFont: "0.75rem", connectorThickness: "2px", gap: scaleDensity("0.75rem") },
+  lg: { circle: "2.5rem", font: "0.875rem", iconSize: "1rem", labelFont: "1rem", descFont: "0.8125rem", connectorThickness: "3px", gap: scaleDensity("1rem") },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 function circleStyle(status: StepStatus) {
   const s: Record<string, string> = {
@@ -161,6 +160,7 @@ function stepCursor(index: number) {
   if (props.linear && status === "upcoming") return "default";
   return "pointer";
 }
+const messages = useMessages();
 </script>
 
 <template>
@@ -174,7 +174,7 @@ function stepCursor(index: number) {
       gap: cfg.gap,
     }"
     role="navigation"
-    aria-label="Progress"
+    :aria-label="messages.stepper.label"
   >
     <template v-for="(step, index) in steps" :key="index">
       <!-- Step -->
@@ -183,7 +183,7 @@ function stepCursor(index: number) {
           display: 'flex',
           flexDirection: orientation === 'horizontal' ? 'column' : 'row',
           alignItems: orientation === 'horizontal' ? 'center' : 'flex-start',
-          gap: '0.375rem',
+          gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           cursor: stepCursor(index),
           flex: orientation === 'horizontal' ? '0 0 auto' : undefined,
         }"
@@ -216,7 +216,7 @@ function stepCursor(index: number) {
             :style="{
               fontSize: cfg.descFont,
               color: 'var(--cui-text-tertiary)',
-              marginTop: '0.125rem',
+              marginTop: 'calc(0.125rem * var(--cui-density-scale, 1))',
               lineHeight: '1.4',
             }"
           >

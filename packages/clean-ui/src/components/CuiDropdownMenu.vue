@@ -107,7 +107,7 @@ const ownerId = computed(() => {
 
 <style scoped>
 .cui-dropdown-menu {
-  padding: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
   border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);

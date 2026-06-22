@@ -11,6 +11,7 @@ import {
   isoToDate, dateToIso, isDateDisabled,
   type DisabledDateRange,
 } from "../utils/date";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -19,7 +20,7 @@ export interface DateRangeValue {
   end: string | Date | null;
 }
 
-export interface CuiDateRangePickerProps {
+export interface CuiDateRangePickerProps extends HideableProps, DisableableProps {
   /** Current range value */
   modelValue?: DateRangeValue;
   /** Display format pattern */
@@ -46,10 +47,6 @@ export interface CuiDateRangePickerProps {
   endPlaceholder?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
-  /** Hidden */
-  hidden?: boolean;
   /** Label */
   label?: string;
 }
@@ -315,7 +312,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
@@ -337,10 +334,10 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
         :style="{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.375rem',
+          gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, 0.375rem)',
-          padding: '0 0.5rem',
+          padding: '0 calc(0.5rem * var(--cui-density-scale, 1))',
           background: 'var(--cui-surface-base, white)',
           opacity: disabled ? '0.5' : '1',
           cursor: disabled ? 'default' : 'pointer',
@@ -357,7 +354,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
             outline: 'none',
             fontSize: '0.875rem',
             color: 'var(--cui-text-body)',
-            padding: '0.5rem 0',
+            padding: 'calc(0.5rem * var(--cui-density-scale, 1)) 0',
             width: `${props.format.length + 1}ch`,
             cursor: 'pointer',
           }"
@@ -373,7 +370,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
             outline: 'none',
             fontSize: '0.875rem',
             color: 'var(--cui-text-body)',
-            padding: '0.5rem 0',
+            padding: 'calc(0.5rem * var(--cui-density-scale, 1)) 0',
             width: `${props.format.length + 1}ch`,
             cursor: 'pointer',
           }"
@@ -382,14 +379,14 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
       <!-- Calendar popover -->
       <template #content>
-        <div :style="{ padding: '0.25rem', minWidth: '260px' }">
+        <div :style="{ padding: 'calc(0.25rem * var(--cui-density-scale, 1))', minWidth: '260px' }">
 
           <!-- Status bar -->
           <div :style="{
             fontSize: '0.75rem',
             color: 'var(--cui-text-secondary)',
             textAlign: 'center',
-            marginBottom: '0.375rem',
+            marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
             fontWeight: '500',
           }">
             {{ selecting === 'start' ? 'Select start date' : 'Select end date' }}
@@ -397,11 +394,11 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
           <!-- DAYS VIEW -->
           <template v-if="viewMode === 'days'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <div :style="{ display: 'flex', gap: '0.25rem' }">
+              <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
                   {{ MONTH_NAMES_SHORT[viewMonth] }}
                 </CuiButton>
@@ -414,15 +411,15 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
               </CuiButton>
             </div>
 
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: '0.25rem' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
               <div
                 v-for="name in DAY_NAMES_SHORT"
                 :key="name"
-                :style="{ textAlign: 'center', fontSize: '0.6875rem', fontWeight: '600', color: 'var(--cui-text-tertiary)', padding: '0.25rem 0', textTransform: 'uppercase' }"
+                :style="{ textAlign: 'center', fontSize: '0.6875rem', fontWeight: '600', color: 'var(--cui-text-tertiary)', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', textTransform: 'uppercase' }"
               >{{ name }}</div>
             </div>
 
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(1px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="(day, i) in calendarDays"
                 :key="i"
@@ -437,15 +434,15 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
           <!-- MONTHS VIEW -->
           <template v-else-if="viewMode === 'months'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="viewYear--"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
               <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">{{ viewYear }}</CuiButton>
               <CuiButton variant="ghost" size="xs" @click="viewYear++"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
             </div>
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="(name, i) in MONTH_NAMES_SHORT" :key="i"
-                :style="{ padding: '0.5rem', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', color: viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
+                :style="{ padding: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', color: viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
                 @click="selectMonth(i)"
               >{{ name }}</div>
             </div>
@@ -453,15 +450,15 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
           <!-- YEARS VIEW -->
           <template v-else-if="viewMode === 'years'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }">
+            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
               <CuiButton variant="ghost" size="xs" @click="viewYear -= 12"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
               <span :style="{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--cui-text-body)' }">{{ yearRangeStart }} – {{ yearRangeStart + 11 }}</span>
               <CuiButton variant="ghost" size="xs" @click="viewYear += 12"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
             </div>
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }">
+            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }">
               <div
                 v-for="year in yearRange" :key="year"
-                :style="{ padding: '0.5rem', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: viewYear === year ? '600' : '400', color: viewYear === year ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
+                :style="{ padding: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: viewYear === year ? '600' : '400', color: viewYear === year ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
                 @click="selectYear(year)"
               >{{ year }}</div>
             </div>

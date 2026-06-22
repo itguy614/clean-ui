@@ -1,11 +1,11 @@
 <script setup lang="ts">
-export interface CuiCardHeaderProps {
+import type { HideableProps } from "../types/common";
+
+export interface CuiCardHeaderProps extends HideableProps {
   /** Convenience: title text */
   title?: string;
   /** Convenience: subtitle text */
   subtitle?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiCardHeaderProps>(), {
@@ -20,8 +20,8 @@ withDefaults(defineProps<CuiCardHeaderProps>(), {
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      gap: '0.75rem',
-      padding: '1rem 1.125rem 0.375rem',
+      gap: 'calc(0.75rem * var(--cui-density-scale, 1))',
+      padding: 'calc(1rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))',
     }"
   >
     <div :style="{ flex: '1', minWidth: '0' }">
@@ -42,14 +42,14 @@ withDefaults(defineProps<CuiCardHeaderProps>(), {
           :style="{
             fontSize: '0.8125rem',
             color: 'var(--cui-text-secondary)',
-            marginTop: '0.125rem',
+            marginTop: 'calc(0.125rem * var(--cui-density-scale, 1))',
           }"
         >
           {{ subtitle }}
         </div>
       </slot>
     </div>
-    <div v-if="$slots.actions" :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: '0' }">
+    <div v-if="$slots.actions" :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
       <slot name="actions" />
     </div>
   </div>

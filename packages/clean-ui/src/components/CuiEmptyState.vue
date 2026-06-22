@@ -1,23 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export type EmptyStateSize = "sm" | "md" | "lg";
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiEmptyStateProps {
+export interface CuiEmptyStateProps extends HideableProps, ColorableProps, SizeableProps {
   /** Phosphor icon name */
   icon?: string;
   /** Heading text */
   title?: string;
   /** Supporting text below the title */
   description?: string;
-  /** Controls icon size, font sizes, and spacing */
-  size?: EmptyStateSize;
-  /** Color role for the icon area */
-  color?: ButtonColor;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
@@ -26,7 +21,7 @@ const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
   hidden: false,
 });
 
-const sizeConfig: Record<EmptyStateSize, {
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   circle: string;
   icon: string;
   titleFont: string;
@@ -34,12 +29,12 @@ const sizeConfig: Record<EmptyStateSize, {
   gap: string;
   descMaxWidth: string;
 }> = {
-  sm: { circle: "2.5rem", icon: "1.25rem", titleFont: "1rem", descFont: "0.8125rem", gap: "0.75rem", descMaxWidth: "20rem" },
-  md: { circle: "3.5rem", icon: "1.75rem", titleFont: "1.125rem", descFont: "0.875rem", gap: "1rem", descMaxWidth: "24rem" },
-  lg: { circle: "4.5rem", icon: "2rem", titleFont: "1.25rem", descFont: "1rem", gap: "1.25rem", descMaxWidth: "28rem" },
+  sm: { circle: "2.5rem", icon: "1.25rem", titleFont: "1rem", descFont: "0.8125rem", gap: scaleDensity("0.75rem"), descMaxWidth: "20rem" },
+  md: { circle: "3.5rem", icon: "1.75rem", titleFont: "1.125rem", descFont: "0.875rem", gap: scaleDensity("1rem"), descMaxWidth: "24rem" },
+  lg: { circle: "4.5rem", icon: "2rem", titleFont: "1.25rem", descFont: "1rem", gap: scaleDensity("1.25rem"), descMaxWidth: "28rem" },
 };
 
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 const circleStyle = computed(() => ({
   width: cfg.value.circle,
@@ -91,7 +86,7 @@ const circleStyle = computed(() => ({
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 2rem 1rem;
+  padding: calc(2rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 .cui-empty-state__icon-area {
@@ -121,7 +116,7 @@ const circleStyle = computed(() => ({
 .cui-empty-state__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   flex-wrap: wrap;
   justify-content: center;
 }

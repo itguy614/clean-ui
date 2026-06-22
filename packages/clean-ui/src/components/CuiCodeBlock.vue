@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiCopyButton from "./CuiCopyButton.vue";
 
-export type CodeBlockSize = "sm" | "md" | "lg";
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiCodeBlockProps {
+export interface CuiCodeBlockProps extends HideableProps, SizeableProps {
   /** Code content */
   code: string;
   /** Language label (displayed in header) */
@@ -21,10 +23,6 @@ export interface CuiCodeBlockProps {
   copyable?: boolean;
   /** Max height before scrolling */
   maxHeight?: string;
-  /** Size */
-  size?: CodeBlockSize;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
@@ -37,12 +35,12 @@ const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
 
 const lines = computed(() => props.code.split("\n"));
 
-const sizeConfig: Record<CodeBlockSize, { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
-  sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: "0.75rem", headerFont: "0.6875rem" },
-  md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: "1rem", headerFont: "0.75rem" },
-  lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: "1.25rem", headerFont: "0.8125rem" },
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
+  sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: scaleDensity("0.75rem"), headerFont: "0.6875rem" },
+  md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: scaleDensity("1rem"), headerFont: "0.75rem" },
+  lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: scaleDensity("1.25rem"), headerFont: "0.8125rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 const headerLabel = computed(() => props.filename || props.language || "");
 
@@ -66,7 +64,7 @@ const highlightSet = computed(() => new Set(props.highlightLines ?? []));
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: `0.375rem ${cfg.padding}`,
+        padding: `calc(0.375rem * var(--cui-density-scale, 1)) ${cfg.padding}`,
         background: 'rgba(255,255,255,0.04)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }"
@@ -115,10 +113,10 @@ const highlightSet = computed(() => new Set(props.highlightLines ?? []));
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            paddingRight: '0.75rem',
+            paddingRight: 'calc(0.75rem * var(--cui-density-scale, 1))',
             paddingLeft: cfg.padding,
             borderRight: '1px solid rgba(255,255,255,0.06)',
-            marginRight: '0.75rem',
+            marginRight: 'calc(0.75rem * var(--cui-density-scale, 1))',
             userSelect: 'none',
             flexShrink: '0',
           }"
@@ -154,10 +152,10 @@ const highlightSet = computed(() => new Set(props.highlightLines ?? []));
               background: highlightSet.has(startLine + i)
                 ? 'rgba(255,255,255,0.06)'
                 : 'transparent',
-              marginLeft: highlightSet.has(startLine + i) ? '-0.5rem' : '0',
-              marginRight: highlightSet.has(startLine + i) ? '-0.5rem' : '0',
-              paddingLeft: highlightSet.has(startLine + i) ? '0.5rem' : '0',
-              paddingRight: highlightSet.has(startLine + i) ? '0.5rem' : '0',
+              marginLeft: highlightSet.has(startLine + i) ? 'calc(-0.5rem * var(--cui-density-scale, 1))' : '0',
+              marginRight: highlightSet.has(startLine + i) ? 'calc(-0.5rem * var(--cui-density-scale, 1))' : '0',
+              paddingLeft: highlightSet.has(startLine + i) ? 'calc(0.5rem * var(--cui-density-scale, 1))' : '0',
+              paddingRight: highlightSet.has(startLine + i) ? 'calc(0.5rem * var(--cui-density-scale, 1))' : '0',
               borderLeft: highlightSet.has(startLine + i)
                 ? '2px solid var(--cui-primary)'
                 : '2px solid transparent',

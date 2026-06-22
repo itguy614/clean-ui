@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
+import { useMessages } from "../composables/useMessages";
 import CuiSpinner from "./CuiSpinner.vue";
 
 export interface ComboboxOption {
@@ -22,7 +24,7 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps {
+export interface CuiComboboxProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -39,12 +41,6 @@ export interface CuiComboboxProps {
   minChars?: number;
   /** Maximum visible items before scrolling (controls dropdown height) */
   maxVisible?: number;
-  /** Size */
-  size?: "sm" | "md" | "lg";
-  /** Color */
-  color?: ButtonColor;
-  /** Disabled */
-  disabled?: boolean;
   /** Loading state (external) */
   loading?: boolean;
   /** Label */
@@ -55,8 +51,8 @@ export interface CuiComboboxProps {
   errorMessage?: string;
   /** No results text */
   noResultsText?: string;
-  /** Hidden */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiComboboxProps>(), {
@@ -72,8 +68,17 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   loading: false,
   error: false,
   noResultsText: "No results found",
+  rounded: "md",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
@@ -139,12 +144,13 @@ const filteredOptions = computed(() => {
 const isLoading = computed(() => props.loading || internalLoading.value);
 
 // Size config
-const sizeConfig: Record<string, { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "0.25rem 0.5rem", tagSize: "sm", itemPadding: "0.375rem 0.625rem", inputHeight: "2rem" },
-  md: { fontSize: "0.875rem", padding: "0.3125rem 0.625rem", tagSize: "sm", itemPadding: "0.5rem 0.75rem", inputHeight: "2.375rem" },
-  lg: { fontSize: "0.9375rem", padding: "0.4375rem 0.75rem", tagSize: "md", itemPadding: "0.625rem 0.875rem", inputHeight: "2.75rem" },
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
+  sm: { fontSize: "0.8125rem", padding: `${scaleDensity("0.25rem")} ${scaleDensity("0.5rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.375rem")} ${scaleDensity("0.625rem")}`, inputHeight: scaleDensity("2rem") },
+  md: { fontSize: "0.875rem", padding: `${scaleDensity("0.3125rem")} ${scaleDensity("0.625rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.5rem")} ${scaleDensity("0.75rem")}`, inputHeight: scaleDensity("2.375rem") },
+  lg: { fontSize: "0.9375rem", padding: `${scaleDensity("0.4375rem")} ${scaleDensity("0.75rem")}`, tagSize: "md", itemPadding: `${scaleDensity("0.625rem")} ${scaleDensity("0.875rem")}`, inputHeight: scaleDensity("2.75rem") },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Dropdown positioning
 function updateDropdownPosition() {
@@ -167,7 +173,7 @@ function updateDropdownPosition() {
     border: "1px solid var(--cui-border)",
     borderRadius: "0.5rem",
     boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "0.25rem",
+    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
   };
 
   if (openAbove) {
@@ -305,6 +311,17 @@ watch(isOpen, (open) => {
   if (open) nextTick(updateDropdownPosition);
 });
 
+// Expose imperative handle
+function focus(opts?: FocusOptions) {
+  inputRef.value?.focus(opts);
+}
+
+function blur() {
+  inputRef.value?.blur();
+}
+
+defineExpose({ el: wrapperRef, focus, blur });
+
 // Option styling
 function optionStyle(index: number, option: ComboboxOption) {
   const selected = selectedSet.value.has(option.value);
@@ -312,7 +329,7 @@ function optionStyle(index: number, option: ComboboxOption) {
   return {
     display: "flex",
     alignItems: "center",
-    gap: "0.5rem",
+    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
     padding: cfg.value.itemPadding,
     cursor: option.disabled ? "default" : "pointer",
     fontSize: cfg.value.fontSize,
@@ -323,13 +340,14 @@ function optionStyle(index: number, option: ComboboxOption) {
     borderRadius: "0.25rem",
   };
 }
+const messages = useMessages();
 </script>
 
 <template>
   <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
     <!-- Input area -->
@@ -338,10 +356,10 @@ function optionStyle(index: number, option: ComboboxOption) {
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
         padding: cfg.padding,
         border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
-        borderRadius: 'var(--cui-button-radius, 0.375rem)',
+        borderRadius: radiusMap[rounded],
         background: 'var(--cui-surface-base, white)',
         cursor: disabled ? 'default' : 'text',
         opacity: disabled ? '0.5' : '1',
@@ -358,7 +376,7 @@ function optionStyle(index: number, option: ComboboxOption) {
         removable
         @remove="removeTag(opt.value)"
       >
-        <img v-if="opt.image" :src="opt.image as string" :style="{ width: '1rem', height: '1rem', borderRadius: '50%', objectFit: 'cover', marginRight: '0.125rem' }" />
+        <img v-if="opt.image" :src="opt.image as string" :style="{ width: '1rem', height: '1rem', borderRadius: '50%', objectFit: 'cover', marginRight: 'calc(0.125rem * var(--cui-density-scale, 1))' }" />
         {{ opt.label }}
       </CuiBadge>
 
@@ -376,7 +394,7 @@ function optionStyle(index: number, option: ComboboxOption) {
           background: 'transparent',
           fontSize: cfg.fontSize,
           color: 'var(--cui-text-body)',
-          padding: '0.125rem 0',
+          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
           fontFamily: 'inherit',
         }"
         @input="onInput"
@@ -385,14 +403,14 @@ function optionStyle(index: number, option: ComboboxOption) {
       />
 
       <!-- Right icons -->
-      <div :style="{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: '0' }">
+      <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
         <CuiSpinner v-if="isLoading" size="xs" />
         <CuiIcon v-else name="caret-down" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }" />
       </div>
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: '0.25rem' }">
+    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
       {{ errorMessage }}
     </div>
 
@@ -400,14 +418,14 @@ function optionStyle(index: number, option: ComboboxOption) {
     <Teleport to="body">
       <div v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
         <!-- Loading -->
-        <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: '1rem', textAlign: 'center' }">
-          <CuiSpinner size="sm" show-label label="Searching..." />
+        <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+          <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
         </div>
 
         <!-- No results -->
         <div
           v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)"
-          :style="{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
+          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
         >
           {{ noResultsText }}
         </div>
@@ -415,9 +433,9 @@ function optionStyle(index: number, option: ComboboxOption) {
         <!-- Min chars hint -->
         <div
           v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
-          :style="{ padding: '0.75rem', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
+          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
         >
-          Type {{ minChars - query.length }} more character{{ minChars - query.length === 1 ? '' : 's' }}...
+          {{ messages.combobox.typeMore(minChars - query.length) }}
         </div>
 
         <!-- Options list -->
@@ -448,7 +466,7 @@ function optionStyle(index: number, option: ComboboxOption) {
               </div>
               <div
                 v-if="option.description"
-                :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: '0.0625rem' }"
+                :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: 'calc(0.0625rem * var(--cui-density-scale, 1))' }"
               >
                 {{ option.description }}
               </div>

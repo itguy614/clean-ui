@@ -1,27 +1,26 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 export type BadgeVariant = "solid" | "subtle" | "outline";
-export type BadgeSize = "sm" | "md";
 export type BadgeAnimation = "pulse" | "bounce" | "ping" | "none";
 
-export interface CuiBadgeProps {
+const SUPPORTED_SIZES = ["sm", "md"] as const;
+
+export interface CuiBadgeProps extends HideableProps, ColorableProps, SizeableProps {
   /** Visual variant */
   variant?: BadgeVariant;
-  /** Color role */
-  color?: ButtonColor;
-  /** Size */
-  size?: BadgeSize;
   /** Render as a small dot with no text */
   dot?: boolean;
   /** Show remove button (tag mode) */
   removable?: boolean;
   /** Animation */
   animation?: BadgeAnimation;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiBadgeProps>(), {
@@ -31,8 +30,17 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
   dot: false,
   removable: false,
   animation: "none",
+  rounded: "full",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   remove: [];
@@ -59,12 +67,17 @@ const badgeStyle = computed(() => {
     base.border = "1px solid transparent";
   }
 
+  base.borderRadius = radiusMap[props.rounded];
+
   return base;
 });
 
 const dotStyle = computed(() => ({
   background: `var(--cui-${props.color})`,
 }));
+
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+const messages = useMessages();
 </script>
 
 <template>
@@ -74,7 +87,7 @@ const dotStyle = computed(() => ({
     v-show="!hidden"
     class="cui-badge cui-badge--dot"
     :class="[
-      `cui-badge--${size}`,
+      `cui-badge--${clampedSize}`,
       animation !== 'none' ? `cui-badge--${animation}` : '',
     ]"
   >
@@ -88,7 +101,7 @@ const dotStyle = computed(() => ({
     v-show="!hidden"
     class="cui-badge"
     :class="[
-      `cui-badge--${size}`,
+      `cui-badge--${clampedSize}`,
       animation !== 'none' ? `cui-badge--${animation}` : '',
     ]"
     :style="badgeStyle"
@@ -100,10 +113,10 @@ const dotStyle = computed(() => ({
       v-if="removable"
       type="button"
       class="cui-badge__remove"
-      aria-label="Remove"
+      :aria-label="messages.remove"
       @click.stop="emit('remove')"
     >
-      <CuiIcon name="x" :size="size === 'sm' ? '0.625rem' : '0.75rem'" />
+      <CuiIcon name="x" :size="clampedSize === 'sm' ? '0.625rem' : '0.75rem'" />
     </button>
   </span>
 </template>
@@ -113,8 +126,7 @@ const dotStyle = computed(() => ({
 .cui-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  border-radius: 9999px;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;
@@ -123,12 +135,12 @@ const dotStyle = computed(() => ({
 
 /* --- Sizes --- */
 .cui-badge--sm {
-  padding: 0.125rem 0.5rem;
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
 }
 
 .cui-badge--md {
-  padding: 0.1875rem 0.625rem;
+  padding: calc(0.1875rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   font-size: 0.8125rem;
 }
 
@@ -164,7 +176,7 @@ const dotStyle = computed(() => ({
   background: none;
   cursor: pointer;
   padding: 0;
-  margin: -0.0625rem -0.125rem -0.0625rem 0;
+  margin: calc(-0.0625rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.0625rem * var(--cui-density-scale, 1)) 0;
   border-radius: 50%;
   color: currentColor;
   opacity: 0.6;
@@ -178,7 +190,7 @@ const dotStyle = computed(() => ({
 .cui-badge__content {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 /* Animations — use shared keyframes from main.css where possible */

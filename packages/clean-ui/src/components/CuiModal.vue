@@ -5,12 +5,13 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
+import type { HideableProps, CuiRounded } from "../types/common";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiModalProps {
-  /** Controls modal visibility */
-  open?: boolean;
+export interface CuiModalProps extends HideableProps {
+  /** Controls modal visibility (v-model:visible) */
+  visible?: boolean;
   /** Modal width — named size or custom CSS value */
   size?: ModalSize | string;
   /** Title text (rendered in header) */
@@ -31,12 +32,12 @@ export interface CuiModalProps {
   backdropImage?: string;
   /** Backdrop gradient */
   backdropGradient?: string;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiModalProps>(), {
-  open: false,
+  visible: false,
   size: "md",
   persistent: false,
   noCloseButton: false,
@@ -44,22 +45,31 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
+  rounded: "md",
   hidden: false,
 });
 
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
+
 const emit = defineEmits<{
-  "update:open": [value: boolean];
+  "update:visible": [value: boolean];
   close: [];
 }>();
 
 const dialogRef = useTemplateRef<HTMLElement>("dialogEl");
 
 const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
-  open: () => props.open,
+  open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
   allowNested: () => props.allowNested,
-  onUpdateOpen: (v) => emit("update:open", v),
+  onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
 
@@ -104,7 +114,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           ref="dialogEl"
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
-          :style="{ maxWidth }"
+          :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="title ? titleId : undefined"
@@ -141,7 +151,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: calc(2rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Container (centers the modal, must be above backdrop) --- */
@@ -153,7 +163,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   justify-content: center;
   width: 100%;
   max-height: calc(100vh - 4rem);
-  margin-top: 4rem;
+  margin-top: calc(4rem * var(--cui-density-scale, 1));
 }
 
 /* --- Modal panel --- */
@@ -163,7 +173,6 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   width: 100%;
   max-height: calc(100vh - 8rem);
   background: var(--cui-surface-base);
-  border-radius: var(--cui-button-radius, 0.375rem);
   box-shadow: 0 16px 48px rgb(0 0 0 / 0.2);
   outline: none;
   overflow: hidden;

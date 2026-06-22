@@ -50,6 +50,9 @@ const prefsExpanded = ref(false);
         :props="[
           { name: 'legend', type: 'string', default: '-', description: 'Legend text (required)' },
           { name: 'description', type: 'string', default: '-', description: 'Description below the legend' },
+          { name: 'variant', type: 'outline | subtle | ghost', default: 'outline', description: 'outline = border only, subtle = tinted background, ghost = no border or background' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'surface', description: 'Border accent (outline) and background tint (subtle). surface* = neutral intensities' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius (mirrors CuiButton)' },
           { name: 'collapsible', type: 'boolean', default: 'false', description: 'Allow expand/collapse' },
           { name: 'expanded', type: 'boolean', default: 'true', description: 'Expanded state (v-model:expanded)' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable all controls inside' },
@@ -105,6 +108,58 @@ const prefsExpanded = ref(false);
               </CuiFlex>
             </CuiFieldset>
           </div>
+        </Example>
+
+        <!-- Variants -->
+        <Example title="Variants" :code="`<CuiFieldset legend=&quot;Outline&quot; variant=&quot;outline&quot;> ... </CuiFieldset>
+<CuiFieldset legend=&quot;Subtle&quot; variant=&quot;subtle&quot;> ... </CuiFieldset>
+<CuiFieldset legend=&quot;Ghost&quot; variant=&quot;ghost&quot;> ... </CuiFieldset>`">
+          <CuiStack spacing="4" class="max-w-lg">
+            <CuiFieldset legend="Outline" description="Border only — the default." variant="outline">
+              <CuiFormField label="Field">
+                <CuiInput placeholder="Outline variant" />
+              </CuiFormField>
+            </CuiFieldset>
+            <CuiFieldset legend="Subtle" description="Subtle tinted background." variant="subtle">
+              <CuiFormField label="Field">
+                <CuiInput placeholder="Subtle variant" />
+              </CuiFormField>
+            </CuiFieldset>
+            <CuiFieldset legend="Ghost" description="No border or background — grouping only." variant="ghost">
+              <CuiFormField label="Field">
+                <CuiInput placeholder="Ghost variant" />
+              </CuiFormField>
+            </CuiFieldset>
+          </CuiStack>
+        </Example>
+
+        <!-- Color tint -->
+        <Example title="Color (subtle)" :code="`<CuiFieldset legend=&quot;Danger Zone&quot; variant=&quot;subtle&quot; color=&quot;error&quot;> ... </CuiFieldset>`">
+          <CuiStack spacing="4" class="max-w-lg">
+            <CuiFieldset legend="Danger Zone" description="Irreversible actions." variant="subtle" color="error">
+              <CuiFormField label="Confirm">
+                <CuiInput placeholder="Type to confirm" />
+              </CuiFormField>
+            </CuiFieldset>
+            <CuiFieldset legend="Heads Up" description="Outline tinted with a color role." variant="outline" color="warning">
+              <CuiFormField label="Field">
+                <CuiInput placeholder="Warning outline" />
+              </CuiFormField>
+            </CuiFieldset>
+          </CuiStack>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiFieldset legend=&quot;None&quot; rounded=&quot;none&quot; />
+<CuiFieldset legend=&quot;Large&quot; rounded=&quot;lg&quot; />`">
+          <CuiStack spacing="4" class="max-w-lg">
+            <CuiFieldset legend="Square" variant="subtle" rounded="none">
+              <CuiFormField label="Field"><CuiInput placeholder="rounded='none'" /></CuiFormField>
+            </CuiFieldset>
+            <CuiFieldset legend="Large radius" variant="subtle" rounded="lg">
+              <CuiFormField label="Field"><CuiInput placeholder="rounded='lg'" /></CuiFormField>
+            </CuiFieldset>
+          </CuiStack>
         </Example>
 
         <!-- Collapsible -->

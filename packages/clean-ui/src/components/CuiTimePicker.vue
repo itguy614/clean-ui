@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
 import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import type { HideableProps, DisableableProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps {
+export interface CuiTimePickerProps extends HideableProps, DisableableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -23,12 +24,8 @@ export interface CuiTimePickerProps {
   placeholder?: string;
   /** Size */
   size?: "sm" | "md" | "lg";
-  /** Disabled */
-  disabled?: boolean;
   /** Label */
   label?: string;
-  /** Hidden */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiTimePickerProps>(), {
@@ -145,15 +142,28 @@ function onApply() {
 watch(popoverVisible, (open) => {
   if (open) parseTime(props.modelValue);
 });
+
+// Expose imperative handle — the trigger is a non-input div, so focus the root
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+
+function focus(opts?: FocusOptions) {
+  rootEl.value?.focus(opts);
+}
+
+function blur() {
+  rootEl.value?.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{
         display: 'block',
-        marginBottom: '0.25rem',
+        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         fontWeight: '500',
         color: 'var(--cui-text-secondary)',
@@ -173,8 +183,8 @@ watch(popoverVisible, (open) => {
         :style="{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.4375rem 0.625rem',
+          gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+          padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, 0.375rem)',
           background: 'var(--cui-surface-base, white)',
@@ -191,7 +201,7 @@ watch(popoverVisible, (open) => {
 
       <!-- Time picker popover -->
       <template #content>
-        <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }">
+        <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
           <!-- Hours -->
           <CuiInputStepper
             :model-value="hours"
@@ -222,7 +232,7 @@ watch(popoverVisible, (open) => {
           />
 
           <!-- AM/PM toggle (12h only) -->
-          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: '0.125rem', marginLeft: '0.25rem' }">
+          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: 'calc(0.125rem * var(--cui-density-scale, 1))', marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
             <CuiButton
               variant="ghost"
               size="xs"

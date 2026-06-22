@@ -11,6 +11,8 @@ const sections = [
   { id: "icons", label: "Icons", path: "/foundations/icons", group: "Foundations" },
   { id: "themes", label: "Themes", path: "/foundations/themes", group: "Foundations" },
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations" },
+  { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
+  { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
 
   // Layout (alphabetical)
   { id: "container", label: "Container", path: "/components/container", group: "Layout" },
@@ -31,6 +33,7 @@ const sections = [
   { id: "date-range-picker", label: "Date Range", path: "/components/date-range-picker", group: "Form Controls" },
   { id: "fieldset", label: "Fieldset", path: "/components/fieldset", group: "Form Controls" },
   { id: "file-upload", label: "File Upload", path: "/components/file-upload", group: "Form Controls" },
+  { id: "form", label: "Form", path: "/components/form", group: "Form Controls" },
   { id: "form-field", label: "Form Field", path: "/components/form-field", group: "Form Controls" },
   { id: "input", label: "Input", path: "/components/input", group: "Form Controls" },
   { id: "input-stepper", label: "Input Stepper", path: "/components/input-stepper", group: "Form Controls" },

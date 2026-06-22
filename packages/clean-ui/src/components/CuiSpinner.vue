@@ -1,23 +1,17 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { scaleDensity } from "../utils/sizing";
 
-export type SpinnerSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type SpinnerVariant = "ring" | "dots" | "bars";
 
-export interface CuiSpinnerProps {
-  /** Size */
-  size?: SpinnerSize;
-  /** Color role */
-  color?: ButtonColor;
+export interface CuiSpinnerProps extends HideableProps, ColorableProps, SizeableProps {
   /** Visual variant */
   variant?: SpinnerVariant;
   /** Accessible label */
   label?: string;
   /** Show label text below the spinner */
   showLabel?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiSpinnerProps>(), {
@@ -29,12 +23,12 @@ const props = withDefaults(defineProps<CuiSpinnerProps>(), {
   hidden: false,
 });
 
-const sizeConfig: Record<SpinnerSize, { box: string; stroke: string; dotSize: string; barWidth: string; barHeight: string; labelFont: string; gap: string }> = {
-  xs: { box: "0.875rem", stroke: "2px", dotSize: "0.25rem", barWidth: "0.1875rem", barHeight: "0.5rem", labelFont: "0.6875rem", gap: "0.25rem" },
-  sm: { box: "1.25rem", stroke: "2px", dotSize: "0.3125rem", barWidth: "0.1875rem", barHeight: "0.625rem", labelFont: "0.75rem", gap: "0.375rem" },
-  md: { box: "1.75rem", stroke: "3px", dotSize: "0.375rem", barWidth: "0.25rem", barHeight: "0.875rem", labelFont: "0.8125rem", gap: "0.5rem" },
-  lg: { box: "2.5rem", stroke: "3px", dotSize: "0.5rem", barWidth: "0.25rem", barHeight: "1.125rem", labelFont: "0.875rem", gap: "0.5rem" },
-  xl: { box: "3.5rem", stroke: "4px", dotSize: "0.625rem", barWidth: "0.3125rem", barHeight: "1.5rem", labelFont: "1rem", gap: "0.625rem" },
+const sizeConfig: Record<CuiSize, { box: string; stroke: string; dotSize: string; barWidth: string; barHeight: string; labelFont: string; gap: string }> = {
+  xs: { box: "0.875rem", stroke: "2px", dotSize: "0.25rem", barWidth: "0.1875rem", barHeight: "0.5rem", labelFont: "0.6875rem", gap: scaleDensity("0.25rem") },
+  sm: { box: "1.25rem", stroke: "2px", dotSize: "0.3125rem", barWidth: "0.1875rem", barHeight: "0.625rem", labelFont: "0.75rem", gap: scaleDensity("0.375rem") },
+  md: { box: "1.75rem", stroke: "3px", dotSize: "0.375rem", barWidth: "0.25rem", barHeight: "0.875rem", labelFont: "0.8125rem", gap: scaleDensity("0.5rem") },
+  lg: { box: "2.5rem", stroke: "3px", dotSize: "0.5rem", barWidth: "0.25rem", barHeight: "1.125rem", labelFont: "0.875rem", gap: scaleDensity("0.5rem") },
+  xl: { box: "3.5rem", stroke: "4px", dotSize: "0.625rem", barWidth: "0.3125rem", barHeight: "1.5rem", labelFont: "1rem", gap: scaleDensity("0.625rem") },
 };
 
 const cfg = computed(() => sizeConfig[props.size]);

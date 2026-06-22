@@ -1,23 +1,25 @@
 <script setup lang="ts">
-export type KbdSize = "sm" | "md" | "lg";
+import { computed } from "vue";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { clampSize, scaleDensity } from "../utils/sizing";
 
-export interface CuiKbdProps {
-  /** Size */
-  size?: KbdSize;
-  /** Hide the component */
-  hidden?: boolean;
+export interface CuiKbdProps extends HideableProps, SizeableProps {
 }
 
-withDefaults(defineProps<CuiKbdProps>(), {
+const props = withDefaults(defineProps<CuiKbdProps>(), {
   size: "md",
   hidden: false,
 });
 
-const sizeConfig: Record<KbdSize, { fontSize: string; padding: string; minWidth: string }> = {
-  sm: { fontSize: "0.6875rem", padding: "0.0625rem 0.3125rem", minWidth: "1.125rem" },
-  md: { fontSize: "0.75rem", padding: "0.125rem 0.375rem", minWidth: "1.375rem" },
-  lg: { fontSize: "0.8125rem", padding: "0.1875rem 0.4375rem", minWidth: "1.5rem" },
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; minWidth: string }> = {
+  sm: { fontSize: "0.6875rem", padding: `${scaleDensity("0.0625rem")} ${scaleDensity("0.3125rem")}`, minWidth: "1.125rem" },
+  md: { fontSize: "0.75rem", padding: `${scaleDensity("0.125rem")} ${scaleDensity("0.375rem")}`, minWidth: "1.375rem" },
+  lg: { fontSize: "0.8125rem", padding: `${scaleDensity("0.1875rem")} ${scaleDensity("0.4375rem")}`, minWidth: "1.5rem" },
 };
+
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
@@ -27,9 +29,9 @@ const sizeConfig: Record<KbdSize, { fontSize: string; padding: string; minWidth:
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontSize: sizeConfig[size].fontSize,
-      padding: sizeConfig[size].padding,
-      minWidth: sizeConfig[size].minWidth,
+      fontSize: sizeConfig[clampedSize].fontSize,
+      padding: sizeConfig[clampedSize].padding,
+      minWidth: sizeConfig[clampedSize].minWidth,
       fontFamily: 'var(--cui-font-sans, system-ui, sans-serif)',
       fontWeight: '500',
       lineHeight: '1.4',

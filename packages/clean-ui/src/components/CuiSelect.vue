@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import type { InputSize } from "./CuiInput.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 export interface SelectOption {
   value: string | number;
@@ -13,7 +21,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface CuiSelectProps {
+export interface CuiSelectProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value (single) or values (multiple) */
   modelValue?: string | number | null | Array<string | number>;
   /** Options — array of strings or { value, label, group?, disabled? } objects */
@@ -28,20 +36,14 @@ export interface CuiSelectProps {
   loading?: boolean;
   /** Text shown when no options available */
   noOptionsText?: string;
-  /** Color role */
-  color?: ButtonColor;
-  /** Size */
-  size?: InputSize;
   /** Error state */
   error?: boolean;
   /** Error message */
   errorMessage?: string;
-  /** Disabled */
-  disabled?: boolean;
   /** Readonly */
   readonly?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiSelectProps>(), {
@@ -57,6 +59,7 @@ const props = withDefaults(defineProps<CuiSelectProps>(), {
   disabled: false,
   readonly: false,
   hidden: false,
+  rounded: "md",
 });
 
 const emit = defineEmits<{
@@ -318,6 +321,7 @@ const dims = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return { minHeight: s.height, px: s.px, fontSize: s.fontSize };
 });
+const messages = useMessages();
 </script>
 
 <template>
@@ -343,6 +347,7 @@ const dims = computed(() => {
       <div
         ref="triggerRef"
         class="cui-select__trigger"
+        :style="{ borderRadius: radiusMap[rounded] }"
         role="combobox"
         :aria-expanded="isOpen"
         aria-haspopup="listbox"
@@ -366,7 +371,7 @@ const dims = computed(() => {
                 type="button"
                 class="cui-select__chip-remove"
                 tabindex="-1"
-                aria-label="Remove"
+                :aria-label="messages.remove"
                 @click.stop="removeChip(val)"
               >
                 <CuiIcon name="x" size="0.75rem" />
@@ -395,7 +400,7 @@ const dims = computed(() => {
             type="button"
             class="cui-select__clear"
             tabindex="-1"
-            aria-label="Clear"
+            :aria-label="messages.clear"
             @click.stop="clear"
           >
             <CuiIcon name="x" size="0.75rem" />
@@ -419,7 +424,7 @@ const dims = computed(() => {
         <!-- Loading -->
         <div v-if="loading" class="cui-select__loading">
           <CuiIcon name="spinner-gap" size="1rem" class="cui-select__spinner" />
-          Loading...
+          {{ messages.loading }}
         </div>
 
         <!-- Empty -->
@@ -488,14 +493,13 @@ const dims = computed(() => {
   align-items: center;
   justify-content: space-between;
   min-height: var(--_sel-min-height);
-  padding: 0.25rem var(--_sel-px);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) var(--_sel-px);
   border: 1px solid var(--_sel-border);
   background: var(--cui-surface-base);
   font-size: var(--_sel-font-size);
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  gap: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   user-select: none;
 }
 
@@ -529,7 +533,7 @@ const dims = computed(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
   min-height: calc(var(--_sel-min-height) - 0.75rem);
@@ -538,7 +542,7 @@ const dims = computed(() => {
 .cui-select__label {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-text-body);
   white-space: nowrap;
   overflow: hidden;
@@ -553,8 +557,8 @@ const dims = computed(() => {
 .cui-select__chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.375rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   background: var(--color-surface-100);
   color: var(--cui-text-body);
@@ -589,7 +593,7 @@ const dims = computed(() => {
 .cui-select__actions {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex-shrink: 0;
 }
 
@@ -635,7 +639,7 @@ const dims = computed(() => {
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-  padding: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 :where(.dark, .dark *) .cui-select__dropdown {
@@ -648,8 +652,8 @@ const dims = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.75rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   color: var(--cui-text-secondary);
 }
@@ -662,7 +666,7 @@ const dims = computed(() => {
 
 /* --- Group header --- */
 .cui-select__group-header {
-  padding: 0.5rem 0.5rem 0.25rem;
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -674,8 +678,8 @@ const dims = computed(() => {
 .cui-select__option {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   cursor: pointer;
   font-size: var(--_sel-font-size);
@@ -726,14 +730,14 @@ const dims = computed(() => {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
   min-width: 0;
 }
 
 /* --- Error --- */
 .cui-select__error {
   font-size: 0.8125rem;
-  margin-top: 0.375rem;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   color: var(--cui-error);
 }
 </style>

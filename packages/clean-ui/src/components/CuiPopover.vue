@@ -3,10 +3,12 @@ import { ref, computed, watch, onUnmounted, useSlots } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import CuiIcon from "./CuiIcon.vue";
+import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 
-export interface CuiPopoverProps {
+export interface CuiPopoverProps extends HideableProps, DisableableProps {
   /** Optional header title — renders header bar with close button */
   title?: string;
   /** Preferred placement */
@@ -25,12 +27,10 @@ export interface CuiPopoverProps {
   width?: string;
   /** Manual visibility control */
   visible?: boolean;
-  /** Prevents showing */
-  disabled?: boolean;
   /** Show close button in header */
   closable?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
+  /** Border radius */
+  rounded?: CuiRounded;
 }
 
 const props = withDefaults(defineProps<CuiPopoverProps>(), {
@@ -41,8 +41,17 @@ const props = withDefaults(defineProps<CuiPopoverProps>(), {
   noArrow: false,
   disabled: false,
   closable: true,
+  rounded: "lg",
   hidden: false,
 });
+
+const radiusMap: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "0.25rem",
+  md: "var(--cui-button-radius, 0.375rem)",
+  lg: "0.5rem",
+  full: "9999px",
+};
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -76,6 +85,14 @@ useClickOutside(
   },
 );
 
+// Close on Escape from anywhere — the panel is teleported to <body>, so a
+// wrapper-scoped keydown misses it once focus moves into the panel.
+watch(isVisible, (v) => {
+  if (typeof document === "undefined") return;
+  if (v) document.addEventListener("keydown", onKeydown);
+  else document.removeEventListener("keydown", onKeydown);
+});
+
 function doShow() {
   if (props.disabled) return;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
@@ -108,6 +125,7 @@ function onPopoverMouseLeave() { if (props.trigger === "hover" || props.trigger 
 onUnmounted(() => {
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
+  if (typeof document !== "undefined") document.removeEventListener("keydown", onKeydown);
 });
 
 const hasHeader = computed(() => props.title || slots.header);
@@ -119,7 +137,7 @@ const panelStyle = computed(() => {
     zIndex: "9998",
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
-    borderRadius: "0.625rem",
+    borderRadius: radiusMap[props.rounded],
     boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
     minWidth: "12rem",
     maxWidth: "24rem",
@@ -148,6 +166,7 @@ const arrowClipPaths: Record<string, string> = {
   left: "polygon(0% 0%, 100% 0%, 100% 100%)",
   right: "polygon(0% 0%, 0% 100%, 100% 100%)",
 };
+const messages = useMessages();
 </script>
 
 <template>
@@ -160,7 +179,6 @@ const arrowClipPaths: Record<string, string> = {
     @focusin="onFocusIn"
     @focusout="onFocusOut"
     @click="onClick"
-    @keydown="onKeydown"
   >
     <div ref="referenceRef" :style="{ display: 'inline-flex' }">
       <slot />
@@ -183,8 +201,8 @@ const arrowClipPaths: Record<string, string> = {
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            gap: '0.5rem',
-            padding: '0.75rem 0.875rem 0.25rem',
+            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
+            padding: 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot name="header">
@@ -210,10 +228,10 @@ const arrowClipPaths: Record<string, string> = {
               color: 'var(--cui-text-tertiary)',
               cursor: 'pointer',
               flexShrink: '0',
-              marginTop: '-0.0625rem',
-              marginRight: '-0.125rem',
+              marginTop: 'calc(-0.0625rem * var(--cui-density-scale, 1))',
+              marginRight: 'calc(-0.125rem * var(--cui-density-scale, 1))',
             }"
-            aria-label="Close"
+            :aria-label="messages.close"
             @click.stop="doHide"
           >
             <CuiIcon name="x" size="0.8125rem" />
@@ -223,7 +241,7 @@ const arrowClipPaths: Record<string, string> = {
         <!-- Body -->
         <div
           :style="{
-            padding: hasHeader ? '0.25rem 0.875rem 0.75rem' : '0.75rem 0.875rem',
+            padding: hasHeader ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
             fontSize: '0.875rem',
             lineHeight: '1.55',
             color: 'var(--cui-text-secondary)',
@@ -236,7 +254,7 @@ const arrowClipPaths: Record<string, string> = {
         <div
           v-if="hasFooter"
           :style="{
-            padding: '0 0.875rem 0.75rem',
+            padding: '0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
           }"
         >
           <slot name="footer" />

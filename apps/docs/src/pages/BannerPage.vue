@@ -34,12 +34,13 @@ function resetAll() {
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'primary', description: 'Color role' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
           { name: 'variant', type: 'solid | subtle', default: 'subtle', description: 'Visual variant' },
           { name: 'position', type: 'top | bottom', default: 'top', description: 'Sticky position' },
           { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show dismiss button' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide default role icon' },
           { name: 'storageKey', type: 'string', default: '—', description: 'Persist dismissal to localStorage under this key' },
+          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status). off to silence promotional banners.' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />

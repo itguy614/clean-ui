@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiTooltip from "./CuiTooltip.vue";
 import { useCopyToClipboard } from "../composables/useCopyToClipboard";
 
-export type CopyButtonSize = "xs" | "sm" | "md";
+const SUPPORTED_SIZES = ["xs", "sm", "md"] as const;
 
-export interface CuiCopyButtonProps {
+export interface CuiCopyButtonProps extends HideableProps, ColorableProps, SizeableProps {
   /** Text to copy to clipboard */
   value: string;
-  /** Size */
-  size?: CopyButtonSize;
-  /** Color role */
-  color?: ButtonColor;
   /** Button variant */
   variant?: "ghost" | "outline";
   /** Tooltip text before copy */
@@ -25,8 +22,6 @@ export interface CuiCopyButtonProps {
   resetDelay?: number;
   /** Show text label alongside the icon */
   showLabel?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiCopyButtonProps>(), {
@@ -46,11 +41,13 @@ function onClick() {
   copy(props.value);
 }
 
-const iconSize: Record<CopyButtonSize, string> = {
+const iconSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   xs: "0.75rem",
   sm: "0.875rem",
   md: "1rem",
 };
+
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
@@ -64,7 +61,7 @@ const iconSize: Record<CopyButtonSize, string> = {
       <template #prefix>
         <CuiIcon
           :name="copied ? 'check' : 'copy'"
-          :size="iconSize[size]"
+          :size="iconSize[clampedSize]"
           :style="{ transition: 'transform 0.15s ease', transform: copied ? 'scale(1.1)' : 'scale(1)' }"
         />
       </template>

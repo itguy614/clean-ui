@@ -28,14 +28,16 @@ const showPulse = ref(true);
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info', default: 'info', description: 'Color role (auto-selects icon)' },
+          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'info', description: 'Color role (auto-selects icon)' },
           { name: 'variant', type: 'solid | subtle | outline', default: 'subtle', description: 'Visual style' },
+          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
           { name: 'title', type: 'string', default: '-', description: 'Bold title text' },
           { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the default role icon' },
           { name: 'dismissible', type: 'boolean', default: 'false', description: 'Show X dismiss button' },
           { name: 'autoDismiss', type: 'number', default: '-', description: 'Auto-dismiss after N milliseconds' },
           { name: 'entrance', type: 'fade | slide-down | slide-left | none', default: 'fade', description: 'Entrance animation on mount' },
           { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
+          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status). off to silence.' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
@@ -137,6 +139,19 @@ const showPulse = ref(true);
             </CuiAlert>
             <CuiAlert variant="outline" color="warning" title="Deprecation Notice" entrance="none">
               This API endpoint will be removed in v3.0.
+            </CuiAlert>
+          </CuiStack>
+        </Example>
+
+        <!-- Rounded -->
+        <Example title="Rounded" :code="`<CuiAlert rounded=&quot;none&quot; color=&quot;info&quot; title=&quot;Square&quot; entrance=&quot;none&quot;>No radius.</CuiAlert>
+<CuiAlert rounded=&quot;lg&quot; color=&quot;success&quot; title=&quot;Large radius&quot; entrance=&quot;none&quot;>Rounded corners.</CuiAlert>`">
+          <CuiStack spacing="3">
+            <CuiAlert rounded="none" color="info" title="Square" entrance="none">
+              No border radius.
+            </CuiAlert>
+            <CuiAlert rounded="lg" color="success" title="Large radius" entrance="none">
+              Generously rounded corners.
             </CuiAlert>
           </CuiStack>
         </Example>

@@ -39,8 +39,8 @@ export function computeDropdownPosition(
   preferredPlacement: DropdownPlacement = "bottom",
 ): { styles: Record<string, string>; actualPlacement: DropdownPlacement } {
   const rect = triggerEl.getBoundingClientRect();
-  const viewportHeight = window.innerHeight;
-  const viewportWidth = window.innerWidth;
+  const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 0;
+  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 0;
 
   let placement = preferredPlacement;
 

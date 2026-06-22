@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
+import { scaleDensity } from "../utils/sizing";
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarShape = "circle" | "rounded";
 export type AvatarStatus = "online" | "offline" | "away" | "busy";
 
 export type AvatarStatusAnimation = "pulse" | "ping" | "none";
 
-export interface CuiAvatarProps {
+export interface CuiAvatarProps extends HideableProps, ColorableProps, SizeableProps {
   /** Image URL */
   src?: string;
   /** Alt text for image */
@@ -20,18 +20,12 @@ export interface CuiAvatarProps {
   initials?: string;
   /** Fallback icon name when no image or initials */
   icon?: string;
-  /** Size */
-  size?: AvatarSize;
   /** Shape */
   shape?: AvatarShape;
-  /** Color role for initials/icon background */
-  color?: ButtonColor;
   /** Animate the status indicator */
   statusAnimation?: AvatarStatusAnimation;
   /** Status indicator dot */
   status?: AvatarStatus;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAvatarProps>(), {
@@ -58,12 +52,12 @@ const computedInitials = computed(() => {
   return "";
 });
 
-const sizeConfig: Record<AvatarSize, { box: string; font: string; icon: string; statusDot: string; statusOffset: string }> = {
-  xs: { box: "1.5rem", font: "0.5rem", icon: "0.75rem", statusDot: "0.5rem", statusOffset: "-2px" },
-  sm: { box: "2rem", font: "0.625rem", icon: "0.875rem", statusDot: "0.625rem", statusOffset: "-2px" },
-  md: { box: "2.5rem", font: "0.75rem", icon: "1rem", statusDot: "0.625rem", statusOffset: "-1px" },
-  lg: { box: "3.5rem", font: "1rem", icon: "1.25rem", statusDot: "0.75rem", statusOffset: "0px" },
-  xl: { box: "5rem", font: "1.375rem", icon: "1.75rem", statusDot: "1rem", statusOffset: "2px" },
+const sizeConfig: Record<CuiSize, { box: string; font: string; icon: string; statusDot: string; statusOffset: string }> = {
+  xs: { box: scaleDensity("1.5rem"), font: "0.5rem", icon: scaleDensity("0.75rem"), statusDot: scaleDensity("0.5rem"), statusOffset: scaleDensity("-2px") },
+  sm: { box: scaleDensity("2rem"), font: "0.625rem", icon: scaleDensity("0.875rem"), statusDot: scaleDensity("0.625rem"), statusOffset: scaleDensity("-2px") },
+  md: { box: scaleDensity("2.5rem"), font: "0.75rem", icon: scaleDensity("1rem"), statusDot: scaleDensity("0.625rem"), statusOffset: scaleDensity("-1px") },
+  lg: { box: scaleDensity("3.5rem"), font: "1rem", icon: scaleDensity("1.25rem"), statusDot: scaleDensity("0.75rem"), statusOffset: scaleDensity("0px") },
+  xl: { box: scaleDensity("5rem"), font: "1.375rem", icon: scaleDensity("1.75rem"), statusDot: scaleDensity("1rem"), statusOffset: scaleDensity("2px") },
 };
 
 const cfg = computed(() => sizeConfig[props.size]);

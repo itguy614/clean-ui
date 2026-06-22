@@ -20,18 +20,23 @@ export const THEME_PRESETS: ThemePreset[] = [
 const STORAGE_KEY = "cui-theme";
 const CLASS_PREFIX = "cui-theme-";
 
-// Shared reactive state
-const activeTheme = ref<string>(loadTheme());
+const isBrowser = typeof window !== "undefined";
 
 function loadTheme(): string {
-  if (typeof window === "undefined") return "mono";
-  return localStorage.getItem(STORAGE_KEY) ?? "mono";
+  if (!isBrowser) return "mono";
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? "mono";
+  } catch {
+    return "mono";
+  }
 }
+
+// Shared reactive state
+const activeTheme = ref<string>(loadTheme());
 
 function applyTheme(themeId: string) {
   if (typeof document === "undefined") return;
 
-  // Remove all theme classes
   const root = document.documentElement;
   for (const cls of Array.from(root.classList)) {
     if (cls.startsWith(CLASS_PREFIX)) {
@@ -39,21 +44,23 @@ function applyTheme(themeId: string) {
     }
   }
 
-  // Apply new theme (default = no class needed, uses @theme values)
   if (themeId !== "default") {
     root.classList.add(`${CLASS_PREFIX}${themeId}`);
   }
-
-  // Persist
-  localStorage.setItem(STORAGE_KEY, themeId);
 }
 
-// Apply on init
+// Apply on init (browser only)
 applyTheme(activeTheme.value);
 
-// Watch for changes
 watch(activeTheme, (newTheme) => {
   applyTheme(newTheme);
+  if (isBrowser) {
+    try {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    } catch {
+      // localStorage unavailable (SSR, private browsing, etc.)
+    }
+  }
 });
 
 /**

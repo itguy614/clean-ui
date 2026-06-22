@@ -2,18 +2,15 @@
 import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiAccordionItemProps {
+export interface CuiAccordionItemProps extends HideableProps, DisableableProps {
   /** Unique value for this item */
   value: string;
   /** Header label text (or use #header slot) */
   label?: string;
   /** Start expanded (uncontrolled mode) */
   defaultOpen?: boolean;
-  /** Disabled — can't toggle */
-  disabled?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiAccordionItemProps>(), {
@@ -152,7 +149,7 @@ const triggerId = `cui-accordion-trigger-${props.value}`;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.875rem 1.125rem;
+  padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1));
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--cui-text-body);
@@ -214,7 +211,7 @@ const triggerId = `cui-accordion-trigger-${props.value}`;
 }
 
 .cui-accordion-item__content {
-  padding: 0 1.125rem 1rem;
+  padding: 0 calc(1.125rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   color: var(--cui-text-secondary);
   line-height: 1.6;

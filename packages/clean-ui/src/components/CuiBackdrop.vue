@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import type { CuiColorOrCss, HideableProps } from "../types/common";
+import { resolveColor } from "../utils/color";
 
 export type BackdropBlur = "none" | "sm" | "md" | "lg" | string;
 
-export interface CuiBackdropProps {
+export interface CuiBackdropProps extends HideableProps {
   /** Backdrop opacity (0-1) */
   opacity?: number;
   /** Backdrop blur — named size or custom CSS value */
   blur?: BackdropBlur;
-  /** Backdrop color (CSS color string, default black) */
-  color?: string;
+  /** Backdrop color — a color role (mapped to its token) or any CSS color (default black) */
+  color?: CuiColorOrCss;
   /** Background image URL or data URI */
   image?: string;
   /** CSS gradient string */
   gradient?: string;
   /** External visibility control — when provided, overrides internal fade-in state */
   visible?: boolean;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiBackdropProps>(), {
@@ -65,12 +65,13 @@ const backdropStyle = computed(() => {
 
   // For backdrop-filter to work, the background must be semi-transparent
   // (not achieved via the opacity property, which hides the blur effect).
+  const bgColor = resolveColor(props.color, "black");
   if (hasBlur) {
-    layers.push(`color-mix(in srgb, ${props.color} ${Math.round(props.opacity * 100)}%, transparent)`);
+    layers.push(`color-mix(in srgb, ${bgColor} ${Math.round(props.opacity * 100)}%, transparent)`);
     style.backdropFilter = `blur(${blurValue})`;
     style.webkitBackdropFilter = `blur(${blurValue})`;
   } else {
-    layers.push(props.color);
+    layers.push(bgColor);
   }
 
   style.background = layers.join(", ");

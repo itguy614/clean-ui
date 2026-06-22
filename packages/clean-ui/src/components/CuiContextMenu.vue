@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import type { HideableProps, DisableableProps } from "../types/common";
 
-export interface CuiContextMenuProps {
-  /** Prevents the context menu from opening */
-  disabled?: boolean;
+export interface CuiContextMenuProps extends HideableProps, DisableableProps {
   /** Minimum width of the menu panel */
   minWidth?: string;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiContextMenuProps>(), {
@@ -232,7 +229,7 @@ defineExpose({ open, close, isOpen });
 }
 
 .cui-context-menu__panel {
-  padding: 0.25rem;
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
   border-radius: var(--cui-button-radius, 0.375rem);
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);

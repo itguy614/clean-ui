@@ -55,7 +55,7 @@ const formAgree = ref(false);
       <h2 class="mb-4 text-2xl font-semibold">CuiSlideover Props</h2>
       <PropTable
         :props="[
-          { name: 'v-model:open', type: 'boolean', default: 'false', description: 'Controls visibility' },
+          { name: 'v-model:visible', type: 'boolean', default: 'false', description: 'Controls visibility' },
           { name: 'side', type: 'right | left | top | bottom', default: 'right', description: 'Which edge the panel slides from' },
           { name: 'size', type: 'sm | md | lg | xl | full | string', default: 'md', description: 'Panel width/height (named or custom CSS value)' },
           { name: 'title', type: 'string', default: '—', description: 'Header title text (simple mode)' },
@@ -76,7 +76,7 @@ const formAgree = ref(false);
       <h2 class="mb-4 text-2xl font-semibold">Events</h2>
       <EventTable
         :events="[
-          { name: 'update:open', payload: 'boolean', description: 'Controls slideover visibility (v-model:open)' },
+          { name: 'update:visible', payload: 'boolean', description: 'Controls slideover visibility (v-model:visible)' },
           { name: 'close', payload: '—', description: 'Fires when the slideover is closed' },
         ]"
       />
@@ -87,41 +87,41 @@ const formAgree = ref(false);
       <CuiStack spacing="6">
 
         <!-- Basic (right) -->
-        <Example title="Basic (Right)" :code="`<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Details&quot;>
+        <Example title="Basic (Right)" :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Details&quot;>
   <p>Panel content here.</p>
 </CuiSlideover>`">
           <CuiButton variant="solid" size="sm" @click="basic = true">Open Right</CuiButton>
-          <CuiSlideover v-model:open="basic" title="Detail Panel">
+          <CuiSlideover v-model:visible="basic" title="Detail Panel">
             <p>This is a basic slideover from the right edge. Click the X, press Escape, or click the backdrop to close.</p>
           </CuiSlideover>
         </Example>
 
         <!-- Sides -->
-        <Example title="All Sides" :code="`<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Right Panel&quot; side=&quot;right&quot;>...</CuiSlideover>
-<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Left Panel&quot; side=&quot;left&quot;>...</CuiSlideover>
-<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Top Panel&quot; side=&quot;top&quot;>...</CuiSlideover>
-<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Bottom Panel&quot; side=&quot;bottom&quot;>...</CuiSlideover>`">
+        <Example title="All Sides" :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Right Panel&quot; side=&quot;right&quot;>...</CuiSlideover>
+<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Left Panel&quot; side=&quot;left&quot;>...</CuiSlideover>
+<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Top Panel&quot; side=&quot;top&quot;>...</CuiSlideover>
+<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Bottom Panel&quot; side=&quot;bottom&quot;>...</CuiSlideover>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="basic = true">Right (default)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="leftPanel = true">Left</CuiButton>
             <CuiButton variant="outline" size="sm" @click="topPanel = true">Top</CuiButton>
             <CuiButton variant="outline" size="sm" @click="bottomPanel = true">Bottom</CuiButton>
           </CuiFlex>
-          <CuiSlideover v-model:open="leftPanel" side="left" title="Left Panel">
+          <CuiSlideover v-model:visible="leftPanel" side="left" title="Left Panel">
             <p>Slides in from the left edge. Good for navigation drawers or secondary sidebars.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="topPanel" side="top" title="Top Panel">
+          <CuiSlideover v-model:visible="topPanel" side="top" title="Top Panel">
             <p>Slides down from the top. Useful for notifications or search panels.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="bottomPanel" side="bottom" title="Bottom Panel">
+          <CuiSlideover v-model:visible="bottomPanel" side="bottom" title="Bottom Panel">
             <p>Slides up from the bottom. Common on mobile for action sheets or detail drawers.</p>
           </CuiSlideover>
         </Example>
 
         <!-- Sizes -->
-        <Example title="Sizes (horizontal)" :code="`<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Small Panel&quot; size=&quot;sm&quot;>...</CuiSlideover>
-<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Large Panel&quot; size=&quot;lg&quot;>...</CuiSlideover>
-<CuiSlideover v-model:open=&quot;show&quot; title=&quot;Custom Width&quot; size=&quot;600px&quot;>...</CuiSlideover>`">
+        <Example title="Sizes (horizontal)" :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Small Panel&quot; size=&quot;sm&quot;>...</CuiSlideover>
+<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Large Panel&quot; size=&quot;lg&quot;>...</CuiSlideover>
+<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Custom Width&quot; size=&quot;600px&quot;>...</CuiSlideover>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="sized.sm = true">Small (20rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="basic = true">Medium (default)</CuiButton>
@@ -130,25 +130,25 @@ const formAgree = ref(false);
             <CuiButton variant="outline" size="sm" @click="sized.full = true">Full</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.custom = true">Custom (600px)</CuiButton>
           </CuiFlex>
-          <CuiSlideover v-model:open="sized.sm" title="Small Panel" size="sm">
+          <CuiSlideover v-model:visible="sized.sm" title="Small Panel" size="sm">
             <p>A narrow panel (20rem / 320px). Good for quick actions or simple lists.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="sized.lg" title="Large Panel" size="lg">
+          <CuiSlideover v-model:visible="sized.lg" title="Large Panel" size="lg">
             <p>A wider panel (36rem / 576px). Room for forms and detailed content.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="sized.xl" title="XL Panel" size="xl">
+          <CuiSlideover v-model:visible="sized.xl" title="XL Panel" size="xl">
             <p>Extra wide (48rem / 768px). Good for split views or data-heavy panels.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="sized.full" title="Full Width" size="full">
+          <CuiSlideover v-model:visible="sized.full" title="Full Width" size="full">
             <p>Takes up the full viewport width. Like a page takeover.</p>
           </CuiSlideover>
-          <CuiSlideover v-model:open="sized.custom" title="Custom Width" size="600px">
+          <CuiSlideover v-model:visible="sized.custom" title="Custom Width" size="600px">
             <p>A custom width of 600px passed as a string.</p>
           </CuiSlideover>
         </Example>
 
         <!-- With Footer -->
-        <Example title="With Footer Actions" :code="`<CuiSlideover v-model:open=&quot;show&quot;>
+        <Example title="With Footer Actions" :code="`<CuiSlideover v-model:visible=&quot;show&quot;>
   <CuiModalHeader title=&quot;Edit&quot; @close=&quot;show = false&quot; />
   <CuiModalBody>...</CuiModalBody>
   <CuiModalFooter>
@@ -157,7 +157,7 @@ const formAgree = ref(false);
   </CuiModalFooter>
 </CuiSlideover>`">
           <CuiButton variant="solid" size="sm" @click="withFooter = true">Open with Footer</CuiButton>
-          <CuiSlideover v-model:open="withFooter">
+          <CuiSlideover v-model:visible="withFooter">
             <CuiModalHeader title="Edit Settings" @close="withFooter = false" />
             <CuiModalBody>
               <p>The slideover reuses CuiModalHeader, CuiModalBody, and CuiModalFooter — the same sub-components from CuiModal.</p>
@@ -170,7 +170,7 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Scrolling Body -->
-        <Example title="Scrolling Body" :code="`<CuiSlideover v-model:open=&quot;show&quot; size=&quot;lg&quot;>
+        <Example title="Scrolling Body" :code="`<CuiSlideover v-model:visible=&quot;show&quot; size=&quot;lg&quot;>
   <CuiModalHeader title=&quot;Activity Log&quot; @close=&quot;show = false&quot; />
   <CuiModalBody>
     <p v-for=&quot;i in 20&quot; :key=&quot;i&quot;>Long content entry {{ i }}...</p>
@@ -180,7 +180,7 @@ const formAgree = ref(false);
   </CuiModalFooter>
 </CuiSlideover>`">
           <CuiButton variant="outline" size="sm" @click="scrolling = true">Open Long Content</CuiButton>
-          <CuiSlideover v-model:open="scrolling" size="lg">
+          <CuiSlideover v-model:visible="scrolling" size="lg">
             <CuiModalHeader title="Activity Log" @close="scrolling = false" />
             <CuiModalBody>
               <CuiStack spacing="4">
@@ -198,7 +198,7 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Persistent -->
-        <Example title="Persistent (no Escape/backdrop close)" :code="`<CuiSlideover v-model:open=&quot;show&quot; persistent>
+        <Example title="Persistent (no Escape/backdrop close)" :code="`<CuiSlideover v-model:visible=&quot;show&quot; persistent>
   <CuiModalHeader title=&quot;Unsaved Changes&quot; no-close-button />
   <CuiModalBody>
     <p>You must choose an option below to continue.</p>
@@ -209,7 +209,7 @@ const formAgree = ref(false);
   </CuiModalFooter>
 </CuiSlideover>`">
           <CuiButton variant="outline" size="sm" color="warning" @click="persistent = true">Open Persistent</CuiButton>
-          <CuiSlideover v-model:open="persistent" persistent>
+          <CuiSlideover v-model:visible="persistent" persistent>
             <CuiModalHeader title="Unsaved Changes" no-close-button />
             <CuiModalBody>
               <p>You have unsaved changes. You must choose an option below to continue.</p>
@@ -223,7 +223,7 @@ const formAgree = ref(false);
 
         <!-- Blurred Backdrop -->
         <Example title="Blurred Backdrop" :code="`<CuiSlideover
-  v-model:open=&quot;show&quot;
+  v-model:visible=&quot;show&quot;
   title=&quot;Blurred Backdrop&quot;
   backdrop-blur=&quot;md&quot;
   :backdrop-opacity=&quot;0.3&quot;
@@ -232,7 +232,7 @@ const formAgree = ref(false);
 </CuiSlideover>`">
           <CuiButton variant="outline" size="sm" @click="blurred = true">Blur + Tint</CuiButton>
           <CuiSlideover
-            v-model:open="blurred"
+            v-model:visible="blurred"
             title="Blurred Backdrop"
             backdrop-blur="md"
             :backdrop-opacity="0.3"
@@ -242,7 +242,7 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Form in Slideover -->
-        <Example title="Form in Slideover" :code="`<CuiSlideover v-model:open=&quot;show&quot; size=&quot;lg&quot;>
+        <Example title="Form in Slideover" :code="`<CuiSlideover v-model:visible=&quot;show&quot; size=&quot;lg&quot;>
   <CuiModalHeader title=&quot;Create User&quot; @close=&quot;show = false&quot; />
   <CuiModalBody>
     <CuiStack spacing=&quot;4&quot;>
@@ -257,7 +257,7 @@ const formAgree = ref(false);
   </CuiModalFooter>
 </CuiSlideover>`">
           <CuiButton variant="solid" size="sm" @click="formPanel = true">Create User</CuiButton>
-          <CuiSlideover v-model:open="formPanel" size="lg">
+          <CuiSlideover v-model:visible="formPanel" size="lg">
             <CuiModalHeader title="Create User" @close="formPanel = false" />
             <CuiModalBody>
               <CuiStack spacing="4">
@@ -286,7 +286,7 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Settings Panel Pattern -->
-        <Example title="Settings Panel (left)" :code="`<CuiSlideover v-model:open=&quot;show&quot; side=&quot;left&quot; size=&quot;sm&quot;>
+        <Example title="Settings Panel (left)" :code="`<CuiSlideover v-model:visible=&quot;show&quot; side=&quot;left&quot; size=&quot;sm&quot;>
   <CuiModalHeader title=&quot;Settings&quot; @close=&quot;show = false&quot; />
   <CuiModalBody>
     <CuiStack spacing=&quot;4&quot;>
@@ -302,7 +302,7 @@ const formAgree = ref(false);
   </CuiModalFooter>
 </CuiSlideover>`">
           <CuiButton variant="outline" size="sm" @click="settingsPanel = true">Open Settings</CuiButton>
-          <CuiSlideover v-model:open="settingsPanel" side="left" size="sm">
+          <CuiSlideover v-model:visible="settingsPanel" side="left" size="sm">
             <CuiModalHeader title="Settings" @close="settingsPanel = false" />
             <CuiModalBody>
               <CuiStack spacing="4">

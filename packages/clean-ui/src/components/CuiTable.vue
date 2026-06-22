@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, provide, toRef } from "vue";
-import { TableContextKey, type TableSize } from "./table-context";
+import { computed, provide, ref } from "vue";
+import { TableContextKey } from "./table-context";
+import type { SizeableProps, HideableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import { useScrollShadows, scrollShadowBottomStyle, scrollShadowRightStyle } from "../composables/useScrollShadows";
 
-export interface CuiTableProps {
-  /** Cell padding scale */
-  size?: TableSize;
+export interface CuiTableProps extends HideableProps, SizeableProps {
   /** Alternating row backgrounds */
   striped?: boolean;
   /** Row hover highlight */
@@ -20,8 +20,12 @@ export interface CuiTableProps {
   maxHeight?: string;
   /** Min width — forces horizontal scrolling when content overflows (e.g., "1200px") */
   minWidth?: string;
-  /** Hide the component */
-  hidden?: boolean;
+  /**
+   * Total row count for windowed/virtualized tables. Sets `aria-rowcount` on the
+   * `<table>` so assistive tech reports the real total even when only a subset of
+   * rows is in the DOM. Omit for non-virtualized tables (native semantics suffice).
+   */
+  ariaRowcount?: number;
 }
 
 const props = withDefaults(defineProps<CuiTableProps>(), {
@@ -34,14 +38,17 @@ const props = withDefaults(defineProps<CuiTableProps>(), {
   hidden: false,
 });
 
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+
 provide(TableContextKey, {
-  size: toRef(props, "size"),
-  stickyHeader: toRef(props, "stickyHeader"),
+  size: clampedSize,
+  stickyHeader: computed(() => props.stickyHeader),
 });
 
 const tableClasses = computed(() => [
   "cui-table",
-  `cui-table--${props.size}`,
+  `cui-table--${clampedSize.value}`,
   {
     "cui-table--striped": props.striped,
     "cui-table--hoverable": props.hoverable,
@@ -66,18 +73,27 @@ const tableStyle = computed(() => ({
 
 const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useScrollShadows();
 
+const scrollWrapper = ref<HTMLElement | null>(null);
+
+function setWrapperRef(el: any) {
+  scrollWrapper.value = el as HTMLElement | null;
+  onWrapperRef(el as HTMLElement | null);
+}
+
+defineExpose({ scrollWrapper });
+
 </script>
 
 <template>
   <!-- Scroll wrapper when maxHeight or minWidth is set -->
   <div v-if="maxHeight || minWidth" v-show="!hidden" style="position: relative;">
     <div
-      :ref="onWrapperRef"
+      :ref="setWrapperRef"
       class="cui-table-wrapper"
       :style="wrapperStyle"
       @scroll="onScroll"
     >
-      <table :class="tableClasses" :style="tableStyle">
+      <table :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
@@ -87,7 +103,7 @@ const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useSc
   </div>
 
   <!-- Bare table -->
-  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;">
+  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;" :aria-rowcount="ariaRowcount">
     <slot />
   </table>
 </template>
@@ -118,13 +134,13 @@ const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useSc
 
 .cui-table--sm th,
 .cui-table--sm td {
-  padding: 0.375rem 0.5rem;
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
 }
 
 /* --- Size: md (default) --- */
 .cui-table--md th,
 .cui-table--md td {
-  padding: 0.625rem 0.75rem;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 /* --- Size: lg --- */
@@ -134,7 +150,7 @@ const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useSc
 
 .cui-table--lg th,
 .cui-table--lg td {
-  padding: 0.75rem 1rem;
+  padding: calc(0.75rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
 }
 
 /* --- Head row styling --- */
@@ -194,7 +210,10 @@ const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useSc
 .cui-table--sticky-header thead th {
   position: sticky !important;
   top: 0 !important;
-  z-index: 10 !important;
+  /* z-index intentionally NOT !important: a cell that is BOTH a sticky header
+     and a sticky column (the top-left "corner") needs to layer above its
+     neighbours, which it does by setting a higher z-index inline. */
+  z-index: 10;
   background: var(--color-surface-50) !important;
 }
 

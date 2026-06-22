@@ -39,7 +39,7 @@ const phoneFormatted = ref("");
           { name: 'placeholder', type: 'string', default: '-', description: 'Placeholder text shown when empty and unfocused' },
           { name: 'tokens', type: 'Record<string, { pattern: RegExp }>', default: '-', description: 'Custom token definitions' },
           { name: 'fillChar', type: 'string', default: '_', description: 'Character for unfilled positions' },
-          { name: 'color', type: 'ButtonColor', default: 'primary', description: 'Focus border color' },
+          { name: 'color', type: 'CuiColor', default: 'primary', description: 'Focus border color' },
           { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Input size' },
           { name: 'clearable', type: 'boolean', default: 'false', description: 'Show clear button' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },

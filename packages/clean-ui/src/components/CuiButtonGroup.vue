@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { HideableProps } from "../types/common";
+
 export type ButtonGroupOrientation = "horizontal" | "vertical";
 
-export interface CuiButtonGroupProps {
+export interface CuiButtonGroupProps extends HideableProps {
   /** Layout direction */
   orientation?: ButtonGroupOrientation;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 withDefaults(defineProps<CuiButtonGroupProps>(), {

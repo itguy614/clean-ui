@@ -2,7 +2,9 @@
 import { computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiSelect from "./CuiSelect.vue";
-import type { ButtonColor } from "./CuiButton.vue";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -13,9 +15,7 @@ export interface LaravelPaginatorMeta {
   to: number | null;
 }
 
-export type PaginationSize = "sm" | "md";
-
-export interface CuiPaginationProps {
+export interface CuiPaginationProps extends HideableProps, ColorableProps, SizeableProps {
   /** Laravel paginator meta object */
   meta?: LaravelPaginatorMeta;
   /** Current page (override or standalone) */
@@ -32,14 +32,8 @@ export interface CuiPaginationProps {
   hidePerPage?: boolean;
   /** Hide the "Showing X to Y of Z" info text */
   hideInfo?: boolean;
-  /** Color role for active page */
-  color?: ButtonColor;
-  /** Size */
-  size?: PaginationSize;
   /** Max page buttons to show before truncating */
   maxButtons?: number;
-  /** Hide the component */
-  hidden?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiPaginationProps>(), {
@@ -56,6 +50,9 @@ const emit = defineEmits<{
   "update:currentPage": [value: number];
   "update:perPage": [value: number];
 }>();
+
+const SUPPORTED_SIZES = ["sm", "md"] as const;
+const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 
 // Resolve values from meta or individual props
 const page = computed(() => props.currentPage ?? props.meta?.current_page ?? 1);
@@ -143,9 +140,11 @@ function onPerPageChange(val: string | number | null | Array<string | number>) {
   }
 }
 
+const messages = useMessages();
+
 // Per-page select options
 const perPageSelectOptions = computed(() =>
-  props.perPageOptions.map((n) => ({ value: n, label: `${n} / page` })),
+  props.perPageOptions.map((n) => ({ value: n, label: messages.value.pagination.perPage(n) })),
 );
 </script>
 
@@ -153,11 +152,11 @@ const perPageSelectOptions = computed(() =>
   <div
     v-show="!hidden"
     class="cui-pagination"
-    :class="`cui-pagination--${size}`"
+    :class="`cui-pagination--${clampedSize}`"
   >
     <!-- Info text -->
     <div v-if="!hideInfo && totalItems > 0" class="cui-pagination__info">
-      Showing {{ from }} to {{ to }} of {{ totalItems }} results
+      {{ messages.pagination.summary({ from, to, total: totalItems }) }}
     </div>
 
     <div class="cui-pagination__controls">
@@ -166,7 +165,7 @@ const perPageSelectOptions = computed(() =>
         <CuiSelect
           :model-value="itemsPerPage"
           :options="perPageSelectOptions"
-          :size="size === 'sm' ? 'xs' : 'sm'"
+          :size="clampedSize === 'sm' ? 'xs' : 'sm'"
           @update:model-value="onPerPageChange"
         />
       </div>
@@ -181,7 +180,7 @@ const perPageSelectOptions = computed(() =>
           aria-label="Previous page"
           @click="goTo(page - 1)"
         >
-          <CuiIcon name="caret-left" :size="size === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon name="caret-left" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
 
         <!-- Page numbers -->
@@ -215,7 +214,7 @@ const perPageSelectOptions = computed(() =>
           aria-label="Next page"
           @click="goTo(page + 1)"
         >
-          <CuiIcon name="caret-right" :size="size === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon name="caret-right" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
       </nav>
     </div>
@@ -228,7 +227,7 @@ const perPageSelectOptions = computed(() =>
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-pagination__info {
@@ -244,7 +243,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination__controls {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-pagination__per-page {
@@ -255,7 +254,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination__nav {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 /* --- Page buttons --- */
@@ -265,7 +264,7 @@ const perPageSelectOptions = computed(() =>
   justify-content: center;
   min-width: 2rem;
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: 0 calc(0.5rem * var(--cui-density-scale, 1));
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--cui-text-body);
@@ -280,7 +279,7 @@ const perPageSelectOptions = computed(() =>
 .cui-pagination--sm .cui-pagination__btn {
   min-width: 1.625rem;
   height: 1.625rem;
-  padding: 0 0.375rem;
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1));
   font-size: 0.75rem;
 }
 
