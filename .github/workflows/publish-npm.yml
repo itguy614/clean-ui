@@ -1,9 +1,13 @@
 name: Publish to npm
 
+# Publish only when a release reaches master (e.g. the develop → master release
+# PR merges). Pushing a version tag on develop must NOT publish. The version
+# check makes this idempotent: ordinary master pushes that don't bump the
+# version (and re-runs) are skipped, so only a new version actually publishes.
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -24,10 +28,26 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Check whether this version is already published
+        id: check
+        working-directory: packages/clean-ui
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm — skipping publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$NAME@$VERSION is new — will publish."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build library
+        if: steps.check.outputs.publish == 'true'
         run: pnpm --filter @itguy614/clean-ui build
 
       - name: Publish to npm
+        if: steps.check.outputs.publish == 'true'
         working-directory: packages/clean-ui
         run: npm publish --access public
         env:
