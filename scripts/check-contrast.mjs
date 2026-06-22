@@ -126,16 +126,18 @@ function buildScale(vars, prefix) {
 }
 
 function parseAllThemes() {
-  const mainCss = readFileSync(
-    resolve(__dirname, "../packages/clean-ui/src/styles/main.css"),
-    "utf-8",
-  );
   const themesCss = readFileSync(
     resolve(__dirname, "../packages/clean-ui/src/styles/themes.css"),
     "utf-8",
   );
+  // The default color scale (@theme) lives in its own single-source file,
+  // imported by both the library and the docs (see theme.css / issue #35).
+  const themeCss = readFileSync(
+    resolve(__dirname, "../packages/clean-ui/src/styles/theme.css"),
+    "utf-8",
+  );
 
-  const themeBlockMatch = mainCss.match(/@theme\s*\{([\s\S]*?)\}/);
+  const themeBlockMatch = themeCss.match(/@theme\s*\{([\s\S]*?)\}/);
   const defaultVars = themeBlockMatch
     ? extractColorVars(themeBlockMatch[1])
     : {};
