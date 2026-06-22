@@ -165,7 +165,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       class="cui-radio__indicator"
       :style="{
         '--_radio-color': `var(--cui-${resolvedColor})`,
-        '--_radio-border': isChecked ? `var(--cui-${resolvedColor}-border)` : `var(--color-surface-400)`,
+        '--_radio-border': isChecked ? `var(--cui-${resolvedColor}-border)` : `var(--cui-border-strong)`,
         '--_radio-bg': isChecked ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
     >
@@ -224,7 +224,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 2px solid var(--_radio-border);
+  border: 1px solid var(--_radio-border);
   background: var(--_radio-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
   margin-top: 0.125rem; /* align with first line of text */
@@ -308,7 +308,9 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 .cui-radio-button--active {
   background: var(--_rb-bg);
   color: var(--_rb-color);
-  border-color: var(--_rb-border);
+  /* Keep the neutral border on the active segment (both light and dark) so the
+     group stays visually connected — only the fill and text change. */
+  border-color: var(--cui-border-strong);
   position: relative;
   z-index: 1;
 }

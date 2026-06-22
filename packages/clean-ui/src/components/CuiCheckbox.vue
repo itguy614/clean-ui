@@ -114,7 +114,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       class="cui-checkbox__indicator"
       :style="{
         '--_check-color': `var(--cui-${resolvedColor})`,
-        '--_check-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--color-surface-400)`,
+        '--_check-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--cui-border-strong)`,
         '--_check-bg': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
     >
@@ -176,7 +176,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 0.25rem;
-  border: 2px solid var(--_check-border);
+  border: 1px solid var(--_check-border);
   background: var(--_check-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
   margin-top: 0.125rem;

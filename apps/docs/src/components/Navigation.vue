@@ -132,7 +132,7 @@ const groupedSections = sections.reduce((acc, section) => {
                 'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
                 'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
               ]"
-              active-class="[color:var(--cui-primary-text)] [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
+              active-class="[color:var(--cui-primary-text)]! [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
               @click="$emit('navigate')"
             >
               {{ section.label }}

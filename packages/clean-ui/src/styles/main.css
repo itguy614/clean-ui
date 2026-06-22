@@ -233,8 +233,8 @@
   --cui-border-strong: var(--color-surface-500);
 
   /* --- Primary (references scale so themes override correctly) --- */
-  --cui-primary:            var(--color-primary-300);
-  --cui-primary-hover:      var(--color-primary-200);
+  --cui-primary:            var(--color-primary-200);
+  --cui-primary-hover:      var(--color-primary-100);
   --cui-primary-active:     var(--color-primary-100);
   --cui-primary-bg:         var(--color-primary-900);
   --cui-primary-border:     var(--color-primary-400);
@@ -249,7 +249,8 @@
   --cui-primary-solid-active: var(--color-primary-800);
 
   /* --- Secondary (muted primary — also references scale for theme compat) --- */
-  --cui-secondary:            var(--color-secondary-300);
+  /* Brightened from secondary-300 (0.58) for AA on subtle/outline text in dark. */
+  --cui-secondary:            oklch(0.72 0.05 270);
   --cui-secondary-hover:      var(--color-secondary-100);
   --cui-secondary-active:     var(--color-secondary-100);
   --cui-secondary-bg:         var(--color-secondary-900);
@@ -369,8 +370,10 @@
 
   /* --- Text color semantics (light mode) --- */
   --cui-text-body: var(--color-surface-900);
-  --cui-text-secondary: var(--color-surface-500);
-  --cui-text-tertiary: var(--color-surface-400);
+  --cui-text-secondary: var(--color-surface-700);
+  /* Custom step (~5:1 on white): lighter than secondary for hierarchy, but the
+     surface scale has no step between 600 (fails AA) and 700 that passes. */
+  --cui-text-tertiary: oklch(0.55 0.012 270);
   --cui-text-emphasis: var(--color-surface-950);
   --cui-text-link: var(--cui-primary);
   --cui-text-link-hover: var(--cui-primary-hover);
@@ -391,7 +394,7 @@
   --cui-text-emphasis: var(--color-surface-50);
   --cui-text-link: var(--cui-primary);
   --cui-text-link-hover: var(--cui-primary-hover);
-  --cui-text-code: var(--color-primary-300);
+  --cui-text-code: var(--color-primary-200);
 }
 
 /* ============================================================
