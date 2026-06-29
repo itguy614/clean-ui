@@ -4,6 +4,7 @@ import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from 
 import CuiIcon from "./CuiIcon.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
+import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
@@ -47,6 +48,8 @@ const props = withDefaults(defineProps<CuiAlertProps>(), {
   hidden: false,
   rounded: "md",
 });
+
+warnVariantColor("CuiAlert", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
 
 const emit = defineEmits<{
   dismiss: [];
