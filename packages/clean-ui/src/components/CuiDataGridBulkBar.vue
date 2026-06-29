@@ -80,10 +80,12 @@ function onAction(action: DataGridBulkAction) {
   align-items: center;
   gap: calc(0.75rem * var(--cui-density-scale, 1));
   padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
-  /* Use the solid token (darker in dark mode) so the white text stays readable —
-     plain --cui-primary is lightened in dark mode for accent text/borders. */
-  background: var(--cui-primary-solid, var(--cui-primary));
-  color: var(--cui-primary-text);
+  /* Subtle-first (per the library's guiding principle): a tinted primary surface
+     rather than a solid hero-color background, so the outline action buttons keep
+     full contrast. All three slots auto-swap for dark mode. */
+  background: var(--cui-primary-bg);
+  border: 1px solid var(--cui-primary-border);
+  color: var(--cui-primary);
   border-radius: var(--cui-button-radius, 0.375rem);
   box-shadow: 0 -2px 12px rgb(0 0 0 / 0.15);
   max-width: 48rem;
