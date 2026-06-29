@@ -58,4 +58,18 @@ describe("CuiInput", () => {
     });
     expect(wrapper.find("button.cui-input__clear").exists()).toBe(false);
   });
+
+  it("accepts type='number' and a numeric modelValue", () => {
+    const wrapper = mount(CuiInput, { props: { type: "number", modelValue: 42 } });
+    const native = wrapper.get("input.cui-input__native");
+    expect(native.attributes("type")).toBe("number");
+    expect((native.element as HTMLInputElement).value).toBe("42");
+  });
+
+  it("shows the clear button for a numeric 0 (not treated as empty)", () => {
+    const wrapper = mount(CuiInput, {
+      props: { type: "number", modelValue: 0, clearable: true },
+    });
+    expect(wrapper.find("button.cui-input__clear").exists()).toBe(true);
+  });
 });

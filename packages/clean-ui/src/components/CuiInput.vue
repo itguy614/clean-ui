@@ -13,11 +13,19 @@ const radiusMap: Record<CuiRounded, string> = {
   full: "9999px",
 };
 
-export type InputType = "text" | "password" | "email" | "url" | "tel" | "search";
+export type InputType =
+  | "text"
+  | "password"
+  | "email"
+  | "url"
+  | "tel"
+  | "search"
+  | "number"
+  | "range";
 
 export interface CuiInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
-  /** v-model binding */
-  modelValue?: string;
+  /** v-model binding. `string | number` so `type="number"` / `v-model.number` bind without a cast. */
+  modelValue?: string | number;
   /** Input type */
   type?: InputType;
   /** Placeholder text */
@@ -48,7 +56,7 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
 });
 
 const emit = defineEmits<{
-  "update:modelValue": [value: string];
+  "update:modelValue": [value: string | number];
   clear: [];
 }>();
 
@@ -61,7 +69,15 @@ const resolvedType = computed(() => {
 });
 
 // Clearable logic
-const showClear = computed(() => props.clearable && props.modelValue && !props.disabled && !props.readonly);
+// Use an explicit emptiness check (not truthiness) so a numeric 0 still shows the clear button.
+const showClear = computed(
+  () =>
+    props.clearable &&
+    props.modelValue !== "" &&
+    props.modelValue != null &&
+    !props.disabled &&
+    !props.readonly,
+);
 
 function clear() {
   emit("update:modelValue", "");
