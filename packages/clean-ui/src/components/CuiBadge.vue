@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
 import { clampSize } from "../utils/sizing";
+import { warnVariantColor } from "../utils/devWarn";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 
@@ -33,6 +34,8 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
   rounded: "full",
   hidden: false,
 });
+
+warnVariantColor("CuiBadge", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",

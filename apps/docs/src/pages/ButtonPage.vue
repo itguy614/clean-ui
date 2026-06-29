@@ -25,6 +25,22 @@ function simulateLoad() {
       </p>
     </div>
 
+    <CuiCard variant="outline">
+      <CuiCardBody>
+        <p class="text-sm text-surface-700 dark:text-surface-300">
+          <strong><code>color</code> vs <code>variant</code>:</strong>
+          <code>color</code> sets the semantic role (<code>primary</code>,
+          <code>success</code>, <code>error</code>, <code>warning</code>,
+          <code>info</code>, …); <code>variant</code> sets the visual style
+          (<code>solid</code>, <code>outline</code>, <code>dash</code>,
+          <code>ghost</code>). Passing a role name to <code>variant</code> (e.g.
+          <code>variant="primary"</code>) won't work — use
+          <code>color="primary"</code>. Note the role for “danger” is
+          <code>error</code>.
+        </p>
+      </CuiCardBody>
+    </CuiCard>
+
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable

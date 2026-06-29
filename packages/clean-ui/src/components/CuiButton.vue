@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
+import { warnVariantColor } from "../utils/devWarn";
 import type {
   CuiColor,
   CuiRounded,
@@ -43,6 +44,8 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   disabled: false,
   hidden: false,
 });
+
+warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
 
 const isDisabled = computed(() => props.disabled || props.loading);
 

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-06-29
+
+### Added
+- `CuiDataGrid` is now generic over its row type (`CuiDataGrid<T>`) — custom cell slots and row/bulk-action emits are typed, no more `(row as any)` (#46)
+- `CuiInput` supports `type="number"` / `"range"` and a numeric `modelValue` (`string | number`), so `v-model.number` binds without a cast (#47)
+- Dev-mode warning when an unrecognized `variant`/`color` is passed to `CuiBadge`/`CuiButton`/`CuiAlert`, plus docs clarifying color vs variant (#48)
+
+### Fixed
+- DataGrid bulk-action bar buttons no longer render blue-on-blue; the bar is now a subtle tinted surface (#49)
+- DataGrid header→body divider now renders (its header cells are td-based) (#43)
+- `CuiSlideover` / `CuiModal` open (slide/scale-in) animation now plays (#44)
+
 ## [1.0.0] - 2026-06-22
 
 ### Added

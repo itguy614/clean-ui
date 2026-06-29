@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { toRef, watch, useSlots } from "vue";
+<script setup lang="ts" generic="T extends object = DataGridRow">
+import { toRef, watch, useSlots, type Ref } from "vue";
 import { useDataGrid, provideDataGrid } from "../composables/useDataGrid";
 import type {
   DataGridColumn,
@@ -24,11 +24,11 @@ import CuiSkeleton from "./CuiSkeleton.vue";
 import type { HideableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiDataGridProps extends HideableProps {
+export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps {
   /** Column definitions */
   columns: DataGridColumn[];
-  /** Data source — array for client-side, PaginatedData for server-side */
-  data: DataGridRow[] | PaginatedData;
+  /** Data source — array for client-side, PaginatedData for server-side. Generic over the row type so cell slots, emits, and data are typed. */
+  data: T[] | PaginatedData<T>;
   /** Server-side mode — emits navigate events instead of processing locally */
   serverSide?: boolean;
   /** Row identifier key */
@@ -86,7 +86,7 @@ export interface CuiDataGridProps extends HideableProps {
   virtualRowHeight?: number;
 }
 
-const props = withDefaults(defineProps<CuiDataGridProps>(), {
+const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
   serverSide: false,
   rowKey: "id",
   showSelectAll: true,
@@ -110,17 +110,40 @@ const props = withDefaults(defineProps<CuiDataGridProps>(), {
 
 const emit = defineEmits<{
   navigate: [params: DataGridQueryParams];
-  "row-click": [payload: { row: DataGridRow }];
-  "row-action": [payload: { action: DataGridRowAction; row: DataGridRow }];
-  "bulk-action": [payload: { action: DataGridBulkAction; rows: DataGridRow[] }];
+  "row-click": [payload: { row: T }];
+  "row-action": [payload: { action: DataGridRowAction; row: T }];
+  "bulk-action": [payload: { action: DataGridBulkAction; rows: T[] }];
   "selection-change": [selectedIds: string[]];
 }>();
+
+defineSlots<
+  {
+    "toolbar-start"?: () => unknown;
+    "toolbar-end"?: () => unknown;
+    empty?: () => unknown;
+    card?: (props: { row: T }) => unknown;
+  } & {
+    // Per-column cell slots: `cell-<columnKey>`, payload typed over the row type.
+    [K in `cell-${string}`]?: (props: { value: unknown; row: T }) => unknown;
+  }
+>();
+
+// Named payload types over the row type T. Used to cast at the loose-internals
+// (DataGridRow) → public-API (T) boundary; named aliases keep the template casts
+// free of inline object-type literals (which the template parser chokes on).
+type CardSlotProps = { row: T };
+type CellSlotProps = { value: unknown; row: T };
+type RowClickPayload = { row: T };
+type RowActionPayload = { action: DataGridRowAction; row: T };
+type BulkActionPayload = { action: DataGridBulkAction; rows: T[] };
 
 const slots = useSlots();
 
 const grid = useDataGrid({
   columns: props.columns,
-  data: toRef(props, "data"),
+  // The grid internals operate on the loose DataGridRow shape; T is a public-API
+  // refinement, so cast once here at the boundary.
+  data: toRef(props, "data") as Ref<DataGridRow[] | PaginatedData>,
   serverSide: props.serverSide,
   rowKey: props.rowKey,
   defaultPerPage: props.perPageOptions?.[0] ?? 15,
@@ -219,7 +242,7 @@ const messages = useMessages();
             :row-key="rowKey"
           >
             <template #card="cardProps">
-              <slot name="card" v-bind="cardProps" />
+              <slot name="card" v-bind="(cardProps as CardSlotProps)" />
             </template>
           </CuiDataGridCardView>
 
@@ -237,8 +260,8 @@ const messages = useMessages();
             :size="size"
             :virtualize="virtualize"
             :virtual-row-height="virtualRowHeight"
-            @row-click="emit('row-click', $event)"
-            @row-action="emit('row-action', $event)"
+            @row-click="emit('row-click', $event as RowClickPayload)"
+            @row-action="emit('row-action', $event as RowActionPayload)"
           >
             <!-- Forward cell slots -->
             <template
@@ -246,7 +269,7 @@ const messages = useMessages();
               :key="col.key"
               #[`cell-${col.key}`]="slotProps"
             >
-              <slot :name="`cell-${col.key}`" v-bind="slotProps">
+              <slot :name="`cell-${col.key}`" v-bind="(slotProps as CellSlotProps)">
                 {{ slotProps.value }}
               </slot>
             </template>
@@ -268,7 +291,7 @@ const messages = useMessages();
     <CuiDataGridBulkBar
       v-if="bulkActions && bulkActions.length > 0"
       :actions="bulkActions"
-      @bulk-action="emit('bulk-action', $event)"
+      @bulk-action="emit('bulk-action', $event as BulkActionPayload)"
     />
   </div>
 </template>

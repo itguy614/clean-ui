@@ -169,6 +169,15 @@ defineExpose({ scrollWrapper });
   background: var(--color-surface-800);
 }
 
+/* CuiDataGrid renders td-based header cells (CuiTableCell) inside <thead>, which
+   the th-only rule above can't match — so the header→body divider was missing on
+   the DataGrid. Give td headers the same divider. (Only the border: DataGrid pins
+   its header at the cell level via headerCellStyle, so we deliberately do NOT add
+   a sticky position rule for td here — that would re-create the nested-sticky bug.) */
+.cui-table thead td {
+  border-bottom: 1px solid var(--cui-border);
+}
+
 /* --- Body row dividers (on cells, not rows, for border-separate compat) --- */
 .cui-table tbody td {
   border-bottom: 1px solid var(--cui-border);
