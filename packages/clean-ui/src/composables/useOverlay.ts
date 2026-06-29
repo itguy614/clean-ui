@@ -49,9 +49,16 @@ export function useOverlay(options: UseOverlayOptions) {
     // Lock body scroll
     document.body.style.overflow = "hidden";
 
+    // nextTick alone schedules a microtask, which runs before the browser
+    // paints — so the element mounts (off-screen transform) and flips to its
+    // final transform in the same frame, and the enter transition never fires.
+    // requestAnimationFrame defers the flip until after a paint, giving the
+    // compositor a rendered off-screen frame to transition from.
     nextTick(() => {
-      isAnimating.value = true;
-      dialogRef.value?.focus();
+      requestAnimationFrame(() => {
+        isAnimating.value = true;
+        dialogRef.value?.focus();
+      });
     });
   }
 
