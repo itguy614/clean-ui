@@ -12,11 +12,11 @@ withDefaults(defineProps<CuiTableHeadProps>(), {
 
 provide(TableSectionContextKey, { isHead: true });
 
-// Sticky header is pinned at the CELL level (each th/td gets position: sticky;
+// Sticky header is pinned at the CELL level (each cell gets position: sticky;
 // top: 0), NOT on the <thead>. A sticky <thead> + sticky cells is a nested
 // same-axis sticky, which detaches sticky-column header cells from the header's
 // vertical pinning. See `.cui-table--sticky-header thead th` and, for the data
-// grid (td-based headers), CuiDataGridTable's headerCellStyle.
+// grid, CuiDataGridTable's headerCellStyle.
 </script>
 
 <template>

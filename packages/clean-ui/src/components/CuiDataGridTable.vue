@@ -185,6 +185,10 @@ function stickyBodyColStyle(colKey: string): Record<string, string | number> | u
 // `top: 0` when stickyHeader is on; sticky columns additionally get `left`. A
 // cell that's both (the top-left corner) sits above the regular header row (10)
 // and the sticky body column (4) at z-index 11.
+//
+// These cells are <th>, so `.cui-table--sticky-header thead th` also applies:
+// it agrees on position/top, and deliberately leaves z-index and left alone so
+// the inline values here still win.
 function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
   const leftVal = stickyColumnOffsets.value.get(col.key);
   const stickyCol = !!leftVal;

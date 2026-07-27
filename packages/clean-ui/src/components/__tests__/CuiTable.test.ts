@@ -71,6 +71,47 @@ describe("CuiTable + sub-components", () => {
     expect(bodyCells[0].text()).toBe("Alice");
   });
 
+  it("infers <th scope=col> for cells in the head with no header prop", () => {
+    // The common case: callers don't pass `header`, so the cell has to derive it
+    // from the section context. A Boolean prop cast to `false` when absent would
+    // silently make these <td> and break the sticky-header rule.
+    const wrapper = mount(CuiTable, {
+      props: { stickyHeader: true },
+      slots: {
+        default: () => [
+          h(CuiTableHead, () => [
+            h(CuiTableRow, () => [h(CuiTableCell, () => "Name"), h(CuiTableCell, () => "Score")]),
+          ]),
+          h(CuiTableBody, () => [
+            h(CuiTableRow, () => [h(CuiTableCell, () => "Alice"), h(CuiTableCell, () => "10")]),
+          ]),
+        ],
+      },
+    });
+
+    const headCells = wrapper.findAll("thead th");
+    expect(headCells).toHaveLength(2);
+    expect(headCells[0].attributes("scope")).toBe("col");
+    expect(wrapper.findAll("thead td")).toHaveLength(0);
+    // body cells are unaffected
+    expect(wrapper.findAll("tbody td")).toHaveLength(2);
+  });
+
+  it("honors an explicit header={false} inside the head", () => {
+    const wrapper = mount(CuiTable, {
+      slots: {
+        default: () => [
+          h(CuiTableHead, () => [
+            h(CuiTableRow, () => [h(CuiTableCell, { header: false }, () => "Plain")]),
+          ]),
+        ],
+      },
+    });
+
+    expect(wrapper.find("thead td").exists()).toBe(true);
+    expect(wrapper.find("thead th").exists()).toBe(false);
+  });
+
   it("applies the align style on a cell", () => {
     const wrapper = mountTable();
     const scoreHeader = wrapper.findAll("thead th")[1];

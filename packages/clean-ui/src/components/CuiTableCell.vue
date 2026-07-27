@@ -21,6 +21,10 @@ export interface CuiTableCellProps extends HideableProps {
 }
 
 const props = withDefaults(defineProps<CuiTableCellProps>(), {
+  // Declaring a default — even `undefined` — opts this Boolean prop out of Vue's
+  // absent-prop casting, which would otherwise hand us `false` and make the
+  // "explicit override" branch below indistinguishable from "not passed".
+  header: undefined,
   align: "left",
   nowrap: false,
   hidden: false,

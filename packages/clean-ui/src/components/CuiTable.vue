@@ -160,20 +160,17 @@ defineExpose({ scrollWrapper });
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--cui-text-secondary);
-  background: var(--color-surface-50);
+  background: var(--cui-table-head-bg, var(--color-surface-50));
   border-bottom: 1px solid var(--cui-border);
   text-align: left;
 }
 
 :where(.dark, .dark *) .cui-table thead th {
-  background: var(--color-surface-800);
+  background: var(--cui-table-head-bg, var(--color-surface-800));
 }
 
-/* CuiDataGrid renders td-based header cells (CuiTableCell) inside <thead>, which
-   the th-only rule above can't match — so the header→body divider was missing on
-   the DataGrid. Give td headers the same divider. (Only the border: DataGrid pins
-   its header at the cell level via headerCellStyle, so we deliberately do NOT add
-   a sticky position rule for td here — that would re-create the nested-sticky bug.) */
+/* A cell can still opt out of header semantics with an explicit `header={false}`
+   inside a <thead>, so keep the divider on td head cells too. */
 .cui-table thead td {
   border-bottom: 1px solid var(--cui-border);
 }
@@ -223,11 +220,14 @@ defineExpose({ scrollWrapper });
      and a sticky column (the top-left "corner") needs to layer above its
      neighbours, which it does by setting a higher z-index inline. */
   z-index: 10;
-  background: var(--color-surface-50) !important;
+  /* Token, not a raw scale step: CuiDataGrid pins its own header cells inline
+     with the same token, and this !important would otherwise clobber a
+     consumer's --cui-table-head-bg override on every sticky grid. */
+  background: var(--cui-table-head-bg, var(--color-surface-50)) !important;
 }
 
 :where(.dark, .dark *) .cui-table--sticky-header thead th {
-  background: var(--color-surface-800) !important;
+  background: var(--cui-table-head-bg, var(--color-surface-800)) !important;
 }
 
 /* --- Selected row --- */

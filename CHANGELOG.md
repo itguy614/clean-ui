@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `CuiTable` header backgrounds now reference the `--cui-table-head-bg` token instead of raw surface scale steps, so overriding it works on sticky tables and `CuiDataGrid` (#64)
+
 ### Fixed
+- `CuiTableCell` inside a `CuiTableHead` now renders `<th scope="col">` instead of `<td>`. Vue casts an absent `Boolean` prop to `false`, so the explicit-override branch always won and the section context was never consulted — which also meant `sticky-header` was a silent no-op, since its CSS matches `thead th`. **DOM change:** consumer CSS targeting `thead td` needs updating (#64)
 - `CuiTabs` tab bar now scrolls when the tabs overflow their container, with an edge fade marking the clipped side — trailing tabs were previously clipped and unreachable inside `CuiModal` / `CuiSlideover` (#57)
 - `CuiTabs` keyboard navigation no longer focuses a tab in a different `CuiTabs` instance when two tab sets on a page share tab values (#57)
 
