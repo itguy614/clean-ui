@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `CuiTab` accepts a `#label` slot for custom tab-button content — badges, icons, status dots. The `label` prop stays required and renders whenever no slot is given (#45)
+
 ### Changed
 - `CuiTable` header backgrounds now reference the `--cui-table-head-bg` token instead of raw surface scale steps, so overriding it works on sticky tables and `CuiDataGrid` (#64)
 - `CuiTable` now always renders its scroll wrapper (`<div class="cui-table-wrapper">`) around the `<table>`, not only when `minWidth`/`maxHeight` is passed. The wrapper stays inert (`overflow: visible`) while the table fits and only becomes a scroll container when the table actually overflows, so page-scrolled `stickyHeader` tables are unaffected. **DOM change:** a CSS selector matching `.cui-table` as a direct child of a specific element needs updating (#58)
 - New `table.scrollRegionLabel` message key (default `"Scrollable table"`) — the accessible name for a table's scroll region (#58)
 
 ### Fixed
+- A `CuiTab` no longer jumps to the end of the tab bar when one of its props changes — re-registration now updates in place instead of removing and re-appending (#45)
 - Storage access no longer throws where `localStorage` exists but is unusable — sandboxed iframes without `allow-same-origin`, Safari private mode, blocked cookies, exceeded quota. `useDensity`, `useDataGridViews`' `localStorageViewAdapter`, and `CuiBanner` were unguarded; `useDensity` read at module scope, so a single throw took down every import of the library barrel. All storage now routes through one guarded helper (#67)
 - Test suite runs on modern Node again: Node ≥22 ships an inert global `localStorage` that shadows jsdom's, which broke the `useDensity` and smoke suites at collect time. CI now runs a Node 20 + 24 matrix so runtime-dependent breakage surfaces (#67)
 - `CuiTableCell` inside a `CuiTableHead` now renders `<th scope="col">` instead of `<td>`. Vue casts an absent `Boolean` prop to `false`, so the explicit-override branch always won and the section context was never consulted — which also meant `sticky-header` was a silent no-op, since its CSS matches `thead th`. **DOM change:** consumer CSS targeting `thead td` needs updating (#64)

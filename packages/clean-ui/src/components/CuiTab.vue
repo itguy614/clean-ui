@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, onUnmounted, computed, watch } from "vue";
+import { inject, onMounted, onUnmounted, computed, watch, useSlots } from "vue";
 import { TabsContextKey } from "./tabs-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -26,27 +26,33 @@ if (!ctx) {
 
 const isActive = computed(() => ctx.activeTab.value === props.value);
 
-// Register/unregister with parent
-onMounted(() => {
-  ctx.register({
+const slots = useSlots();
+
+function definition() {
+  return {
     value: props.value,
     label: props.label,
     disabled: props.disabled,
     closeable: props.closeable,
-  });
+    // Call through `slots` rather than capturing the slot function, so the
+    // parent's render always invokes the current one — a badge count in the
+    // slot updates without re-registering the tab.
+    labelSlot: slots.label ? () => slots.label?.() : undefined,
+  };
+}
+
+// Register with parent
+onMounted(() => {
+  ctx.register(definition());
 });
 
-// Update registration when props change
+// Re-register when what the bar renders changes. `register` updates in place,
+// so this can't reorder the tab. Slot *presence* is watched too: a tab that
+// gains a #label slot later still needs the parent to pick it up.
 watch(
-  () => ({ label: props.label, disabled: props.disabled, closeable: props.closeable }),
+  () => [props.label, props.disabled, props.closeable, !!slots.label],
   () => {
-    ctx.unregister(props.value);
-    ctx.register({
-      value: props.value,
-      label: props.label,
-      disabled: props.disabled,
-      closeable: props.closeable,
-    });
+    ctx.register(definition());
   },
 );
 
