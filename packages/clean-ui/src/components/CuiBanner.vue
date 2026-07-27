@@ -5,6 +5,7 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { COLOR_ICON_MAP } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
+import { safeGetItem, safeSetItem } from "../utils/storage";
 
 export type BannerPosition = "top" | "bottom";
 export type BannerVariant = "solid" | "subtle";
@@ -35,15 +36,15 @@ const emit = defineEmits<{
   dismiss: [];
 }>();
 
-// Check localStorage for previously dismissed banners
+// Check storage for previously dismissed banners
 const dismissed = ref(
-  props.storageKey ? localStorage.getItem(`cui-banner-${props.storageKey}`) === "1" : false,
+  props.storageKey ? safeGetItem(`cui-banner-${props.storageKey}`) === "1" : false,
 );
 
 function dismiss() {
   dismissed.value = true;
   if (props.storageKey) {
-    localStorage.setItem(`cui-banner-${props.storageKey}`, "1");
+    safeSetItem(`cui-banner-${props.storageKey}`, "1");
   }
   emit("dismiss");
 }
