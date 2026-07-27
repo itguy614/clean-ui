@@ -1,4 +1,4 @@
-import type { InjectionKey, Ref } from "vue";
+import type { InjectionKey, Ref, VNodeChild } from "vue";
 import type { CuiColor } from "../types/common";
 
 export type TabVariant = "underline" | "segmented";
@@ -10,6 +10,12 @@ export interface TabDefinition {
   label: string;
   disabled?: boolean;
   closeable?: boolean;
+  /**
+   * CuiTab's `#label` slot, forwarded so CuiTabs can render it inside the tab
+   * button (the button lives in the bar, which the parent owns). Absent when the
+   * tab has no `#label` slot, in which case the parent renders `label` as text.
+   */
+  labelSlot?: () => VNodeChild;
 }
 
 export interface TabsContext {

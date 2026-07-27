@@ -93,6 +93,83 @@ describe("CuiTabs + CuiTab", () => {
   });
 });
 
+describe("CuiTab #label slot", () => {
+  it("renders slot content inside the tab button instead of the label text", async () => {
+    const wrapper = mount(
+      defineComponent({
+        components: { CuiTabs, CuiTab },
+        setup: () => ({ count: ref(3) }),
+        template: `
+          <CuiTabs>
+            <CuiTab value="clients" label="Clients">
+              <template #label>Clients <span class="badge">{{ count }}</span></template>
+              Panel
+            </CuiTab>
+            <CuiTab value="plain" label="Plain">Panel two</CuiTab>
+          </CuiTabs>
+        `,
+      }),
+    );
+    await wrapper.vm.$nextTick();
+
+    const tabs = wrapper.findAll('[role="tab"]');
+    expect(tabs[0].find(".badge").exists()).toBe(true);
+    expect(tabs[0].text()).toBe("Clients 3");
+    // a tab without the slot still renders its label prop
+    expect(tabs[1].text()).toBe("Plain");
+    expect(tabs[1].find(".badge").exists()).toBe(false);
+  });
+
+  it("re-renders slot content when its reactive source changes", async () => {
+    const host = defineComponent({
+      components: { CuiTabs, CuiTab },
+      setup: () => ({ count: ref(3) }),
+      template: `
+        <CuiTabs>
+          <CuiTab value="clients" label="Clients">
+            <template #label>Clients <span class="badge">{{ count }}</span></template>
+            Panel
+          </CuiTab>
+        </CuiTabs>
+      `,
+    });
+    const wrapper = mount(host);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".badge").text()).toBe("3");
+
+    (wrapper.vm as unknown as { count: number }).count = 7;
+    await wrapper.vm.$nextTick();
+    // the slot is invoked by CuiTabs' render, so the count must still track
+    expect(wrapper.find(".badge").text()).toBe("7");
+  });
+
+  it("keeps tab order when a tab's label prop changes", async () => {
+    const host = defineComponent({
+      components: { CuiTabs, CuiTab },
+      setup: () => ({ first: ref("One") }),
+      template: `
+        <CuiTabs>
+          <CuiTab value="one" :label="first">Panel one</CuiTab>
+          <CuiTab value="two" label="Two">Panel two</CuiTab>
+          <CuiTab value="three" label="Three">Panel three</CuiTab>
+        </CuiTabs>
+      `,
+    });
+    const wrapper = mount(host);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findAll('[role="tab"]').map((t) => t.text())).toEqual(["One", "Two", "Three"]);
+
+    // Re-registering used to push the tab to the end of the bar
+    (wrapper.vm as unknown as { first: string }).first = "Renamed";
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findAll('[role="tab"]').map((t) => t.text())).toEqual([
+      "Renamed",
+      "Two",
+      "Three",
+    ]);
+  });
+});
+
 describe("CuiTabs overflow", () => {
   /** jsdom reports every element as 0x0; fake a scrollable bar. */
   function stubMetrics(

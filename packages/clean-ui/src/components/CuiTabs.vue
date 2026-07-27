@@ -56,7 +56,12 @@ watch(
 );
 
 function register(tab: TabDefinition) {
-  if (!tabs.value.find((t) => t.value === tab.value)) {
+  const idx = tabs.value.findIndex((t) => t.value === tab.value);
+  if (idx >= 0) {
+    // Update in place — re-pushing would jump the tab to the end of the bar
+    // whenever one of its props changed.
+    tabs.value[idx] = tab;
+  } else {
     tabs.value.push(tab);
   }
   // Auto-activate first tab
@@ -242,7 +247,10 @@ const messages = useMessages();
           :tabindex="activeTab === tab.value ? 0 : -1"
           @click="activate(tab.value)"
         >
-          <span class="cui-tabs__tab-content">{{ tab.label }}</span>
+          <span class="cui-tabs__tab-content">
+            <component :is="tab.labelSlot" v-if="tab.labelSlot" />
+            <template v-else>{{ tab.label }}</template>
+          </span>
           <button
             v-if="tab.closeable"
             type="button"
