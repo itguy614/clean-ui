@@ -50,6 +50,10 @@ export interface CuiMessages {
   stepper: { label: string };
   skeleton: { label: string };
   tabs: { closeTab: string };
+  table: {
+    /** Accessible name for the scroll region a table gets when it overflows. */
+    scrollRegionLabel: string;
+  };
   dataGrid: {
     noResultsTitle: string;
     noResultsDescription: string;
@@ -98,6 +102,7 @@ export const defaultMessages: CuiMessages = {
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
   tabs: { closeTab: "Close tab" },
+  table: { scrollRegionLabel: "Scrollable table" },
   dataGrid: {
     noResultsTitle: "No results found",
     noResultsDescription: "Try adjusting your search or filters.",

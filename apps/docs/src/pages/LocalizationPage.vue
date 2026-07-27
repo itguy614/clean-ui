@@ -132,7 +132,7 @@ const es = {
           <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>,
           <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>,
           <code class="cui-code">skeleton</code>, <code class="cui-code">tabs</code>,
-          <code class="cui-code">dataGrid</code>. See the
+          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code>. See the
           <code class="cui-code">CuiMessages</code> type for the full shape — your editor will
           autocomplete every key.
         </p>

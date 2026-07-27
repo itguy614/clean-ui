@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import {
   CuiBadge,
   CuiCard,
   CuiCardBody,
+  CuiSlider,
   CuiStack,
   CuiTable,
   CuiTableHead,
@@ -23,6 +25,8 @@ const employees = [
 ];
 
 const stickyStyle = { position: 'sticky' as const, top: '0', zIndex: 10, background: 'var(--color-surface-50)' };
+
+const overflowWidth = ref(343);
 
 const stickyData = [
   ...employees,
@@ -463,6 +467,67 @@ const stickyData = [
               </CuiTable>
             </CuiCardBody>
           </CuiCard>
+        </Example>
+
+        <!-- Horizontal overflow -->
+        <Example title="Horizontal overflow (automatic)" :code="`<!-- No props needed — a table too wide for its container
+     scrolls inside it instead of overflowing the page -->
+<CuiTable hoverable>
+  <CuiTableHead>…</CuiTableHead>
+  <CuiTableBody>…</CuiTableBody>
+</CuiTable>`">
+          <CuiStack spacing="4">
+            <p class="text-sm text-surface-500">
+              A table wider than its container scrolls horizontally within it, with a fade on the
+              clipped edge. The wrapper only becomes a scroll container when it has to — while the
+              table fits it stays inert, so a page-scrolled
+              <code class="cui-code">sticky-header</code> keeps working. Drag the width to see it
+              engage.
+            </p>
+
+            <CuiSlider
+              v-model="overflowWidth"
+              label="Container width"
+              :min="240"
+              :max="900"
+              :step="1"
+              show-value
+              :format-value="(v: number) => `${v}px`"
+            />
+
+            <div :style="{ width: `${overflowWidth}px`, maxWidth: '100%' }">
+              <CuiCard variant="outline">
+                <CuiCardBody no-padding>
+                  <CuiTable hoverable>
+                    <CuiTableHead>
+                      <CuiTableRow>
+                        <CuiTableCell nowrap>Name</CuiTableCell>
+                        <CuiTableCell nowrap>Role</CuiTableCell>
+                        <CuiTableCell nowrap>Email</CuiTableCell>
+                        <CuiTableCell nowrap>Status</CuiTableCell>
+                        <CuiTableCell nowrap align="right">Salary</CuiTableCell>
+                      </CuiTableRow>
+                    </CuiTableHead>
+                    <CuiTableBody>
+                      <CuiTableRow v-for="emp in employees" :key="emp.name">
+                        <CuiTableCell nowrap>{{ emp.name }}</CuiTableCell>
+                        <CuiTableCell nowrap>{{ emp.role }}</CuiTableCell>
+                        <CuiTableCell nowrap>{{ emp.email }}</CuiTableCell>
+                        <CuiTableCell nowrap>{{ emp.status }}</CuiTableCell>
+                        <CuiTableCell nowrap align="right">{{ emp.salary }}</CuiTableCell>
+                      </CuiTableRow>
+                    </CuiTableBody>
+                  </CuiTable>
+                </CuiCardBody>
+              </CuiCard>
+            </div>
+
+            <p class="text-sm text-surface-500">
+              Once it scrolls, the wrapper becomes a keyboard-reachable
+              <code class="cui-code">role="region"</code> with a focus ring — tab to it and use the
+              arrow keys.
+            </p>
+          </CuiStack>
         </Example>
 
       </CuiStack>
