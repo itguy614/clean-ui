@@ -9,7 +9,7 @@ const ROLE_LIST =
 // across bundlers in a published ESM library is brittle, and these only ever fire
 // on genuine misuse, never on valid usage.)
 const warned = new Set<string>();
-function warnOnce(message: string): void {
+export function warnOnce(message: string): void {
   if (warned.has(message)) return;
   warned.add(message);
   console.warn(message);

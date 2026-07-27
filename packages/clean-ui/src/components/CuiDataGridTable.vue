@@ -230,11 +230,12 @@ const auxHeaderCellStyle = computed(() =>
 // ---------------------------------------------------------------------------
 // Virtualization
 // ---------------------------------------------------------------------------
-// The scrollable element is CuiTable's internal wrapper div, which it exposes
-// via defineExpose({ scrollWrapper }) and only exists when maxHeight is set.
-// We capture it through CuiTable's :ref and hand it to the virtualizer so it
-// can listen for scroll events. When virtualization is off (or maxHeight is
-// unset) we leave the container null and the virtualizer stays dormant.
+// The scrollable element is CuiTable's internal wrapper div, which it always
+// renders and exposes via defineExpose({ scrollWrapper }). We capture it through
+// CuiTable's :ref and hand it to the virtualizer so it can listen for scroll
+// events. Vertical scrolling still requires maxHeight, so when virtualization is
+// off (or maxHeight is unset) we leave the container null and the virtualizer
+// stays dormant.
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
 function setScrollContainer(wrapper: HTMLElement | null) {
