@@ -1,4 +1,12 @@
-@import "tailwindcss";
+/* `source(none)` disables Tailwind's automatic content detection for this
+   stylesheet. The library's components are styled entirely with their own
+   `.cui-*` CSS and never use utility classes, but the scanner still picked
+   candidates out of incidental source text ("hidden", "flex", "block", …) and
+   emitted real utilities into `@layer utilities`. Shipped in dist, those merged
+   into a consuming app's own utilities layer *after* its Tailwind — so our bare
+   `.hidden` beat their `.md:flex` and every `hidden md:flex` toggle stayed
+   collapsed. We generate no utilities; the consumer's Tailwind owns that layer. */
+@import "tailwindcss" source(none);
 @import "./themes.css";
 /* Color scale (@theme) — single source of truth, shared with the docs app. */
 @import "./theme.css";
