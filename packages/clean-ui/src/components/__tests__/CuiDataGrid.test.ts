@@ -15,10 +15,19 @@ const data: DataGridRow[] = [
 ];
 
 function headerCells(wrapper: ReturnType<typeof mount>) {
-  return wrapper.findAll("thead th, thead td");
+  return wrapper.findAll("thead th");
 }
 
 describe("CuiDataGrid sticky columns", () => {
+  it("renders header cells as <th scope=col>", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: { columns, data, maxHeight: "320px", hideToolbar: true },
+    });
+    expect(wrapper.findAll("thead td")).toHaveLength(0);
+    expect(headerCells(wrapper)[0].attributes("scope")).toBe("col");
+    wrapper.unmount();
+  });
+
   it("pins a sticky-column header cell on BOTH axes (top + left) so it stays put on vertical scroll", () => {
     const wrapper = mount(CuiDataGrid, {
       props: { columns, data, maxHeight: "320px", hideToolbar: true },
