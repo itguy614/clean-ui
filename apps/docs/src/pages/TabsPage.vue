@@ -7,6 +7,8 @@ import {
   CuiFormField,
   CuiIcon,
   CuiInput,
+  CuiSlideover,
+  CuiSlider,
   CuiStack,
   CuiTab,
   CuiTabs,
@@ -24,6 +26,20 @@ const closeable = ref("file1");
 const closeableTabs = ref(["file1", "file2", "file3"]);
 const transitionTab = ref("fade");
 const lazyTab = ref("tab1");
+
+const overflowTabs = [
+  { value: "general", label: "General" },
+  { value: "notifications", label: "Notifications" },
+  { value: "appearance", label: "Appearance" },
+  { value: "integrations", label: "Integrations" },
+  { value: "billing", label: "Billing & Invoices" },
+  { value: "advanced", label: "Advanced" },
+];
+const overflow = ref("general");
+const overflowWidth = ref(343);
+const overflowVariant = ref<"underline" | "segmented">("underline");
+const slideoverOpen = ref(false);
+const slideoverTab = ref("general");
 
 function removeTab(value: string) {
   closeableTabs.value = closeableTabs.value.filter((t) => t !== value);
@@ -307,6 +323,98 @@ function resetTabs() {
               </CuiTab>
             </CuiTabs>
             <p class="text-sm text-surface-500">Panels are destroyed when inactive (v-if instead of v-show). Good for deferring expensive renders or data fetches.</p>
+          </CuiStack>
+        </Example>
+
+        <!-- Overflow -->
+        <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit -->
+<div style=&quot;width: 343px&quot;>
+  <CuiTabs v-model=&quot;active&quot;>
+    <CuiTab value=&quot;general&quot; label=&quot;General&quot;>…</CuiTab>
+    <CuiTab value=&quot;notifications&quot; label=&quot;Notifications&quot;>…</CuiTab>
+    <!-- …more tabs than fit… -->
+  </CuiTabs>
+</div>`">
+          <CuiStack spacing="4">
+            <p class="text-sm text-surface-500">
+              When the tabs are wider than their container the bar scrolls horizontally, and the
+              clipped edge fades to show there's more. Drag the width to see it engage — the active
+              tab is always scrolled into view.
+            </p>
+
+            <CuiSlider
+              v-model="overflowWidth"
+              label="Container width"
+              :min="240"
+              :max="720"
+              :step="1"
+              show-value
+              :format-value="(v: number) => `${v}px`"
+            />
+
+            <div
+              class="rounded-lg border border-dashed p-3"
+              style="border-color: var(--cui-border)"
+              :style="{ width: `${overflowWidth}px`, maxWidth: '100%' }"
+            >
+              <CuiTabs v-model="overflow" :variant="overflowVariant">
+                <CuiTab
+                  v-for="tab in overflowTabs"
+                  :key="tab.value"
+                  :value="tab.value"
+                  :label="tab.label"
+                >
+                  <p>{{ tab.label }} panel.</p>
+                </CuiTab>
+              </CuiTabs>
+            </div>
+
+            <CuiFlex gap="4" align="center" wrap="wrap">
+              <CuiToggle
+                :model-value="overflowVariant === 'segmented'"
+                label="Segmented variant"
+                @update:model-value="overflowVariant = $event ? 'segmented' : 'underline'"
+              />
+              <CuiButton
+                size="sm"
+                @click="overflow = overflowTabs[overflowTabs.length - 1].value"
+              >
+                Activate last tab
+              </CuiButton>
+            </CuiFlex>
+          </CuiStack>
+        </Example>
+
+        <!-- Overflow inside a clipping overlay -->
+        <Example title="Overflow inside a Slideover" :code="`<CuiSlideover v-model:visible=&quot;open&quot; title=&quot;Settings&quot; size=&quot;sm&quot;>
+  <CuiTabs v-model=&quot;active&quot;>
+    <!-- Tabs stay reachable even though the panel is overflow: hidden -->
+  </CuiTabs>
+</CuiSlideover>`">
+          <CuiStack spacing="3">
+            <p class="text-sm text-surface-500">
+              The original bug report: overlay panels are
+              <code class="cui-code">overflow: hidden</code>, so
+              before this fix the trailing tabs were clipped away with no way to reach them.
+            </p>
+            <div>
+              <CuiButton @click="slideoverOpen = true">
+                <template #prefix><CuiIcon name="sidebar" /></template>
+                Open settings panel
+              </CuiButton>
+            </div>
+            <CuiSlideover v-model:visible="slideoverOpen" title="Settings" size="sm">
+              <CuiTabs v-model="slideoverTab">
+                <CuiTab
+                  v-for="tab in overflowTabs"
+                  :key="tab.value"
+                  :value="tab.value"
+                  :label="tab.label"
+                >
+                  <p>{{ tab.label }} settings go here.</p>
+                </CuiTab>
+              </CuiTabs>
+            </CuiSlideover>
           </CuiStack>
         </Example>
 
