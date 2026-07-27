@@ -1,4 +1,5 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 
 // Global set of active overlays shared across all instances
 const globalActiveOverlays = new Set<symbol>();
@@ -36,6 +37,24 @@ export function useOverlay(options: UseOverlayOptions) {
   const isAnimating = ref(false);
   const previousFocus = ref<HTMLElement | null>(null);
 
+  // The scroll lock is reference-counted globally, so this instance must
+  // release exactly what it took. close() can run without a preceding open
+  // (a `visible` flag set false while already closed) and unmount races the
+  // exit-animation timeout, so both paths go through this guard.
+  let holdsScrollLock = false;
+
+  function acquireScrollLock() {
+    if (holdsScrollLock) return;
+    holdsScrollLock = true;
+    lockBodyScroll();
+  }
+
+  function releaseScrollLock() {
+    if (!holdsScrollLock) return;
+    holdsScrollLock = false;
+    unlockBodyScroll();
+  }
+
   function openOverlay() {
     // One-at-a-time check
     if (!getAllowNested() && globalActiveOverlays.size > 0) {
@@ -46,8 +65,7 @@ export function useOverlay(options: UseOverlayOptions) {
     previousFocus.value = document.activeElement as HTMLElement;
     isVisible.value = true;
 
-    // Lock body scroll
-    document.body.style.overflow = "hidden";
+    acquireScrollLock();
 
     // nextTick alone schedules a microtask, which runs before the browser
     // paints — so the element mounts (off-screen transform) and flips to its
@@ -72,10 +90,7 @@ export function useOverlay(options: UseOverlayOptions) {
       onUpdateOpen(false);
       onClose();
 
-      // Restore body scroll if no other overlays
-      if (globalActiveOverlays.size === 0) {
-        document.body.style.overflow = "";
-      }
+      releaseScrollLock();
 
       // Return focus
       previousFocus.value?.focus();
@@ -134,9 +149,7 @@ export function useOverlay(options: UseOverlayOptions) {
 
   onUnmounted(() => {
     globalActiveOverlays.delete(overlayId);
-    if (globalActiveOverlays.size === 0) {
-      document.body.style.overflow = "";
-    }
+    releaseScrollLock();
   });
 
   return {

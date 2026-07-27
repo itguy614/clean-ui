@@ -39,6 +39,11 @@ if (typeof globalThis.localStorage?.getItem !== "function") {
   });
 }
 
+// jsdom ships window.scrollTo as a stub that logs "Not implemented: window.scrollTo"
+// on every call. The overlay scroll lock restores the scroll position through it,
+// so replace it with a silent no-op (still spy-able) instead of drowning the output.
+window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+
 if (!("ResizeObserver" in globalThis)) {
   globalThis.ResizeObserver = class {
     observe() {}

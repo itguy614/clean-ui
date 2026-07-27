@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `table.scrollRegionLabel` message key (default `"Scrollable table"`) — the accessible name for a table's scroll region (#58)
 
 ### Fixed
+- Overlay scroll lock now holds on iOS Safari — `overflow: hidden` on `<body>` doesn't stop touch scrolling there, so the page kept panning behind an open `CuiModal` / `CuiSlideover`. On iOS the body is pinned with `position: fixed` at its current offset and the scroll position is restored on close; other platforms keep the lighter `overflow` lock (#61)
+- Overlay scroll lock is reference-counted, so closing one of two stacked overlays no longer unlocks the page, and it restores the previous inline `<body>` styles instead of blanking them (#61)
+- Opening an overlay no longer shifts the page sideways where scrollbars take up space — the removed scrollbar's width is held as padding (#61)
 - A `CuiTab` no longer jumps to the end of the tab bar when one of its props changes — re-registration now updates in place instead of removing and re-appending (#45)
 - Storage access no longer throws where `localStorage` exists but is unusable — sandboxed iframes without `allow-same-origin`, Safari private mode, blocked cookies, exceeded quota. `useDensity`, `useDataGridViews`' `localStorageViewAdapter`, and `CuiBanner` were unguarded; `useDensity` read at module scope, so a single throw took down every import of the library barrel. All storage now routes through one guarded helper (#67)
 - Test suite runs on modern Node again: Node ≥22 ships an inert global `localStorage` that shadows jsdom's, which broke the `useDensity` and smoke suites at collect time. CI now runs a Node 20 + 24 matrix so runtime-dependent breakage surfaces (#67)
