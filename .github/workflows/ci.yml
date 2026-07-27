@@ -12,6 +12,12 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 is the support floor; 24 catches breakage from newer runtime
+        # globals (e.g. Node >= 22's built-in localStorage shadowing jsdom's).
+        node-version: [20, 24]
     steps:
       - uses: actions/checkout@v4
 
@@ -19,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile

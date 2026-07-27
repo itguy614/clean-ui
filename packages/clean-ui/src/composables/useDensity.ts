@@ -1,4 +1,5 @@
 import { ref, watch } from "vue";
+import { safeGetItem, safeSetItem } from "../utils/storage";
 
 export type DensityId = "compact" | "default" | "comfortable";
 
@@ -24,8 +25,7 @@ const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
 const activeDensity = ref<DensityId>(loadDensity());
 
 function loadDensity(): DensityId {
-  if (typeof window === "undefined") return DEFAULT;
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = safeGetItem(STORAGE_KEY);
   return stored && VALID_IDS.has(stored) ? (stored as DensityId) : DEFAULT;
 }
 
@@ -40,7 +40,7 @@ function applyDensity(id: DensityId) {
   // default == :root baseline, so no class is needed for it.
   if (id !== "default") root.classList.add(`${CLASS_PREFIX}${id}`);
 
-  localStorage.setItem(STORAGE_KEY, id);
+  safeSetItem(STORAGE_KEY, id);
 }
 
 // Apply on init + on change.

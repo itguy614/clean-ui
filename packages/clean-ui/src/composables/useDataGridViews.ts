@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import type { DataGridSavedView, DataGridViewAdapter } from "../types/data-grid";
+import { safeGetItem, safeSetItem } from "../utils/storage";
 
 /** Built-in localStorage adapter */
 export function localStorageViewAdapter(prefix = "cui-datagrid"): DataGridViewAdapter {
@@ -9,10 +10,12 @@ export function localStorageViewAdapter(prefix = "cui-datagrid"): DataGridViewAd
 
   return {
     async load(gridId: string): Promise<DataGridSavedView[]> {
+      const raw = safeGetItem(storageKey(gridId));
+      if (!raw) return [];
       try {
-        const raw = localStorage.getItem(storageKey(gridId));
-        return raw ? JSON.parse(raw) : [];
+        return JSON.parse(raw);
       } catch {
+        // Corrupt payload — treat as no saved views
         return [];
       }
     },
@@ -25,13 +28,13 @@ export function localStorageViewAdapter(prefix = "cui-datagrid"): DataGridViewAd
       } else {
         views.push(view);
       }
-      localStorage.setItem(storageKey(gridId), JSON.stringify(views));
+      safeSetItem(storageKey(gridId), JSON.stringify(views));
     },
 
     async remove(gridId: string, viewId: string): Promise<void> {
       const views = await this.load(gridId);
       const filtered = views.filter((v) => v.id !== viewId);
-      localStorage.setItem(storageKey(gridId), JSON.stringify(filtered));
+      safeSetItem(storageKey(gridId), JSON.stringify(filtered));
     },
   };
 }

@@ -1,4 +1,5 @@
 import { ref, watch } from "vue";
+import { safeGetItem, safeSetItem } from "../utils/storage";
 
 export interface ThemePreset {
   id: string;
@@ -20,15 +21,8 @@ export const THEME_PRESETS: ThemePreset[] = [
 const STORAGE_KEY = "cui-theme";
 const CLASS_PREFIX = "cui-theme-";
 
-const isBrowser = typeof window !== "undefined";
-
 function loadTheme(): string {
-  if (!isBrowser) return "mono";
-  try {
-    return localStorage.getItem(STORAGE_KEY) ?? "mono";
-  } catch {
-    return "mono";
-  }
+  return safeGetItem(STORAGE_KEY) ?? "mono";
 }
 
 // Shared reactive state
@@ -54,13 +48,7 @@ applyTheme(activeTheme.value);
 
 watch(activeTheme, (newTheme) => {
   applyTheme(newTheme);
-  if (isBrowser) {
-    try {
-      localStorage.setItem(STORAGE_KEY, newTheme);
-    } catch {
-      // localStorage unavailable (SSR, private browsing, etc.)
-    }
-  }
+  safeSetItem(STORAGE_KEY, newTheme);
 });
 
 /**
