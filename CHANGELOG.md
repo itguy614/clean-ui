@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- `CuiTabs` tab bar now scrolls when the tabs overflow their container, with an edge fade marking the clipped side — trailing tabs were previously clipped and unreachable inside `CuiModal` / `CuiSlideover` (#57)
+- `CuiTabs` keyboard navigation no longer focuses a tab in a different `CuiTabs` instance when two tab sets on a page share tab values (#57)
+
 ## [1.0.1] - 2026-06-29
 
 ### Added
