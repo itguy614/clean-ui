@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-07-28
+
+### Added
+- `CuiTab` accepts a `#label` slot for custom tab-button content — badges, icons, status dots. The `label` prop stays required and renders whenever no slot is given (#45)
 
 ### Changed
 - **BREAKING (icons):** `CuiIcon` no longer resolves arbitrary names by importing all of `@phosphor-icons/vue`. It now renders from a static set — the 52 icons the library's own components draw — plus anything you register. An unregistered name renders a `?` glyph and logs how to fix it. Measured on an app rendering one icon: **1306 kB → 124 kB gzip, 1513 icons → 52** (#42)
@@ -13,11 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `<CuiIcon :icon="PhRocket" />` passes a component directly
   - `import "@itguy614/clean-ui/icons/lazy"` restores the old any-name behavior in one line, at the old bundle cost — for apps whose icon names come from data
 - Icons in the static set now render synchronously, so they appear in SSR output and on first paint instead of after mount — the placeholder and the hydration workaround are gone for them (#42)
-
-### Added
-- `CuiTab` accepts a `#label` slot for custom tab-button content — badges, icons, status dots. The `label` prop stays required and renders whenever no slot is given (#45)
-
-### Changed
 - `CuiTable` header backgrounds now reference the `--cui-table-head-bg` token instead of raw surface scale steps, so overriding it works on sticky tables and `CuiDataGrid` (#64)
 - `CuiTable` now always renders its scroll wrapper (`<div class="cui-table-wrapper">`) around the `<table>`, not only when `minWidth`/`maxHeight` is passed. The wrapper stays inert (`overflow: visible`) while the table fits and only becomes a scroll container when the table actually overflows, so page-scrolled `stickyHeader` tables are unaffected. **DOM change:** a CSS selector matching `.cui-table` as a direct child of a specific element needs updating (#58)
 - New `table.scrollRegionLabel` message key (default `"Scrollable table"`) — the accessible name for a table's scroll region (#58)
