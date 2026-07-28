@@ -13,7 +13,7 @@
 - pnpm monorepo: `packages/clean-ui` (library) + `apps/docs` (docs site)
 - Vue 3.5+ / TypeScript / Tailwind CSS v4 / Vite 6
 - Component prefix: `Cui` (CuiButton, CuiGrid, etc.)
-- Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`
+- Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon name the library renders must be statically imported into `src/icons/builtin.ts`** — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
 - Positioning: `@floating-ui/vue` for tooltips; manual `computeDropdownPosition` for dropdowns/select
 
 ## Build & Dev
@@ -182,7 +182,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 ## Adding a New Component — Checklist
 1. Read this file first. Follow established patterns.
 2. Create the `.vue` file in `src/components/`. If it needs shared context, create a `{name}-context.ts` file (NOT exports in the .vue file).
-3. Use `CuiIcon` for all icons (never inline SVGs).
+3. Use `CuiIcon` for all icons (never inline SVGs). Add any new icon name to `src/icons/builtin.ts`.
 4. Import sizes from `utils/sizing.ts`, not local maps.
 5. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
 6. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.

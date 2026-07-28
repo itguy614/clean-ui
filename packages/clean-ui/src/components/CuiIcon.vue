@@ -1,14 +1,32 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, type Component } from "vue";
+import { shallowRef, computed, watchEffect, toRaw, type Component } from "vue";
 import type { CuiSize, CuiColorOrCss, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
+import {
+  resolveRegisteredIcon,
+  getIconFallbackResolver,
+  type IconFallbackResolver,
+} from "../icons/registry";
+import { FALLBACK_ICON } from "../icons/builtin";
+import { warnOnce } from "../utils/devWarn";
 
 export type IconWeight = "thin" | "light" | "regular" | "bold" | "fill" | "duotone";
 export type IconSize = CuiSize | (string & {});
 
 export interface CuiIconProps extends HideableProps {
-  /** Phosphor icon name in kebab-case (e.g. "check", "warning-circle", "eye-slash") */
-  name: string;
+  /**
+   * Phosphor icon name in kebab-case (e.g. "check", "warning-circle").
+   * Resolved from the built-in set and anything passed to `registerIcons()`.
+   * An unregistered name still renders, via a lazy import of the whole Phosphor
+   * package — which is not tree-shakeable, so it warns in the console.
+   */
+  name?: string;
+  /**
+   * A Phosphor component passed directly, e.g. `:icon="PhRocket"`. The simplest
+   * tree-shakeable path — the consumer's own static import. Takes precedence
+   * over `name`.
+   */
+  icon?: Component;
   /** Icon weight/style */
   weight?: IconWeight;
   /** Icon size — named scale (xs–xl) or custom CSS value */
@@ -45,40 +63,87 @@ function toPascalCase(name: string): string {
   return "Ph" + name.split("-").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join("");
 }
 
-// Cache resolved icon components so they're only loaded once per icon name
-const iconCache = new Map<string, Component>();
-const iconComponent = ref<Component | null>(null);
+/**
+ * Icons resolve in three steps:
+ *
+ * 1. `:icon` — a component handed straight to us.
+ * 2. `name` against the built-in set + `registerIcons()`. Synchronous, so the
+ *    icon renders on first paint and during SSR (both sides read the same static
+ *    map, so there's nothing to mismatch).
+ * 3. Neither — the fallback glyph, plus a warning naming the fix.
+ *
+ * There is deliberately NO `import("@phosphor-icons/vue")` here: a bundler that
+ * sees one has to keep all ~1500 icons, which is exactly the cost #42 is about
+ * (1315 kB gzip with it, 124 kB without). Consumers who want any-name resolution
+ * install a resolver by importing `@itguy614/clean-ui/icons/lazy`, which keeps
+ * the package out of every other bundle.
+ */
+// shallowRef, not ref: a plain ref deep-converts the component definition, which
+// makes Vue log "received a Component that was made a reactive object".
+const asyncResolved = shallowRef<Component | null>(null);
 
-// Resolve the icon for a given name. Runs in the browser only (called from
-// onMounted + a watcher) so the Phosphor import never executes on the server —
-// avoiding hydration mismatches. The `requested`/guard handles a reactive
-// `name` change whose async import resolves out of order.
-async function resolveIcon(name: string) {
-  const pascalName = toPascalCase(name);
+const staticIcon = computed<Component | null>(() => {
+  // toRaw: an icon held in reactive state arrives as a proxy, and rendering a
+  // reactive component definition makes Vue warn about the overhead.
+  if (props.icon) return toRaw(props.icon);
+  if (!props.name) return null;
+  return resolveRegisteredIcon(props.name) ?? null;
+});
 
-  if (iconCache.has(pascalName)) {
-    iconComponent.value = iconCache.get(pascalName)!;
-    return;
-  }
+const iconComponent = computed<Component | null>(() => staticIcon.value ?? asyncResolved.value);
 
+function warnUnknown(name: string) {
+  warnOnce(
+    `[CuiIcon] unknown icon "${name}". Register it so it ships with your bundle:\n` +
+      `  import { registerIcons } from "@itguy614/clean-ui";\n` +
+      `  import { ${toPascalCase(name)} } from "@phosphor-icons/vue";\n` +
+      `  registerIcons({ "${name}": ${toPascalCase(name)} });\n` +
+      `Or, to resolve any name at runtime (pulls in the whole icon package):\n` +
+      `  import "@itguy614/clean-ui/icons/lazy";`,
+  );
+}
+
+async function resolveViaFallback(name: string, resolver: IconFallbackResolver) {
   try {
-    const mod = await import("@phosphor-icons/vue");
-    let resolved = mod[pascalName as keyof typeof mod] as Component | undefined;
+    const resolved = await resolver(name);
     if (!resolved) {
-      console.warn(`[CuiIcon] Icon "${name}" (${pascalName}) not found in @phosphor-icons/vue`);
-      resolved = mod.PhQuestion as Component;
+      warnOnce(`[CuiIcon] Icon "${name}" (${toPascalCase(name)}) not found in @phosphor-icons/vue`);
     }
-    iconCache.set(pascalName, resolved);
-    // Ignore a stale resolution if `name` changed while we were importing.
-    if (props.name === name) iconComponent.value = resolved;
+    // Ignore a stale resolution if `name` changed while we were resolving.
+    if (props.name === name) asyncResolved.value = resolved ?? FALLBACK_ICON;
   } catch {
-    console.warn(`[CuiIcon] Failed to load icon "${name}"`);
+    warnOnce(`[CuiIcon] Failed to load icon "${name}"`);
+    if (props.name === name) asyncResolved.value = FALLBACK_ICON;
   }
 }
 
-onMounted(() => resolveIcon(props.name));
-// Re-resolve when the name prop changes (browser-only; onMounted has run).
-watch(() => props.name, (name) => resolveIcon(name));
+watchEffect(() => {
+  if (staticIcon.value || !props.name) {
+    asyncResolved.value = null;
+    return;
+  }
+
+  const resolver = getIconFallbackResolver();
+  if (!resolver) {
+    // Render the "?" glyph rather than nothing, so a typo is visible instead of
+    // silently blank — same as pre-1.1 behaviour for a bad name.
+    warnUnknown(props.name);
+    asyncResolved.value = FALLBACK_ICON;
+    return;
+  }
+
+  // A resolver can't complete during SSR; the placeholder covers the gap.
+  if (typeof window === "undefined") return;
+  resolveViaFallback(props.name, resolver);
+});
+
+// Unconditional, matching the rest of utils/devWarn: only genuine misuse
+// reaches it, and dev detection in a published ESM library is unreliable.
+watchEffect(() => {
+  if (!props.name && !props.icon) {
+    warnOnce("[CuiIcon] requires either a `name` or an `icon` prop.");
+  }
+});
 
 // Duotone CSS overrides
 const wrapperStyle = computed(() => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CuiCard, CuiCardBody, CuiIcon, CuiFlex, CuiStack } from "@itguy614/clean-ui";
+import { CuiAlert, CuiCard, CuiCardBody, CuiIcon, CuiFlex, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
 
@@ -36,7 +36,8 @@ const commonIcons = [
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'name', type: 'string', default: '-', description: 'Phosphor icon name in kebab-case (e.g. check, warning-circle)' },
+          { name: 'name', type: 'string', default: '-', description: 'Phosphor icon name in kebab-case (e.g. check, warning-circle). Resolved from the built-in set plus anything you registered' },
+          { name: 'icon', type: 'Component', default: '-', description: 'A Phosphor component passed directly, e.g. :icon=&quot;PhRocket&quot;. Takes precedence over name' },
           { name: 'weight', type: 'thin | light | regular | bold | fill | duotone', default: 'regular', description: 'Icon weight/style' },
           { name: 'size', type: 'xs | sm | md | lg | xl | string', default: 'md', description: 'Size (named or custom CSS value)' },
           { name: 'color', type: 'string', default: 'currentColor', description: 'Icon color (inherits from parent by default)' },
@@ -45,6 +46,71 @@ const commonIcons = [
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
         ]"
       />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Tree-shaking</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="4">
+            <p>
+              Phosphor ships ~1,500 Vue components. clean-ui statically imports only the
+              <strong>52 icons its own components draw</strong>, so that's all you pay for by
+              default. Icon names beyond that set need to reach your bundle somehow — the
+              library can't know them in advance.
+            </p>
+
+            <div>
+              <h3 class="mb-2 text-lg font-semibold">Register the icons you use</h3>
+              <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
+                The recommended path: your static import is what makes it tree-shakeable.
+                Call it once, anywhere — app entry, a route module, a lazy feature.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import { registerIcons } from "@itguy614/clean-ui";
+import { PhRocket, PhGithubLogo } from "@phosphor-icons/vue";
+
+registerIcons({ rocket: PhRocket, "github-logo": PhGithubLogo });
+
+// then anywhere:
+&lt;CuiIcon name="rocket" /&gt;</code></pre>
+            </div>
+
+            <div>
+              <h3 class="mb-2 text-lg font-semibold">Or pass the component directly</h3>
+              <pre class="cui-pre"><code class="cui-code">import { PhRocket } from "@phosphor-icons/vue";
+
+&lt;CuiIcon :icon="PhRocket" /&gt;</code></pre>
+            </div>
+
+            <div>
+              <h3 class="mb-2 text-lg font-semibold">Or accept the whole package</h3>
+              <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
+                One import makes any name resolve at runtime, as in clean-ui 1.0.x. Convenient
+                when icon names come from data and can't be enumerated — but it pulls in every
+                icon, measured on an app rendering a single icon:
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import "@itguy614/clean-ui/icons/lazy";</code></pre>
+              <CuiFlex gap="6" class="mt-3 text-sm" wrap="wrap">
+                <div>
+                  <div style="color: var(--cui-text-secondary)">default</div>
+                  <div><strong>124 kB</strong> gzip · 52 icons</div>
+                </div>
+                <div>
+                  <div style="color: var(--cui-text-secondary)">with icons/lazy</div>
+                  <div><strong>1,315 kB</strong> gzip · the full set</div>
+                </div>
+              </CuiFlex>
+            </div>
+
+            <CuiAlert color="info" title="This site opts in">
+              The gallery below renders arbitrary Phosphor names to show what's available, so
+              the docs import <code class="cui-code">icons/lazy</code>. An unregistered name in
+              an app without it renders a <code class="cui-code">?</code> glyph and logs how to
+              register it.
+            </CuiAlert>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
     </div>
 
     <div>

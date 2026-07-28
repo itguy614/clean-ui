@@ -35,6 +35,10 @@
       "import": "./dist/index.js"
     },
     "./styles": "./dist/clean-ui.css",
+    "./icons/lazy": {
+      "types": "./dist/icons/lazy.d.ts",
+      "import": "./dist/icons/lazy.js"
+    },
     "./*": "./dist/*"
   },
   "files": [
@@ -43,7 +47,8 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "./dist/icons/lazy.js"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",
