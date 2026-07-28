@@ -279,6 +279,18 @@ export type {
 } from "./types/grid";
 
 // Composable exports
+// Icon registry — register statically-imported Phosphor icons so they tree-shake.
+// The lazy any-name resolver is NOT re-exported here on purpose: importing it
+// would pull the whole icon package into every consumer bundle. It lives at
+// "@itguy614/clean-ui/icons/lazy".
+export {
+  registerIcons,
+  hasIcon,
+  registeredIconNames,
+  setIconFallbackResolver,
+  type IconFallbackResolver,
+} from "./icons/registry";
+export { BUILTIN_ICONS } from "./icons/builtin";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";

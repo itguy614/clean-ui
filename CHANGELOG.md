@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING (icons):** `CuiIcon` no longer resolves arbitrary names by importing all of `@phosphor-icons/vue`. It now renders from a static set — the 52 icons the library's own components draw — plus anything you register. An unregistered name renders a `?` glyph and logs how to fix it. Measured on an app rendering one icon: **1306 kB → 124 kB gzip, 1513 icons → 52** (#42)
+  - `registerIcons({ rocket: PhRocket })` adds your own statically-imported icons; each adds only itself to the bundle
+  - `<CuiIcon :icon="PhRocket" />` passes a component directly
+  - `import "@itguy614/clean-ui/icons/lazy"` restores the old any-name behavior in one line, at the old bundle cost — for apps whose icon names come from data
+- Icons in the static set now render synchronously, so they appear in SSR output and on first paint instead of after mount — the placeholder and the hydration workaround are gone for them (#42)
+
 ### Added
 - `CuiTab` accepts a `#label` slot for custom tab-button content — badges, icons, status dots. The `label` prop stays required and renders whenever no slot is given (#45)
 

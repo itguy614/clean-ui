@@ -8,12 +8,18 @@ export default defineConfig({
   base: process.env.VITE_BASE ?? "/",
   plugins: [vue(), tailwindcss()],
   resolve: {
-    alias: {
-      "@itguy614/clean-ui": resolve(
-        __dirname,
-        "../../packages/clean-ui/src/index.ts",
-      ),
-    },
+    // Array form, longest find first: an object alias prefix-matches, so the bare
+    // package key would also swallow the "/icons/lazy" subpath.
+    alias: [
+      {
+        find: "@itguy614/clean-ui/icons/lazy",
+        replacement: resolve(__dirname, "../../packages/clean-ui/src/icons/lazy.ts"),
+      },
+      {
+        find: /^@itguy614\/clean-ui$/,
+        replacement: resolve(__dirname, "../../packages/clean-ui/src/index.ts"),
+      },
+    ],
   },
   server: {
     // Allow importing repo-root files (VERSION, CHANGELOG.md) via ?raw in dev.
