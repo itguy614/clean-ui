@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import CuiTreeView from "../CuiTreeView.vue";
 import CuiTreeNode from "../CuiTreeNode.vue";
+import CuiIcon from "../CuiIcon.vue";
 import type { TreeNode } from "../CuiTreeView.vue";
 
 // Find the CuiTreeNode whose OWN node.id matches, then return its clickable
@@ -108,5 +109,68 @@ describe("CuiTreeView", () => {
 
     expect(wrapper.emitted("node-click")).toBeUndefined();
     expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+  });
+});
+
+describe("CuiTreeView chevron hit target", () => {
+  /** The chevron box is the row's first child. */
+  function chevronFor(wrapper: VueWrapper, id: string | number) {
+    return rowFor(wrapper, id).element.firstElementChild as HTMLElement;
+  }
+
+  // jsdom does no layout, so assert the emitted sizing expression: the 24px
+  // floor (WCAG 2.5.8) must come from scaleControlHeight, not the glyph size.
+  it.each([
+    ["sm", "0.75rem"],
+    ["md", "0.875rem"],
+    ["lg", "1rem"],
+  ])("floors the %s chevron box at 24px while the glyph stays %s", (size, iconSize) => {
+    const wrapper = mount(CuiTreeView, { props: { ...baseProps, size } });
+    const chevron = chevronFor(wrapper, "fruits");
+
+    expect(chevron.style.width).toBe(`max(24px, calc(${iconSize} * var(--cui-density-scale, 1)))`);
+    expect(chevron.style.height).toBe(chevron.style.width);
+
+    // the caret glyph itself is unchanged — read the icon's size prop, since
+    // the rendered phosphor svg carries its dimensions differently
+    const caret = wrapper
+      .findAllComponents(CuiIcon)
+      .find((c) => c.props("name") === "caret-right")!;
+    expect(caret.props("size")).toBe(iconSize);
+  });
+
+  it("gives leaf nodes the same box so rows stay aligned and equal height", () => {
+    const wrapper = mount(CuiTreeView, {
+      props: { ...baseProps, size: "sm", defaultExpanded: ["fruits"] },
+    });
+    const parent = chevronFor(wrapper, "fruits");
+    const leaf = chevronFor(wrapper, "apple");
+
+    expect(leaf.style.width).toBe(parent.style.width);
+    expect(leaf.style.height).toBe(parent.style.height);
+    // ...but a leaf draws no caret
+    expect(leaf.querySelector("svg")).toBeNull();
+  });
+
+  it("keeps the caret optically in place by offsetting the wider box", () => {
+    const wrapper = mount(CuiTreeView, { props: { ...baseProps, size: "sm" } });
+    const chevron = chevronFor(wrapper, "fruits");
+
+    // negative margin == -(hitSize - iconSize)/2, so the glyph's centre doesn't
+    // move and stays aligned with the showLines connectors
+    expect(chevron.style.marginLeft).toBe(
+      "calc((0.75rem - max(24px, calc(0.75rem * var(--cui-density-scale, 1)))) / 2)",
+    );
+  });
+
+  it("still toggles expansion when the chevron box is clicked", async () => {
+    const wrapper = mount(CuiTreeView, { props: { ...baseProps } });
+    const chevron = chevronFor(wrapper, "fruits");
+    chevron.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.emitted("node-expand")![0]).toEqual([expect.objectContaining({ id: "fruits" }), true]);
+    // the row's own select handler must not also fire
+    expect(wrapper.emitted("node-click")).toBeUndefined();
   });
 });

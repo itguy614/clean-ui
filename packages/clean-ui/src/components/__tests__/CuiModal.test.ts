@@ -89,6 +89,45 @@ describe("CuiModal", () => {
     wrapper.unmount();
   });
 
+  it("locks body scroll while open and releases it on close", async () => {
+    const wrapper = mount(CuiModal, { props: { visible: true } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await wrapper.setProps({ visible: false });
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.body.style.overflow).toBe("");
+    wrapper.unmount();
+  });
+
+  it("releases the lock when unmounted while still open", async () => {
+    const wrapper = mount(CuiModal, { props: { visible: true } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    wrapper.unmount();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("keeps the lock until the last of two stacked overlays closes", async () => {
+    const first = mount(CuiModal, { props: { visible: true } });
+    const second = mount(CuiModal, { props: { visible: true, allowNested: true } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await second.setProps({ visible: false });
+    await vi.runOnlyPendingTimersAsync();
+    // the first modal is still open — the page must stay locked
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await first.setProps({ visible: false });
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.body.style.overflow).toBe("");
+
+    first.unmount();
+    second.unmount();
+  });
+
   it("persistent blocks Escape and backdrop close", async () => {
     const wrapper = mount(CuiModal, { props: { visible: true, persistent: true } });
     await vi.runOnlyPendingTimersAsync();

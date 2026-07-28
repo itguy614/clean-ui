@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import CuiTreeNode from "./CuiTreeNode.vue";
 import type { HideableProps } from "../types/common";
-import { scaleDensity } from "../utils/sizing";
+import { scaleDensity, scaleControlHeight } from "../utils/sizing";
 
 export interface TreeNode {
   /** Unique identifier */
@@ -100,10 +100,14 @@ function selectNode(node: TreeNode) {
   }
 }
 
-const sizeConfig: Record<string, { fontSize: string; iconSize: string; indent: string; padY: string; padX: string }> = {
-  sm: { fontSize: "0.8125rem", iconSize: "0.75rem", indent: scaleDensity("1rem"), padY: scaleDensity("0.1875rem"), padX: scaleDensity("0.375rem") },
-  md: { fontSize: "0.875rem", iconSize: "0.875rem", indent: scaleDensity("1.25rem"), padY: scaleDensity("0.25rem"), padX: scaleDensity("0.5rem") },
-  lg: { fontSize: "0.9375rem", iconSize: "1rem", indent: scaleDensity("1.5rem"), padY: scaleDensity("0.375rem"), padX: scaleDensity("0.625rem") },
+// `hitSize` is the chevron's clickable box, floored at 24px (WCAG 2.5.8) by
+// scaleControlHeight — the same floor CuiButton/CuiInput use. It's deliberately
+// independent of `iconSize`, which stays the glyph's visual size: at sm the caret
+// still draws at 12px, inside a 24px target.
+const sizeConfig: Record<string, { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string }> = {
+  sm: { fontSize: "0.8125rem", iconSize: "0.75rem", hitSize: scaleControlHeight("0.75rem"), indent: scaleDensity("1rem"), padY: scaleDensity("0.1875rem"), padX: scaleDensity("0.375rem") },
+  md: { fontSize: "0.875rem", iconSize: "0.875rem", hitSize: scaleControlHeight("0.875rem"), indent: scaleDensity("1.25rem"), padY: scaleDensity("0.25rem"), padX: scaleDensity("0.5rem") },
+  lg: { fontSize: "0.9375rem", iconSize: "1rem", hitSize: scaleControlHeight("1rem"), indent: scaleDensity("1.5rem"), padY: scaleDensity("0.375rem"), padX: scaleDensity("0.625rem") },
 };
 const cfg = computed(() => sizeConfig[props.size]);
 </script>

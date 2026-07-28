@@ -2,11 +2,14 @@
 import { ref } from "vue";
 import {
   CuiAlert,
+  CuiBadge,
   CuiButton,
   CuiFlex,
   CuiFormField,
   CuiIcon,
   CuiInput,
+  CuiSlideover,
+  CuiSlider,
   CuiStack,
   CuiTab,
   CuiTabs,
@@ -24,6 +27,23 @@ const closeable = ref("file1");
 const closeableTabs = ref(["file1", "file2", "file3"]);
 const transitionTab = ref("fade");
 const lazyTab = ref("tab1");
+
+const overflowTabs = [
+  { value: "general", label: "General" },
+  { value: "notifications", label: "Notifications" },
+  { value: "appearance", label: "Appearance" },
+  { value: "integrations", label: "Integrations" },
+  { value: "billing", label: "Billing & Invoices" },
+  { value: "advanced", label: "Advanced" },
+];
+const customContent = ref("clients");
+const pendingClients = ref(3);
+
+const overflow = ref("general");
+const overflowWidth = ref(343);
+const overflowVariant = ref<"underline" | "segmented">("underline");
+const slideoverOpen = ref(false);
+const slideoverTab = ref("general");
 
 function removeTab(value: string) {
   closeableTabs.value = closeableTabs.value.filter((t) => t !== value);
@@ -68,10 +88,18 @@ function resetTabs() {
       <PropTable
         :props="[
           { name: 'value', type: 'string', default: '—', description: 'Unique tab identifier (required)' },
-          { name: 'label', type: 'string', default: '—', description: 'Tab label text (required)' },
+          { name: 'label', type: 'string', default: '—', description: 'Tab label text (required); rendered in the tab button unless a #label slot is given' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disable this tab' },
           { name: 'closeable', type: 'boolean', default: 'false', description: 'Show close button' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+        ]"
+      />
+
+      <h3 class="mt-6 mb-2 text-lg font-semibold">CuiTab Slots</h3>
+      <PropTable
+        :props="[
+          { name: 'default', type: 'slot', default: '—', description: 'Panel content shown when the tab is active' },
+          { name: 'label', type: 'slot', default: '—', description: 'Custom tab-button content (badge, icon, status dot). Replaces the label prop in the button' },
         ]"
       />
     </div>
@@ -217,6 +245,54 @@ function resetTabs() {
           </CuiTabs>
         </Example>
 
+        <!-- Custom tab content -->
+        <Example title="Custom Tab Content (#label slot)" :code="`<CuiTab value=&quot;clients&quot; label=&quot;Clients&quot;>
+  <template #label>
+    Clients <CuiBadge color=&quot;warning&quot; size=&quot;sm&quot;>{{ pending }}</CuiBadge>
+  </template>
+  <!-- panel content -->
+  <ClientList />
+</CuiTab>`">
+          <CuiStack spacing="3">
+            <p class="text-sm text-surface-500">
+              A <code class="cui-code">#label</code> slot on <code class="cui-code">CuiTab</code>
+              renders inside the tab button, for counts, icons, or status dots. The
+              <code class="cui-code">label</code> prop stays required and is used whenever no slot
+              is given — as on the last tab below.
+            </p>
+
+            <CuiTabs v-model="customContent">
+              <CuiTab value="clients" label="Clients">
+                <template #label>
+                  Clients
+                  <CuiBadge color="warning" size="sm">{{ pendingClients }}</CuiBadge>
+                </template>
+                <CuiFlex gap="2" align="center">
+                  <CuiButton size="sm" @click="pendingClients++">Add a pending client</CuiButton>
+                  <span class="text-sm text-surface-500">The badge updates in place.</span>
+                </CuiFlex>
+              </CuiTab>
+              <CuiTab value="reports" label="Reports">
+                <template #label>
+                  <CuiIcon name="chart-bar" size="1rem" />
+                  Reports
+                </template>
+                <p>An icon alongside the tab text.</p>
+              </CuiTab>
+              <CuiTab value="archive" label="Archive">
+                <p>No slot here — the label prop is rendered as plain text.</p>
+              </CuiTab>
+            </CuiTabs>
+
+            <p class="text-sm text-surface-500">
+              Keep the tab's text inside the slot: the button's accessible name comes from what it
+              renders, so <code class="cui-code">Clients 3</code> is announced in full. A slot with
+              no text at all (an icon on its own) would leave the tab unnamed — include
+              visually-hidden text in that case.
+            </p>
+          </CuiStack>
+        </Example>
+
         <!-- Closeable -->
         <Example title="Closeable Tabs" :code="`<CuiTabs v-model=&quot;active&quot; @close=&quot;removeTab&quot;>
   <CuiTab
@@ -307,6 +383,98 @@ function resetTabs() {
               </CuiTab>
             </CuiTabs>
             <p class="text-sm text-surface-500">Panels are destroyed when inactive (v-if instead of v-show). Good for deferring expensive renders or data fetches.</p>
+          </CuiStack>
+        </Example>
+
+        <!-- Overflow -->
+        <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit -->
+<div style=&quot;width: 343px&quot;>
+  <CuiTabs v-model=&quot;active&quot;>
+    <CuiTab value=&quot;general&quot; label=&quot;General&quot;>…</CuiTab>
+    <CuiTab value=&quot;notifications&quot; label=&quot;Notifications&quot;>…</CuiTab>
+    <!-- …more tabs than fit… -->
+  </CuiTabs>
+</div>`">
+          <CuiStack spacing="4">
+            <p class="text-sm text-surface-500">
+              When the tabs are wider than their container the bar scrolls horizontally, and the
+              clipped edge fades to show there's more. Drag the width to see it engage — the active
+              tab is always scrolled into view.
+            </p>
+
+            <CuiSlider
+              v-model="overflowWidth"
+              label="Container width"
+              :min="240"
+              :max="720"
+              :step="1"
+              show-value
+              :format-value="(v: number) => `${v}px`"
+            />
+
+            <div
+              class="rounded-lg border border-dashed p-3"
+              style="border-color: var(--cui-border)"
+              :style="{ width: `${overflowWidth}px`, maxWidth: '100%' }"
+            >
+              <CuiTabs v-model="overflow" :variant="overflowVariant">
+                <CuiTab
+                  v-for="tab in overflowTabs"
+                  :key="tab.value"
+                  :value="tab.value"
+                  :label="tab.label"
+                >
+                  <p>{{ tab.label }} panel.</p>
+                </CuiTab>
+              </CuiTabs>
+            </div>
+
+            <CuiFlex gap="4" align="center" wrap="wrap">
+              <CuiToggle
+                :model-value="overflowVariant === 'segmented'"
+                label="Segmented variant"
+                @update:model-value="overflowVariant = $event ? 'segmented' : 'underline'"
+              />
+              <CuiButton
+                size="sm"
+                @click="overflow = overflowTabs[overflowTabs.length - 1].value"
+              >
+                Activate last tab
+              </CuiButton>
+            </CuiFlex>
+          </CuiStack>
+        </Example>
+
+        <!-- Overflow inside a clipping overlay -->
+        <Example title="Overflow inside a Slideover" :code="`<CuiSlideover v-model:visible=&quot;open&quot; title=&quot;Settings&quot; size=&quot;sm&quot;>
+  <CuiTabs v-model=&quot;active&quot;>
+    <!-- Tabs stay reachable even though the panel is overflow: hidden -->
+  </CuiTabs>
+</CuiSlideover>`">
+          <CuiStack spacing="3">
+            <p class="text-sm text-surface-500">
+              The original bug report: overlay panels are
+              <code class="cui-code">overflow: hidden</code>, so
+              before this fix the trailing tabs were clipped away with no way to reach them.
+            </p>
+            <div>
+              <CuiButton @click="slideoverOpen = true">
+                <template #prefix><CuiIcon name="sidebar" /></template>
+                Open settings panel
+              </CuiButton>
+            </div>
+            <CuiSlideover v-model:visible="slideoverOpen" title="Settings" size="sm">
+              <CuiTabs v-model="slideoverTab">
+                <CuiTab
+                  v-for="tab in overflowTabs"
+                  :key="tab.value"
+                  :value="tab.value"
+                  :label="tab.label"
+                >
+                  <p>{{ tab.label }} settings go here.</p>
+                </CuiTab>
+              </CuiTabs>
+            </CuiSlideover>
           </CuiStack>
         </Example>
 

@@ -12,7 +12,7 @@ const props = defineProps<{
   selectable: boolean;
   showLines: boolean;
   animated: boolean;
-  cfg: { fontSize: string; iconSize: string; indent: string; padY: string; padX: string };
+  cfg: { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string };
 }>();
 
 const emit = defineEmits<{
@@ -149,11 +149,15 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
       }"
       @click="onNodeClick"
     >
-      <!-- Expand/collapse chevron -->
+      <!-- Expand/collapse chevron. The box is cfg.hitSize (>= 24px), not the
+           glyph size, so the caret stays visually small but is tappable. Leaf
+           nodes render the same box empty, which keeps labels aligned and every
+           row the same height. -->
       <div
         :style="{
-          width: cfg.iconSize,
-          height: cfg.iconSize,
+          width: cfg.hitSize,
+          height: cfg.hitSize,
+          marginLeft: `calc((${cfg.iconSize} - ${cfg.hitSize}) / 2)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

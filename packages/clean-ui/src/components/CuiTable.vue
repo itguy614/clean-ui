@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, provide, ref } from "vue";
+import { computed, provide, ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { TableContextKey } from "./table-context";
 import type { SizeableProps, HideableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useScrollShadows, scrollShadowBottomStyle, scrollShadowRightStyle } from "../composables/useScrollShadows";
+import { useMessages } from "../composables/useMessages";
+import { warnOnce } from "../utils/devWarn";
 
 export interface CuiTableProps extends HideableProps, SizeableProps {
   /** Alternating row backgrounds */
@@ -58,54 +60,103 @@ const tableClasses = computed(() => [
   },
 ]);
 
-const wrapperStyle = computed(() => {
-  if (!props.maxHeight && !props.minWidth) return undefined;
-  const s: Record<string, string> = { overflow: "auto", position: "relative" };
-  if (props.maxHeight) s.maxHeight = props.maxHeight;
-  return s;
-});
-
 const tableStyle = computed(() => ({
   borderCollapse: "separate" as const,
   borderSpacing: "0",
   minWidth: props.minWidth || undefined,
 }));
 
-const { canScrollRight, canScrollDown, onScroll, onMount: onWrapperRef } = useScrollShadows();
+const { canScrollRight, canScrollDown, onScroll: onShadowScroll, update } = useScrollShadows();
 
 const scrollWrapper = ref<HTMLElement | null>(null);
+const tableEl = ref<HTMLElement | null>(null);
 
-function setWrapperRef(el: any) {
-  scrollWrapper.value = el as HTMLElement | null;
-  onWrapperRef(el as HTMLElement | null);
+// --- Overflow containment ---
+// The wrapper is always rendered, but it only becomes a scroll container when it
+// has to. `overflow-x: auto` forces overflow-y to compute to `auto` as well, which
+// would re-parent a sticky <thead> to this wrapper's scrollport — as tall as the
+// content, so the header would never actually stick during page scroll. Staying
+// `visible` while the table fits keeps that case behaving natively.
+const isOverflowingX = ref(false);
+
+const scrollable = computed(() => !!props.maxHeight || isOverflowingX.value);
+
+const wrapperStyle = computed(() => {
+  const s: Record<string, string> = { position: "relative" };
+  if (props.maxHeight) {
+    s.overflow = "auto";
+    s.maxHeight = props.maxHeight;
+  } else if (isOverflowingX.value) {
+    s.overflowX = "auto";
+  }
+  return s;
+});
+
+function measure() {
+  const wrap = scrollWrapper.value;
+  const table = tableEl.value;
+  if (!wrap || !table) return;
+
+  // Measured off the table, not the wrapper: an `overflow: visible` wrapper
+  // doesn't reliably report overflowing content in its own scrollWidth.
+  isOverflowingX.value = Math.max(table.scrollWidth, table.offsetWidth) - wrap.clientWidth > 1;
+  update(wrap);
+
+  if (isOverflowingX.value && props.stickyHeader && !props.maxHeight) {
+    warnOnce(
+      "[clean-ui] CuiTable: stickyHeader with a horizontally overflowing table needs " +
+        "maxHeight. The scroll container required to contain the overflow also becomes " +
+        "the sticky header's scrollport, so the header can't stick to the viewport.",
+    );
+  }
 }
 
-defineExpose({ scrollWrapper });
+let resizeObserver: ResizeObserver | undefined;
+
+onMounted(() => {
+  requestAnimationFrame(measure);
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(measure);
+    // Both: the wrapper for viewport changes, the table for content changes
+    if (scrollWrapper.value) resizeObserver.observe(scrollWrapper.value);
+    if (tableEl.value) resizeObserver.observe(tableEl.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = undefined;
+});
+
+watch(() => [props.minWidth, props.maxHeight, props.fixedLayout], measure, { flush: "post" });
+
+const messages = useMessages();
+
+defineExpose({ scrollWrapper, measure });
 
 </script>
 
 <template>
-  <!-- Scroll wrapper when maxHeight or minWidth is set -->
-  <div v-if="maxHeight || minWidth" v-show="!hidden" style="position: relative;">
+  <!-- The wrapper always renders; it only becomes a scroll container when the
+       table overflows (or maxHeight is set). See `wrapperStyle` above. -->
+  <div v-show="!hidden" style="position: relative;">
     <div
-      :ref="setWrapperRef"
+      ref="scrollWrapper"
       class="cui-table-wrapper"
       :style="wrapperStyle"
-      @scroll="onScroll"
+      :role="scrollable ? 'region' : undefined"
+      :tabindex="scrollable ? 0 : undefined"
+      :aria-label="scrollable ? messages.table.scrollRegionLabel : undefined"
+      @scroll="onShadowScroll"
     >
-      <table :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
+      <table ref="tableEl" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
 
-    <div v-if="canScrollRight" :style="scrollShadowRightStyle" />
-    <div v-if="canScrollDown" :style="scrollShadowBottomStyle" />
+    <div v-if="scrollable && canScrollRight" :style="scrollShadowRightStyle" />
+    <div v-if="scrollable && canScrollDown" :style="scrollShadowBottomStyle" />
   </div>
-
-  <!-- Bare table -->
-  <table v-else v-show="!hidden" :class="tableClasses" style="border-collapse: separate; border-spacing: 0;" :aria-rowcount="ariaRowcount">
-    <slot />
-  </table>
 </template>
 
 <style>
@@ -113,6 +164,13 @@ defineExpose({ scrollWrapper });
 
 .cui-table-wrapper {
   position: relative;
+}
+
+/* The wrapper is a tab stop only while it scrolls (WCAG 2.1.1 — scrollable
+   regions must be keyboard-reachable), so give it a visible focus ring. */
+.cui-table-wrapper:focus-visible {
+  outline: 2px solid var(--cui-primary-focus-ring);
+  outline-offset: 2px;
 }
 
 .cui-table {
@@ -160,20 +218,17 @@ defineExpose({ scrollWrapper });
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--cui-text-secondary);
-  background: var(--color-surface-50);
+  background: var(--cui-table-head-bg, var(--color-surface-50));
   border-bottom: 1px solid var(--cui-border);
   text-align: left;
 }
 
 :where(.dark, .dark *) .cui-table thead th {
-  background: var(--color-surface-800);
+  background: var(--cui-table-head-bg, var(--color-surface-800));
 }
 
-/* CuiDataGrid renders td-based header cells (CuiTableCell) inside <thead>, which
-   the th-only rule above can't match — so the header→body divider was missing on
-   the DataGrid. Give td headers the same divider. (Only the border: DataGrid pins
-   its header at the cell level via headerCellStyle, so we deliberately do NOT add
-   a sticky position rule for td here — that would re-create the nested-sticky bug.) */
+/* A cell can still opt out of header semantics with an explicit `header={false}`
+   inside a <thead>, so keep the divider on td head cells too. */
 .cui-table thead td {
   border-bottom: 1px solid var(--cui-border);
 }
@@ -223,11 +278,14 @@ defineExpose({ scrollWrapper });
      and a sticky column (the top-left "corner") needs to layer above its
      neighbours, which it does by setting a higher z-index inline. */
   z-index: 10;
-  background: var(--color-surface-50) !important;
+  /* Token, not a raw scale step: CuiDataGrid pins its own header cells inline
+     with the same token, and this !important would otherwise clobber a
+     consumer's --cui-table-head-bg override on every sticky grid. */
+  background: var(--cui-table-head-bg, var(--color-surface-50)) !important;
 }
 
 :where(.dark, .dark *) .cui-table--sticky-header thead th {
-  background: var(--color-surface-800) !important;
+  background: var(--cui-table-head-bg, var(--color-surface-800)) !important;
 }
 
 /* --- Selected row --- */

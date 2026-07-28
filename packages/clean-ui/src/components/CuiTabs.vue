@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, toRef, computed, nextTick } from "vue";
+import { ref, provide, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
   TabsContextKey,
@@ -41,6 +41,7 @@ const emit = defineEmits<{
 const activeTab = ref(props.modelValue ?? "");
 const previousTab = ref("");
 const tabs = ref<TabDefinition[]>([]);
+const barRef = ref<HTMLElement | null>(null);
 
 // Sync external v-model
 import { watch } from "vue";
@@ -55,7 +56,12 @@ watch(
 );
 
 function register(tab: TabDefinition) {
-  if (!tabs.value.find((t) => t.value === tab.value)) {
+  const idx = tabs.value.findIndex((t) => t.value === tab.value);
+  if (idx >= 0) {
+    // Update in place — re-pushing would jump the tab to the end of the bar
+    // whenever one of its props changed.
+    tabs.value[idx] = tab;
+  } else {
     tabs.value.push(tab);
   }
   // Auto-activate first tab
@@ -124,13 +130,73 @@ function onKeydown(e: KeyboardEvent) {
   if (nextIdx >= 0) {
     activate(enabledTabs[nextIdx].value);
     nextTick(() => {
-      const tabEl = document.querySelector<HTMLElement>(
-        `[data-cui-tab-value="${enabledTabs[nextIdx].value}"]`,
-      );
-      tabEl?.focus();
+      tabElement(enabledTabs[nextIdx].value)?.focus();
     });
   }
 }
+
+// --- Overflow scrolling ---
+// The bar scrolls when the tabs don't fit; without this the trailing tabs are
+// clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
+
+/** Scoped lookup — a global querySelector would hit another CuiTabs on the page. */
+function tabElement(value: string): HTMLElement | null {
+  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${value}"]`) ?? null;
+}
+
+/** Which edges have content scrolled out of view — drives the edge fade mask. */
+const overflowEdges = ref<"none" | "start" | "end" | "both">("none");
+
+function updateOverflow() {
+  const el = barRef.value;
+  if (!el) return;
+  const horizontal = props.orientation === "horizontal";
+  const viewport = horizontal ? el.clientWidth : el.clientHeight;
+  const content = horizontal ? el.scrollWidth : el.scrollHeight;
+  // Math.abs: RTL scrollLeft is negative in some engines
+  const pos = Math.abs(horizontal ? el.scrollLeft : el.scrollTop);
+
+  // 1px tolerance absorbs sub-pixel layout rounding
+  if (content - viewport <= 1) {
+    overflowEdges.value = "none";
+    return;
+  }
+  const atStart = pos <= 1;
+  const atEnd = pos >= content - viewport - 1;
+  overflowEdges.value = atStart ? "end" : atEnd ? "start" : "both";
+}
+
+function scrollActiveIntoView() {
+  // Keyboard nav scrolls via focus(); this covers v-model changes and mount.
+  tabElement(activeTab.value)?.scrollIntoView?.({ inline: "nearest", block: "nearest" });
+}
+
+let resizeObserver: ResizeObserver | undefined;
+
+onMounted(() => {
+  nextTick(() => {
+    scrollActiveIntoView();
+    updateOverflow();
+  });
+  if (typeof ResizeObserver !== "undefined" && barRef.value) {
+    resizeObserver = new ResizeObserver(updateOverflow);
+    resizeObserver.observe(barRef.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = undefined;
+});
+
+watch(activeTab, () => {
+  scrollActiveIntoView();
+  updateOverflow();
+}, { flush: "post" });
+
+// Tabs registering/unregistering changes the scrollable width
+watch(() => tabs.value.length, updateOverflow, { flush: "post" });
+watch(() => props.orientation, updateOverflow, { flush: "post" });
 
 // Slide direction
 const slideDirection = computed(() => {
@@ -151,44 +217,52 @@ const messages = useMessages();
     ]"
   >
     <!-- Tab bar -->
-    <div
-      class="cui-tabs__bar"
-      role="tablist"
-      :aria-orientation="orientation"
-      @keydown="onKeydown"
-    >
-      <button
-        v-for="tab in tabs"
-        :key="tab.value"
-        :data-cui-tab-value="tab.value"
-        class="cui-tabs__tab"
-        :class="{
-          'cui-tabs__tab--active': activeTab === tab.value,
-          'cui-tabs__tab--disabled': tab.disabled,
-        }"
-        :style="{
-          '--_tab-color': `var(--cui-${color})`,
-          '--_tab-hover': `var(--cui-${color}-hover)`,
-          '--_tab-bg': `var(--cui-${color}-bg)`,
-        }"
-        role="tab"
-        :aria-selected="activeTab === tab.value"
-        :aria-disabled="tab.disabled || undefined"
-        :tabindex="activeTab === tab.value ? 0 : -1"
-        @click="activate(tab.value)"
+    <div class="cui-tabs__bar-outer">
+      <div
+        ref="barRef"
+        class="cui-tabs__bar"
+        role="tablist"
+        :aria-orientation="orientation"
+        :data-overflow="overflowEdges"
+        @keydown="onKeydown"
+        @scroll="updateOverflow"
       >
-        <span class="cui-tabs__tab-content">{{ tab.label }}</span>
         <button
-          v-if="tab.closeable"
-          type="button"
-          class="cui-tabs__tab-close"
-          :aria-label="messages.tabs.closeTab"
-          tabindex="-1"
-          @click.stop="close(tab.value)"
+          v-for="tab in tabs"
+          :key="tab.value"
+          :data-cui-tab-value="tab.value"
+          class="cui-tabs__tab"
+          :class="{
+            'cui-tabs__tab--active': activeTab === tab.value,
+            'cui-tabs__tab--disabled': tab.disabled,
+          }"
+          :style="{
+            '--_tab-color': `var(--cui-${color})`,
+            '--_tab-hover': `var(--cui-${color}-hover)`,
+            '--_tab-bg': `var(--cui-${color}-bg)`,
+          }"
+          role="tab"
+          :aria-selected="activeTab === tab.value"
+          :aria-disabled="tab.disabled || undefined"
+          :tabindex="activeTab === tab.value ? 0 : -1"
+          @click="activate(tab.value)"
         >
-          <CuiIcon name="x" size="0.75rem" />
+          <span class="cui-tabs__tab-content">
+            <component :is="tab.labelSlot" v-if="tab.labelSlot" />
+            <template v-else>{{ tab.label }}</template>
+          </span>
+          <button
+            v-if="tab.closeable"
+            type="button"
+            class="cui-tabs__tab-close"
+            :aria-label="messages.tabs.closeTab"
+            tabindex="-1"
+            @click.stop="close(tab.value)"
+          >
+            <CuiIcon name="x" size="0.75rem" />
+          </button>
         </button>
-      </button>
+      </div>
     </div>
 
     <!-- Panels -->
@@ -201,6 +275,8 @@ const messages = useMessages();
 <style scoped>
 .cui-tabs {
   display: flex;
+  /* allow shrinking inside a flex parent instead of forcing overflow */
+  min-width: 0;
 }
 
 .cui-tabs--horizontal {
@@ -212,48 +288,125 @@ const messages = useMessages();
   gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
-/* --- Tab bar --- */
-.cui-tabs__bar {
+/* --- Tab bar ---
+   Two elements on purpose: the outer holds the static chrome (underline border,
+   segmented track) while the inner is the scroll viewport, so the chrome neither
+   scrolls away nor gets caught by the inner's edge-fade mask. */
+.cui-tabs__bar-outer {
   display: flex;
   flex-shrink: 0;
+  min-width: 0;
+}
+
+.cui-tabs__bar {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  scroll-behavior: smooth;
+  /* Native bar is hidden — the edge fade is the overflow affordance. Consumers
+     wanting a visible one can add `.cui-scrollbar` and override these. */
+  scrollbar-width: none;
+  -webkit-mask-image: var(--_tab-fade, none);
+  mask-image: var(--_tab-fade, none);
+}
+
+.cui-tabs__bar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cui-tabs__bar {
+    scroll-behavior: auto;
+  }
 }
 
 .cui-tabs--horizontal .cui-tabs__bar {
   flex-direction: row;
   gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.cui-tabs--vertical .cui-tabs__bar-outer {
+  min-width: 10rem;
+  min-height: 0;
 }
 
 .cui-tabs--vertical .cui-tabs__bar {
   flex-direction: column;
   gap: 0;
-  min-width: 10rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Edge fade — set by the `data-overflow` state, which tracks scroll position */
+.cui-tabs--horizontal .cui-tabs__bar[data-overflow="end"] {
+  --_tab-fade: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent 100%);
+}
+
+.cui-tabs--horizontal .cui-tabs__bar[data-overflow="start"] {
+  --_tab-fade: linear-gradient(to left, #000 calc(100% - 1.5rem), transparent 100%);
+}
+
+.cui-tabs--horizontal .cui-tabs__bar[data-overflow="both"] {
+  --_tab-fade: linear-gradient(
+    to right,
+    transparent 0,
+    #000 1.5rem,
+    #000 calc(100% - 1.5rem),
+    transparent 100%
+  );
+}
+
+.cui-tabs--vertical .cui-tabs__bar[data-overflow="end"] {
+  --_tab-fade: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
+}
+
+.cui-tabs--vertical .cui-tabs__bar[data-overflow="start"] {
+  --_tab-fade: linear-gradient(to top, #000 calc(100% - 1.5rem), transparent 100%);
+}
+
+.cui-tabs--vertical .cui-tabs__bar[data-overflow="both"] {
+  --_tab-fade: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 1.5rem,
+    #000 calc(100% - 1.5rem),
+    transparent 100%
+  );
 }
 
 /* Underline variant */
-.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__bar {
+.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__bar-outer {
   border-bottom: 1px solid var(--cui-border);
 }
 
-.cui-tabs--underline.cui-tabs--vertical .cui-tabs__bar {
+.cui-tabs--underline.cui-tabs--vertical .cui-tabs__bar-outer {
   border-right: 1px solid var(--cui-border);
-  padding-right: 0;
 }
 
-/* Segmented variant */
-.cui-tabs--segmented .cui-tabs__bar {
+/* Segmented variant — track lives on the outer; the 0.25rem inset is split
+   across both so the active pill's drop shadow isn't clipped by the scroller. */
+.cui-tabs--segmented .cui-tabs__bar-outer {
   background: var(--color-surface-100);
   border-radius: var(--cui-button-radius, 0.375rem);
-  padding: calc(0.25rem * var(--cui-density-scale, 1));
-  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
-:where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar {
+:where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar-outer {
   background: var(--color-surface-800);
+}
+
+.cui-tabs--segmented .cui-tabs__bar {
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
 /* --- Tab button --- */
 .cui-tabs__tab {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
   padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
