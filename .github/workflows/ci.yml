@@ -34,10 +34,44 @@ jobs:
       - name: Build library
         run: pnpm --filter @itguy614/clean-ui build
 
-      # Unit + smoke tests
+      # Every bare import in dist must be relative or a declared dependency —
+      # closes the whole class of bug behind #42 and #62, not just those cases.
+      - name: Check for undeclared imports in dist
+        run: pnpm --filter @itguy614/clean-ui check:imports
+
+      # Unit + smoke tests (jsdom) and server-rendering assertions (node).
       - name: Run tests
-        run: pnpm --filter @itguy614/clean-ui test
+        run: pnpm --filter @itguy614/clean-ui exec vitest run --project jsdom --project ssr
+
+      # Real-browser tests for layout/selection/input-method-dependent behaviour
+      # (task 2.3.2) — non-blocking for now. The capability existing and running
+      # in CI is what matters today; gating merges on it is a deliberate follow-up
+      # once it's proven stable here, not an oversight.
+      - name: Install Playwright browser
+        run: pnpm --filter @itguy614/clean-ui exec playwright install --with-deps chromium
+        continue-on-error: true
+
+      - name: Run browser tests
+        run: pnpm --filter @itguy614/clean-ui exec vitest run --project browser
+        continue-on-error: true
 
       # Type-check the docs app
       - name: Type-check docs
         run: pnpm --filter @itguy614/clean-ui-docs exec vue-tsc --noEmit
+
+      # Packs every publishable package and installs it with npm (not the pnpm
+      # workspace) into a throwaway consumer app — the only place the exports
+      # map, peer resolution and published file list are exercised at all.
+      - name: Verify consumer fixture
+        run: node scripts/verify-fixture.mjs
+
+      # The package guarantees (no icon barrel, no Tailwind utilities layer,
+      # single-instance dependencies), expressed as assertions over that
+      # fixture's build output rather than asserted in a changelog.
+      - name: Check fixture guarantees
+        run: node scripts/check-fixture-guarantees.mjs
+
+      # Gzip delta the fixture bundle grows by from importing the package,
+      # against the committed budget in fixtures/size-budget.json.
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-budget.mjs

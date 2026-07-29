@@ -65,3 +65,36 @@ if (!("IntersectionObserver" in globalThis)) {
     thresholds = [];
   } as unknown as typeof IntersectionObserver;
 }
+
+// jsdom doesn't implement Range's client-rect measurement at all — calling
+// either method throws "is not a function" — which a DOM-measuring editor
+// needs to mount under jsdom at all (cursor/selection positioning reads these
+// to place itself). Without this stub the failure looks like "this cannot be
+// tested," not a missing polyfill.
+function zeroRect(): DOMRect {
+  return {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    toJSON() {
+      return this;
+    },
+  };
+}
+
+if (typeof Range !== "undefined" && !Range.prototype.getBoundingClientRect) {
+  Range.prototype.getBoundingClientRect = zeroRect;
+}
+if (typeof Range !== "undefined" && !Range.prototype.getClientRects) {
+  Range.prototype.getClientRects = function (): DOMRectList {
+    const rects: DOMRect[] = [];
+    return Object.assign(rects, {
+      item: (index: number) => rects[index] ?? null,
+    }) as unknown as DOMRectList;
+  };
+}

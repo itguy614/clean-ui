@@ -50,11 +50,14 @@
     "**/*.css",
     "./dist/icons/lazy.js",
     "./dist/duplicate-guard.js",
-    "./src/duplicate-guard.ts"
+    "./src/duplicate-guard.ts",
+    "./dist/composables/useTheme.js",
+    "./dist/composables/useDensity.js"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",
     "size": "node scripts/postbuild.mjs",
+    "check:imports": "node scripts/check-dist-imports.mjs .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -64,8 +67,12 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-vue": "^5.2.0",
+    "@vitest/browser": "3.2.4",
+    "@vue/server-renderer": "^3.5.40",
     "@vue/test-utils": "^2.4.0",
+    "es-module-lexer": "^2.3.1",
     "jsdom": "^26.1.0",
+    "playwright": "^1.62.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
     "vite": "^6.3.0",
