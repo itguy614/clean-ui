@@ -8,14 +8,14 @@
  * `npm install @itguy614/clean-ui` actually resolves to.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, existsSync, rmSync, readFileSync } from "node:fs";
+import { mkdtempSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { listPublishablePackages } from "./list-publishable-packages.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE_DIR = resolve(ROOT, "fixtures/consumer-app");
-const PACKAGES_DIR = resolve(ROOT, "packages");
 
 function log(message) {
   console.log(`[verify-fixture] ${message}`);
@@ -35,13 +35,8 @@ function relativeToRoot(path) {
   return path.startsWith(ROOT) ? path.slice(ROOT.length + 1) || "." : path;
 }
 
-// 1. Discover publishable packages: any packages/* with a package.json and no "private": true.
-const publishable = readdirSync(PACKAGES_DIR, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => resolve(PACKAGES_DIR, entry.name))
-  .filter((dir) => existsSync(join(dir, "package.json")))
-  .map((dir) => ({ dir, pkg: JSON.parse(readFileSync(join(dir, "package.json"), "utf-8")) }))
-  .filter(({ pkg }) => !pkg.private);
+// 1. Discover publishable packages.
+const publishable = listPublishablePackages();
 
 if (publishable.length === 0) fail("No publishable packages found under packages/*.");
 log(`Publishable packages: ${publishable.map(({ pkg }) => pkg.name).join(", ")}`);

@@ -20,13 +20,13 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
 
 | Status      | Count |
 | ----------- | ----- |
-| Complete    | 17    |
+| Complete    | 22    |
 | In Progress | 0     |
-| Not Started | 8     |
+| Not Started | 3     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
-**Overall Progress:** 68%
+**Overall Progress:** 88%
 
 ## Phases
 
@@ -34,7 +34,7 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
 | --- | ------------------------------------------------------------ | ----------- | -------- |
 | 01  | [API Seams](./phase-01/)                                     | Complete    | 8/8      |
 | 02  | [Build, Dependencies and Verification](./phase-02/)          | Complete    | 9/9      |
-| 03  | [Release Machinery and Docs Deploy](./phase-03/)             | Not Started | 0/5      |
+| 03  | [Release Machinery and Docs Deploy](./phase-03/)             | Complete    | 5/5      |
 | 99  | [Cross-Cutting Concerns](./phase-99/)                        | Not Started | 0/3      |
 
 ## Architecture Decisions

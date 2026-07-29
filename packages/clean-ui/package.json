@@ -58,7 +58,8 @@
     "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",
     "size": "node scripts/postbuild.mjs",
     "check:imports": "node scripts/check-dist-imports.mjs .",
-    "test": "vitest run",
+    "test": "vitest run --project jsdom --project ssr",
+    "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
   },
   "peerDependencies": {

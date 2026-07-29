@@ -13,10 +13,31 @@ permissions:
   contents: write # create GitHub Releases
 
 jobs:
-  publish:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
     steps:
       - uses: actions/checkout@v4
+      - id: list
+        # Matrix over every publishable package (packages/* without "private":
+        # true) — adding one there extends this matrix automatically, no
+        # workflow change needed.
+        run: echo "packages=$(node scripts/list-publishable-packages.mjs)" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.discover.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history + tags: the changed-files guard below diffs this
+          # package's directory against the previous release tag.
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: pnpm/action-setup@v4
 
@@ -29,37 +50,65 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Check whether this version is already published
-        id: check
-        working-directory: packages/clean-ui
+        id: version-check
+        working-directory: ${{ matrix.package }}
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
             echo "$NAME@$VERSION is already on npm — skipping publish."
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "$NAME@$VERSION is new — will publish."
+            echo "$NAME@$VERSION is new to npm."
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build library
-        if: steps.check.outputs.publish == 'true'
-        run: pnpm --filter @itguy614/clean-ui build
+      # Under lockstep versioning every package's version moves on every
+      # release, even ones that release didn't touch — the npm-view check
+      # alone would then republish a byte-identical artifact. Skip a package
+      # whose files haven't changed since the previous release tag; this is
+      # intentional, not a bug, so it's logged rather than silent.
+      - name: Check whether this package changed since the last release
+        id: changed-check
+        if: steps.version-check.outputs.publish == 'true'
+        run: |
+          CURRENT_VERSION=$(cat VERSION)
+          PREV_TAG=$(git tag --list 'v*' --sort=-v:refname | grep -vx "v$CURRENT_VERSION" | head -n 1)
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous release tag found — treating ${{ matrix.package }} as changed."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "$PREV_TAG" HEAD -- "${{ matrix.package }}"; then
+            echo "${{ matrix.package }} has not changed since $PREV_TAG — skipping publish (lockstep version bump only, not a real release for this package)."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "${{ matrix.package }} changed since $PREV_TAG."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
+        run: pnpm --filter "${{ steps.version-check.outputs.name }}" build
 
       - name: Publish to npm
-        if: steps.check.outputs.publish == 'true'
-        working-directory: packages/clean-ui
+        if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
+        working-directory: ${{ matrix.package }}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Create GitHub Release
-        if: steps.check.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.check.outputs.version }}
         run: |
+          VERSION=$(cat VERSION)
           TAG="v$VERSION"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists — skipping."

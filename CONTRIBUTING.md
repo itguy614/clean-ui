@@ -18,9 +18,9 @@ pnpm install
 |---|---|
 | `packages/clean-ui` | The published library (`@itguy614/clean-ui`) |
 | `apps/docs` | Documentation site — it **dogfoods** the library and is deployed to GitHub Pages |
-| `config` | Shared config modules used by more than one app/package — e.g. `workspace-aliases.ts`, the one place that maps a published package name to its workspace source |
+| `config` | Shared config modules used by more than one app/package — `workspace-aliases.ts` maps a published package name to its workspace source; `docs-sites.mjs` lists every docs site GitHub Pages hosts and its base path |
 | `fixtures/consumer-app` | Not a workspace member. A throwaway app `scripts/verify-fixture.mjs` installs packed tarballs into with **npm**, to check what a real external install actually resolves to |
-| `scripts` | Tooling — `new-component.mjs` (scaffold), `check-contrast.mjs` (WCAG audit), `verify-fixture.mjs` / `check-fixture-guarantees.mjs` / `check-bundle-budget.mjs` (consumer-fixture verification) |
+| `scripts` | Tooling — `new-component.mjs` (scaffold), `check-contrast.mjs` (WCAG audit), `verify-fixture.mjs` / `check-fixture-guarantees.mjs` / `check-bundle-budget.mjs` (consumer-fixture verification), `build-docs-sites.mjs` (composes `config/docs-sites.mjs` into one Pages artifact), `list-publishable-packages.mjs` (the publish matrix's discovery) |
 | `CLAUDE.md` | The canonical conventions & architecture reference — read it before building components |
 
 ## Common commands
@@ -100,6 +100,37 @@ Finish with a green `pnpm build` (zero TypeScript errors) and `pnpm test`.
 - Use clear, conventional-style commit subjects (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
 - Ensure `pnpm build` and `pnpm test` pass. For visual changes, include before/after screenshots.
 - Be kind in reviews — we credit effort and iterate together. 💙
+
+## Releases
+
+This repo can publish more than one npm package (`packages/*` without `"private": true` —
+today just `@itguy614/clean-ui`), but every one of them shares **one version number**:
+
+- The root `VERSION` file, the root `CHANGELOG.md`, and `git` tags (`vMAJOR.MINOR.PATCH`) are the
+  single source of truth. Every publishable package's `package.json` version moves together with
+  them on every release, whether or not that package actually changed.
+- **Changelog entries name the package in parentheses when it isn't clean-ui** — e.g. `Add a
+  linter subpath (clean-ui-editor)`. Unlabeled entries are clean-ui.
+- **A new package joins at the current shared version**, not `1.0.0` — its maturity belongs in its
+  own docs/README, not in a version number it doesn't independently control.
+- **Ordering rule for coupled releases:** if a satellite package's release depends on a clean-ui
+  seam that hasn't shipped yet, the satellite's release **must not reach `master` before** the
+  clean-ui release that provides it. A satellite depends on clean-ui through a caret peer range
+  (`^1.2.0`), which resolves against the **npm registry**, not the workspace — publishing the
+  satellite first means its stated peer requirement doesn't exist on npm yet.
+- **A package that hasn't changed since the previous release tag is skipped by the publish
+  workflow**, even though lockstep moved its version number too — otherwise every release would
+  republish every package as a byte-identical, pointless new version. This is intentional, and the
+  publish job logs it as a deliberate skip, not a failure.
+
+`/make-release` bumps `VERSION`, `CHANGELOG.md`, and every publishable package's `package.json` to
+the same new version, tags it, and pushes. `.github/workflows/publish-npm.yml` then runs the
+skip-if-unchanged logic above per package once that tag reaches `master` — the skill itself doesn't
+need to know which packages actually changed; the workflow decides that per package at publish time.
+
+`fixtures/consumer-app/package.json` also has a `"version"` field — it's `"private": true` test
+infrastructure, not part of lockstep, and should be left alone. A version-bump tool that scans the
+whole repo for `"version"` fields will find it; don't include it in a release's file list.
 
 ## License
 
