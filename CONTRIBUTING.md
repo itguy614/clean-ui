@@ -27,9 +27,9 @@ pnpm install
 
 ```sh
 pnpm dev               # run the docs site locally (hot reload)
-pnpm build             # build the library (Vite + vue-tsc type declarations)
-pnpm test              # run the test suite (vitest)
-pnpm check:contrast    # audit color contrast across every theme
+pnpm build             # build every workspace package, in dependency order (Vite + vue-tsc)
+pnpm test              # run every workspace package's test suite — see Tests below for scope
+pnpm check:contrast    # audit color contrast across every theme (and any other package's tokens)
 pnpm verify:fixture     # pack + install with npm into fixtures/consumer-app, check
                         # tree-shaking/CSS/single-instance guarantees and the size budget
 ```
@@ -74,7 +74,10 @@ Finish with a green `pnpm build` (zero TypeScript errors) and `pnpm test`.
 
 ## Tests
 
-`packages/clean-ui/vitest.config.ts` runs three vitest projects — `pnpm test` runs all of them:
+`packages/clean-ui/vitest.config.ts` runs three vitest projects. `pnpm test` (root, or
+`pnpm --filter @itguy614/clean-ui test`) runs **jsdom + ssr** — required, and what CI gates on.
+**browser** is a separate, explicit command (see below): a fresh checkout's first `pnpm test`
+shouldn't fail just because nobody's run `playwright install` yet.
 
 - **jsdom** (`src/components/__tests__`, `src/composables/__tests__`, etc.) — the main suite:
   vitest + `@vue/test-utils` + jsdom. New components should at least have a smoke test (mounts,
@@ -86,12 +89,12 @@ Finish with a green `pnpm build` (zero TypeScript errors) and `pnpm test`.
   (`@vitest/browser`), for behaviour that depends on real layout, selection or input method (jsdom's
   layout engine is a no-op — `getComputedStyle`/`scrollHeight` are always zero there). First run
   needs the browser installed once: `pnpm --filter @itguy614/clean-ui exec playwright install
-  chromium`. Run just this project with `pnpm --filter @itguy614/clean-ui exec vitest run --project
-  browser`. **Triaging a failure:** re-run with `--project browser` and drop `headless: true` in
-  `vitest.config.ts` locally to watch it happen in a visible browser window, or add
-  `page.pause()`-style debugging via the test's `page` object (see [Vitest's browser mode
-  docs](https://vitest.dev/guide/browser/)). CI treats this project as non-blocking for now
-  (`continue-on-error`) — a red run there is a signal to look at, not (yet) a merge blocker.
+  chromium`. Run it with `pnpm --filter @itguy614/clean-ui test:browser`. **Triaging a failure:**
+  re-run the same command and drop `headless: true` in `vitest.config.ts` locally to watch it
+  happen in a visible browser window, or add `page.pause()`-style debugging via the test's `page`
+  object (see [Vitest's browser mode docs](https://vitest.dev/guide/browser/)). CI treats this
+  project as non-blocking for now (`continue-on-error`) — a red run there is a signal to look at,
+  not (yet) a merge blocker.
 
 ## Commits & pull requests
 

@@ -18,8 +18,12 @@
 
 ## Build & Dev
 - This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
-- Build library: `pnpm build` (root) or `pnpm --filter @itguy614/clean-ui build`
-- After rebuild, clear docs cache: `rm -rf apps/docs/node_modules/.vite`
+- `pnpm build` (root) builds every workspace package, in dependency order. `pnpm --filter
+  @itguy614/clean-ui build` builds just the library.
+- The docs site resolves `@itguy614/clean-ui` to workspace *source* (`config/workspace-aliases.ts`),
+  not a built `dist` — changes show up immediately under `pnpm dev`, no rebuild needed. If Vite's
+  dependency pre-bundling cache goes stale (rare — usually right after adding a new source file
+  under an aliased path), clear it: `rm -rf apps/docs/node_modules/.vite`.
 - Color scale (`@theme`) is single-source in `packages/clean-ui/src/styles/theme.css`; both the library `main.css` and the docs `apps/docs/src/styles/main.css` `@import` it (no mirroring). The contrast audit reads the scale from `theme.css` too.
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
 
@@ -190,6 +194,24 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 8. Add `aria-*` attributes, keyboard navigation, focus rings.
 9. `defineExpose({ el, focus, blur })` on interactive components.
 10. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
+    **Exception: satellite packages with a heavy dependency graph (e.g. a CodeMirror-based editor)
+    must NOT do this.** A global `app.component()` install puts that package's entire dependency
+    tree in every consumer's main bundle, whether or not they ever render the component, and
+    defeats route-level code splitting. Export the component as a named import only, and document
+    an async-component usage pattern instead:
+    ```ts
+    // satellite-package/src/index.ts — named export, no app.component() registration
+    export { default as CuiMarkdownEditor } from "./components/CuiMarkdownEditor.vue";
+    ```
+    ```vue
+    <!-- consumer app: load it only on the route/view that needs it -->
+    <script setup>
+    import { defineAsyncComponent } from "vue";
+    const CuiMarkdownEditor = defineAsyncComponent(() =>
+      import("@itguy614/clean-ui-editor").then((m) => m.CuiMarkdownEditor),
+    );
+    </script>
+    ```
 11. Create a docs page, add route, add nav entry in the correct group.
 12. Use `CuiCard` for example containers in docs, not hand-rolled divs.
 13. Build and verify: `pnpm build` must pass with zero TypeScript errors.
