@@ -132,12 +132,43 @@ const es = {
           <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>,
           <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>,
           <code class="cui-code">skeleton</code>, <code class="cui-code">tabs</code>,
-          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code>. See the
+          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
+          whatever namespaces a satellite package (see below) has added. See the
           <code class="cui-code">CuiMessages</code> type for the full shape — your editor will
           autocomplete every key.
         </p>
         <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">import type { CuiMessages, DeepPartialMessages } from "@itguy614/clean-ui";
 import { defaultMessages } from "@itguy614/clean-ui";  // the English baseline</code></pre>
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
+      <CuiCardHeader title="Adding a namespace from a satellite package" />
+      <CuiCardBody>
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          A companion package (e.g. a clean-ui editor add-on) can add its own strings to the
+          catalog with full type-checking, by augmenting <code class="cui-code">CuiMessageNamespaces</code>
+          — the empty interface <code class="cui-code">CuiMessages</code> extends. Declaration merging
+          can't reach a closed interface, so this is the seam that makes it possible. Put the
+          <code class="cui-code">declare module</code> block anywhere TypeScript picks it up (a
+          <code class="cui-code">.d.ts</code> file included by your <code class="cui-code">tsconfig.json</code>
+          is the usual choice) — after that, the namespace shows up on <code class="cui-code">CuiMessages</code>
+          everywhere, including <code class="cui-code">CuiConfigProvider</code>'s <code class="cui-code">messages</code> prop.
+        </p>
+        <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">// e.g. clean-ui-editor/src/messages-augment.d.ts
+import "@itguy614/clean-ui";
+
+declare module "@itguy614/clean-ui" {
+  interface CuiMessageNamespaces {
+    markdownEditor: {
+      linkPrompt: string;
+      insertImage: string;
+    };
+  }
+}
+
+// Consumers now get autocomplete + type-checking for the new namespace:
+&lt;CuiConfigProvider :messages="{ markdownEditor: { linkPrompt: 'Link URL' } }"&gt;</code></pre>
       </CuiCardBody>
     </CuiCard>
   </CuiStack>

@@ -2,9 +2,19 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+
+// Read (not import) package.json — importing it would put it under vue-tsc's
+// rootDir-checked program; reading it here keeps that entirely out of `src`.
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf-8"));
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  define: {
+    // Replaced with a literal at build time — see src/version.ts. Never read
+    // from the filesystem at runtime, so it can't drift from what's published.
+    __CUI_VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     lib: {
       // Two entries: the barrel, plus the opt-in lazy icon resolver. The latter

@@ -48,7 +48,9 @@
   ],
   "sideEffects": [
     "**/*.css",
-    "./dist/icons/lazy.js"
+    "./dist/icons/lazy.js",
+    "./dist/duplicate-guard.js",
+    "./src/duplicate-guard.ts"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node scripts/postbuild.mjs",

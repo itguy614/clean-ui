@@ -10,18 +10,18 @@ runtime guard that makes a duplicated clean-ui fail loudly instead of silently. 
 
 | Status      | Count |
 | ----------- | ----- |
-| Complete    | 0     |
+| Complete    | 8     |
 | In Progress | 0     |
-| Not Started | 8     |
+| Not Started | 0     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
-**Progress:** 0/8 tasks complete
+**Progress:** 8/8 tasks complete
 
 ## Agent Assignments
 
 | Agent                                  | Focus Area                          | Tasks         |
-| -------------------------------------- | ----------------------------------- | ------------- |
+| --------------------------------------- | ----------------------------------- | ------------- |
 | web-developer-tools:frontend-developer | Composables, types, message catalog | 1.1.1 – 1.3.2 |
 | developer-tools:testing-specialist     | Unit tests for each seam            | 1.1.3, 1.2.3  |
 
@@ -33,7 +33,7 @@ runtime guard that makes a duplicated clean-ui fail loudly instead of silently. 
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | low |
 | Dependencies | None |
@@ -46,10 +46,10 @@ package can declare its own namespace and keep full type checking. `mergeMessage
 passes unknown keys through at runtime, so this is a type-level change only.
 
 **Acceptance Criteria:**
-- [ ] A separate package can augment `CuiMessageNamespaces` and have its namespace type-check
+- [x] A separate package can augment `CuiMessageNamespaces` and have its namespace type-check
       inside `CuiConfigProvider`'s messages prop
-- [ ] Existing message keys keep their exact types; nothing becomes loosely typed
-- [ ] `defaultMessages` and `mergeMessages` behaviour is unchanged
+- [x] Existing message keys keep their exact types; nothing becomes loosely typed
+- [x] `defaultMessages` and `mergeMessages` behaviour is unchanged
 
 ---
 
@@ -57,7 +57,7 @@ passes unknown keys through at runtime, so this is a type-level change only.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | low |
 | Dependencies | 1.1.1 |
@@ -68,8 +68,8 @@ to put it, and how the namespace then appears in the catalog. This is the page c
 use for message overrides.
 
 **Acceptance Criteria:**
-- [ ] Localization page shows a complete, copyable augmentation example
-- [ ] The existing namespace list mentions that satellite packages may add their own
+- [x] Localization page shows a complete, copyable augmentation example
+- [x] The existing namespace list mentions that satellite packages may add their own
 
 ---
 
@@ -77,7 +77,7 @@ use for message overrides.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | testing-specialist |
 | Complexity | medium |
 | Dependencies | 1.1.1 |
@@ -88,9 +88,9 @@ rejected. Runtime tests cannot catch a regression here, since the failure mode i
 type-level.
 
 **Acceptance Criteria:**
-- [ ] A fixture augmenting the interface type-checks under `vue-tsc`
-- [ ] A deliberately wrong namespace shape fails the type check
-- [ ] The check runs as part of the existing type-check step
+- [x] A fixture augmenting the interface type-checks under `vue-tsc`
+- [x] A deliberately wrong namespace shape fails the type check
+- [x] The check runs as part of the existing type-check step
 
 ---
 
@@ -100,7 +100,7 @@ type-level.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | medium |
 | Dependencies | None |
@@ -113,10 +113,10 @@ component, observing class changes. Consumers such as CodeMirror need this becau
 flag is fixed when configuration is built, not read from the cascade.
 
 **Acceptance Criteria:**
-- [ ] Reports the scheme for the calling component's own ancestor chain, not the document
-- [ ] Reacts to a class toggled on any ancestor, including a scoped subtree
-- [ ] SSR-safe: no DOM access during server rendering, correct after hydration
-- [ ] Observers are disconnected on unmount
+- [x] Reports the scheme for the calling component's own ancestor chain, not the document
+- [x] Reacts to a class toggled on any ancestor, including a scoped subtree
+- [x] SSR-safe: no DOM access during server rendering, correct after hydration
+- [x] Observers are disconnected on unmount
 
 ---
 
@@ -124,7 +124,7 @@ flag is fixed when configuration is built, not read from the cascade.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | low |
 | Dependencies | 1.2.1 |
@@ -135,8 +135,8 @@ through the new composable so there is one implementation. Components that resol
 purely in CSS are left alone — this is not a refactor of the token system.
 
 **Acceptance Criteria:**
-- [ ] No component hand-rolls a `.dark` class observer
-- [ ] No visual change in either mode, verified in the docs site
+- [x] No component hand-rolls a `.dark` class observer
+- [x] No visual change in either mode, verified in the docs site
 
 ---
 
@@ -144,7 +144,7 @@ purely in CSS are left alone — this is not a refactor of the token system.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | testing-specialist |
 | Complexity | medium |
 | Dependencies | 1.2.1 |
@@ -154,9 +154,9 @@ Cover the cases that make a global boolean wrong: a scoped subtree, a toggle aft
 nested scopes disagreeing.
 
 **Acceptance Criteria:**
-- [ ] Two components in differently-scoped subtrees report different values
-- [ ] Toggling a class after mount updates subscribers
-- [ ] Unmounting removes the observer
+- [x] Two components in differently-scoped subtrees report different values
+- [x] Toggling a class after mount updates subscribers
+- [x] Unmounting removes the observer
 
 ---
 
@@ -166,7 +166,7 @@ nested scopes disagreeing.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | low |
 | Dependencies | None |
@@ -176,9 +176,9 @@ The package exports no version, so a satellite cannot detect a mismatch against 
 Export a `version` constant, sourced from `package.json` at build time so it cannot drift.
 
 **Acceptance Criteria:**
-- [ ] `version` is exported from the barrel and matches `package.json` exactly
-- [ ] The value is inlined at build time, not read from the filesystem at runtime
-- [ ] A test fails if the two disagree
+- [x] `version` is exported from the barrel and matches `package.json` exactly
+- [x] The value is inlined at build time, not read from the filesystem at runtime
+- [x] A test fails if the two disagree
 
 ---
 
@@ -186,7 +186,7 @@ Export a `version` constant, sourced from `package.json` at build time so it can
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | medium |
 | Dependencies | 1.3.1 |
@@ -199,6 +199,6 @@ global on first use and emit a one-time developer warning when a second, differe
 appears, naming the versions and the likely cause.
 
 **Acceptance Criteria:**
-- [ ] A simulated second instance produces one warning naming both versions
-- [ ] The warning suggests the concrete fix (dedupe or a matching peer range)
-- [ ] Single-instance usage is silent, and the check costs nothing measurable
+- [x] A simulated second instance produces one warning naming both versions
+- [x] The warning suggests the concrete fix (dedupe or a matching peer range)
+- [x] Single-instance usage is silent, and the check costs nothing measurable
