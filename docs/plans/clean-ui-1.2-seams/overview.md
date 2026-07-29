@@ -22,7 +22,7 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
 | ----------- | ----- |
 | Complete    | 0     |
 | In Progress | 0     |
-| Not Started | 26    |
+| Not Started | 25    |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
@@ -35,7 +35,7 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
 | 01  | [API Seams](./phase-01/)                                     | Not Started | 0/8      |
 | 02  | [Build, Dependencies and Verification](./phase-02/)          | Not Started | 0/9      |
 | 03  | [Release Machinery and Docs Deploy](./phase-03/)             | Not Started | 0/5      |
-| 99  | [Cross-Cutting Concerns](./phase-99/)                        | Not Started | 0/4      |
+| 99  | [Cross-Cutting Concerns](./phase-99/)                        | Not Started | 0/3      |
 
 ## Architecture Decisions
 

@@ -11,45 +11,31 @@ carried silently into a two-package world.
 | ----------- | ----- |
 | Complete    | 0     |
 | In Progress | 0     |
-| Not Started | 4     |
+| Not Started | 3     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
-**Progress:** 0/4 tasks complete
+**Progress:** 0/3 tasks complete
 
 ## Agent Assignments
 
 | Agent                                    | Focus Area                    | Tasks           |
 | ---------------------------------------- | ----------------------------- | --------------- |
-| web-developer-tools:full-stack-developer | Tooling, audit scripts        | 99.1.1, 99.1.2  |
-| developer-tools:documentation-expert     | Convention documentation      | 99.1.3, 99.1.4  |
+| web-developer-tools:full-stack-developer | Tooling, audit scripts        | 99.1.1          |
+| developer-tools:documentation-expert     | Convention documentation      | 99.1.2, 99.1.3  |
+
+## Decisions Already Taken
+
+- **No linter.** The repository has no eslint, prettier or biome configuration, and the root `lint`
+  script matches nothing. Rather than introduce one, the acceptance criteria that claimed "linting
+  passes" were struck from the specifications; `vue-tsc` remains the automated code gate. Recorded
+  here because the absence is deliberate, not an oversight for someone to helpfully fix.
 
 ## Tasks
 
 ### Group 99.1: Repository hygiene
 
-#### Task 99.1.1: Decide the linter question
-
-| Field | Value |
-|-------|-------|
-| Status | `[ ]` Not Started |
-| Assigned | full-stack-developer |
-| Complexity | medium |
-| Dependencies | None |
-
-**Description:**
-There is no linter in this repository — no eslint, prettier or biome configuration — and the root
-`lint` script matches no package script. Any acceptance criterion claiming "linting passes" is
-currently false, and this spec set contains such claims. Either add a flat config or remove the
-claims; do not leave both in place. Worth resolving before a second package doubles the surface.
-
-**Acceptance Criteria:**
-- [ ] Either a linter runs in CI across the workspace, or no document claims one does
-- [ ] If added, it passes on the existing code without a mass reformat in the same change
-
----
-
-#### Task 99.1.2: Extend the contrast audit beyond one package
+#### Task 99.1.1: Extend the contrast audit beyond one package
 
 | Field | Value |
 |-------|-------|
@@ -71,7 +57,7 @@ from configuration.
 
 ---
 
-#### Task 99.1.3: Record the global-install exception in CLAUDE.md
+#### Task 99.1.2: Record the global-install exception in CLAUDE.md
 
 | Field | Value |
 |-------|-------|
@@ -93,7 +79,7 @@ follows the rule and undoes the reason the package was split.
 
 ---
 
-#### Task 99.1.4: Reconcile the docs with reality
+#### Task 99.1.3: Reconcile the docs with reality
 
 | Field | Value |
 |-------|-------|

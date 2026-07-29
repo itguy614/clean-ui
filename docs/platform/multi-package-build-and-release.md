@@ -142,9 +142,12 @@ build, which nothing in CI performs.
 ## Known Gaps Not Addressed Here
 
 - There is no linter in this repository: no eslint, prettier or biome configuration exists, and
-  the root `lint` script matches no package script. Any acceptance criterion asserting "linting
-  passes" is currently false. Worth resolving before a second package doubles the surface, but
-  it is a separate piece of work.
+  the root `lint` script matches no package script. **Decision: no linter is being introduced**,
+  and every acceptance criterion asserting "linting passes" has been struck rather than left
+  false. Type checking through `vue-tsc` remains the automated code gate. Adding a linter later
+  is a separate piece of work, and would come with its own decision about formatting the existing
+  code. Note the root `lint` script still exists and silently matches nothing, which is worth
+  removing whenever someone next touches the root scripts.
 - `scripts/check-contrast.mjs` reads clean-ui's `theme.css` with a hardcoded token pair list.
   Extending the audit to a second package's tokens is real work, and any requirement claiming
   a satellite package is "verified by the same contrast audit" depends on it.
