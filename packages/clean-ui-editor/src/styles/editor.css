@@ -1,0 +1,64 @@
+/**
+ * Basic structural styling — border, padding, focus ring, disabled/error
+ * states — matching CuiInput/CuiTextarea's conventions so the editor reads
+ * as a native clean-ui control. Semantic tokens only (NFR6): no hardcoded
+ * colors. Source-mode syntax highlighting (the CodeMirror HighlightStyle
+ * built from --cui-* tokens) and dark-mode reactivity land in Phase 02 —
+ * this file only covers the chrome around the CodeMirror-owned content.
+ */
+
+.cui-markdown-editor {
+  --_cme-border: var(--cui-border-strong);
+  --_cme-focus-border: var(--cui-primary);
+  --_cme-focus-ring: var(--cui-primary-focus-ring);
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--_cme-border);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  background: var(--cui-surface-base);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  /* Reserved so the SSR shell and the hydrated, CodeMirror-mounted editor
+     occupy the same height — CodeMirror's own styles are injected at
+     runtime and are absent until then. */
+  min-height: 8rem;
+}
+
+.cui-markdown-editor:focus-within:not(.cui-markdown-editor--disabled) {
+  border-color: var(--_cme-focus-border);
+  box-shadow: 0 0 0 2px var(--_cme-focus-ring);
+}
+
+.cui-markdown-editor--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cui-markdown-editor--error {
+  --_cme-border: var(--cui-error);
+  --_cme-focus-border: var(--cui-error);
+  --_cme-focus-ring: var(--cui-error-focus-ring);
+}
+
+.cui-markdown-editor__cm-host {
+  flex: 1;
+  /* Reserved so the pre-hydration shell (this div, empty) and the
+     CodeMirror-populated editor occupy the same height — CodeMirror's own
+     styles are injected at runtime and are absent until then. */
+  min-height: 6.5rem;
+}
+
+.cui-markdown-editor__cm-host .cm-editor {
+  height: 100%;
+  outline: none;
+  font-size: 0.9375rem;
+  color: var(--cui-text-body);
+}
+
+.cui-markdown-editor__cm-host .cm-content {
+  padding: 0.5rem 0.75rem;
+}
+
+.cui-markdown-editor__cm-host .cm-placeholder {
+  color: var(--cui-text-tertiary);
+}

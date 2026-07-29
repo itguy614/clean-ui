@@ -1,15 +1,15 @@
 {
-  "name": "@itguy614/clean-ui",
+  "name": "@itguy614/clean-ui-editor",
   "version": "1.2.0",
   "type": "module",
-  "description": "A clean, dark-mode-ready Vue 3 component library — 100+ token-driven, themeable, accessible components.",
+  "description": "A markdown editor for clean-ui — CodeMirror 6 buffer, hidden syntax markers, extensible via a declarative plugin API.",
   "license": "MIT",
   "author": "Kurt Wolf",
-  "homepage": "https://itguy614.github.io/clean-ui/",
+  "homepage": "https://itguy614.github.io/clean-ui/editor/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/itguy614/clean-ui.git",
-    "directory": "packages/clean-ui"
+    "directory": "packages/clean-ui-editor"
   },
   "bugs": {
     "url": "https://github.com/itguy614/clean-ui/issues"
@@ -17,14 +17,11 @@
   "keywords": [
     "vue",
     "vue3",
-    "component-library",
-    "components",
-    "ui",
-    "design-system",
-    "tailwindcss",
-    "dark-mode",
-    "typescript",
-    "accessible"
+    "markdown",
+    "editor",
+    "codemirror",
+    "wysiwyg",
+    "clean-ui"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,10 +31,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles": "./dist/clean-ui.css",
-    "./icons/lazy": {
-      "types": "./dist/icons/lazy.d.ts",
-      "import": "./dist/icons/lazy.js"
+    "./styles": "./dist/clean-ui-editor.css",
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "import": "./dist/render.js"
+    },
+    "./codemirror": {
+      "types": "./dist/codemirror.d.ts",
+      "import": "./dist/codemirror.js"
     },
     "./*": "./dist/*"
   },
@@ -47,34 +48,25 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css",
-    "./dist/icons/lazy.js",
-    "./dist/duplicate-guard.js",
-    "./src/duplicate-guard.ts",
-    "./dist/composables/useTheme.js",
-    "./dist/composables/useDensity.js"
+    "**/*.css"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node scripts/check-dist-imports.mjs .",
+    "check:imports": "node ../clean-ui/scripts/check-dist-imports.mjs .",
     "test": "vitest run --project jsdom --project ssr",
-    "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
   },
   "peerDependencies": {
+    "@itguy614/clean-ui": "^1.2.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.0",
+    "@itguy614/clean-ui": "workspace:*",
     "@vitejs/plugin-vue": "^5.2.0",
-    "@vitest/browser": "3.2.4",
     "@vue/server-renderer": "^3.5.40",
     "@vue/test-utils": "^2.4.0",
-    "es-module-lexer": "^2.3.1",
     "jsdom": "^26.1.0",
-    "playwright": "^1.62.0",
-    "tailwindcss": "^4.1.0",
     "typescript": "^5.7.0",
     "vite": "^6.3.0",
     "vitest": "^3.1.0",
@@ -82,7 +74,14 @@
     "vue-tsc": "^2.2.0"
   },
   "dependencies": {
-    "@floating-ui/vue": "^1.1.11",
-    "@phosphor-icons/vue": "^2.2.1"
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-markdown": "^6.5.1",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.7",
+    "@lezer/common": "^1.5.2",
+    "@lezer/highlight": "^1.2.3",
+    "@lezer/markdown": "^1.7.2"
   }
 }
