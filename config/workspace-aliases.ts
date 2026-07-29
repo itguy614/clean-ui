@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,4 +27,19 @@ export function workspaceAliases() {
       replacement: resolve(REPO_ROOT, "packages/clean-ui/src/index.ts"),
     },
   ];
+}
+
+/**
+ * The Vite `define` an app aliasing clean-ui to source (via `workspaceAliases`
+ * above) must also apply. `src/version.ts` reads `__CUI_VERSION__`, replaced
+ * at build time by `packages/clean-ui`'s own vite.config.ts/vitest.config.ts
+ * — but aliasing to source means that file gets bundled through the
+ * *consuming* app's Vite config instead, which never defined it, so the
+ * identifier is left bare and throws `ReferenceError: __CUI_VERSION__ is not
+ * defined` the moment anything imports the barrel. Any app using
+ * `workspaceAliases()` needs this too.
+ */
+export function cleanUiVersionDefine() {
+  const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, "packages/clean-ui/package.json"), "utf-8"));
+  return { __CUI_VERSION__: JSON.stringify(pkg.version) };
 }
