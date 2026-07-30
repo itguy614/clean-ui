@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
 import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
-import { EditorState, Compartment, type Extension } from "@codemirror/state";
+import { EditorState, Compartment, Prec, type Extension } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
@@ -12,6 +12,11 @@ import { throttle } from "../utils/throttle";
 import { revealExtension } from "../reveal";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
+import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
+import { createCommandContext } from "../plugins/command-context";
+import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
+import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
+import type { CuiEditorPlugin } from "../plugins/types";
 
 export type CuiMarkdownEditorMode = "wysiwyg" | "source";
 
@@ -35,6 +40,14 @@ export interface CuiMarkdownEditorProps {
   readonly?: boolean;
   /** Renders a built-in wysiwyg/source toggle. Set false to drive `mode` yourself. */
   showModeToggle?: boolean;
+  /**
+   * Declarative extensions (FR17). Defaults to `DEFAULT_PLUGINS` — empty
+   * until Phase 04 ships built-in formatting plugins against this same API.
+   * Create plugin instances once (module scope or a computed with no
+   * reactive deps), not inline in a template — a new array reference every
+   * render would reconfigure the editor's extensions on every render (FR22).
+   */
+  plugins?: CuiEditorPlugin[];
 }
 
 const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
@@ -47,6 +60,13 @@ const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
 const emit = defineEmits<{
   "update:modelValue": [value: string];
   "update:mode": [mode: CuiMarkdownEditorMode];
+  /** A registered plugin's command or `isActive` query threw (FR21a). */
+  pluginError: [info: PluginErrorInfo];
+  /** The `plugins` prop changed to a configuration that failed to build
+   * (FR22a's version check, or any other registry-build failure) — the
+   * previous configuration is kept and this reports why the new one wasn't
+   * applied (FR22). */
+  pluginConfigError: [message: string];
 }>();
 
 const cmHostRef = useTemplateRef<HTMLDivElement>("cmHost");
@@ -68,6 +88,53 @@ const { isDark } = useColorScheme(rootRef);
 function themeExtensions(): Extension[] {
   return [editorThemeExtension(isDark.value), syntaxHighlighting(cuiMarkdownHighlightStyle)];
 }
+
+const pluginsCompartment = new Compartment();
+
+// Reads `view` through this closure rather than a captured reference, so a
+// context built once and reused (in the keymap below, and via `runCommand`)
+// always operates on the live view — including inside a `collect()`
+// continuation that runs after an awaited gap.
+const commandContext = createCommandContext(() => view);
+
+function reportPluginWarnings(warnings: RegistryWarning[]) {
+  for (const warning of warnings) {
+    console.warn(`[CuiMarkdownEditor] ${warning.message}`);
+  }
+}
+
+function handlePluginError(info: PluginErrorInfo) {
+  emit("pluginError", info);
+}
+
+/** Builds the CodeMirror extensions a registry contributes: its raw
+ * `extensions` (grouped per plugin, not flattened, so a broken one is at
+ * least identifiable as its own subtree — FR21a) plus a keymap built from
+ * the registry's already conflict-resolved bindings, each call routed
+ * through the same guarded `invokeCommand` every other invocation path uses.
+ * `Prec.highest` so a plugin's own bindings are checked before the base
+ * editing keymap installed in `createView()`. */
+function registryExtensions(registry: PluginRegistry): Extension[] {
+  const pluginKeymap = keymap.of(
+    registry.keymap.map((entry) => ({
+      key: entry.key,
+      run: () => invokeCommand(registry, entry.command, commandContext, handlePluginError),
+    })),
+  );
+  return [Prec.highest(pluginKeymap), ...registry.extensions];
+}
+
+// The initial registry: built once here (not deferred to onMounted) since
+// `createView()` needs its extensions synchronously. `plugins` defaults to
+// `DEFAULT_PLUGINS`, which is always valid (empty), so there's no "keep the
+// previous configuration" fallback to reach for yet — that only applies to
+// the reactive watcher below, once a *previous* configuration exists.
+let currentRegistry: PluginRegistry = (() => {
+  const result = buildRegistry(props.plugins ?? DEFAULT_PLUGINS);
+  if (!result.ok) throw new Error(result.error);
+  reportPluginWarnings(result.registry.warnings);
+  return result.registry;
+})();
 
 // The value contract's echo-suppression state (FR2): the last document value
 // this component has actually told the host about (or was told to apply).
@@ -127,6 +194,7 @@ function createView(): EditorView {
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(props.mode)),
         themeCompartment.of(themeExtensions()),
+        pluginsCompartment.of(registryExtensions(currentRegistry)),
         readOnlyCompartment.of(EditorState.readOnly.of(Boolean(props.disabled || props.readonly))),
         EditorView.contentAttributes.of({
           role: "textbox",
@@ -192,6 +260,25 @@ watch(isDark, () => {
   view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions()) });
 });
 
+// FR22: build and validate the replacement configuration before applying
+// it. On failure, `currentRegistry` and the live compartment content are
+// left completely untouched — a bad `plugins` value never leaves a
+// half-reconfigured, dead editor holding the user's document.
+watch(
+  () => props.plugins,
+  (newPlugins) => {
+    const result = buildRegistry(newPlugins ?? DEFAULT_PLUGINS);
+    if (!result.ok) {
+      emit("pluginConfigError", result.error);
+      return;
+    }
+    reportPluginWarnings(result.registry.warnings);
+    currentRegistry = result.registry;
+    if (!view) return;
+    view.dispatch({ effects: pluginsCompartment.reconfigure(registryExtensions(currentRegistry)) });
+  },
+);
+
 function setMode(mode: CuiMarkdownEditorMode) {
   if (mode === props.mode) return;
   emit("update:mode", mode);
@@ -202,6 +289,13 @@ defineExpose({
   focus: () => view?.focus(),
   blur: () => view?.contentDOM.blur(),
   getView: () => view,
+  /** FR24: runs a registered command by id through the same guarded path
+   * every other invocation route (keymap, and eventually toolbar/slash
+   * menu) uses — a throwing command reports via `pluginError` and returns
+   * `false` rather than propagating. */
+  runCommand: (id: string, ...args: unknown[]) => invokeCommand(currentRegistry, id, commandContext, handlePluginError, ...args),
+  isCommandActive: (id: string) => queryIsActive(currentRegistry, id, commandContext, handlePluginError),
+  getSelection: () => (view ? commandContext.selection : null),
 });
 </script>
 
