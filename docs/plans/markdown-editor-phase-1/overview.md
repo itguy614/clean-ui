@@ -20,20 +20,20 @@ rendered widgets, split preview, and a plugin tier for custom markdown syntax.
 
 | Status      | Count |
 | ----------- | ----- |
-| Complete    | 7     |
+| Complete    | 12    |
 | In Progress | 0     |
-| Not Started | 37    |
+| Not Started | 30    |
 | Blocked     | 0     |
-| Deferred    | 0     |
+| Deferred    | 2     |
 
-**Overall Progress:** 16%
+**Overall Progress:** 27% (12/44 complete, 2 deferred)
 
 ## Phases
 
 | #   | Phase                                                    | Status      | Progress |
 | --- | -------------------------------------------------------- | ----------- | -------- |
 | 01  | [Package Scaffold and Editor Foundation](./phase-01/)    | Complete    | 7/7      |
-| 02  | [Reveal Layer and Theming](./phase-02/)                  | Not Started | 0/7      |
+| 02  | [Reveal Layer and Theming](./phase-02/)                  | Complete    | 5/7 (2 deferred) |
 | 03  | [Plugin System](./phase-03/)                             | Not Started | 0/8      |
 | 04  | [Built-in Plugins, Slash Menu and Paste](./phase-04/)    | Not Started | 0/8      |
 | 05  | [Form Integration, Limits and Messages](./phase-05/)     | Not Started | 0/5      |
@@ -79,3 +79,11 @@ in headless Chrome. It did **not** prove: touch behaviour on a physical device (
 on-screen keyboard), composition through a real input method, or how the exposed markdown sounds in
 a screen reader. Those are tasks in Phase 99 of the platform plan's browser runner and in this
 plan's Phase 02, not assumptions.
+
+**Update (Phase 02 complete):** the headless-Chrome-provable half of this debt was discharged with
+real Playwright verification — real `pointerType: "touch"` events, a CDP accessibility-tree
+extraction proving markers are exposed as `StaticText` regardless of caret position, and dark-mode
+compartment reconfiguration without a remount. What no headless environment can provide — a
+physical device and a real screen reader — was formally deferred (tasks 2.3.1 and 2.3.2, see
+`phase-02/phase-02-tasks.md`) rather than claimed complete. This remains outstanding for a later
+pass with the right hardware/software available.

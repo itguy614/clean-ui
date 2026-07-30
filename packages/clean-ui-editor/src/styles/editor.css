@@ -1,10 +1,7 @@
 /**
- * Basic structural styling — border, padding, focus ring, disabled/error
- * states — matching CuiInput/CuiTextarea's conventions so the editor reads
- * as a native clean-ui control. Semantic tokens only (NFR6): no hardcoded
- * colors. Source-mode syntax highlighting (the CodeMirror HighlightStyle
- * built from --cui-* tokens) and dark-mode reactivity land in Phase 02 —
- * this file only covers the chrome around the CodeMirror-owned content.
+ * Structural styling — border, padding, focus ring, disabled/error states —
+ * matching CuiInput/CuiTextarea's conventions so the editor reads as a
+ * native clean-ui control. Semantic tokens only (NFR6): no hardcoded colors.
  */
 
 .cui-markdown-editor {
@@ -56,9 +53,22 @@
 }
 
 .cui-markdown-editor__cm-host .cm-content {
-  padding: 0.5rem 0.75rem;
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-markdown-editor__cm-host .cm-placeholder {
   color: var(--cui-text-tertiary);
+}
+
+/**
+ * FR9: hides a markdown syntax marker *visually only* — the text stays a
+ * real DOM text node (just rendered at zero size), so it's still exposed to
+ * the accessibility tree and still traversed by the caret. `display: none`
+ * or `visibility: hidden` would remove it from that tree too, which is
+ * exactly the thing FR9 forbids — this is why Decoration.replace() (which
+ * removes the characters from the DOM outright) can't be used either.
+ */
+.cui-md-marker-hidden {
+  font-size: 0;
+  line-height: 0;
 }

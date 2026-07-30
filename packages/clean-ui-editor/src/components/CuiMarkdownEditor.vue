@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
-import { EditorView, keymap, placeholder as placeholderExtension } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
 import { EditorState, Compartment, type Extension } from "@codemirror/state";
+import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
-import { CuiButtonGroup, CuiButton } from "@itguy614/clean-ui";
+import { CuiButtonGroup, CuiButton, useColorScheme } from "@itguy614/clean-ui";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { registerEditorInstance, translateCodeMirrorError } from "../duplicate-guard";
 import { throttle } from "../utils/throttle";
+import { revealExtension } from "../reveal";
+import { editorThemeExtension } from "../theme/editor-theme";
+import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 
 export type CuiMarkdownEditorMode = "wysiwyg" | "source";
 
@@ -52,6 +56,18 @@ const isMounted = ref(false);
 let view: EditorView | null = null;
 const modeCompartment = new Compartment();
 const readOnlyCompartment = new Compartment();
+const themeCompartment = new Compartment();
+
+// clean-ui's dark mode is a `.dark` class that can land on any ancestor at
+// any time — CodeMirror's own base theme picks its (hardcoded, non-token)
+// caret/selection colours from a `dark` flag fixed when its theme extension
+// was built, so that flag must be re-driven through a compartment whenever
+// this signal changes, not just read once at mount (see src/theme/editor-theme.ts).
+const { isDark } = useColorScheme(rootRef);
+
+function themeExtensions(): Extension[] {
+  return [editorThemeExtension(isDark.value), syntaxHighlighting(cuiMarkdownHighlightStyle)];
+}
 
 // The value contract's echo-suppression state (FR2): the last document value
 // this component has actually told the host about (or was told to apply).
@@ -77,14 +93,10 @@ function resolveCspNonce(): string | undefined {
   return document.querySelector('meta[name="csp-nonce"]')?.getAttribute("content") ?? undefined;
 }
 
-/**
- * Phase 01 has no visual difference between modes yet — both are the base
- * editor. Phase 02's reveal layer plugs its hide/reveal decorations into
- * this same compartment for "wysiwyg"; "source" stays the base editor with
- * nothing added, per FR4.
- */
-function buildModeExtensions(_mode: CuiMarkdownEditorMode): Extension[] {
-  return [];
+/** `wysiwyg` gets the reveal layer (hidden markers, revealed on caret entry);
+ * `source` stays the base editor with nothing added, per FR4. */
+function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
+  return mode === "wysiwyg" ? [revealExtension()] : [];
 }
 
 function onDocChanged(value: string) {
@@ -102,6 +114,11 @@ function createView(): EditorView {
       doc: props.modelValue,
       extensions: [
         cuiMarkdownLanguage.extension,
+        // Renders the caret/selection as themeable `.cm-cursorLayer`/
+        // `.cm-selectionLayer` DOM layers instead of relying on the native
+        // browser caret and ::selection, which the chrome theme (see
+        // src/theme/editor-theme.ts) styles from --cui-* tokens.
+        drawSelection(),
         history(),
         keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap]),
         EditorView.updateListener.of((update) => {
@@ -109,6 +126,7 @@ function createView(): EditorView {
         }),
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(props.mode)),
+        themeCompartment.of(themeExtensions()),
         readOnlyCompartment.of(EditorState.readOnly.of(Boolean(props.disabled || props.readonly))),
         EditorView.contentAttributes.of({
           role: "textbox",
@@ -168,6 +186,11 @@ watch(
     view.dispatch({ effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(isReadOnly)) });
   },
 );
+
+watch(isDark, () => {
+  if (!view) return;
+  view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions()) });
+});
 
 function setMode(mode: CuiMarkdownEditorMode) {
   if (mode === props.mode) return;
