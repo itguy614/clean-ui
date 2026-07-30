@@ -37,8 +37,17 @@ function isList(type: { name: string }): boolean {
   return type.name === "OrderedList" || type.name === "BulletList";
 }
 
-const configuredParser = baseParser.configure([
-  GFM,
+/**
+ * The GFM-configured parser with no CodeMirror-specific props — a plain
+ * `@lezer/markdown` `MarkdownParser`, reused as-is by the render subpath
+ * (`src/render/`) so a document parses identically whether it's being
+ * edited or rendered to HTML, with no second markdown-parser dependency and
+ * no `@codemirror/*` import (NFR1a's tree-shaking discipline extends to that
+ * subpath, which must also stay DOM-free — see task 6.1.3).
+ */
+export const gfmParser = baseParser.configure([GFM]);
+
+const configuredParser = gfmParser.configure([
   {
     props: [
       foldNodeProp.add((type) =>

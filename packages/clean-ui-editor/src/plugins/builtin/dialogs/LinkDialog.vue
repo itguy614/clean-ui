@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiButton, CuiInput } from "@itguy614/clean-ui";
-import { isAllowedUrl } from "./url-policy";
+import { isAllowedUrl } from "../../../url-policy";
 import { pickLinkDialogMessages, defaultMarkdownEditorMessages, type LinkDialogMessages } from "../../../messages";
 
 const props = withDefaults(

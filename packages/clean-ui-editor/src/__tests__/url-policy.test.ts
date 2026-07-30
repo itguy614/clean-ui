@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { isAllowedUrl } from "../url-policy";
 
 describe("isAllowedUrl", () => {
-  it.each(["http://example.com", "https://example.com/page", "mailto:person@example.com"])(
+  it.each(["http://example.com", "https://example.com/page", "mailto:person@example.com", "tel:+15551234567"])(
     "allows %s",
     (url) => {
       expect(isAllowedUrl(url)).toBe(true);
