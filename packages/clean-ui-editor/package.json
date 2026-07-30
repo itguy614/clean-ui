@@ -48,7 +48,9 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css"
+    "**/*.css",
+    "./dist/icons.js",
+    "./src/icons.ts"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
@@ -74,6 +76,7 @@
     "vue-tsc": "^2.2.0"
   },
   "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
     "@codemirror/autocomplete": "^6.20.3",
     "@codemirror/commands": "^6.10.4",
     "@codemirror/lang-markdown": "^6.5.1",

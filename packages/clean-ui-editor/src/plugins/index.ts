@@ -1,5 +1,23 @@
 export { definePlugin } from "./define-plugin";
 export { DEFAULT_PLUGINS } from "./default-plugins";
+export {
+  boldPlugin,
+  italicPlugin,
+  strikethroughPlugin,
+  inlineCodePlugin,
+  heading1Plugin,
+  heading2Plugin,
+  heading3Plugin,
+  bulletedListPlugin,
+  numberedListPlugin,
+  taskListPlugin,
+  blockquotePlugin,
+  codeFencePlugin,
+  horizontalRulePlugin,
+  linkPlugin,
+  imagePlugin,
+  tablePastePlugin,
+} from "./builtin";
 export { buildRegistry, type PluginRegistry, type BuildRegistryResult, type RegistryWarning } from "./registry";
 export { invokeCommand, queryIsActive, type PluginErrorInfo, type PluginErrorHandler } from "./invoke-command";
 export { createCommandContext } from "./command-context";

@@ -36,6 +36,7 @@ export default defineConfig({
         test: {
           name: "ssr",
           environment: "node",
+          setupFiles: ["./src/test-setup-ssr.ts"],
           include: ["src/__tests__/ssr/**/*.test.ts"],
         },
       },

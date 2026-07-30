@@ -2,7 +2,8 @@ import { RangeSetBuilder } from "@codemirror/state";
 import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import { granularityField, setGranularityEffect } from "./granularity";
-import { SUPPORTED_CONSTRUCT_NODES, isMarkerNodeName } from "./constructs";
+import { activeConstructsField, setActiveConstructsEffect } from "./construct-policy";
+import { isMarkerNodeName } from "./constructs";
 
 /**
  * Visually hides via zero-size styling — never `Decoration.replace()`, which
@@ -22,13 +23,14 @@ function isRevealed(nodeFrom: number, nodeTo: number, view: EditorView): boolean
 
 function computeDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
+  const activeConstructs = view.state.field(activeConstructsField);
 
   for (const { from, to } of view.visibleRanges) {
     syntaxTree(view.state).iterate({
       from,
       to,
       enter: (ref) => {
-        if (!SUPPORTED_CONSTRUCT_NODES.has(ref.name)) return;
+        if (!activeConstructs.has(ref.name)) return;
         if (isRevealed(ref.from, ref.to, view)) return;
 
         let child = ref.node.firstChild;
@@ -64,7 +66,8 @@ export const revealPlugin = ViewPlugin.fromClass(
       if (update.view.compositionStarted) return;
 
       const granularityChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setGranularityEffect)));
-      if (update.docChanged || update.viewportChanged || update.selectionSet || granularityChanged) {
+      const constructsChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setActiveConstructsEffect)));
+      if (update.docChanged || update.viewportChanged || update.selectionSet || granularityChanged || constructsChanged) {
         this.decorations = computeDecorations(update.view);
       }
     }

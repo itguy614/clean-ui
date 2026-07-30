@@ -1,17 +1,44 @@
 import type { EditorView } from "@codemirror/view";
 import type { ChangeSpec } from "@codemirror/state";
+import { syntaxTree } from "@codemirror/language";
+import type { SyntaxNode } from "@lezer/common";
 import type { CommandContext } from "./types";
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
  * once and reused across invocations always operates on the current view —
  * matters for `collect()` continuations, which run after an awaited gap.
+ *
+ * `onCollectingChange`, if supplied, fires `true` for the duration of any
+ * `collect()` call and `false` once it settles — this is how the host
+ * component knows to block mode switching while a dialog is open (FR14),
+ * without `CommandContext` itself needing any concept of "mode."
  */
-export function createCommandContext(getView: () => EditorView | null): CommandContext {
+export function createCommandContext(
+  getView: () => EditorView | null,
+  onCollectingChange?: (isCollecting: boolean) => void,
+): CommandContext {
   function requireView(): EditorView {
     const view = getView();
     if (!view) throw new Error("CuiMarkdownEditor: command invoked after the editor was unmounted.");
     return view;
+  }
+
+  function findConstructRange(nodeName: string): { from: number; to: number } | null {
+    const view = requireView();
+    const pos = view.state.selection.main.head;
+    // Bias toward the node ending here first (side -1) — matters right
+    // after a closing marker, e.g. the cursor landing at "**bold**|" should
+    // still read as inside the bold construct — then fall back to the node
+    // starting here (side 1) for a cursor at the open boundary.
+    for (const side of [-1, 1] as const) {
+      let node: SyntaxNode | null = syntaxTree(view.state).resolveInner(pos, side);
+      while (node) {
+        if (node.name === nodeName) return { from: node.from, to: node.to };
+        node = node.parent;
+      }
+    }
+    return null;
   }
 
   function replaceRange(from: number, to: number, text: string): void {
@@ -66,12 +93,18 @@ export function createCommandContext(getView: () => EditorView | null): CommandC
       view.dispatch(view.state.update({ changes, scrollIntoView: true }));
     },
     async collect(open) {
-      return new Promise((resolve) => {
-        open({
-          resolve: (value) => resolve(value),
-          cancel: () => resolve(null),
+      onCollectingChange?.(true);
+      try {
+        return await new Promise((resolve) => {
+          open({
+            resolve: (value) => resolve(value),
+            cancel: () => resolve(null),
+          });
         });
-      });
+      } finally {
+        onCollectingChange?.(false);
+      }
     },
+    findConstructRange,
   };
 }

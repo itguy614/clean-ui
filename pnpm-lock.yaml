@@ -120,6 +120,9 @@ importers:
       '@lezer/markdown':
         specifier: ^1.7.2
         version: 1.7.2
+      '@phosphor-icons/vue':
+        specifier: ^2.2.1
+        version: 2.2.1(vue@3.5.40(typescript@5.9.3))
     devDependencies:
       '@itguy614/clean-ui':
         specifier: workspace:*

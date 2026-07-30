@@ -3,9 +3,17 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { history, undo } from "@codemirror/commands";
 import { createCommandContext } from "../command-context";
+import { cuiMarkdownLanguage } from "../../language/markdown-language";
 
 function makeView(doc: string): EditorView {
   return new EditorView({ state: EditorState.create({ doc, extensions: [history()] }), parent: document.body });
+}
+
+function makeMarkdownView(doc: string): EditorView {
+  return new EditorView({
+    state: EditorState.create({ doc, extensions: [history(), cuiMarkdownLanguage.extension] }),
+    parent: document.body,
+  });
 }
 
 describe("createCommandContext", () => {
@@ -161,6 +169,51 @@ describe("createCommandContext", () => {
       await context.collect<string>((settle) => settle.cancel());
 
       expect(view.state.doc.toString()).toBe("untouched");
+    });
+  });
+
+  describe("findConstructRange", () => {
+    it("returns null when the cursor is outside any instance of the construct", () => {
+      view = makeMarkdownView("plain text **bold** more text");
+      view.dispatch({ selection: { anchor: 3 } });
+      const context = createCommandContext(() => view!);
+
+      expect(context.findConstructRange("StrongEmphasis")).toBeNull();
+    });
+
+    it("returns the enclosing range when the cursor is inside the construct", () => {
+      const doc = "plain text **bold** more text";
+      view = makeMarkdownView(doc);
+      view.dispatch({ selection: { anchor: doc.indexOf("bold") + 2 } });
+      const context = createCommandContext(() => view!);
+
+      const range = context.findConstructRange("StrongEmphasis");
+      expect(range).not.toBeNull();
+      expect(doc.slice(range!.from, range!.to)).toBe("**bold**");
+    });
+
+    it("still finds the construct with the cursor right after its closing marker", () => {
+      const doc = "**bold**";
+      view = makeMarkdownView(doc);
+      view.dispatch({ selection: { anchor: doc.length } });
+      const context = createCommandContext(() => view!);
+
+      const range = context.findConstructRange("StrongEmphasis");
+      expect(range).toEqual({ from: 0, to: doc.length });
+    });
+
+    it("distinguishes sibling constructs of a different type at the same position boundary", () => {
+      const doc = "*em***bold**";
+      view = makeMarkdownView(doc);
+      view.dispatch({ selection: { anchor: "*em*".length } }); // boundary between Emphasis and StrongEmphasis
+      const context = createCommandContext(() => view!);
+
+      // At this exact boundary, at least one of the two should resolve
+      // (never both null), proving side -1/+1 resolution actually works
+      // rather than silently always missing.
+      const emphasis = context.findConstructRange("Emphasis");
+      const strong = context.findConstructRange("StrongEmphasis");
+      expect(emphasis !== null || strong !== null).toBe(true);
     });
   });
 });

@@ -1,24 +1,30 @@
 import { NodeProp } from "@lezer/common";
 import { GFM, parser as baseParser } from "@lezer/markdown";
-import {
-  Language,
-  defineLanguageFacet,
-  languageDataProp,
-  foldNodeProp,
-  indentNodeProp,
-} from "@codemirror/language";
+import { Language, languageDataProp, foldNodeProp, indentNodeProp } from "@codemirror/language";
+import { markdownLanguage } from "@codemirror/lang-markdown";
 
 /**
  * The markdown language, built directly from `@lezer/markdown` + `GFM` —
- * deliberately NOT `@codemirror/lang-markdown`'s `markdown()`/`markdownLanguage`,
- * whose static dependency on `@codemirror/lang-html` (for embedded-HTML
- * support this editor doesn't use) costs 70 kB gzip (NFR1a). This is the
- * same construction `@codemirror/lang-markdown` itself uses internally to
- * build its own `commonmarkLanguage` — reimplemented here starting from the
+ * deliberately NOT `@codemirror/lang-markdown`'s `markdown()` factory, whose
+ * static dependency on `@codemirror/lang-html` (for embedded-HTML support
+ * this editor doesn't use) costs 70 kB gzip (NFR1a). This is the same
+ * construction `@codemirror/lang-markdown` itself uses internally to build
+ * its own `commonmarkLanguage` — reimplemented here starting from the
  * GFM-configured parser instead, so the HTML import is never reached at all.
+ *
+ * `data` reuses `markdownLanguage.data` (imported directly, not through
+ * `markdown()`, so this alone doesn't reach the HTML dependency either —
+ * `markdownLanguage`'s own construction is plain `@lezer/markdown` + GFM,
+ * exactly like this file's) rather than defining a new facet, because
+ * `@codemirror/lang-markdown`'s exported `insertNewlineContinueMarkup` /
+ * `deleteMarkupBackward` (task 4.2.1) gate on `markdownLanguage.isActiveAt()`,
+ * which compares the parsed document's language-data facet by *identity*
+ * against that one specific facet object. A separately-`defineLanguageFacet`d
+ * facet — however identical in content — always fails that check, silently
+ * turning both commands into no-ops. Confirmed by writing the list-typing
+ * tests first and watching them fail before this fix.
  */
-
-const data = defineLanguageFacet({ commentTokens: { block: { open: "<!--", close: "-->" } } });
+const data = markdownLanguage.data;
 
 const headingProp = new NodeProp<number>();
 

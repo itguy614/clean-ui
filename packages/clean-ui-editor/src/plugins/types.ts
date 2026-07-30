@@ -55,6 +55,16 @@ export interface CommandContext {
   replaceRanges(edits: Array<{ from: number; to: number; text: string }>): void;
   /** Opens an async collection gate (FR18a). Resolves `null` on cancel. */
   collect<T>(open: CollectOpener<T>): Promise<T | null>;
+  /**
+   * The range of the nearest ancestor syntax node named `nodeName` enclosing
+   * the current selection head, or `null` if the cursor isn't inside one.
+   * Built-in toggle commands (bold, italic, headings, ...) use this for
+   * `isActive` and to find the exact range to strip on toggle-off (FR12) —
+   * added once those commands, the tier's first real users, needed it (a
+   * plain node-name string in, a plain range out, so it doesn't leak
+   * CodeMirror's own tree/`NodeType` types into the declarative surface).
+   */
+  findConstructRange(nodeName: string): { from: number; to: number } | null;
 }
 
 /** Synchronous, returns whether it handled the invocation (FR18). Async work

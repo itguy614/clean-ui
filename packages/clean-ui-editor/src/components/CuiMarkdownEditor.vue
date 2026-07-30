@@ -5,18 +5,22 @@ import { EditorState, Compartment, Prec, type Extension } from "@codemirror/stat
 import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
+import { completionKeymap } from "@codemirror/autocomplete";
 import { CuiButtonGroup, CuiButton, useColorScheme } from "@itguy614/clean-ui";
+import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { registerEditorInstance, translateCodeMirrorError } from "../duplicate-guard";
 import { throttle } from "../utils/throttle";
-import { revealExtension } from "../reveal";
+import { revealExtension, setActiveConstructsEffect } from "../reveal";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
 import { createCommandContext } from "../plugins/command-context";
 import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
+import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
 import type { CuiEditorPlugin } from "../plugins/types";
+import { convertHtmlToMarkdown } from "../paste/convert-html";
 
 export type CuiMarkdownEditorMode = "wysiwyg" | "source";
 
@@ -48,6 +52,14 @@ export interface CuiMarkdownEditorProps {
    * render would reconfigure the editor's extensions on every render (FR22).
    */
   plugins?: CuiEditorPlugin[];
+  /** Subsets and orders the toolbar by command id (task 4.1.2). Omit for the
+   * full set the active plugins collect. Replace the toolbar entirely with
+   * the `#toolbar` slot instead of this prop. */
+  toolbar?: string[];
+  /** Renders the plugin-command toolbar (bold/italic/... from the active
+   * `plugins`). Set false to omit it — e.g. when replacing it via `#toolbar`
+   * would be redundant, or a host wants only the mode toggle. */
+  showToolbar?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
@@ -55,6 +67,7 @@ const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
   mode: "wysiwyg",
   throttle: 0,
   showModeToggle: true,
+  showToolbar: true,
 });
 
 const emit = defineEmits<{
@@ -67,6 +80,9 @@ const emit = defineEmits<{
    * previous configuration is kept and this reports why the new one wasn't
    * applied (FR22). */
   pluginConfigError: [message: string];
+  /** FR28: a pasted image file was refused (no upload affordance exists in
+   * v1) — nothing was inserted; `message` is a host-displayable explanation. */
+  pasteRejected: [message: string];
 }>();
 
 const cmHostRef = useTemplateRef<HTMLDivElement>("cmHost");
@@ -91,11 +107,25 @@ function themeExtensions(): Extension[] {
 
 const pluginsCompartment = new Compartment();
 
+// FR14: true for the duration of any `collect()` call (e.g. the link/image
+// dialogs) — disables the mode-toggle buttons below so a dialog stays valid
+// against whichever mode was active when it opened.
+const isCollecting = ref(false);
+
 // Reads `view` through this closure rather than a captured reference, so a
 // context built once and reused (in the keymap below, and via `runCommand`)
 // always operates on the live view — including inside a `collect()`
 // continuation that runs after an awaited gap.
-const commandContext = createCommandContext(() => view);
+const commandContext = createCommandContext(
+  () => view,
+  (collecting) => (isCollecting.value = collecting),
+);
+
+// Bumped on every selection/document change so the toolbar's pressed state
+// (which reads live CodeMirror state through `isCommandActive`, not a Vue
+// ref) has a reactive dependency to re-render against — see updateListener
+// in createView() and CuiMarkdownEditorToolbar's `selectionVersion` prop.
+const selectionVersion = ref(0);
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
   for (const warning of warnings) {
@@ -121,7 +151,7 @@ function registryExtensions(registry: PluginRegistry): Extension[] {
       run: () => invokeCommand(registry, entry.command, commandContext, handlePluginError),
     })),
   );
-  return [Prec.highest(pluginKeymap), ...registry.extensions];
+  return [Prec.highest(pluginKeymap), slashMenuExtension(registry, commandContext, handlePluginError), ...registry.extensions];
 }
 
 // The initial registry: built once here (not deferred to onMounted) since
@@ -160,14 +190,52 @@ function resolveCspNonce(): string | undefined {
   return document.querySelector('meta[name="csp-nonce"]')?.getAttribute("content") ?? undefined;
 }
 
+/** FR27/FR29: the reveal layer only decorates constructs the active plugins
+ * actually declare via `decorations` — excluding a plugin means its markers
+ * stay literal, unstyled text. */
+function activeConstructsFromRegistry(registry: PluginRegistry): ReadonlySet<string> {
+  return new Set(registry.decorations.map((rule) => rule.node));
+}
+
 /** `wysiwyg` gets the reveal layer (hidden markers, revealed on caret entry);
  * `source` stays the base editor with nothing added, per FR4. */
 function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
-  return mode === "wysiwyg" ? [revealExtension()] : [];
+  return mode === "wysiwyg" ? [revealExtension(activeConstructsFromRegistry(currentRegistry))] : [];
 }
 
 function onDocChanged(value: string) {
   emitModelValue(value);
+}
+
+/**
+ * FR28: HTML paste converts to markdown through the active plugins' own
+ * `paste` rules; a modifier/"paste as plain text" action naturally has no
+ * `text/html` clipboard entry at all (the browser strips it before this
+ * handler ever runs), so falling through to CodeMirror's own default paste
+ * handling for that case needs no special-casing here. An image file paste
+ * is refused outright — no upload affordance exists in v1.
+ */
+function handlePaste(event: ClipboardEvent, targetView: EditorView): boolean {
+  const clipboardData = event.clipboardData;
+  if (!clipboardData) return false;
+
+  const imageFile = [...clipboardData.files].find((file) => file.type.startsWith("image/"));
+  if (imageFile) {
+    event.preventDefault();
+    emit("pasteRejected", "Pasted images aren't supported yet — insert an image by URL instead.");
+    return true;
+  }
+
+  const html = clipboardData.getData("text/html");
+  if (!html) return false;
+
+  const markdown = convertHtmlToMarkdown(html, currentRegistry.paste, currentRegistry.constructs);
+  if (!markdown.trim()) return false;
+
+  event.preventDefault();
+  const { from, to } = targetView.state.selection.main;
+  targetView.dispatch({ changes: { from, to, insert: markdown }, selection: { anchor: from + markdown.length } });
+  return true;
 }
 
 function createView(): EditorView {
@@ -187,10 +255,12 @@ function createView(): EditorView {
         // src/theme/editor-theme.ts) styles from --cui-* tokens.
         drawSelection(),
         history(),
-        keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap]),
+        keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap, ...completionKeymap]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) onDocChanged(update.state.doc.toString());
+          if (update.docChanged || update.selectionSet) selectionVersion.value++;
         }),
+        EditorView.domEventHandlers({ paste: handlePaste }),
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(props.mode)),
         themeCompartment.of(themeExtensions()),
@@ -275,7 +345,16 @@ watch(
     reportPluginWarnings(result.registry.warnings);
     currentRegistry = result.registry;
     if (!view) return;
-    view.dispatch({ effects: pluginsCompartment.reconfigure(registryExtensions(currentRegistry)) });
+    view.dispatch({
+      effects: [
+        pluginsCompartment.reconfigure(registryExtensions(currentRegistry)),
+        // The reveal layer's own construct policy (FR27/FR29) — only
+        // present in wysiwyg mode, so only worth updating there; dispatching
+        // an effect an inactive StateField doesn't have is a harmless no-op,
+        // but the guard keeps this from doing pointless work in source mode.
+        ...(props.mode === "wysiwyg" ? [setActiveConstructsEffect.of(activeConstructsFromRegistry(currentRegistry))] : []),
+      ],
+    });
   },
 );
 
@@ -284,17 +363,25 @@ function setMode(mode: CuiMarkdownEditorMode) {
   emit("update:mode", mode);
 }
 
+/** FR24: runs a registered command by id through the same guarded path
+ * every other invocation route (keymap, toolbar, imperative call) uses — a
+ * throwing command reports via `pluginError` and returns `false` rather
+ * than propagating. Also the toolbar's click handler (below). */
+function runCommand(id: string, ...args: unknown[]): boolean {
+  return invokeCommand(currentRegistry, id, commandContext, handlePluginError, ...args);
+}
+
+function isCommandActive(id: string): boolean {
+  return queryIsActive(currentRegistry, id, commandContext, handlePluginError);
+}
+
 defineExpose({
   el: rootRef,
   focus: () => view?.focus(),
   blur: () => view?.contentDOM.blur(),
   getView: () => view,
-  /** FR24: runs a registered command by id through the same guarded path
-   * every other invocation route (keymap, and eventually toolbar/slash
-   * menu) uses — a throwing command reports via `pluginError` and returns
-   * `false` rather than propagating. */
-  runCommand: (id: string, ...args: unknown[]) => invokeCommand(currentRegistry, id, commandContext, handlePluginError, ...args),
-  isCommandActive: (id: string) => queryIsActive(currentRegistry, id, commandContext, handlePluginError),
+  runCommand,
+  isCommandActive,
   getSelection: () => (view ? commandContext.selection : null),
 });
 </script>
@@ -309,7 +396,7 @@ defineExpose({
       <CuiButton
         size="sm"
         :variant="mode === 'wysiwyg' ? 'solid' : 'outline'"
-        :disabled="disabled"
+        :disabled="disabled || isCollecting"
         data-testid="cui-markdown-editor-mode-wysiwyg"
         @click="setMode('wysiwyg')"
       >
@@ -318,13 +405,23 @@ defineExpose({
       <CuiButton
         size="sm"
         :variant="mode === 'source' ? 'solid' : 'outline'"
-        :disabled="disabled"
+        :disabled="disabled || isCollecting"
         data-testid="cui-markdown-editor-mode-source"
         @click="setMode('source')"
       >
         Source
       </CuiButton>
     </CuiButtonGroup>
+    <slot name="toolbar" :registry="currentRegistry" :run-command="runCommand" :is-command-active="isCommandActive">
+      <CuiMarkdownEditorToolbar
+        v-if="showToolbar"
+        :registry="currentRegistry"
+        :toolbar="toolbar"
+        :run-command="runCommand"
+        :is-command-active="isCommandActive"
+        :selection-version="selectionVersion"
+      />
+    </slot>
     <div
       ref="cmHost"
       class="cui-markdown-editor__cm-host"
