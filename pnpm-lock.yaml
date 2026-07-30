@@ -39,6 +39,40 @@ importers:
         specifier: ^2.2.0
         version: 2.2.12(typescript@5.9.3)
 
+  apps/editor-docs:
+    dependencies:
+      '@itguy614/clean-ui':
+        specifier: workspace:*
+        version: link:../../packages/clean-ui
+      '@itguy614/clean-ui-editor':
+        specifier: workspace:*
+        version: link:../../packages/clean-ui-editor
+      vue:
+        specifier: ^3.5.40
+        version: 3.5.40(typescript@5.9.3)
+      vue-router:
+        specifier: ^5.0.4
+        version: 5.0.4(@vue/compiler-sfc@3.5.40)(vue@3.5.40(typescript@5.9.3))
+    devDependencies:
+      '@tailwindcss/vite':
+        specifier: ^4.1.0
+        version: 4.2.2(vite@6.4.2(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
+      '@vitejs/plugin-vue':
+        specifier: ^5.2.0
+        version: 5.2.4(vite@6.4.2(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))(vue@3.5.40(typescript@5.9.3))
+      tailwindcss:
+        specifier: ^4.1.0
+        version: 4.2.2
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.3.0
+        version: 6.4.2(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3)
+      vue-tsc:
+        specifier: ^2.2.0
+        version: 2.2.12(typescript@5.9.3)
+
   packages/clean-ui:
     dependencies:
       '@floating-ui/vue':

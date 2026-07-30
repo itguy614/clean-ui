@@ -12,4 +12,7 @@
  * 404.html for why a nested 404.html alone would NOT make a non-root site's
  * deep links work on GitHub Pages.
  */
-export const DOCS_SITES = [{ dir: "apps/docs", base: "/" }];
+export const DOCS_SITES = [
+  { dir: "apps/docs", base: "/" },
+  { dir: "apps/editor-docs", base: "/editor/" },
+];
