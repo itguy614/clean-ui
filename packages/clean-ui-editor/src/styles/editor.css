@@ -37,6 +37,35 @@
   --_cme-focus-ring: var(--cui-error-focus-ring);
 }
 
+.cui-markdown-editor__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
+  gap: calc(1rem * var(--cui-density-scale, 1));
+}
+
+.cui-markdown-editor__error {
+  font-size: 0.8125rem;
+  color: var(--cui-error);
+}
+
+.cui-markdown-editor__spacer {
+  flex: 1;
+}
+
+.cui-markdown-editor__counter {
+  font-size: 0.75rem;
+  color: var(--cui-text-tertiary);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.cui-markdown-editor__counter--over {
+  color: var(--cui-error);
+  font-weight: 500;
+}
+
 .cui-markdown-editor__cm-host {
   flex: 1;
   /* Reserved so the pre-hydration shell (this div, empty) and the

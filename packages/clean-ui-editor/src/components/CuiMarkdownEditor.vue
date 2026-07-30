@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
 import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
-import { EditorState, Compartment, Prec, type Extension } from "@codemirror/state";
+import { EditorState, Compartment, Prec, Annotation, type Extension, type Transaction } from "@codemirror/state";
 import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
@@ -21,6 +21,7 @@ import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
 import type { CuiEditorPlugin } from "../plugins/types";
 import { convertHtmlToMarkdown } from "../paste/convert-html";
+import { useMarkdownEditorMessages } from "../composables/useMarkdownEditorMessages";
 
 export type CuiMarkdownEditorMode = "wysiwyg" | "source";
 
@@ -32,6 +33,29 @@ export interface CuiMarkdownEditorProps {
   placeholder?: string;
   /** Minimum ms between `update:modelValue` emissions. 0 (default) emits on every change. */
   throttle?: number;
+  /** Applied to the editable surface (`.cm-content`, `role="textbox"`), not
+   * the outer wrapper — so a `<label for>` pointing at it actually focuses
+   * the editor, matching how `CuiFormField`'s slot bindings are meant to be
+   * spread onto a field (FR31). */
+  id?: string;
+  /** Recolors the border to `--cui-error` and sets `aria-invalid`, matching
+   * `CuiInput`/`CuiTextarea`'s own convention. */
+  error?: boolean;
+  /** Shown below the editor when `error` is true. */
+  errorMessage?: string;
+  /** Sets `aria-required` on the editable surface. Presentational only —
+   * `CuiForm` validates through a resolver, not native required validation,
+   * so this never blocks submission by itself (FR31). */
+  required?: boolean;
+  /**
+   * Counts markdown source characters (what a storage column holds), and
+   * shows a counter like `CuiTextarea`. Unlike `CuiTextarea`, this never
+   * truncates: an edit or paste that would exceed the limit is refused
+   * outright, since cutting markdown at a character boundary can split a
+   * link or leave an unclosed code fence (FR32). Client-side only — the
+   * server must still validate stored length.
+   */
+  maxLength?: number;
   /**
    * Content-Security-Policy nonce, applied when the editor is constructed.
    * CodeMirror injects its styles at runtime, so under a strict `style-src`
@@ -68,6 +92,8 @@ const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
   throttle: 0,
   showModeToggle: true,
   showToolbar: true,
+  error: false,
+  required: false,
 });
 
 const emit = defineEmits<{
@@ -83,6 +109,11 @@ const emit = defineEmits<{
   /** FR28: a pasted image file was refused (no upload affordance exists in
    * v1) — nothing was inserted; `message` is a host-displayable explanation. */
   pasteRejected: [message: string];
+  /** FR32: an edit or paste was refused because it would exceed `maxLength`;
+   * nothing was inserted. `message` names the overage for paste specifically
+   * (typing simply stops accepting new characters, with no discrete event
+   * per keystroke to report). */
+  maxLengthExceeded: [message: string];
 }>();
 
 const cmHostRef = useTemplateRef<HTMLDivElement>("cmHost");
@@ -93,6 +124,52 @@ let view: EditorView | null = null;
 const modeCompartment = new Compartment();
 const readOnlyCompartment = new Compartment();
 const themeCompartment = new Compartment();
+const contentAttrsCompartment = new Compartment();
+
+// Marks a transaction as host-driven (the `modelValue` sync watcher below),
+// exempting it from the maxLength guard: FR32 refuses *edits and pastes*
+// that would exceed the limit, but a host is free to supply — and this
+// component must still faithfully display, per the value contract's "never
+// rewrites content the user did not edit" — a document already over length
+// (e.g. legacy content saved before a limit existed).
+const externalSync = Annotation.define<boolean>();
+
+// Live doc length for the counter (task 5.2.1) — tracked from the
+// updateListener directly rather than derived from `modelValue`, since that
+// prop can lag behind the real buffer under a throttle (see `emitModelValue`).
+const docLength = ref(0);
+
+/** `id`/`error`/`required` all belong on the editable surface itself (FR31)
+ * — the same element that already carries `role="textbox"` — not the outer
+ * wrapper, so a `<label for>` and a screen reader's error/required state
+ * both target the thing that's actually focusable and editable. */
+function buildContentAttributes(): Record<string, string> {
+  return {
+    role: "textbox",
+    "aria-multiline": "true",
+    "data-testid": "cui-markdown-editor-content",
+    ...(props.id ? { id: props.id } : {}),
+    ...(props.error ? { "aria-invalid": "true" } : {}),
+    ...(props.required ? { "aria-required": "true" } : {}),
+  };
+}
+
+const isAtLimit = computed(() => props.maxLength !== undefined && docLength.value >= props.maxLength);
+
+/**
+ * FR32: refuses rather than truncates. A transaction filter (not a change
+ * filter) so it sees the resulting document as a whole — truncating at
+ * `tr.newDoc.length - maxLength` characters, the naive alternative, can cut
+ * a link mid-URL or leave a code fence unclosed. Reading `props.maxLength`
+ * live in the closure means no Compartment/reconfigure is needed when the
+ * prop changes. Exempts `externalSync`-tagged transactions — see that
+ * annotation's own comment.
+ */
+function maxLengthFilter(tr: Transaction) {
+  if (!tr.docChanged || tr.annotation(externalSync)) return tr;
+  if (props.maxLength !== undefined && tr.newDoc.length > props.maxLength) return [];
+  return tr;
+}
 
 // clean-ui's dark mode is a `.dark` class that can land on any ancestor at
 // any time — CodeMirror's own base theme picks its (hardcoded, non-token)
@@ -112,6 +189,8 @@ const pluginsCompartment = new Compartment();
 // against whichever mode was active when it opened.
 const isCollecting = ref(false);
 
+const messages = useMarkdownEditorMessages();
+
 // Reads `view` through this closure rather than a captured reference, so a
 // context built once and reused (in the keymap below, and via `runCommand`)
 // always operates on the live view — including inside a `collect()`
@@ -119,6 +198,7 @@ const isCollecting = ref(false);
 const commandContext = createCommandContext(
   () => view,
   (collecting) => (isCollecting.value = collecting),
+  () => messages.value,
 );
 
 // Bumped on every selection/document change so the toolbar's pressed state
@@ -151,7 +231,11 @@ function registryExtensions(registry: PluginRegistry): Extension[] {
       run: () => invokeCommand(registry, entry.command, commandContext, handlePluginError),
     })),
   );
-  return [Prec.highest(pluginKeymap), slashMenuExtension(registry, commandContext, handlePluginError), ...registry.extensions];
+  return [
+    Prec.highest(pluginKeymap),
+    slashMenuExtension(registry, commandContext, handlePluginError, () => messages.value),
+    ...registry.extensions,
+  ];
 }
 
 // The initial registry: built once here (not deferred to onMounted) since
@@ -222,18 +306,28 @@ function handlePaste(event: ClipboardEvent, targetView: EditorView): boolean {
   const imageFile = [...clipboardData.files].find((file) => file.type.startsWith("image/"));
   if (imageFile) {
     event.preventDefault();
-    emit("pasteRejected", "Pasted images aren't supported yet — insert an image by URL instead.");
+    emit("pasteRejected", messages.value.pasteRejectedImage);
     return true;
   }
 
   const html = clipboardData.getData("text/html");
-  if (!html) return false;
+  const markdown = html ? convertHtmlToMarkdown(html, currentRegistry.paste, currentRegistry.constructs) : clipboardData.getData("text/plain");
 
-  const markdown = convertHtmlToMarkdown(html, currentRegistry.paste, currentRegistry.constructs);
+  const { from, to } = targetView.state.selection.main;
+  if (props.maxLength !== undefined) {
+    const resultLength = targetView.state.doc.length - (to - from) + markdown.length;
+    const overage = resultLength - props.maxLength;
+    if (overage > 0) {
+      event.preventDefault();
+      emit("maxLengthExceeded", messages.value.maxLengthExceeded(overage, props.maxLength));
+      return true;
+    }
+  }
+
+  if (!html) return false; // within limit — fall through to CodeMirror's own plain-text paste
   if (!markdown.trim()) return false;
 
   event.preventDefault();
-  const { from, to } = targetView.state.selection.main;
   targetView.dispatch({ changes: { from, to, insert: markdown }, selection: { anchor: from + markdown.length } });
   return true;
 }
@@ -257,20 +351,20 @@ function createView(): EditorView {
         history(),
         keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap, ...completionKeymap]),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) onDocChanged(update.state.doc.toString());
+          if (update.docChanged) {
+            onDocChanged(update.state.doc.toString());
+            docLength.value = update.state.doc.length;
+          }
           if (update.docChanged || update.selectionSet) selectionVersion.value++;
         }),
+        EditorState.transactionFilter.of(maxLengthFilter),
         EditorView.domEventHandlers({ paste: handlePaste }),
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(props.mode)),
         themeCompartment.of(themeExtensions()),
         pluginsCompartment.of(registryExtensions(currentRegistry)),
         readOnlyCompartment.of(EditorState.readOnly.of(Boolean(props.disabled || props.readonly))),
-        EditorView.contentAttributes.of({
-          role: "textbox",
-          "aria-multiline": "true",
-          "data-testid": "cui-markdown-editor-content",
-        }),
+        contentAttrsCompartment.of(EditorView.contentAttributes.of(buildContentAttributes())),
         EditorView.editable.of(!props.disabled),
         ...(nonce ? [EditorView.cspNonce.of(nonce)] : []),
       ],
@@ -284,6 +378,7 @@ onMounted(() => {
   } catch (error) {
     throw translateCodeMirrorError(error);
   }
+  docLength.value = view.state.doc.length;
   isMounted.value = true;
 });
 
@@ -300,6 +395,7 @@ watch(
     if (!view) return;
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: newValue },
+      annotations: externalSync.of(true),
     });
   },
 );
@@ -311,7 +407,9 @@ watch(
     view.dispatch({
       effects: [
         modeCompartment.reconfigure(buildModeExtensions(newMode)),
-        EditorView.announce.of(newMode === "source" ? "Source mode" : "Formatted mode"),
+        EditorView.announce.of(
+          newMode === "source" ? messages.value.modeToggleSourceAnnounce : messages.value.modeToggleFormattedAnnounce,
+        ),
       ],
     });
   },
@@ -329,6 +427,16 @@ watch(isDark, () => {
   if (!view) return;
   view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions()) });
 });
+
+watch(
+  () => [props.id, props.error, props.required],
+  () => {
+    if (!view) return;
+    view.dispatch({
+      effects: contentAttrsCompartment.reconfigure(EditorView.contentAttributes.of(buildContentAttributes())),
+    });
+  },
+);
 
 // FR22: build and validate the replacement configuration before applying
 // it. On failure, `currentRegistry` and the live compartment content are
@@ -390,7 +498,7 @@ defineExpose({
   <div
     ref="root"
     class="cui-markdown-editor"
-    :class="{ 'cui-markdown-editor--disabled': disabled }"
+    :class="{ 'cui-markdown-editor--disabled': disabled, 'cui-markdown-editor--error': error }"
   >
     <CuiButtonGroup v-if="showModeToggle" style="margin: 0.375rem 0.375rem 0">
       <CuiButton
@@ -400,7 +508,7 @@ defineExpose({
         data-testid="cui-markdown-editor-mode-wysiwyg"
         @click="setMode('wysiwyg')"
       >
-        Formatted
+        {{ messages.modeToggleFormatted }}
       </CuiButton>
       <CuiButton
         size="sm"
@@ -409,7 +517,7 @@ defineExpose({
         data-testid="cui-markdown-editor-mode-source"
         @click="setMode('source')"
       >
-        Source
+        {{ messages.modeToggleSource }}
       </CuiButton>
     </CuiButtonGroup>
     <slot name="toolbar" :registry="currentRegistry" :run-command="runCommand" :is-command-active="isCommandActive">
@@ -427,5 +535,19 @@ defineExpose({
       class="cui-markdown-editor__cm-host"
       :data-testid="isMounted ? 'cui-markdown-editor' : 'cui-markdown-editor-shell'"
     />
+    <div v-if="(error && errorMessage) || maxLength !== undefined" class="cui-markdown-editor__footer">
+      <div v-if="error && errorMessage" class="cui-markdown-editor__error" data-testid="cui-markdown-editor-error">
+        {{ errorMessage }}
+      </div>
+      <div v-else class="cui-markdown-editor__spacer" />
+      <div
+        v-if="maxLength !== undefined"
+        class="cui-markdown-editor__counter"
+        :class="{ 'cui-markdown-editor__counter--over': isAtLimit }"
+        data-testid="cui-markdown-editor-counter"
+      >
+        {{ messages.counter(docLength, maxLength!) }}
+      </div>
+    </div>
   </div>
 </template>

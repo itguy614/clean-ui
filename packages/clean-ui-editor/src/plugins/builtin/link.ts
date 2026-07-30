@@ -1,6 +1,7 @@
 import { definePlugin } from "../define-plugin";
 import { mountStandaloneDialog } from "./dialogs/mount-standalone";
 import LinkDialog from "./dialogs/LinkDialog.vue";
+import { pickLinkDialogMessages } from "../../messages";
 import type { CommandContext } from "../types";
 
 const URL_LOOKING_PATTERN = /^(https?:\/\/|mailto:)\S+$/i;
@@ -25,6 +26,7 @@ export const linkPlugin = definePlugin({
             const unmount = mountStandaloneDialog(LinkDialog, {
               initialUrl: initial.url,
               initialLabel: initial.label,
+              messages: pickLinkDialogMessages(context.messages),
               onSubmit: (values: { url: string; label: string }) => {
                 settle.resolve(values);
                 unmount();

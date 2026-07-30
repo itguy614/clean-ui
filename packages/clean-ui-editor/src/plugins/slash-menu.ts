@@ -3,6 +3,7 @@ import type { Extension } from "@codemirror/state";
 import type { CommandContext } from "./types";
 import type { PluginRegistry } from "./registry";
 import { invokeCommand, type PluginErrorHandler } from "./invoke-command";
+import { defaultMarkdownEditorMessages, resolveCommandLabel, type CuiMarkdownEditorMessages } from "../messages";
 
 /**
  * FR20: any command carrying both a `label` and an `icon` qualifies for the
@@ -22,8 +23,18 @@ export function slashMenuCommandIds(registry: PluginRegistry): Array<{ id: strin
  * Built on CodeMirror's own autocomplete so filtering, arrow navigation,
  * Enter-to-run and Escape-to-dismiss (leaving the typed text untouched) all
  * come from the library rather than being reimplemented.
+ *
+ * `getMessages`, if supplied, is called fresh on every query (not once at
+ * extension-build time) so a locale switch after mount is picked up with no
+ * extra reconfigure wiring — this completion source is already a plain
+ * function CodeMirror re-invokes live per keystroke (task 5.2.2).
  */
-export function slashMenuExtension(registry: PluginRegistry, context: CommandContext, onError: PluginErrorHandler): Extension {
+export function slashMenuExtension(
+  registry: PluginRegistry,
+  context: CommandContext,
+  onError: PluginErrorHandler,
+  getMessages: () => CuiMarkdownEditorMessages = () => defaultMarkdownEditorMessages,
+): Extension {
   const commandIds = slashMenuCommandIds(registry);
 
   function source(completionContext: CompletionContext): CompletionResult | null {
@@ -33,8 +44,9 @@ export function slashMenuExtension(registry: PluginRegistry, context: CommandCon
     // "/" typed) shouldn't pop the menu just because completion is active.
     if (match.from === match.to && !completionContext.explicit) return null;
 
+    const messages = getMessages();
     const options: Completion[] = commandIds.map(({ id, label }) => ({
-      label,
+      label: resolveCommandLabel(messages, id, label),
       type: "keyword",
       apply(view, _completion, _from, to) {
         // The result's own `from` (below) is deliberately *after* the "/" —

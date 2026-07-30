@@ -1,4 +1,5 @@
 import type { Extension } from "@codemirror/state";
+import type { CuiMarkdownEditorMessages } from "../messages";
 
 /**
  * Bumped only when the declarative plugin contract itself breaks — a plugin
@@ -65,6 +66,11 @@ export interface CommandContext {
    * CodeMirror's own tree/`NodeType` types into the declarative surface).
    */
   findConstructRange(nodeName: string): { from: number; to: number } | null;
+  /** This package's resolved message catalog (task 5.2.2) — read by a
+   * command that renders its own dialog (link, image) so that UI honors the
+   * host's locale even though it mounts as a detached Vue app with no
+   * `inject()` access to `CuiConfigProvider`. */
+  readonly messages: CuiMarkdownEditorMessages;
 }
 
 /** Synchronous, returns whether it handled the invocation (FR18). Async work

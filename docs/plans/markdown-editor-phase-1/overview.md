@@ -20,13 +20,13 @@ rendered widgets, split preview, and a plugin tier for custom markdown syntax.
 
 | Status      | Count |
 | ----------- | ----- |
-| Complete    | 28    |
+| Complete    | 33    |
 | In Progress | 0     |
-| Not Started | 14    |
+| Not Started | 9     |
 | Blocked     | 0     |
 | Deferred    | 2     |
 
-**Overall Progress:** 64% (28/44 complete, 2 deferred)
+**Overall Progress:** 75% (33/44 complete, 2 deferred)
 
 ## Phases
 
@@ -36,7 +36,7 @@ rendered widgets, split preview, and a plugin tier for custom markdown syntax.
 | 02  | [Reveal Layer and Theming](./phase-02/)                  | Complete    | 5/7 (2 deferred) |
 | 03  | [Plugin System](./phase-03/)                             | Complete    | 8/8      |
 | 04  | [Built-in Plugins, Slash Menu and Paste](./phase-04/)    | Complete    | 8/8      |
-| 05  | [Form Integration, Limits and Messages](./phase-05/)     | Not Started | 0/5      |
+| 05  | [Form Integration, Limits and Messages](./phase-05/)     | Complete    | 5/5      |
 | 06  | [Render Subpath](./phase-06/)                            | Not Started | 0/4      |
 | 07  | [Documentation Site](./phase-07/)                        | Not Started | 0/5      |
 

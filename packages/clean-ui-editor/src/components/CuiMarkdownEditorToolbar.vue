@@ -2,6 +2,8 @@
 import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
 import { CuiButton, CuiIcon, useScrollShadows, scrollShadowRightStyle } from "@itguy614/clean-ui";
 import type { PluginRegistry } from "../plugins/registry";
+import { useMarkdownEditorMessages } from "../composables/useMarkdownEditorMessages";
+import { resolveCommandLabel } from "../messages";
 
 const props = defineProps<{
   registry: PluginRegistry;
@@ -19,11 +21,14 @@ const props = defineProps<{
   selectionVersion: number;
 }>();
 
+const messages = useMarkdownEditorMessages();
+
 const entries = computed(() => {
   const ids = props.toolbar ?? props.registry.toolbar.map((entry) => entry.command);
   return ids
     .map((id) => ({ id, spec: props.registry.commands.get(id)?.spec }))
-    .filter((entry): entry is { id: string; spec: NonNullable<typeof entry.spec> } => Boolean(entry.spec?.label));
+    .filter((entry): entry is { id: string; spec: NonNullable<typeof entry.spec> } => Boolean(entry.spec?.label))
+    .map((entry) => ({ ...entry, label: resolveCommandLabel(messages.value, entry.id, entry.spec.label!) }));
 });
 
 const activeStates = computed(() => {
@@ -77,7 +82,7 @@ function onKeydown(event: KeyboardEvent) {
     ref="bar"
     class="cui-markdown-editor-toolbar"
     role="toolbar"
-    aria-label="Formatting"
+    :aria-label="messages.toolbarAriaLabel"
     @keydown="onKeydown"
     @scroll="onScroll"
   >
@@ -90,8 +95,8 @@ function onKeydown(event: KeyboardEvent) {
       :variant="activeStates.get(entry.id) ? 'solid' : 'ghost'"
       :tabindex="index === focusedIndex ? 0 : -1"
       :aria-pressed="entry.spec.isActive ? activeStates.get(entry.id) : undefined"
-      :aria-label="entry.spec.label"
-      :title="entry.spec.label"
+      :aria-label="entry.label"
+      :title="entry.label"
       @click="activate(entry.id, index)"
     >
       <template v-if="entry.spec.icon" #prefix>

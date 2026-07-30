@@ -4,6 +4,8 @@ import "./icons";
 export { default as CuiMarkdownEditor } from "./components/CuiMarkdownEditor.vue";
 export type { CuiMarkdownEditorProps, CuiMarkdownEditorMode } from "./components/CuiMarkdownEditor.vue";
 export { version } from "./version";
+export { defaultMarkdownEditorMessages, mergeMarkdownEditorMessages, resolveCommandLabel, type CuiMarkdownEditorMessages } from "./messages";
+export { useMarkdownEditorMessages } from "./composables/useMarkdownEditorMessages";
 export {
   definePlugin,
   DEFAULT_PLUGINS,

@@ -1,6 +1,7 @@
 import { definePlugin } from "../define-plugin";
 import { mountStandaloneDialog } from "./dialogs/mount-standalone";
 import ImageDialog from "./dialogs/ImageDialog.vue";
+import { pickImageDialogMessages } from "../../messages";
 
 export const imagePlugin = definePlugin({
   id: "cui-image",
@@ -12,6 +13,7 @@ export const imagePlugin = definePlugin({
             const unmount = mountStandaloneDialog(ImageDialog, {
               initialUrl: "",
               initialAlt: "",
+              messages: pickImageDialogMessages(context.messages),
               onSubmit: (values: { url: string; alt: string }) => {
                 settle.resolve(values);
                 unmount();

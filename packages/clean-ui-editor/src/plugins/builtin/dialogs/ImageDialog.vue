@@ -2,13 +2,18 @@
 import { ref, onMounted } from "vue";
 import { CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiButton, CuiInput } from "@itguy614/clean-ui";
 import { isAllowedUrl } from "./url-policy";
+import { pickImageDialogMessages, defaultMarkdownEditorMessages, type ImageDialogMessages } from "../../../messages";
 
-const props = defineProps<{
-  initialUrl: string;
-  initialAlt: string;
-  onSubmit: (values: { url: string; alt: string }) => void;
-  onCancel: () => void;
-}>();
+const props = withDefaults(
+  defineProps<{
+    initialUrl: string;
+    initialAlt: string;
+    messages?: ImageDialogMessages;
+    onSubmit: (values: { url: string; alt: string }) => void;
+    onCancel: () => void;
+  }>(),
+  { messages: () => pickImageDialogMessages(defaultMarkdownEditorMessages) },
+);
 
 const url = ref(props.initialUrl);
 const alt = ref(props.initialAlt);
@@ -22,11 +27,11 @@ onMounted(() => {
 function submit() {
   const trimmedUrl = url.value.trim();
   if (!trimmedUrl) {
-    urlError.value = "A URL is required.";
+    urlError.value = props.messages.urlRequired;
     return;
   }
   if (!isAllowedUrl(trimmedUrl)) {
-    urlError.value = "This URL scheme isn't allowed.";
+    urlError.value = props.messages.urlSchemeNotAllowed;
     return;
   }
   props.onSubmit({ url: trimmedUrl, alt: alt.value.trim() });
@@ -39,29 +44,29 @@ function cancel() {
 
 <template>
   <CuiModal v-model:visible="visible" size="sm" @close="cancel">
-    <CuiModalHeader title="Insert image" @close="cancel" />
+    <CuiModalHeader :title="props.messages.title" @close="cancel" />
     <CuiModalBody>
       <div style="display: flex; flex-direction: column; gap: 0.75rem">
         <div>
-          <label for="cui-image-dialog-url" class="cui-lead" style="display: block; margin-bottom: 0.25rem">Image URL</label>
+          <label for="cui-image-dialog-url" class="cui-lead" style="display: block; margin-bottom: 0.25rem">{{ props.messages.urlLabel }}</label>
           <CuiInput
             id="cui-image-dialog-url"
             v-model="url"
-            placeholder="https://example.com/image.png"
+            :placeholder="props.messages.urlPlaceholder"
             :error="Boolean(urlError)"
             :error-message="urlError"
             @keydown.enter="submit"
           />
         </div>
         <div>
-          <label for="cui-image-dialog-alt" style="display: block; margin-bottom: 0.25rem">Alt text</label>
-          <CuiInput id="cui-image-dialog-alt" v-model="alt" placeholder="Describes the image" @keydown.enter="submit" />
+          <label for="cui-image-dialog-alt" style="display: block; margin-bottom: 0.25rem">{{ props.messages.altLabel }}</label>
+          <CuiInput id="cui-image-dialog-alt" v-model="alt" :placeholder="props.messages.altPlaceholder" @keydown.enter="submit" />
         </div>
       </div>
     </CuiModalBody>
     <CuiModalFooter>
-      <CuiButton variant="outline" @click="cancel">Cancel</CuiButton>
-      <CuiButton variant="solid" @click="submit">Insert</CuiButton>
+      <CuiButton variant="outline" @click="cancel">{{ props.messages.cancel }}</CuiButton>
+      <CuiButton variant="solid" @click="submit">{{ props.messages.insert }}</CuiButton>
     </CuiModalFooter>
   </CuiModal>
 </template>

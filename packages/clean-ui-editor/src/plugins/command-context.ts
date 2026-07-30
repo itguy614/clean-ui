@@ -3,6 +3,7 @@ import type { ChangeSpec } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 import type { SyntaxNode } from "@lezer/common";
 import type { CommandContext } from "./types";
+import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
@@ -13,10 +14,19 @@ import type { CommandContext } from "./types";
  * `collect()` call and `false` once it settles — this is how the host
  * component knows to block mode switching while a dialog is open (FR14),
  * without `CommandContext` itself needing any concept of "mode."
+ *
+ * `getMessages`, if supplied, is a live accessor over the resolved message
+ * catalog (task 5.2.2) — a command that opens its own dialog (link, image)
+ * reads `context.messages.linkDialog`/`.imageDialog` and passes those
+ * strings down as plain props, since `mountStandaloneDialog` creates a
+ * detached Vue app with no `inject()` access to the host's
+ * `CuiConfigProvider`. Defaults to the English catalog so a context built
+ * without this (e.g. a unit test) still works.
  */
 export function createCommandContext(
   getView: () => EditorView | null,
   onCollectingChange?: (isCollecting: boolean) => void,
+  getMessages: () => CuiMarkdownEditorMessages = () => defaultMarkdownEditorMessages,
 ): CommandContext {
   function requireView(): EditorView {
     const view = getView();
@@ -106,5 +116,8 @@ export function createCommandContext(
       }
     },
     findConstructRange,
+    get messages() {
+      return getMessages();
+    },
   };
 }

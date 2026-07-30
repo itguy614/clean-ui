@@ -204,6 +204,202 @@ describe("CuiMarkdownEditor", () => {
     expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').exists()).toBe(false);
   });
 
+  describe("form control props (FR31)", () => {
+    it("applies id, aria-invalid and aria-required to the editable surface, not the wrapper", async () => {
+      wrapper = mount(CuiMarkdownEditor, {
+        props: { modelValue: "", id: "doc-field", error: true, required: true },
+      });
+      await nextTick();
+
+      const content = wrapper.find('[data-testid="cui-markdown-editor-content"]');
+      expect(content.attributes("id")).toBe("doc-field");
+      expect(content.attributes("aria-invalid")).toBe("true");
+      expect(content.attributes("aria-required")).toBe("true");
+      expect(wrapper.attributes("id")).toBeUndefined();
+    });
+
+    it("omits aria-invalid and aria-required when error and required are false", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "" } });
+      await nextTick();
+
+      const content = wrapper.find('[data-testid="cui-markdown-editor-content"]');
+      expect(content.attributes("aria-invalid")).toBeUndefined();
+      expect(content.attributes("aria-required")).toBeUndefined();
+    });
+
+    it("reacts to error/required/id changing after mount without remounting the view", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "x" } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      await wrapper.setProps({ error: true, required: true, id: "later-id" });
+      await nextTick();
+
+      expect(getView(wrapper)).toBe(view); // same instance, reconfigured in place
+      const content = wrapper.find('[data-testid="cui-markdown-editor-content"]');
+      expect(content.attributes("aria-invalid")).toBe("true");
+      expect(content.attributes("aria-required")).toBe("true");
+      expect(content.attributes("id")).toBe("later-id");
+    });
+
+    it("recolors the border and shows the message when error is set, matching CuiTextarea's convention", async () => {
+      wrapper = mount(CuiMarkdownEditor, {
+        props: { modelValue: "", error: true, errorMessage: "This field is required" },
+      });
+      await nextTick();
+
+      expect(wrapper.classes()).toContain("cui-markdown-editor--error");
+      const message = wrapper.find('[data-testid="cui-markdown-editor-error"]');
+      expect(message.exists()).toBe(true);
+      expect(message.text()).toBe("This field is required");
+    });
+
+    it("shows no error message when error is true but errorMessage is unset", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", error: true } });
+      await nextTick();
+
+      expect(wrapper.find('[data-testid="cui-markdown-editor-error"]').exists()).toBe(false);
+    });
+
+    it("disabled removes the editor from the tab order (not just visually)", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "x", disabled: true } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      expect(view.contentDOM.getAttribute("contenteditable")).not.toBe("true");
+    });
+
+    it("readonly keeps the editor focusable and selectable but blocks edits", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "x", readonly: true } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      expect(view.contentDOM.getAttribute("contenteditable")).toBe("true");
+      expect(view.state.readOnly).toBe(true);
+    });
+  });
+
+  describe("placeholder (task 5.1.2)", () => {
+    it("shows the placeholder only when the document is empty, and it's never part of the value", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", placeholder: "Write something..." } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      expect(wrapper.find(".cm-placeholder").exists()).toBe(true);
+      expect(view.state.doc.toString()).toBe("");
+
+      view.dispatch({ changes: { from: 0, insert: "x" } });
+      await nextTick();
+      expect(wrapper.find(".cm-placeholder").exists()).toBe(false);
+
+      view.dispatch({ changes: { from: 0, to: 1 } });
+      await nextTick();
+      expect(wrapper.find(".cm-placeholder").exists()).toBe(true);
+      expect(view.state.doc.toString()).toBe("");
+    });
+  });
+
+  describe("maxLength (task 5.2.1)", () => {
+    it("shows a counter that turns to the error state at the limit", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abc", maxLength: 5 } });
+      await nextTick();
+
+      const counter = wrapper.find('[data-testid="cui-markdown-editor-counter"]');
+      expect(counter.text()).toBe("3/5");
+      expect(counter.classes()).not.toContain("cui-markdown-editor__counter--over");
+
+      const view = getView(wrapper)!;
+      view.dispatch({ changes: { from: 3, insert: "de" } });
+      await nextTick();
+
+      expect(wrapper.find('[data-testid="cui-markdown-editor-counter"]').text()).toBe("5/5");
+      expect(wrapper.find('[data-testid="cui-markdown-editor-counter"]').classes()).toContain(
+        "cui-markdown-editor__counter--over",
+      );
+    });
+
+    it("refuses an edit that would exceed the limit — typing stops, nothing is inserted", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abcde", maxLength: 5 } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      view.dispatch({ changes: { from: 5, insert: "f" } });
+
+      expect(view.state.doc.toString()).toBe("abcde");
+    });
+
+    it("still allows edits that keep the document at or under the limit (e.g. deleting, or replacing within budget)", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abcde", maxLength: 5 } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      view.dispatch({ changes: { from: 0, to: 1 } }); // delete "a" -> "bcde" (4 chars)
+      expect(view.state.doc.toString()).toBe("bcde");
+
+      view.dispatch({ changes: { from: 4, insert: "f" } }); // back up to the limit
+      expect(view.state.doc.toString()).toBe("bcdef");
+    });
+
+    it("never truncates: an externally-supplied modelValue already over the limit is displayed as-is", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", maxLength: 3 } });
+      await nextTick();
+
+      await wrapper.setProps({ modelValue: "way over the limit" });
+      await nextTick();
+
+      const view = getView(wrapper)!;
+      expect(view.state.doc.toString()).toBe("way over the limit");
+    });
+
+    it("refuses an oversized paste and reports the overage, inserting nothing", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abc", maxLength: 5 } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      const clipboardData = { getData: (type: string) => (type === "text/plain" ? "wxyz" : ""), files: [] };
+      const event = new Event("paste", { cancelable: true }) as ClipboardEvent;
+      Object.defineProperty(event, "clipboardData", { value: clipboardData });
+      view.contentDOM.dispatchEvent(event);
+      await nextTick();
+
+      expect(view.state.doc.toString()).toBe("abc");
+      const emitted = wrapper.emitted("maxLengthExceeded");
+      expect(emitted?.at(-1)?.[0]).toMatch(/exceed the 5-character limit by 2 character/);
+    });
+
+    it("never leaves a split construct behind: an oversized paste containing a link inserts nothing, not a truncated fragment", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", maxLength: 10 } });
+      await nextTick();
+      const view = getView(wrapper)!;
+
+      const clipboardData = {
+        getData: (type: string) => (type === "text/plain" ? "[a very long link](https://example.com/path)" : ""),
+        files: [],
+      };
+      const event = new Event("paste", { cancelable: true }) as ClipboardEvent;
+      Object.defineProperty(event, "clipboardData", { value: clipboardData });
+      view.contentDOM.dispatchEvent(event);
+      await nextTick();
+
+      expect(view.state.doc.toString()).toBe("");
+    });
+
+    it("allows a paste that fits within the remaining budget", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "ab", maxLength: 5 } });
+      await nextTick();
+      const view = getView(wrapper)!;
+      view.dispatch({ selection: { anchor: 2 } });
+
+      const clipboardData = { getData: (type: string) => (type === "text/plain" ? "cde" : ""), files: [] };
+      const event = new Event("paste", { cancelable: true }) as ClipboardEvent;
+      Object.defineProperty(event, "clipboardData", { value: clipboardData });
+      view.contentDOM.dispatchEvent(event);
+      await nextTick();
+
+      expect(view.state.doc.toString()).toBe("abcde");
+    });
+  });
+
   describe("cspNonce", () => {
     afterEach(() => {
       document.head.querySelectorAll("style").forEach((el) => el.remove());
