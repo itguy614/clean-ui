@@ -132,12 +132,61 @@ const es = {
           <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>,
           <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>,
           <code class="cui-code">skeleton</code>, <code class="cui-code">tabs</code>,
-          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code>. See the
+          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
+          whatever namespaces a satellite package (see below) has added. See the
           <code class="cui-code">CuiMessages</code> type for the full shape — your editor will
           autocomplete every key.
         </p>
         <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">import type { CuiMessages, DeepPartialMessages } from "@itguy614/clean-ui";
 import { defaultMessages } from "@itguy614/clean-ui";  // the English baseline</code></pre>
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
+      <CuiCardHeader title="Adding a namespace from a satellite package" />
+      <CuiCardBody>
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          A companion package can add its own strings to the catalog with full type-checking, by
+          augmenting <code class="cui-code">CuiMessageNamespaces</code> — the empty interface
+          <code class="cui-code">CuiMessages</code> extends. Declaration merging can't reach a closed
+          interface, so this is the seam that makes it possible. Put the
+          <code class="cui-code">declare module</code> block anywhere TypeScript picks it up — after
+          that, the namespace shows up on <code class="cui-code">CuiMessages</code> everywhere,
+          including <code class="cui-code">CuiConfigProvider</code>'s <code class="cui-code">messages</code> prop.
+        </p>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+          <code class="cui-code">@itguy614/clean-ui-editor</code> is the first package to use this
+          seam: every string <code class="cui-code">CuiMarkdownEditor</code> renders — toolbar
+          tooltips, the mode toggle, the link/image dialogs, the length-limit counter and refusal
+          messages — resolves through a <code class="cui-code">markdownEditor</code> namespace this
+          way, instead of hardcoding English anywhere in the component.
+        </p>
+        <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">// clean-ui-editor/src/messages.ts (shipped in the package — nothing to write yourself)
+declare module "@itguy614/clean-ui" {
+  interface CuiMessageNamespaces {
+    markdownEditor: {
+      // Deliberately flat, not grouped — see the file's own doc comment:
+      // DeepPartialMessages only makes a namespace's own fields independently
+      // optional, so a nested group would force overriding all of its fields
+      // at once to change even one.
+      modeToggleFormatted: string;
+      modeToggleSource: string;
+      toolbarAriaLabel: string;
+      toolbarBold: string;
+      toolbarItalic: string; // ...every built-in command
+      linkDialogTitle: string;
+      linkDialogUrlLabel: string; // ...
+      imageDialogTitle: string;
+      imageDialogAltLabel: string; // ...
+      pasteRejectedImage: string;
+      maxLengthExceeded: (overage: number, limit: number) => string;
+      counter: (length: number, limit: number) => string;
+    };
+  }
+}
+
+// Override just one string — everything else falls back to the English defaults:
+&lt;CuiConfigProvider :messages="{ markdownEditor: { toolbarBold: 'Gras' } }"&gt;</code></pre>
       </CuiCardBody>
     </CuiCard>
   </CuiStack>

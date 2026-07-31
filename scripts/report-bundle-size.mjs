@@ -1,13 +1,14 @@
+#!/usr/bin/env node
 /**
- * Postbuild — prints bundle size report.
+ * Postbuild — prints a bundle size report for the current package's `dist`.
+ * Run from that package's own directory (its `build` script does this via
+ * `node ../../scripts/report-bundle-size.mjs`) — shared across every
+ * publishable package rather than copy-pasted per package.
  */
-
 import { readdirSync, statSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dist = resolve(__dirname, "..", "dist");
+const dist = resolve(process.cwd(), "dist");
 
 function formatSize(bytes) {
   return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} kB`;
@@ -16,8 +17,7 @@ function formatSize(bytes) {
 function walk(dir) {
   let total = 0;
   const entries = [];
-  const items = readdirSync(dir, { withFileTypes: true });
-  for (const item of items) {
+  for (const item of readdirSync(dir, { withFileTypes: true })) {
     const full = resolve(dir, item.name);
     if (item.isDirectory()) {
       const [subTotal, subEntries] = walk(full);
@@ -32,14 +32,13 @@ function walk(dir) {
   return [total, entries];
 }
 
-const [totalSize, entries] = walk(dist);
+const [, entries] = walk(dist);
 const jsEntries = entries.filter((e) => e.path.endsWith(".js"));
-const cssSize = existsSync(resolve(dist, "clean-ui.css"))
-  ? statSync(resolve(dist, "clean-ui.css")).size
-  : 0;
+const cssFiles = existsSync(dist) ? readdirSync(dist).filter((f) => f.endsWith(".css")) : [];
+const cssSize = cssFiles.reduce((sum, file) => sum + statSync(resolve(dist, file)).size, 0);
 
 const sorted = [...jsEntries].sort((a, b) => b.size - a.size);
-const jsSize = jsEntries.reduce((s, e) => s + e.size, 0);
+const jsSize = jsEntries.reduce((sum, entry) => sum + entry.size, 0);
 
 console.log(`\n--- Bundle Size Report ---`);
 console.log(`  Total JS:  ${formatSize(jsSize)} (${jsEntries.length} files)`);

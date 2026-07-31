@@ -1,0 +1,10 @@
+{
+  "methodology": "Gzip delta of fixtures/consumer-app's built JS+CSS (dist/assets/*.{js,css}), with @itguy614/clean-ui imported minus the same build with clean-ui swapped for a same-shaped stub (CUI_BUNDLE_BASELINE=1). See scripts/check-bundle-budget.mjs. This file is read, never auto-written, by CI — re-measure and update gzipBytes/measured by hand when a size increase is expected and accepted.",
+  "budgets": [
+    {
+      "package": "@itguy614/clean-ui",
+      "gzipBytes": 66560,
+      "measured": "2026-07-29"
+    }
+  ]
+}

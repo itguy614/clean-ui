@@ -30,14 +30,54 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Type-check + build the library (also emits .d.ts via vue-tsc)
-      - name: Build library
-        run: pnpm --filter @itguy614/clean-ui build
+      # Workspace-recursive, topological: builds every package that defines a
+      # "build" script, in dependency order (clean-ui, then apps/docs, which
+      # depends on it). A new package's build runs here on day one with no
+      # workflow change. apps/docs's own build already runs `vue-tsc --noEmit`
+      # internally, so this also covers what used to be a separate type-check step.
+      - name: Build workspace
+        run: pnpm -r build
 
-      # Unit + smoke tests
+      # Every bare import in a publishable package's dist must be relative or
+      # a declared dependency — closes the whole class of bug behind #42 and
+      # #62, not just those cases. --if-present: only packages that define
+      # this script run it (apps/docs doesn't, and isn't published).
+      - name: Check for undeclared imports in dist
+        run: pnpm -r --if-present check:imports
+
+      # Unit + smoke tests (jsdom) and server-rendering assertions (node),
+      # workspace-recursive: runs every package's own "test" script.
+      # --if-present so a package without one (apps/docs) is skipped, not an error.
       - name: Run tests
-        run: pnpm --filter @itguy614/clean-ui test
+        run: pnpm -r --if-present test
 
-      # Type-check the docs app
-      - name: Type-check docs
-        run: pnpm --filter @itguy614/clean-ui-docs exec vue-tsc --noEmit
+      # Real-browser tests for layout/selection/input-method-dependent behaviour
+      # (task 2.3.2) — non-blocking for now. The capability existing and running
+      # in CI is what matters today; gating merges on it is a deliberate follow-up
+      # once it's proven stable here, not an oversight. Package-specific (not
+      # workspace-recursive): which packages need a real-browser suite, and what
+      # it covers, is inherently per-package, not a workspace-wide convention.
+      - name: Install Playwright browser
+        run: pnpm --filter @itguy614/clean-ui exec playwright install --with-deps chromium
+        continue-on-error: true
+
+      - name: Run browser tests
+        run: pnpm --filter @itguy614/clean-ui test:browser
+        continue-on-error: true
+
+      # Packs every publishable package and installs it with npm (not the pnpm
+      # workspace) into a throwaway consumer app — the only place the exports
+      # map, peer resolution and published file list are exercised at all.
+      - name: Verify consumer fixture
+        run: node scripts/verify-fixture.mjs
+
+      # The package guarantees (no icon barrel, no Tailwind utilities layer,
+      # single-instance dependencies), expressed as assertions over that
+      # fixture's build output rather than asserted in a changelog.
+      - name: Check fixture guarantees
+        run: node scripts/check-fixture-guarantees.mjs
+
+      # Gzip delta the fixture bundle grows by from importing the package,
+      # against the committed budget in fixtures/size-budget.json.
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-budget.mjs

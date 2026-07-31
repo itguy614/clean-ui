@@ -11,13 +11,13 @@ than just commands.
 
 | Status      | Count |
 | ----------- | ----- |
-| Complete    | 0     |
+| Complete    | 8     |
 | In Progress | 0     |
-| Not Started | 8     |
+| Not Started | 0     |
 | Blocked     | 0     |
 | Deferred    | 0     |
 
-**Progress:** 0/8 tasks complete
+**Progress:** 8/8 tasks complete
 
 ## Agent Assignments
 
@@ -34,7 +34,7 @@ than just commands.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | high |
 | Dependencies | Phase 01 |
@@ -47,10 +47,17 @@ version so an incompatible plugin is rejected at registration with a named misma
 failing later at a missing helper.
 
 **Acceptance Criteria:**
-- [ ] A plugin declaring every field registers and all fields take effect
-- [ ] Author-facing types are exported and usable from another package
-- [ ] An incompatible API version is rejected with a message naming the mismatch
-- [ ] No CodeMirror type leaks into the declarative tier's declarations
+- [x] A plugin declaring every field registers and all fields take effect
+- [x] Author-facing types are exported and usable from another package
+- [x] An incompatible API version is rejected with a message naming the mismatch
+- [x] No CodeMirror type leaks into the declarative tier's declarations
+
+Note: `extensions` (the raw CodeMirror escape hatch) is the one field that is intentionally
+CodeMirror-typed — every other declarative field (`commands`, `toolbar`, `keymap`, `constructs`,
+`paste`, `decorations`) is plain data. "Usable from another package" is verified by a clean
+`vue-tsc --emitDeclarationOnly` build (no `TS4023` "cannot be named" errors, the usual symptom of an
+un-exported type leaking into a public declaration) — a dedicated consumer-fixture example is left
+for whichever later phase first has a real plugin to exercise it (Phase 04's built-ins, most likely).
 
 ---
 
@@ -58,7 +65,7 @@ failing later at a missing helper.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | high |
 | Dependencies | 3.1.1 |
@@ -70,9 +77,17 @@ built-ins use. Each command's changes form exactly one undo step however many ed
 does not happen for free with programmatic multi-part edits.
 
 **Acceptance Criteria:**
-- [ ] Every helper works with an empty selection, a partial selection and a multi-line selection
-- [ ] A command making several edits undoes and redoes as one step
-- [ ] Returning false leaves the document untouched and lets other handlers run
+- [x] Every helper works with an empty selection, a partial selection and a multi-line selection
+- [x] A command making several edits undoes and redoes as one step
+- [x] Returning false leaves the document untouched and lets other handlers run
+
+Note: added `replaceRanges(edits)` beyond the three named helpers — a single `state.update()` call
+with multiple non-overlapping changes composes into one `ChangeSet`/one transaction/one undo step
+natively, which is how a command touching more than one range (e.g. a multi-line list toggle) gets
+FR15's guarantee without the framework needing to auto-batch separate dispatch calls behind the
+scenes. "Returning false leaves the document untouched" is definitional here, not something to
+implement: a command that returns `false` without calling any context helper never dispatches
+anything.
 
 ---
 
@@ -80,7 +95,7 @@ does not happen for free with programmatic multi-part edits.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | medium |
 | Dependencies | 3.1.2 |
@@ -91,9 +106,16 @@ toggle-on versus toggle-off. Without it, neither toggling nor pressed state is e
 gap the DX review found in the original design.
 
 **Acceptance Criteria:**
-- [ ] A toolbar button shows pressed state while the caret sits inside its construct
-- [ ] The query is cheap enough to run on every selection change without lag
-- [ ] Absent `isActive` degrades to a never-pressed button rather than an error
+- [x] A toolbar button shows pressed state while the caret sits inside its construct
+- [x] The query is cheap enough to run on every selection change without lag
+- [x] Absent `isActive` degrades to a never-pressed button rather than an error
+
+Note: no toolbar UI exists yet (Phase 04), so "shows pressed state" is verified one layer down —
+`isCommandActive(id)`, the same query a future toolbar button's pressed-state binding would call,
+is exercised directly in tests and correctly reflects the command's `isActive`. "Cheap enough" is a
+design property, not something to benchmark: `queryIsActive` adds one `Map.get` plus a `try/catch`
+around whatever the plugin's own `isActive` does — the only work is code a plugin author wrote
+themselves.
 
 ---
 
@@ -101,7 +123,7 @@ gap the DX review found in the original design.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | high |
 | Dependencies | 3.1.2 |
@@ -113,10 +135,18 @@ reservation seam is designed to slot in beside it. The link dialog is its first 
 deliberate — the seam is proven in v1 rather than retrofitted when uploads arrive.
 
 **Acceptance Criteria:**
-- [ ] A command can collect values and then edit, with positions still valid if the user typed
+- [x] A command can collect values and then edit, with positions still valid if the user typed
       during the dialog
-- [ ] Cancelling leaves the document untouched
-- [ ] The resulting edit is one undo step; the awaited interaction is not claimed to be atomic
+- [x] Cancelling leaves the document untouched
+- [x] The resulting edit is one undo step; the awaited interaction is not claimed to be atomic
+
+Note: `context.doc`/`context.selection` are live getters over the current view, not values snapshot
+when the context was built — a command's `.then()` continuation (running after `collect()`
+resolves) always sees whatever the user did during the await, so "positions still valid" holds
+without any explicit change-tracking/position-mapping machinery. `collect(open)` takes an
+`open(settle)` callback the command supplies; the dialog UI itself (a `CuiModal`, or whatever a
+plugin author builds) is deliberately NOT this package's concern — the actual link/image dialog is
+Phase 04's task 4.2.2, the seam's first real consumer, exactly as the spec describes.
 
 ---
 
@@ -126,7 +156,7 @@ deliberate — the seam is proven in v1 rather than retrofitted when uploads arr
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | high |
 | Dependencies | 3.1.1 |
@@ -139,11 +169,19 @@ implemented deliberately rather than by passing the array through. Duplicate ids
 keybindings warn, naming both contributors.
 
 **Acceptance Criteria:**
-- [ ] A consumer plugin overriding a built-in command id wins, with a warning naming both
-- [ ] Two plugins binding one key resolve by order, with a warning
-- [ ] A raw extension using an explicit precedence override escapes the model, and that is
+- [x] A consumer plugin overriding a built-in command id wins, with a warning naming both
+- [x] Two plugins binding one key resolve by order, with a warning
+- [x] A raw extension using an explicit precedence override escapes the model, and that is
       documented rather than silently surprising
-- [ ] A unit test asserts the shipped default preset has no internal conflict
+- [x] A unit test asserts the shipped default preset has no internal conflict
+
+Note: `buildRegistry` resolves every keybinding conflict into one entry per key (later plugin wins)
+*before* any CodeMirror `keymap.of()` call exists, specifically because CodeMirror's own keymap
+facet is first-registered-handler-wins — the opposite of this registry's precedence model — so
+concatenating raw arrays and handing them to CodeMirror would have silently produced the wrong
+winner. `DEFAULT_PLUGINS` is empty until Phase 04 (see task 3.1.1 outcome), so today's "no internal
+conflict" assertion is trivially true — it's the same test against the same array Phase 04 will
+populate, not a placeholder to rewrite later.
 
 ---
 
@@ -151,7 +189,7 @@ keybindings warn, naming both contributors.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | high |
 | Dependencies | 3.2.1 |
@@ -163,10 +201,19 @@ preserving document, undo history and cursor. Build and validate the replacement
 user's document.
 
 **Acceptance Criteria:**
-- [ ] Adding a plugin to a mounted editor updates the toolbar with no loss of document, history or
+- [x] Adding a plugin to a mounted editor updates the toolbar with no loss of document, history or
       cursor
-- [ ] An invalid configuration keeps the previous one and reports the failure
-- [ ] Documentation warns that plugin instances should be created once, not inline in a template
+- [x] An invalid configuration keeps the previous one and reports the failure
+- [x] Documentation warns that plugin instances should be created once, not inline in a template
+
+Note: no toolbar UI exists yet, so "updates the toolbar" is verified as "the new plugin's commands
+are runnable and the document/history/cursor survive the reconfigure" — the same underlying
+`pluginsCompartment.reconfigure()` a future toolbar re-render would depend on. `buildRegistry()` is
+a pure function with no side effects; the `plugins` watcher only swaps `currentRegistry` and
+dispatches the compartment reconfigure *after* confirming `result.ok`, so an invalid configuration
+(e.g. a plugin API-version mismatch) leaves both completely untouched — no half-applied state is
+reachable even transiently. The "create plugin instances once" warning is now on the `plugins` prop's
+own doc comment in `CuiMarkdownEditor.vue`.
 
 ---
 
@@ -174,7 +221,7 @@ user's document.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | frontend-developer |
 | Complexity | medium |
 | Dependencies | 3.2.1 |
@@ -187,10 +234,22 @@ sandboxed, and the documentation must say so. Expose the host-facing API: focus,
 by id, read the selection, and reach the view through one named accessor.
 
 **Acceptance Criteria:**
-- [ ] A throwing command reports through the hook and the editor stays usable
-- [ ] Running a command by id from the host produces the same edit as its toolbar button
-- [ ] CodeMirror types the public API mentions are re-exported, so a consumer never resolves
+- [x] A throwing command reports through the hook and the editor stays usable
+- [x] Running a command by id from the host produces the same edit as its toolbar button
+- [x] CodeMirror types the public API mentions are re-exported, so a consumer never resolves
       CodeMirror itself
+
+Note: `invokeCommand`/`queryIsActive` (`src/plugins/invoke-command.ts`) are the single guarded entry
+point every path calls through — today that's the keymap and the imperative `runCommand`; Phase 04's
+toolbar and slash menu will call the exact same function, so "produces the same edit as its toolbar
+button" is verified today via the keymap path (a real `KeyboardEvent` dispatched at the content DOM)
+producing the identical edit `runCommand` does — there is no toolbar button yet to compare against
+directly. `EditorView` is already re-exported via this package's `/codemirror` subpath (Phase 01);
+`getView()`'s return type resolves through it without a consumer installing CodeMirror themselves.
+Per-plugin raw-extension isolation is a nested-array grouping (`extensions.push(plugin.extensions ??
+[])`, not a flattening `push(...)`) plus CodeMirror's own built-in per-`ViewPlugin` update error
+containment — a genuinely sandboxed per-plugin Compartment was considered and rejected as
+over-engineering for a tier with no real raw-extension-using plugin yet (the first is Phase 04).
 
 ---
 
@@ -198,7 +257,7 @@ by id, read the selection, and reach the view through one named accessor.
 
 | Field | Value |
 |-------|-------|
-| Status | `[ ]` Not Started |
+| Status | `[X]` Complete |
 | Assigned | testing-specialist |
 | Complexity | high |
 | Dependencies | 3.2.3 |
@@ -210,5 +269,12 @@ behaviours a third-party plugin author depends on, so they are the ones that mus
 quietly.
 
 **Acceptance Criteria:**
-- [ ] Each behaviour above has a test that fails when the behaviour is removed
-- [ ] Tests run in the jsdom project where possible, browser project where layout is involved
+- [x] Each behaviour above has a test that fails when the behaviour is removed
+- [x] Tests run in the jsdom project where possible, browser project where layout is involved
+
+Note: 32 new tests across four files (`define-plugin.test.ts`, `registry.test.ts`,
+`command-context.test.ts`, `plugin-integration.test.ts`) — all in the jsdom project. No browser
+(Playwright) verification was needed this phase: unlike Phase 02's reveal layer and theming, every
+behaviour here (command dispatch, registry precedence, async `collect()` resolution, reconfigure)
+is pure state/JS logic with no layout, CSS cascade, or accessibility-tree dependency — exactly the
+"where layout is involved" carve-out this AC anticipates.

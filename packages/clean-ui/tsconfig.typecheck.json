@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // declaration/declarationDir/declarationMap are inherited as-is (true) —
+    // noEmit alone suppresses all output, and TS rejects declarationDir/Map
+    // without declaration also being truthy.
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.test-d.ts"],
+  "exclude": ["node_modules"]
+}

@@ -18,12 +18,18 @@
 
 ## Build & Dev
 - This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
-- Build library: `pnpm build` (root) or `pnpm --filter @itguy614/clean-ui build`
-- After rebuild, clear docs cache: `rm -rf apps/docs/node_modules/.vite`
+- `pnpm build` (root) builds every workspace package, in dependency order. `pnpm --filter
+  @itguy614/clean-ui build` builds just the library.
+- The docs site resolves `@itguy614/clean-ui` to workspace *source* (`config/workspace-aliases.ts`),
+  not a built `dist` — changes show up immediately under `pnpm dev`, no rebuild needed. If Vite's
+  dependency pre-bundling cache goes stale (rare — usually right after adding a new source file
+  under an aliased path), clear it: `rm -rf apps/docs/node_modules/.vite`.
 - Color scale (`@theme`) is single-source in `packages/clean-ui/src/styles/theme.css`; both the library `main.css` and the docs `apps/docs/src/styles/main.css` `@import` it (no mirroring). The contrast audit reads the scale from `theme.css` too.
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
 
 ## Critical Gotchas
+- **A Vite `define` constant used in library source must be replicated by every app that aliases the library to source.** `src/version.ts` (in clean-ui and clean-ui-editor) reads a `__CUI_*_VERSION__` global, replaced at build time by that package's own `vite.config.ts`/`vitest.config.ts` — but since `apps/docs` (and any future docs app) aliases published packages to workspace *source* instead of `dist`, that file gets bundled through the *consuming app's own* Vite config, not the library's. Forgetting the matching `define` there doesn't fail the build or `vue-tsc` (an undeclared global identifier is only a runtime `ReferenceError`, not a build-time or type error) — it fails silently until something actually imports the barrel in a browser, crashing the whole module before anything mounts (a blank page, no build/test signal at all). `config/workspace-aliases.ts`'s `workspaceVersionDefines()` is the fix; any app using `workspaceAliases()` must also spread it into its own `define`. This class of bug is exactly why `pnpm build`/`pnpm test` passing isn't sufficient for a docs-site change — load it in a browser.
+- **`vue` and `@vue/server-renderer` must resolve to the exact same version across the workspace.** Mixing them (e.g. `vue@3.5.32` with `@vue/server-renderer@3.5.40` — easy to end up with, since `pnpm add @vue/server-renderer` resolves independently of whatever `vue` version is already in the lockfile) breaks `useTemplateRef` specifically under server rendering: `renderToString` throws `Cannot define property <name>, object is not extensible`, while a plain `ref()` template ref works fine on the same mismatched pair. Neither `vue-tsc` nor a build catches this — only an actual `renderToString()` call does, and only if the rendered component happens to use `useTemplateRef` (clean-ui's own SSR test didn't, at first, and so didn't catch it even though `useTemplateRef` is the library's own documented convention — see `CuiButton.vue`). Fix: pin `vue`'s **devDependency** (not the consumer-facing `^3.5.0` peerDependency range) to match `@vue/server-renderer` exactly in every package that has both, e.g. `pnpm update vue --recursive --latest`.
 - **Tailwind v4 cannot detect dynamic classes** — never use template literals for Tailwind classes. Layout components use inline `:style` bindings instead.
 - **`<script setup>` cannot have ES module exports** — shared types, injection keys, and context interfaces MUST go in separate `.ts` files (e.g., `radio-context.ts`, `multi-select-group-context.ts`, `dropdown-context.ts`, `tabs-context.ts`, `breadcrumb-context.ts`). This has caused build failures multiple times.
 - **Label + hidden input double-toggle** — when a `<label>` contains a hidden `<input>`, clicking fires toggle twice. Always add `@click.stop.prevent` on hidden inputs inside labels.
@@ -190,6 +196,24 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 8. Add `aria-*` attributes, keyboard navigation, focus rings.
 9. `defineExpose({ el, focus, blur })` on interactive components.
 10. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
+    **Exception: satellite packages with a heavy dependency graph (e.g. a CodeMirror-based editor)
+    must NOT do this.** A global `app.component()` install puts that package's entire dependency
+    tree in every consumer's main bundle, whether or not they ever render the component, and
+    defeats route-level code splitting. Export the component as a named import only, and document
+    an async-component usage pattern instead:
+    ```ts
+    // satellite-package/src/index.ts — named export, no app.component() registration
+    export { default as CuiMarkdownEditor } from "./components/CuiMarkdownEditor.vue";
+    ```
+    ```vue
+    <!-- consumer app: load it only on the route/view that needs it -->
+    <script setup>
+    import { defineAsyncComponent } from "vue";
+    const CuiMarkdownEditor = defineAsyncComponent(() =>
+      import("@itguy614/clean-ui-editor").then((m) => m.CuiMarkdownEditor),
+    );
+    </script>
+    ```
 11. Create a docs page, add route, add nav entry in the correct group.
 12. Use `CuiCard` for example containers in docs, not hand-rolled divs.
 13. Build and verify: `pnpm build` must pass with zero TypeScript errors.
