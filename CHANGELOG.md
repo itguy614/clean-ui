@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-31
+
+### Added
+- **New package: `@itguy614/clean-ui-editor`** — a markdown editor built on CodeMirror 6 where the
+  markdown text *is* the document, so there is no conversion and nothing to lose on round-trip.
+  Syntax markers hide until the caret enters the construct (construct granularity for pointer
+  input, whole-line for touch); `wysiwyg` and `source` are one buffer with decorations on or off.
+  Ships a plugin API whose declarative tier every built-in formatting action is written against, a
+  slash menu, HTML-to-markdown paste, form-control integration with a `maxLength` that refuses
+  rather than truncates, and a localised message namespace. Joins at the shared version per the
+  lockstep policy; it is a first release, and its documentation says so (clean-ui-editor)
+- Rendering markdown to HTML is opt-in at `@itguy614/clean-ui-editor/render`, and injectable — a
+  consumer can supply the renderer they already use. Nothing in the core entry imports a renderer
+  or a sanitiser, at any phase (clean-ui-editor)
+- `@itguy614/clean-ui-editor/codemirror` re-exports the CodeMirror surface a plugin author needs,
+  so a single instance is the default rather than something consumers must arrange
+  (clean-ui-editor)
+- Seams for satellite packages: an augmentable `CuiMessageNamespaces` interface so another package
+  can add a typed message namespace, an exported `version` so a version mismatch or duplicate copy
+  can be detected at runtime, and `useColorScheme` for code that needs the dark-mode state in
+  JavaScript — resolved from the calling component's own ancestor chain, so a `.dark` scoped to a
+  subtree is respected
+- A second documentation site for the editor, served at `/editor/` alongside the existing one
+
+### Changed
+- Publishing is a matrix over every publishable package, with a guard that skips a package whose
+  files have not changed since the previous release tag — lockstep moves every version number, and
+  without the guard each release would republish byte-identical packages
+- CI builds and tests the whole workspace on both supported Node versions rather than a single
+  filtered package, and GitHub Pages now hosts both documentation sites from one composed artifact
+- Package dependencies are externalized by rule rather than a maintained list, and CI asserts that
+  every bare import in a built `dist` is declared — a list silently inlines the dependency someone
+  forgets to add
+- Package guarantees are verified in a **packed consumer build** installed with npm, not against
+  this repository's own source aliases: no icon barrel, no CSS utilities layer, a single copy of
+  each shared runtime dependency, and a committed gzip budget that fails CI on regression. Both
+  regressions this checks for shipped to consumers before it existed (#42, #62)
+- The contrast audit reads token sources from configuration, so it can cover more than one package
+- `CuiButton` renders its content span only when the default slot is filled, so an icon-only button
+  no longer emits an empty span
+
 ## [1.1.0] - 2026-07-28
 
 ### Added
