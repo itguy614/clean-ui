@@ -87,9 +87,21 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Each matrix package builds in its own isolated runner, so a package
+      # that depends on another workspace package (e.g. clean-ui-editor on
+      # clean-ui) can't rely on a sibling matrix job's dist having already
+      # been built — there's no shared artifact between them. `pkg...`
+      # (trailing dots) is pnpm's "this package plus its own workspace
+      # dependencies" filter — confirmed empirically (the *leading*-dots form,
+      # `...pkg`, is the opposite: this package plus its *dependents*) — so
+      # this builds clean-ui first when the matrix package is clean-ui-editor,
+      # and is a no-op broadening for clean-ui itself (no workspace deps).
+      # Reproduced the bare `--filter "pkg"` version's exact failure
+      # (`Cannot find module '@itguy614/clean-ui'`) in an isolated worktree
+      # before confirming this fixes it.
       - name: Build
         if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
-        run: pnpm --filter "${{ steps.version-check.outputs.name }}" build
+        run: pnpm --filter "${{ steps.version-check.outputs.name }}..." build
 
       - name: Publish to npm
         if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
