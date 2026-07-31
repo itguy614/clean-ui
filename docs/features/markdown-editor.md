@@ -1,7 +1,8 @@
 # Feature: Markdown Editor (@itguy614/clean-ui-editor)
 
-**Status**: Draft
+**Status**: Implemented — v1 delivered by `docs/plans/markdown-editor-phase-1/`
 **Created**: 2026-07-29
+**Successor scope**: `docs/features/markdown-editor-phase-2.md`
 
 ## Problem Statement
 
@@ -420,28 +421,11 @@ method; and no screen reader has been run, so how the exposed markdown *sounds* 
 
 ## Phasing
 
-**Phase 1.5** — split source-and-preview mode, once the `render` adapter contract exists.
-
-**Phase 2**, in this order:
-
-1. Image upload. Paste or drop a file, an `upload` prop returning a URL, and the interaction
-   already designed for it: insert a localised placeholder immediately, replace exactly that
-   range on success (CodeMirror maps the range as the user keeps typing), remove it and
-   surface an error on failure, and expose an `uploading` state so a form can block submit
-   while a placeholder exists. Likely the first thing the first integration asks for.
-2. Tables as a complete feature: insert action, Tab and Shift-Tab between cells, new row at the
-   last cell, row and column insertion, and the rendered table widget, shipped together.
-3. Remaining rendered widgets: inline images, clickable task checkboxes, syntax-highlighted
-   fences. Each needs its own edit and exit-to-source interaction, which is where this class
-   of editor accumulates defects.
-
-**Phase 3** — a plugin tier for custom markdown syntax (new inline or block constructs with
-their own Lezer grammar), including how unknown syntax degrades for other consumers of the
-document.
-
-**Out of scope** — collaborative or multi-cursor editing, comments, suggestions, revision
-history; footnotes, math and frontmatter as core constructs (candidates for plugins); image
-editing or media library management.
+This document describes v1, which is implemented. Everything deferred beyond it — split preview,
+image upload, tables as a complete feature, the remaining rendered widgets, a plugin tier for
+custom markdown syntax, and what is out of scope indefinitely — is specified in
+`docs/features/markdown-editor-phase-2.md`, along with the v1 invariants those phases must
+preserve and the verification debt they inherit.
 
 ## First Integration
 
