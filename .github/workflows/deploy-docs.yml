@@ -36,6 +36,17 @@ jobs:
       - name: Build library
         run: pnpm --filter @itguy614/clean-ui build
 
+      # apps/editor-docs's own build script is `vue-tsc --noEmit && vite
+      # build` — same dist-types-must-exist-first requirement as above, but
+      # for @itguy614/clean-ui-editor (which apps/editor-docs also depends
+      # on via workspace:*). Without this, config/docs-sites.mjs already
+      # listing apps/editor-docs isn't enough: its build fails to resolve
+      # @itguy614/clean-ui-editor's types, since nothing had built that
+      # package's dist yet. Runs after the library build above, since
+      # clean-ui-editor itself depends on clean-ui.
+      - name: Build editor package
+        run: pnpm --filter @itguy614/clean-ui-editor build
+
       # Builds every site listed in config/docs-sites.mjs with its own base
       # path and composes them into one directory for one Pages artifact —
       # Pages hosts one site per repository, so N docs apps become N
