@@ -16,7 +16,7 @@ describe("mergeMarkdownEditorMessages", () => {
     const merged = mergeMarkdownEditorMessages({ toolbarBold: "Gras" });
     expect(merged.toolbarBold).toBe("Gras");
     expect(merged.toolbarItalic).toBe(defaultMarkdownEditorMessages.toolbarItalic);
-    expect(merged.modeToggleFormatted).toBe(defaultMarkdownEditorMessages.modeToggleFormatted);
+    expect(merged.modeToggleSwitchToSource).toBe(defaultMarkdownEditorMessages.modeToggleSwitchToSource);
   });
 
   it("overrides a function-valued field wholesale", () => {

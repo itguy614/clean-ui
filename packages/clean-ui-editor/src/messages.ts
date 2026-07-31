@@ -30,8 +30,13 @@ declare module "@itguy614/clean-ui" {
 }
 
 export interface CuiMarkdownEditorMessages {
-  modeToggleFormatted: string;
-  modeToggleSource: string;
+  /** Accessible name/tooltip for the single floating mode-toggle button,
+   * one per destination — e.g. while viewing the formatted document, the
+   * button's label describes switching *to* source (not the current
+   * state), since there's no second, always-visible button to show the
+   * other state alongside it. */
+  modeToggleSwitchToSource: string;
+  modeToggleSwitchToFormatted: string;
   /** `EditorView.announce` text for assistive tech on a mode switch. */
   modeToggleFormattedAnnounce: string;
   modeToggleSourceAnnounce: string;
@@ -91,8 +96,8 @@ export interface CuiMarkdownEditorMessages {
 
 /** Built-in English defaults. */
 export const defaultMarkdownEditorMessages: CuiMarkdownEditorMessages = {
-  modeToggleFormatted: "Formatted",
-  modeToggleSource: "Source",
+  modeToggleSwitchToSource: "Switch to source view",
+  modeToggleSwitchToFormatted: "Switch to formatted view",
   modeToggleFormattedAnnounce: "Formatted mode",
   modeToggleSourceAnnounce: "Source mode",
 

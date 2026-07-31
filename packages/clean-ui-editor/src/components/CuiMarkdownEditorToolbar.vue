@@ -87,6 +87,14 @@ function onKeydown(event: KeyboardEvent) {
     @scroll="onScroll"
   >
     <div v-if="canScrollLeft" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowLeftStyle" />
+    <!-- `solid` for the active/pressed state is a deliberate, sign-off exception
+         to the library's general "subtle by default, bold by choice" rule
+         (tinted `-bg`/`-border` for resting/selected state elsewhere — toggles,
+         checkboxes, radios, badges): an icon-only formatting toggle needs the
+         clearest possible pressed/unpressed contrast at a glance, with no label
+         to fall back on, and full-fill active state is the same convention
+         Word/Docs/Notion use for exactly this kind of icon toolbar. Not an
+         oversight — see the UX review this was raised in. -->
     <CuiButton
       v-for="(entry, index) in entries"
       :key="entry.id"
@@ -127,6 +135,22 @@ function onKeydown(event: KeyboardEvent) {
   flex-shrink: 0;
   min-width: 24px;
   min-height: 24px;
+}
+
+/* `size="sm"` (32px) reads fine as a mouse target but falls short of the
+   ~44px touch-target guideline (WCAG 2.5.5, Apple HIG) on a phone-width
+   screen, where a near-miss tap is more likely to scroll this already
+   horizontally-scrollable strip than activate the button. `min-width`/
+   `min-height` float above `CuiButton`'s own inline `height` (from its
+   `size` prop) rather than conflicting with it — the icon and padding stay
+   exactly as `size="sm"` renders them, just with a larger tap area. Scoped
+   to mobile only: the toolbar's icon-dense, compact layout is deliberate
+   at desktop/mouse widths. */
+@media (max-width: 639px) {
+  .cui-markdown-editor-toolbar :deep(.cui-button) {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .cui-markdown-editor-toolbar__shadow {

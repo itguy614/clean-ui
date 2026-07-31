@@ -4,8 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @itguy614/clean-ui-docs dev",
+    "dev:editor-docs": "pnpm --filter @itguy614/clean-ui-editor-docs dev",
     "build": "pnpm -r build",
     "build:docs": "pnpm --filter @itguy614/clean-ui-docs build",
+    "build:editor-docs": "pnpm --filter @itguy614/clean-ui-editor-docs build",
     "test": "pnpm -r --if-present test",
     "lint": "pnpm -r lint",
     "new:component": "node scripts/new-component.mjs",

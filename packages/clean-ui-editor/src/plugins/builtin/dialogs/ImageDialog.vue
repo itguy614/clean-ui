@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick, useTemplateRef } from "vue";
 import { CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiButton, CuiInput } from "@itguy614/clean-ui";
 import { isAllowedUrl } from "../../../url-policy";
 import { pickImageDialogMessages, defaultMarkdownEditorMessages, type ImageDialogMessages } from "../../../messages";
@@ -19,9 +19,14 @@ const url = ref(props.initialUrl);
 const alt = ref(props.initialAlt);
 const urlError = ref("");
 const visible = ref(false);
+const urlInputRef = useTemplateRef<{ focus: (opts?: FocusOptions) => void }>("urlInputEl");
 
-onMounted(() => {
+onMounted(async () => {
   visible.value = true;
+  // See LinkDialog.vue's identical comment: the URL field is what's typed
+  // into first, so it should get initial focus, not the modal's own root.
+  await nextTick();
+  urlInputRef.value?.focus();
 });
 
 function submit() {
@@ -51,6 +56,7 @@ function cancel() {
           <label for="cui-image-dialog-url" class="cui-lead" style="display: block; margin-bottom: 0.25rem">{{ props.messages.urlLabel }}</label>
           <CuiInput
             id="cui-image-dialog-url"
+            ref="urlInputEl"
             v-model="url"
             :placeholder="props.messages.urlPlaceholder"
             :error="Boolean(urlError)"

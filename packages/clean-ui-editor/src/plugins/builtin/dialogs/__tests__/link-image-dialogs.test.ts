@@ -74,6 +74,30 @@ describe("link and image dialogs (collect() seam)", () => {
     expect(view.state.doc.toString()).toBe("");
   });
 
+  it("opening the link dialog focuses the URL field, not the modal's own root", async () => {
+    // Regression test (UX review): focus previously landed on the modal
+    // root, costing a keyboard user two Tab presses (past the header's
+    // close button) to reach the field they almost always want to type
+    // into first.
+    wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [linkPlugin] } });
+    await nextTick();
+    exposed(wrapper).runCommand("link");
+    await nextTick();
+    await flush();
+
+    expect(document.activeElement).toBe(nativeInput("cui-link-dialog-url"));
+  });
+
+  it("opening the image dialog focuses the URL field, not the modal's own root", async () => {
+    wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [imagePlugin] } });
+    await nextTick();
+    exposed(wrapper).runCommand("image");
+    await nextTick();
+    await flush();
+
+    expect(document.activeElement).toBe(nativeInput("cui-image-dialog-url"));
+  });
+
   it("a URL-looking selection pre-fills the URL field; any other selection becomes the label", async () => {
     wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "https://example.com and some words", plugins: [linkPlugin] } });
     await nextTick();
@@ -130,16 +154,16 @@ describe("link and image dialogs (collect() seam)", () => {
     wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [linkPlugin] } });
     await nextTick();
 
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-source"]').attributes("disabled")).toBeUndefined();
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').attributes("disabled")).toBeUndefined();
 
     exposed(wrapper).runCommand("link");
     await nextTick();
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-source"]').attributes("disabled")).toBeDefined();
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').attributes("disabled")).toBeDefined();
 
     clickButtonWithText("Cancel");
     await flush();
     await nextTick();
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-source"]').attributes("disabled")).toBeUndefined();
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').attributes("disabled")).toBeUndefined();
   });
 
   it("running the image command inserts an image by URL only, one undo step", async () => {

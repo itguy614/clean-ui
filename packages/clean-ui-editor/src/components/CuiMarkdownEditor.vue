@@ -6,12 +6,14 @@ import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
-import { CuiButtonGroup, CuiButton, useColorScheme } from "@itguy614/clean-ui";
+import { CuiButton, CuiIcon, useColorScheme } from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
+import { exitListWithBlankLine } from "../language/exit-list-blank-line";
 import { registerEditorInstance, translateCodeMirrorError } from "../duplicate-guard";
 import { throttle } from "../utils/throttle";
 import { revealExtension, setActiveConstructsEffect } from "../reveal";
+import { codeBackgroundPlugin } from "../theme/code-decorations";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
@@ -118,6 +120,7 @@ const emit = defineEmits<{
 
 const cmHostRef = useTemplateRef<HTMLDivElement>("cmHost");
 const rootRef = useTemplateRef<HTMLDivElement>("root");
+const controlRef = useTemplateRef<HTMLDivElement>("control");
 const isMounted = ref(false);
 
 let view: EditorView | null = null;
@@ -157,6 +160,24 @@ function buildContentAttributes(): Record<string, string> {
 const isAtLimit = computed(() => props.maxLength !== undefined && docLength.value >= props.maxLength);
 
 /**
+ * A keystroke silently swallowed at the limit is otherwise invisible while
+ * typing at speed — the counter is the only signal, and it's easy to not
+ * be looking at it. Reuses the library's own shared `cui-shake` keyframe
+ * (never define a local one for an animation this already names — see
+ * main.css) at a one-shot duration instead of `CuiAlert`/`CuiToast`'s
+ * `4s infinite` pulsing use of it; toggling the class off then back on
+ * (via a forced reflow) restarts the animation even if triggered again
+ * mid-shake from rapid typing past the limit.
+ */
+function triggerMaxLengthShake() {
+  const el = controlRef.value;
+  if (!el) return;
+  el.classList.remove("cui-markdown-editor__control--shake");
+  void el.offsetWidth; // forces a reflow so re-adding the class below restarts the animation
+  el.classList.add("cui-markdown-editor__control--shake");
+}
+
+/**
  * FR32: refuses rather than truncates. A transaction filter (not a change
  * filter) so it sees the resulting document as a whole — truncating at
  * `tr.newDoc.length - maxLength` characters, the naive alternative, can cut
@@ -167,7 +188,10 @@ const isAtLimit = computed(() => props.maxLength !== undefined && docLength.valu
  */
 function maxLengthFilter(tr: Transaction) {
   if (!tr.docChanged || tr.annotation(externalSync)) return tr;
-  if (props.maxLength !== undefined && tr.newDoc.length > props.maxLength) return [];
+  if (props.maxLength !== undefined && tr.newDoc.length > props.maxLength) {
+    triggerMaxLengthShake();
+    return [];
+  }
   return tr;
 }
 
@@ -188,6 +212,17 @@ const pluginsCompartment = new Compartment();
 // dialogs) — disables the mode-toggle buttons below so a dialog stays valid
 // against whichever mode was active when it opened.
 const isCollecting = ref(false);
+
+// `mode` follows the same "controlled, with an uncontrolled fallback"
+// pattern as a native form element: the built-in toggle (showModeToggle,
+// on by default) works standalone with no `v-model:mode` binding at all —
+// `currentMode` is this component's own source of truth, seeded from the
+// prop once and driven forward by setMode() from then on. A consumer that
+// DOES bind v-model:mode still gets the prop synced back in below, so both
+// usages work. Reading `props.mode` directly instead (as this component
+// used to) means an unbound `update:mode` emit reaches nobody, and the
+// button that just fired it never actually changes anything.
+const currentMode = ref<CuiMarkdownEditorMode>(props.mode);
 
 const messages = useMarkdownEditorMessages();
 
@@ -348,7 +383,19 @@ function createView(): EditorView {
         // browser caret and ::selection, which the chrome theme (see
         // src/theme/editor-theme.ts) styles from --cui-* tokens.
         drawSelection(),
+        // A markdown document's lines are prose paragraphs, not source code —
+        // without this, a long paragraph runs off the right edge instead of
+        // wrapping, forcing horizontal scroll to read it.
+        EditorView.lineWrapping,
+        // Inline/fenced code backgrounds — unconditional (like the highlight
+        // style's own monospace/color treatment), active in both modes.
+        codeBackgroundPlugin,
         history(),
+        // `Prec.highest` so this runs before `markdownKeymap`'s own Enter
+        // binding below — it wraps that same command (see
+        // exit-list-blank-line.ts for why the wrapping is needed) rather
+        // than replacing it.
+        Prec.highest(keymap.of([{ key: "Enter", run: exitListWithBlankLine }])),
         keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap, ...completionKeymap]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
@@ -360,7 +407,7 @@ function createView(): EditorView {
         EditorState.transactionFilter.of(maxLengthFilter),
         EditorView.domEventHandlers({ paste: handlePaste }),
         placeholderExtension(props.placeholder ?? ""),
-        modeCompartment.of(buildModeExtensions(props.mode)),
+        modeCompartment.of(buildModeExtensions(currentMode.value)),
         themeCompartment.of(themeExtensions()),
         pluginsCompartment.of(registryExtensions(currentRegistry)),
         readOnlyCompartment.of(EditorState.readOnly.of(Boolean(props.disabled || props.readonly))),
@@ -400,20 +447,28 @@ watch(
   },
 );
 
+// A controlling parent (v-model:mode) changing the prop syncs into
+// currentMode too — setMode() below already keeps them in sync the other
+// direction, and Vue's watch no-ops when the value doesn't actually change,
+// so this doesn't loop against setMode's own emit.
 watch(
   () => props.mode,
   (newMode) => {
-    if (!view) return;
-    view.dispatch({
-      effects: [
-        modeCompartment.reconfigure(buildModeExtensions(newMode)),
-        EditorView.announce.of(
-          newMode === "source" ? messages.value.modeToggleSourceAnnounce : messages.value.modeToggleFormattedAnnounce,
-        ),
-      ],
-    });
+    if (newMode !== currentMode.value) currentMode.value = newMode;
   },
 );
+
+watch(currentMode, (newMode) => {
+  if (!view) return;
+  view.dispatch({
+    effects: [
+      modeCompartment.reconfigure(buildModeExtensions(newMode)),
+      EditorView.announce.of(
+        newMode === "source" ? messages.value.modeToggleSourceAnnounce : messages.value.modeToggleFormattedAnnounce,
+      ),
+    ],
+  });
+});
 
 watch(
   () => Boolean(props.disabled || props.readonly),
@@ -460,16 +515,29 @@ watch(
         // present in wysiwyg mode, so only worth updating there; dispatching
         // an effect an inactive StateField doesn't have is a harmless no-op,
         // but the guard keeps this from doing pointless work in source mode.
-        ...(props.mode === "wysiwyg" ? [setActiveConstructsEffect.of(activeConstructsFromRegistry(currentRegistry))] : []),
+        ...(currentMode.value === "wysiwyg" ? [setActiveConstructsEffect.of(activeConstructsFromRegistry(currentRegistry))] : []),
       ],
     });
   },
 );
 
 function setMode(mode: CuiMarkdownEditorMode) {
-  if (mode === props.mode) return;
+  if (mode === currentMode.value) return;
+  currentMode.value = mode;
   emit("update:mode", mode);
 }
+
+function toggleMode() {
+  setMode(currentMode.value === "wysiwyg" ? "source" : "wysiwyg");
+}
+
+/** A single button describes what clicking it *does* (switch to the other
+ * view), not the view you're currently in — there's no second, persistently
+ * visible button here to show the current state alongside it, unlike the
+ * previous two-button layout. */
+const modeToggleLabel = computed(() =>
+  currentMode.value === "wysiwyg" ? messages.value.modeToggleSwitchToSource : messages.value.modeToggleSwitchToFormatted,
+);
 
 /** FR24: runs a registered command by id through the same guarded path
  * every other invocation route (keymap, toolbar, imperative call) uses — a
@@ -498,43 +566,48 @@ defineExpose({
   <div
     ref="root"
     class="cui-markdown-editor"
-    :class="{ 'cui-markdown-editor--disabled': disabled, 'cui-markdown-editor--error': error }"
+    :class="{
+      'cui-markdown-editor--disabled': disabled,
+      'cui-markdown-editor--error': error,
+      'cui-markdown-editor--wysiwyg': currentMode === 'wysiwyg',
+      'cui-markdown-editor--source': currentMode === 'source',
+    }"
   >
-    <CuiButtonGroup v-if="showModeToggle" style="margin: 0.375rem 0.375rem 0">
-      <CuiButton
-        size="sm"
-        :variant="mode === 'wysiwyg' ? 'solid' : 'outline'"
-        :disabled="disabled || isCollecting"
-        data-testid="cui-markdown-editor-mode-wysiwyg"
-        @click="setMode('wysiwyg')"
-      >
-        {{ messages.modeToggleFormatted }}
-      </CuiButton>
-      <CuiButton
-        size="sm"
-        :variant="mode === 'source' ? 'solid' : 'outline'"
-        :disabled="disabled || isCollecting"
-        data-testid="cui-markdown-editor-mode-source"
-        @click="setMode('source')"
-      >
-        {{ messages.modeToggleSource }}
-      </CuiButton>
-    </CuiButtonGroup>
-    <slot name="toolbar" :registry="currentRegistry" :run-command="runCommand" :is-command-active="isCommandActive">
-      <CuiMarkdownEditorToolbar
-        v-if="showToolbar"
-        :registry="currentRegistry"
-        :toolbar="toolbar"
-        :run-command="runCommand"
-        :is-command-active="isCommandActive"
-        :selection-version="selectionVersion"
-      />
-    </slot>
-    <div
-      ref="cmHost"
-      class="cui-markdown-editor__cm-host"
-      :data-testid="isMounted ? 'cui-markdown-editor' : 'cui-markdown-editor-shell'"
-    />
+    <div ref="control" class="cui-markdown-editor__control">
+      <slot name="toolbar" :registry="currentRegistry" :run-command="runCommand" :is-command-active="isCommandActive">
+        <CuiMarkdownEditorToolbar
+          v-if="showToolbar"
+          :registry="currentRegistry"
+          :toolbar="toolbar"
+          :run-command="runCommand"
+          :is-command-active="isCommandActive"
+          :selection-version="selectionVersion"
+        />
+      </slot>
+      <div class="cui-markdown-editor__cm-wrapper">
+        <div
+          ref="cmHost"
+          class="cui-markdown-editor__cm-host"
+          :data-testid="isMounted ? 'cui-markdown-editor' : 'cui-markdown-editor-shell'"
+        />
+        <CuiButton
+          v-if="showModeToggle"
+          class="cui-markdown-editor__mode-toggle"
+          variant="ghost"
+          rounded="full"
+          size="sm"
+          :disabled="disabled || isCollecting"
+          :title="modeToggleLabel"
+          :aria-label="modeToggleLabel"
+          data-testid="cui-markdown-editor-mode-toggle"
+          @click="toggleMode"
+        >
+          <template #prefix>
+            <CuiIcon :name="currentMode === 'wysiwyg' ? 'code' : 'eye'" />
+          </template>
+        </CuiButton>
+      </div>
+    </div>
     <div v-if="(error && errorMessage) || maxLength !== undefined" class="cui-markdown-editor__footer">
       <div v-if="error && errorMessage" class="cui-markdown-editor__error" data-testid="cui-markdown-editor-error">
         {{ errorMessage }}

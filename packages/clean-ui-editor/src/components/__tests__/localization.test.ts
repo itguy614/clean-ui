@@ -34,8 +34,12 @@ describe("CuiMarkdownEditor localization (task 5.2.2)", () => {
     wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [boldPlugin] } });
     await nextTick();
 
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').text()).toBe("Formatted");
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-source"]').text()).toBe("Source");
+    // Starts in wysiwyg, so the toggle's label/tooltip describes switching
+    // *to* source — there's no second, always-visible button to show the
+    // current state alongside it.
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').attributes("aria-label")).toBe(
+      "Switch to source view",
+    );
     expect(wrapper.find(".cui-markdown-editor-toolbar").attributes("aria-label")).toBe("Formatting");
     expect(wrapper.find(".cui-markdown-editor-toolbar .cui-button").attributes("aria-label")).toBe("Bold");
   });
@@ -54,15 +58,25 @@ describe("CuiMarkdownEditor localization (task 5.2.2)", () => {
     expect(labels).toContain("Gras");
     expect(labels).toContain("Italic"); // untouched sibling stays at the English default
     // The mode toggle and toolbar aria-label are unrelated fields — also untouched.
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').text()).toBe("Formatted");
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').attributes("aria-label")).toBe(
+      "Switch to source view",
+    );
   });
 
   it("overrides the mode-toggle labels and screen-reader announcements", async () => {
-    wrapper = mount(withProvider({ markdownEditor: { modeToggleFormatted: "Con formato", modeToggleSource: "Fuente" } }));
+    wrapper = mount(
+      withProvider({
+        markdownEditor: { modeToggleSwitchToSource: "Cambiar a código fuente", modeToggleSwitchToFormatted: "Cambiar a vista con formato" },
+      }),
+    );
     await nextTick();
 
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').text()).toBe("Con formato");
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-source"]').text()).toBe("Fuente");
+    const toggle = () => wrapper!.find('[data-testid="cui-markdown-editor-mode-toggle"]');
+    expect(toggle().attributes("aria-label")).toBe("Cambiar a código fuente"); // starts in wysiwyg
+
+    await toggle().trigger("click");
+    await nextTick();
+    expect(toggle().attributes("aria-label")).toBe("Cambiar a vista con formato"); // now in source
   });
 
   it("overrides the maxLength counter and refusal message formatting", async () => {

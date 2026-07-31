@@ -191,17 +191,43 @@ describe("CuiMarkdownEditor", () => {
       });
       expect(call).toBeDefined();
     });
+
+    it("the built-in toggle works standalone, with no v-model:mode bound at all", async () => {
+      // Regression test: `setMode` used to only `emit("update:mode", ...)` —
+      // with no v-model:mode listener, that emit reached nobody and the
+      // editor's own actual mode never changed, so the built-in toggle
+      // (on by default) silently did nothing for the very common case of a
+      // consumer using `v-model="doc"` alone. `mode` must behave like a
+      // native form control: controllable, but usable uncontrolled too.
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "**bold** and more text after it" } });
+      await nextTick();
+
+      const view = getView(wrapper)!;
+      view.dispatch({ selection: { anchor: view.state.doc.length } }); // move the caret away from the construct
+      await nextTick();
+      // wysiwyg by default: the reveal layer is active, so with the caret
+      // away from it, the bold markers are hidden markers, not plain text.
+      expect(view.dom.querySelectorAll(".cui-md-marker-hidden").length).toBeGreaterThan(0);
+
+      await wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').trigger("click");
+      await nextTick();
+
+      expect(wrapper.emitted("update:mode")?.at(-1)).toEqual(["source"]);
+      // The real proof it isn't just emitting into the void: source mode
+      // actually removes the reveal layer, so the raw markers show instead.
+      expect(view.dom.querySelectorAll(".cui-md-marker-hidden").length).toBe(0);
+    });
   });
 
-  it("renders a mode-toggle button group by default, suppressible via showModeToggle", async () => {
+  it("renders a floating mode-toggle button by default, suppressible via showModeToggle", async () => {
     wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "" } });
     await nextTick();
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').exists()).toBe(true);
     wrapper.unmount();
 
     wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", showModeToggle: false } });
     await nextTick();
-    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-wysiwyg"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="cui-markdown-editor-mode-toggle"]').exists()).toBe(false);
   });
 
   describe("form control props (FR31)", () => {
@@ -326,6 +352,24 @@ describe("CuiMarkdownEditor", () => {
       view.dispatch({ changes: { from: 5, insert: "f" } });
 
       expect(view.state.doc.toString()).toBe("abcde");
+    });
+
+    it("shakes the control box when a keystroke is rejected at the limit", async () => {
+      // Regression test (UX review): a swallowed keystroke was otherwise
+      // invisible while typing at speed — the counter is the only signal,
+      // and it's easy to not be looking at it.
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abcde", maxLength: 5 }, attachTo: document.body });
+      await nextTick();
+      const view = getView(wrapper)!;
+      const control = wrapper.find(".cui-markdown-editor__control");
+      expect(control.classes()).not.toContain("cui-markdown-editor__control--shake");
+
+      view.dispatch({ changes: { from: 5, insert: "f" } });
+      await nextTick();
+
+      expect(wrapper.find(".cui-markdown-editor__control").classes()).toContain(
+        "cui-markdown-editor__control--shake",
+      );
     });
 
     it("still allows edits that keep the document at or under the limit (e.g. deleting, or replacing within budget)", async () => {

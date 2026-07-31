@@ -45,8 +45,19 @@ export function slashMenuExtension(
     if (match.from === match.to && !completionContext.explicit) return null;
 
     const messages = getMessages();
-    const options: Completion[] = commandIds.map(({ id, label }) => ({
+    const options: Completion[] = commandIds.map(({ id, label }, index) => ({
       label: resolveCommandLabel(messages, id, label),
+      // `@codemirror/autocomplete`'s default `compareCompletions` sorts
+      // strictly by `sortText` (falling back to `label` when absent) —
+      // alphabetical-by-label order buries "Bold" behind "Blockquote" and
+      // interleaves inline formatting with block-level commands, rather
+      // than the toolbar's own deliberate grouping (inline marks, then
+      // headings, then lists, then blocks) that `commandIds` already
+      // preserves via the registry's insertion order. A zero-padded index
+      // as `sortText` keeps that grouping in the palette regardless of
+      // what's typed — filtering still narrows by fuzzy-matching `label`,
+      // only the *display order* of what's left is pinned.
+      sortText: String(index).padStart(3, "0"),
       type: "keyword",
       apply(view, _completion, _from, to) {
         // The result's own `from` (below) is deliberately *after* the "/" —
