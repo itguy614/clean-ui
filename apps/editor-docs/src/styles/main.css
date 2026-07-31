@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Color scale (@theme) — imported from the library so the docs compile Tailwind
+   utilities (bg-surface-50, text-primary-500, …) from the exact same tokens.
+   The semantic --cui-* layer + themes arrive at runtime via the library's CSS
+   (pulled in by importing components in main.ts). Never re-declare the scale here. */
+@import "../../../../packages/clean-ui/src/styles/theme.css";
+
+@custom-variant dark (&:where(.dark, .dark *));

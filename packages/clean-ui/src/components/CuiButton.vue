@@ -183,7 +183,7 @@ const buttonStyle = computed(() => {
     </span>
 
     <!-- Default content -->
-    <span :class="{ 'opacity-0': loading }" class="cui-button__content">
+    <span v-if="$slots.default" :class="{ 'opacity-0': loading }" class="cui-button__content">
       <slot />
     </span>
 

@@ -1,6 +1,10 @@
 import type { App } from "vue";
 import type { CleanUIOptions } from "./types";
 
+// Detect a second, different-version copy of clean-ui in the same page — see
+// duplicate-guard.ts. Runs as early as possible, before anything else loads.
+import "./duplicate-guard";
+
 // Components
 import CuiButton from "./components/CuiButton.vue";
 import CuiButtonGroup from "./components/CuiButtonGroup.vue";
@@ -163,7 +167,7 @@ export { useToast } from "./composables/useToast";
 export { useMessages } from "./composables/useMessages";
 export type { CuiConfigProviderProps } from "./components/CuiConfigProvider.vue";
 export { defaultMessages, mergeMessages } from "./messages";
-export type { CuiMessages, DeepPartialMessages, PaginationRange } from "./messages";
+export type { CuiMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";
 export type { CuiIconProps, IconWeight, IconSize } from "./components/CuiIcon.vue";
 export type { CuiTabsProps } from "./components/CuiTabs.vue";
 export type { CuiTabProps } from "./components/CuiTab.vue";
@@ -265,6 +269,7 @@ export type { CuiRadioGroupProps } from "./components/CuiRadioGroup.vue";
 export { RadioGroupKey } from "./components/radio-context";
 export type { RadioGroupContext } from "./components/radio-context";
 export type { CleanUIOptions, CleanUIPlugin } from "./types";
+export { version } from "./version";
 export type {
   TailwindSpacing,
   TailwindBreakpoint,
@@ -300,6 +305,7 @@ export type { LayoutContext } from "./composables/useLayoutContext";
 export type { ActiveBreakpoint } from "./composables/useBreakpoint";
 export { useOverlay, type UseOverlayOptions } from "./composables/useOverlay";
 export { useClickOutside } from "./composables/useClickOutside";
+export { useColorScheme } from "./composables/useColorScheme";
 export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
 
 export function createCleanUI(_options: CleanUIOptions = {}) {

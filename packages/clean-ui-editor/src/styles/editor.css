@@ -1,0 +1,378 @@
+/**
+ * Structural styling — border, padding, focus ring, disabled/error states —
+ * matching CuiInput/CuiTextarea's conventions so the editor reads as a
+ * native clean-ui control. Semantic tokens only (NFR6): no hardcoded colors.
+ */
+
+/**
+ * Wrapper (no border) / control (bordered box) / footer (counter, below and
+ * outside the box) — the exact same three-layer split as `CuiTextarea`
+ * (`.cui-textarea-wrapper` > `.cui-textarea` + `.cui-textarea__footer`), so
+ * the char counter sits below-and-outside the editor like every other
+ * clean-ui form control's counter, not inside it. State modifier classes
+ * (`--disabled`, `--error`, `--wysiwyg`, `--source`) stay on this outer
+ * root rather than moving to `__control` — existing tests assert them via
+ * `wrapper.classes()` (root-only), and the mode-dependent font rules below
+ * reach `.cm-content` through descendant selectors regardless of how many
+ * wrapper levels sit in between, so neither needed to change.
+ */
+.cui-markdown-editor {
+  display: flex;
+  flex-direction: column;
+}
+
+.cui-markdown-editor__control {
+  --_cme-border: var(--cui-border-strong);
+  --_cme-focus-border: var(--cui-primary);
+  --_cme-focus-ring: var(--cui-primary-focus-ring);
+
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--_cme-border);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  background: var(--cui-surface-base);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  /* Reserved so the SSR shell and the hydrated, CodeMirror-mounted editor
+     occupy the same height — CodeMirror's own styles are injected at
+     runtime and are absent until then. */
+  min-height: 8rem;
+}
+
+.cui-markdown-editor:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within {
+  border-color: var(--_cme-focus-border);
+  box-shadow: 0 0 0 2px var(--_cme-focus-ring);
+}
+
+.cui-markdown-editor--disabled .cui-markdown-editor__control {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cui-markdown-editor--error .cui-markdown-editor__control {
+  --_cme-border: var(--cui-error);
+  --_cme-focus-border: var(--cui-error);
+  --_cme-focus-ring: var(--cui-error-focus-ring);
+}
+
+/* A keystroke rejected at `maxLength` — reuses the shared `cui-shake`
+   keyframe (main.css) at a quick one-shot duration, unlike CuiAlert/
+   CuiToast's `4s infinite` pulsing use of the same keyframe for a
+   persistently-displayed warning icon. */
+.cui-markdown-editor__control--shake {
+  animation: cui-shake 0.5s ease-in-out 1;
+}
+
+.cui-markdown-editor__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
+  gap: calc(1rem * var(--cui-density-scale, 1));
+}
+
+.cui-markdown-editor__error {
+  font-size: 0.8125rem;
+  color: var(--cui-error);
+}
+
+.cui-markdown-editor__spacer {
+  flex: 1;
+}
+
+.cui-markdown-editor__counter {
+  font-size: 0.75rem;
+  color: var(--cui-text-tertiary);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.cui-markdown-editor__counter--over {
+  color: var(--cui-error);
+  font-weight: 500;
+}
+
+.cui-markdown-editor__cm-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+
+.cui-markdown-editor__cm-host {
+  flex: 1;
+  /* Reserved so the pre-hydration shell (this div, empty) and the
+     CodeMirror-populated editor occupy the same height — CodeMirror's own
+     styles are injected at runtime and are absent until then. */
+  min-height: 6.5rem;
+}
+
+/**
+ * The mode-toggle button floats in the text area's own bottom-right corner
+ * (a sibling of `.cui-markdown-editor__cm-host`, positioned via the shared
+ * `.cui-markdown-editor__cm-wrapper` ancestor — never a child of `cm-host`
+ * itself, which CodeMirror owns exclusively and would fight over). Needs a
+ * real background, not `ghost`'s default transparent one, so it stays
+ * legible over whatever text scrolls underneath it — but `CuiButton` sets
+ * background/border via an inline `:style` binding (computed per variant),
+ * which beats a plain external rule outright regardless of specificity,
+ * same as the CodeMirror overrides above. `position` needs the same
+ * treatment for a different reason: `CuiButton`'s own scoped style sets
+ * `.cui-button { position: relative }` (for its internal spinner overlay),
+ * and Vue's scoped-style `[data-v-xxxx]` attribute selector makes that rule
+ * MORE specific than this plain class, not merely tied with it — confirmed
+ * via `getComputedStyle` still showing `position: relative` with no
+ * `!important`. All three need it here.
+ */
+.cui-markdown-editor__mode-toggle {
+  position: absolute !important;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  background: var(--cui-surface-base) !important;
+  border: 1px solid var(--cui-border) !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  z-index: 1;
+}
+
+:where(.dark, .dark *) .cui-markdown-editor__mode-toggle {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+
+/* Same touch-target floor as the formatting toolbar (see the matching
+   comment in CuiMarkdownEditorToolbar.vue) — `size="sm"` (32px) falls
+   short of the ~44px guideline on a phone-width screen. */
+@media (max-width: 639px) {
+  .cui-markdown-editor__mode-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.cui-markdown-editor__cm-host .cm-editor {
+  height: 100%;
+  outline: none;
+  font-size: 0.9375rem;
+  color: var(--cui-text-body);
+}
+
+.cui-markdown-editor__cm-host .cm-content {
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+}
+
+/**
+ * Font family is mode-dependent, deliberately re-asserted (not left to
+ * inheritance) at a higher, guaranteed-winning specificity: clean-ui's
+ * `.cui-typography` layer applies `font-family: var(--cui-font-sans)` via
+ * `.cui-typography *` — a universal descendant selector whose specificity
+ * (one class) exactly ties CodeMirror's own dynamically-injected
+ * highlight-style rules, so which one wins depends on injection order, not
+ * anything meaningful — confirmed empirically, not assumed. Scoping one
+ * class deeper (`.cui-markdown-editor--wysiwyg .cm-content *`, two classes)
+ * wins that tie regardless of order.
+ *
+ * `wysiwyg` reads as a formatted document, so prose gets clean-ui's own
+ * prose font; `source` reads as raw markdown source, so the whole buffer
+ * stays monospace, CodeMirror's own default. Either way, an inline/fenced
+ * code span is pinned to monospace via the `.cui-md-code` class
+ * (src/theme/syntax-highlight.ts gives it that class explicitly, rather
+ * than relying on CodeMirror's own unstable auto-generated class name) at
+ * three classes deep — higher than either mode rule above, so code is
+ * never affected by which mode is active.
+ */
+.cui-markdown-editor--wysiwyg .cm-content,
+.cui-markdown-editor--wysiwyg .cm-content * {
+  font-family: var(--cui-font-sans);
+}
+
+.cui-markdown-editor--source .cm-content,
+.cui-markdown-editor--source .cm-content * {
+  font-family: var(--cui-font-mono);
+  /* Source is the literal, undecorated buffer — headings still get their
+     tinted syntax-highlight color (so structure is still visible at a
+     glance), but not their wysiwyg-only font-size boost from
+     `syntax-highlight.ts`'s `heading1`-`heading6` entries. `inherit` rather
+     than a hardcoded literal: every element in the chain re-inherits from
+     its own parent, so the true source of truth stays `.cm-editor`'s own
+     font-size above, not a second, driftable copy of the same number. */
+  font-size: inherit;
+}
+
+.cui-markdown-editor .cm-content .cui-md-code {
+  font-family: var(--cui-font-mono);
+}
+
+/* Inline code: a small "pill" background around the whole construct
+   (markers included — a hidden marker is zero-width, so it doesn't disturb
+   the shape; a revealed one just shows inside the pill, which reads fine). */
+.cui-md-inline-code {
+  background: var(--cui-surface-bg);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.3em;
+}
+
+/* Fenced code block: a background spanning every line of the block, since a
+   text-level decoration can't paint the full-width line background a code
+   block needs. Rounded only on the fence's first/last line, like a real
+   code block, not every line individually. */
+.cui-md-code-block-line {
+  background: var(--cui-surface-bg);
+}
+
+.cui-md-code-block-line--first {
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.cui-md-code-block-line--last {
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+/**
+ * A bulleted list item's line, once its `ListMark` ("-") is hidden: the
+ * `padding-left` reserves a gutter for the bullet glyph and gives wrapped
+ * continuation rows (via `EditorView.lineWrapping`) a hanging indent that
+ * lines up under the text, not under the bullet. One class per nesting
+ * depth, defined here in increasing-depth order deliberately: a line that's
+ * simultaneously the first line of an outer item AND the first line of a
+ * nested item inside it (a single-line-of-content nested list item) gets
+ * both classes, and with equal specificity, plain CSS source order settles
+ * the tie — the deeper, later-defined rule wins, which is also the
+ * visually correct one.
+ *
+ * Scoped under `.cui-markdown-editor__cm-host .cm-content` (three classes),
+ * not left as a bare single class, for the same reason as `.cui-md-code`
+ * above: CodeMirror's own base theme sets `.cm-line`'s padding via a
+ * two-class selector (its generated editor-instance class + `.cm-line`),
+ * which otherwise beats a single class outright on specificity — confirmed
+ * via `getComputedStyle` showing 6px (CodeMirror's own gutter padding)
+ * instead of the declared 1.25em.
+ */
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line {
+  position: relative;
+}
+
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-1 {
+  padding-left: 1.25em;
+}
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-2 {
+  padding-left: 2.5em;
+}
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-3 {
+  padding-left: 3.75em;
+}
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-4 {
+  padding-left: 5em;
+}
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-5 {
+  padding-left: 6.25em;
+}
+.cui-markdown-editor__cm-host .cm-content .cui-md-list-line-6 {
+  padding-left: 7.5em;
+}
+
+/* Absolutely positioned so it never affects text flow/wrapping — its host
+   line's own padding-left (above) is what actually reserves its space.
+   `left` is set inline per element (see BulletWidget), computed from
+   nesting depth so a nested item's bullet sits inside its own indent band
+   rather than always at the line's outer edge. */
+.cui-md-bullet {
+  position: absolute;
+  user-select: none;
+}
+
+.cui-markdown-editor__cm-host .cm-placeholder {
+  color: var(--cui-text-tertiary);
+}
+
+/**
+ * FR9: hides a markdown syntax marker *visually only* — the text stays a
+ * real DOM text node (just rendered at zero size), so it's still exposed to
+ * the accessibility tree and still traversed by the caret. `display: none`
+ * or `visibility: hidden` would remove it from that tree too, which is
+ * exactly the thing FR9 forbids — this is why Decoration.replace() (which
+ * removes the characters from the DOM outright) can't be used either.
+ *
+ * `font-size: 0` alone relies on inheritance into CodeMirror's own nested
+ * highlight-style `<span>` — fine for most tags (color, fontStyle), but a
+ * heading marker's inner span also carries `tags.heading1`'s explicit
+ * `fontSize` (var(--cui-font-size-h1) etc.), and an explicit declaration on
+ * an element always wins over an inherited one regardless of selector
+ * specificity — confirmed via `getComputedStyle` showing the wrapper at 0px
+ * and its own highlight-style child still at 36px. The `*` re-asserts zero
+ * explicitly on every descendant instead of leaning on inheritance;
+ * `!important` is needed too, since CodeMirror injects its highlight
+ * stylesheet at runtime, after this one, so a plain specificity tie would
+ * still go to whichever tag's fontSize rule runs later.
+ */
+.cui-md-marker-hidden,
+.cui-md-marker-hidden * {
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+/**
+ * Slash-menu palette (`@codemirror/autocomplete`'s own tooltip, task 5.2) —
+ * matched to `CuiDropdownMenu`/`CuiDropdownItem`'s look (background, border,
+ * radius, shadow, item padding/hover) so it reads as a clean-ui control
+ * rather than CodeMirror's own generic, monospace, hardcoded-blue default.
+ * `EditorView.baseTheme()`'s rules (which is how the default look is
+ * supplied) are documented as low-priority, trivially overridden by a
+ * normal stylesheet rule — true only for properties it *doesn't* itself
+ * set on a given selector (background/border/radius/shadow on the tooltip
+ * itself: no competing declaration, so a plain override just applies).
+ * Wherever it sets that *exact* property on that *exact* selector (`> ul`'s
+ * `font-family`, `.cm-completionIcon`'s `display`), a same-specificity
+ * override still lost regardless of source order — confirmed via
+ * `getComputedStyle` still showing `monospace`/`inline-block` with no
+ * `!important`; those two rules use it below, the rest don't need it. Not
+ * scoped under `.cui-markdown-editor` because CodeMirror renders tooltips
+ * as a sibling of `document.body`, outside the editor's own DOM subtree.
+ */
+.cm-tooltip.cm-tooltip-autocomplete {
+  border: 1px solid var(--cui-border);
+  border-radius: var(--cui-button-radius, 0.375rem);
+  background: var(--cui-surface-base);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+:where(.dark, .dark *) .cm-tooltip.cm-tooltip-autocomplete {
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul {
+  font-family: var(--cui-font-sans) !important;
+  padding: 0.25rem;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul > li {
+  padding: 0.5rem 0.625rem !important;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--cui-text-body);
+}
+
+/* The highlighted/active option — matches CuiDropdownItem's hover/focus
+   treatment instead of the default's hardcoded solid blue, keeping with
+   the library's subtle-by-default color principle. */
+.cm-tooltip-autocomplete ul li[aria-selected] {
+  background: var(--color-surface-100) !important;
+  color: var(--cui-text-body) !important;
+}
+
+:where(.dark, .dark *) .cm-tooltip-autocomplete ul li[aria-selected] {
+  background: var(--color-surface-800) !important;
+}
+
+/* Every slash-menu command registers with the same generic "keyword" type
+   (task 5.2's own command list has no per-command icon glyph mapped into
+   completion `type`), so the default rendering repeats the same key icon
+   before every single option — noisier than no icon at all. */
+.cm-completionIcon {
+  display: none !important;
+}
+
+.cm-completionMatchedText {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--cui-primary);
+}

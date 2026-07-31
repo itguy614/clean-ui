@@ -1,0 +1,14 @@
+export { boldPlugin } from "./bold";
+export { italicPlugin } from "./italic";
+export { strikethroughPlugin } from "./strikethrough";
+export { inlineCodePlugin } from "./inline-code";
+export { heading1Plugin, heading2Plugin, heading3Plugin } from "./heading";
+export { bulletedListPlugin } from "./bulleted-list";
+export { numberedListPlugin } from "./numbered-list";
+export { taskListPlugin } from "./task-list";
+export { blockquotePlugin } from "./blockquote";
+export { codeFencePlugin } from "./code-fence";
+export { horizontalRulePlugin } from "./horizontal-rule";
+export { linkPlugin } from "./link";
+export { imagePlugin } from "./image";
+export { tablePastePlugin } from "./table-paste";

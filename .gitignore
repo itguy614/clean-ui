@@ -6,6 +6,8 @@ node_modules
 
 # Build output
 dist
+dist-baseline
+combined-dist
 
 # IDE
 .vscode

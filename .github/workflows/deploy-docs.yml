@@ -29,24 +29,39 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Build the component library first (docs imports from source, but
-      # the build ensures type-checking passes)
+      # Every docs site resolves @itguy614/clean-ui to workspace *source* at
+      # bundle time (config/workspace-aliases.ts), but type-checking it still
+      # goes through the normal workspace:* symlink, which reads this
+      # package's dist/index.d.ts — so it has to exist first.
       - name: Build library
         run: pnpm --filter @itguy614/clean-ui build
 
-      # Build docs with the GitHub Pages base path
-      - name: Build docs
+      # apps/editor-docs's own build script is `vue-tsc --noEmit && vite
+      # build` — same dist-types-must-exist-first requirement as above, but
+      # for @itguy614/clean-ui-editor (which apps/editor-docs also depends
+      # on via workspace:*). Without this, config/docs-sites.mjs already
+      # listing apps/editor-docs isn't enough: its build fails to resolve
+      # @itguy614/clean-ui-editor's types, since nothing had built that
+      # package's dist yet. Runs after the library build above, since
+      # clean-ui-editor itself depends on clean-ui.
+      - name: Build editor package
+        run: pnpm --filter @itguy614/clean-ui-editor build
+
+      # Builds every site listed in config/docs-sites.mjs with its own base
+      # path and composes them into one directory for one Pages artifact —
+      # Pages hosts one site per repository, so N docs apps become N
+      # subdirectories (the first entry keeps this site's existing root URL).
+      # Writes the single, site-root 404.html Pages actually serves for any
+      # unmatched path anywhere on the site (see the script for why a
+      # 404.html nested under a sub-site's own directory wouldn't work).
+      - name: Build and compose docs sites
         env:
           VITE_BASE: /clean-ui/
-        run: pnpm --filter @itguy614/clean-ui-docs build
-
-      # Copy index.html → 404.html for SPA client-side routing
-      - name: Create 404 fallback
-        run: cp apps/docs/dist/index.html apps/docs/dist/404.html
+        run: node scripts/build-docs-sites.mjs combined-dist
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/docs/dist
+          path: combined-dist
 
   deploy:
     needs: build

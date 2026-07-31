@@ -15,7 +15,23 @@ export interface PaginationRange {
   total: number;
 }
 
-export interface CuiMessages {
+/**
+ * Extension point for satellite packages. `CuiMessages` is re-exported from the
+ * barrel, so a plain interface can't be augmented from another package via
+ * declaration merging — but this one, extended by `CuiMessages` below, can:
+ *
+ *   declare module "@itguy614/clean-ui" {
+ *     interface CuiMessageNamespaces {
+ *       markdownEditor: { linkPrompt: string };
+ *     }
+ *   }
+ *
+ * Deliberately not an index signature — that would make every namespace
+ * `any`-shaped and lose the type checking this file exists to provide.
+ */
+export interface CuiMessageNamespaces {}
+
+export interface CuiMessages extends CuiMessageNamespaces {
   // --- Shared action / aria labels (reused across components) ---
   close: string;
   dismiss: string;

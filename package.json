@@ -4,12 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @itguy614/clean-ui-docs dev",
-    "build": "pnpm --filter @itguy614/clean-ui build",
+    "dev:editor-docs": "pnpm --filter @itguy614/clean-ui-editor-docs dev",
+    "build": "pnpm -r build",
     "build:docs": "pnpm --filter @itguy614/clean-ui-docs build",
-    "test": "pnpm --filter @itguy614/clean-ui test",
+    "build:editor-docs": "pnpm --filter @itguy614/clean-ui-editor-docs build",
+    "test": "pnpm -r --if-present test",
     "lint": "pnpm -r lint",
     "new:component": "node scripts/new-component.mjs",
-    "check:contrast": "node scripts/check-contrast.mjs"
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "verify:fixture": "node scripts/verify-fixture.mjs && node scripts/check-fixture-guarantees.mjs && node scripts/check-bundle-budget.mjs"
   },
   "engines": {
     "node": ">=20",
