@@ -1,6 +1,6 @@
 {
   "name": "@itguy614/clean-ui-editor",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "A markdown editor for clean-ui — CodeMirror 6 buffer, hidden syntax markers, extensible via a declarative plugin API.",
   "license": "MIT",

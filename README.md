@@ -10,6 +10,15 @@ overridable at every level via CSS custom properties.
 
 **[📖 Documentation & live examples →](https://itguy614.github.io/clean-ui/)**
 
+## Packages
+
+Two packages are published to npm from this monorepo:
+
+| Package | npm | Description |
+|---|---|---|
+| [`@itguy614/clean-ui`](./packages/clean-ui/README.md) | [![npm](https://img.shields.io/npm/v/@itguy614/clean-ui.svg)](https://www.npmjs.com/package/@itguy614/clean-ui) | The Vue 3 component library — 100+ token-driven, themeable, accessible components. |
+| [`@itguy614/clean-ui-editor`](./packages/clean-ui-editor/README.md) | [![npm](https://img.shields.io/npm/v/@itguy614/clean-ui-editor.svg)](https://www.npmjs.com/package/@itguy614/clean-ui-editor) | A CodeMirror 6 markdown editor themed with clean-ui — WYSIWYG + source modes, a declarative plugin API, and optional safe HTML rendering. |
+
 ## Install
 
 ```sh
@@ -37,7 +46,8 @@ This is a pnpm monorepo:
 
 | Path | Description |
 |---|---|
-| `packages/clean-ui` | The published library (`@itguy614/clean-ui`) |
+| `packages/clean-ui` | The published component library (`@itguy614/clean-ui`) |
+| `packages/clean-ui-editor` | The published markdown editor (`@itguy614/clean-ui-editor`) — CodeMirror 6, themed with clean-ui |
 | `apps/docs` | The documentation site (dogfoods the library), deployed to GitHub Pages |
 | `scripts` | Tooling (e.g. `check-contrast.mjs` — WCAG audit across themes) |
 

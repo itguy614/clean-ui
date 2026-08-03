@@ -17,7 +17,7 @@ and overridable at every level via CSS custom properties.
 - **Accessible first** — WCAG AA contrast targets, ARIA attributes, keyboard navigation, focus management.
 - **TypeScript** — full type definitions; shared `CuiColor` / `CuiSize` / `CuiRounded` prop types across components.
 - **Tailwind CSS v4 compatible** — color scales registered via `@theme` so Tailwind utilities work alongside the components.
-- **Tree-shakeable ESM** (+ CJS build), Vue as the only peer dependency.
+- **Tree-shakeable, per-module ESM** — Vue is the only peer dependency. (ESM-only as of 1.0.)
 
 ## Installation
 
@@ -106,6 +106,36 @@ Every color, radius, and typography value is a `--cui-*` custom property. Overri
   /* …50–950 */
 }
 ```
+
+## Markdown editor
+
+Need a markdown editor? The companion package
+[**`@itguy614/clean-ui-editor`**](https://www.npmjs.com/package/@itguy614/clean-ui-editor)
+is a CodeMirror 6 editor themed with clean-ui's tokens — WYSIWYG (hidden syntax markers) and
+source modes, a declarative plugin API, and an optional safe HTML renderer. It has a heavier
+dependency graph, so it ships as a separate, lazily-loadable package rather than in the core:
+
+```sh
+npm install @itguy614/clean-ui-editor
+```
+
+```vue
+<script setup lang="ts">
+import { ref, defineAsyncComponent } from "vue";
+import "@itguy614/clean-ui-editor/styles";
+
+const CuiMarkdownEditor = defineAsyncComponent(() =>
+  import("@itguy614/clean-ui-editor").then((m) => m.CuiMarkdownEditor),
+);
+const content = ref("# Hello");
+</script>
+
+<template>
+  <CuiMarkdownEditor v-model="content" />
+</template>
+```
+
+See the [editor README](../clean-ui-editor/README.md) for modes, plugins, and rendering.
 
 ## Documentation
 
