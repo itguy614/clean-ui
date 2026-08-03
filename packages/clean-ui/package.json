@@ -51,7 +51,6 @@
     "./dist/icons/lazy.js",
     "./dist/duplicate-guard.js",
     "./src/duplicate-guard.ts",
-    "./dist/composables/useTheme.js",
     "./dist/composables/useDensity.js"
   ],
   "scripts": {
