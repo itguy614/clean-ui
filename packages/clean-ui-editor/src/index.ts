@@ -1,5 +1,4 @@
 import "./styles/editor.css";
-import "./icons";
 
 export { default as CuiMarkdownEditor } from "./components/CuiMarkdownEditor.vue";
 export type { CuiMarkdownEditorProps, CuiMarkdownEditorMode } from "./components/CuiMarkdownEditor.vue";
