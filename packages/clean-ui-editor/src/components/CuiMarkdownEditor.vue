@@ -1,3 +1,12 @@
+<script lang="ts">
+// Register the built-in toolbar glyphs as part of THIS component's module graph,
+// so they always register when the editor is used — not via a bare barrel side
+// effect a consumer's bundler can tree-shake away (which left them showing "?").
+// Runs once, at module evaluation. See issue #86.
+import { registerEditorIcons } from "../icons";
+registerEditorIcons();
+</script>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
 import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
