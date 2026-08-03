@@ -1,6 +1,6 @@
 {
   "name": "@itguy614/clean-ui",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "description": "A clean, dark-mode-ready Vue 3 component library — 100+ token-driven, themeable, accessible components.",
   "license": "MIT",

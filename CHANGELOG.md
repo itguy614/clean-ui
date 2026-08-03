@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-08-03
+
+### Fixed
+- `useTheme` no longer strips a consuming app's own `cui-theme-<brand>` class or forces a theme when the library loads; a stored theme is restored lazily on first use, and with nothing stored the default is a no-op (base Navy) rather than mono (#85)
+- `@itguy614/clean-ui-editor`: built-in toolbar icons now register reliably in consumer builds — they were tree-shaken away and rendered as `?` (#86)
+- `CuiTimePicker`'s trigger honors the `size` prop, so it matches `CuiInput`/`CuiDatePicker` heights when placed side by side (#87)
+- `CuiPopover` no longer flashes at the viewport's top-left for one frame before Floating UI positions it — fixes the open flash across date/time pickers and popover menus (#88)
+
 ## [1.2.1] - 2026-08-03
 
 ### Documentation
