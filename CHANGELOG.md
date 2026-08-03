@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-08-03
+
+### Documentation
+- Add a README for `@itguy614/clean-ui-editor` — features, install, async usage, wysiwyg/source modes, the plugin API, and markdown→HTML rendering (#82)
+- Link the editor from the `clean-ui` README (new "Markdown editor" section) and add a Packages section to the monorepo README (#82)
+- Correct the `clean-ui` README: the library is ESM-only as of 1.0 (#82)
+
 ## [1.2.0] - 2026-07-31
 
 ### Added
