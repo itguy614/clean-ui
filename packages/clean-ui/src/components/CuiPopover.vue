@@ -70,7 +70,7 @@ watch(
   },
 );
 
-const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide } = usePopover({
+const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
   placement: computed(() => props.placement),
   offsetDistance: computed(() => props.offset ?? 10),
   arrow: !props.noArrow,
@@ -188,7 +188,7 @@ const messages = useMessages();
       <div
         v-if="isVisible"
         ref="floatingRef"
-        :style="{ ...floatingStyles, ...panelStyle }"
+        :style="{ ...floatingStyles, ...panelStyle, visibility: isPositioned ? 'visible' : 'hidden' }"
         role="dialog"
         :aria-labelledby="headerId"
         @mouseenter="onPopoverMouseEnter"

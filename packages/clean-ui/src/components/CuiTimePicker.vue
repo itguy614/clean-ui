@@ -5,6 +5,7 @@ import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
   disabled: false,
   hidden: false,
 });
+
+// Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
+// same `size` when placed side by side (#87).
+const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size]);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -180,17 +185,19 @@ defineExpose({ el: rootEl, focus, blur });
     >
       <!-- Trigger input -->
       <div
+        class="cui-time-picker__trigger"
         :style="{
           display: 'inline-flex',
           alignItems: 'center',
           gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-          padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
+          height: triggerDims.height,
+          padding: `0 ${triggerDims.px}`,
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, 0.375rem)',
           background: 'var(--cui-surface-base, white)',
           cursor: disabled ? 'default' : 'pointer',
           opacity: disabled ? '0.5' : '1',
-          fontSize: '0.875rem',
+          fontSize: triggerDims.fontSize,
           color: displayText ? 'var(--cui-text-body)' : 'var(--cui-text-tertiary)',
           minWidth: format === '24' ? '6rem' : '8rem',
         }"
