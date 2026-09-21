@@ -47,6 +47,18 @@ createApp(App).use(createCleanUI()).mount("#app");
 </template>
 ```
 
+### The stylesheet does not reset your page
+
+`@itguy614/clean-ui/styles` styles the library's own components and nothing else.
+Its base rules — `box-sizing`, `font: inherit` on form controls, list and margin
+resets — are scoped to elements carrying a `cui-*` class and their descendants,
+and every selector sits at zero specificity (`:where(…)`), so your own CSS always
+wins. Nothing is applied to `html`, `body`, or your markup.
+
+That means the library does **not** supply a global reset. If you use Tailwind,
+your own `@import "tailwindcss"` already provides preflight. If you don't, and you
+want one, bring your own (`normalize.css`, `modern-normalize`, or your framework's).
+
 ### Or import components individually
 
 No plugin required — import only what you use:

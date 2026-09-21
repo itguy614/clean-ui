@@ -416,7 +416,7 @@ const messages = useMessages();
 
     <!-- Dropdown (teleported) -->
     <Teleport to="body">
-      <div v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
+      <div v-if="isOpen" ref="dropdownRef" class="cui-combobox__dropdown" :style="dropdownStyle">
         <!-- Loading -->
         <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />

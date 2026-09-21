@@ -1,0 +1,212 @@
+/* ============================================================
+   SCOPED BASE  (see #72, follow-up to #62)
+
+   Tailwind's preflight is a *global* reset: `*`, `html`, `a`, `ul`,
+   `button`, … with no scope at all. Importing `tailwindcss` pulled all
+   of it into `dist/clean-ui.css`, so every consumer of this library got
+   a page-wide reset they never asked for — headings and paragraphs with
+   their margins zeroed, list markers gone, `border-width: 0` everywhere.
+   Tailwind consumers got it *twice*, from two possibly different
+   Tailwind versions, and ours won ties on import order.
+
+   A component library has no business restyling the host app's elements,
+   so this file is preflight rewritten to apply only inside the library's
+   own subtree: an element carrying a `cui-*` class, and its descendants.
+   Components are full of unclassed elements (`button`, `input`, `label`,
+   `thead`, `tr`, `td`, `img`, `legend`, `hr`, …) and render consumer
+   content in slots, so the scope has to include descendants — not just
+   the `cui-*` element itself.
+
+   Every selector is wrapped in `:where()`, which keeps specificity at
+   zero. Consumers override any of it with a plain element or class
+   selector, exactly as they could with the real preflight.
+
+   Deliberately NOT carried over: preflight's `html`/`:host` rule. It is
+   the one rule that cannot be scoped — it *is* the host document. The
+   parts components actually depend on (`line-height`, the tap highlight)
+   are re-applied on the scope root below, where they inherit down into
+   the component instead of the whole page.
+
+   Keep this in sync with Tailwind's preflight when bumping Tailwind;
+   `src/styles/__tests__/preflight.test.ts` guards the scoping itself.
+   ============================================================ */
+
+/* --- Universal reset: box model, margins, borders --- */
+:where([class^="cui-"], [class*=" cui-"]),
+:where([class^="cui-"], [class*=" cui-"])::before,
+:where([class^="cui-"], [class*=" cui-"])::after,
+:where([class^="cui-"], [class*=" cui-"])::backdrop,
+:where([class^="cui-"], [class*=" cui-"])::file-selector-button,
+:where([class^="cui-"], [class*=" cui-"]) *,
+:where([class^="cui-"], [class*=" cui-"]) *::before,
+:where([class^="cui-"], [class*=" cui-"]) *::after,
+:where([class^="cui-"], [class*=" cui-"]) *::backdrop,
+:where([class^="cui-"], [class*=" cui-"]) *::file-selector-button {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+
+/* --- Scope root: the inheritable half of preflight's `html` rule --- */
+:where([class^="cui-"], [class*=" cui-"]) {
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --- Typographic normalization --- */
+:where([class^="cui-"], [class*=" cui-"]):where(h1, h2, h3, h4, h5, h6),
+:where([class^="cui-"], [class*=" cui-"]) :where(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(a),
+:where([class^="cui-"], [class*=" cui-"]) :where(a) {
+  color: inherit;
+  -webkit-text-decoration: inherit;
+  text-decoration: inherit;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(b, strong),
+:where([class^="cui-"], [class*=" cui-"]) :where(b, strong) {
+  font-weight: bolder;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(code, kbd, samp, pre),
+:where([class^="cui-"], [class*=" cui-"]) :where(code, kbd, samp, pre) {
+  font-family: var(--cui-font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  font-size: 1em;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(small),
+:where([class^="cui-"], [class*=" cui-"]) :where(small) {
+  font-size: 80%;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(sub, sup),
+:where([class^="cui-"], [class*=" cui-"]) :where(sub, sup) {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(sub),
+:where([class^="cui-"], [class*=" cui-"]) :where(sub) {
+  bottom: -0.25em;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(sup),
+:where([class^="cui-"], [class*=" cui-"]) :where(sup) {
+  top: -0.5em;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(abbr[title]),
+:where([class^="cui-"], [class*=" cui-"]) :where(abbr[title]) {
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+/* --- Lists: components build menus and listboxes out of ul/li --- */
+:where([class^="cui-"], [class*=" cui-"]):where(ol, ul, menu),
+:where([class^="cui-"], [class*=" cui-"]) :where(ol, ul, menu) {
+  list-style: none;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(summary),
+:where([class^="cui-"], [class*=" cui-"]) :where(summary) {
+  display: list-item;
+}
+
+/* --- Tables --- */
+:where([class^="cui-"], [class*=" cui-"]):where(table),
+:where([class^="cui-"], [class*=" cui-"]) :where(table) {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(hr),
+:where([class^="cui-"], [class*=" cui-"]) :where(hr) {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+/* --- Replaced elements: `display: block` is what keeps icons from
+       picking up the inline baseline gap --- */
+:where([class^="cui-"], [class*=" cui-"]):where(img, svg, video, canvas, audio, iframe, embed, object),
+:where([class^="cui-"], [class*=" cui-"]) :where(img, svg, video, canvas, audio, iframe, embed, object) {
+  display: block;
+  vertical-align: middle;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(img, video),
+:where([class^="cui-"], [class*=" cui-"]) :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- Form controls: `font: inherit` is the one every `.cui-button`,
+       `.cui-input` and `.cui-select` depends on — without it they render
+       in the UA's form font instead of the page font --- */
+:where([class^="cui-"], [class*=" cui-"]):where(button, input, select, optgroup, textarea),
+:where([class^="cui-"], [class*=" cui-"]) :where(button, input, select, optgroup, textarea),
+:where([class^="cui-"], [class*=" cui-"])::file-selector-button,
+:where([class^="cui-"], [class*=" cui-"]) *::file-selector-button {
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0;
+  background-color: transparent;
+  opacity: 1;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(button, input[type="button"], input[type="reset"], input[type="submit"]),
+:where([class^="cui-"], [class*=" cui-"]) :where(button, input[type="button"], input[type="reset"], input[type="submit"]),
+:where([class^="cui-"], [class*=" cui-"])::file-selector-button,
+:where([class^="cui-"], [class*=" cui-"]) *::file-selector-button {
+  appearance: button;
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(textarea),
+:where([class^="cui-"], [class*=" cui-"]) :where(textarea) {
+  resize: vertical;
+}
+
+:where([class^="cui-"], [class*=" cui-"])::placeholder,
+:where([class^="cui-"], [class*=" cui-"]) *::placeholder {
+  opacity: 1;
+  color: color-mix(in oklab, currentcolor 50%, transparent);
+}
+
+:where([class^="cui-"], [class*=" cui-"]):where(progress),
+:where([class^="cui-"], [class*=" cui-"]) :where(progress) {
+  vertical-align: baseline;
+}
+
+:where([class^="cui-"], [class*=" cui-"]) ::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+:where([class^="cui-"], [class*=" cui-"]) ::-webkit-inner-spin-button,
+:where([class^="cui-"], [class*=" cui-"]) ::-webkit-outer-spin-button {
+  height: auto;
+}
+
+:where([class^="cui-"], [class*=" cui-"]) :where(:-moz-focusring) {
+  outline: auto;
+}
+
+:where([class^="cui-"], [class*=" cui-"]) :where(:-moz-ui-invalid) {
+  box-shadow: none;
+}
+
+/* --- `hidden` wins over a component's own `display` --- */
+:where([class^="cui-"], [class*=" cui-"])[hidden]:where(:not([hidden="until-found"])),
+:where([class^="cui-"], [class*=" cui-"]) [hidden]:where(:not([hidden="until-found"])) {
+  display: none !important;
+}

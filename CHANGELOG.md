@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- The distributed stylesheet no longer ships Tailwind's preflight. `dist/clean-ui.css` carried the full global reset in `@layer base` — `box-sizing` on `*`, `-webkit-text-size-adjust` on `html`, zeroed `h1`–`h6`/`p` margins, `list-style: none` on `ul`/`ol`, `border-width: 0`, `button { background: transparent }`. Tailwind consumers got it twice, once from their own `@import "tailwindcss"` and once from ours, possibly from a different Tailwind version, and ours won ties on import order; consumers not using Tailwind got a page-wide reset they never asked for, easily misread as "clean-ui broke my typography". The library no longer imports the `tailwindcss` entrypoint at all — it pulls in `tailwindcss/theme.css` only, to compile its own `@theme`, and ships `styles/preflight.css`: the same reset scoped to `cui-*` subtrees (an element with a `cui-*` class, and its descendants) with every selector wrapped in `:where()` so it stays at zero specificity and stays overridable, in `@layer base` under an explicit `@layer theme, base, components, utilities;` so it still loses to your utilities. Tailwind's default theme variables (`--font-sans`, `--spacing`, `--color-red-*`, …) are no longer emitted either; the library references none of them. **Note:** a consumer unknowingly relying on clean-ui to supply their global reset will now need one of their own — the same class of change as #62's, and worth checking alongside it (#72)
+- Four teleported panels (`CuiCombobox`, `CuiPopover`, `CuiSlideover`, `CuiTagInput`) rendered into `<body>` without a `cui-*` class of their own. They now carry `cui-combobox__dropdown`, `cui-popover__panel`, `cui-slideover-overlay` and `cui-tag-input__dropdown`, which puts them inside the scoped base — and makes them targetable from consumer CSS (#72)
+
 ## [1.2.2] - 2026-08-03
 
 ### Fixed

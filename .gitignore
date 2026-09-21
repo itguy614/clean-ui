@@ -36,3 +36,6 @@ coverage
 # Stray non-pnpm lockfiles (this is a pnpm workspace)
 package-lock.json
 yarn.lock
+
+# Vitest browser-mode failure screenshots
+__screenshots__
