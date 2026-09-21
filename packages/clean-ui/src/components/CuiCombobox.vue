@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded } from "../types/common";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -24,7 +24,7 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiComboboxProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -394,6 +394,11 @@ const messages = useMessages();
       <!-- Search input -->
       <input
         ref="inputRef"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
         :value="isOpen ? query : displayText"
         :placeholder="selectedOptions.length > 0 ? '' : placeholder"
         :disabled="disabled"

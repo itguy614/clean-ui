@@ -39,6 +39,11 @@ const temp = ref(72);
           { name: 'showRange', type: 'boolean', default: 'false', description: 'Show min/max labels below track' },
           { name: 'thumbIcon', type: 'string', default: '—', description: 'Phosphor icon name for the thumb' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+          { name: 'id', type: 'string', default: '-', description: 'id of the native control — what a label for attribute must point at. CuiFormField supplies it automatically' },
+          { name: 'name', type: 'string', default: '-', description: 'Native control name, for form serialization and browser autofill' },
+          { name: 'autocomplete', type: 'string', default: '-', description: 'Native autocomplete hint, e.g. email, street-address, off' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
         ]"
       />
     </div>

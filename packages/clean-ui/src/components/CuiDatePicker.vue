@@ -11,13 +11,13 @@ import {
   isoToDate, dateToIso, isDateDisabled,
   type DisabledDateRange,
 } from "../utils/date";
-import type { HideableProps, DisableableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type DatePickerMode = "date" | "month";
 export type DatePickerValueType = "iso" | "date";
 export type DatePickerFillDay = "first" | "last";
 
-export interface CuiDatePickerProps extends HideableProps, DisableableProps {
+export interface CuiDatePickerProps extends NativeControlProps, HideableProps, DisableableProps {
   /** Current value */
   modelValue?: string | Date | null;
   /** Display format pattern (MM/DD/YYYY, DD-MMM-YYYY, etc.) */
@@ -318,6 +318,11 @@ watch(popoverVisible, (open) => {
       <!-- Trigger: masked input -->
       <CuiMaskedInput
         ref="maskedInput"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
         :model-value="inputRaw"
         :mask="mask"
         :placeholder="inputPlaceholder"

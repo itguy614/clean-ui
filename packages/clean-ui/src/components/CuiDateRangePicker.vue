@@ -11,7 +11,7 @@ import {
   isoToDate, dateToIso, isDateDisabled,
   type DisabledDateRange,
 } from "../utils/date";
-import type { HideableProps, DisableableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -20,7 +20,7 @@ export interface DateRangeValue {
   end: string | Date | null;
 }
 
-export interface CuiDateRangePickerProps extends HideableProps, DisableableProps {
+export interface CuiDateRangePickerProps extends NativeControlProps, HideableProps, DisableableProps {
   /** Current range value */
   modelValue?: DateRangeValue;
   /** Display format pattern */
@@ -345,6 +345,11 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
       >
         <CuiIcon name="calendar-blank" size="0.875rem" style="color: var(--cui-text-tertiary); flex-shrink: 0;" />
         <input
+          :id="id"
+          :name="name"
+          :autocomplete="autocomplete"
+          :aria-describedby="ariaDescribedby"
+          :aria-labelledby="ariaLabelledby"
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly

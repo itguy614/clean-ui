@@ -111,6 +111,9 @@ const dynamicField = ref({
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'readonly', type: 'boolean', default: 'false', description: 'Readonly state' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+          { name: 'id', type: 'string', default: '-', description: 'id of the trigger. CuiSelect has no native form element, so a label for attribute alone cannot name it — use aria-labelledby, which CuiFormField supplies' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
         ]"
       />
     </div>

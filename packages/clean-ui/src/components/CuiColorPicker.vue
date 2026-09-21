@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef } from "vue";
-import type { CuiSize, HideableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiSize, HideableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
@@ -14,7 +14,7 @@ export type PresetPalette = "theme" | "basic" | "material" | "tailwind";
 
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiColorPickerProps extends HideableProps, SizeableProps, DisableableProps {
+export interface CuiColorPickerProps extends NativeControlProps, HideableProps, SizeableProps, DisableableProps {
   /** Color value (any supported format) */
   modelValue?: string;
   /** Output format */
@@ -431,6 +431,11 @@ defineExpose({ el: rootEl, focus, blur });
         />
         <input
           ref="inputEl"
+          :id="id"
+          :name="name"
+          :autocomplete="autocomplete"
+          :aria-describedby="ariaDescribedby"
+          :aria-labelledby="ariaLabelledby"
           v-model="textInput"
           :style="{
             flex: '1',

@@ -2,9 +2,9 @@
 import { computed, inject, ref } from "vue";
 import { CheckboxGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
-import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 
-export interface CuiCheckboxProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiCheckboxProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
   /** The value this checkbox represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
@@ -97,6 +97,11 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   >
     <!-- Hidden native input -->
     <input
+      :id="id"
+      :name="name"
+      :autocomplete="autocomplete"
+      :aria-describedby="ariaDescribedby"
+      :aria-labelledby="ariaLabelledby"
       type="checkbox"
       :value="value !== undefined ? String(value) : undefined"
       :checked="isChecked"

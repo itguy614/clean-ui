@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 
 export type InputStepperOrientation = "horizontal" | "vertical";
 
-export interface CuiInputStepperProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputStepperProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -146,7 +146,9 @@ defineExpose({ el: rootEl, focus, blur });
         @click="decrement">
         <CuiIcon name="minus" :size="cfg.iconSize" />
       </CuiButton>
-      <input ref="inputH" type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+      <input ref="inputH" :id="id" :name="name" :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
+        type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
         :style="{ width: cfg.inputWidth, height: '100%', textAlign: 'center', border: 'none', borderLeft: '1px solid var(--cui-border-strong, var(--cui-border))', borderRight: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canIncrement" :color="color"
@@ -174,7 +176,9 @@ defineExpose({ el: rootEl, focus, blur });
         @click="increment">
         <CuiIcon name="caret-up" :size="cfg.iconSize" />
       </CuiButton>
-      <input ref="inputV" type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+      <input ref="inputV" :id="id" :name="name" :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
+        type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
         :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"

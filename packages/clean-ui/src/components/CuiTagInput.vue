@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -13,7 +13,7 @@ export interface TagOption {
   [key: string]: unknown;
 }
 
-export interface CuiTagInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTagInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected tags */
   modelValue?: string[];
   /** Predefined tag suggestions */
@@ -329,6 +329,11 @@ defineExpose({ el: wrapperRef, focus, blur });
 
       <!-- Input -->
       <input
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
         v-if="!atMax"
         ref="inputRef"
         :value="query"
