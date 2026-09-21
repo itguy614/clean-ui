@@ -76,7 +76,7 @@ function onReset() {
 </script>
 
 <template>
-  <CuiDropdown>
+  <CuiDropdown class="cui-data-grid-view-manager">
     <CuiDropdownTrigger>
       <CuiButton variant="outline" size="sm">
         <template #prefix><CuiIcon name="bookmark-simple" size="0.875rem" /></template>

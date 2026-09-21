@@ -386,6 +386,7 @@ defineExpose({
 
 <template>
   <CuiInput
+    class="cui-masked-input"
     v-show="!hidden"
     ref="maskedInputRef"
     :model-value="displayValue"

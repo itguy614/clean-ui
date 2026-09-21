@@ -83,7 +83,7 @@ const containerStyle = computed(() => {
 </script>
 
 <template>
-  <div v-if="!dismissed" v-show="!hidden" :style="containerStyle" v-bind="liveAttrs">
+  <div class="cui-banner" v-if="!dismissed" v-show="!hidden" :style="containerStyle" v-bind="liveAttrs">
     <!-- Icon -->
     <CuiIcon v-if="!noIcon" :name="iconName" size="1.125rem" style="flex-shrink: 0;" />
 

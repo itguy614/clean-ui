@@ -51,6 +51,7 @@ const cellStyle = computed(() => {
 <template>
   <component
     :is="tag"
+    class="cui-table-cell"
     v-show="!hidden"
     :style="cellStyle"
     :colspan="colspan"

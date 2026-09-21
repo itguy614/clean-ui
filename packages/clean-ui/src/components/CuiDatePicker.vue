@@ -293,7 +293,7 @@ watch(popoverVisible, (open) => {
 </script>
 
 <template>
-  <div ref="rootEl" v-show="!hidden">
+  <div class="cui-date-picker" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{

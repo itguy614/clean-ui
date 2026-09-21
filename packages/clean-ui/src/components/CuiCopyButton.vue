@@ -51,7 +51,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
-  <CuiTooltip v-show="!hidden" :text="copied ? copiedTooltip : tooltip" placement="top" :show-delay="300">
+  <CuiTooltip class="cui-copy-button" v-show="!hidden" :text="copied ? copiedTooltip : tooltip" placement="top" :show-delay="300">
     <CuiButton
       :size="size"
       :variant="variant"

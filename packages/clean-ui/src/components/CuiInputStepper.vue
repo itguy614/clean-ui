@@ -114,7 +114,7 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div ref="rootEl" v-show="!hidden">
+  <div class="cui-input-stepper" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{

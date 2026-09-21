@@ -307,7 +307,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 </script>
 
 <template>
-  <div v-show="!hidden">
+  <div class="cui-date-range-picker" v-show="!hidden">
     <label
       v-if="label"
       :style="{

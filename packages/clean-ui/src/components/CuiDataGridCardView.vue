@@ -15,7 +15,7 @@ function getRowId(row: DataGridRow): string {
 </script>
 
 <template>
-  <CuiGrid :cols="{ sm: 1, md: 2, lg: 3 }" gap="4">
+  <CuiGrid class="cui-data-grid-card-view" :cols="{ sm: 1, md: 2, lg: 3 }" gap="4">
     <div v-for="row in grid.displayData.value" :key="getRowId(row)">
       <slot name="card" :row="row" />
     </div>

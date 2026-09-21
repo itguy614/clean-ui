@@ -47,7 +47,7 @@ const cardStyle = computed(() => {
 </script>
 
 <template>
-  <div v-show="!hidden" :style="cardStyle">
+  <div class="cui-card" v-show="!hidden" :style="cardStyle">
     <slot />
   </div>
 </template>

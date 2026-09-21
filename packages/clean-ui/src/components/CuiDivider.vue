@@ -87,7 +87,7 @@ const labelStyle = computed(() => ({
 
 <template>
   <!-- Horizontal with label -->
-  <div v-if="orientation === 'horizontal' && hasLabel" v-show="!hidden" :style="containerStyle" role="separator">
+  <div v-if="orientation === 'horizontal' && hasLabel" v-show="!hidden" class="cui-divider" :style="containerStyle" role="separator">
     <div v-if="labelPosition !== 'start'" :style="lineStyle" />
     <span :style="labelStyle">
       <slot>{{ label }}</slot>
@@ -97,6 +97,7 @@ const labelStyle = computed(() => ({
 
   <!-- Horizontal without label -->
   <hr
+    class="cui-divider"
     v-else-if="orientation === 'horizontal'"
     v-show="!hidden"
     :style="{
@@ -110,7 +111,7 @@ const labelStyle = computed(() => ({
   />
 
   <!-- Vertical with label -->
-  <div v-else-if="hasLabel" v-show="!hidden" :style="containerStyle" role="separator">
+  <div v-else-if="hasLabel" v-show="!hidden" class="cui-divider" :style="containerStyle" role="separator">
     <div v-if="labelPosition !== 'start'" :style="lineStyle" />
     <span :style="labelStyle">
       <slot>{{ label }}</slot>
@@ -120,6 +121,7 @@ const labelStyle = computed(() => ({
 
   <!-- Vertical without label -->
   <div
+    class="cui-divider"
     v-else
     v-show="!hidden"
     :style="{

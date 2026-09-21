@@ -204,7 +204,7 @@ const messages = useMessages();
 </script>
 
 <template>
-  <div ref="rootEl" v-show="!hidden">
+  <div class="cui-file-upload" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{ display: 'block', marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"

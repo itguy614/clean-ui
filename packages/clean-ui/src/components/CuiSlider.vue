@@ -83,7 +83,7 @@ defineExpose({ el: inputRef, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden" :style="{ opacity: disabled ? 0.5 : 1 }">
+  <div class="cui-slider" v-show="!hidden" :style="{ opacity: disabled ? 0.5 : 1 }">
     <!-- Label + value row -->
     <div
       v-if="label || showValue"

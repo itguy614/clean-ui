@@ -296,6 +296,7 @@ const panelStyle = computed(() => ({
 
 <template>
   <div
+    class="cui-transfer-list"
     v-show="!hidden"
     :style="{
       display: 'flex',

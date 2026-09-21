@@ -15,6 +15,7 @@ withDefaults(defineProps<CuiCardHeaderProps>(), {
 
 <template>
   <div
+    class="cui-card-header"
     v-show="!hidden"
     :style="{
       display: 'flex',

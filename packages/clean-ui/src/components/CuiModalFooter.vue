@@ -21,6 +21,7 @@ const justifyMap: Record<string, string> = {
 
 <template>
   <div
+    class="cui-modal-footer"
     v-show="!hidden"
     :style="{
       display: 'flex',

@@ -75,6 +75,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
 
 <template>
   <div
+    class="cui-tree-node"
     role="treeitem"
     :aria-expanded="hasChildren ? isExpanded : undefined"
     :style="{ position: 'relative' }"
@@ -128,6 +129,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
 
     <!-- Node row -->
     <div
+      class="cui-tree-node__row"
       :style="{
         display: 'flex',
         alignItems: 'center',
@@ -154,6 +156,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
            nodes render the same box empty, which keeps labels aligned and every
            row the same height. -->
       <div
+        class="cui-tree-node__chevron"
         :style="{
           width: cfg.hitSize,
           height: cfg.hitSize,

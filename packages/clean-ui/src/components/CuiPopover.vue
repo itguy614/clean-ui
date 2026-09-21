@@ -171,6 +171,7 @@ const messages = useMessages();
 
 <template>
   <div
+    class="cui-popover"
     ref="wrapperRef"
     v-show="!hidden"
     :style="{ display: 'inline-flex' }"

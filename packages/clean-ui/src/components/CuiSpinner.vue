@@ -37,6 +37,7 @@ const spinnerColor = computed(() => `var(--cui-${props.color})`);
 
 <template>
   <div
+    class="cui-spinner"
     v-show="!hidden"
     role="status"
     :aria-label="label"

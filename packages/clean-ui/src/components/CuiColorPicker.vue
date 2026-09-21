@@ -273,6 +273,7 @@ defineExpose({ el: rootEl, focus, blur });
 
 <template>
   <div
+    class="cui-color-picker"
     ref="rootEl"
     v-show="!hidden"
     :style="{

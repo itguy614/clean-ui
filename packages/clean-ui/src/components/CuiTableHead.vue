@@ -20,7 +20,7 @@ provide(TableSectionContextKey, { isHead: true });
 </script>
 
 <template>
-  <thead v-show="!hidden">
+  <thead class="cui-table-head" v-show="!hidden">
     <slot />
   </thead>
 </template>

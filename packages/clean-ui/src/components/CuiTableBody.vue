@@ -13,7 +13,7 @@ provide(TableSectionContextKey, { isHead: false });
 </script>
 
 <template>
-  <tbody v-show="!hidden">
+  <tbody class="cui-table-body" v-show="!hidden">
     <slot />
   </tbody>
 </template>

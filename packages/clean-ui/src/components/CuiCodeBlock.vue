@@ -49,6 +49,7 @@ const highlightSet = computed(() => new Set(props.highlightLines ?? []));
 
 <template>
   <div
+    class="cui-code-block"
     v-show="!hidden"
     :style="{
       borderRadius: '0.5rem',
