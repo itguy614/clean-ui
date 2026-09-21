@@ -352,18 +352,18 @@ const messages = useMessages();
 
     <!-- Input area -->
     <div
+      class="cui-combobox__control"
+      :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
         gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
         padding: cfg.padding,
-        border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
         borderRadius: radiusMap[rounded],
-        background: 'var(--cui-surface-base, white)',
         cursor: disabled ? 'default' : 'text',
         opacity: disabled ? '0.5' : '1',
         minHeight: cfg.inputHeight,
+        '--_cb-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
+        '--_cb-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
+        '--_cb-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
       }"
       @click="inputRef?.focus()"
     >
@@ -484,3 +484,28 @@ const messages = useMessages();
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Focus ring, mirroring CuiInput/CuiSelect. The control is a wrapper around a
+   borderless `<input>`, so the ring keys off `:focus-within` (as CuiInput does)
+   rather than `:focus-visible` — the focusable element is the child, and an
+   input is expected to show focus on click, not only on keyboard entry.
+   `border`, `background` and `transition` live here rather than in the inline
+   `:style` above BECAUSE of this rule: an inline `border` shorthand would win
+   over `border-color` below, so the focus border could never apply. The
+   dynamic halves stay as custom properties set on this same element — the rule
+   that consumes them is on the element itself, per CLAUDE.md. */
+.cui-combobox__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  border: 1px solid var(--_cb-border);
+  background: var(--cui-surface-base, white);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cui-combobox__control:focus-within:not(.cui-combobox__control--disabled) {
+  border-color: var(--_cb-focus-border);
+  box-shadow: 0 0 0 2px var(--_cb-focus-ring);
+}
+</style>

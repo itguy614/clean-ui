@@ -127,4 +127,68 @@ describe("CuiCombobox", () => {
     expect(dropdownOptionTexts()).toEqual([]);
     wrapper.unmount();
   });
+
+  // ── Focus ring ────────────────────────────────────────────────────────────
+  // The control had no focus styling at all and suppressed the input's native
+  // outline, so a focused combobox showed nothing once its dropdown closed.
+  // jsdom can't evaluate `:focus-within`, so these pin the two things the rule
+  // depends on instead.
+  describe("focus ring", () => {
+    function control(wrapper: ReturnType<typeof mount>) {
+      return wrapper.get(".cui-combobox__control").element as HTMLElement;
+    }
+
+    it("exposes the focus-ring custom properties from the color role", () => {
+      const wrapper = mount(CuiCombobox, { props: { options: OPTIONS } });
+      const style = control(wrapper).style;
+
+      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe(
+        "var(--cui-primary-focus-ring)",
+      );
+      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-primary)");
+      wrapper.unmount();
+    });
+
+    it("follows the color prop", () => {
+      const wrapper = mount(CuiCombobox, { props: { options: OPTIONS, color: "success" } });
+      const style = control(wrapper).style;
+
+      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe(
+        "var(--cui-success-focus-ring)",
+      );
+      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-success)");
+      wrapper.unmount();
+    });
+
+    it("uses the error role when error is set", () => {
+      const wrapper = mount(CuiCombobox, { props: { options: OPTIONS, error: true } });
+      const style = control(wrapper).style;
+
+      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe("var(--cui-error-focus-ring)");
+      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-error)");
+      wrapper.unmount();
+    });
+
+    // The reason `border` moved out of the inline `:style` and into the scoped
+    // stylesheet: an inline `border` shorthand outranks the `border-color` in
+    // `:focus-within`, so re-adding one here would silently kill the focus
+    // border while every other test still passed.
+    it("keeps border out of the inline style so the focus rule can win", () => {
+      const wrapper = mount(CuiCombobox, { props: { options: OPTIONS } });
+      const style = control(wrapper).style;
+
+      expect(style.border).toBe("");
+      expect(style.borderColor).toBe("");
+      wrapper.unmount();
+    });
+
+    it("marks the control disabled so the focus rule can opt out", () => {
+      const wrapper = mount(CuiCombobox, { props: { options: OPTIONS, disabled: true } });
+
+      expect(wrapper.get(".cui-combobox__control").classes()).toContain(
+        "cui-combobox__control--disabled",
+      );
+      wrapper.unmount();
+    });
+  });
 });
