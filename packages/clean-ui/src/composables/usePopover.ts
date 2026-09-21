@@ -62,6 +62,16 @@ export function usePopover(options: UsePopoverOptions = {}) {
       placement: floatingPlacement,
       middleware,
       strategy: options.strategy ?? "absolute",
+      // `left`/`top` rather than Floating UI's default `transform: translate()`.
+      // A panel that animates in owns its own `transform`, and a CSS animation
+      // on that property REPLACES the element's transform for the animation's
+      // whole duration — so the positioning translate was dropped and the panel
+      // rendered at the top-left corner of the screen for 0.15s before snapping
+      // into place. Visible on every CuiPopover consumer (date/time pickers,
+      // the data grid's column manager) and on CuiTooltip, where the show delay
+      // usually hid it. Positioning through `left`/`top` leaves `transform`
+      // free for the animation.
+      transform: false,
       whileElementsMounted: autoUpdate,
     },
   );

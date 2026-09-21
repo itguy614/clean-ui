@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Floating panels no longer flash at the top-left corner of the screen before jumping into place. Floating UI positions with `transform: translate()`, and the panels animate in with `transform: scale(...)` — a CSS animation on `transform` *replaces* the element's transform for its whole duration, so the positioning translate was dropped and the panel rendered at the origin of the teleport container for the full 0.15s, then snapped. Most obvious opening upward, where the jump is the height of the viewport. `usePopover` now passes `transform: false`, so Floating UI writes `left`/`top` and the animation owns `transform` uncontested. Affected `CuiPopover` and everything rendering through it — `CuiDatePicker`, `CuiDateRangePicker`, `CuiTimePicker`, `CuiDataGridColumnManager` — and `CuiTooltip`, whose 200ms show delay made it easier to miss. `CuiPopover`'s existing `isPositioned` guard could not catch this, because the displacement happens *after* positioning succeeds; `CuiTooltip`, which had no such guard, now has one too (#101)
+
 ### Added
 - `CuiTreeView` exposes its expansion state. It owned it privately before — no `v-model:expanded`, no `defineExpose`, and `defaultExpanded` read once during setup — so a consumer could observe expansion through `@node-expand` but could not cause it, and "expand all", "reveal a search hit" and restore-after-reload all required synthesising a click on the chevron element through the DOM (#94)
   - `v-model:expanded` — pass it and expansion is controlled, exactly like `modelValue` already is for selection: the tree renders the ids you give it and emits every change instead of moving itself, so expansion can be driven from app state, persisted and restored. Omit it and the tree manages its own, seeded from `defaultExpanded` / `expandAll` as before. Both existing props keep working untouched
