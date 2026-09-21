@@ -349,7 +349,12 @@ defineExpose({ el: wrapperRef, focus, blur });
 
     <!-- Dropdown -->
     <Teleport to="body">
-      <div v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)" ref="dropdownRef" :style="dropdownStyle">
+      <div
+        v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)"
+        ref="dropdownRef"
+        class="cui-tag-input__dropdown"
+        :style="dropdownStyle"
+      >
         <!-- Loading -->
         <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="xs" show-label label="Searching..." />

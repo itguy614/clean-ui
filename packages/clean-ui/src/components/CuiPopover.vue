@@ -188,6 +188,7 @@ const messages = useMessages();
       <div
         v-if="isVisible"
         ref="floatingRef"
+        class="cui-popover__panel"
         :style="{ ...floatingStyles, ...panelStyle, visibility: isPositioned ? 'visible' : 'hidden' }"
         role="dialog"
         :aria-labelledby="headerId"

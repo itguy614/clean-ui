@@ -1,12 +1,30 @@
-/* `source(none)` disables Tailwind's automatic content detection for this
-   stylesheet. The library's components are styled entirely with their own
-   `.cui-*` CSS and never use utility classes, but the scanner still picked
-   candidates out of incidental source text ("hidden", "flex", "block", …) and
-   emitted real utilities into `@layer utilities`. Shipped in dist, those merged
-   into a consuming app's own utilities layer *after* its Tailwind — so our bare
-   `.hidden` beat their `.md:flex` and every `hidden md:flex` toggle stayed
-   collapsed. We generate no utilities; the consumer's Tailwind owns that layer. */
-@import "tailwindcss" source(none);
+/* The library does not import `tailwindcss`. It used to, and every part of that
+   import turned out to be something a component library should not ship:
+
+   - `@layer utilities` — the content scanner picked candidates out of incidental
+     source text ("hidden", "flex", "block", …) and emitted real utilities. In
+     dist they merged into a consuming app's utilities layer *after* its own
+     Tailwind, so our bare `.hidden` beat their `.md:flex` and every
+     `hidden md:flex` toggle stayed collapsed (#62). `source(none)` fixed that.
+   - `@layer base` — Tailwind's preflight, a page-wide reset the consumer never
+     asked for, possibly from a different Tailwind version than their own (#72).
+     `./preflight.css` replaces it with the same reset scoped to `cui-*` subtrees.
+   - Tailwind's default theme — unused. The library references no `--spacing`,
+     `--text-*`, `--radius-*` or default `--color-*`; only its own `--cui-*` and
+     the `--color-{role}-*` scale that `./theme.css` defines.
+
+   The Tailwind engine still processes this file for the `@theme` block in
+   `./theme.css` and the `@custom-variant` below. Utilities belong to the
+   consumer's Tailwind; base styles belong to the consumer's app. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+/* `layer(base)` is not cosmetic. An unlayered rule beats every layered one no
+   matter its specificity, so an unlayered reset would override the consumer's
+   `@layer utilities` — a `cui-*` element's `px-3 py-2` would lose to our
+   `padding: 0`. Tailwind's preflight sat in `@layer base`; this sits exactly
+   where it did, and the layer order above makes that deterministic whether or
+   not the consumer's own Tailwind is imported first. */
+@import "./preflight.css" layer(base);
 @import "./themes.css";
 /* Color scale (@theme) — single source of truth, shared with the docs app. */
 @import "./theme.css";

@@ -146,6 +146,7 @@ const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
     <div
       v-if="isVisible"
       v-show="!hidden"
+      class="cui-slideover-overlay"
       :style="{ position: 'fixed', inset: '0', zIndex: '9990' }"
       @keydown="onKeydown"
     >
