@@ -94,6 +94,7 @@ const asyncOptions = ref<ComboboxOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const dropdownRef = ref<HTMLElement | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
+const controlRef = ref<HTMLElement | null>(null);
 const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -154,13 +155,22 @@ const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Dropdown positioning
 function updateDropdownPosition() {
-  if (!wrapperRef.value) return;
-  const rect = wrapperRef.value.getBoundingClientRect();
+  // The CONTROL, not the wrapper. The wrapper also holds the label above the
+  // control and the error message below it, so anchoring to it opened the panel
+  // 4px above the *label* — a gap the height of the label, which read as the
+  // dropdown detaching from the field. CuiSelect has always measured its
+  // trigger; this matches it.
+  const anchor = controlRef.value ?? wrapperRef.value;
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
   const vh = window.innerHeight;
   const spaceBelow = vh - rect.bottom;
   const spaceAbove = rect.top;
-  const maxH = Math.min(320, Math.max(spaceBelow, spaceAbove) - 16);
   const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+  // Bound by the side actually being opened to. Taking the roomier side
+  // regardless let a panel opened upward be taller than the room above it, and
+  // run off the top of the viewport.
+  const maxH = Math.max(0, Math.min(320, (openAbove ? spaceAbove : spaceBelow) - 16));
 
   const s: Record<string, string> = {
     position: "fixed",
@@ -352,6 +362,7 @@ const messages = useMessages();
 
     <!-- Input area -->
     <div
+      ref="controlRef"
       class="cui-combobox__control"
       :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
