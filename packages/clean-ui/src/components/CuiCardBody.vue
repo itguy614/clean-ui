@@ -13,7 +13,7 @@ withDefaults(defineProps<CuiCardBodyProps>(), {
 </script>
 
 <template>
-  <div v-show="!hidden" :style="{ padding: noPadding ? '0' : 'calc(0.5rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1))' }">
+  <div class="cui-card-body" v-show="!hidden" :style="{ padding: noPadding ? '0' : 'calc(0.5rem * var(--cui-density-scale, 1)) calc(1.125rem * var(--cui-density-scale, 1))' }">
     <slot />
   </div>
 </template>

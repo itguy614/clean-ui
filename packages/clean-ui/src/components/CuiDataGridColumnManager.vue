@@ -48,7 +48,7 @@ function onDragEnd() {
 </script>
 
 <template>
-  <CuiPopover placement="bottom" width="240px" title="Columns">
+  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="240px" title="Columns">
     <CuiButton variant="outline" size="sm">
       <template #prefix><CuiIcon name="columns" size="0.875rem" /></template>
       Columns

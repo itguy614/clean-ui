@@ -23,6 +23,7 @@ const messages = useMessages();
 
 <template>
   <div
+    class="cui-modal-header"
     v-show="!hidden"
     :style="{
       display: 'flex',

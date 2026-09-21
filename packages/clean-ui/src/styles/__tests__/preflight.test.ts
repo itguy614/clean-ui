@@ -24,6 +24,39 @@ function splitSelectorList(selector: string): string[] {
   return parts.filter(Boolean);
 }
 
+/** Every top-level element of a component's <template>, as raw start tags. */
+function templateRoots(source: string): string[] {
+  const open = source.indexOf("<template>");
+  if (open === -1) return [];
+  const body = source.slice(open + "<template>".length, source.lastIndexOf("</template>"));
+
+  const roots: string[] = [];
+  let depth = 0;
+  let i = 0;
+  while (i < body.length) {
+    if (body.startsWith("<!--", i)) {
+      const end = body.indexOf("-->", i);
+      i = end === -1 ? body.length : end + 3;
+      continue;
+    }
+    if (body[i] !== "<") {
+      i++;
+      continue;
+    }
+    if (body[i + 1] === "/") {
+      depth--;
+      const end = body.indexOf(">", i);
+      i = end === -1 ? body.length : end + 1;
+      continue;
+    }
+    const tag = readTag(body, i);
+    if (depth === 0) roots.push(tag);
+    if (!tag.trimEnd().endsWith("/>")) depth++;
+    i += tag.length;
+  }
+  return roots;
+}
+
 /** Read one whole start tag from `source` at `start`, ignoring `>` inside attribute values. */
 function readTag(source: string, start: number): string {
   let quote: string | null = null;
@@ -121,5 +154,59 @@ describe("teleported roots stay inside the scope", () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+});
+
+/**
+ * The scoped base only reaches an element with a `cui-*` class and its
+ * descendants, so a component whose own root has no such class renders its
+ * whole subtree outside it — no `box-sizing`, no `font: inherit`. 36 of 106
+ * roots were in that state when #72 shipped. This keeps them in.
+ */
+describe("every component root is inside the scope", () => {
+  // Roots that cannot carry a class, and do not need to:
+  const EXEMPT: Record<string, string> = {
+    // Renderless: the root is <slot />, so there is no element of our own.
+    "CuiConfigProvider.vue": "renderless",
+    "CuiToastProvider.vue": "renderless (its toast container is classed separately)",
+    // <Teleport> is not an element; the element it teleports carries the class.
+    "CuiDropdownMenu.vue": "teleports .cui-dropdown-menu",
+    "CuiModal.vue": "teleports .cui-modal-overlay",
+    "CuiSlideover.vue": "teleports .cui-slideover-overlay",
+    // Root is <CuiModal>, which renders a Teleport root and so cannot inherit a
+    // fallthrough class — Vue warns if you pass one. Its rendered DOM root is
+    // CuiModal's own .cui-modal-overlay, which is already in scope.
+    "CuiConfirmDialog.vue": "root is CuiModal, which cannot inherit a class",
+    // <Transition> is not an element either; the bar it wraps carries the class.
+    "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
+  };
+
+  it("gives every root element a cui-* class", () => {
+    const offenders: string[] = [];
+
+    for (const file of walk(SRC).filter((f) => f.endsWith(".vue"))) {
+      const name = file.split("/").pop()!;
+      if (name in EXEMPT) continue;
+
+      for (const root of templateRoots(readFileSync(file, "utf8"))) {
+        if (!/class="[^"]*\bcui-/.test(root) && !/:class="[^"]*cui-/.test(root)) {
+          offenders.push(`${file.replace(SRC + "/", "")}: ${root.split("\n")[0].trim()}`);
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the exemption list honest", () => {
+    // An exempt file that grew a normal root should drop off the list rather
+    // than sit there excusing a real gap.
+    for (const [name, why] of Object.entries(EXEMPT)) {
+      const file = walk(SRC).find((f) => f.endsWith("/" + name));
+      expect(file, `${name} is exempt but no longer exists`).toBeDefined();
+      const roots = templateRoots(readFileSync(file!, "utf8"));
+      const exempted = roots.some((r) => /^<(slot|Teleport|Transition|CuiModal)\b/.test(r));
+      expect(exempted, `${name} is exempt as "${why}" but its roots no longer match`).toBe(true);
+    }
   });
 });

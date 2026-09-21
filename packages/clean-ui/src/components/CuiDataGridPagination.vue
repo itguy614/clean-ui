@@ -21,6 +21,7 @@ function onPerPageChange(val: number) {
 
 <template>
   <CuiPagination
+    class="cui-data-grid-pagination"
     :current-page="grid.paginationMeta.value.current_page"
     :total-pages="grid.paginationMeta.value.last_page"
     :per-page="grid.paginationMeta.value.per_page"

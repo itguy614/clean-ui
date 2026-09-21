@@ -24,6 +24,7 @@ const { canScrollUp, canScrollDown, onScroll, onMount } = useScrollShadows();
     - Shadows: absolute on the wrapper, above the scroll content.
   -->
   <div
+    class="cui-modal-body"
     v-show="!hidden"
     :style="{
       position: 'relative',

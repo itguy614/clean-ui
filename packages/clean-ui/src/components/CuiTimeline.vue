@@ -14,6 +14,7 @@ withDefaults(defineProps<CuiTimelineProps>(), {
 
 <template>
   <div
+    class="cui-timeline"
     v-show="!hidden"
     :style="{
       display: 'flex',

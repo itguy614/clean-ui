@@ -22,7 +22,7 @@ provide(DropdownRadioKey, {
 </script>
 
 <template>
-  <div role="group">
+  <div class="cui-dropdown-radio-group" role="group">
     <slot />
   </div>
 </template>

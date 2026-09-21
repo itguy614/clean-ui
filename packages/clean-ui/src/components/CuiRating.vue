@@ -141,7 +141,7 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div ref="rootEl" v-show="!hidden">
+  <div class="cui-rating" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"

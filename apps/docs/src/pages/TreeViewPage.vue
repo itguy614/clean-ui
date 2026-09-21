@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiBadge, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiTreeView, type TreeNode } from "@itguy614/clean-ui";
+import { CuiBadge, CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiInput, CuiStack, CuiTreeView, type TreeNode } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
+import MethodTable from "../components/MethodTable.vue";
 import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
@@ -159,6 +160,32 @@ function mapToTree(data: typeof apiResponse): TreeNode[] {
 
 const jsonTree = mapToTree(apiResponse);
 const selectedPerson = ref<string | number | null>(null);
+
+// --- Controlled expansion -------------------------------------------------
+// The bound array is the single source of truth: the toolbar writes to it, the
+// tree renders it, and it is what you would persist and restore.
+const expandedFiles = ref<(string | number)[]>(["src"]);
+
+// Imperative API, reached through a template ref — for the actions a bound
+// array is clumsy for, like expanding every node without walking the tree
+// yourself, or revealing a search hit's ancestors.
+const treeRef = ref<InstanceType<typeof CuiTreeView> | null>(null);
+const search = ref("");
+
+function revealMatch() {
+  const term = search.value.trim().toLowerCase();
+  if (!term) return;
+  const walk = (nodes: TreeNode[]): TreeNode | undefined => {
+    for (const node of nodes) {
+      if (node.label.toLowerCase().includes(term)) return node;
+      const hit = node.children && walk(node.children);
+      if (hit) return hit;
+    }
+    return undefined;
+  };
+  const match = walk(fileTree);
+  if (match) treeRef.value?.reveal(match.id);
+}
 </script>
 
 <template>
@@ -179,8 +206,9 @@ const selectedPerson = ref<string | number | null>(null);
           { name: 'nodes', type: 'TreeNode[]', default: '—', description: 'Tree data (required)' },
           { name: 'modelValue', type: 'string | number | array | null', default: 'null', description: 'Selected node id(s)' },
           { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selection' },
-          { name: 'defaultExpanded', type: '(string | number)[]', default: '—', description: 'Initially expanded node ids' },
-          { name: 'expandAll', type: 'boolean', default: 'false', description: 'Expand all nodes by default' },
+          { name: 'expanded', type: '(string | number)[]', default: '—', description: 'Expanded node ids (v-model:expanded). Pass it and expansion is controlled; omit it and the tree manages its own' },
+          { name: 'defaultExpanded', type: '(string | number)[]', default: '—', description: 'Initially expanded node ids — read once, ignored when `expanded` is passed' },
+          { name: 'expandAll', type: 'boolean', default: 'false', description: 'Expand every node by default — read once, ignored when `expanded` is passed' },
           { name: 'showLines', type: 'boolean', default: 'true', description: 'Show connecting lines' },
           { name: 'selectable', type: 'boolean', default: 'true', description: 'Allow selection (false = expand-only)' },
           { name: 'animated', type: 'boolean', default: 'true', description: 'Animate expand/collapse' },
@@ -196,7 +224,30 @@ const selectedPerson = ref<string | number | null>(null);
         :events="[
           { name: 'update:modelValue', payload: 'string | number | Array | null', description: 'Fires when selection changes (v-model)' },
           { name: 'node-click', payload: 'TreeNode', description: 'Fires when a selectable node is clicked' },
-          { name: 'node-expand', payload: 'TreeNode, boolean', description: 'Fires when a node is expanded or collapsed' },
+          { name: 'update:expanded', payload: '(string | number)[]', description: 'Fires whenever expansion changes (v-model:expanded)' },
+          { name: 'node-expand', payload: 'TreeNode, boolean', description: 'Fires when a single node is expanded or collapsed. Bulk changes report through update:expanded instead' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Methods</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        Reached through a template ref. Each one works whether expansion is controlled
+        (<code class="cui-code">v-model:expanded</code>) or not — when it is controlled they
+        emit <code class="cui-code">update:expanded</code> rather than moving the tree themselves.
+      </p>
+      <MethodTable
+        :methods="[
+          { name: 'expand', signature: '(id) => void', description: 'Expand one node. No-op if already expanded' },
+          { name: 'collapse', signature: '(id) => void', description: 'Collapse one node. No-op if already collapsed' },
+          { name: 'toggleExpand', signature: '(id) => void', description: 'Flip a single node between expanded and collapsed' },
+          { name: 'expandAll', signature: '() => void', description: 'Expand every node that has children, at any depth' },
+          { name: 'collapseAll', signature: '() => void', description: 'Collapse everything' },
+          { name: 'reveal', signature: '(id) => void', description: 'Expand every ancestor of a node so it becomes visible — for jumping to a search hit' },
+          { name: 'isExpanded', signature: '(id) => boolean', description: 'Whether a node id is currently expanded' },
+          { name: 'expandedIds', signature: '() => (string | number)[]', description: 'The ids currently expanded' },
+          { name: 'el', signature: 'HTMLElement', description: 'The root element' },
         ]"
       />
     </div>
@@ -204,6 +255,54 @@ const selectedPerson = ref<string | number | null>(null);
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
+
+        <!-- Controlled expansion -->
+        <Example title="Controlled expansion" :code="`&lt;script setup&gt;
+const expanded = ref([&#39;src&#39;])
+const tree = ref()
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;CuiButton @click=&quot;tree.expandAll()&quot;&gt;Expand all&lt;/CuiButton&gt;
+  &lt;CuiButton @click=&quot;tree.collapseAll()&quot;&gt;Collapse all&lt;/CuiButton&gt;
+  &lt;CuiButton @click=&quot;tree.reveal(&#39;Input.vue&#39;)&quot;&gt;Reveal&lt;/CuiButton&gt;
+
+  &lt;CuiTreeView ref=&quot;tree&quot; v-model:expanded=&quot;expanded&quot; :nodes=&quot;fileTree&quot; /&gt;
+&lt;/template&gt;`">
+          <CuiStack spacing="4">
+            <CuiFlex gap="2" class="items-center flex-wrap">
+              <CuiButton size="sm" @click="treeRef?.expandAll()">Expand all</CuiButton>
+              <CuiButton size="sm" @click="treeRef?.collapseAll()">Collapse all</CuiButton>
+              <CuiInput
+                v-model="search"
+                size="sm"
+                placeholder="Find a file…"
+                style="width: 12rem;"
+                @keyup.enter="revealMatch"
+              />
+              <CuiButton size="sm" color="primary" @click="revealMatch">Reveal</CuiButton>
+            </CuiFlex>
+
+            <CuiFlex gap="4" class="items-start">
+              <CuiCard variant="outline" style="width: 18rem;">
+                <CuiCardBody>
+                  <CuiTreeView ref="treeRef" v-model:expanded="expandedFiles" :nodes="fileTree" />
+                </CuiCardBody>
+              </CuiCard>
+              <div class="text-sm" style="color: var(--cui-text-secondary);">
+                <div>
+                  Expanded:
+                  <code class="cui-code">{{ expandedFiles.length ? expandedFiles.join(", ") : "none" }}</code>
+                </div>
+                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--cui-text-tertiary);">
+                  The array is the source of truth — the toolbar writes to it, the tree renders it,
+                  and it is what you would persist and restore. <code class="cui-code">reveal()</code>
+                  expands the ancestors of a match without you having to work out the path.
+                </div>
+              </div>
+            </CuiFlex>
+          </CuiStack>
+        </Example>
 
         <!-- File explorer -->
         <Example title="File Explorer" :code="`<CuiTreeView

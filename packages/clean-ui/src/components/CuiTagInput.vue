@@ -283,7 +283,7 @@ defineExpose({ el: wrapperRef, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
+  <div class="cui-tag-input" v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
     <label
       v-if="label"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"

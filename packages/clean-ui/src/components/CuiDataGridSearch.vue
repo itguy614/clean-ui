@@ -31,7 +31,7 @@ function onClear() {
 </script>
 
 <template>
-  <div style="position: relative; max-width: 20rem; flex: 1;">
+  <div class="cui-data-grid-search" style="position: relative; max-width: 20rem; flex: 1;">
     <CuiInput
       :model-value="localQuery"
       :placeholder="messages.dataGrid.search"

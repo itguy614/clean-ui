@@ -266,6 +266,7 @@ const totalCols = computed(() => {
 
 <template>
   <CuiTable
+    class="cui-data-grid-table"
     :ref="(instance: any) => setScrollContainer(instance?.scrollWrapper ?? null)"
     :size="size"
     :striped="striped"
