@@ -48,7 +48,7 @@ watch(
   },
 );
 
-const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide } = usePopover({
+const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
   placement: toRef(props, "placement"),
   offsetDistance: 8,
   arrow: !props.noArrow,
@@ -175,7 +175,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,
         ]"
-        :style="{ ...floatingStyles, ...tooltipStyle }"
+        :style="{ ...floatingStyles, ...tooltipStyle, visibility: isPositioned ? 'visible' : 'hidden' }"
         role="tooltip"
         @mouseenter="onTooltipMouseEnter"
         @mouseleave="onTooltipMouseLeave"
