@@ -44,40 +44,73 @@ function closeAll() {
   close();
 }
 
-function positionAtCursor(x: number, y: number) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const padding = 16;
+/** Gap kept between the panel and the viewport edge. */
+const VIEWPORT_PADDING = 16;
+/** Tallest the panel gets before it scrolls internally, however much room there is. */
+const MAX_PANEL_HEIGHT = 400;
 
-  const styles: Record<string, string> = {
+function positionAtCursor(x: number, y: number) {
+  // First pass: place the panel at the cursor with NO maxHeight, so it lays out
+  // at its natural height and can be measured. It used to be clamped to the
+  // space below the cursor here, which made the flip-up check downstream
+  // unreachable — `rect.bottom` was at most `vh - padding` by construction, so
+  // a menu opened near the bottom edge squashed into the remaining sliver and
+  // scrolled instead of flipping (#95).
+  //
+  // Hidden rather than visible for that one frame: unconstrained, the panel can
+  // hang off the bottom of the viewport, and it is the same trick CuiPopover
+  // uses to avoid showing an unpositioned panel (#88).
+  menuStyle.value = {
     position: "fixed",
     zIndex: "9990",
+    left: `${x}px`,
+    top: `${y}px`,
+    visibility: "hidden",
   };
 
-  // Default: open rightward and downward from cursor
-  styles.left = `${x}px`;
-  styles.top = `${y}px`;
-  styles.maxHeight = `${Math.min(vh - y - padding, 400)}px`;
-
-  menuStyle.value = styles;
-
-  // After render, check if menu overflows and adjust
   nextTick(() => {
     if (!menuRef.value) return;
-    const rect = menuRef.value.getBoundingClientRect();
 
-    const adjusted = { ...styles };
+    // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
+    // in with `transform: scale(0.95)` and a rect reports the *transformed* box,
+    // so measuring mid-animation reads about 5% small. Offsets are layout
+    // values and ignore the transform.
+    const height = menuRef.value.offsetHeight;
+    const width = menuRef.value.offsetWidth;
 
-    // Flip left if overflows right edge
-    if (rect.right > vw - padding) {
-      adjusted.left = `${Math.max(padding, x - rect.width)}px`;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
+    const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
+    const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
+    const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
+
+    const adjusted: Record<string, string> = {
+      position: "fixed",
+      zIndex: "9990",
+      left: `${x}px`,
+      top: `${y}px`,
+    };
+
+    if (height <= fitsBelow) {
+      adjusted.maxHeight = `${fitsBelow}px`;
+    } else if (height <= fitsAbove) {
+      // Flip up with the panel's BOTTOM on the cursor, so the first item stays
+      // next to the pointer and it still reads as the same control.
+      adjusted.top = `${Math.max(VIEWPORT_PADDING, y - height)}px`;
+      adjusted.maxHeight = `${fitsAbove}px`;
+    } else {
+      // Fits neither — scroll on the roomier side, still anchored to the cursor.
+      const useAbove = roomAbove > roomBelow;
+      const maxHeight = useAbove ? fitsAbove : fitsBelow;
+      adjusted.top = useAbove ? `${Math.max(VIEWPORT_PADDING, y - maxHeight)}px` : `${y}px`;
+      adjusted.maxHeight = `${maxHeight}px`;
     }
 
-    // Flip up if overflows bottom edge
-    if (rect.bottom > vh - padding) {
-      const newTop = Math.max(padding, y - rect.height);
-      adjusted.top = `${newTop}px`;
-      adjusted.maxHeight = `${Math.min(y - padding, 400)}px`;
+    // Flip left if it would overflow the right edge.
+    if (x + width > vw - VIEWPORT_PADDING) {
+      adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
     }
 
     menuStyle.value = adjusted;

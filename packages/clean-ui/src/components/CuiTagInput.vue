@@ -84,6 +84,7 @@ const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const dropdownRef = ref<HTMLElement | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
+const controlRef = ref<HTMLElement | null>(null);
 const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -135,12 +136,18 @@ const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 // Dropdown positioning
 function updateDropdownPosition() {
-  if (!wrapperRef.value) return;
-  const rect = wrapperRef.value.getBoundingClientRect();
+  // The CONTROL, not the wrapper — the wrapper also holds the label above and
+  // the error message below, so anchoring to it left a label-sized gap between
+  // the field and the panel. See CuiSelect, which measures its trigger.
+  const anchor = controlRef.value ?? wrapperRef.value;
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
   const vh = window.innerHeight;
   const spaceBelow = vh - rect.bottom;
-  const openAbove = spaceBelow < 200 && rect.top > spaceBelow;
-  const maxH = Math.min(240, Math.max(spaceBelow, rect.top) - 16);
+  const spaceAbove = rect.top;
+  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+  // Bound by the side actually being opened to, not the roomier one.
+  const maxH = Math.max(0, Math.min(240, (openAbove ? spaceAbove : spaceBelow) - 16));
 
   const s: Record<string, string> = {
     position: "fixed",
@@ -291,6 +298,8 @@ defineExpose({ el: wrapperRef, focus, blur });
 
     <!-- Input area -->
     <div
+      ref="controlRef"
+      class="cui-tag-input__control"
       :style="{
         display: 'flex',
         flexWrap: 'wrap',
