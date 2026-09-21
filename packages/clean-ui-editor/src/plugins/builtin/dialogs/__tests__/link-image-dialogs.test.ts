@@ -19,11 +19,12 @@ function flush() {
   return Promise.resolve().then(() => Promise.resolve());
 }
 
-// The id prop CuiInput receives lands on its root wrapper div (plain attrs
-// fallthrough), not the native <input> it renders internally — so every
-// lookup here needs the descendant combinator to reach the real input.
+// CuiInput declares `id` and binds it to the native <input> it renders, so the
+// id resolves straight to the real control. It used to fall through to the
+// wrapper div instead, which is why these lookups needed a descendant
+// combinator — see clean-ui#78.
 function nativeInput(id: string): HTMLInputElement | null {
-  return document.querySelector(`#${id} input`);
+  return document.querySelector(`input#${id}`);
 }
 
 function setInputValue(id: string, value: string) {

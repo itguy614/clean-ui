@@ -25,6 +25,7 @@
   dependency pre-bundling cache goes stale (rare — usually right after adding a new source file
   under an aliased path), clear it: `rm -rf apps/docs/node_modules/.vite`.
 - Color scale (`@theme`) is single-source in `packages/clean-ui/src/styles/theme.css`; both the library `main.css` and the docs `apps/docs/src/styles/main.css` `@import` it (no mirroring). The contrast audit reads the scale from `theme.css` too.
+- **Verify with the root `pnpm -r` scripts, not `--filter <one package>`.** CI runs `pnpm -r build`, `pnpm -r --if-present check:imports` and `pnpm -r --if-present test` across every workspace. A change inside `packages/clean-ui` routinely breaks `packages/clean-ui-editor`, which consumes it — a filtered run is green while CI is red. The fixture checks (`scripts/verify-fixture.mjs`, then `check-fixture-guarantees.mjs` and `check-bundle-budget.mjs`, in that order — the latter two need the fixture built first) and `pnpm --filter @itguy614/clean-ui test:browser` are part of the same job.
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
 
 ## Critical Gotchas
