@@ -39,6 +39,11 @@ const minutes = ref(30);
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
           { name: 'label', type: 'string', default: '—', description: 'Label text above the input' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+          { name: 'id', type: 'string', default: '-', description: 'id of the native control — what a label for attribute must point at. CuiFormField supplies it automatically' },
+          { name: 'name', type: 'string', default: '-', description: 'Native control name, for form serialization and browser autofill' },
+          { name: 'autocomplete', type: 'string', default: '-', description: 'Native autocomplete hint, e.g. email, street-address, off' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
         ]"
       />
     </div>

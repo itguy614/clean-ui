@@ -55,6 +55,12 @@ const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? fal
 
 // Auto-generate a stable id once (not a computed — Math.random() must not re-run on re-render)
 const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)}`;
+// Ids for the label and the help/error text, so the control can point at them.
+// `for`/`id` alone is not enough: it only forms an association with *labelable*
+// elements, which leaves a control like CuiSelect — whose focusable surface is a
+// `div[role="combobox"]` — with no accessible name at all (#78).
+const labelId = `${fieldId}-label`;
+const descriptionId = `${fieldId}-description`;
 
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires
 // v-model + error in one shot. Standalone mode omits the model bindings.
@@ -64,6 +70,10 @@ const slotBindings = computed(() => {
     error: resolvedError.value,
     disabled: isDisabled.value,
   };
+  if (props.label) base.ariaLabelledby = labelId;
+  // Only when there is something to describe — a dangling aria-describedby
+  // pointing at an element that isn't rendered is worse than none.
+  if (showError.value || props.helpText) base.ariaDescribedby = descriptionId;
   if (formBound.value) {
     base.modelValue = form!.getValue(props.name!);
     base["onUpdate:modelValue"] = (value: unknown) => form!.setValue(props.name!, value);
@@ -91,6 +101,7 @@ onBeforeUnmount(() => {
     <!-- Label -->
     <label
       v-if="label"
+      :id="labelId"
       :for="fieldId"
       class="cui-form-field__label"
     >
@@ -107,10 +118,10 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer: help text or error message -->
-      <div v-if="showError" class="cui-form-field__error">
+      <div v-if="showError" class="cui-form-field__error" :id="descriptionId">
         {{ resolvedMessage }}
       </div>
-      <div v-else-if="helpText" class="cui-form-field__help">
+      <div v-else-if="helpText" class="cui-form-field__help" :id="descriptionId">
         {{ helpText }}
       </div>
     </div>

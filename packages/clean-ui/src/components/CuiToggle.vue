@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { ToggleGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 
-export interface CuiToggleProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiToggleProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** The value this toggle represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
@@ -109,6 +109,11 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   >
     <!-- Hidden native input -->
     <input
+      :id="id"
+      :name="name"
+      :autocomplete="autocomplete"
+      :aria-describedby="ariaDescribedby"
+      :aria-labelledby="ariaLabelledby"
       type="checkbox"
       :value="value !== undefined ? String(value) : undefined"
       :checked="isChecked"

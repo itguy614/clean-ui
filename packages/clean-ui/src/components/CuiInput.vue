@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
@@ -23,7 +23,7 @@ export type InputType =
   | "number"
   | "range";
 
-export interface CuiInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding. `string | number` so `type="number"` / `v-model.number` bind without a cast. */
   modelValue?: string | number;
   /** Input type */
@@ -143,6 +143,11 @@ const messages = useMessages();
         <!-- Native input -->
         <input
           ref="inputEl"
+          :id="id"
+          :name="name"
+          :autocomplete="autocomplete"
+          :aria-describedby="ariaDescribedby"
+          :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
           :placeholder="placeholder"

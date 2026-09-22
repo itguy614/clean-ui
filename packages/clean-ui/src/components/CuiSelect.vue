@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
@@ -21,7 +21,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface CuiSelectProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiSelectProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value (single) or values (multiple) */
   modelValue?: string | number | null | Array<string | number>;
   /** Options — array of strings or { value, label, group?, disabled? } objects */
@@ -346,6 +346,9 @@ const messages = useMessages();
       <!-- Trigger -->
       <div
         ref="triggerRef"
+        :id="id"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
         class="cui-select__trigger"
         :style="{ borderRadius: radiusMap[rounded] }"
         role="combobox"

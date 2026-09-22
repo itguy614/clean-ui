@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE } from "../utils/sizing";
 
 const radiusMap: Record<CuiRounded, string> = {
@@ -11,7 +11,7 @@ const radiusMap: Record<CuiRounded, string> = {
   full: "9999px",
 };
 
-export interface CuiTextareaProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
   modelValue?: string;
   /** Placeholder text */
@@ -148,6 +148,11 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
     >
       <textarea
         ref="textareaEl"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"

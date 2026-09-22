@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from "vue";
-import type { CuiColor, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -14,7 +14,7 @@ export interface FileEntry {
   type: string;
 }
 
-export interface CuiFileUploadProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiFileUploadProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
   /** Accepted file types (e.g., ".pdf,.docx", "image/*") */
   accept?: string;
   /** Allow multiple files */
@@ -213,6 +213,11 @@ const messages = useMessages();
     <!-- Hidden file input -->
     <input
       ref="inputRef"
+      :id="id"
+      :name="name"
+      :autocomplete="autocomplete"
+      :aria-describedby="ariaDescribedby"
+      :aria-labelledby="ariaLabelledby"
       type="file"
       :accept="accept"
       :multiple="multiple"

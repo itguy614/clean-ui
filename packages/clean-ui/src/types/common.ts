@@ -97,3 +97,40 @@ export interface FormControlProps extends DisableableProps {
   /** Readonly state */
   readonly?: boolean;
 }
+
+/**
+ * Attributes that belong on a form control's **native focusable element**, not
+ * on its wrapper.
+ *
+ * Without these declared as props, Vue's attribute fallthrough drops them on
+ * the component's single root — `.cui-input-wrapper`, `.cui-select`, and so on
+ * — which is a plain `<div>`. A `<label for>` then points at something that
+ * cannot be focused or labelled, so clicking the label does nothing and screen
+ * readers never form the label/control association (#78). `name` and
+ * `autocomplete` are equally useless on a wrapper: the browser only reads them
+ * off a real form control.
+ *
+ * Declaring them here takes them out of `$attrs`, so they stop landing on the
+ * wrapper and the component binds them where they belong. `class` and `style`
+ * still fall through to the wrapper, which is where consumers expect them.
+ *
+ * `CuiFormField` supplies `id`, `ariaDescribedby` and `ariaLabelledby` through
+ * its slot bindings, so `v-bind="f"` wires all of this up on its own.
+ */
+export interface NativeControlProps {
+  /** id of the focusable element — what a `<label for>` has to point at. */
+  id?: string;
+  /** Native control name, for form serialization and browser autofill. */
+  name?: string;
+  /** Native autocomplete hint, e.g. `"email"`, `"street-address"`, `"off"`. */
+  autocomplete?: string;
+  /** id(s) of the text describing this control — help text, error message. */
+  ariaDescribedby?: string;
+  /**
+   * id(s) of the element labelling this control. Needed for controls whose
+   * focusable element is not a *labelable* one — `CuiSelect`'s trigger is a
+   * `div[role="combobox"]`, and `<label for>` only forms an association with
+   * labelable elements, so `for`/`id` alone leaves those controls unnamed.
+   */
+  ariaLabelledby?: string;
+}

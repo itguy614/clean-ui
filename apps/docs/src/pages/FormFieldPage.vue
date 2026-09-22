@@ -62,7 +62,28 @@ const agree = ref(false);
       <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
       <PropTable
         :props="[
-          { name: 'default', type: 'slot', default: '-', description: 'The form control. Receives { id, error } as slot props.' },
+          { name: 'default', type: 'slot', default: '-', description: 'The form control. Receives the bindings listed below — spread them with v-bind.' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Slot bindings</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        <code class="cui-code">v-bind="f"</code> wires the control to the field in one go.
+        The accessibility bindings land on the control’s own focusable element, not on its
+        wrapper, so a click on the label focuses the control and assistive technology reads
+        the label and help text with it.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'id', type: 'string', default: '-', description: 'Matches the label for attribute. Lands on the control native element' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id of the rendered label. Needed by controls whose focusable element is not labelable, such as CuiSelect' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id of the help text or error message. Omitted when the field renders neither' },
+          { name: 'error', type: 'boolean', default: 'false', description: 'Resolved error state, from the form when name-bound, else from the error prop' },
+          { name: 'disabled', type: 'boolean', default: 'false', description: 'Resolved disabled state, including the parent CuiForm' },
+          { name: 'modelValue / onUpdate:modelValue', type: 'unknown', default: '-', description: 'Two-way value binding. Only when the field has a name and sits inside a CuiForm' },
+          { name: 'readonly', type: 'boolean', default: 'false', description: 'From the parent CuiForm. Only when form-bound' },
         ]"
       />
     </div>
