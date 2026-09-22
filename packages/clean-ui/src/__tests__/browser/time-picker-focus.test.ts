@@ -144,6 +144,47 @@ it("Right and Left move between hour, minute and AM/PM", async () => {
     expect(second.getAttribute("role"), "next tab stop should be the minutes field").toBe("spinbutton");
   });
 
+it("Enter commits the value and closes, returning focus to the trigger", async () => {
+    mountPicker();
+    await open();
+
+    await userEvent.keyboard("{ArrowUp}");   // 09:30 -> 10:30
+    await frames(4);
+    await userEvent.keyboard("{Enter}");
+    await frames(8);
+
+    expect(panel()).toBeNull();
+    expect(document.activeElement).toBe(trigger());
+    const emitted = wrapper!.emitted("update:modelValue")!;
+    expect(String(emitted[emitted.length - 1][0])).toBe("10:30");
+  });
+
+  it("Enter on AM/PM applies the change before closing", async () => {
+    // A button's click is the default action of Enter. Closing synchronously
+    // would tear the button out of the DOM before that click ran, and the
+    // period change would be silently lost.
+    wrapper?.unmount();
+    wrapper = mount(CuiTimePicker, {
+      attachTo: document.body,
+      props: { modelValue: "09:30 AM", format: "12" },
+    });
+    trigger().focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await frames(12);
+
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");  // to AM/PM
+    await frames(4);
+    // PM is the second period button
+    const pm = [...document.querySelectorAll<HTMLElement>(".cui-time-picker__period")][1];
+    pm.focus();
+    await userEvent.keyboard("{Enter}");
+    await frames(10);
+
+    expect(panel()).toBeNull();
+    const emitted = wrapper!.emitted("update:modelValue")!;
+    expect(String(emitted[emitted.length - 1][0])).toContain("PM");
+  });
+
   it("the focused field is genuinely visible, not a hidden one", async () => {
     mountPicker();
     await open();

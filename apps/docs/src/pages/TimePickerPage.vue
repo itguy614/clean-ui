@@ -58,6 +58,7 @@ const time4 = ref("02:00 PM");
       <PropTable
         :props="[
           { name: 'Enter / Space / Down', type: 'key', default: '-', description: 'Open the panel' },
+          { name: 'Enter', type: 'key', default: '-', description: 'Commit the time and close, returning focus to the trigger' },
           { name: 'Escape', type: 'key', default: '-', description: 'Close the panel and return focus to the trigger' },
           { name: 'Up / Down', type: 'key', default: '-', description: 'Step the focused hour or minute field. Focus moves into the panel when it opens, so these work immediately' },
           { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Step in tens' },

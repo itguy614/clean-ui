@@ -172,6 +172,24 @@ function panelFields(): HTMLElement[] {
  * there is nothing useful for the caret to do with them anyway.
  */
 function onPanelKeydown(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    // Enter commits and closes, matching the calendar.
+    //
+    // Deferred by a frame, and NOT prevented when the AM/PM buttons have focus:
+    // a button's click is the default action of Enter, so preventing it would
+    // swallow the AM/PM change, and closing synchronously would tear the button
+    // out of the DOM before that click ever ran. Let it happen, then close.
+    const onPeriodButton = (document.activeElement as HTMLElement | null)?.classList.contains(
+      "cui-time-picker__period",
+    );
+    if (!onPeriodButton) e.preventDefault();
+    requestAnimationFrame(() => {
+      emitValue();
+      popoverVisible.value = false;
+    });
+    return;
+  }
+
   if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
   const fields = panelFields();
   const current = fields.indexOf(document.activeElement as HTMLElement);
