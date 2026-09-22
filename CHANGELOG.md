@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `CuiTreeView` is operable from the keyboard (#74). It had no keyboard handling of any kind — no `tabindex`, no `keydown` listener — so expand/collapse and selection were reachable only with a pointer, a WCAG 2.1.1 failure on the component's core interaction
+  - A single tab stop with roving focus, per the ARIA tree pattern: one `Tab` reaches the tree however many nodes it holds. A `tabindex` per node would have added a tab stop per node, which is what that pattern exists to avoid
+  - `↓`/`↑` move through visible nodes across depth boundaries; `→` expands a collapsed parent then steps into its first child; `←` collapses an expanded parent then steps out to the parent; `Home`/`End` jump to the ends; `Enter`/`Space` do exactly what a row click does; `*` expands every sibling at the current level; typing jumps by label prefix, accumulating for ~600ms so a multi-letter search continues rather than restarting. Disabled nodes are skipped throughout
+  - Pointer and keyboard share one notion of the current node, so tabbing away and back resumes where a click left off. Collapsing a branch that contains the focused node moves focus to a still-visible node instead of dropping it onto `<body>`
+  - Tree ARIA completed: `aria-multiselectable` on the tree; `aria-selected`, `aria-disabled`, `aria-level`, `aria-setsize` and `aria-posinset` on each `treeitem`; `role="group"` on each children wrapper. The focus ring draws on the row rather than the `treeitem` element, which has to wrap the whole subtree to contain the child group
+
+### Added
 - `CuiCoreMessages` is exported — the message keys this package itself ships, as distinct from `CuiMessages`, which is those plus whatever satellite packages have merged into `CuiMessageNamespaces` (#107)
 
 ### Fixed

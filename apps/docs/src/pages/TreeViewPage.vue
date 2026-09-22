@@ -253,6 +253,65 @@ function revealMatch() {
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        The tree is a single tab stop with roving focus, per the ARIA tree pattern &mdash; one
+        <code class="cui-code">Tab</code> reaches it however many nodes it holds, and the arrow keys
+        move within it. Disabled nodes are skipped.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Down / Up', type: 'key', default: '-', description: 'Next / previous visible node, crossing depth boundaries' },
+          { name: 'Right', type: 'key', default: '-', description: 'Collapsed parent: expand. Expanded parent: move to its first child. Leaf: nothing' },
+          { name: 'Left', type: 'key', default: '-', description: 'Expanded parent: collapse. Otherwise: move to the parent' },
+          { name: 'Home / End', type: 'key', default: '-', description: 'First / last visible node' },
+          { name: 'Enter / Space', type: 'key', default: '-', description: 'Same as clicking the row: selects, or toggles when selectable is false' },
+          { name: 'Asterisk', type: 'key', default: '-', description: 'Expand every sibling at the current level' },
+          { name: 'Typing', type: 'key', default: '-', description: 'Jump to the next node whose label starts with what you type. The buffer accumulates for about 600ms, so typing continues the search rather than restarting it' },
+        ]"
+      />
+
+      <p class="mb-4 mt-6" style="color: var(--cui-text-secondary);">
+        Pointer and keyboard share one notion of the current node, so clicking a row and then
+        pressing <code class="cui-code">Tab</code> away and back resumes where you left off.
+      </p>
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Accessibility</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="2">
+            <div>
+              <code class="cui-code">role="tree"</code> on the container, with
+              <code class="cui-code">aria-multiselectable</code> when
+              <code class="cui-code">multiple</code> is set.
+            </div>
+            <div>
+              <code class="cui-code">role="treeitem"</code> per node, carrying
+              <code class="cui-code">aria-expanded</code> (parents only),
+              <code class="cui-code">aria-selected</code> (when selectable),
+              <code class="cui-code">aria-disabled</code>, and
+              <code class="cui-code">aria-level</code> /
+              <code class="cui-code">aria-setsize</code> /
+              <code class="cui-code">aria-posinset</code>.
+            </div>
+            <div>
+              <code class="cui-code">role="group"</code> on each children wrapper, so nesting depth
+              is conveyed rather than merely drawn.
+            </div>
+            <div>
+              The focus ring is drawn on the row, not on the
+              <code class="cui-code">treeitem</code> element &mdash; that element has to wrap the
+              whole subtree to contain the child group, so outlining it would box in every
+              descendant.
+            </div>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 
