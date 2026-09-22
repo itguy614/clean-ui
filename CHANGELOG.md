@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- The date and time pickers no longer scroll the page when opened. Making the panel focusable (below) meant `focus()` started actually doing something, and focusing an element scrolls it into view — with the panel still at the origin, opening a picker part-way down a page yanked the page to the top. Every focus in the picker path now passes `{ preventScroll: true }`; the panel opens beside a trigger the user is already looking at, so there is nothing to scroll to. `CuiMaskedInput.focus()` forwards `FocusOptions` as `CuiInput.focus()` and the native method already did (#112)
 - `CuiPopover` and `CuiTooltip` hide their not-yet-positioned panel with `opacity: 0` instead of `visibility: hidden` (#112). `focus()` on a `visibility: hidden` element is a silent no-op, so any consumer moving focus into a panel on open was racing Floating UI's positioning and losing intermittently — which is why the date and time pickers each grew a `requestAnimationFrame` retry loop. Both loops and their shared helper are deleted; one `focus()` now works. The suppression also covers `animation`, which is load-bearing rather than tidiness: a CSS animation overrides inline styles, and both panels animate `opacity` from 0, so `opacity: 0` alone would have been overridden the moment the scale-in started and reintroduced the flash #88 fixed. Withholding it also means the animation plays from the final position rather than starting mid-move
 
 ### Added

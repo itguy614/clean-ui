@@ -297,7 +297,7 @@ watch(popoverVisible, (open) => {
   } else {
     // Focus has to come back to the field, or closing the panel drops it on
     // <body> and a keyboard user loses their place in the form.
-    startInputRef.value?.focus();
+    startInputRef.value?.focus({ preventScroll: true });
   }
 });
 

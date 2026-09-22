@@ -198,7 +198,7 @@ function onPanelKeydown(e: KeyboardEvent) {
   const next = current + (e.key === "ArrowRight" ? 1 : -1);
   // Stop at the ends rather than wrapping: hours and minutes read left to
   // right, and jumping from minutes back to hours mid-entry is disorienting.
-  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus();
+  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus({ preventScroll: true });
 }
 
 /**
@@ -212,14 +212,14 @@ function focusPanel() {
   // rather than `visibility: hidden` (#112), so the field is focusable as soon
   // as it is rendered.
   cachedFields = [];
-  panelFields()[0]?.focus();
+  panelFields()[0]?.focus({ preventScroll: true });
 }
 
 watch(popoverVisible, (open) => {
   // Closing must return focus to the trigger, or it falls to <body>.
   if (!open) {
     cachedFields = [];
-    triggerEl.value?.focus();
+    triggerEl.value?.focus({ preventScroll: true });
     return;
   }
   parseTime(props.modelValue);

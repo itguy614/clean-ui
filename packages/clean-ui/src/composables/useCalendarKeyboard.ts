@@ -87,8 +87,16 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
     // One attempt is enough: CuiPopover hides its unpositioned panel with
     // `opacity: 0` rather than `visibility: hidden` (#112), so the cell is
     // focusable as soon as it is rendered.
+    //
+    // `preventScroll` because of that same change: the cell is focusable while
+    // the panel is still at the origin, and focusing an element scrolls it into
+    // view — which yanked the whole page to the top. The calendar opens beside
+    // a trigger the user is already looking at, so there is nothing to scroll
+    // to.
     nextTick(() => {
-      gridRef.value?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`)?.focus();
+      gridRef.value
+        ?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`)
+        ?.focus({ preventScroll: true });
     });
   }
 

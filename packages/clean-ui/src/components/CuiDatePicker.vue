@@ -312,7 +312,7 @@ watch(popoverVisible, (open) => {
   if (!open) {
     // Closing has to hand focus back to whatever opened the panel, or it falls
     // to <body> and a keyboard user loses their place entirely.
-    maskedInputRef.value?.focus();
+    maskedInputRef.value?.focus({ preventScroll: true });
     return;
   }
 
