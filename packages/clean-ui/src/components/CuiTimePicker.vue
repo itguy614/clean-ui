@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
+import { ref, computed, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
@@ -144,9 +144,37 @@ function onApply() {
 }
 
 // Open popover syncs from current value
+const panelEl = useTemplateRef<HTMLElement>("panelEl");
+
+/**
+ * Frames to keep retrying for. CuiPopover renders its panel `visibility: hidden`
+ * until Floating UI positions it (#88), and `focus()` on a hidden element is a
+ * silent no-op — the same race the calendar hit.
+ */
+const FOCUS_ATTEMPT_FRAMES = 10;
+
+/**
+ * Move focus into the panel when it opens. The panel is teleported to <body>,
+ * so it is nowhere near the trigger in tab order — without this, opening the
+ * picker left focus on the trigger and Tab went off to whatever follows the
+ * component in the document, never into the hours field. The panel was
+ * effectively keyboard-only-openable and nothing more.
+ */
+function focusPanel(attempt = 0) {
+  const first = panelEl.value?.querySelector<HTMLElement>("input, [tabindex]:not([tabindex='-1'])");
+  first?.focus();
+  if (first && document.activeElement !== first && attempt < FOCUS_ATTEMPT_FRAMES) {
+    requestAnimationFrame(() => focusPanel(attempt + 1));
+  }
+}
+
 watch(popoverVisible, (open) => {
   // Closing must return focus to the trigger, or it falls to <body>.
-  if (!open) triggerEl.value?.focus();
+  if (!open) {
+    triggerEl.value?.focus();
+    return;
+  }
+  nextTick(() => focusPanel());
   if (open) parseTime(props.modelValue);
 });
 
@@ -243,7 +271,12 @@ defineExpose({ el: rootEl, focus, blur });
 
       <!-- Time picker popover -->
       <template #content>
-        <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+        <div
+          ref="panelEl"
+          class="cui-time-picker__panel"
+          @keydown.escape.prevent.stop="popoverVisible = false"
+          :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
+        >
           <!-- Hours -->
           <CuiInputStepper
             :model-value="hours"

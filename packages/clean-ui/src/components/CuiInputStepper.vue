@@ -44,6 +44,52 @@ const emit = defineEmits<{
 const canDecrement = computed(() => props.wrap || props.min === undefined || props.modelValue - props.step >= props.min);
 const canIncrement = computed(() => props.wrap || props.max === undefined || props.modelValue + props.step <= props.max);
 
+/**
+ * Arrow keys on a spinbutton, per the ARIA pattern (#74). The component had no
+ * keydown handling at all, so the value could only be changed by clicking the
+ * +/- buttons or retyping it — which is also why CuiTimePicker was unusable
+ * from the keyboard once its panel was open.
+ */
+function onKeydown(e: KeyboardEvent) {
+  if (props.disabled) return;
+
+  switch (e.key) {
+    case "ArrowUp":
+      e.preventDefault();
+      increment();
+      break;
+    case "ArrowDown":
+      e.preventDefault();
+      decrement();
+      break;
+    case "PageUp":
+    case "PageDown": {
+      // A coarser jump, as a native number input gives: ten steps at a time.
+      // Computed in one go rather than by calling increment() ten times — this
+      // is a controlled component, so `modelValue` does not change until the
+      // parent writes it back, and ten calls would all emit the same +1.
+      e.preventDefault();
+      const delta = props.step * 10 * (e.key === "PageUp" ? 1 : -1);
+      let next = Math.round((props.modelValue + delta) * 1e10) / 1e10;
+      if (props.max !== undefined) next = Math.min(next, props.max);
+      if (props.min !== undefined) next = Math.max(next, props.min);
+      if (next !== props.modelValue) emit("update:modelValue", next);
+      break;
+    }
+    case "Home":
+      if (props.min === undefined) return;
+      e.preventDefault();
+      emit("update:modelValue", props.min);
+      break;
+    case "End":
+      if (props.max === undefined) return;
+      e.preventDefault();
+      emit("update:modelValue", props.max);
+      break;
+    default:
+  }
+}
+
 function decrement() {
   if (props.disabled || !canDecrement.value) return;
   let next = Math.round((props.modelValue - props.step) * 1e10) / 1e10;
@@ -148,7 +194,9 @@ defineExpose({ el: rootEl, focus, blur });
       </CuiButton>
       <input ref="inputH" :id="id" :name="name" :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
+        role="spinbutton" :aria-valuenow="modelValue" :aria-valuemin="min" :aria-valuemax="max"
         type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+        @keydown="onKeydown"
         :style="{ width: cfg.inputWidth, height: '100%', textAlign: 'center', border: 'none', borderLeft: '1px solid var(--cui-border-strong, var(--cui-border))', borderRight: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canIncrement" :color="color"
@@ -178,7 +226,9 @@ defineExpose({ el: rootEl, focus, blur });
       </CuiButton>
       <input ref="inputV" :id="id" :name="name" :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
+        role="spinbutton" :aria-valuenow="modelValue" :aria-valuemin="min" :aria-valuemax="max"
         type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+        @keydown="onKeydown"
         :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
         @input="onInput" />
       <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"

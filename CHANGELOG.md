@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Movement deliberately does not skip disabled dates: a calendar is a grid whose shape carries meaning, and holes in it make it impossible to navigate. Disabled cells are reachable and carry `aria-disabled`; selection is what refuses
   - `role="grid"` / `role="gridcell"` with `aria-selected`, `aria-disabled` and per-cell labels, and a single roving tab stop
   - `CuiTimePicker`'s trigger is now `role="combobox"` in the tab order, opening on `Enter`/`Space`/`↓` and closing on `Escape`. It therefore also takes `id` / `aria-labelledby` / `aria-describedby`, which #78 had to skip because there was nothing focusable to attach them to — closing that half of #103
+  - `CuiInputStepper` gains keyboard stepping and `role="spinbutton"`: `↑`/`↓` by one step, `PageUp`/`PageDown` by ten, `Home`/`End` to the bounds, all honouring `wrap`/`min`/`max`. It had no keydown handling at all, which is a WCAG 2.1.1 gap in its own right and is also why `CuiTimePicker`'s panel did nothing once opened
+  - `CuiTimePicker` moves focus into its panel on open. The panel is teleported to `<body>`, so it sits nowhere near the trigger in tab order — leaving focus on the trigger meant `Tab` went to whatever follows the component in the document, never into the hours field
   - New `useCalendarKeyboard` composable holds the grid navigation, shared by both date pickers rather than written twice
 
 ### Added

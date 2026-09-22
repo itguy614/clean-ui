@@ -58,6 +58,21 @@ const minutes = ref(30);
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        The field is a <code class="cui-code">role="spinbutton"</code> carrying its current value
+        and range, and steps with the keyboard as a native number input does.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Up / Down', type: 'key', default: '-', description: 'Step by one step. Honours wrap, min and max' },
+          { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Step by ten steps, clamped to the range' },
+          { name: 'Home / End', type: 'key', default: '-', description: 'Jump to min or max, when they are set' },
+        ]"
+      />
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 
