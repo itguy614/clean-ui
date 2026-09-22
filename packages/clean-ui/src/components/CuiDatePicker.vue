@@ -297,7 +297,7 @@ const rootEl = useTemplateRef<HTMLElement>("rootEl");
 const maskedInputRef = useTemplateRef<InstanceType<typeof CuiMaskedInput>>("maskedInput");
 
 function focus(opts?: FocusOptions) {
-  if (maskedInputRef.value) maskedInputRef.value.focus();
+  if (maskedInputRef.value) maskedInputRef.value.focus({ preventScroll: true });
   else rootEl.value?.focus(opts);
 }
 
