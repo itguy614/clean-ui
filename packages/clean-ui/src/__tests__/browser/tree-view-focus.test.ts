@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiTreeView from "../../components/CuiTreeView.vue";
@@ -12,20 +12,6 @@ import preflight from "../../styles/preflight.css?inline";
 describe("CuiTreeView focus (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 
-  beforeAll(() => {
-    const style = document.createElement("style");
-    // The focus-ring token has to be defined, not just the reset: the rule is
-    // `outline: 2px solid var(--cui-primary-focus-ring)`, and an undefined
-    // custom property makes the whole declaration invalid at computed-value
-    // time — `outline-style` silently falls back to `none` and the assertion
-    // reads as "no ring" for the wrong reason.
-    style.textContent = `
-      @layer theme, base, components, utilities;
-      @layer base { ${preflight} }
-      :root { --cui-primary-focus-ring: rgba(59, 70, 200, 0.4); }
-    `;
-    document.head.append(style);
-  });
 
   afterEach(() => {
     wrapper?.unmount();

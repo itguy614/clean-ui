@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h } from "vue";
 import CuiPopover from "../../components/CuiPopover.vue";
@@ -23,15 +23,6 @@ import preflight from "../../styles/preflight.css?inline";
 describe("floating panels do not flash at the top-left (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 
-  beforeAll(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      @layer theme, base, components, utilities;
-      @layer base { ${preflight} }
-      @keyframes cui-scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    `;
-    document.head.append(style);
-  });
 
   afterEach(() => {
     wrapper?.unmount();

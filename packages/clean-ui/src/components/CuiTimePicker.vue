@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
+import { ref, computed, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import type { HideableProps, DisableableProps } from "../types/common";
+import { focusWhenReady } from "../utils/focus";
+import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends HideableProps, DisableableProps {
+export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -144,19 +145,121 @@ function onApply() {
 }
 
 // Open popover syncs from current value
+const panelEl = useTemplateRef<HTMLElement>("panelEl");
+
+/**
+ * Frames to keep retrying for. CuiPopover renders its panel `visibility: hidden`
+ * until Floating UI positions it (#88), and `focus()` on a hidden element is a
+ * silent no-op — the same race the calendar hit.
+ */
+/**
+ * The fields a user moves between: hours, minutes, and AM/PM when shown.
+ * Cached while the panel is open — the set only changes when `format` flips
+ * between 12 and 24, so re-querying on every arrow keypress is wasted work.
+ */
+let cachedFields: HTMLElement[] = [];
+function panelFields(): HTMLElement[] {
+  if (cachedFields.length === 0) {
+    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+  }
+  return cachedFields;
+}
+
+/**
+ * Left/Right move between hour, minute and AM/PM, the way the segments of a
+ * native `<input type="time">` do. Tab does it too, but Left/Right is what a
+ * user reaches for in a time field — and inside a two-character spinbutton
+ * there is nothing useful for the caret to do with them anyway.
+ */
+function onPanelKeydown(e: KeyboardEvent) {
+  if (e.key === "Enter") {
+    // Enter commits and closes, matching the calendar.
+    //
+    // Deferred by a frame, and NOT prevented when the AM/PM buttons have focus:
+    // a button's click is the default action of Enter, so preventing it would
+    // swallow the AM/PM change, and closing synchronously would tear the button
+    // out of the DOM before that click ever ran. Let it happen, then close.
+    const onPeriodButton = (document.activeElement as HTMLElement | null)?.classList.contains(
+      "cui-time-picker__period",
+    );
+    if (!onPeriodButton) e.preventDefault();
+    requestAnimationFrame(() => {
+      emitValue();
+      popoverVisible.value = false;
+    });
+    return;
+  }
+
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const fields = panelFields();
+  const current = fields.indexOf(document.activeElement as HTMLElement);
+  if (current === -1) return;
+
+  e.preventDefault();
+  const next = current + (e.key === "ArrowRight" ? 1 : -1);
+  // Stop at the ends rather than wrapping: hours and minutes read left to
+  // right, and jumping from minutes back to hours mid-entry is disorienting.
+  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus();
+}
+
+/**
+ * Move focus into the panel when it opens. The panel is teleported to <body>,
+ * so it is nowhere near the trigger in tab order — without this, opening the
+ * picker left focus on the trigger and Tab went off to whatever follows the
+ * component in the document, never into the hours field.
+ */
+function focusPanel() {
+  focusWhenReady(() => {
+    // Recomputed here rather than read from the cache: on the first frames the
+    // panel may not have rendered yet, so an empty result must not stick.
+    cachedFields = [];
+    return panelFields()[0];
+  });
+}
+
 watch(popoverVisible, (open) => {
-  if (open) parseTime(props.modelValue);
+  // Closing must return focus to the trigger, or it falls to <body>.
+  if (!open) {
+    cachedFields = [];
+    triggerEl.value?.focus();
+    return;
+  }
+  parseTime(props.modelValue);
+  nextTick(() => focusPanel());
 });
 
 // Expose imperative handle — the trigger is a non-input div, so focus the root
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const triggerEl = useTemplateRef<HTMLElement>("triggerEl");
+
+/**
+ * The trigger was a bare `<div>` — no tabindex, no role — so the time picker
+ * could not be reached by keyboard at all, and there was nothing for a
+ * `<label for>` to resolve to either (#74, and the half of #103 this closes).
+ * Modelled on CuiSelect, which already gets this right: Enter, Space or Down
+ * opens, Escape closes and hands focus back.
+ */
+function onTriggerKeydown(e: KeyboardEvent) {
+  if (props.disabled) return;
+
+  if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+    e.preventDefault();
+    popoverVisible.value = true;
+    return;
+  }
+  if (e.key === "Escape" && popoverVisible.value) {
+    e.preventDefault();
+    popoverVisible.value = false;
+  }
+}
 
 function focus(opts?: FocusOptions) {
-  rootEl.value?.focus(opts);
+  // The trigger is what is focusable; the root is a plain wrapper.
+  (triggerEl.value ?? rootEl.value)?.focus(opts);
 }
 
 function blur() {
-  rootEl.value?.blur();
+  (triggerEl.value ?? rootEl.value)?.blur();
 }
 
 defineExpose({ el: rootEl, focus, blur });
@@ -185,7 +288,17 @@ defineExpose({ el: rootEl, focus, blur });
     >
       <!-- Trigger input -->
       <div
+        ref="triggerEl"
         class="cui-time-picker__trigger"
+        role="combobox"
+        aria-haspopup="dialog"
+        :aria-expanded="popoverVisible"
+        :aria-disabled="disabled || undefined"
+        :id="id"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
+        :tabindex="disabled ? -1 : 0"
+        @keydown="onTriggerKeydown"
         :style="{
           display: 'inline-flex',
           alignItems: 'center',
@@ -208,7 +321,13 @@ defineExpose({ el: rootEl, focus, blur });
 
       <!-- Time picker popover -->
       <template #content>
-        <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+        <div
+          ref="panelEl"
+          class="cui-time-picker__panel"
+          @keydown.escape.prevent.stop="popoverVisible = false"
+          @keydown="onPanelKeydown"
+          :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
+        >
           <!-- Hours -->
           <CuiInputStepper
             :model-value="hours"
@@ -250,6 +369,7 @@ defineExpose({ el: rootEl, focus, blur });
                 borderRadius: '0.25rem',
                 minWidth: '2.5rem',
               }"
+              class="cui-time-picker__period"
               @click="period = 'AM'; emitValue()"
             >AM</CuiButton>
             <CuiButton
@@ -262,6 +382,7 @@ defineExpose({ el: rootEl, focus, blur });
                 borderRadius: '0.25rem',
                 minWidth: '2.5rem',
               }"
+              class="cui-time-picker__period"
               @click="period = 'PM'; emitValue()"
             >PM</CuiButton>
           </div>

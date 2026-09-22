@@ -58,6 +58,9 @@ export default defineConfig({
         test: {
           name: "browser",
           include: ["src/__tests__/browser/**/*.test.ts"],
+          // The scoped base and the focus-ring token, injected once. Six suites
+          // had copy-pasted the same beforeAll before this existed.
+          setupFiles: ["./src/__tests__/browser/setup.ts"],
           browser: {
             enabled: true,
             provider: "playwright",

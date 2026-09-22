@@ -49,6 +49,27 @@ const time4 = ref("02:00 PM");
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        The trigger is a <code class="cui-code">role="combobox"</code> in the tab order. It was
+        previously a plain <code class="cui-code">&lt;div&gt;</code>, so the picker could not be
+        reached by keyboard at all.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Enter / Space / Down', type: 'key', default: '-', description: 'Open the panel' },
+          { name: 'Enter', type: 'key', default: '-', description: 'Commit the time and close, returning focus to the trigger' },
+          { name: 'Escape', type: 'key', default: '-', description: 'Close the panel and return focus to the trigger' },
+          { name: 'Up / Down', type: 'key', default: '-', description: 'Step the focused hour or minute field. Focus moves into the panel when it opens, so these work immediately' },
+          { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Step in tens' },
+          { name: 'Home / End', type: 'key', default: '-', description: 'Jump to the lowest or highest value for that field' },
+          { name: 'Left / Right', type: 'key', default: '-', description: 'Move between hour, minute and AM/PM, as the segments of a native time input do. Stops at the ends rather than wrapping' },
+          { name: 'Tab', type: 'key', default: '-', description: 'Also moves between the fields. The stepper buttons are not tab stops, so it goes straight from hour to minute' },
+        ]"
+      />
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 
