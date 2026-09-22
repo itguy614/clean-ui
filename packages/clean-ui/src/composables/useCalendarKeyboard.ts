@@ -74,11 +74,28 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
     return calendarCellKey("years", date.getFullYear());
   }
 
-  function focusCell() {
+  /**
+   * Frames to keep retrying the focus for. CuiPopover renders its panel with
+   * `visibility: hidden` until Floating UI has positioned it (#88) — and
+   * `focus()` on a `visibility: hidden` element is a silent no-op, so a single
+   * attempt lands nowhere and the arrow keys go to the input's caret instead.
+   * Whether it happens is a race with positioning, which is why it only
+   * misbehaved sometimes, and most often when opened from the keyboard.
+   */
+  const FOCUS_ATTEMPT_FRAMES = 10;
+
+  function focusCell(attempt = 0) {
     const key = currentKey();
-    nextTick(() => {
-      gridRef.value?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`)?.focus();
-    });
+    const tryFocus = () => {
+      const cell = gridRef.value?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`);
+      cell?.focus();
+      if (cell && document.activeElement !== cell && attempt < FOCUS_ATTEMPT_FRAMES) {
+        // Not focusable yet — still hidden, or not laid out. Try again next frame.
+        requestAnimationFrame(() => focusCell(attempt + 1));
+      }
+    };
+    if (attempt === 0) nextTick(tryFocus);
+    else tryFocus();
   }
 
   /** Point the grid at a date and focus it — call this when the panel opens. */
