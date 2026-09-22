@@ -3,7 +3,6 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { h } from "vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiButton from "../../components/CuiButton.vue";
-import preflight from "../../styles/preflight.css?inline";
 
 // Floating UI positions with `transform: translate()` by default. The panel
 // animates in with `transform: scale(...)` — and a CSS animation on `transform`
@@ -76,6 +75,25 @@ describe("floating panels do not flash at the top-left (real browser)", () => {
       expect(Math.abs(f.top - settled.top), `panel moved to top=${f.top}`).toBeLessThan(20);
       expect(Math.abs(f.left - settled.left), `panel moved to left=${f.left}`).toBeLessThan(20);
     }
+  });
+
+it("hides the unpositioned panel without making it unfocusable", async () => {
+    // The guard used to be `visibility: hidden`, and focus() on a
+    // visibility:hidden element is a silent no-op — so every consumer wanting
+    // to move focus into the panel on open was racing the positioning and
+    // losing intermittently (#112). `opacity: 0` hides it just as well and
+    // leaves it focusable, which is why the pickers need no retry loop.
+    await openPopover();
+    await frame();
+    await frame();
+
+    const panel = document.querySelector<HTMLElement>(".cui-popover__panel")!;
+    expect(getComputedStyle(panel).visibility).toBe("visible");
+
+    // ...and it really can take focus, first attempt.
+    panel.tabIndex = -1;
+    panel.focus();
+    expect(document.activeElement).toBe(panel);
   });
 
   it("positions through left/top, which an animated transform cannot displace", async () => {

@@ -6,7 +6,6 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import { focusWhenReady } from "../utils/focus";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
@@ -199,7 +198,7 @@ function onPanelKeydown(e: KeyboardEvent) {
   const next = current + (e.key === "ArrowRight" ? 1 : -1);
   // Stop at the ends rather than wrapping: hours and minutes read left to
   // right, and jumping from minutes back to hours mid-entry is disorienting.
-  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus();
+  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus({ preventScroll: true });
 }
 
 /**
@@ -209,19 +208,39 @@ function onPanelKeydown(e: KeyboardEvent) {
  * component in the document, never into the hours field.
  */
 function focusPanel() {
-  focusWhenReady(() => {
-    // Recomputed here rather than read from the cache: on the first frames the
-    // panel may not have rendered yet, so an empty result must not stick.
-    cachedFields = [];
-    return panelFields()[0];
-  });
+  // One attempt: CuiPopover hides its unpositioned panel with `opacity: 0`
+  // rather than `visibility: hidden` (#112), so the field is focusable as soon
+  // as it is rendered.
+  cachedFields = [];
+  panelFields()[0]?.focus({ preventScroll: true });
+}
+
+/**
+ * Hand focus back to the field when the panel closes — but only if it is ours
+ * to take.
+ *
+ * Closing is very often caused by clicking somewhere else, including another
+ * picker. Restoring unconditionally yanks focus out of whatever was just
+ * clicked: with two pickers on a page, opening the second left the focus ring
+ * on the first one's field.
+ *
+ * Two cases are ours. Focus still inside our own panel — the watcher runs
+ * before the DOM updates, so that is what Escape and a commit look like. Or
+ * focus already on `<body>`, meaning the close orphaned it and nobody else has
+ * claimed it. Anything else belongs to whatever the user just clicked.
+ */
+function restoreFocusToTrigger() {
+  const active = document.activeElement;
+  const ours = active === document.body || (!!active && !!panelEl.value?.contains(active));
+  if (!ours) return;
+  triggerEl.value?.focus({ preventScroll: true });
 }
 
 watch(popoverVisible, (open) => {
   // Closing must return focus to the trigger, or it falls to <body>.
   if (!open) {
     cachedFields = [];
-    triggerEl.value?.focus();
+    restoreFocusToTrigger();
     return;
   }
   parseTime(props.modelValue);

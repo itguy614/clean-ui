@@ -379,7 +379,9 @@ function onFocus() {
 defineExpose({
   el: inputRef,
   formattedValue,
-  focus: () => (inputRef.value as any)?.focus(),
+  // Forwards FocusOptions, as CuiInput.focus() and the native focus() both do —
+  // callers need { preventScroll } when restoring focus from an overlay (#112).
+  focus: (opts?: FocusOptions) => (inputRef.value as any)?.focus(opts),
   blur: () => (inputRef.value as any)?.blur(),
 });
 </script>
