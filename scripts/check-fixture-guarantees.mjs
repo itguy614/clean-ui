@@ -97,6 +97,39 @@ const GUARANTEES = [
     },
   },
   {
+    name: "@itguy614/clean-ui: no global reset in the built stylesheet (#72)",
+    check() {
+      const css = readBuiltAssets([".css"]);
+
+      // The fixture uses no Tailwind of its own, so anything resembling
+      // preflight in here came from the library. These two only ever appear in
+      // preflight's `html`/`:host` rule, which is the one rule that cannot be
+      // scoped — it *is* the host document.
+      const globalFingerprints = ["text-size-adjust", "tab-size:"];
+      const leaked = globalFingerprints.filter((marker) => css.includes(marker));
+      if (leaked.length > 0) {
+        return `found global reset declaration(s) in the built CSS: ${leaked.join(", ")}.`;
+      }
+
+      // Every box-sizing rule must be scoped to a cui-* subtree. This is the
+      // load-bearing half: preflight's `*, ::before, ::after { box-sizing }` is
+      // what silently restyled a consumer's own page, and it is the rule the
+      // components genuinely depend on, so it cannot simply be dropped — only
+      // scoped. An unscoped one means the blanket reset is back.
+      const unscoped = [];
+      for (const [, selector, declarations] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        if (declarations.includes("box-sizing") && !selector.includes("cui-")) {
+          unscoped.push(selector.trim().slice(0, 80));
+        }
+      }
+      if (unscoped.length > 0) {
+        return `found box-sizing applied outside a cui-* scope: ${unscoped.join(" | ")}.`;
+      }
+
+      return null;
+    },
+  },
+  {
     name: "vue: exactly one installed copy (single-instance dependency)",
     check() {
       const copies = findInstalledCopies(FIXTURE_NODE_MODULES, "vue");
