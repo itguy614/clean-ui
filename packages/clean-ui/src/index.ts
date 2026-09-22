@@ -167,7 +167,7 @@ export { useToast } from "./composables/useToast";
 export { useMessages } from "./composables/useMessages";
 export type { CuiConfigProviderProps } from "./components/CuiConfigProvider.vue";
 export { defaultMessages, mergeMessages } from "./messages";
-export type { CuiMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";
+export type { CuiMessages, CuiCoreMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";
 export type { CuiIconProps, IconWeight, IconSize } from "./components/CuiIcon.vue";
 export type { CuiTabsProps } from "./components/CuiTabs.vue";
 export type { CuiTabProps } from "./components/CuiTab.vue";

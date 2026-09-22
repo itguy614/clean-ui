@@ -1,17 +1,17 @@
 import { test, expectTypeOf } from "vitest";
-// Targets the BUILT declarations, not "./messages" source: declaration merging
-// is whole-program, so augmenting CuiMessageNamespaces from a file that shares
-// a program with messages.ts's own `defaultMessages` literal would make that
-// literal fail its own type check. A real satellite package never sees that
-// literal either — only this package's compiled .d.ts — so this fixture
-// mirrors real usage instead of the source layout. Requires `pnpm build` to
-// have run first (CI always builds before testing; see tsconfig.typecheck.json).
-import type { CuiMessages, DeepPartialMessages } from "../dist/messages";
+// Targets source. This used to have to target the BUILT declarations: because
+// declaration merging is whole-program, augmenting CuiMessageNamespaces from a
+// file sharing a program with messages.ts made that file's own
+// `defaultMessages` literal fail its own type check — the augmented CuiMessages
+// required a namespace this package cannot provide for itself. Splitting
+// CuiCoreMessages out (#107) removed that, so the fixture no longer needs a
+// `pnpm build` to have run first, and no longer asserts against a stale build.
+import type { CuiMessages, DeepPartialMessages } from "./messages";
 
 // Simulates a satellite package augmenting the catalog via declaration
 // merging. A real package targets the public specifier ("@itguy614/clean-ui");
-// here the module resolves to the same compiled file as the import above.
-declare module "../dist/messages" {
+// here the module resolves to the same file as the import above.
+declare module "./messages" {
   interface CuiMessageNamespaces {
     exampleSatellite: {
       greeting: string;

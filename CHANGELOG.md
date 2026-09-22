@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `CuiCoreMessages` is exported — the message keys this package itself ships, as distinct from `CuiMessages`, which is those plus whatever satellite packages have merged into `CuiMessageNamespaces` (#107)
+
+### Fixed
+- `defaultMessages` is typed `CuiCoreMessages` rather than `CuiMessages`. Declaration merging is whole-program, so once a satellite augmented `CuiMessageNamespaces`, the library's own defaults literal no longer satisfied its own annotation — the augmented interface required a namespace this package cannot provide for itself. That forced `messages.test-d.ts` to assert against the built `.d.ts` (and so against a stale build, needing `pnpm build` to have run first) and blocked `apps/editor-docs` from resolving clean-ui to source the way `apps/docs` does. Both are now fixed: the type test targets source, the whole clean-ui suite passes with no `dist` present at all, and `apps/editor-docs` type-checks against source like every other workspace app. The single widening lives in `mergeMessages`, which returns `CuiMessages` from a `CuiCoreMessages` base — sound because a satellite ships and merges its own namespace defaults (#107)
+
+### Added
 - `CuiContextMenu` can be reached without a right-click (#60). It could only be summoned by the native `contextmenu` event, and `positionAtCursor` was private, so a consumer wiring their own gesture had to dispatch a synthetic MouseEvent at a private code path. On touch that left context actions effectively unreachable; by keyboard they were unreachable outright
   - **`openAt(x, y)`** on the instance — open at viewport coordinates, for driving the menu from a kebab button or a list-row gesture. This is what the downstream workaround was faking
   - **Keyboard**: `Shift+F10` and the dedicated Menu key open the menu at the focused element, as the platform does. No opt-in, as long as the wrapped content contains something focusable
