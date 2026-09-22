@@ -38,6 +38,25 @@ function extractColorVars(cssBlock) {
   return vars;
 }
 
+/** Every top-level `selector { … }` rule in a flat stylesheet (no nesting). */
+function ruleBlocks(css) {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  return [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+    selector: m[1].trim(),
+    body: m[2],
+  }));
+}
+
+/**
+ * The audit is only meaningful if it found the palette it claims to be
+ * grading. A missing block used to degrade to an empty scale and a silent
+ * pass, so this throws instead.
+ */
+function requireBlock(block, what) {
+  if (!block) throw new Error(`check-contrast: could not find ${what} in themes.css`);
+  return block.body;
+}
+
 function buildScale(vars, prefix) {
   const scale = {};
   for (const [key, val] of Object.entries(vars)) {
@@ -57,10 +76,21 @@ function parseAllThemes() {
   const themeBlockMatch = themeCss.match(/@theme\s*\{([\s\S]*?)\}/);
   const defaultVars = themeBlockMatch ? extractColorVars(themeBlockMatch[1]) : {};
 
-  // The default (Navy) dark block: the selector list that targets the dark
-  // scoping root and nothing else — i.e. contains no theme class.
-  const defaultDarkMatch = themesCss.match(/^:root\.dark,\s*\n\.dark\s*\{([\s\S]*?)\}/m);
-  const defaultDarkVars = defaultDarkMatch ? extractColorVars(defaultDarkMatch[1]) : {};
+  // Classify by what the selector *says*, not by where it sits in the file.
+  // This used to key off the exact selector text and off a 120-character
+  // look-back for `.dark` — both of which broke the moment the selectors were
+  // reshaped (#121), silently yielding empty scales and a green audit that
+  // checked nothing.
+  const blocks = ruleBlocks(themesCss);
+  const isDark = (selector) => /(^|[\s,>~+])[^\s,>~+]*\.dark\b/.test(selector);
+  const themeClass = (selector, id) => selector.includes(`.cui-theme-${id}`);
+
+  const defaultDarkVars = extractColorVars(
+    requireBlock(
+      blocks.find((b) => isDark(b.selector) && !b.selector.includes(".cui-theme-")),
+      "the default (Navy) dark block",
+    ),
+  );
 
   const themes = [];
 
@@ -83,22 +113,14 @@ function parseAllThemes() {
   ];
 
   for (const cfg of themeConfigs) {
-    const allBlocks = [...themesCss.matchAll(new RegExp(`\\.cui-theme-${cfg.id}[^{]*\\{([\\s\\S]*?)\\}`, "g"))];
+    const own = blocks.filter((b) => themeClass(b.selector, cfg.id));
 
-    let lightBody = "";
-    let darkBody = "";
-
-    for (const match of allBlocks) {
-      const prefix = themesCss.slice(Math.max(0, match.index - 120), match.index);
-      if (prefix.includes(".dark")) {
-        if (!darkBody) darkBody = match[1];
-      } else {
-        if (!lightBody) lightBody = match[1];
-      }
-    }
-
-    const lightVars = extractColorVars(lightBody);
-    const darkVars = extractColorVars(darkBody);
+    const lightVars = extractColorVars(
+      requireBlock(own.find((b) => !isDark(b.selector)), `the ${cfg.name} light block`),
+    );
+    const darkVars = extractColorVars(
+      requireBlock(own.find((b) => isDark(b.selector)), `the ${cfg.name} dark block`),
+    );
 
     const theme = {
       id: cfg.id,
@@ -107,10 +129,6 @@ function parseAllThemes() {
       surface: buildScale(lightVars, "color-surface-"),
       darkSurface: buildScale(darkVars, "color-surface-"),
     };
-
-    if (Object.keys(theme.darkSurface).length === 0) {
-      theme.darkSurface = { ...themes[0].darkSurface };
-    }
 
     themes.push(theme);
   }

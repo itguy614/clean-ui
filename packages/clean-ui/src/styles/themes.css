@@ -14,19 +14,13 @@
 /* (Default theme keeps @theme values — only non-default themes override) */
 
 /* Dark mode surface tint for default (indigo) */
-/* Scoping root only rather than `:where(.dark, .dark *)` — see the note in
-   main.css, including why this needs `:root.dark` and not a bare
-   `:where(.dark)`. Declared on the scoping root, these inherit, so a subtree
-   can re-declare them (#121).
+/* Scoping root only, at a specificity that beats the `:root` light block — see
+   the note in main.css and "Color System" in CLAUDE.md (#121).
 
-   The three-selector form per theme is deliberate. `useTheme` puts the theme
-   class on `document.documentElement`, which is where the `dark` class normally
-   goes too — and with both on the SAME element neither of the old selectors
-   matched it: one needed the theme nested inside dark, the other needed dark
-   nested inside the theme. What actually matched was `.cui-theme-x :where(.dark *)`,
-   i.e. every descendant — which is why the themed element itself was getting the
-   LIGHT surface values while its children got the dark ones. The middle selector
-   covers the same-element case properly. */
+   Three selectors per theme, because `useTheme` puts the theme class on
+   `document.documentElement`, which is where `dark` normally goes too: the
+   middle one is the same-element case, and omitting it leaves the themed
+   element itself on the LIGHT values while its descendants go dark. */
 :root.dark,
 .dark {
   --color-surface-50:  oklch(0.983 0.008 270);
