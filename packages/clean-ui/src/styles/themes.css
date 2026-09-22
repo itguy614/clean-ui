@@ -14,7 +14,21 @@
 /* (Default theme keeps @theme values — only non-default themes override) */
 
 /* Dark mode surface tint for default (indigo) */
-:where(.dark, .dark *) {
+/* Scoping root only rather than `:where(.dark, .dark *)` — see the note in
+   main.css, including why this needs `:root.dark` and not a bare
+   `:where(.dark)`. Declared on the scoping root, these inherit, so a subtree
+   can re-declare them (#121).
+
+   The three-selector form per theme is deliberate. `useTheme` puts the theme
+   class on `document.documentElement`, which is where the `dark` class normally
+   goes too — and with both on the SAME element neither of the old selectors
+   matched it: one needed the theme nested inside dark, the other needed dark
+   nested inside the theme. What actually matched was `.cui-theme-x :where(.dark *)`,
+   i.e. every descendant — which is why the themed element itself was getting the
+   LIGHT surface values while its children got the dark ones. The middle selector
+   covers the same-element case properly. */
+:root.dark,
+.dark {
   --color-surface-50:  oklch(0.983 0.008 270);
   --color-surface-100: oklch(0.960 0.008 270);
   --color-surface-200: oklch(0.900 0.008 270);
@@ -56,8 +70,9 @@
   --color-surface-950: oklch(0.196 0.010 150);
 }
 
-:where(.dark, .dark *) .cui-theme-forest,
-.cui-theme-forest :where(.dark, .dark *) {
+.dark .cui-theme-forest,
+.cui-theme-forest.dark,
+.cui-theme-forest .dark {
   --color-surface-50:  oklch(0.983 0.006 150);
   --color-surface-100: oklch(0.960 0.006 150);
   --color-surface-200: oklch(0.900 0.008 150);
@@ -99,8 +114,9 @@
   --color-surface-950: oklch(0.196 0.015 60);
 }
 
-:where(.dark, .dark *) .cui-theme-amber,
-.cui-theme-amber :where(.dark, .dark *) {
+.dark .cui-theme-amber,
+.cui-theme-amber.dark,
+.cui-theme-amber .dark {
   --color-surface-50:  oklch(0.983 0.006 60);
   --color-surface-100: oklch(0.960 0.006 60);
   --color-surface-200: oklch(0.900 0.008 60);
@@ -142,8 +158,9 @@
   --color-surface-950: oklch(0.196 0.010 250);
 }
 
-:where(.dark, .dark *) .cui-theme-azure,
-.cui-theme-azure :where(.dark, .dark *) {
+.dark .cui-theme-azure,
+.cui-theme-azure.dark,
+.cui-theme-azure .dark {
   --color-surface-50:  oklch(0.983 0.006 250);
   --color-surface-100: oklch(0.960 0.006 250);
   --color-surface-200: oklch(0.900 0.008 250);
@@ -185,8 +202,9 @@
   --color-surface-950: oklch(0.196 0.010 210);
 }
 
-:where(.dark, .dark *) .cui-theme-teal,
-.cui-theme-teal :where(.dark, .dark *) {
+.dark .cui-theme-teal,
+.cui-theme-teal.dark,
+.cui-theme-teal .dark {
   --color-surface-50:  oklch(0.983 0.006 210);
   --color-surface-100: oklch(0.960 0.006 210);
   --color-surface-200: oklch(0.900 0.008 210);
@@ -228,8 +246,9 @@
   --color-surface-950: oklch(0.196 0.016 285);
 }
 
-:where(.dark, .dark *) .cui-theme-violet,
-.cui-theme-violet :where(.dark, .dark *) {
+.dark .cui-theme-violet,
+.cui-theme-violet.dark,
+.cui-theme-violet .dark {
   --color-surface-50:  oklch(0.983 0.008 285);
   --color-surface-100: oklch(0.960 0.008 285);
   --color-surface-200: oklch(0.900 0.010 285);
@@ -272,8 +291,9 @@
   --color-surface-950: oklch(0.196 0.010 25);
 }
 
-:where(.dark, .dark *) .cui-theme-ruby,
-.cui-theme-ruby :where(.dark, .dark *) {
+.dark .cui-theme-ruby,
+.cui-theme-ruby.dark,
+.cui-theme-ruby .dark {
   --color-surface-50:  oklch(0.983 0.006 25);
   --color-surface-100: oklch(0.960 0.006 25);
   --color-surface-200: oklch(0.900 0.008 25);
@@ -315,8 +335,9 @@
   --color-surface-950: oklch(0.196 0.002 270);
 }
 
-:where(.dark, .dark *) .cui-theme-mono,
-.cui-theme-mono :where(.dark, .dark *) {
+.dark .cui-theme-mono,
+.cui-theme-mono.dark,
+.cui-theme-mono .dark {
   --color-surface-50:  oklch(0.983 0.003 270);
   --color-surface-100: oklch(0.960 0.003 270);
   --color-surface-200: oklch(0.900 0.003 270);

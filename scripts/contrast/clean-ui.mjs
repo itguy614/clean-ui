@@ -57,7 +57,9 @@ function parseAllThemes() {
   const themeBlockMatch = themeCss.match(/@theme\s*\{([\s\S]*?)\}/);
   const defaultVars = themeBlockMatch ? extractColorVars(themeBlockMatch[1]) : {};
 
-  const defaultDarkMatch = themesCss.match(/^:where\(\.dark,\s*\.dark\s*\*\)\s*\{([\s\S]*?)\}/m);
+  // The default (Navy) dark block: the selector list that targets the dark
+  // scoping root and nothing else — i.e. contains no theme class.
+  const defaultDarkMatch = themesCss.match(/^:root\.dark,\s*\n\.dark\s*\{([\s\S]*?)\}/m);
   const defaultDarkVars = defaultDarkMatch ? extractColorVars(defaultDarkMatch[1]) : {};
 
   const themes = [];

@@ -161,7 +161,25 @@
    Same hue/saturation, adjusted lightness for dark backgrounds.
    ============================================================ */
 
-:where(.dark, .dark *) {
+/* Scoping root only, NOT `:where(.dark, .dark *)`. The blanket form declared
+   these on every element in the subtree, so custom-property inheritance could
+   not do its job: an ancestor re-declaring a token was overridden by the library
+   on each descendant individually, and a deliberately-light surface inside a
+   dark panel could only be themed by mirroring the library's own blanket
+   selector (#121). Declared on the scoping root, they inherit — and a subtree
+   can re-declare them.
+
+   `:root.dark, .dark` and not a bare `:where(.dark)`: the light slots above are
+   on `:root` (0,1,0), and `.dark` normally lands on <html>, the same element.
+   A zero-specificity `:where(.dark)` loses that tie and dark mode silently
+   renders light — the blanket form only ever worked here because `.dark *`
+   matched <body> and below, where `:root` cannot reach. `:root.dark` (0,2,0)
+   wins outright; the bare `.dark` covers a scoped subtree.
+
+   `&:where(.dark, .dark *)` stays on the `@custom-variant` above: a Tailwind
+   variant has to match the element itself, which is the case this form is for. */
+:root.dark,
+.dark {
   --cui-surface-base: var(--color-surface-900);
 
   /* Neutral color role — dark mode (intensity = contrast against the dark base) */
@@ -354,7 +372,8 @@
 }
 
 /* --- Dark mode text color overrides --- */
-:where(.dark, .dark *) {
+:root.dark,
+.dark {
   --cui-text-body: var(--color-surface-200);
   --cui-text-secondary: var(--color-surface-400);
   --cui-text-tertiary: var(--color-surface-500);
