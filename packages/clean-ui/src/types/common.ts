@@ -117,20 +117,25 @@ export interface FormControlProps extends DisableableProps {
  * `CuiFormField` supplies `id`, `ariaDescribedby` and `ariaLabelledby` through
  * its slot bindings, so `v-bind="f"` wires all of this up on its own.
  */
-export interface NativeControlProps {
-  /** id of the focusable element — what a `<label for>` has to point at. */
+export interface AriaLabelableProps {
+  /** id of the element — what a `<label for>` has to point at, where it can. */
   id?: string;
+  /** id(s) of the text describing this control — help text, error message. */
+  ariaDescribedby?: string;
+  /**
+   * id(s) of the element labelling this control.
+   *
+   * The only way to name something `<label for>` cannot reach: a group has no
+   * single control to point at, and `CuiSelect`'s trigger is a
+   * `div[role="combobox"]`, which is not a *labelable* element. `for`/`id`
+   * silently forms no association with either, so without this they are unnamed.
+   */
+  ariaLabelledby?: string;
+}
+
+export interface NativeControlProps extends AriaLabelableProps {
   /** Native control name, for form serialization and browser autofill. */
   name?: string;
   /** Native autocomplete hint, e.g. `"email"`, `"street-address"`, `"off"`. */
   autocomplete?: string;
-  /** id(s) of the text describing this control — help text, error message. */
-  ariaDescribedby?: string;
-  /**
-   * id(s) of the element labelling this control. Needed for controls whose
-   * focusable element is not a *labelable* one — `CuiSelect`'s trigger is a
-   * `div[role="combobox"]`, and `<label for>` only forms an association with
-   * labelable elements, so `for`/`id` alone leaves those controls unnamed.
-   */
-  ariaLabelledby?: string;
 }

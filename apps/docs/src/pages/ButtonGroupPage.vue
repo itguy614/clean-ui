@@ -30,6 +30,10 @@ import Example from "../components/Example.vue";
       <PropTable
         :props="[
           { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Layout direction' },
+          { name: 'label', type: 'string', default: '-', description: 'Accessible group name, used when there is no element to point aria-labelledby at' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the element naming this group. A label for attribute cannot point at a group; CuiFormField supplies this automatically' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text' },
+          { name: 'id', type: 'string', default: '-', description: 'id of the group container' },
         ]"
       />
     </div>

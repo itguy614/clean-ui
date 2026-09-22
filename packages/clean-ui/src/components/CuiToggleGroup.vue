@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import { ToggleGroupKey } from "./multi-select-group-context";
 
-export interface CuiToggleGroupProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiToggleGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
   /** Array of selected values */
   modelValue?: Array<string | number>;
   /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
@@ -72,7 +72,10 @@ provide(ToggleGroupKey, {
   <div
     v-show="!hidden"
     role="group"
-    :aria-label="label"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-toggle-group"
     :class="[

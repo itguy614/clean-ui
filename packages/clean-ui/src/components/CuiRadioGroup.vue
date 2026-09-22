@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
-export interface CuiRadioGroupProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiRadioGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value */
   modelValue?: string | number | boolean;
   /** Shared name attribute for all radios */
@@ -103,7 +103,10 @@ function onKeydown(e: KeyboardEvent) {
   <div
     v-show="!hidden"
     role="radiogroup"
-    :aria-label="label"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-radio-group"
     :class="[

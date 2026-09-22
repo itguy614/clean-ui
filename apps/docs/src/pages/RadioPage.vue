@@ -59,6 +59,9 @@ const dynamicField = ref({
           { name: 'errorMessage', type: 'string', default: '-', description: 'Error message below group' },
           { name: 'label', type: 'string', default: '-', description: 'Accessible group label (aria-label)' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
+          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the element naming this group. The only thing that can name it — a label for attribute cannot point at a group. CuiFormField supplies it automatically' },
+          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
+          { name: 'id', type: 'string', default: '-', description: 'id of the group container' },
         ]"
       />
     </div>
