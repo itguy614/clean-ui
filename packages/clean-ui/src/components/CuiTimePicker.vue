@@ -6,11 +6,11 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import type { HideableProps, DisableableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends HideableProps, DisableableProps {
+export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -145,18 +145,43 @@ function onApply() {
 
 // Open popover syncs from current value
 watch(popoverVisible, (open) => {
+  // Closing must return focus to the trigger, or it falls to <body>.
+  if (!open) triggerEl.value?.focus();
   if (open) parseTime(props.modelValue);
 });
 
 // Expose imperative handle — the trigger is a non-input div, so focus the root
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const triggerEl = useTemplateRef<HTMLElement>("triggerEl");
+
+/**
+ * The trigger was a bare `<div>` — no tabindex, no role — so the time picker
+ * could not be reached by keyboard at all, and there was nothing for a
+ * `<label for>` to resolve to either (#74, and the half of #103 this closes).
+ * Modelled on CuiSelect, which already gets this right: Enter, Space or Down
+ * opens, Escape closes and hands focus back.
+ */
+function onTriggerKeydown(e: KeyboardEvent) {
+  if (props.disabled) return;
+
+  if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+    e.preventDefault();
+    popoverVisible.value = true;
+    return;
+  }
+  if (e.key === "Escape" && popoverVisible.value) {
+    e.preventDefault();
+    popoverVisible.value = false;
+  }
+}
 
 function focus(opts?: FocusOptions) {
-  rootEl.value?.focus(opts);
+  // The trigger is what is focusable; the root is a plain wrapper.
+  (triggerEl.value ?? rootEl.value)?.focus(opts);
 }
 
 function blur() {
-  rootEl.value?.blur();
+  (triggerEl.value ?? rootEl.value)?.blur();
 }
 
 defineExpose({ el: rootEl, focus, blur });
@@ -185,7 +210,17 @@ defineExpose({ el: rootEl, focus, blur });
     >
       <!-- Trigger input -->
       <div
+        ref="triggerEl"
         class="cui-time-picker__trigger"
+        role="combobox"
+        aria-haspopup="dialog"
+        :aria-expanded="popoverVisible"
+        :aria-disabled="disabled || undefined"
+        :id="id"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
+        :tabindex="disabled ? -1 : 0"
+        @keydown="onTriggerKeydown"
         :style="{
           display: 'inline-flex',
           alignItems: 'center',

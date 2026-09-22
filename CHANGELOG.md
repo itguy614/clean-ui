@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The date and time pickers are operable from the keyboard (#74). `CuiDatePicker` and `CuiDateRangePicker` built their day/month/year grids from unfocusable `<div>`s with a click handler — no `tabindex`, no `role`, no `keydown` listener — so a date could only be picked with a pointer. `CuiTimePicker` had no focusable trigger at all
+  - Calendar grids: `←`/`→` a day, `↑`/`↓` a week, `Home`/`End` the ends of the week, `PageUp`/`PageDown` a month, `Shift` + those a year, `Enter`/`Space` to select, `Escape` to close. The month and year grids use the same keys in their own units. Moving past the edge of a month pages the calendar, so the focused cell is always one you can see
+  - Opening puts focus on the selected date (or today); closing returns it to the field. In `CuiDateRangePicker` the range preview follows the focused cell while picking the end, where it previously only followed the pointer
+  - Movement deliberately does not skip disabled dates: a calendar is a grid whose shape carries meaning, and holes in it make it impossible to navigate. Disabled cells are reachable and carry `aria-disabled`; selection is what refuses
+  - `role="grid"` / `role="gridcell"` with `aria-selected`, `aria-disabled` and per-cell labels, and a single roving tab stop
+  - `CuiTimePicker`'s trigger is now `role="combobox"` in the tab order, opening on `Enter`/`Space`/`↓` and closing on `Escape`. It therefore also takes `id` / `aria-labelledby` / `aria-describedby`, which #78 had to skip because there was nothing focusable to attach them to — closing that half of #103
+  - New `useCalendarKeyboard` composable holds the grid navigation, shared by both date pickers rather than written twice
+
+### Added
 - `CuiTreeView` is operable from the keyboard (#74). It had no keyboard handling of any kind — no `tabindex`, no `keydown` listener — so expand/collapse and selection were reachable only with a pointer, a WCAG 2.1.1 failure on the component's core interaction
   - A single tab stop with roving focus, per the ARIA tree pattern: one `Tab` reaches the tree however many nodes it holds. A `tabindex` per node would have added a tab stop per node, which is what that pattern exists to avoid
   - `↓`/`↑` move through visible nodes across depth boundaries; `→` expands a collapsed parent then steps into its first child; `←` collapses an expanded parent then steps out to the parent; `Home`/`End` jump to the ends; `Enter`/`Space` do exactly what a row click does; `*` expands every sibling at the current level; typing jumps by label prefix, accumulating for ~600ms so a multi-letter search continues rather than restarting. Disabled nodes are skipped throughout

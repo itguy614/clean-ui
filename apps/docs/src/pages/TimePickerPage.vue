@@ -49,6 +49,22 @@ const time4 = ref("02:00 PM");
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        The trigger is a <code class="cui-code">role="combobox"</code> in the tab order. It was
+        previously a plain <code class="cui-code">&lt;div&gt;</code>, so the picker could not be
+        reached by keyboard at all.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Enter / Space / Down', type: 'key', default: '-', description: 'Open the panel' },
+          { name: 'Escape', type: 'key', default: '-', description: 'Close the panel and return focus to the trigger' },
+          { name: 'Up / Down', type: 'key', default: '-', description: 'Once inside, the hour and minute steppers are native inputs and step with the arrow keys' },
+        ]"
+      />
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 

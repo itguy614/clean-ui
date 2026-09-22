@@ -63,6 +63,34 @@ const dateObj = ref<Date | null>(new Date());
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        The calendar is a grid with roving focus: opening the panel puts focus on the selected date
+        (or today), and closing it hands focus back to the field. Disabled dates are reachable and
+        announced &mdash; a calendar is a grid whose shape carries meaning, so movement never skips
+        cells; it is selection that refuses.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Left / Right', type: 'key', default: '-', description: 'Previous / next day. In the month and year grids, previous / next cell' },
+          { name: 'Up / Down', type: 'key', default: '-', description: 'Same weekday, previous / next week. One row in the month and year grids' },
+          { name: 'Home / End', type: 'key', default: '-', description: 'First / last day of the week. January / December, or the ends of the year range' },
+          { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Previous / next month. In the year grid, previous / next page of years' },
+          { name: 'Shift + PageUp / PageDown', type: 'key', default: '-', description: 'Previous / next year' },
+          { name: 'Enter / Space', type: 'key', default: '-', description: 'Select the focused cell' },
+          { name: 'Escape', type: 'key', default: '-', description: 'Close the panel and return focus to the field' },
+        ]"
+      />
+      <p class="mb-4 mt-6" style="color: var(--cui-text-secondary);">
+        Moving past the edge of a month pages the calendar, so the focused cell is always one you
+        can see. The grid carries <code class="cui-code">role="grid"</code> with
+        <code class="cui-code">role="gridcell"</code> cells,
+        <code class="cui-code">aria-selected</code> and
+        <code class="cui-code">aria-disabled</code>.
+      </p>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 
