@@ -283,6 +283,27 @@ watch(focusedDate, (date) => {
 });
 
 // Open resets
+/**
+ * Hand focus back to the field when the panel closes — but only if it is ours
+ * to take.
+ *
+ * Closing is very often caused by clicking somewhere else, including another
+ * picker. Restoring unconditionally yanks focus out of whatever was just
+ * clicked: with two pickers on a page, opening the second left the focus ring
+ * on the first one's field.
+ *
+ * Two cases are ours. Focus still inside our own panel — the watcher runs
+ * before the DOM updates, so that is what Escape and a commit look like. Or
+ * focus already on `<body>`, meaning the close orphaned it and nobody else has
+ * claimed it. Anything else belongs to whatever the user just clicked.
+ */
+function restoreFocusToTrigger() {
+  const active = document.activeElement;
+  const ours = active === document.body || (!!active && !!gridRef.value?.contains(active));
+  if (!ours) return;
+  startInputRef.value?.focus({ preventScroll: true });
+}
+
 watch(popoverVisible, (open) => {
   if (open) {
     viewMode.value = "days";
@@ -297,7 +318,7 @@ watch(popoverVisible, (open) => {
   } else {
     // Focus has to come back to the field, or closing the panel drops it on
     // <body> and a keyboard user loses their place in the form.
-    startInputRef.value?.focus({ preventScroll: true });
+    restoreFocusToTrigger();
   }
 });
 
