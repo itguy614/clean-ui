@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Group controls can be named (#103). `CuiRadioGroup`, `CuiCheckboxGroup`, `CuiToggleGroup`, `CuiButtonGroup` and `CuiDropdownRadioGroup` now accept `aria-labelledby`, `aria-describedby` and `id`. A `<label for>` cannot name a group — there is no single control to point at, and a container is not a *labelable* element, so the association was silently never formed. That is why #78 left them out. `CuiFormField` already renders its label and help/error text with ids, so `v-bind="f"` now names a group end to end
+  - `aria-label` is omitted when `aria-labelledby` is present: `aria-labelledby` wins anyway, and it points at text the user can actually see, so emitting both is noise
+  - `CuiDropdownRadioGroup` was `role="group"`; it holds radios, so it is now `role="radiogroup"`. It and `CuiButtonGroup` also gain a `label` prop, for use where there is no element to point at
+  - `AriaLabelableProps` is split out of `NativeControlProps` (which now extends it) and both are exported — `NativeControlProps` had not been exported at all since #78
+
 ### Fixed
 - A picker no longer steals the focus ring back when another one opens. Closing hands focus to the field, and closing is usually caused by clicking elsewhere — so with two pickers on a page, opening the second left the ring on the first one'''s field while the second one'''s panel was open. Focus is only reclaimed when it is the picker'''s to reclaim: still inside its own panel (what Escape and a commit look like, since the watcher runs before the DOM updates), or already on `<body>` because the close orphaned it (#112)
 - The date and time pickers no longer scroll the page when opened. Making the panel focusable (below) meant `focus()` started actually doing something, and focusing an element scrolls it into view — with the panel still at the origin, opening a picker part-way down a page yanked the page to the top. Every focus in the picker path now passes `{ preventScroll: true }`; the panel opens beside a trigger the user is already looking at, so there is nothing to scroll to. `CuiMaskedInput.focus()` forwards `FocusOptions` as `CuiInput.focus()` and the native method already did (#112)

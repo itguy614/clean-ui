@@ -119,6 +119,8 @@ export type {
   SizeableProps,
   DisableableProps,
   FormControlProps,
+  AriaLabelableProps,
+  NativeControlProps,
   LiveRegionMode,
   LiveRegionProps,
 } from "./types/common";

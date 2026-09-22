@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { provide, toRef, type Ref } from "vue";
 import { DropdownRadioKey } from "./dropdown-context";
+import type { AriaLabelableProps } from "../types/common";
 
-export interface CuiDropdownRadioGroupProps {
+export interface CuiDropdownRadioGroupProps extends AriaLabelableProps {
   /** Selected value */
   modelValue?: string | number;
+  /** Accessible group name, when no `aria-labelledby` target exists. */
+  label?: string;
 }
 
 const props = defineProps<CuiDropdownRadioGroupProps>();
@@ -22,7 +25,14 @@ provide(DropdownRadioKey, {
 </script>
 
 <template>
-  <div class="cui-dropdown-radio-group" role="group">
+  <div
+    class="cui-dropdown-radio-group"
+    role="radiogroup"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
+  >
     <slot />
   </div>
 </template>

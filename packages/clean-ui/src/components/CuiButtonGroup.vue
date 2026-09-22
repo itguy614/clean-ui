@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { HideableProps } from "../types/common";
+import type { HideableProps, AriaLabelableProps } from "../types/common";
 
 export type ButtonGroupOrientation = "horizontal" | "vertical";
 
-export interface CuiButtonGroupProps extends HideableProps {
+export interface CuiButtonGroupProps extends AriaLabelableProps, HideableProps {
+  /** Accessible group name, when no `aria-labelledby` target exists. */
+  label?: string;
   /** Layout direction */
   orientation?: ButtonGroupOrientation;
 }
@@ -20,6 +22,10 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
     class="cui-button-group"
     :class="`cui-button-group--${orientation}`"
     role="group"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
   >
     <slot />
   </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { CuiColor, CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { CuiColor, CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import { CheckboxGroupKey } from "./multi-select-group-context";
 
-export interface CuiCheckboxGroupProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiCheckboxGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
   /** Array of selected values */
   modelValue?: Array<string | number>;
   /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
@@ -73,7 +73,10 @@ provide(CheckboxGroupKey, {
   <div
     v-show="!hidden"
     role="group"
-    :aria-label="label"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-checkbox-group"
     :class="[
