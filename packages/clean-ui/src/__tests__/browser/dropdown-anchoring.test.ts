@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import CuiSelect from "../../components/CuiSelect.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
@@ -17,11 +17,6 @@ import preflight from "../../styles/preflight.css?inline";
 describe("dropdown anchoring near the viewport bottom (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 
-  beforeAll(() => {
-    const style = document.createElement("style");
-    style.textContent = `@layer theme, base, components, utilities;\n@layer base {\n${preflight}\n}`;
-    document.head.append(style);
-  });
 
   afterEach(() => {
     wrapper?.unmount();

@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
 import preflight from "../../styles/preflight.css?inline";
+import { frames } from "./helpers";
 
 /**
  * #74 — opening the time picker has to put focus inside the panel.
@@ -20,20 +21,12 @@ import preflight from "../../styles/preflight.css?inline";
 describe("CuiTimePicker focus hand-off (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 
-  beforeAll(() => {
-    const style = document.createElement("style");
-    style.textContent = `@layer theme, base, components, utilities;\n@layer base { ${preflight} }`;
-    document.head.append(style);
-  });
 
   afterEach(() => {
     wrapper?.unmount();
     wrapper = undefined;
   });
 
-  const frames = async (n: number) => {
-    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(() => r(null)));
-  };
 
   function mountPicker(props: Record<string, unknown> = {}) {
     wrapper = mount(CuiTimePicker, {

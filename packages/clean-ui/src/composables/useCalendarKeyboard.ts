@@ -1,4 +1,6 @@
-import { ref, nextTick, type Ref } from "vue";
+import { ref, computed, nextTick, type Ref } from "vue";
+import { addDays, addMonths, addYears, yearPageStart, YEARS_PER_PAGE } from "../utils/date";
+import { focusWhenReady } from "../utils/focus";
 
 export type CalendarViewMode = "days" | "months" | "years";
 
@@ -12,19 +14,16 @@ export interface UseCalendarKeyboardOptions {
   selectDay: (date: Date) => void;
   selectMonth: (month: number) => void;
   selectYear: (year: number) => void;
+  /** Open the panel. */
+  open: () => void;
   /** Close the panel and hand focus back to the trigger. */
   close: () => void;
+  /** Whether the control is currently disabled. */
+  isDisabled?: () => boolean;
 }
 
 /** Columns per row, per grid — arrow-up/down moves by exactly one row. */
 const COLUMNS: Record<CalendarViewMode, number> = { days: 7, months: 3, years: 3 };
-
-const addDays = (date: Date, days: number) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-const addMonths = (date: Date, months: number) =>
-  new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
-const addYears = (date: Date, years: number) =>
-  new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
 
 /** Stable key for a cell, so focus can be restored to it after a re-render. */
 export function calendarCellKey(mode: CalendarViewMode, value: Date | number): string {
@@ -52,8 +51,9 @@ export function calendarCellKey(mode: CalendarViewMode, value: Date | number): s
  * announced via `aria-disabled`; it is *selection* that refuses.
  */
 export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
-  const { viewMode, viewYear, viewMonth, selectDay, selectMonth, selectYear, close } = options;
-  const yearsPerPage = options.yearsPerPage ?? 12;
+  const { viewMode, viewYear, viewMonth, selectDay, selectMonth, selectYear, open, close } = options;
+  const yearsPerPage = options.yearsPerPage ?? YEARS_PER_PAGE;
+  const isDisabled = options.isDisabled ?? (() => false);
 
   const gridRef = ref<HTMLElement | null>(null);
   const focusedDate = ref<Date>(new Date());
@@ -67,42 +67,27 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
     viewYear.value = date.getFullYear();
   }
 
-  function currentKey(): string {
+  /**
+   * The focused cell's key, as one string. Cells compare their own key against
+   * it, which is a single string compare per cell instead of three Date getters
+   * — and the grid re-renders on every arrow press, so that ran ~250 times a
+   * keystroke before.
+   */
+  const focusedKey = computed(() => {
     const date = focusedDate.value;
     if (viewMode.value === "days") return calendarCellKey("days", date);
     if (viewMode.value === "months") return calendarCellKey("months", date.getMonth());
     return calendarCellKey("years", date.getFullYear());
-  }
+  });
 
-  /**
-   * Frames to keep retrying the focus for. CuiPopover renders its panel with
-   * `visibility: hidden` until Floating UI has positioned it (#88) — and
-   * `focus()` on a `visibility: hidden` element is a silent no-op, so a single
-   * attempt lands nowhere and the arrow keys go to the input's caret instead.
-   * Whether it happens is a race with positioning, which is why it only
-   * misbehaved sometimes, and most often when opened from the keyboard.
-   */
-  const FOCUS_ATTEMPT_FRAMES = 10;
+  /** Roving tabindex: only the focused cell is in the tab order. */
+  const cellTabIndex = (key: string) => (key === focusedKey.value ? 0 : -1);
 
-  function focusCell(attempt = 0) {
-    const key = currentKey();
-    const tryFocus = () => {
-      const cell = gridRef.value?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`);
-      cell?.focus();
-      if (cell && document.activeElement !== cell && attempt < FOCUS_ATTEMPT_FRAMES) {
-        // Not focusable yet — still hidden, or not laid out. Try again next frame.
-        requestAnimationFrame(() => focusCell(attempt + 1));
-      }
-    };
-    if (attempt === 0) nextTick(tryFocus);
-    else tryFocus();
-  }
-
-  /** Point the grid at a date and focus it — call this when the panel opens. */
-  function resetFocus(date: Date = new Date()) {
-    focusedDate.value = date;
-    syncViewToFocus();
-    focusCell();
+  function focusCell() {
+    const key = focusedKey.value;
+    nextTick(() => {
+      focusWhenReady(() => gridRef.value?.querySelector<HTMLElement>(`[data-cui-cell="${key}"]`));
+    });
   }
 
   function moveTo(date: Date) {
@@ -110,6 +95,9 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
     syncViewToFocus();
     focusCell();
   }
+
+  /** Point the grid at a date and focus it — call this when the panel opens. */
+  const resetFocus = (date: Date = new Date()) => moveTo(date);
 
   function onGridKeydown(e: KeyboardEvent) {
     const mode = viewMode.value;
@@ -137,24 +125,17 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
         moveTo(step(columns));
         break;
       case "Home":
+      case "End": {
         e.preventDefault();
-        if (mode === "days") moveTo(addDays(date, -date.getDay()));
-        else if (mode === "months") moveTo(new Date(date.getFullYear(), 0, 1));
-        else moveTo(new Date(Math.floor(date.getFullYear() / yearsPerPage) * yearsPerPage, date.getMonth(), 1));
+        const toEnd = e.key === "End";
+        if (mode === "days") moveTo(addDays(date, toEnd ? 6 - date.getDay() : -date.getDay()));
+        else if (mode === "months") moveTo(new Date(date.getFullYear(), toEnd ? 11 : 0, 1));
+        else {
+          const pageStart = yearPageStart(date.getFullYear(), yearsPerPage);
+          moveTo(new Date(toEnd ? pageStart + yearsPerPage - 1 : pageStart, date.getMonth(), 1));
+        }
         break;
-      case "End":
-        e.preventDefault();
-        if (mode === "days") moveTo(addDays(date, 6 - date.getDay()));
-        else if (mode === "months") moveTo(new Date(date.getFullYear(), 11, 1));
-        else
-          moveTo(
-            new Date(
-              Math.floor(date.getFullYear() / yearsPerPage) * yearsPerPage + yearsPerPage - 1,
-              date.getMonth(),
-              1,
-            ),
-          );
-        break;
+      }
       case "PageUp":
         e.preventDefault();
         // Shift makes it a year instead of a month, matching every native picker.
@@ -180,26 +161,31 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
     }
   }
 
-  const isFocusedDay = (date: Date) =>
-    viewMode.value === "days" &&
-    date.getFullYear() === focusedDate.value.getFullYear() &&
-    date.getMonth() === focusedDate.value.getMonth() &&
-    date.getDate() === focusedDate.value.getDate();
-
-  const isFocusedMonth = (month: number) =>
-    viewMode.value === "months" && month === focusedDate.value.getMonth();
-
-  const isFocusedYear = (year: number) =>
-    viewMode.value === "years" && year === focusedDate.value.getFullYear();
+  /**
+   * Opening the calendar from the field. CuiPopover's only open path is a click,
+   * so without this the grid navigation above is unreachable: a keyboard user
+   * can tab to the field and type a date, but never see the calendar.
+   *
+   * `ArrowDown` is the convention for a date field and for comboboxes generally.
+   * Enter is deliberately not bound — in a form it submits, and the field
+   * accepts typed input, so stealing it would be worse than useless.
+   */
+  function onFieldKeydown(e: KeyboardEvent) {
+    if (isDisabled()) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      open();
+    }
+  }
 
   return {
     gridRef,
     focusedDate,
+    focusedKey,
+    cellTabIndex,
     onGridKeydown,
+    onFieldKeydown,
     resetFocus,
     focusCell,
-    isFocusedDay,
-    isFocusedMonth,
-    isFocusedYear,
   };
 }

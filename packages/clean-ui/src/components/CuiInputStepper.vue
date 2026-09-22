@@ -50,6 +50,14 @@ const canIncrement = computed(() => props.wrap || props.max === undefined || pro
  * +/- buttons or retyping it — which is also why CuiTimePicker was unusable
  * from the keyboard once its panel was open.
  */
+/** Round off float drift, then hold the value inside [min, max]. */
+function clampValue(value: number): number {
+  let next = Math.round(value * 1e10) / 1e10;
+  if (props.max !== undefined) next = Math.min(next, props.max);
+  if (props.min !== undefined) next = Math.max(next, props.min);
+  return next;
+}
+
 function onKeydown(e: KeyboardEvent) {
   if (props.disabled) return;
 
@@ -70,9 +78,7 @@ function onKeydown(e: KeyboardEvent) {
       // parent writes it back, and ten calls would all emit the same +1.
       e.preventDefault();
       const delta = props.step * 10 * (e.key === "PageUp" ? 1 : -1);
-      let next = Math.round((props.modelValue + delta) * 1e10) / 1e10;
-      if (props.max !== undefined) next = Math.min(next, props.max);
-      if (props.min !== undefined) next = Math.max(next, props.min);
+      const next = clampValue(props.modelValue + delta);
       if (next !== props.modelValue) emit("update:modelValue", next);
       break;
     }

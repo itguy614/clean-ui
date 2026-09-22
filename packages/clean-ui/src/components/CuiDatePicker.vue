@@ -125,7 +125,10 @@ function isDisabled(date: Date): boolean {
 
 // --- Day grid ---
 const calendarDays = computed(() => {
-  const days: { date: Date; inMonth: boolean; disabled: boolean }[] = [];
+  // `key` is built once per month here rather than in the template: the grid
+  // re-renders on every arrow press, so a template-literal per cell meant 42
+  // string allocations per keystroke for a value that only changes per month.
+  const days: { date: Date; inMonth: boolean; disabled: boolean; key: string }[] = [];
   const totalDays = daysInMonth(viewYear.value, viewMonth.value);
   const startDay = firstDayOfMonth(viewYear.value, viewMonth.value);
 
@@ -135,13 +138,13 @@ const calendarDays = computed(() => {
   const prevDays = daysInMonth(prevYear, prevMonth);
   for (let i = startDay - 1; i >= 0; i--) {
     const d = new Date(prevYear, prevMonth, prevDays - i);
-    days.push({ date: d, inMonth: false, disabled: isDisabled(d) });
+    days.push({ date: d, inMonth: false, disabled: isDisabled(d), key: calendarCellKey("days", d) });
   }
 
   // Current month
   for (let i = 1; i <= totalDays; i++) {
     const d = new Date(viewYear.value, viewMonth.value, i);
-    days.push({ date: d, inMonth: true, disabled: isDisabled(d) });
+    days.push({ date: d, inMonth: true, disabled: isDisabled(d), key: calendarCellKey("days", d) });
   }
 
   // Next month fill (to complete 6 rows)
@@ -150,7 +153,7 @@ const calendarDays = computed(() => {
   const nextYear = viewMonth.value === 11 ? viewYear.value + 1 : viewYear.value;
   for (let i = 1; i <= remaining; i++) {
     const d = new Date(nextYear, nextMonth, i);
-    days.push({ date: d, inMonth: false, disabled: isDisabled(d) });
+    days.push({ date: d, inMonth: false, disabled: isDisabled(d), key: calendarCellKey("days", d) });
   }
 
   return days;
@@ -196,33 +199,16 @@ const yearRange = computed(() => Array.from({ length: 12 }, (_, i) => yearRangeS
 function prevYearRange() { viewYear.value -= 12; }
 function nextYearRange() { viewYear.value += 12; }
 
-/**
- * Opening the calendar from the keyboard. CuiPopover's only open path is a
- * click, so without this the grid navigation below is unreachable: a keyboard
- * user can tab to the field and type a date, but can never see the calendar.
- *
- * `ArrowDown` (and `Alt+ArrowDown`) is the convention for a date field and for
- * comboboxes generally. Enter is deliberately not bound — in a form it submits,
- * and the field accepts typed input, so stealing it would be worse than useless.
- */
-function onFieldKeydown(e: KeyboardEvent) {
-  if (props.disabled) return;
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    popoverVisible.value = true;
-  }
-}
-
 // --- Keyboard (#74) ---
 // The grids were unfocusable <div>s with a click handler, so a date could only
 // be picked with a pointer. Navigation is shared with CuiDateRangePicker.
 const {
   gridRef,
+  focusedKey,
+  cellTabIndex,
   onGridKeydown,
+  onFieldKeydown,
   resetFocus,
-  isFocusedDay,
-  isFocusedMonth,
-  isFocusedYear,
 } = useCalendarKeyboard({
   viewMode,
   viewYear,
@@ -230,11 +216,11 @@ const {
   selectDay: (date) => selectDay({ date, disabled: isDisabled(date) }),
   selectMonth,
   selectYear,
+  open: () => { popoverVisible.value = true; },
+  isDisabled: () => props.disabled,
   close: () => { popoverVisible.value = false; },
 });
 
-/** A cell is in the tab order only while it is the one the arrows are on. */
-const cellTabIndex = (focused: boolean) => (focused ? 0 : -1);
 
 // Header click handlers
 function onMonthHeaderClick() { viewMode.value = "months"; }
@@ -441,8 +427,8 @@ watch(popoverVisible, (open) => {
                 v-for="(day, i) in calendarDays"
                 :key="i"
                 role="gridcell"
-                :data-cui-cell="calendarCellKey('days', day.date)"
-                :tabindex="cellTabIndex(isFocusedDay(day.date))"
+                :data-cui-cell="day.key"
+                :tabindex="cellTabIndex(day.key)"
                 :aria-selected="selectedDate ? day.date.toDateString() === selectedDate.toDateString() : false"
                 :aria-disabled="day.disabled || undefined"
                 :aria-label="day.date.toDateString()"
@@ -488,7 +474,7 @@ watch(popoverVisible, (open) => {
                 :key="i"
                 role="gridcell"
                 :data-cui-cell="calendarCellKey('months', i)"
-                :tabindex="cellTabIndex(isFocusedMonth(i))"
+                :tabindex="cellTabIndex(calendarCellKey('months', i))"
                 :aria-label="MONTH_NAMES[i] + ' ' + viewYear"
                 :style="{
                   padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
@@ -534,7 +520,7 @@ watch(popoverVisible, (open) => {
                 :key="year"
                 role="gridcell"
                 :data-cui-cell="calendarCellKey('years', year)"
-                :tabindex="cellTabIndex(isFocusedYear(year))"
+                :tabindex="cellTabIndex(calendarCellKey('years', year))"
                 :aria-label="String(year)"
                 :style="{
                   padding: 'calc(0.5rem * var(--cui-density-scale, 1))',

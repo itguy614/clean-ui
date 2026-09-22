@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
-import preflight from "../../styles/preflight.css?inline";
+import { describe, it, expect, afterEach, beforeAll } from "vitest";
 
 // #72 — the library used to ship Tailwind's preflight, a page-wide reset, in
 // `dist/clean-ui.css`. `styles/preflight.css` replaces it with the same rules
@@ -13,17 +12,11 @@ import preflight from "../../styles/preflight.css?inline";
 // the host page keeps its UA defaults, and the library's own subtree still gets
 // everything its components assume.
 describe("scoped preflight (real browser, no host reset)", () => {
+
   beforeAll(() => {
-    const style = document.createElement("style");
-    // Mirror how the stylesheet actually ships: the reset lives in `@layer base`,
-    // under the same layer order main.css declares. Injecting it unlayered would
-    // make the tests pass while the shipped file behaves differently — an
-    // unlayered rule outranks every layered one, so an unlayered reset silently
-    // beats a consumer's `@layer utilities`.
-    style.textContent = `@layer theme, base, components, utilities;\n@layer base {\n${preflight}\n}`;
-    document.head.append(style);
     // A font the UA would never pick for a form control on its own, so
-    // `font: inherit` is unambiguous when we look for it below.
+    // `font: inherit` is unambiguous when we look for it below. (The scoped
+    // base itself now comes from the shared browser setup.)
     document.body.style.fontFamily = '"Courier New"';
   });
 

@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
 import preflight from "../../styles/preflight.css?inline";
+import { frames } from "./helpers";
 
 /**
  * #74 — opening the calendar has to actually move focus into the grid.
@@ -17,11 +18,6 @@ import preflight from "../../styles/preflight.css?inline";
 describe("CuiDatePicker focus hand-off (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 
-  beforeAll(() => {
-    const style = document.createElement("style");
-    style.textContent = `@layer theme, base, components, utilities;\n@layer base { ${preflight} }`;
-    document.head.append(style);
-  });
 
   afterEach(() => {
     wrapper?.unmount();
@@ -36,9 +32,6 @@ describe("CuiDatePicker focus hand-off (real browser)", () => {
     return wrapper;
   }
 
-  const frames = async (n: number) => {
-    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(() => r(null)));
-  };
   const focusedCell = () => (document.activeElement as HTMLElement | null)?.dataset.cuiCell;
 
   it("moves focus into the grid when opened from the keyboard", async () => {

@@ -6,6 +6,7 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { focusWhenReady } from "../utils/focus";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
@@ -151,18 +152,17 @@ const panelEl = useTemplateRef<HTMLElement>("panelEl");
  * until Floating UI positions it (#88), and `focus()` on a hidden element is a
  * silent no-op — the same race the calendar hit.
  */
-const FOCUS_ATTEMPT_FRAMES = 10;
-
 /**
- * Move focus into the panel when it opens. The panel is teleported to <body>,
- * so it is nowhere near the trigger in tab order — without this, opening the
- * picker left focus on the trigger and Tab went off to whatever follows the
- * component in the document, never into the hours field. The panel was
- * effectively keyboard-only-openable and nothing more.
+ * The fields a user moves between: hours, minutes, and AM/PM when shown.
+ * Cached while the panel is open — the set only changes when `format` flips
+ * between 12 and 24, so re-querying on every arrow keypress is wasted work.
  */
-/** The fields a user moves between: hours, minutes, and AM/PM when shown. */
+let cachedFields: HTMLElement[] = [];
 function panelFields(): HTMLElement[] {
-  return [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+  if (cachedFields.length === 0) {
+    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+  }
+  return cachedFields;
 }
 
 /**
@@ -202,22 +202,30 @@ function onPanelKeydown(e: KeyboardEvent) {
   fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus();
 }
 
-function focusPanel(attempt = 0) {
-  const first = panelEl.value?.querySelector<HTMLElement>("input, [tabindex]:not([tabindex='-1'])");
-  first?.focus();
-  if (first && document.activeElement !== first && attempt < FOCUS_ATTEMPT_FRAMES) {
-    requestAnimationFrame(() => focusPanel(attempt + 1));
-  }
+/**
+ * Move focus into the panel when it opens. The panel is teleported to <body>,
+ * so it is nowhere near the trigger in tab order — without this, opening the
+ * picker left focus on the trigger and Tab went off to whatever follows the
+ * component in the document, never into the hours field.
+ */
+function focusPanel() {
+  focusWhenReady(() => {
+    // Recomputed here rather than read from the cache: on the first frames the
+    // panel may not have rendered yet, so an empty result must not stick.
+    cachedFields = [];
+    return panelFields()[0];
+  });
 }
 
 watch(popoverVisible, (open) => {
   // Closing must return focus to the trigger, or it falls to <body>.
   if (!open) {
+    cachedFields = [];
     triggerEl.value?.focus();
     return;
   }
+  parseTime(props.modelValue);
   nextTick(() => focusPanel());
-  if (open) parseTime(props.modelValue);
 });
 
 // Expose imperative handle — the trigger is a non-input div, so focus the root
