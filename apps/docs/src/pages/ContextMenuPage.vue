@@ -10,15 +10,26 @@ import {
   CuiDropdownCheckItem,
   CuiIcon,
   CuiStack,
+  CuiButton,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import EventTable from "../components/EventTable.vue";
+import MethodTable from "../components/MethodTable.vue";
 import Example from "../components/Example.vue";
 
 const lastAction = ref("(right-click the area above)");
 
 const bold = ref(false);
 const italic = ref(false);
+
+// Touch / keyboard reachability demo
+const touchMenu = ref<InstanceType<typeof CuiContextMenu> | null>(null);
+const touchAction = ref("(hold the row, press Shift+F10 on it, or use the button)");
+
+function openFromButton(e: MouseEvent) {
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  touchMenu.value?.openAt(rect.left, rect.bottom);
+}
 </script>
 
 <template>
@@ -38,6 +49,9 @@ const italic = ref(false);
         :props="[
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevents the context menu from opening' },
           { name: 'minWidth', type: 'string', default: '12rem', description: 'Minimum width of the menu panel' },
+          { name: 'trigger', type: 'contextmenu | longpress | auto', default: 'contextmenu', description: 'Which gestures open the menu. auto is both: the native event for mouse and pen, a hold for touch' },
+          { name: 'longPressDelay', type: 'number', default: '500', description: 'How long a touch must be held before the menu opens, in ms' },
+          { name: 'longPressTolerance', type: 'number', default: '10', description: 'Movement that cancels a hold, in px. A drag or a scroll is not a press' },
           { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
         ]"
       />
@@ -58,13 +72,100 @@ const italic = ref(false);
       <EventTable
         :events="[
           { name: 'select', payload: '\u2014', description: 'Fires when a menu item is selected' },
+          { name: 'open', payload: 'x: number, y: number', description: 'Fires when the menu opens, with the viewport coordinates it opened at' },
+          { name: 'close', payload: '\u2014', description: 'Fires when the menu closes' },
         ]"
       />
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Methods</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">Reached through a template ref.</p>
+      <MethodTable
+        :methods="[
+          { name: 'openAt', signature: '(x, y) => void', description: 'Open the menu at viewport coordinates, for driving it from your own gesture such as a kebab button or a long press on a list row' },
+          { name: 'open', signature: '() => void', description: 'Open at the last position used' },
+          { name: 'close', signature: '() => void', description: 'Close the menu' },
+          { name: 'isOpen', signature: 'boolean', description: 'Whether the menu is currently open' },
+        ]"
+      />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Reaching it without a right-click</h2>
+      <p class="mb-4" style="color: var(--cui-text-secondary);">
+        A native <code class="cui-code">contextmenu</code> event is the default trigger, but it is
+        not reachable on touch, and not reachable at all from the keyboard. Three routes cover the
+        rest.
+      </p>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="3">
+            <div>
+              <strong>Keyboard</strong> &mdash; <code class="cui-code">Shift+F10</code> and the
+              dedicated Menu key open the menu at the focused element, as the platform does. This
+              works with no opt-in, as long as the wrapped content contains something focusable.
+            </div>
+            <div>
+              <strong>Long press</strong> &mdash; set <code class="cui-code">trigger</code> to
+              <code class="cui-code">auto</code>. It is opt-in because suppressing the iOS callout
+              and native text selection has to be in place before the gesture starts, so it cannot
+              be switched on mid-hold: enabling it makes the wrapped content unselectable by touch.
+              Use it on rows and tiles, not on prose.
+            </div>
+            <div>
+              <strong>Your own affordance</strong> &mdash; call
+              <code class="cui-code">openAt(x, y)</code> from a visible kebab button, positioned with
+              its <code class="cui-code">getBoundingClientRect()</code>. That turns a hidden gesture
+              into a discoverable control.
+            </div>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
+
+        <!-- Touch and keyboard -->
+        <Example title="Touch, keyboard, and your own button" :code="`&lt;CuiContextMenu ref=&quot;menu&quot; trigger=&quot;auto&quot;&gt;
+  &lt;div tabindex=&quot;0&quot;&gt;Hold me, or focus me and press Shift+F10&lt;/div&gt;
+  &lt;template #menu&gt; ... &lt;/template&gt;
+&lt;/CuiContextMenu&gt;
+
+&lt;!-- or drive it from a visible affordance --&gt;
+&lt;CuiButton @click=&quot;openFromButton&quot;&gt;Actions&lt;/CuiButton&gt;
+
+function openFromButton(e) {
+  const rect = e.currentTarget.getBoundingClientRect()
+  menu.value.openAt(rect.left, rect.bottom)
+}`">
+          <CuiStack spacing="3">
+            <CuiContextMenu ref="touchMenu" trigger="auto">
+              <div
+                tabindex="0"
+                style="padding: 1.5rem; border: 1px solid var(--cui-border); border-radius: 0.375rem; cursor: pointer;"
+              >
+                Right-click, hold (touch), or focus and press Shift+F10
+              </div>
+              <template #menu>
+                <CuiDropdownItem @click="touchAction = 'Renamed'">Rename</CuiDropdownItem>
+                <CuiDropdownItem @click="touchAction = 'Duplicated'">Duplicate</CuiDropdownItem>
+                <CuiDropdownDivider />
+                <CuiDropdownItem color="error" @click="touchAction = 'Deleted'">Delete</CuiDropdownItem>
+              </template>
+            </CuiContextMenu>
+
+            <div>
+              <CuiButton size="sm" @click="openFromButton">Actions</CuiButton>
+            </div>
+
+            <div class="text-sm" style="color: var(--cui-text-secondary);">
+              Last action: <code class="cui-code">{{ touchAction }}</code>
+            </div>
+          </CuiStack>
+        </Example>
 
         <!-- Basic -->
         <Example title="Basic Context Menu" :code="`<CuiContextMenu>

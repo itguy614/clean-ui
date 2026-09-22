@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `CuiContextMenu` can be reached without a right-click (#60). It could only be summoned by the native `contextmenu` event, and `positionAtCursor` was private, so a consumer wiring their own gesture had to dispatch a synthetic MouseEvent at a private code path. On touch that left context actions effectively unreachable; by keyboard they were unreachable outright
+  - **`openAt(x, y)`** on the instance — open at viewport coordinates, for driving the menu from a kebab button or a list-row gesture. This is what the downstream workaround was faking
+  - **Keyboard**: `Shift+F10` and the dedicated Menu key open the menu at the focused element, as the platform does. No opt-in, as long as the wrapped content contains something focusable
+  - **Long press**: `trigger="longpress"` or `trigger="auto"` (the native event for mouse and pen, a hold for touch), with `longPressDelay` (500ms) and `longPressTolerance` (10px, so a drag or scroll is not a press). It is **opt-in** because suppressing the iOS callout and native text selection has to be in place *before* the gesture starts — it cannot be switched on mid-hold — so enabling it makes the wrapped content unselectable by touch. The default stays `contextmenu`, unchanged for every existing consumer
+  - The hold swallows the `click` and the `contextmenu` the platform synthesises from the same press, so a long press neither activates what is underneath nor opens the menu twice on Android
+  - New `open` (with coordinates) and `close` events
+
+### Added
 - New `NativeControlProps` mixin in `types/common.ts` — `id`, `name`, `autocomplete`, `ariaDescribedby`, `ariaLabelledby`. Every single-value form control now extends it and binds the attributes to its own focusable element (#78)
 - `CuiFormField` renders its label and its help/error text with ids, and passes `ariaLabelledby` / `ariaDescribedby` through its slot bindings. `aria-describedby` is omitted when the field renders neither help text nor an error, since a reference to an element that isn't there is worse than none (#78)
 - `CuiTreeView` exposes its expansion state. It owned it privately before — no `v-model:expanded`, no `defineExpose`, and `defaultExpanded` read once during setup — so a consumer could observe expansion through `@node-expand` but could not cause it, and "expand all", "reveal a search hit" and restore-after-reload all required synthesising a click on the chevron element through the DOM (#94)
