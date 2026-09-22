@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `CuiPopover` and `CuiTooltip` hide their not-yet-positioned panel with `opacity: 0` instead of `visibility: hidden` (#112). `focus()` on a `visibility: hidden` element is a silent no-op, so any consumer moving focus into a panel on open was racing Floating UI's positioning and losing intermittently — which is why the date and time pickers each grew a `requestAnimationFrame` retry loop. Both loops and their shared helper are deleted; one `focus()` now works. The suppression also covers `animation`, which is load-bearing rather than tidiness: a CSS animation overrides inline styles, and both panels animate `opacity` from 0, so `opacity: 0` alone would have been overridden the moment the scale-in started and reintroduced the flash #88 fixed. Withholding it also means the animation plays from the final position rather than starting mid-move
+
 ### Added
 - The date and time pickers are operable from the keyboard (#74). `CuiDatePicker` and `CuiDateRangePicker` built their day/month/year grids from unfocusable `<div>`s with a click handler — no `tabindex`, no `role`, no `keydown` listener — so a date could only be picked with a pointer. `CuiTimePicker` had no focusable trigger at all
   - `↓` on the field opens the calendar. CuiPopover only opens on a click, so without this the grid navigation below was unreachable — a keyboard user could type a date but never see the calendar. `Enter` is deliberately not bound: in a form it submits, and the field accepts typed input

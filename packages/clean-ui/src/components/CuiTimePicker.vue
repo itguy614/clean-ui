@@ -6,7 +6,6 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import { focusWhenReady } from "../utils/focus";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
@@ -209,12 +208,11 @@ function onPanelKeydown(e: KeyboardEvent) {
  * component in the document, never into the hours field.
  */
 function focusPanel() {
-  focusWhenReady(() => {
-    // Recomputed here rather than read from the cache: on the first frames the
-    // panel may not have rendered yet, so an empty result must not stick.
-    cachedFields = [];
-    return panelFields()[0];
-  });
+  // One attempt: CuiPopover hides its unpositioned panel with `opacity: 0`
+  // rather than `visibility: hidden` (#112), so the field is focusable as soon
+  // as it is rendered.
+  cachedFields = [];
+  panelFields()[0]?.focus();
 }
 
 watch(popoverVisible, (open) => {

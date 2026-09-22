@@ -135,6 +135,31 @@ onUnmounted(() => {
 });
 
 // Tooltip background/text colors
+/**
+ * How the tooltip is hidden for the frame or two before Floating UI has
+ * positioned it (#88).
+ *
+ * NOT `visibility: hidden`, which was the original guard: `focus()` on a
+ * `visibility: hidden` element is a silent no-op, so any consumer moving focus
+ * into the tooltip on open was racing the positioning, and lost intermittently
+ * (#112). Two of them grew retry loops to work around it.
+ *
+ * `animation: none` is load-bearing, not tidiness. A CSS animation overrides
+ * inline styles, and the tooltip's scale-in animates `opacity` from 0 to 1 — so
+ * `opacity: 0` alone would be overridden the moment it started, and the tooltip
+ * would appear at the origin before being positioned, which is exactly the
+ * flash #88 fixed. Withholding the animation also means it plays from the final
+ * position rather than starting mid-move.
+ */
+const hiddenUntilPositioned = computed(() => {
+  const styles: Record<string, string> = {};
+  if (isPositioned.value) return styles;
+  styles.opacity = "0";
+  styles.pointerEvents = "none";
+  styles.animation = "none";
+  return styles;
+});
+
 const tooltipStyle = computed(() => {
   if (props.color) {
     return {
@@ -175,7 +200,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,
         ]"
-        :style="{ ...floatingStyles, ...tooltipStyle, visibility: isPositioned ? 'visible' : 'hidden' }"
+        :style="{ ...floatingStyles, ...tooltipStyle, ...hiddenUntilPositioned }"
         role="tooltip"
         @mouseenter="onTooltipMouseEnter"
         @mouseleave="onTooltipMouseLeave"
