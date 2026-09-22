@@ -62,7 +62,8 @@ const time4 = ref("02:00 PM");
           { name: 'Up / Down', type: 'key', default: '-', description: 'Step the focused hour or minute field. Focus moves into the panel when it opens, so these work immediately' },
           { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Step in tens' },
           { name: 'Home / End', type: 'key', default: '-', description: 'Jump to the lowest or highest value for that field' },
-          { name: 'Tab', type: 'key', default: '-', description: 'Move between the hour, minute and AM/PM controls' },
+          { name: 'Left / Right', type: 'key', default: '-', description: 'Move between hour, minute and AM/PM, as the segments of a native time input do. Stops at the ends rather than wrapping' },
+          { name: 'Tab', type: 'key', default: '-', description: 'Also moves between the fields. The stepper buttons are not tab stops, so it goes straight from hour to minute' },
         ]"
       />
     </div>

@@ -90,6 +90,60 @@ describe("CuiTimePicker focus hand-off (real browser)", () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+it("Right and Left move between hour, minute and AM/PM", async () => {
+    wrapper?.unmount();
+    wrapper = mount(CuiTimePicker, {
+      attachTo: document.body,
+      props: { modelValue: "09:30 AM", format: "12" },
+    });
+    trigger().focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await frames(12);
+
+    const label = () => {
+      const el = document.activeElement as HTMLElement;
+      return el.getAttribute("role") === "spinbutton"
+        ? `spin:${el.getAttribute("aria-valuemax")}`
+        : el.className.includes("cui-time-picker__period")
+          ? "period"
+          : "other";
+    };
+
+    expect(label()).toBe("spin:12");     // hours
+    await userEvent.keyboard("{ArrowRight}");
+    await frames(4);
+    expect(label()).toBe("spin:59");     // minutes
+    await userEvent.keyboard("{ArrowRight}");
+    await frames(4);
+    expect(label()).toBe("period");      // AM/PM
+    await userEvent.keyboard("{ArrowLeft}");
+    await frames(4);
+    expect(label()).toBe("spin:59");     // back to minutes
+  });
+
+  it("stops at the ends rather than wrapping round", async () => {
+    mountPicker();
+    await open();
+    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
+    await frames(4);
+
+    // Still on hours — jumping to the far end mid-entry is disorienting.
+    expect((document.activeElement as HTMLElement).getAttribute("aria-valuemax")).toBe("23");
+  });
+
+  it("Tab goes straight between the fields, not through the spinner buttons", async () => {
+    mountPicker();
+    await open();
+    const first = document.activeElement as HTMLElement;
+
+    await userEvent.tab();
+    await frames(4);
+    const second = document.activeElement as HTMLElement;
+
+    expect(second).not.toBe(first);
+    expect(second.getAttribute("role"), "next tab stop should be the minutes field").toBe("spinbutton");
+  });
+
   it("the focused field is genuinely visible, not a hidden one", async () => {
     mountPicker();
     await open();

@@ -187,7 +187,7 @@ defineExpose({ el: rootEl, focus, blur });
         height: cfg.height,
       }"
     >
-      <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"
+      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canDecrement" :color="color"
         :style="{ borderRadius: 'var(--cui-button-radius, 0.375rem) 0 0 var(--cui-button-radius, 0.375rem)', border: 'none', height: '100%' }"
         @click="decrement">
         <CuiIcon name="minus" :size="cfg.iconSize" />
@@ -199,7 +199,7 @@ defineExpose({ el: rootEl, focus, blur });
         @keydown="onKeydown"
         :style="{ width: cfg.inputWidth, height: '100%', textAlign: 'center', border: 'none', borderLeft: '1px solid var(--cui-border-strong, var(--cui-border))', borderRight: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0', fontFamily: 'inherit' }"
         @input="onInput" />
-      <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canIncrement" :color="color"
+      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canIncrement" :color="color"
         :style="{ borderRadius: '0 var(--cui-button-radius, 0.375rem) var(--cui-button-radius, 0.375rem) 0', border: 'none', height: '100%' }"
         @click="increment">
         <CuiIcon name="plus" :size="cfg.iconSize" />
@@ -219,7 +219,7 @@ defineExpose({ el: rootEl, focus, blur });
         overflow: 'hidden',
       }"
     >
-      <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canIncrement" :color="color"
+      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canIncrement" :color="color"
         :style="{ border: 'none', borderRadius: '0', width: '100%', minWidth: cfg.inputWidth }"
         @click="increment">
         <CuiIcon name="caret-up" :size="cfg.iconSize" />
@@ -231,7 +231,7 @@ defineExpose({ el: rootEl, focus, blur });
         @keydown="onKeydown"
         :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
         @input="onInput" />
-      <CuiButton variant="ghost" :size="cfg.buttonSize" :disabled="disabled || !canDecrement" :color="color"
+      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canDecrement" :color="color"
         :style="{ border: 'none', borderRadius: '0', width: '100%' }"
         @click="decrement">
         <CuiIcon name="caret-down" :size="cfg.iconSize" />

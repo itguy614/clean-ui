@@ -160,6 +160,30 @@ const FOCUS_ATTEMPT_FRAMES = 10;
  * component in the document, never into the hours field. The panel was
  * effectively keyboard-only-openable and nothing more.
  */
+/** The fields a user moves between: hours, minutes, and AM/PM when shown. */
+function panelFields(): HTMLElement[] {
+  return [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+}
+
+/**
+ * Left/Right move between hour, minute and AM/PM, the way the segments of a
+ * native `<input type="time">` do. Tab does it too, but Left/Right is what a
+ * user reaches for in a time field — and inside a two-character spinbutton
+ * there is nothing useful for the caret to do with them anyway.
+ */
+function onPanelKeydown(e: KeyboardEvent) {
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const fields = panelFields();
+  const current = fields.indexOf(document.activeElement as HTMLElement);
+  if (current === -1) return;
+
+  e.preventDefault();
+  const next = current + (e.key === "ArrowRight" ? 1 : -1);
+  // Stop at the ends rather than wrapping: hours and minutes read left to
+  // right, and jumping from minutes back to hours mid-entry is disorienting.
+  fields[Math.min(fields.length - 1, Math.max(0, next))]?.focus();
+}
+
 function focusPanel(attempt = 0) {
   const first = panelEl.value?.querySelector<HTMLElement>("input, [tabindex]:not([tabindex='-1'])");
   first?.focus();
@@ -275,6 +299,7 @@ defineExpose({ el: rootEl, focus, blur });
           ref="panelEl"
           class="cui-time-picker__panel"
           @keydown.escape.prevent.stop="popoverVisible = false"
+          @keydown="onPanelKeydown"
           :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
         >
           <!-- Hours -->
@@ -318,6 +343,7 @@ defineExpose({ el: rootEl, focus, blur });
                 borderRadius: '0.25rem',
                 minWidth: '2.5rem',
               }"
+              class="cui-time-picker__period"
               @click="period = 'AM'; emitValue()"
             >AM</CuiButton>
             <CuiButton
@@ -330,6 +356,7 @@ defineExpose({ el: rootEl, focus, blur });
                 borderRadius: '0.25rem',
                 minWidth: '2.5rem',
               }"
+              class="cui-time-picker__period"
               @click="period = 'PM'; emitValue()"
             >PM</CuiButton>
           </div>
