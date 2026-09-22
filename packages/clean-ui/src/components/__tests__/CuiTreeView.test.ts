@@ -32,12 +32,17 @@ const baseProps = { nodes, animated: false };
 
 describe("CuiTreeView", () => {
   it("renders a treeitem per top-level node with aria-expanded only on parents", () => {
-    const wrapper = mount(CuiTreeView, { props: baseProps });
+    const wrapper = mount(CuiTreeView, { props: { ...baseProps, defaultExpanded: ["fruits"] } });
     const items = wrapper.findAll('[role="treeitem"]');
-    // Collapsed: only the 2 top-level nodes are present.
-    expect(items).toHaveLength(2);
-    // Parent nodes (have children) carry aria-expanded; it starts collapsed.
-    expect(items[0].attributes("aria-expanded")).toBe("false");
+
+    // fruits (+ apple, banana) and veggies
+    expect(items).toHaveLength(4);
+    // A parent carries aria-expanded, reflecting its state...
+    expect(items[0].attributes("aria-expanded")).toBe("true");
+    expect(items.find((i) => i.text().startsWith("Veggies"))!.attributes("aria-expanded")).toBe("false");
+    // ...and a leaf must NOT, or assistive tech announces every row as collapsible.
+    const leaf = items.find((i) => i.text().startsWith("Apple"))!;
+    expect(leaf.attributes("aria-expanded")).toBeUndefined();
   });
 
   it("expands a node when its chevron is clicked, revealing children", async () => {
@@ -440,12 +445,20 @@ describe("CuiTreeView keyboard", () => {
   it("does not run off either end", async () => {
     const wrapper = mountTree();
     item("a").focus();
+
+    // Prove movement is live first — otherwise "focus did not move" is satisfied
+    // by a handler that does nothing at all, and this test can never fail.
+    await press(wrapper, "ArrowDown");
+    expect(focusedId()).toBe("b");
     await press(wrapper, "ArrowUp");
     expect(focusedId()).toBe("a");
 
+    await press(wrapper, "ArrowUp");
+    expect(focusedId(), "already at the top").toBe("a");
+
     item("c").focus();
     await press(wrapper, "ArrowDown");
-    expect(focusedId()).toBe("c");
+    expect(focusedId(), "already at the bottom").toBe("c");
   });
 
   it("right expands a collapsed parent, then steps into its first child", async () => {
@@ -461,11 +474,13 @@ describe("CuiTreeView keyboard", () => {
   });
 
   it("right does nothing on a leaf", async () => {
-    const wrapper = mountTree();
-    item("c").focus();
+    // a1 deliberately, not the last node: on the last one a wrongly-moving Right
+    // clamps back to where it started, and the test passes for the wrong reason.
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a1").focus();
     await press(wrapper, "ArrowRight");
 
-    expect(focusedId()).toBe("c");
+    expect(focusedId()).toBe("a1");
     expect(wrapper.emitted("update:expanded")).toBeUndefined();
   });
 
