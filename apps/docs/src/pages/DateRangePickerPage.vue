@@ -71,6 +71,7 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
       </p>
       <PropTable
         :props="[
+          { name: 'Down (on the field)', type: 'key', default: '-', description: 'Open the calendar. Enter is deliberately left alone so a form can still submit, and so typing a date into the field keeps working' },
           { name: 'Left / Right', type: 'key', default: '-', description: 'Previous / next day. In the month and year grids, previous / next cell' },
           { name: 'Up / Down', type: 'key', default: '-', description: 'Same weekday, previous / next week. One row in the month and year grids' },
           { name: 'Home / End', type: 'key', default: '-', description: 'First / last day of the week. January / December, or the ends of the year range' },

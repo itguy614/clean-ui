@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - The date and time pickers are operable from the keyboard (#74). `CuiDatePicker` and `CuiDateRangePicker` built their day/month/year grids from unfocusable `<div>`s with a click handler — no `tabindex`, no `role`, no `keydown` listener — so a date could only be picked with a pointer. `CuiTimePicker` had no focusable trigger at all
+  - `↓` on the field opens the calendar. CuiPopover only opens on a click, so without this the grid navigation below was unreachable — a keyboard user could type a date but never see the calendar. `Enter` is deliberately not bound: in a form it submits, and the field accepts typed input
   - Calendar grids: `←`/`→` a day, `↑`/`↓` a week, `Home`/`End` the ends of the week, `PageUp`/`PageDown` a month, `Shift` + those a year, `Enter`/`Space` to select, `Escape` to close. The month and year grids use the same keys in their own units. Moving past the edge of a month pages the calendar, so the focused cell is always one you can see
   - Opening puts focus on the selected date (or today); closing returns it to the field. In `CuiDateRangePicker` the range preview follows the focused cell while picking the end, where it previously only followed the pointer
   - Movement deliberately does not skip disabled dates: a calendar is a grid whose shape carries meaning, and holes in it make it impossible to navigate. Disabled cells are reachable and carry `aria-disabled`; selection is what refuses

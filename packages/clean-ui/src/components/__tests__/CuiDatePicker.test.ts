@@ -39,6 +39,37 @@ describe("CuiDatePicker keyboard", () => {
     await wrapper!.vm.$nextTick();
   }
 
+it("opens the calendar from the field with ArrowDown", async () => {
+    // Without this the grid navigation below is unreachable: CuiPopover only
+    // opens on a click, so a keyboard user could type a date but never see the
+    // calendar at all.
+    wrapper = mount(CuiDatePicker, { attachTo: document.body, props: { modelValue: "2026-03-15" } });
+    expect(document.querySelector('[role="grid"]')).toBeNull();
+
+    await wrapper.find("input").trigger("keydown", { key: "ArrowDown" });
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+
+    expect(document.querySelector('[role="grid"]')).toBeTruthy();
+    expect(focusedCell()).toBe("d:2026-2-15");
+  });
+
+  it("leaves Enter alone on the field, so a form can still submit", async () => {
+    wrapper = mount(CuiDatePicker, { attachTo: document.body, props: { modelValue: "2026-03-15" } });
+    await wrapper.find("input").trigger("keydown", { key: "Enter" });
+    await wrapper.vm.$nextTick();
+
+    expect(document.querySelector('[role="grid"]')).toBeNull();
+  });
+
+  it("does not open from the field when disabled", async () => {
+    wrapper = mount(CuiDatePicker, { attachTo: document.body, props: { modelValue: "2026-03-15", disabled: true } });
+    await wrapper.find("input").trigger("keydown", { key: "ArrowDown" });
+    await wrapper.vm.$nextTick();
+
+    expect(document.querySelector('[role="grid"]')).toBeNull();
+  });
+
   it("renders a grid of gridcells, not bare divs", async () => {
     await openOn("2026-03-15");
     expect(grid()).toBeTruthy();

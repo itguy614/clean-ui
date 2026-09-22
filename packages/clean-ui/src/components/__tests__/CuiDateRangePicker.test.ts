@@ -33,6 +33,21 @@ describe("CuiDateRangePicker keyboard", () => {
     await wrapper!.vm.$nextTick();
   }
 
+it("opens the calendar from the start field with ArrowDown", async () => {
+    wrapper = mount(CuiDateRangePicker, {
+      attachTo: document.body,
+      props: { modelValue: { start: "2026-03-10", end: "2026-03-20" } },
+    });
+    expect(document.querySelector('[role="grid"]')).toBeNull();
+
+    await wrapper.find("input").trigger("keydown", { key: "ArrowDown" });
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+
+    expect(document.querySelector('[role="grid"]')).toBeTruthy();
+    expect(focusedCell()).toBe("d:2026-2-10");
+  });
+
   it("opens onto a grid focused at the range start", async () => {
     await open();
     expect(document.querySelector('[role="grid"]')).toBeTruthy();

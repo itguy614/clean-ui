@@ -246,6 +246,23 @@ const yearRange = computed(() => Array.from({ length: 12 }, (_, i) => yearRangeS
 function selectMonth(i: number) { viewMonth.value = i; viewMode.value = "days"; }
 function selectYear(y: number) { viewYear.value = y; viewMode.value = "months"; }
 
+/**
+ * Opening the calendar from the keyboard. CuiPopover's only open path is a
+ * click, so without this the grid navigation below is unreachable: a keyboard
+ * user can tab to the field and type a date, but can never see the calendar.
+ *
+ * `ArrowDown` (and `Alt+ArrowDown`) is the convention for a date field and for
+ * comboboxes generally. Enter is deliberately not bound — in a form it submits,
+ * and the field accepts typed input, so stealing it would be worse than useless.
+ */
+function onFieldKeydown(e: KeyboardEvent) {
+  if (props.disabled) return;
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    popoverVisible.value = true;
+  }
+}
+
 // --- Keyboard (#74) ---
 // Same grids as CuiDatePicker, same navigation — shared rather than written
 // twice. Range-specific behaviour stays here: Enter runs the component's own
@@ -387,6 +404,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
         <CuiIcon name="calendar-blank" size="0.875rem" style="color: var(--cui-text-tertiary); flex-shrink: 0;" />
         <input
           ref="startInput"
+          @keydown="onFieldKeydown"
           :id="id"
           :name="name"
           :autocomplete="autocomplete"
