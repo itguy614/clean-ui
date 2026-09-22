@@ -1,0 +1,26 @@
+{
+  "//": [
+    "TypeScript's half of config/workspace-aliases.ts. That module points Vite at",
+    "each publishable package's workspace SOURCE; without the matching `paths`",
+    "here, `vue-tsc` falls back to node resolution and reads the package's built",
+    "`dist/*.d.ts` instead — so the bundler and the type checker disagree about",
+    "what the code is. A docs typecheck then fails on anything added to the",
+    "library since its last build, naming a prop or method that plainly exists",
+    "(#60, #94), and passes again after a rebuild for no visible reason.",
+    "",
+    "Relative paths in an extended config resolve against the file they are",
+    "written in, so these are relative to config/.",
+    "",
+    "Extend this from any app that spreads workspaceAliases() into its Vite",
+    "config, and keep the two lists in step."
+  ],
+  "compilerOptions": {
+    "paths": {
+      "@itguy614/clean-ui": ["../packages/clean-ui/src/index.ts"],
+      "@itguy614/clean-ui/icons/lazy": ["../packages/clean-ui/src/icons/lazy.ts"],
+      "@itguy614/clean-ui-editor": ["../packages/clean-ui-editor/src/index.ts"],
+      "@itguy614/clean-ui-editor/render": ["../packages/clean-ui-editor/src/render.ts"],
+      "@itguy614/clean-ui-editor/codemirror": ["../packages/clean-ui-editor/src/codemirror.ts"]
+    }
+  }
+}
