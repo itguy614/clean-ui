@@ -13,14 +13,21 @@ const props = defineProps<{
   showLines: boolean;
   animated: boolean;
   cfg: { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string };
+  /** The single item carrying `tabindex="0"` — roving focus is owned by CuiTreeView. */
+  activeId: string | number | null;
+  /** aria-setsize / aria-posinset for this node among its siblings. */
+  sizeOfSet: number;
+  positionInSet: number;
 }>();
 
 const emit = defineEmits<{
   "toggle-expand": [node: TreeNode];
   "select-node": [node: TreeNode];
+  "node-focused": [id: string | number];
 }>();
 
 const hasChildren = computed(() => props.node.children && props.node.children.length > 0);
+const isActive = computed(() => props.activeId === props.node.id);
 const isExpanded = computed(() => props.expanded.has(props.node.id));
 const isSelected = computed(() => props.selectedSet.has(props.node.id));
 
@@ -61,6 +68,7 @@ function onChevronClick(e: Event) {
 }
 
 function onNodeClick() {
+  emit("node-focused", props.node.id);
   if (hasChildren.value && !props.selectable) {
     emit("toggle-expand", props.node);
   } else {
@@ -77,8 +85,16 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
   <div
     class="cui-tree-node"
     role="treeitem"
+    :data-cui-tree-id="String(node.id)"
+    :tabindex="node.disabled ? undefined : isActive ? 0 : -1"
     :aria-expanded="hasChildren ? isExpanded : undefined"
-    :style="{ position: 'relative' }"
+    :aria-selected="selectable ? isSelected : undefined"
+    :aria-disabled="node.disabled || undefined"
+    :aria-level="depth + 1"
+    :aria-setsize="sizeOfSet"
+    :aria-posinset="positionInSet"
+    :style="{ position: 'relative', outline: 'none' }"
+    @focusin.self="emit('node-focused', node.id)"
   >
     <!--
       Parent's vertical continuation line — extends full height of this treeitem
@@ -193,6 +209,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
     <div
       v-if="hasChildren && showChildren"
       ref="childrenRef"
+      role="group"
       :style="{
         position: 'relative',
         overflow: animated ? 'hidden' : undefined,
@@ -212,8 +229,12 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
         :show-lines="showLines"
         :animated="animated"
         :cfg="cfg"
+        :active-id="activeId"
+        :size-of-set="node.children!.length"
+        :position-in-set="idx + 1"
         @toggle-expand="emit('toggle-expand', $event)"
         @select-node="emit('select-node', $event)"
+        @node-focused="emit('node-focused', $event)"
       >
         <template #node="slotProps: any">
           <slot name="node" v-bind="slotProps" />
@@ -222,3 +243,18 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
     </div>
   </div>
 </template>
+
+<style scoped>
+/*
+  The focus ring goes on the ROW, not on the element that holds it. `treeitem`
+  has to sit on the outer node — it is what contains the child `group`, per the
+  ARIA tree pattern — but that element wraps the entire subtree, so an outline on
+  it would draw a box around every descendant. Outlining the row instead marks
+  exactly the item that has focus.
+*/
+.cui-tree-node:focus-visible > .cui-tree-node__row {
+  outline: 2px solid var(--cui-primary-focus-ring);
+  outline-offset: -2px;
+  border-radius: 0.25rem;
+}
+</style>

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import CuiTreeView from "../CuiTreeView.vue";
 import CuiTreeNode from "../CuiTreeNode.vue";
@@ -32,12 +32,17 @@ const baseProps = { nodes, animated: false };
 
 describe("CuiTreeView", () => {
   it("renders a treeitem per top-level node with aria-expanded only on parents", () => {
-    const wrapper = mount(CuiTreeView, { props: baseProps });
+    const wrapper = mount(CuiTreeView, { props: { ...baseProps, defaultExpanded: ["fruits"] } });
     const items = wrapper.findAll('[role="treeitem"]');
-    // Collapsed: only the 2 top-level nodes are present.
-    expect(items).toHaveLength(2);
-    // Parent nodes (have children) carry aria-expanded; it starts collapsed.
-    expect(items[0].attributes("aria-expanded")).toBe("false");
+
+    // fruits (+ apple, banana) and veggies
+    expect(items).toHaveLength(4);
+    // A parent carries aria-expanded, reflecting its state...
+    expect(items[0].attributes("aria-expanded")).toBe("true");
+    expect(items.find((i) => i.text().startsWith("Veggies"))!.attributes("aria-expanded")).toBe("false");
+    // ...and a leaf must NOT, or assistive tech announces every row as collapsible.
+    const leaf = items.find((i) => i.text().startsWith("Apple"))!;
+    expect(leaf.attributes("aria-expanded")).toBeUndefined();
   });
 
   it("expands a node when its chevron is clicked, revealing children", async () => {
@@ -359,5 +364,290 @@ describe("CuiTreeView expansion API", () => {
       expect(wrapper.emitted("node-expand")).toBeUndefined();
       expect(wrapper.emitted("update:expanded")).toHaveLength(1);
     });
+  });
+});
+
+/**
+ * #74 — CuiTreeView had no keyboard handling of any kind: no tabindex, no
+ * keydown listener, so expand/collapse and selection were reachable only with a
+ * pointer (WCAG 2.1.1). The tree ARIA was correspondingly thin — no
+ * `aria-selected`, no `role="group"` on the children wrapper, no `aria-disabled`.
+ */
+describe("CuiTreeView keyboard", () => {
+  const deep: TreeNode[] = [
+    {
+      id: "a",
+      label: "Alpha",
+      children: [
+        { id: "a1", label: "Alpha one" },
+        { id: "a2", label: "Alpha two", children: [{ id: "a2x", label: "Alpha two x" }] },
+      ],
+    },
+    { id: "b", label: "Bravo", children: [{ id: "b1", label: "Bravo one" }] },
+    { id: "c", label: "Charlie" },
+  ];
+
+  // One tree at a time, torn down between tests: these assertions read
+  // document.activeElement, so a leftover mount would have them querying the
+  // wrong tree.
+  let tree: VueWrapper | undefined;
+
+  afterEach(() => {
+    tree?.unmount();
+    tree = undefined;
+  });
+
+  function mountTree(props: Record<string, unknown> = {}) {
+    tree = mount(CuiTreeView, {
+      attachTo: document.body,
+      props: { nodes: deep, animated: false, ...props },
+    });
+    return tree;
+  }
+
+  const item = (id: string) =>
+    tree!.element.querySelector<HTMLElement>(`[data-cui-tree-id="${id}"]`)!;
+  const focusedId = () => (document.activeElement as HTMLElement | null)?.dataset.cuiTreeId;
+  const tabStops = () => tree!.element.querySelectorAll('[role="treeitem"][tabindex="0"]');
+
+  /** Press a key on whichever treeitem currently holds focus. */
+  async function press(wrapper: VueWrapper, key: string) {
+    const target = (document.activeElement as HTMLElement) ?? item("a");
+    target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+  }
+
+  it("is a single tab stop — one tabindex=0 for the whole tree", () => {
+    const wrapper = mountTree({ expandAll: true });
+    const minusOnes = wrapper.element.querySelectorAll('[role="treeitem"][tabindex="-1"]');
+
+    expect(tabStops()).toHaveLength(1);
+    expect(tabStops()[0].getAttribute("data-cui-tree-id")).toBe("a");
+    expect(minusOnes.length).toBeGreaterThan(0);
+  });
+
+  it("moves down and up through visible items, crossing depth boundaries", async () => {
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a").focus();
+
+    await press(wrapper, "ArrowDown");
+    expect(focusedId()).toBe("a1");
+    await press(wrapper, "ArrowDown");
+    expect(focusedId()).toBe("a2");
+    // out of the branch and on to the next top-level node
+    await press(wrapper, "ArrowDown");
+    expect(focusedId()).toBe("b");
+    await press(wrapper, "ArrowUp");
+    expect(focusedId()).toBe("a2");
+  });
+
+  it("does not run off either end", async () => {
+    const wrapper = mountTree();
+    item("a").focus();
+
+    // Prove movement is live first — otherwise "focus did not move" is satisfied
+    // by a handler that does nothing at all, and this test can never fail.
+    await press(wrapper, "ArrowDown");
+    expect(focusedId()).toBe("b");
+    await press(wrapper, "ArrowUp");
+    expect(focusedId()).toBe("a");
+
+    await press(wrapper, "ArrowUp");
+    expect(focusedId(), "already at the top").toBe("a");
+
+    item("c").focus();
+    await press(wrapper, "ArrowDown");
+    expect(focusedId(), "already at the bottom").toBe("c");
+  });
+
+  it("right expands a collapsed parent, then steps into its first child", async () => {
+    const wrapper = mountTree();
+    item("a").focus();
+
+    await press(wrapper, "ArrowRight");
+    expect(wrapper.emitted("update:expanded")![0]).toEqual([["a"]]);
+    expect(focusedId(), "expanding must not also move").toBe("a");
+
+    await press(wrapper, "ArrowRight");
+    expect(focusedId()).toBe("a1");
+  });
+
+  it("right does nothing on a leaf", async () => {
+    // a1 deliberately, not the last node: on the last one a wrongly-moving Right
+    // clamps back to where it started, and the test passes for the wrong reason.
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a1").focus();
+    await press(wrapper, "ArrowRight");
+
+    expect(focusedId()).toBe("a1");
+    expect(wrapper.emitted("update:expanded")).toBeUndefined();
+  });
+
+  it("left collapses an expanded parent, then steps out to the parent", async () => {
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a").focus();
+
+    await press(wrapper, "ArrowLeft");
+    expect(wrapper.emitted("update:expanded")![0]).toEqual([[]]);
+    expect(focusedId()).toBe("a");
+
+  });
+
+  it("left steps out to the parent from a child", async () => {
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a1").focus();
+
+    await press(wrapper, "ArrowLeft");
+    expect(focusedId()).toBe("a");
+  });
+
+  it("Home and End jump to the first and last visible items", async () => {
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a2").focus();
+
+    await press(wrapper, "End");
+    expect(focusedId()).toBe("c");
+    await press(wrapper, "Home");
+    expect(focusedId()).toBe("a");
+  });
+
+  it("Enter and Space select, matching a row click", async () => {
+    for (const key of ["Enter", " "]) {
+      const wrapper = mountTree();
+      item("c").focus();
+      await press(wrapper, key);
+
+      expect(wrapper.emitted("node-click")![0][0]).toMatchObject({ id: "c" });
+      expect(wrapper.emitted("update:modelValue")![0]).toEqual(["c"]);
+      }
+  });
+
+  it("Enter toggles instead of selecting when selectable is false", async () => {
+    const wrapper = mountTree({ selectable: false });
+    item("a").focus();
+    await press(wrapper, "Enter");
+
+    expect(wrapper.emitted("update:expanded")![0]).toEqual([["a"]]);
+    expect(wrapper.emitted("node-click")).toBeUndefined();
+  });
+
+  it("* expands every sibling at the current level", async () => {
+    const wrapper = mountTree();
+    item("a").focus();
+    await press(wrapper, "*");
+
+    // a and b have children; c is a leaf and is not included
+    expect(wrapper.emitted("update:expanded")![0]).toEqual([["a", "b"]]);
+  });
+
+  it("type-ahead jumps to the item starting with what was typed", async () => {
+    const wrapper = mountTree();
+    item("a").focus();
+
+    await press(wrapper, "b");
+    expect(focusedId()).toBe("b");
+  });
+
+  it("type-ahead accumulates within the window rather than treating each key separately", async () => {
+    // Discriminating because "Charlie" exists: if each keystroke were handled on
+    // its own, "c" would jump there. Accumulated, the buffer is "bc", which
+    // matches nothing, so focus must stay on Bravo.
+    const wrapper = mountTree();
+    item("a").focus();
+
+    await press(wrapper, "b");
+    expect(focusedId()).toBe("b");
+    await press(wrapper, "c");
+    expect(focusedId(), "'bc' matches nothing — 'c' must not be read on its own").toBe("b");
+  });
+
+  it("skips disabled nodes when moving", async () => {
+    const withDisabled: TreeNode[] = [
+      { id: "x", label: "Ex" },
+      { id: "y", label: "Why", disabled: true },
+      { id: "z", label: "Zed" },
+    ];
+    tree = mount(CuiTreeView, {
+      attachTo: document.body,
+      props: { nodes: withDisabled, animated: false },
+    });
+    const wrapper = tree;
+    item("x").focus();
+    await press(wrapper, "ArrowDown");
+
+    expect(focusedId()).toBe("z");
+  });
+
+  it("keeps focus on the tree when a collapse hides the focused node", async () => {
+    const wrapper = mountTree({ defaultExpanded: ["a"] });
+    item("a1").focus();
+    await press(wrapper, "ArrowLeft"); // a1 is a leaf → moves to parent "a"
+    expect(focusedId()).toBe("a");
+
+    await press(wrapper, "ArrowLeft"); // collapses "a", hiding a1/a2
+    expect(document.querySelector('[data-cui-tree-id="a1"]')).toBeNull();
+    // the roving tab stop is still a real, visible node
+    expect(tabStops()).toHaveLength(1);
+  });
+
+  it("a row click adopts the roving focus, so Tab resumes there", async () => {
+    const wrapper = mountTree();
+    await rowFor(wrapper, "c").trigger("click");
+
+    expect(item("c").getAttribute("tabindex")).toBe("0");
+    expect(item("a").getAttribute("tabindex")).toBe("-1");
+  });
+});
+
+describe("CuiTreeView tree ARIA", () => {
+  const nodesWithChild: TreeNode[] = [
+    { id: "p", label: "Parent", children: [{ id: "k", label: "Kid" }] },
+    { id: "d", label: "Disabled", disabled: true },
+  ];
+
+  function mountTree(props: Record<string, unknown> = {}) {
+    return mount(CuiTreeView, { props: { nodes: nodesWithChild, animated: false, ...props } });
+  }
+
+  it("marks the children wrapper as a group so depth is conveyed", () => {
+    const wrapper = mountTree({ defaultExpanded: ["p"] });
+    expect(wrapper.find('[role="group"]').exists()).toBe(true);
+  });
+
+  it("reports selection state", async () => {
+    const wrapper = mountTree({ modelValue: "d" });
+    const items = wrapper.findAll('[role="treeitem"]');
+    expect(items[1].attributes("aria-selected")).toBe("true");
+    expect(items[0].attributes("aria-selected")).toBe("false");
+  });
+
+  it("omits aria-selected entirely when the tree is not selectable", () => {
+    const wrapper = mountTree({ selectable: false });
+    expect(wrapper.find('[role="treeitem"]').attributes("aria-selected")).toBeUndefined();
+  });
+
+  it("announces multi-select only when multiple is set", () => {
+    expect(mountTree().find('[role="tree"]').attributes("aria-multiselectable")).toBeUndefined();
+    expect(mountTree({ multiple: true }).find('[role="tree"]').attributes("aria-multiselectable")).toBe("true");
+  });
+
+  it("marks disabled nodes, and takes them out of the tab order", () => {
+    const wrapper = mountTree();
+    const disabled = wrapper.findAll('[role="treeitem"]')[1];
+    expect(disabled.attributes("aria-disabled")).toBe("true");
+    expect(disabled.attributes("tabindex")).toBeUndefined();
+  });
+
+  it("carries level, set size and position", () => {
+    const wrapper = mountTree({ defaultExpanded: ["p"] });
+    const parent = wrapper.findAll('[role="treeitem"]')[0];
+    expect(parent.attributes("aria-level")).toBe("1");
+    expect(parent.attributes("aria-setsize")).toBe("2");
+    expect(parent.attributes("aria-posinset")).toBe("1");
+
+    const child = wrapper.findAll('[role="treeitem"]')[1];
+    expect(child.attributes("aria-level")).toBe("2");
+    expect(child.attributes("aria-setsize")).toBe("1");
   });
 });
