@@ -1,8 +1,28 @@
 {
+  "//": [
+    "Only the EDITOR is mapped to source here, unlike apps/docs which also maps",
+    "@itguy614/clean-ui (see config/tsconfig.workspace-source.json).",
+    "",
+    "This app's program contains clean-ui-editor's augmentation of",
+    "CuiMessageNamespaces. Declaration merging is whole-program, so if that",
+    "augmentation shared a program with clean-ui's `messages.ts` SOURCE, the",
+    "`defaultMessages` literal in it would stop satisfying its own `CuiMessages`",
+    "annotation — the augmented interface requires a namespace the library cannot",
+    "itself provide. Resolving clean-ui to its built .d.ts is what a real",
+    "satellite package does, and is the arrangement the seam was designed around;",
+    "see the note at the top of packages/clean-ui/src/messages.test-d.ts.",
+    "",
+    "Consequence: a typecheck here still reads clean-ui's last build, so it can",
+    "lag library source the way apps/docs used to. Tracked in #107."
+  ],
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "paths": {
+      "@itguy614/clean-ui-editor": ["../../packages/clean-ui-editor/src/index.ts"],
+      "@itguy614/clean-ui-editor/render": ["../../packages/clean-ui-editor/src/render.ts"],
+      "@itguy614/clean-ui-editor/codemirror": ["../../packages/clean-ui-editor/src/codemirror.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "env.d.ts"],
   "exclude": ["node_modules", "dist"]
