@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { h } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
 import CuiInput from "../../components/CuiInput.vue";
@@ -6,6 +7,7 @@ import CuiSelect from "../../components/CuiSelect.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
 import CuiTagInput from "../../components/CuiTagInput.vue";
 import CuiInputStepper from "../../components/CuiInputStepper.vue";
+import CuiFormField from "../../components/CuiFormField.vue";
 
 /**
  * #123 — the actual complaint: stack a CuiInput above a CuiCombobox, both `md`, and they
@@ -114,6 +116,47 @@ describe("form controls line up (real browser)", () => {
     it("gives the stepper the same height", () => {
       // Its value is centred between the +/- buttons, so indent does not apply.
       expect(box(control(CuiInputStepper, size)).height).toBe(box(control(CuiInput, size)).height);
+    });
+  });
+
+  describe("a required field beside an optional one", () => {
+    // CuiFormField's label is a flex row, so its height is its tallest child. The required
+    // marker inherited a taller line-height from the surrounding prose, growing the label
+    // by ~1.4px and pushing a required field's control that much lower than its neighbour.
+    // Small, but plainly visible on any two-column form row.
+    function field(required: boolean) {
+      const host = document.createElement("div");
+      host.style.width = "320px";
+      document.body.append(host);
+      hosts.push(host);
+      const w = mount(CuiFormField, {
+        props: { label: "Label", required },
+        slots: { default: () => h(CuiInput, { size: "md" }) },
+        attachTo: host,
+      });
+      mounted.push(w);
+      const root = w.element as HTMLElement;
+      return {
+        label: root.querySelector<HTMLElement>(".cui-form-field__label")!,
+        control: root.querySelector<HTMLElement>(".cui-input")!,
+      };
+    }
+
+    it("puts both controls at the same offset from the top of the field", () => {
+      const req = field(true);
+      const opt = field(false);
+
+      const reqOffset = req.control.getBoundingClientRect().top - req.label.getBoundingClientRect().top;
+      const optOffset = opt.control.getBoundingClientRect().top - opt.label.getBoundingClientRect().top;
+
+      expect(reqOffset).toBeCloseTo(optOffset, 1);
+    });
+
+    it("keeps the label the same height with and without the marker", () => {
+      expect(field(true).label.getBoundingClientRect().height).toBeCloseTo(
+        field(false).label.getBoundingClientRect().height,
+        1,
+      );
     });
   });
 

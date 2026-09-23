@@ -162,12 +162,19 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
+/* The label is a flex row, so its height is whatever its tallest child is — and that must
+   not depend on whether the field happens to be required. The markers inherit a taller
+   line-height from the surrounding prose otherwise, which grew the label by ~1.4px and
+   pushed a required field's control that much lower than the field beside it in the same
+   row. Visible wherever a form puts a required and an optional field side by side. */
 .cui-form-field__required {
   color: var(--cui-error);
   font-weight: 600;
+  line-height: inherit;
 }
 
 .cui-form-field__required-text {
+  line-height: inherit;
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--cui-error);
