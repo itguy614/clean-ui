@@ -142,10 +142,10 @@ describe("CuiCombobox", () => {
       const wrapper = mount(CuiCombobox, { props: { options: OPTIONS } });
       const style = control(wrapper).style;
 
-      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe(
+      expect(style.getPropertyValue("--_combobox-focus-ring").trim()).toBe(
         "var(--cui-primary-focus-ring)",
       );
-      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-primary)");
+      expect(style.getPropertyValue("--_combobox-focus-border").trim()).toBe("var(--cui-primary)");
       wrapper.unmount();
     });
 
@@ -153,10 +153,10 @@ describe("CuiCombobox", () => {
       const wrapper = mount(CuiCombobox, { props: { options: OPTIONS, color: "success" } });
       const style = control(wrapper).style;
 
-      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe(
+      expect(style.getPropertyValue("--_combobox-focus-ring").trim()).toBe(
         "var(--cui-success-focus-ring)",
       );
-      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-success)");
+      expect(style.getPropertyValue("--_combobox-focus-border").trim()).toBe("var(--cui-success)");
       wrapper.unmount();
     });
 
@@ -164,8 +164,8 @@ describe("CuiCombobox", () => {
       const wrapper = mount(CuiCombobox, { props: { options: OPTIONS, error: true } });
       const style = control(wrapper).style;
 
-      expect(style.getPropertyValue("--_cb-focus-ring").trim()).toBe("var(--cui-error-focus-ring)");
-      expect(style.getPropertyValue("--_cb-focus-border").trim()).toBe("var(--cui-error)");
+      expect(style.getPropertyValue("--_combobox-focus-ring").trim()).toBe("var(--cui-error-focus-ring)");
+      expect(style.getPropertyValue("--_combobox-focus-border").trim()).toBe("var(--cui-error)");
       wrapper.unmount();
     });
 

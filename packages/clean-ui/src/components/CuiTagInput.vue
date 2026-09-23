@@ -135,10 +135,12 @@ const cfg = computed(() => {
   // leaves room for the chips.
   const py = scaleDensity("0.25rem");
   return {
-    fontSize: s.fontSize,
-    padding: `${py} ${s.px}`,
-    inputHeight: s.height,
     tagSize: nestedSize(props.size),
+    style: {
+      "--_tag-input-font-size": s.fontSize,
+      "--_tag-input-padding": `${py} ${s.px}`,
+      "--_tag-input-min-height": s.height,
+    },
   };
 });
 
@@ -158,17 +160,16 @@ function updateDropdownPosition() {
   const maxH = Math.max(0, Math.min(240, (openAbove ? spaceAbove : spaceBelow) - 16));
 
   const s: Record<string, string> = {
+    // The panel is teleported to <body>, so it inherits nothing from the component — it
+    // has to carry the size-derived properties itself (#123).
+    ...cfg.value.style,
     position: "fixed",
     zIndex: "9990",
     left: `${rect.left}px`,
     width: `${rect.width}px`,
     maxHeight: `${maxH}px`,
-    overflowY: "auto",
-    background: "var(--cui-surface-base)",
-    border: "1px solid var(--cui-border)",
-    borderRadius: "0.5rem",
-    boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
+    // Only the geometry the positioner computes stays inline; the panel's paint lives in
+    // the stylesheet so it can be themed (#123).
   };
 
   if (openAbove) s.bottom = `${vh - rect.top + 4}px`;
@@ -298,28 +299,22 @@ defineExpose({ el: wrapperRef, focus, blur });
 </script>
 
 <template>
-  <div class="cui-tag-input" v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
+  <!-- Size-derived properties on the ROOT: the dropdown is a sibling of the control, so
+       anything set on the control would never reach the suggestions. -->
+  <div class="cui-tag-input" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      class="cui-tag-input__label"
     >{{ label }}</label>
 
     <!-- Input area -->
     <div
       ref="controlRef"
       class="cui-tag-input__control"
+      :class="{ 'cui-tag-input__control--disabled': disabled }"
       :style="{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        padding: cfg.padding,
-        border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
-        borderRadius: radiusMap[rounded],
-        background: 'var(--cui-surface-base, white)',
-        cursor: disabled ? 'default' : 'text',
-        opacity: disabled ? '0.5' : '1',
-        minHeight: cfg.inputHeight,
+        '--_tag-input-radius': radiusMap[rounded],
+        '--_tag-input-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
       }"
       @click="inputRef?.focus()"
     >
@@ -347,22 +342,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         :value="query"
         :placeholder="modelValue.length > 0 ? '' : placeholder"
         :disabled="disabled"
-        :style="{
-          flex: '1',
-          minWidth: '4rem',
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          fontSize: cfg.fontSize,
-          color: 'var(--cui-text-body)',
-          padding: '0',
-          // A determinate line-height, so the field's intrinsic height cannot push the
-          // control past the shared scale's height: at `sm` the default plus its own
-          // padding came to 24px, which with the control's padding and borders made the
-          // box 34px against a 32px input (#123).
-          lineHeight: '1.25',
-          fontFamily: 'inherit',
-        }"
+        class="cui-tag-input__input"
         @input="onInput"
         @focus="onFocus"
         @keydown="onKeydown"
@@ -370,7 +350,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Error -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" class="cui-tag-input__error">
       {{ errorMessage }}
     </div>
 
@@ -392,18 +372,8 @@ defineExpose({ el: wrapperRef, focus, blur });
           v-for="(suggestion, i) in filteredSuggestions"
           :key="suggestion.value"
           :data-index="i"
-          :style="{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-            cursor: 'pointer',
-            fontSize: cfg.fontSize,
-            borderRadius: '0.25rem',
-            background: focusedIndex === i ? 'var(--cui-primary-bg)' : 'transparent',
-            color: 'var(--cui-text-body)',
-            transition: 'background 0.1s ease',
-          }"
+          class="cui-tag-input__suggestion"
+          :class="{ 'cui-tag-input__suggestion--focused': focusedIndex === i }"
           @click.stop="selectSuggestion(suggestion)"
           @mouseenter="focusedIndex = i"
         >
@@ -415,21 +385,10 @@ defineExpose({ el: wrapperRef, focus, blur });
         <!-- Create new -->
         <div
           v-if="canCreate"
-          :style="{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
-            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-            cursor: 'pointer',
-            fontSize: cfg.fontSize,
-            borderRadius: '0.25rem',
-            background: focusedIndex === filteredSuggestions.length ? 'var(--cui-primary-bg)' : 'transparent',
-            color: 'var(--cui-primary)',
-            fontWeight: '500',
-            transition: 'background 0.1s ease',
-            borderTop: filteredSuggestions.length > 0 ? '1px solid color-mix(in srgb, var(--cui-border) 50%, transparent)' : 'none',
-            marginTop: filteredSuggestions.length > 0 ? 'calc(0.125rem * var(--cui-density-scale, 1))' : '0',
-            paddingTop: filteredSuggestions.length > 0 ? 'calc(0.5rem * var(--cui-density-scale, 1))' : undefined,
+          class="cui-tag-input__create"
+          :class="{
+            'cui-tag-input__suggestion--focused': focusedIndex === filteredSuggestions.length,
+            'cui-tag-input__create--divided': filteredSuggestions.length > 0,
           }"
           @click.stop="createTag"
           @mouseenter="focusedIndex = filteredSuggestions.length"
@@ -441,3 +400,118 @@ defineExpose({ el: wrapperRef, focus, blur });
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable ---
+   Zero specificity, so a consumer's own rule wins without `!important`. See the note in
+   CuiButton.vue. The private values come from the style binding; a public token set
+   anywhere in the ancestor chain takes precedence (#123). */
+:where(.cui-tag-input__control) {
+  min-height: var(--cui-tag-input-min-height, var(--_tag-input-min-height));
+  padding: var(--cui-tag-input-padding, var(--_tag-input-padding));
+  border-radius: var(--cui-tag-input-radius, var(--_tag-input-radius));
+  border: var(--cui-tag-input-border-width, 1px) solid var(--_tag-input-border);
+  background: var(--cui-tag-input-bg, var(--cui-surface-base, white));
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+}
+
+:where(.cui-tag-input__dropdown) {
+  background: var(--cui-tag-input-panel-bg, var(--cui-surface-base));
+  border: var(--cui-tag-input-panel-border, 1px solid var(--cui-border));
+  border-radius: var(--cui-tag-input-panel-radius, 0.5rem);
+  box-shadow: var(
+    --cui-tag-input-panel-shadow,
+    0 8px 24px -4px rgba(0, 0, 0, 0.12),
+    0 2px 8px -2px rgba(0, 0, 0, 0.08)
+  );
+  padding: var(--cui-tag-input-panel-padding, calc(0.25rem * var(--cui-density-scale, 1)));
+}
+
+:where(.cui-tag-input__suggestion, .cui-tag-input__create) {
+  padding: var(
+    --cui-tag-input-item-padding,
+    calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))
+  );
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+  border-radius: var(--cui-tag-input-item-radius, 0.25rem);
+}
+
+:where(.cui-tag-input__suggestion) {
+  color: var(--cui-tag-input-item-color, var(--cui-text-body));
+}
+
+:where(.cui-tag-input__suggestion--focused) {
+  background: var(--cui-tag-input-item-focus-bg, var(--cui-primary-bg));
+}
+
+/* --- Structural --- */
+.cui-tag-input {
+  position: relative;
+}
+
+.cui-tag-input__label {
+  display: block;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+
+.cui-tag-input__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  cursor: text;
+}
+
+.cui-tag-input__control--disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.cui-tag-input__input {
+  flex: 1;
+  min-width: 4rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+  color: var(--cui-tag-input-color, var(--cui-text-body));
+  /* A determinate line-height, so the field's intrinsic height cannot push the control
+     past the shared scale's height — see the matching note in CuiCombobox (#123). */
+  line-height: 1.25;
+}
+
+.cui-tag-input__dropdown {
+  overflow-y: auto;
+}
+
+.cui-tag-input__suggestion,
+.cui-tag-input__create {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.cui-tag-input__create {
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  color: var(--cui-primary);
+  font-weight: 500;
+}
+
+.cui-tag-input__create--divided {
+  border-top: 1px solid color-mix(in srgb, var(--cui-border) 50%, transparent);
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
+}
+
+.cui-tag-input__error {
+  font-size: 0.75rem;
+  color: var(--cui-error);
+  margin-top: calc(0.25rem * var(--cui-density-scale, 1));
+}
+</style>

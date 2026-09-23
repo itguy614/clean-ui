@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiFlex, CuiInputStepper, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import { CuiCard, CuiCardBody, CuiFlex, CuiInputStepper, CuiStack } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import PropTable from "../components/PropTable.vue";
+import meta from "../meta/input-stepper";
 
+const basic = ref(1);
 const qty = ref(1);
 const price = ref(9.99);
 const temp = ref(72);
@@ -13,68 +15,48 @@ const minutes = ref(30);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Input Stepper</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A numeric input with increment/decrement buttons — ideal for quantities,
-        counters, and settings that adjust in discrete steps. Supports horizontal
-        and vertical orientations, wrap-around, and zero-padded display.
-      </p>
-    </div>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiInputStepper v-model=&quot;quantity&quot; :min=&quot;1&quot; :max=&quot;10&quot; label=&quot;Quantity&quot; />`"
+      >
+        <CuiInputStepper v-model="basic" :min="1" :max="10" label="Quantity" />
+      </Example>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'modelValue', type: 'number', default: '0', description: 'Current value (v-model)' },
-          { name: 'min', type: 'number', default: '—', description: 'Minimum value' },
-          { name: 'max', type: 'number', default: '—', description: 'Maximum value' },
-          { name: 'step', type: 'number', default: '1', description: 'Step increment' },
-          { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Button layout direction' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'color', type: 'primary | secondary | ...', default: 'primary', description: 'Button color role' },
-          { name: 'pad', type: 'number', default: '—', description: 'Zero-pad display to this width (e.g., 2 shows 05)' },
-          { name: 'wrap', type: 'boolean', default: 'false', description: 'Wrap around from max to min and vice versa' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
-          { name: 'label', type: 'string', default: '—', description: 'Label text above the input' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-          { name: 'id', type: 'string', default: '-', description: 'id of the native control — what a label for attribute must point at. CuiFormField supplies it automatically' },
-          { name: 'name', type: 'string', default: '-', description: 'Native control name, for form serialization and browser autofill' },
-          { name: 'autocomplete', type: 'string', default: '-', description: 'Native autocomplete hint, e.g. email, street-address, off' },
-          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
-          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
-        ]"
-      />
-    </div>
+    <template #accessibility>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="3">
+            <p class="text-surface-700 dark:text-surface-300">
+              The field is a <code class="cui-code">role="spinbutton"</code> carrying its
+              current value and range, and steps with the keyboard as a native number input
+              does.
+            </p>
+            <PropTable
+              :props="[
+                { name: 'Up / Down', type: 'key', description: 'Step by one step. Honours wrap, min and max' },
+                { name: 'PageUp / PageDown', type: 'key', description: 'Step by ten steps, clamped to the range' },
+                { name: 'Home / End', type: 'key', description: 'Jump to min or max, when they are set' },
+              ]"
+            />
+            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+              <li>
+                The <code>+</code> and <code>−</code> buttons are out of the tab order: the
+                field is the control, and it is reachable and operable on its own.
+              </li>
+              <li>
+                Heights are floored at the <code>--cui-control-min-target</code> minimum
+                (WCAG 2.5.8), shared with every other form control.
+              </li>
+            </ul>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:modelValue', payload: 'number', description: 'Fires when the value changes (v-model)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
-      <p class="mb-4" style="color: var(--cui-text-secondary);">
-        The field is a <code class="cui-code">role="spinbutton"</code> carrying its current value
-        and range, and steps with the keyboard as a native number input does.
-      </p>
-      <PropTable
-        :props="[
-          { name: 'Up / Down', type: 'key', default: '-', description: 'Step by one step. Honours wrap, min and max' },
-          { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Step by ten steps, clamped to the range' },
-          { name: 'Home / End', type: 'key', default: '-', description: 'Jump to min or max, when they are set' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Basic -->
         <Example title="Basic" :code="`<CuiInputStepper v-model=&quot;qty&quot; :min=&quot;1&quot; :max=&quot;99&quot; />`">
@@ -162,7 +144,6 @@ const minutes = ref(30);
           </CuiFlex>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

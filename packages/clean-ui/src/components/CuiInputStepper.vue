@@ -147,11 +147,26 @@ function onInput(e: Event) {
 const cfg = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return {
-    height: s.height,
-    font: s.fontSize,
-    inputWidth: `calc(${s.fontSize} * 3)`,
     buttonSize: nestedSize(props.size),
     iconSize: s.fontSize,
+  };
+});
+
+/**
+ * Every value this component computes is emitted as a private `--_input-stepper-*`
+ * property; the stylesheet reads each as
+ * `var(--cui-input-stepper-height, var(--_input-stepper-height))`, so a public token set
+ * anywhere in the ancestor chain wins and this is the default. See "Themeable Properties"
+ * in CLAUDE.md (#114, #123).
+ */
+const stepperStyle = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  return {
+    "--_input-stepper-height": s.height,
+    "--_input-stepper-font-size": s.fontSize,
+    // The field holds a handful of digits, so it scales with the digits rather than with
+    // the control's padding.
+    "--_input-stepper-field-width": `calc(${s.fontSize} * 3)`,
   };
 });
 
@@ -174,82 +189,197 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div class="cui-input-stepper" ref="rootEl" v-show="!hidden">
-    <label
-      v-if="label"
-      :style="{
-        display: 'block',
-        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        fontWeight: '500',
-        color: 'var(--cui-text-secondary)',
-        fontSize: cfg.font,
-        textAlign: isVertical ? 'center' : undefined,
-      }"
-    >
-      {{ label }}
-    </label>
+  <div
+    class="cui-input-stepper"
+    :class="{ 'cui-input-stepper--vertical': isVertical, 'cui-input-stepper--disabled': disabled }"
+    ref="rootEl"
+    v-show="!hidden"
+    :style="stepperStyle"
+  >
+    <label v-if="label" class="cui-input-stepper__label">{{ label }}</label>
 
     <!-- Horizontal layout -->
-    <div
-      v-if="!isVertical"
-      :style="{
-        display: 'inline-flex',
-        alignItems: 'center',
-        borderRadius: 'var(--cui-button-radius, 0.375rem)',
-        border: '1px solid var(--cui-border-strong, var(--cui-border))',
-        opacity: disabled ? '0.5' : '1',
-        height: cfg.height,
-      }"
-    >
-      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canDecrement" :color="color"
-        :style="{ borderRadius: 'var(--cui-button-radius, 0.375rem) 0 0 var(--cui-button-radius, 0.375rem)', border: 'none', height: '100%' }"
-        @click="decrement">
+    <div v-if="!isVertical" class="cui-input-stepper__control">
+      <CuiButton
+        variant="ghost"
+        :size="cfg.buttonSize"
+        tabindex="-1"
+        :disabled="disabled || !canDecrement"
+        :color="color"
+        class="cui-input-stepper__button cui-input-stepper__button--first"
+        @click="decrement"
+      >
         <CuiIcon name="minus" :size="cfg.iconSize" />
       </CuiButton>
-      <input ref="inputH" :id="id" :name="name" :autocomplete="autocomplete"
-        :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
-        role="spinbutton" :aria-valuenow="modelValue" :aria-valuemin="min" :aria-valuemax="max"
-        type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+      <input
+        ref="inputH"
+        class="cui-input-stepper__field"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
+        role="spinbutton"
+        :aria-valuenow="modelValue"
+        :aria-valuemin="min"
+        :aria-valuemax="max"
+        type="text"
+        inputmode="numeric"
+        :value="displayValue"
+        :disabled="disabled"
         @keydown="onKeydown"
-        :style="{ width: cfg.inputWidth, height: '100%', textAlign: 'center', border: 'none', borderLeft: '1px solid var(--cui-border-strong, var(--cui-border))', borderRight: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: '0', fontFamily: 'inherit' }"
-        @input="onInput" />
-      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canIncrement" :color="color"
-        :style="{ borderRadius: '0 var(--cui-button-radius, 0.375rem) var(--cui-button-radius, 0.375rem) 0', border: 'none', height: '100%' }"
-        @click="increment">
+        @input="onInput"
+      />
+      <CuiButton
+        variant="ghost"
+        :size="cfg.buttonSize"
+        tabindex="-1"
+        :disabled="disabled || !canIncrement"
+        :color="color"
+        class="cui-input-stepper__button cui-input-stepper__button--last"
+        @click="increment"
+      >
         <CuiIcon name="plus" :size="cfg.iconSize" />
       </CuiButton>
     </div>
 
     <!-- Vertical layout -->
-    <div
-      v-else
-      :style="{
-        display: 'inline-flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        borderRadius: 'var(--cui-button-radius, 0.375rem)',
-        border: '1px solid var(--cui-border-strong, var(--cui-border))',
-        opacity: disabled ? '0.5' : '1',
-        overflow: 'hidden',
-      }"
-    >
-      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canIncrement" :color="color"
-        :style="{ border: 'none', borderRadius: '0', width: '100%', minWidth: cfg.inputWidth }"
-        @click="increment">
+    <div v-else class="cui-input-stepper__control">
+      <CuiButton
+        variant="ghost"
+        :size="cfg.buttonSize"
+        tabindex="-1"
+        :disabled="disabled || !canIncrement"
+        :color="color"
+        class="cui-input-stepper__button"
+        @click="increment"
+      >
         <CuiIcon name="caret-up" :size="cfg.iconSize" />
       </CuiButton>
-      <input ref="inputV" :id="id" :name="name" :autocomplete="autocomplete"
-        :aria-describedby="ariaDescribedby" :aria-labelledby="ariaLabelledby"
-        role="spinbutton" :aria-valuenow="modelValue" :aria-valuemin="min" :aria-valuemax="max"
-        type="text" inputmode="numeric" :value="displayValue" :disabled="disabled"
+      <input
+        ref="inputV"
+        class="cui-input-stepper__field"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-labelledby="ariaLabelledby"
+        role="spinbutton"
+        :aria-valuenow="modelValue"
+        :aria-valuemin="min"
+        :aria-valuemax="max"
+        type="text"
+        inputmode="numeric"
+        :value="displayValue"
+        :disabled="disabled"
         @keydown="onKeydown"
-        :style="{ width: cfg.inputWidth, textAlign: 'center', border: 'none', borderTop: '1px solid var(--cui-border-strong, var(--cui-border))', borderBottom: '1px solid var(--cui-border-strong, var(--cui-border))', background: 'var(--cui-surface-base, white)', color: 'var(--cui-text-body)', fontSize: cfg.font, fontWeight: '600', outline: 'none', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', fontFamily: 'inherit' }"
-        @input="onInput" />
-      <CuiButton variant="ghost" :size="cfg.buttonSize" tabindex="-1" :disabled="disabled || !canDecrement" :color="color"
-        :style="{ border: 'none', borderRadius: '0', width: '100%' }"
-        @click="decrement">
+        @input="onInput"
+      />
+      <CuiButton
+        variant="ghost"
+        :size="cfg.buttonSize"
+        tabindex="-1"
+        :disabled="disabled || !canDecrement"
+        :color="color"
+        class="cui-input-stepper__button"
+        @click="decrement"
+      >
         <CuiIcon name="caret-down" :size="cfg.iconSize" />
       </CuiButton>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable ---
+   Zero specificity, so a consumer's own rule wins without `!important`. See the note in
+   CuiButton.vue. */
+:where(.cui-input-stepper__control) {
+  height: var(--cui-input-stepper-height, var(--_input-stepper-height));
+  border: var(--cui-input-stepper-border, 1px solid var(--cui-border-strong, var(--cui-border)));
+  border-radius: var(--cui-input-stepper-radius, var(--cui-button-radius, 0.375rem));
+}
+
+:where(.cui-input-stepper__field) {
+  width: var(--cui-input-stepper-field-width, var(--_input-stepper-field-width));
+  font-size: var(--cui-input-stepper-font-size, var(--_input-stepper-font-size));
+  background: var(--cui-input-stepper-bg, var(--cui-surface-base, white));
+  color: var(--cui-input-stepper-color, var(--cui-text-body));
+}
+
+:where(.cui-input-stepper__label) {
+  font-size: var(--cui-input-stepper-font-size, var(--_input-stepper-font-size));
+  color: var(--cui-input-stepper-label-color, var(--cui-text-secondary));
+}
+
+/* --- Structural --- */
+.cui-input-stepper__label {
+  display: block;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-weight: 500;
+}
+
+.cui-input-stepper--vertical .cui-input-stepper__label {
+  text-align: center;
+}
+
+.cui-input-stepper__control {
+  display: inline-flex;
+  align-items: center;
+}
+
+.cui-input-stepper--vertical .cui-input-stepper__control {
+  flex-direction: column;
+  height: auto;
+  overflow: hidden;
+}
+
+.cui-input-stepper--disabled .cui-input-stepper__control {
+  opacity: 0.5;
+}
+
+.cui-input-stepper__field {
+  height: 100%;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--cui-border-strong, var(--cui-border));
+  border-right: 1px solid var(--cui-border-strong, var(--cui-border));
+  font-weight: 600;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.cui-input-stepper--vertical .cui-input-stepper__field {
+  height: auto;
+  border: none;
+  border-top: 1px solid var(--cui-border-strong, var(--cui-border));
+  border-bottom: 1px solid var(--cui-border-strong, var(--cui-border));
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) 0;
+}
+
+/* The buttons sit inside the control's own border, so they carry neither their own border
+   nor a radius. These are plain rules rather than inline styles because CuiButton's
+   themeable rules are zero-specificity since #114 — a `:deep()` rule from here wins. */
+.cui-input-stepper__control :deep(.cui-button) {
+  border: none;
+  height: 100%;
+  border-radius: 0;
+}
+
+.cui-input-stepper__button--first :deep(.cui-button),
+.cui-input-stepper__control > :deep(.cui-button.cui-input-stepper__button--first) {
+  border-start-start-radius: var(--cui-button-radius, 0.375rem);
+  border-end-start-radius: var(--cui-button-radius, 0.375rem);
+}
+
+.cui-input-stepper__control > :deep(.cui-button.cui-input-stepper__button--last) {
+  border-start-end-radius: var(--cui-button-radius, 0.375rem);
+  border-end-end-radius: var(--cui-button-radius, 0.375rem);
+}
+
+.cui-input-stepper--vertical .cui-input-stepper__control :deep(.cui-button) {
+  width: 100%;
+  min-width: var(--cui-input-stepper-field-width, var(--_input-stepper-field-width));
+}
+</style>

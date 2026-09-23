@@ -28,6 +28,9 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiCardBody.vue", issue: "#115" },
   { file: "CuiCardFooter.vue", issue: "#115" },
   { file: "CuiCardMedia.vue", issue: "#115" },
+  { file: "CuiCombobox.vue", issue: "#123" },
+  { file: "CuiTagInput.vue", issue: "#123" },
+  { file: "CuiInputStepper.vue", issue: "#123" },
 ];
 
 /** Properties a consumer has a legitimate claim on. Layout and geometry are not here. */
