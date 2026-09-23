@@ -140,16 +140,16 @@ function onKeydown(event: KeyboardEvent) {
 /* `size="sm"` (32px) reads fine as a mouse target but falls short of the
    ~44px touch-target guideline (WCAG 2.5.5, Apple HIG) on a phone-width
    screen, where a near-miss tap is more likely to scroll this already
-   horizontally-scrollable strip than activate the button. `min-width`/
-   `min-height` float above `CuiButton`'s own inline `height` (from its
-   `size` prop) rather than conflicting with it — the icon and padding stay
-   exactly as `size="sm"` renders them, just with a larger tap area. Scoped
-   to mobile only: the toolbar's icon-dense, compact layout is deliberate
-   at desktop/mouse widths. */
+   horizontally-scrollable strip than activate the button. Setting the
+   button's own height token grows the tap area while the icon and padding
+   stay exactly as `size="sm"` renders them; before #114 the height was
+   inline and unreachable, so this had to be smuggled in as `min-height`.
+   Scoped to mobile only: the toolbar's icon-dense, compact layout is
+   deliberate at desktop/mouse widths. */
 @media (max-width: 639px) {
   .cui-markdown-editor-toolbar :deep(.cui-button) {
+    --cui-button-height: 44px;
     min-width: 44px;
-    min-height: 44px;
   }
 }
 

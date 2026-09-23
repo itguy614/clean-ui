@@ -170,7 +170,7 @@ function onHexInput(val: string | number) {
                   no-arrow
                   width="296px"
                 >
-                  <CuiButton variant="outline" size="md" style="height: 100%; border-left: none; border-radius: 0;">
+                  <CuiButton variant="outline" size="md">
                     <CuiIcon name="eyedropper" size="0.875rem" />
                   </CuiButton>
                   <template #content>

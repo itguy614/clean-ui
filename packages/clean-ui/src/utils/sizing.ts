@@ -57,8 +57,18 @@ const DS = "var(--cui-density-scale, 1)";
  * Use this in JS-emitted size maps instead of hand-writing the calc() string.
  */
 export const scaleDensity = (v: string) => `calc(${v} * ${DS})`;
-/** Like {@link scaleDensity} but floored at the 24px minimum touch target (WCAG 2.5.8) — for interactive control heights. */
-export const scaleControlHeight = (v: string) => `max(24px, calc(${v} * ${DS}))`;
+/**
+ * Like {@link scaleDensity} but floored at the minimum touch target — for interactive
+ * control heights.
+ *
+ * The floor is `--cui-control-min-target`, defaulting to the 24px of WCAG 2.5.8. It is a
+ * custom property so that going below the minimum is a deliberate, greppable act rather
+ * than an accident: set it on a container and every control inside relaxes together, which
+ * is the realistic case (a dense toolbar holds buttons *and* inputs). At the shipped sizes
+ * the floor only actually binds at `xs` + compact density.
+ */
+export const scaleControlHeight = (v: string) =>
+  `max(var(--cui-control-min-target, 24px), calc(${v} * ${DS}))`;
 
 // Short local aliases for the dense scale tables below.
 const d = scaleDensity;

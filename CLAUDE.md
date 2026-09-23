@@ -85,6 +85,40 @@
 - Display headings: `.cui-display-1/2/3`, Lead text: `.cui-lead`
 - Code text color references primary scale: `--cui-text-code: var(--color-primary-700)` (light) / `var(--color-primary-300)` (dark)
 
+## Themeable Properties (`--cui-<component>-<slot>`)
+
+**Never write a themeable property as a bare declaration in a style binding.** An inline
+declaration outranks every stylesheet rule, so each one forces `!important` on any consumer
+who wants to restyle it — and on the library itself: CuiButtonGroup carried ten, CuiInput
+three, and CuiButton needed one to beat its *own* inline background on hover (#114).
+
+- **Two layers.** The component still computes its values; it emits them as **private**
+  `--_<component>-<slot>` properties inline, and its stylesheet reads each back as
+  `var(--cui-<component>-<slot>, var(--_<component>-<slot>))`. Emitting the *public* token
+  inline instead looks simpler and is wrong: an inline custom property beats an inherited
+  one, so `.toolbar { --cui-button-bg: … }` on a container could never take effect.
+  `src/__tests__/browser/button-themeable.test.ts` has that case.
+- **Slot vocabulary** — a closed set, like the 9 colour-role slots: `bg`, `color`, `border`,
+  `height`, `px`, `py`, `gap`, `font-size`, `radius`, `hover-bg`, `hover-color`,
+  `hover-border`, `active-bg`, `focus-ring`, `focus-border`. Private prefix matches the
+  public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
+  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
+- **Wrap themeable rules in `:where()`.** Vue's scoped compiler puts the `[data-v-…]`
+  attribute *inside* the bracket, where `:where()` zeroes it along with everything else —
+  scoping still works, the specificity does not. Without this the rule is (0,2,0) and a
+  consumer's plain `.cui-button { … }` at (0,1,0) still loses silently, which is what forced
+  `position: absolute !important` in the editor's `editor.css`. Put the **whole compound**
+  inside: `:where(.cui-button:hover)` is (0,0,0), but `:where(.cui-button):hover` is (0,1,0).
+- **Structural rules stay at normal specificity** — `display`, `align-items`, `cursor`,
+  `white-space`, the disabled rules, sub-element rules. Changing those breaks the component
+  rather than restyling it.
+- **`--cui-control-min-target`** (default `24px`, WCAG 2.5.8) is the shared floor in
+  `scaleControlHeight`, so a dense container relaxes its buttons and inputs together. It
+  only binds at `xs` + compact density.
+- `src/styles/__tests__/control-token.test.ts` enforces this, via an **opt-in** `CONVERTED`
+  list — "once converted, stays converted". ~50 of the ~106 components still write paint
+  inline; add yours to the list when its PR converts it.
+
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
 - `utils/color.ts` — color conversions + `resolveColor()` / `isColorRole()` for the role-or-CSS hybrid (Icon/Divider/Backdrop).
@@ -202,6 +236,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 5. Import sizes from `utils/sizing.ts`, not local maps.
 6. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
 7. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.
+7b. **Emit themeable properties as custom properties, not bare inline declarations**, and wrap the rules that consume them in `:where()`. See "Themeable Properties" above, and add the component to the `CONVERTED` list in `src/styles/__tests__/control-token.test.ts`.
 8. Default to subtle color usage. Solid fill only via explicit `variant="solid"`.
 9. Add `aria-*` attributes, keyboard navigation, focus rings.
 10. `defineExpose({ el, focus, blur })` on interactive components.

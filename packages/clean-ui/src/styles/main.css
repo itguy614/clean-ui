@@ -467,15 +467,22 @@
 .cui-text-tertiary { color: var(--cui-text-tertiary); }
 .cui-text-emphasis { color: var(--cui-text-emphasis); }
 
-/* --- Links --- */
-.cui-typography a {
+/* --- Links ---
+   Prose links only. The `:where()` exclusion skips any element carrying a `cui-*` class —
+   same scoping idiom as preflight.css — because a component that happens to render an
+   <a> (CuiButton with `href`, breadcrumbs, pagination) styles itself and must not be
+   repainted by the typography layer. This became load-bearing in #114: CuiButton's own
+   `color` is now zero-specificity, so before the exclusion this rule won and a solid link
+   button drew its label in the same colour as its background. `:where()` contributes
+   nothing to specificity, so prose links are unchanged. */
+.cui-typography a:where(:not([class^="cui-"]):not([class*=" cui-"])) {
   color: var(--cui-text-link);
   text-decoration: underline;
   text-underline-offset: 2px;
   transition: color 0.15s ease;
 }
 
-.cui-typography a:hover {
+.cui-typography a:where(:not([class^="cui-"]):not([class*=" cui-"])):hover {
   color: var(--cui-text-link-hover);
 }
 

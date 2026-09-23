@@ -4,6 +4,7 @@ import CuiTreeView from "../CuiTreeView.vue";
 import CuiTreeNode from "../CuiTreeNode.vue";
 import CuiIcon from "../CuiIcon.vue";
 import type { TreeNode } from "../CuiTreeView.vue";
+import { scaleControlHeight } from "../../utils/sizing";
 
 // Find the CuiTreeNode whose OWN node.id matches, then return its clickable
 // row element. `find` returns the first match in that node's subtree, which is
@@ -131,7 +132,9 @@ describe("CuiTreeView chevron hit target", () => {
     const wrapper = mount(CuiTreeView, { props: { ...baseProps, size } });
     const chevron = chevronFor(wrapper, "fruits");
 
-    expect(chevron.style.width).toBe(`max(24px, calc(${iconSize} * var(--cui-density-scale, 1)))`);
+    // Against the helper, not a copy of the string it happens to emit today: the point
+    // of the assertion is that the floor comes from scaleControlHeight at all.
+    expect(chevron.style.width).toBe(scaleControlHeight(iconSize));
     expect(chevron.style.height).toBe(chevron.style.width);
 
     // the caret glyph itself is unchanged — read the icon's size prop, since
@@ -161,9 +164,7 @@ describe("CuiTreeView chevron hit target", () => {
 
     // negative margin == -(hitSize - iconSize)/2, so the glyph's centre doesn't
     // move and stays aligned with the showLines connectors
-    expect(chevron.style.marginLeft).toBe(
-      "calc((0.75rem - max(24px, calc(0.75rem * var(--cui-density-scale, 1)))) / 2)",
-    );
+    expect(chevron.style.marginLeft).toBe(`calc((0.75rem - ${scaleControlHeight("0.75rem")}) / 2)`);
   });
 
   it("still toggles expansion when the chevron box is clicked", async () => {

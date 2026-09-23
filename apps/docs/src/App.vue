@@ -16,6 +16,7 @@ import {
   useDensity,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
+import PageNav from "./components/PageNav.vue";
 import { ShowDebugKey } from "./keys";
 
 const isDark = ref(false);
@@ -133,11 +134,14 @@ function toggleDark() {
         </header>
 
         <!-- Page Content -->
-        <main class="cui-typography" :style="{ flex: '1', padding: '1.5rem' }" style="padding: 1.5rem;">
-          <div class="lg:px-6 lg:py-6">
-            <router-view />
-          </div>
-        </main>
+        <div :style="{ flex: '1', display: 'flex', alignItems: 'flex-start', minWidth: '0' }">
+          <main class="cui-typography" :style="{ flex: '1', minWidth: '0', padding: '1.5rem' }">
+            <div class="lg:px-6 lg:py-6">
+              <router-view />
+            </div>
+          </main>
+          <PageNav />
+        </div>
       </div>
     </div>
 

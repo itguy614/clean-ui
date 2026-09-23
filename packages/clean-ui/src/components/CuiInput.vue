@@ -354,21 +354,20 @@ const messages = useMessages();
 }
 
 /* Prefix button: outer left matches input radius, inner right is flat */
-/* !important needed to override button's inline :style border-radius */
 .cui-input__prefix-button :deep(.cui-button) {
-  border-radius: calc(var(--cui-button-radius, 0.375rem) - 1px) 0 0 calc(var(--cui-button-radius, 0.375rem) - 1px) !important;
+  border-radius: calc(var(--cui-button-radius, 0.375rem) - 1px) 0 0 calc(var(--cui-button-radius, 0.375rem) - 1px);
 }
 
 /* Suffix button: inner left is flat, outer right matches input radius */
 .cui-input__suffix-button :deep(.cui-button) {
-  border-radius: 0 calc(var(--cui-button-radius, 0.375rem) - 1px) calc(var(--cui-button-radius, 0.375rem) - 1px) 0 !important;
+  border-radius: 0 calc(var(--cui-button-radius, 0.375rem) - 1px) calc(var(--cui-button-radius, 0.375rem) - 1px) 0;
 }
 
 /* Suppress button's own focus ring inside input — the input's focus-within handles it */
 .cui-input__prefix-button :deep(.cui-button:focus-visible),
 .cui-input__suffix-button :deep(.cui-button:focus-visible) {
   outline: none;
-  background: var(--_btn-hover-bg);
+  background: var(--cui-button-hover-bg, var(--_button-hover-bg));
 }
 
 /* --- Error state --- */
