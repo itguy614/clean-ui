@@ -151,16 +151,20 @@ const isLoading = computed(() => props.loading || internalLoading.value);
 // The scale gives height, horizontal padding and font size. What it has no concept of is
 // derived here rather than re-tabulated: vertical padding falls out of the height, the
 // tag chips take `nestedSize`, and a dropdown item reuses the control's own padding.
+/**
+ * The control grows with its tag rows, so the scale's height is a floor rather than a
+ * fixed height — and the chips inside need room, hence the reduced vertical padding.
+ * Constant, so it is built once rather than per size change.
+ */
+const CHIP_ROW_PY = scaleDensity("0.25rem");
+
 const cfg = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
-  // The control grows with its tag rows, so the scale's height is a floor, not a fixed
-  // height — and the chips inside need room, hence the reduced vertical padding.
-  const py = scaleDensity("0.25rem");
   return {
     tagSize: nestedSize(props.size),
     style: {
       "--_combobox-font-size": s.fontSize,
-      "--_combobox-padding": `${py} ${s.px}`,
+      "--_combobox-padding": `${CHIP_ROW_PY} ${s.px}`,
       "--_combobox-item-padding": `${scaleDensity("0.5rem")} ${s.px}`,
       "--_combobox-min-height": s.height,
     },
@@ -535,12 +539,12 @@ const messages = useMessages();
   border-radius: var(--cui-combobox-item-radius, 0.25rem);
 }
 
-:where(.cui-combobox__option--focused) {
-  background: var(--cui-combobox-item-focus-bg, var(--cui-primary-bg));
-}
-
 :where(.cui-combobox__option--selected) {
   background: var(--cui-combobox-item-selected-bg, color-mix(in srgb, var(--cui-primary-bg) 50%, transparent));
+}
+
+:where(.cui-combobox__option--focused) {
+  background: var(--cui-combobox-item-focus-bg, var(--cui-primary-bg));
 }
 
 :where(.cui-combobox__option--disabled) {
@@ -593,11 +597,6 @@ const messages = useMessages();
   gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   transition: background 0.1s ease;
-}
-
-/* Focused wins over selected: it is where the keyboard is, and the two overlap. */
-.cui-combobox__option--focused.cui-combobox__option--selected {
-  background: var(--cui-combobox-item-focus-bg, var(--cui-primary-bg));
 }
 
 .cui-combobox__option--disabled {

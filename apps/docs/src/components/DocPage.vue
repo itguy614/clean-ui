@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { CuiStack } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardBody, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "./PropTable.vue";
 import SlotTable from "./SlotTable.vue";
 import EventTable from "./EventTable.vue";
@@ -109,9 +109,18 @@ const id = (s: string) => slug(s);
       <slot name="customization" />
     </div>
 
+    <!-- The card wrapper lives here rather than in every page: all five converted pages
+         opened this slot with the identical CuiCard/CuiCardBody/CuiStack scaffold, which
+         is also why each had to import those three components. -->
     <div v-if="$slots.accessibility">
       <h2 :id="id('Accessibility')" class="mb-4 text-2xl font-semibold">Accessibility</h2>
-      <slot name="accessibility" />
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="3">
+            <slot name="accessibility" />
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
     </div>
 
     <!-- One-off sections that do not fit the fixed set. They come last before Examples so

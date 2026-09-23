@@ -144,14 +144,6 @@ function onInput(e: Event) {
 // `inputWidth` is the one genuinely stepper-specific metric and derives from the font
 // size: the field holds a handful of digits, so it scales with the digits, not with the
 // control's padding. The +/- buttons and their glyphs take `nestedSize`.
-const cfg = computed(() => {
-  const s = INPUT_SIZE_SCALE[props.size];
-  return {
-    buttonSize: nestedSize(props.size),
-    iconSize: s.fontSize,
-  };
-});
-
 /**
  * Every value this component computes is emitted as a private `--_input-stepper-*`
  * property; the stylesheet reads each as
@@ -159,14 +151,18 @@ const cfg = computed(() => {
  * anywhere in the ancestor chain wins and this is the default. See "Themeable Properties"
  * in CLAUDE.md (#114, #123).
  */
-const stepperStyle = computed(() => {
+const cfg = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return {
-    "--_input-stepper-height": s.height,
-    "--_input-stepper-font-size": s.fontSize,
-    // The field holds a handful of digits, so it scales with the digits rather than with
-    // the control's padding.
-    "--_input-stepper-field-width": `calc(${s.fontSize} * 3)`,
+    buttonSize: nestedSize(props.size),
+    iconSize: s.fontSize,
+    style: {
+      "--_input-stepper-height": s.height,
+      "--_input-stepper-font-size": s.fontSize,
+      // The field holds a handful of digits, so it scales with the digits rather than
+      // with the control's padding.
+      "--_input-stepper-field-width": `calc(${s.fontSize} * 3)`,
+    },
   };
 });
 
@@ -194,7 +190,7 @@ defineExpose({ el: rootEl, focus, blur });
     :class="{ 'cui-input-stepper--vertical': isVertical, 'cui-input-stepper--disabled': disabled }"
     ref="rootEl"
     v-show="!hidden"
-    :style="stepperStyle"
+    :style="cfg.style"
   >
     <label v-if="label" class="cui-input-stepper__label">{{ label }}</label>
 
@@ -206,7 +202,7 @@ defineExpose({ el: rootEl, focus, blur });
         tabindex="-1"
         :disabled="disabled || !canDecrement"
         :color="color"
-        class="cui-input-stepper__button cui-input-stepper__button--first"
+        class="cui-input-stepper__button"
         @click="decrement"
       >
         <CuiIcon name="minus" :size="cfg.iconSize" />
@@ -236,7 +232,7 @@ defineExpose({ el: rootEl, focus, blur });
         tabindex="-1"
         :disabled="disabled || !canIncrement"
         :color="color"
-        class="cui-input-stepper__button cui-input-stepper__button--last"
+        class="cui-input-stepper__button"
         @click="increment"
       >
         <CuiIcon name="plus" :size="cfg.iconSize" />
@@ -326,12 +322,13 @@ defineExpose({ el: rootEl, focus, blur });
 .cui-input-stepper__control {
   display: inline-flex;
   align-items: center;
+  /* Clips the buttons to the control's own corners, so they need no radius of their own. */
+  overflow: hidden;
 }
 
 .cui-input-stepper--vertical .cui-input-stepper__control {
   flex-direction: column;
   height: auto;
-  overflow: hidden;
 }
 
 .cui-input-stepper--disabled .cui-input-stepper__control {
@@ -359,23 +356,13 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* The buttons sit inside the control's own border, so they carry neither their own border
-   nor a radius. These are plain rules rather than inline styles because CuiButton's
-   themeable rules are zero-specificity since #114 — a `:deep()` rule from here wins. */
+   nor a radius; the control clips them to its corners. Plain rules rather than inline
+   styles because CuiButton's themeable rules are zero-specificity since #114 — a
+   `:deep()` rule from here wins. */
 .cui-input-stepper__control :deep(.cui-button) {
   border: none;
   height: 100%;
   border-radius: 0;
-}
-
-.cui-input-stepper__button--first :deep(.cui-button),
-.cui-input-stepper__control > :deep(.cui-button.cui-input-stepper__button--first) {
-  border-start-start-radius: var(--cui-button-radius, 0.375rem);
-  border-end-start-radius: var(--cui-button-radius, 0.375rem);
-}
-
-.cui-input-stepper__control > :deep(.cui-button.cui-input-stepper__button--last) {
-  border-start-end-radius: var(--cui-button-radius, 0.375rem);
-  border-end-end-radius: var(--cui-button-radius, 0.375rem);
 }
 
 .cui-input-stepper--vertical .cui-input-stepper__control :deep(.cui-button) {

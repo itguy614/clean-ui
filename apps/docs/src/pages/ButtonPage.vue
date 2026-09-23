@@ -72,32 +72,26 @@ function simulateLoad() {
     </template>
 
     <template #accessibility>
-      <CuiCard variant="outline">
-        <CuiCardBody>
-          <CuiStack spacing="3">
-            <p class="text-surface-700 dark:text-surface-300">
-              Renders a native <code>&lt;button&gt;</code>, or an <code>&lt;a&gt;</code> when
-              <code>href</code>/<code>to</code> is set, so keyboard activation, focus order
-              and assistive-technology semantics come from the element itself.
-            </p>
-            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-              <li>Focus ring on <code>:focus-visible</code> only, so pointer users never see it.</li>
-              <li>
-                <code>loading</code> sets <code>aria-busy</code> and blocks interaction; the
-                label stays in the accessible name rather than being replaced by the spinner.
-              </li>
-              <li>
-                Disabled links use <code>aria-disabled</code> with <code>tabindex="-1"</code>
-                — an <code>&lt;a&gt;</code> has no <code>disabled</code> attribute.
-              </li>
-              <li>
-                An icon-only button has no text, so give it an accessible name with
-                <code>aria-label</code>.
-              </li>
-            </ul>
-          </CuiStack>
-        </CuiCardBody>
-      </CuiCard>
+      <p class="text-surface-700 dark:text-surface-300">
+        Renders a native <code>&lt;button&gt;</code>, or an <code>&lt;a&gt;</code> when
+        <code>href</code>/<code>to</code> is set, so keyboard activation, focus order
+        and assistive-technology semantics come from the element itself.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>Focus ring on <code>:focus-visible</code> only, so pointer users never see it.</li>
+        <li>
+          <code>loading</code> sets <code>aria-busy</code> and blocks interaction; the
+          label stays in the accessible name rather than being replaced by the spinner.
+        </li>
+        <li>
+          Disabled links use <code>aria-disabled</code> with <code>tabindex="-1"</code>
+          — an <code>&lt;a&gt;</code> has no <code>disabled</code> attribute.
+        </li>
+        <li>
+          An icon-only button has no text, so give it an accessible name with
+          <code>aria-label</code>.
+        </li>
+      </ul>
     </template>
 
     <template #extra>

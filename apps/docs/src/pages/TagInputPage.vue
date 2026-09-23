@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiTagInput, type TagOption } from "@itguy614/clean-ui";
+import { CuiFlex, CuiTagInput, type TagOption } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import meta from "../meta/tag-input";
 import Example from "../components/Example.vue";
@@ -58,28 +58,22 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
     </template>
 
     <template #accessibility>
-      <CuiCard variant="outline">
-        <CuiCardBody>
-          <CuiStack spacing="3">
-            <p class="text-surface-700 dark:text-surface-300">
-              A text field with an optional suggestions popup. <code>Enter</code> commits the
-              typed value, <code>Backspace</code> on an empty field removes the last tag, and
-              the arrow keys move through suggestions when they are shown.
-            </p>
-            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-              <li>Each tag's remove control is a real button, reachable by keyboard.</li>
-              <li>
-                Sizes come from the shared input scale, so a tag input is the same height and
-                indent as a <code>CuiInput</code> beside it.
-              </li>
-              <li>
-                Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
-                <code>CuiFormField</code> wires both up automatically.
-              </li>
-            </ul>
-          </CuiStack>
-        </CuiCardBody>
-      </CuiCard>
+      <p class="text-surface-700 dark:text-surface-300">
+        A text field with an optional suggestions popup. <code>Enter</code> commits the
+        typed value, <code>Backspace</code> on an empty field removes the last tag, and
+        the arrow keys move through suggestions when they are shown.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>Each tag's remove control is a real button, reachable by keyboard.</li>
+        <li>
+          Sizes come from the shared input scale, so a tag input is the same height and
+          indent as a <code>CuiInput</code> beside it.
+        </li>
+        <li>
+          Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
+          <code>CuiFormField</code> wires both up automatically.
+        </li>
+      </ul>
     </template>
 
     <template #examples>

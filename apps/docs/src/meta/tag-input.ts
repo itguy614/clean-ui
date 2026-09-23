@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "./types";
+import { hiddenProp, inputSizeProp, nativeControlProps, roundedProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Tag Input",
@@ -22,31 +23,14 @@ const meta: ComponentMeta = {
     },
     { name: "createText", type: "string", default: "Create", description: "Text for the create option" },
     { name: "label", type: "string", description: "Label text" },
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Size, from the shared input scale — matches CuiInput and CuiSelect at the same value",
-    },
-    { name: "rounded", type: "none | sm | md | lg | full", default: "md", description: "Border radius" },
+    inputSizeProp,
+    roundedProp,
     { name: "error", type: "boolean", default: "false", description: "Error state" },
     { name: "errorMessage", type: "string", description: "Error message text" },
     { name: "noSuggestionsText", type: "string", default: "No suggestions", description: "Text when no suggestions match" },
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
-    { name: "hidden", type: "boolean", default: "false", description: "Hide the component" },
-    {
-      name: "id",
-      type: "string",
-      description: "id of the native control — what a label's for attribute must point at. CuiFormField supplies it automatically",
-    },
-    { name: "name", type: "string", description: "Native control name, for form serialization and browser autofill" },
-    { name: "autocomplete", type: "string", description: "Native autocomplete hint, e.g. email, street-address, off" },
-    {
-      name: "aria-describedby",
-      type: "string",
-      description: "id(s) of describing text. CuiFormField points this at its help text or error message",
-    },
-    { name: "aria-labelledby", type: "string", description: "id(s) of the labelling element. CuiFormField points this at its label" },
+    hiddenProp,
+    ...nativeControlProps,
   ],
 
   slots: [{ name: "suggestion", payload: "{ suggestion }", description: "Renders one row of the suggestions list" }],

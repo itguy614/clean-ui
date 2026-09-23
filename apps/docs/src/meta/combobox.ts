@@ -1,20 +1,5 @@
 import type { ComponentMeta } from "./types";
-
-const ariaProps = [
-  {
-    name: "id",
-    type: "string",
-    description: "id of the native control — what a label's for attribute must point at. CuiFormField supplies it automatically",
-  },
-  { name: "name", type: "string", description: "Native control name, for form serialization and browser autofill" },
-  { name: "autocomplete", type: "string", description: "Native autocomplete hint, e.g. email, street-address, off" },
-  {
-    name: "aria-describedby",
-    type: "string",
-    description: "id(s) of describing text. CuiFormField points this at its help text or error message",
-  },
-  { name: "aria-labelledby", type: "string", description: "id(s) of the labelling element. CuiFormField points this at its label" },
-];
+import { hiddenProp, inputSizeProp, nativeControlProps, roundedProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Combobox",
@@ -31,13 +16,8 @@ const meta: ComponentMeta = {
     { name: "maxVisible", type: "number", default: "8", description: "Max visible items before scrolling" },
     { name: "placeholder", type: "string", default: "Search...", description: "Placeholder text" },
     { name: "noResultsText", type: "string", default: "No results found", description: "Text when no options match" },
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Size, from the shared input scale — matches CuiInput and CuiSelect at the same value",
-    },
-    { name: "rounded", type: "none | sm | md | lg | full", default: "md", description: "Border radius" },
+    inputSizeProp,
+    roundedProp,
     { name: "label", type: "string", description: "Label text" },
     { name: "error", type: "boolean", default: "false", description: "Error state" },
     { name: "errorMessage", type: "string", description: "Error message" },
@@ -49,8 +29,8 @@ const meta: ComponentMeta = {
     },
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
     { name: "loading", type: "boolean", default: "false", description: "External loading state" },
-    { name: "hidden", type: "boolean", default: "false", description: "Hide the component" },
-    ...ariaProps,
+    hiddenProp,
+    ...nativeControlProps,
   ],
 
   slots: [

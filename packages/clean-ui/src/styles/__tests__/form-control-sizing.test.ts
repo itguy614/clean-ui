@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const COMPONENTS = resolve(__dirname, "../../components");
@@ -79,12 +79,15 @@ describe("form controls size themselves from the shared scale (#123)", () => {
     });
   }
 
-  it("covers every component that renders a bare form control", () => {
-    // A cheap tripwire: if a new component imports INPUT_SIZE_SCALE it is form-row shaped
-    // and belongs on the list above, where the no-local-table rule will apply to it.
-    const users = FORM_CONTROLS.filter((f) =>
-      readFileSync(resolve(COMPONENTS, f), "utf-8").includes("INPUT_SIZE_SCALE"),
-    );
-    expect(users.length).toBeGreaterThanOrEqual(5);
+  it("covers every component that sizes itself from the shared scale", () => {
+    // The list above is the weak part of this guard: a new form control is only covered
+    // once someone remembers to add it. This closes that — anything importing
+    // INPUT_SIZE_SCALE is form-row shaped by definition and must be on the list, so a new
+    // control is caught the day it is written rather than the day someone notices.
+    const users = readdirSync(COMPONENTS)
+      .filter((f) => f.endsWith(".vue"))
+      .filter((f) => readFileSync(resolve(COMPONENTS, f), "utf-8").includes("INPUT_SIZE_SCALE"));
+
+    expect(users.filter((f) => !FORM_CONTROLS.includes(f))).toEqual([]);
   });
 });

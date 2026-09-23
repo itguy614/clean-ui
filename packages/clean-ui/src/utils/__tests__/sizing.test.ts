@@ -15,17 +15,15 @@ describe("INPUT_SIZE_SCALE", () => {
    * alone, which would have made `md` identical to `sm`.
    */
   it("has a monotonic horizontal padding curve", () => {
-    const px = SIZE_ORDER.map((s) => INPUT_SIZE_SCALE[s].px);
-    expect(px).toEqual([
+    // Pinning the exact strings IS the assertion — the alignment tests compare controls to
+    // each other, so an absolute move of the whole scale passes every one of them.
+    expect(SIZE_ORDER.map((s) => INPUT_SIZE_SCALE[s].px)).toEqual([
       "calc(0.5rem * var(--cui-density-scale, 1))",
       "calc(0.625rem * var(--cui-density-scale, 1))",
       "calc(0.75rem * var(--cui-density-scale, 1))",
       "calc(0.875rem * var(--cui-density-scale, 1))",
       "calc(1rem * var(--cui-density-scale, 1))",
     ]);
-
-    const rem = px.map((v) => parseFloat(v.match(/([\d.]+)rem/)![1]));
-    for (let i = 1; i < rem.length; i++) expect(rem[i]).toBeGreaterThan(rem[i - 1]);
   });
 
   it("floors every height at the shared minimum target", () => {

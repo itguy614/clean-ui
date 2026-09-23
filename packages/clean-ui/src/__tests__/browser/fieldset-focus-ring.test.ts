@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
+import { installTokens } from "./helpers";
 import CuiFieldset from "../../components/CuiFieldset.vue";
 import CuiInput from "../../components/CuiInput.vue";
 
@@ -17,27 +18,20 @@ import CuiInput from "../../components/CuiInput.vue";
  * not model at all.
  */
 describe("CuiFieldset leaves room for a field's focus ring (real browser)", () => {
+  let removeTokens: () => void;
   beforeAll(() => {
-    const style = document.createElement("style");
-    style.id = "cui-tokens";
-    // `--color-*` comes from the Tailwind `@theme`, inert in a raw stylesheet — and an
-    // unresolved var invalidates the `border` shorthand, which moves every measurement.
-    style.textContent = `${main}
-      :root {
-        --color-surface-50:#fafafa; --color-surface-100:#f4f4f5; --color-surface-200:#e4e4e7;
-        --color-surface-300:#d4d4d8; --color-surface-400:#a1a1aa; --color-surface-500:#71717a;
-        --color-surface-600:#52525b; --color-surface-700:#3f3f46; --color-surface-800:#27272a;
-        --color-surface-900:#18181b; --color-surface-950:#09090b;
-        --color-primary-100:#e0e7ff; --color-primary-300:#a5b4fc; --color-primary-500:#4f46e5;
-        --color-primary-700:#3730a3; --color-primary-900:#1e1b4b;
-      }`;
-    document.head.append(style);
+    removeTokens = installTokens(main);
   });
+  afterAll(() => removeTokens());
 
-  afterAll(() => document.getElementById("cui-tokens")?.remove());
-
+  const mounted: Array<{ unmount: () => void }> = [];
   const hosts: HTMLElement[] = [];
-  afterEach(() => hosts.splice(0).forEach((h) => h.remove()));
+  afterEach(() => {
+    // Unmount, not just detach: dropping the wrapper leaves the Vue app and its window
+    // listeners alive for the rest of the file.
+    mounted.splice(0).forEach((w) => w.unmount());
+    hosts.splice(0).forEach((h) => h.remove());
+  });
 
   /** The widest ring the library draws: outline 2px at offset 2px. */
   const RING = 4;
@@ -52,6 +46,7 @@ describe("CuiFieldset leaves room for a field's focus ring (real browser)", () =
       slots: { default: () => [h(CuiInput, { size: "md" }), h(CuiInput, { size: "md" })] },
       attachTo: host,
     });
+    mounted.push(w);
     const root = w.element as HTMLElement;
     return {
       root,

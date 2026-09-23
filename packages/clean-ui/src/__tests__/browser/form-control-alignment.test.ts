@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
+import { installTokens } from "./helpers";
 import CuiInput from "../../components/CuiInput.vue";
 import CuiSelect from "../../components/CuiSelect.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
@@ -18,32 +19,19 @@ import CuiFormField from "../../components/CuiFormField.vue";
  * resolves to nothing in jsdom.
  */
 describe("form controls line up (real browser)", () => {
+  let removeTokens: () => void;
   beforeAll(() => {
-    const style = document.createElement("style");
-    style.id = "cui-tokens";
-    // The `--color-*` scale comes from the Tailwind `@theme`, which is inert in a raw
-    // stylesheet — and without it `border: 1px solid var(--cui-border-strong)` is an
-    // invalid shorthand, so the controls render with NO border and every height is 2px out.
-    style.textContent = `${main}
-      :root {
-        --color-surface-50:#fafafa; --color-surface-100:#f4f4f5; --color-surface-200:#e4e4e7;
-        --color-surface-300:#d4d4d8; --color-surface-400:#a1a1aa; --color-surface-500:#71717a;
-        --color-surface-600:#52525b; --color-surface-700:#3f3f46; --color-surface-800:#27272a;
-        --color-surface-900:#18181b; --color-surface-950:#09090b;
-        --color-primary-100:#e0e7ff; --color-primary-300:#a5b4fc; --color-primary-500:#4f46e5;
-        --color-primary-700:#3730a3; --color-primary-900:#1e1b4b;
-      }`;
-    document.head.append(style);
+    removeTokens = installTokens(main);
   });
-
-  afterAll(() => document.getElementById("cui-tokens")?.remove());
+  afterAll(() => removeTokens());
 
   const mounted: Array<{ unmount: () => void }> = [];
   const hosts: HTMLElement[] = [];
-  afterEach(() => {
+  const teardown = () => {
     mounted.splice(0).forEach((w) => w.unmount());
     hosts.splice(0).forEach((h) => h.remove());
-  });
+  };
+  afterEach(teardown);
 
   const OPTIONS = [
     { value: "a", label: "Alpha" },
@@ -51,30 +39,34 @@ describe("form controls line up (real browser)", () => {
   ];
 
   /**
-   * Mount a control and return the element that actually draws its box — the one carrying
-   * the border. Each of these wraps that in a field wrapper holding the label and error
-   * message, and they do not agree on which class sits where, so find it by what it does
-   * rather than by name.
+   * The element that actually draws each control's box. Each component wraps that in a
+   * field wrapper holding the label and error message, and they do not agree on which
+   * class sits where — so the class is named per component rather than hunted for by
+   * walking every descendant and asking which one has a border.
    */
-  function control(component: unknown, size: string, extra: Record<string, unknown> = {}) {
+  const BORDERED: Array<[unknown, string, Record<string, unknown>]> = [
+    [CuiInput, ".cui-input", {}],
+    [CuiSelect, ".cui-select__trigger", { options: OPTIONS }],
+    [CuiCombobox, ".cui-combobox__control", { options: OPTIONS }],
+    [CuiTagInput, ".cui-tag-input__control", {}],
+    [CuiInputStepper, ".cui-input-stepper__control", {}],
+  ];
+
+  function control(component: unknown, size: string) {
+    const [, selector, extra] = BORDERED.find(([c]) => c === component)!;
     const host = document.createElement("div");
     host.style.width = "320px";
     document.body.append(host);
     hosts.push(host);
     const w = mount(component as never, { props: { size, ...extra }, attachTo: host });
     mounted.push(w);
-    const root = w.element as HTMLElement;
-    const bordered = Array.from(root.querySelectorAll<HTMLElement>("*")).find(
-      (e) => getComputedStyle(e).borderTopWidth !== "0px",
-    );
-    return (bordered ?? root) as HTMLElement;
+    return (w.element as HTMLElement).querySelector<HTMLElement>(selector)!;
   }
 
   /** Where the text starts, measured from the control's left edge — the issue's complaint. */
   function textIndent(el: HTMLElement) {
     const text = el.querySelector<HTMLElement>("input, [class*='__value'], [class*='__placeholder']");
-    if (!text) return null;
-    return Math.round(text.getBoundingClientRect().left - el.getBoundingClientRect().left);
+    return text ? Math.round(text.getBoundingClientRect().left - el.getBoundingClientRect().left) : null;
   }
 
   const box = (el: HTMLElement) => ({
@@ -84,38 +76,38 @@ describe("form controls line up (real browser)", () => {
   });
 
   describe.each(["xs", "sm", "md", "lg", "xl"])("at size=%s", (size) => {
-    it("gives the combobox the same height, indent and font size as an input", () => {
-      const input = box(control(CuiInput, size));
-      const combo = box(control(CuiCombobox, size, { options: OPTIONS }));
-
-      // The combobox grows with its tag rows, so its height is a floor: equal when empty.
-      expect(combo.height).toBe(input.height);
-      expect(combo.indent).toBe(input.indent);
-      expect(combo.fontSize).toBe(input.fontSize);
+    // One reference measurement per size, not one per test: it is a pure measurement of a
+    // fresh mount, so taking it once is exactly as honest and saves 15 mounts across the
+    // block — and CuiIcon's first mount pays for the whole Phosphor barrel.
+    let input: ReturnType<typeof box>;
+    beforeAll(() => {
+      input = box(control(CuiInput, size));
+      // Measured and torn down immediately: the numbers are what the tests need, and
+      // leaving the fixture mounted would leak it past this block's afterEach.
+      teardown();
+      // Guards every `toBe(input.indent)` below: two nulls compare equal, so if the text
+      // selector ever stops matching, the indent assertions would all pass vacuously.
+      expect(input.indent, "reference indent must be measurable").not.toBeNull();
     });
 
-    it("gives the tag input the same metrics", () => {
-      const input = box(control(CuiInput, size));
-      const tags = box(control(CuiTagInput, size));
-
-      expect(tags.height).toBe(input.height);
-      expect(tags.indent).toBe(input.indent);
-      expect(tags.fontSize).toBe(input.fontSize);
-    });
-
-    it("gives the select the same height and indent", () => {
+    it.each([
+      // The combobox and tag input grow with their tag rows, so height is a floor here —
+      // equal when empty, which is how they are mounted.
+      ["combobox", CuiCombobox, true],
+      ["tag input", CuiTagInput, true],
       // CuiInput used to put the height on its inner element, so the borders sat outside
       // it and every input was 2px taller than the select beside it (#123).
-      const input = box(control(CuiInput, size));
-      const select = box(control(CuiSelect, size, { options: OPTIONS }));
+      ["select", CuiSelect, true],
+      // The stepper centres its value between the +/- buttons, so indent does not apply.
+      ["stepper", CuiInputStepper, false],
+    ])("gives the %s the same metrics as an input", (_label, component, comparesText) => {
+      const other = box(control(component, size));
 
-      expect(select.height).toBe(input.height);
-      expect(select.indent).toBe(input.indent);
-    });
-
-    it("gives the stepper the same height", () => {
-      // Its value is centred between the +/- buttons, so indent does not apply.
-      expect(box(control(CuiInputStepper, size)).height).toBe(box(control(CuiInput, size)).height);
+      expect(other.height).toBe(input.height);
+      if (comparesText) {
+        expect(other.indent).toBe(input.indent);
+        expect(other.fontSize).toBe(input.fontSize);
+      }
     });
   });
 

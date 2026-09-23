@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiCard, CuiCardBody, CuiFlex, CuiInputStepper, CuiStack } from "@itguy614/clean-ui";
+import { CuiFlex, CuiInputStepper, CuiStack } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import PropTable from "../components/PropTable.vue";
@@ -26,34 +26,28 @@ const minutes = ref(30);
     </template>
 
     <template #accessibility>
-      <CuiCard variant="outline">
-        <CuiCardBody>
-          <CuiStack spacing="3">
-            <p class="text-surface-700 dark:text-surface-300">
-              The field is a <code class="cui-code">role="spinbutton"</code> carrying its
-              current value and range, and steps with the keyboard as a native number input
-              does.
-            </p>
-            <PropTable
-              :props="[
-                { name: 'Up / Down', type: 'key', description: 'Step by one step. Honours wrap, min and max' },
-                { name: 'PageUp / PageDown', type: 'key', description: 'Step by ten steps, clamped to the range' },
-                { name: 'Home / End', type: 'key', description: 'Jump to min or max, when they are set' },
-              ]"
-            />
-            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-              <li>
-                The <code>+</code> and <code>−</code> buttons are out of the tab order: the
-                field is the control, and it is reachable and operable on its own.
-              </li>
-              <li>
-                Heights are floored at the <code>--cui-control-min-target</code> minimum
-                (WCAG 2.5.8), shared with every other form control.
-              </li>
-            </ul>
-          </CuiStack>
-        </CuiCardBody>
-      </CuiCard>
+      <p class="text-surface-700 dark:text-surface-300">
+        The field is a <code class="cui-code">role="spinbutton"</code> carrying its
+        current value and range, and steps with the keyboard as a native number input
+        does.
+      </p>
+      <PropTable
+        :props="[
+          { name: 'Up / Down', type: 'key', description: 'Step by one step. Honours wrap, min and max' },
+          { name: 'PageUp / PageDown', type: 'key', description: 'Step by ten steps, clamped to the range' },
+          { name: 'Home / End', type: 'key', description: 'Jump to min or max, when they are set' },
+        ]"
+      />
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The <code>+</code> and <code>−</code> buttons are out of the tab order: the
+          field is the control, and it is reachable and operable on its own.
+        </li>
+        <li>
+          Heights are floored at the <code>--cui-control-min-target</code> minimum
+          (WCAG 2.5.8), shared with every other form control.
+        </li>
+      </ul>
     </template>
 
     <template #examples>

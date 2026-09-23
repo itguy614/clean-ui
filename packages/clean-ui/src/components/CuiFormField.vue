@@ -163,10 +163,15 @@ onBeforeUnmount(() => {
 }
 
 /* The label is a flex row, so its height is whatever its tallest child is — and that must
-   not depend on whether the field happens to be required. The markers inherit a taller
-   line-height from the surrounding prose otherwise, which grew the label by ~1.4px and
-   pushed a required field's control that much lower than the field beside it in the same
-   row. Visible wherever a form puts a required and an optional field side by side. */
+   not depend on whether the field happens to be required, or a required field's control
+   sits lower than the optional one beside it (#134).
+
+   `line-height: inherit` on the markers, not a height on the label: the label already
+   declares `line-height: 1.4`, but inheritance loses to any rule that matches the child
+   directly, and the docs' prose styles set spans to 1.5. That made the marker's line box
+   21px against the label text's 19.6px, and no height on the label can cap a child that
+   is taller than it. Forcing the child to take the parent's computed value is what
+   actually closes it. */
 .cui-form-field__required {
   color: var(--cui-error);
   font-weight: 600;

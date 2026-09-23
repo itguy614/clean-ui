@@ -129,16 +129,20 @@ const isLoading = computed(() => internalLoading.value);
 // From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
 // size. The private table it replaces had different metrics, only sm|md|lg, and an
 // `inputHeight` that was never density-scaled at all (#123).
+/**
+ * The control grows with its tag rows, so the scale's height is a floor rather than a
+ * fixed height — and the chips inside need room, hence the reduced vertical padding.
+ * Constant, so it is built once rather than per size change.
+ */
+const CHIP_ROW_PY = scaleDensity("0.25rem");
+
 const cfg = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
-  // Grows with its tag rows, so the scale height is a floor; the reduced vertical padding
-  // leaves room for the chips.
-  const py = scaleDensity("0.25rem");
   return {
     tagSize: nestedSize(props.size),
     style: {
       "--_tag-input-font-size": s.fontSize,
-      "--_tag-input-padding": `${py} ${s.px}`,
+      "--_tag-input-padding": `${CHIP_ROW_PY} ${s.px}`,
       "--_tag-input-min-height": s.height,
     },
   };

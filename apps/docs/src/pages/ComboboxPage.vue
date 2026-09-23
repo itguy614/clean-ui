@@ -5,10 +5,6 @@ import {
   CuiBadge,
   CuiCombobox,
   CuiFlex,
-  CuiCard,
-  CuiCardBody,
-  CuiIcon,
-  CuiStack,
   type ComboboxOption,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
@@ -93,31 +89,25 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
     </template>
 
     <template #accessibility>
-      <CuiCard variant="outline">
-        <CuiCardBody>
-          <CuiStack spacing="3">
-            <p class="text-surface-700 dark:text-surface-300">
-              The control is a text field with a listbox popup: typing filters, the arrow
-              keys move through the results, <code>Enter</code> selects and
-              <code>Escape</code> closes.
-            </p>
-            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-              <li>
-                The dropdown is teleported to <code>&lt;body&gt;</code> so it is never clipped
-                by an ancestor, and it anchors to the control rather than the wrapper.
-              </li>
-              <li>
-                Sizes come from the shared input scale, so a combobox is the same height and
-                indent as a <code>CuiInput</code> or <code>CuiSelect</code> beside it.
-              </li>
-              <li>
-                Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
-                <code>CuiFormField</code> wires both up automatically.
-              </li>
-            </ul>
-          </CuiStack>
-        </CuiCardBody>
-      </CuiCard>
+      <p class="text-surface-700 dark:text-surface-300">
+        The control is a text field with a listbox popup: typing filters, the arrow
+        keys move through the results, <code>Enter</code> selects and
+        <code>Escape</code> closes.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The dropdown is teleported to <code>&lt;body&gt;</code> so it is never clipped
+          by an ancestor, and it anchors to the control rather than the wrapper.
+        </li>
+        <li>
+          Sizes come from the shared input scale, so a combobox is the same height and
+          indent as a <code>CuiInput</code> or <code>CuiSelect</code> beside it.
+        </li>
+        <li>
+          Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
+          <code>CuiFormField</code> wires both up automatically.
+        </li>
+      </ul>
     </template>
 
     <template #examples>
