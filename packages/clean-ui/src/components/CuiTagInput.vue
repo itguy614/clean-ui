@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -126,13 +126,21 @@ const canCreate = computed(() => {
 const isLoading = computed(() => internalLoading.value);
 
 // Size config
-const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: "sm" | "md"; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "calc(0.25rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2rem" },
-  md: { fontSize: "0.875rem", padding: "calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2.375rem" },
-  lg: { fontSize: "0.9375rem", padding: "calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", tagSize: "md", inputHeight: "2.75rem" },
-};
-const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+// From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
+// size. The private table it replaces had different metrics, only sm|md|lg, and an
+// `inputHeight` that was never density-scaled at all (#123).
+const cfg = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  // Grows with its tag rows, so the scale height is a floor; the reduced vertical padding
+  // leaves room for the chips.
+  const py = scaleDensity("0.25rem");
+  return {
+    fontSize: s.fontSize,
+    padding: `${py} ${s.px}`,
+    inputHeight: s.height,
+    tagSize: nestedSize(props.size),
+  };
+});
 
 // Dropdown positioning
 function updateDropdownPosition() {
@@ -347,7 +355,12 @@ defineExpose({ el: wrapperRef, focus, blur });
           background: 'transparent',
           fontSize: cfg.fontSize,
           color: 'var(--cui-text-body)',
-          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
+          padding: '0',
+          // A determinate line-height, so the field's intrinsic height cannot push the
+          // control past the shared scale's height: at `sm` the default plus its own
+          // padding came to 24px, which with the control's padding and borders made the
+          // box 34px against a 32px input (#123).
+          lineHeight: '1.25',
           fontFamily: 'inherit',
         }"
         @input="onInput"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 
@@ -137,15 +137,23 @@ function onInput(e: Event) {
   emit("update:modelValue", clamped);
 }
 
-const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { height: string; inputWidth: string; font: string; buttonSize: "xs" | "sm" | "md"; iconSize: string }> = {
-  sm: { height: "1.75rem", inputWidth: "2.5rem", font: "0.8125rem", buttonSize: "xs", iconSize: "0.75rem" },
-  md: { height: "2.25rem", inputWidth: "3rem", font: "0.875rem", buttonSize: "sm", iconSize: "0.875rem" },
-  lg: { height: "2.75rem", inputWidth: "3.5rem", font: "1rem", buttonSize: "md", iconSize: "1rem" },
-};
-
-const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+// From the shared scale, so a stepper lines up with a CuiInput or CuiSelect of the same
+// size. Its private table had its own heights and fonts and only sm|md|lg (#123).
+//
+// `inputWidth` is the one genuinely stepper-specific metric and derives from the font
+// size: the field holds a handful of digits, so it scales with the digits, not with the
+// control's padding. The +/- buttons and their glyphs take `nestedSize`.
+const cfg = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  return {
+    height: s.height,
+    font: s.fontSize,
+    inputWidth: `calc(${s.fontSize} * 3)`,
+    buttonSize: nestedSize(props.size),
+    iconSize: s.fontSize,
+  };
+});
 
 // Expose imperative handle
 const rootEl = useTemplateRef<HTMLElement>("rootEl");

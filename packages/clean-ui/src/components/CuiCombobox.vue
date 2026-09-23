@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { clampSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -144,14 +144,26 @@ const filteredOptions = computed(() => {
 
 const isLoading = computed(() => props.loading || internalLoading.value);
 
-// Size config
-const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: `${scaleDensity("0.25rem")} ${scaleDensity("0.5rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.375rem")} ${scaleDensity("0.625rem")}`, inputHeight: scaleDensity("2rem") },
-  md: { fontSize: "0.875rem", padding: `${scaleDensity("0.3125rem")} ${scaleDensity("0.625rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.5rem")} ${scaleDensity("0.75rem")}`, inputHeight: scaleDensity("2.375rem") },
-  lg: { fontSize: "0.9375rem", padding: `${scaleDensity("0.4375rem")} ${scaleDensity("0.75rem")}`, tagSize: "md", itemPadding: `${scaleDensity("0.625rem")} ${scaleDensity("0.875rem")}`, inputHeight: scaleDensity("2.75rem") },
-};
-const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+// Size config — from the shared scale, so a combobox lines up with a CuiInput or
+// CuiSelect of the same size. It used to carry a private table with different heights,
+// paddings and font sizes, and only sm|md|lg (#123).
+//
+// The scale gives height, horizontal padding and font size. What it has no concept of is
+// derived here rather than re-tabulated: vertical padding falls out of the height, the
+// tag chips take `nestedSize`, and a dropdown item reuses the control's own padding.
+const cfg = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  // The control grows with its tag rows, so the scale's height is a floor, not a fixed
+  // height — and the chips inside need room, hence the reduced vertical padding.
+  const py = scaleDensity("0.25rem");
+  return {
+    fontSize: s.fontSize,
+    padding: `${py} ${s.px}`,
+    itemPadding: `${scaleDensity("0.5rem")} ${s.px}`,
+    inputHeight: s.height,
+    tagSize: nestedSize(props.size),
+  };
+});
 
 // Dropdown positioning
 function updateDropdownPosition() {
@@ -383,7 +395,7 @@ const messages = useMessages();
         v-for="opt in (multiple ? selectedOptions : [])"
         :key="String(opt.value)"
         :color="color"
-        :size="cfg.tagSize as 'sm' | 'md'"
+        :size="cfg.tagSize"
         removable
         @remove="removeTag(opt.value)"
       >
@@ -410,7 +422,12 @@ const messages = useMessages();
           background: 'transparent',
           fontSize: cfg.fontSize,
           color: 'var(--cui-text-body)',
-          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
+          padding: '0',
+          // A determinate line-height, so the field's intrinsic height cannot push the
+          // control past the shared scale's height: at `sm` the default plus its own
+          // padding came to 24px, which with the control's padding and borders made the
+          // box 34px against a 32px input (#123).
+          lineHeight: '1.25',
           fontFamily: 'inherit',
         }"
         @input="onInput"
