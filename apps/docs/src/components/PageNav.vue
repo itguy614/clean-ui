@@ -28,7 +28,15 @@ function collect() {
   // their own, but the pages not yet converted to the shell have none, and the nav is
   // meant to work on all of them from the start. Ids are assigned here from the same
   // `slug()`, deduped, so a converted and an unconverted page anchor identically.
-  const nodes = Array.from(document.querySelectorAll<HTMLElement>("main h2, main h3"));
+  //
+  // Headings inside an example's *preview* are content, not page structure — a product
+  // card demo has an <h3> for the product name, and listing it here reads as a section
+  // that does not exist. `Example` puts its own title in the card header and the demo in
+  // the body, so excluding card bodies keeps exactly the structural headings, on
+  // converted and unconverted pages alike.
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>("main h2, main h3")).filter(
+    (el) => !el.closest(".cui-card-body"),
+  );
   const seen = new Set<string>();
 
   entries.value = nodes.map((el) => {

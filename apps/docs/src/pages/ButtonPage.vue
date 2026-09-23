@@ -35,6 +35,21 @@ function simulateLoad() {
       </CuiCard>
     </template>
 
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiButton>Cancel</CuiButton>
+<CuiButton variant=&quot;solid&quot;>Save</CuiButton>
+<CuiButton variant=&quot;solid&quot; color=&quot;error&quot;>Delete</CuiButton>`"
+      >
+        <CuiFlex gap="3" class="items-center flex-wrap">
+          <CuiButton>Cancel</CuiButton>
+          <CuiButton variant="solid">Save</CuiButton>
+          <CuiButton variant="solid" color="error">Delete</CuiButton>
+        </CuiFlex>
+      </Example>
+    </template>
+
     <template #customization>
       <CuiCard variant="outline" class="mt-4">
         <CuiCardBody>
