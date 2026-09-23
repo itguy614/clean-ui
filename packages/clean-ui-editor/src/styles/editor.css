@@ -111,23 +111,21 @@
  * `.cui-markdown-editor__cm-wrapper` ancestor — never a child of `cm-host`
  * itself, which CodeMirror owns exclusively and would fight over). Needs a
  * real background, not `ghost`'s default transparent one, so it stays
- * legible over whatever text scrolls underneath it — but `CuiButton` sets
- * background/border via an inline `:style` binding (computed per variant),
- * which beats a plain external rule outright regardless of specificity,
- * same as the CodeMirror overrides above. `position` needs the same
- * treatment for a different reason: `CuiButton`'s own scoped style sets
- * `.cui-button { position: relative }` (for its internal spinner overlay),
- * and Vue's scoped-style `[data-v-xxxx]` attribute selector makes that rule
- * MORE specific than this plain class, not merely tied with it — confirmed
- * via `getComputedStyle` still showing `position: relative` with no
- * `!important`. All three need it here.
+ * legible over whatever text scrolls underneath it.
+ *
+ * All three declarations needed `!important` until #114: `CuiButton` wrote
+ * background/border into an inline `:style`, which no stylesheet can outrank,
+ * and its scoped `.cui-button { position: relative }` (for the internal
+ * spinner overlay) carried the `[data-v-xxxx]` attribute, making it MORE
+ * specific than this plain class rather than merely tied. Its themeable rules
+ * are now zero-specificity, so plain declarations win on their own.
  */
 .cui-markdown-editor__mode-toggle {
-  position: absolute !important;
+  position: absolute;
   right: 0.75rem;
   bottom: 0.75rem;
-  background: var(--cui-surface-base) !important;
-  border: 1px solid var(--cui-border) !important;
+  background: var(--cui-surface-base);
+  border: 1px solid var(--cui-border);
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
   z-index: 1;
 }
@@ -141,8 +139,8 @@
    short of the ~44px guideline on a phone-width screen. */
 @media (max-width: 639px) {
   .cui-markdown-editor__mode-toggle {
+    --cui-button-height: 44px;
     min-width: 44px;
-    min-height: 44px;
   }
 }
 

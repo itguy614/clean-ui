@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack } from "@itguy614/clean-ui";
+import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiIcon, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
 import Playground from "../components/Playground.vue";
@@ -52,6 +52,7 @@ function simulateLoad() {
           { name: 'type', type: 'button | submit | reset', default: 'button', description: 'HTML button type attribute' },
           { name: 'href', type: 'string', default: '-', description: 'Renders as <a> link with this URL' },
           { name: 'to', type: 'string | object', default: '-', description: 'Renders as <router-link> with this route' },
+          { name: 'icon', type: 'boolean', default: 'false', description: 'Icon-only: square, no horizontal padding. Also opts out of the 24px minimum target size' },
           { name: 'loading', type: 'boolean', default: 'false', description: 'Shows spinner and disables interaction' },
           { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state (uses aria-disabled for links)' },
         ]"
@@ -223,6 +224,20 @@ function simulateLoad() {
           </CuiFlex>
         </Example>
 
+        <!-- Icon-only -->
+        <Example title="Icon Buttons" :code="`<CuiButton icon variant=&quot;solid&quot; color=&quot;error&quot;>
+  <CuiIcon name=&quot;trash&quot; />
+</CuiButton>`">
+          <CuiFlex gap="3" class="items-center flex-wrap">
+            <CuiButton icon size="sm"><CuiIcon name="copy" /></CuiButton>
+            <CuiButton icon variant="solid"><CuiIcon name="check" /></CuiButton>
+            <CuiButton icon variant="solid" color="error"><CuiIcon name="trash" /></CuiButton>
+            <CuiButton icon variant="ghost" color="secondary"><CuiIcon name="dots-three" /></CuiButton>
+            <CuiButton icon size="lg" variant="outline" color="info"><CuiIcon name="eye" /></CuiButton>
+            <CuiButton icon rounded="full" variant="solid" color="success"><CuiIcon name="plus" /></CuiButton>
+          </CuiFlex>
+        </Example>
+
         <!-- Button Type -->
         <Example title="Button Types">
           <CuiFlex gap="3" class="flex-wrap">
@@ -235,17 +250,65 @@ function simulateLoad() {
       </CuiStack>
     </div>
 
+    <!-- Target size -->
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Minimum target size</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            Control heights are floored at 24px &mdash; the WCAG 2.5.8 minimum target size.
+            The floor only binds at <code>size="xs"</code> under compact density; at every
+            other size the computed height already clears it.
+          </p>
+          <pre class="cui-pre"><code>/* relax it for a dense strip — buttons AND inputs inside */
+.dense-toolbar {
+  --cui-control-min-target: 0px;
+}</code></pre>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            <code>icon</code> opts out on its own, since an icon-only button is usually
+            deliberately small. Both routes take you below the accessibility minimum, so
+            they are worth using knowingly rather than by habit &mdash; the property exists
+            so that going below the floor is a deliberate, greppable act.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
     <!-- Customization -->
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Customization</h2>
-      <CuiCard>
+      <CuiCard variant="outline">
         <CuiCardBody>
           <p class="mb-3 text-surface-600 dark:text-surface-400">
-            Override the global border radius for all buttons:
+            Every property a button computes is exposed as a custom property. Set one on
+            <code>:root</code>, on any container, or on the button itself — no
+            <code>!important</code>, and no dependence on stylesheet order.
           </p>
-          <pre class="cui-pre"><code>:root {
-  --cui-button-radius: 0.5rem;   /* rounder */
+          <pre class="cui-pre"><code>/* every button in a subtree */
+.admin-toolbar {
+  --cui-button-bg: var(--cui-surface-bg);
+  --cui-button-hover-bg: var(--cui-surface-hover);
+  --cui-button-height: 2.25rem;
 }</code></pre>
+          <p class="mt-4 mb-2 font-semibold">Box</p>
+          <pre class="cui-pre"><code>--cui-button-height      --cui-button-gap
+--cui-button-px          --cui-button-font-size
+--cui-button-radius</code></pre>
+          <p class="mt-4 mb-2 font-semibold">Paint</p>
+          <pre class="cui-pre"><code>--cui-button-bg          --cui-button-border
+--cui-button-color</code></pre>
+          <p class="mt-4 mb-2 font-semibold">Interaction</p>
+          <pre class="cui-pre"><code>--cui-button-hover-bg    --cui-button-active-bg
+--cui-button-hover-color --cui-button-focus-ring
+--cui-button-hover-border</code></pre>
+          <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
+            <strong>How it works:</strong> the button computes its per-variant values into
+            private <code>--_button-*</code> properties and reads each one back as
+            <code>var(--cui-button-bg, var(--_button-bg))</code>, so your token wins
+            wherever you set it and the variant supplies the default. The rules themselves
+            are wrapped in <code>:where()</code>, which makes them zero-specificity — so a
+            plain <code>.cui-button { background: … }</code> rule of your own works too.
+          </p>
         </CuiCardBody>
       </CuiCard>
     </div>
