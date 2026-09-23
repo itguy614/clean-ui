@@ -79,6 +79,21 @@ describe("CuiButton themeable properties (real browser)", () => {
     consumer.remove();
   });
 
+  it("keeps the solid variant's own text colour on hover", async () => {
+    // Regression: the hover rule fell back to `inherit` when a variant set no hover colour,
+    // which only solid does. On a page with dark body text that meant dark-on-dark the
+    // moment you pointed at a solid button. Invisible while the resting colour was an
+    // inline style, because that outranked the hover rule (#114).
+    const el = render({ variant: "solid" }, "color: rgb(200, 100, 50)");
+    const resting = paint(el, "color");
+
+    await userEvent.hover(el);
+
+    expect(resting).toBe("rgb(255, 255, 255)");
+    expect(paint(el, "color")).toBe(resting);
+    expect(paint(el, "color")).not.toBe("rgb(200, 100, 50)");
+  });
+
   it("applies the hover token, which used to need !important", async () => {
     const el = render({ variant: "solid" }, "--cui-button-hover-bg: rgb(7, 8, 9)");
     await userEvent.hover(el);

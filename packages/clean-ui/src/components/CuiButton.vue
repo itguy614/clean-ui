@@ -225,9 +225,16 @@ const buttonStyle = computed(() => {
   position: relative;
 }
 
+/* The hover colour falls back to the RESTING colour, not to `inherit`. Only the outline,
+   dash and ghost variants change colour on hover; solid keeps its own. With `inherit` the
+   solid variant took the surrounding text colour on hover — dark text on a dark fill —
+   because both rules are stylesheet rules now and this one comes later. It was masked
+   while the resting colour was an inline declaration, which outranked this rule outright
+   (#114). Falling back to the resting value means a variant that omits a hover colour
+   simply keeps the one it has. */
 :where(.cui-button:hover:not(.cui-button--disabled)) {
   background: var(--cui-button-hover-bg, var(--_button-hover-bg));
-  color: var(--cui-button-hover-color, var(--_button-hover-color, inherit));
+  color: var(--cui-button-hover-color, var(--_button-hover-color, var(--cui-button-color, var(--_button-color))));
   border-color: var(--cui-button-hover-border, var(--_button-hover-border, transparent));
 }
 
