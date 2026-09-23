@@ -293,7 +293,7 @@ defineExpose({ el: rootEl, focus, blur });
 :where(.cui-input-stepper__control) {
   height: var(--cui-input-stepper-height, var(--_input-stepper-height));
   border: var(--cui-input-stepper-border, 1px solid var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-input-stepper-radius, var(--cui-button-radius, 0.375rem));
+  border-radius: var(--cui-input-stepper-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
 }
 
 :where(.cui-input-stepper__field) {

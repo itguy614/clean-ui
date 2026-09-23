@@ -302,7 +302,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   border: 1px solid var(--cui-border-strong);
   background: transparent;
   color: var(--_rb-color);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 

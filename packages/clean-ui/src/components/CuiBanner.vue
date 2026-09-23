@@ -8,22 +8,21 @@ import { resolveLiveRegion } from "../utils/liveRegion";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { useMessages } from "../composables/useMessages";
 
-export type BannerPosition = "top" | "bottom";
+export type BannerPosition = "top" | "bottom" | "inline";
 export type BannerVariant = "solid" | "subtle";
 
 export interface CuiBannerProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Visual variant */
   variant?: BannerVariant;
-  /** Sticky position */
+  /**
+   * Where the banner sits. `top` and `bottom` pin it to that page edge, sticky, with a
+   * rule against the edge. `inline` puts it in the flow instead — no edge rule, a closed
+   * box with a radius — for a notice inside a card or panel, where the rule has nothing
+   * to sit against (#120).
+   */
   position?: BannerPosition;
   /** Show dismiss button */
   dismissible?: boolean;
-  /**
-   * Render in the flow rather than pinned to a page edge: no edge border, a radius, and
-   * `position` no longer applies. For a notice inside a card or panel, where the edge
-   * border has nothing to sit against (#120).
-   */
-  inline?: boolean;
   /** Persist dismissal to localStorage under this key */
   storageKey?: string;
 }
@@ -34,7 +33,6 @@ const props = withDefaults(defineProps<CuiBannerProps>(), {
   position: "top",
   dismissible: true,
   noIcon: false,
-  inline: false,
   hidden: false,
 });
 
@@ -83,9 +81,6 @@ const containerStyle = computed(() => {
           "--_banner-border-color": `var(--cui-${c}-border)`,
         };
 
-  // Pinned to whichever edge it names. Ignored when inline, which takes the banner out of
-  // the sticky flow entirely.
-  if (!props.inline) s[props.position] = "0";
   return s;
 });
 </script>
@@ -93,7 +88,7 @@ const containerStyle = computed(() => {
 <template>
   <div
     class="cui-banner"
-    :class="[`cui-banner--${variant}`, { 'cui-banner--inline': inline, [`cui-banner--${position}`]: !inline }]"
+    :class="[`cui-banner--${variant}`, `cui-banner--${position}`]"
     v-if="!dismissed"
     v-show="!hidden"
     :style="containerStyle"
@@ -163,11 +158,12 @@ const containerStyle = computed(() => {
   border-top: var(--cui-banner-border, 1px solid var(--_banner-border-color));
 }
 
-/* Inline: nothing to sit against, so the rule becomes a box and the corners round to
-   match whatever card or panel holds it (#120). */
+/* Inline: nothing to sit against, so the rule becomes a box and the corners take the
+   shared radius scale — not `--cui-card-radius`, which tied a banner's corners to a
+   component it may sit nowhere near (#120, #141). */
 :where(.cui-banner--inline) {
   border: var(--cui-banner-border, 1px solid var(--_banner-border-color));
-  border-radius: var(--cui-banner-radius, var(--cui-card-radius, 0.5rem));
+  border-radius: var(--cui-banner-radius, var(--cui-radius-lg, 0.5rem));
 }
 
 /* --- Structural --- */
@@ -175,15 +171,25 @@ const containerStyle = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Pinned: sticky against the named edge. The offset lives here rather than in the style
+   binding so the binding has a fixed shape — a variable key means Vue has to clear the
+   stale `top`/`bottom` when `position` flips. */
+.cui-banner--top,
+.cui-banner--bottom {
   position: sticky;
   left: 0;
   right: 0;
   z-index: 50;
 }
 
-.cui-banner--inline {
-  position: static;
-  z-index: auto;
+.cui-banner--top {
+  top: 0;
+}
+
+.cui-banner--bottom {
+  bottom: 0;
 }
 
 .cui-banner__icon {

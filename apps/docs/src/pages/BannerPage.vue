@@ -17,11 +17,11 @@ const show5 = ref(true);
     <template #usage>
       <Example
         code-open
-        :code="`<CuiBanner color=&quot;info&quot; inline&gt;
+        :code="`<CuiBanner color=&quot;info&quot; position=&quot;inline&quot;&gt;
   Scheduled maintenance this Sunday at 02:00 UTC.
 &lt;/CuiBanner&gt;`"
       >
-        <CuiBanner color="info" inline>
+        <CuiBanner color="info" position="inline">
           Scheduled maintenance this Sunday at 02:00 UTC.
         </CuiBanner>
       </Example>

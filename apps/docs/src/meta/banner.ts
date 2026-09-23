@@ -11,13 +11,12 @@ const meta: ComponentMeta = {
     colorProp("Color role, which also picks the default icon", "primary"),
     { name: "variant", type: "solid | subtle", default: "subtle", description: "Visual variant" },
     {
-      name: "inline",
-      type: "boolean",
-      default: "false",
+      name: "position",
+      type: "top | bottom | inline",
+      default: "top",
       description:
-        "Render in the flow rather than pinned to a page edge: no edge rule, a closed box with a radius, and position no longer applies",
+        "Where it sits. top/bottom pin it to that page edge with a rule against it; inline puts it in the flow with a closed box and a radius",
     },
-    { name: "position", type: "top | bottom", default: "top", description: "Which edge to pin to. Ignored when inline" },
     { name: "dismissible", type: "boolean", default: "true", description: "Show dismiss button" },
     ...roleIconProps,
     { name: "storageKey", type: "string", description: "Persist dismissal to localStorage under this key" },
@@ -36,8 +35,8 @@ const meta: ComponentMeta = {
   tokens: [
     { name: "--cui-banner-bg", default: "per color and variant", description: "Background" },
     { name: "--cui-banner-color", default: "per color and variant", description: "Text and icon color" },
-    { name: "--cui-banner-border", default: "1px solid the role's border", description: "Edge rule, or the whole box when inline" },
-    { name: "--cui-banner-radius", default: "var(--cui-card-radius)", description: "Corner radius — inline only" },
+    { name: "--cui-banner-border", default: "1px solid the role's border", description: "The rule against the pinned edge; the whole box when inline; nothing at all on a solid banner" },
+    { name: "--cui-banner-radius", default: "var(--cui-radius-lg)", description: "Corner radius — inline only" },
     { name: "--cui-banner-padding", default: "0.625rem 1rem", description: "Padding (density-scaled)" },
     { name: "--cui-banner-gap", default: "0.75rem", description: "Gap between icon, content and actions" },
     { name: "--cui-banner-font-size", default: "0.875rem", description: "Message font size" },

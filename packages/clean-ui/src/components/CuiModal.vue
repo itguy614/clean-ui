@@ -51,9 +51,9 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 

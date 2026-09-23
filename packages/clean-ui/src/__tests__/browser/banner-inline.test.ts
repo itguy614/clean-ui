@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
 import { installTokens } from "./helpers";
 import CuiBanner from "../../components/CuiBanner.vue";
+import CuiButton from "../../components/CuiButton.vue";
 
 /**
  * #120 — `CuiBanner` assumed it was pinned to a page edge: a `border-bottom` with no
@@ -58,25 +59,27 @@ describe("CuiBanner inline (real browser)", () => {
   });
 
   it("closes the box and rounds the corners when inline", () => {
-    const el = banner({ inline: true });
+    const el = banner({ position: "inline" });
 
     expect(sides(el)).toEqual(["1px", "1px", "1px", "1px"]);
     expect(parseFloat(css(el).borderTopLeftRadius)).toBeGreaterThan(0);
   });
 
-  it("leaves the sticky flow when inline, so position no longer applies", () => {
-    const el = banner({ inline: true, position: "bottom" });
+  it("leaves the sticky flow when inline", () => {
+    // `inline` is a value of `position`, not a second prop beside it — so there is no
+    // `inline + position="bottom"` combination to define, and no offset to clear.
+    const el = banner({ position: "inline" });
 
     expect(css(el).position).toBe("static");
-    // A sticky banner sets the named edge to 0; an inline one leaves it alone.
+    expect(css(el).top).toBe("auto");
     expect(css(el).bottom).toBe("auto");
   });
 
   it("composes with the colour treatment rather than replacing it", () => {
     // The reason `inline` is a boolean and not a `variant` value: an inline banner must
     // still be able to be solid.
-    const solid = banner({ inline: true, variant: "solid", color: "error" });
-    const subtle = banner({ inline: true, variant: "subtle", color: "error" });
+    const solid = banner({ position: "inline", variant: "solid", color: "error" });
+    const subtle = banner({ position: "inline", variant: "subtle", color: "error" });
 
     expect(css(solid).backgroundColor).not.toBe(css(subtle).backgroundColor);
   });
@@ -88,10 +91,66 @@ describe("CuiBanner inline (real browser)", () => {
     consumer.textContent = ".cui-banner { background: rgb(1, 2, 3); border-radius: 10px; }";
     document.head.append(consumer);
 
-    const el = banner({ inline: true });
+    const el = banner({ position: "inline" });
     expect(css(el).backgroundColor).toBe("rgb(1, 2, 3)");
     expect(css(el).borderTopLeftRadius).toBe("10px");
 
     consumer.remove();
+  });
+});
+
+describe("the shared radius scale (real browser)", () => {
+  let removeTokens: () => void;
+  beforeAll(() => {
+    removeTokens = installTokens(main);
+  });
+  afterAll(() => removeTokens());
+
+  const hosts: HTMLElement[] = [];
+  const mounted: Array<{ unmount: () => void }> = [];
+  afterEach(() => {
+    mounted.splice(0).forEach((w) => w.unmount());
+    hosts.splice(0).forEach((h) => h.remove());
+  });
+
+  function inlineBanner(hostStyle = "") {
+    const host = document.createElement("div");
+    host.setAttribute("style", hostStyle);
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount(CuiBanner, { props: { position: "inline" }, slots: { default: () => "x" }, attachTo: host });
+    mounted.push(w);
+    return w.element as HTMLElement;
+  }
+
+  it("moves every component's corners together", () => {
+    // Component radius tokens alias the scale rather than each other — a banner used to
+    // default to `--cui-card-radius`, so its corners tracked a component it may sit
+    // nowhere near (#141).
+    const el = inlineBanner("--cui-radius-lg: 13px");
+    expect(getComputedStyle(el).borderTopLeftRadius).toBe("13px");
+  });
+
+  it("still lets one component be moved on its own", () => {
+    const el = inlineBanner("--cui-radius-lg: 13px; --cui-banner-radius: 3px");
+    expect(getComputedStyle(el).borderTopLeftRadius).toBe("3px");
+  });
+
+  it("reaches components that alias it through their own token", () => {
+    // `--cui-button-radius` is now an alias for `--cui-radius-md`, so moving the scale
+    // moves buttons too — that is what makes it shared rather than a fourth token.
+    const host = document.createElement("div");
+    host.setAttribute("style", "--cui-radius-md: 9px");
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount(CuiButton, { props: { rounded: "md" }, slots: { default: () => "Go" }, attachTo: host });
+    mounted.push(w);
+
+    expect(getComputedStyle(w.element as HTMLElement).borderTopLeftRadius).toBe("9px");
+  });
+
+  it("no longer follows the card's radius", () => {
+    const el = inlineBanner("--cui-card-radius: 20px");
+    expect(getComputedStyle(el).borderTopLeftRadius).not.toBe("20px");
   });
 });

@@ -152,8 +152,23 @@
   --cui-border: var(--color-surface-500);
   --cui-border-strong: var(--color-surface-600);
 
-  /* --- Button defaults --- */
-  --cui-button-radius: 0.375rem;
+  /* --- Radius scale ---
+     One source for corner radii. Component tokens alias these rather than each other:
+     `--cui-banner-radius` used to default to `--cui-card-radius`, and the shared radiusMap
+     defaults `md` to `--cui-button-radius`, so a component's corners were defined in terms
+     of another component's. Retheming meant discovering which one happened to be the
+     reference (#141). Override the scale to move every component together; override a
+     component token to move just that one.
+
+     The component tokens (`--cui-button-radius`, `--cui-card-radius`, …) are deliberately
+     NOT declared here. A custom property substitutes at its declaration site, so
+     `--cui-button-radius: var(--cui-radius-md)` on `:root` would resolve against `:root`
+     and a subtree override of the scale would never reach it. Leaving them undefined puts
+     the scale in each component's own fallback chain instead, where a container can move
+     it. */
+  --cui-radius-sm: 0.25rem;
+  --cui-radius-md: 0.375rem;
+  --cui-radius-lg: 0.5rem;
 }
 
 /* ============================================================

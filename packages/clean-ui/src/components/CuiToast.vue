@@ -206,7 +206,7 @@ const messages = useMessages();
   align-items: flex-start;
   gap: calc(0.75rem * var(--cui-density-scale, 1));
   padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   min-width: 280px;
   max-width: 420px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);

@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { h } from "vue";
 import CuiBanner from "../CuiBanner.vue";
 import CuiAlert from "../CuiAlert.vue";
 import CuiToast from "../CuiToast.vue";
 import CuiIcon from "../CuiIcon.vue";
-import { COLOR_ICON_MAP } from "../../utils/colorIconMap";
+import { COLOR_ICON_MAP, registerRoleIcons, __clearRoleIcons } from "../../utils/colorIconMap";
 
 /**
  * #119 — the role icon was welded to the colour, and `noIcon` could suppress it but not
@@ -64,4 +64,40 @@ describe("COLOR_ICON_MAP", () => {
   });
 
 
+});
+
+describe("registerRoleIcons", () => {
+  afterEach(() => __clearRoleIcons());
+
+  it("overrides a role's icon app-wide, not per call site", () => {
+    // #119 unwelded the icon from the colour per call site; this is the other half —
+    // role → icon is a theme concern the same way role → colour is (#140).
+    registerRoleIcons({ error: "check-circle" });
+
+    for (const component of [CuiBanner, CuiAlert, CuiToast]) {
+      const w = mount(component as never, { props: { color: "error" } });
+      expect(w.findComponent(CuiIcon).props("name")).toBe("check-circle");
+    }
+  });
+
+  it("leaves the roles it was not given alone", () => {
+    registerRoleIcons({ error: "check-circle" });
+
+    const w = mount(CuiAlert, { props: { color: "success" } });
+    expect(w.findComponent(CuiIcon).props("name")).toBe(COLOR_ICON_MAP.success);
+  });
+
+  it("still loses to an explicit icon prop", () => {
+    registerRoleIcons({ error: "check-circle" });
+
+    const w = mount(CuiAlert, { props: { color: "error", icon: "info" } });
+    expect(w.findComponent(CuiIcon).props("name")).toBe("info");
+  });
+
+  it("renders an unregistered override as text rather than a ? glyph", () => {
+    registerRoleIcons({ error: "🔥" });
+
+    const w = mount(CuiAlert, { props: { color: "error" } });
+    expect(w.find(".cui-alert__icon").text()).toContain("🔥");
+  });
 });
