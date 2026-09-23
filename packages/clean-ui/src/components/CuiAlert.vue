@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { COLOR_ICON_MAP, isIconName } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
@@ -26,6 +26,11 @@ export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegion
   title?: string;
   /** Hide the default role icon */
   noIcon?: boolean;
+  /**
+   * Replace the role icon. A registered icon name renders that icon; anything else — an
+   * emoji, a character — renders as text. For arbitrary content use the `#icon` slot.
+   */
+  icon?: string;
   /** Show dismiss X button */
   dismissible?: boolean;
   /** Auto-dismiss after N milliseconds */
@@ -120,7 +125,9 @@ const alertStyle = computed(() => {
   return base;
 });
 
-const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+const defaultIconName = computed(() => (isIconName(props.icon) ? props.icon : (COLOR_ICON_MAP[props.color] ?? "info")));
+/** A non-registered `icon` is literal content — an emoji or a character. */
+const iconText = computed(() => (props.icon && !isIconName(props.icon) ? props.icon : null));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -142,7 +149,8 @@ const messages = useMessages();
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-alert__icon">
       <slot name="icon">
-        <CuiIcon :name="defaultIconName" size="1.25rem" />
+        <template v-if="iconText">{{ iconText }}</template>
+        <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
       </slot>
     </div>
 

@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
-import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { COLOR_ICON_MAP, isIconName } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
 
@@ -24,7 +24,11 @@ export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegion
   showProgress?: boolean;
   /** Persistent animation */
   animation?: AlertAnimation;
-  /** Custom icon (emoji or text) */
+  /**
+   * Replace the role icon. A registered icon name renders that icon; anything else — an
+   * emoji, a character — renders as text, which is what this prop has always done.
+   * Programmatic toasts have no slot, so the prop covers both cases.
+   */
   icon?: string;
   /** Hide the default role icon */
   noIcon?: boolean;
@@ -142,7 +146,9 @@ const toastStyle = computed(() => {
   return base;
 });
 
-const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+const defaultIconName = computed(() => (isIconName(props.icon) ? props.icon : (COLOR_ICON_MAP[props.color] ?? "info")));
+/** A non-registered `icon` is literal content — an emoji or a character. */
+const iconText = computed(() => (props.icon && !isIconName(props.icon) ? props.icon : null));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -162,8 +168,10 @@ const messages = useMessages();
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-toast__icon">
-      <template v-if="icon">{{ icon }}</template>
-      <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
+      <slot name="icon">
+        <template v-if="iconText">{{ iconText }}</template>
+        <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
+      </slot>
     </div>
 
     <!-- Body -->

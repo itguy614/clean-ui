@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { CuiBanner, CuiButton, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
+import meta from "../meta/banner";
 import Example from "../components/Example.vue";
 
 const show1 = ref(true);
@@ -21,56 +21,46 @@ function resetAll() {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Banner</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A full-width notification bar that sticks to the top or bottom of a container.
-        Use for announcements, cookie notices, maintenance alerts, or promotions.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiBanner color=&quot;info&quot; inline&gt;
+  Scheduled maintenance this Sunday at 02:00 UTC.
+&lt;/CuiBanner&gt;`"
+      >
+        <CuiBanner color="info" inline>
+          Scheduled maintenance this Sunday at 02:00 UTC.
+        </CuiBanner>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        A banner announces itself: <code>error</code> becomes an assertive
+        <code>role="alert"</code>, every other colour a polite <code>role="status"</code>.
+        Set <code>live="off"</code> to silence a promotional banner that should not
+        interrupt.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The role icon is decorative and the message carries the meaning, so colour is
+          never the only signal. <code>error</code> uses an octagon rather than an
+          <code>✕</code> — a cross reads as "close", and beside the dismiss button it read
+          as a second one.
+        </li>
+        <li>
+          The dismiss button is icon-only and carries an accessible name from the
+          localized <code>dismiss</code> message.
+        </li>
+        <li>
+          A pinned banner is <code>position: sticky</code>, so it stays in the document
+          flow and in reading order — it does not overlay content or trap focus.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
-          { name: 'variant', type: 'solid | subtle', default: 'subtle', description: 'Visual variant' },
-          { name: 'position', type: 'top | bottom', default: 'top', description: 'Sticky position' },
-          { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show dismiss button' },
-          { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide default role icon' },
-          { name: 'storageKey', type: 'string', default: '—', description: 'Persist dismissal to localStorage under this key' },
-          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status). off to silence promotional banners.' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: 'default', type: 'slot', default: '—', description: 'Banner message content' },
-          { name: 'actions', type: 'slot', default: '—', description: 'Action buttons (e.g., Learn More, Accept)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'dismiss', payload: '—', description: 'Fires when the banner is dismissed' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-
-      <CuiButton size="sm" variant="outline" style="margin-bottom: 1rem;" @click="resetAll">Reset All Banners</CuiButton>
-
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Basic -->
         <Example title="Subtle (default)" :code="`<CuiBanner @dismiss=&quot;show = false&quot;>
@@ -178,7 +168,6 @@ function resetAll() {
           </div>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

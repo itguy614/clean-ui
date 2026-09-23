@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiToastProvider, useToast } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
+import meta from "../meta/toast";
 import Example from "../components/Example.vue";
 
 const collapsedToasts = ref<Array<{ id: string; title: string; color: string }>>([]);
@@ -96,52 +96,46 @@ function floodTest() {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Toast</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Floating notification messages with auto-dismiss, progress countdown,
-        stacking, and animations. Programmatic API via
-        <code class="cui-code">useToast()</code> or template-based
-        <code class="cui-code">CuiToast</code>.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`const { toast } = useToast()
+
+toast.success('Saved!', { description: 'Your changes are live.' })`"
+      >
+        <CuiButton variant="solid" color="success" @click="toast.success('Saved!', { description: 'Your changes are live.' })">
+          Show a toast
+        </CuiButton>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        Toasts announce themselves without moving focus: <code>error</code> becomes an
+        assertive <code>role="alert"</code>, every other colour a polite
+        <code>role="status"</code>.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          Only the topmost toast counts down, and hovering pauses its progress bar — so a
+          toast cannot expire while it is being read.
+        </li>
+        <li>
+          The role icon is decorative and the text carries the meaning.
+          <code>error</code> uses an octagon rather than an <code>✕</code>, which reads as
+          "close" beside the dismiss button.
+        </li>
+        <li>
+          <code>autoDismiss: 0</code> keeps a toast until dismissed, for anything a reader
+          must act on.
+        </li>
+      </ul>
+    </template>
 
-    <!-- Provider Props -->
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiToastProvider Props</h2>
-      <PropTable
-        :props="[
-          { name: 'position', type: 'top-right | top-left | top-center | bottom-right | bottom-left | bottom-center', default: 'bottom-center', description: 'Screen position for toasts' },
-          { name: 'stackMode', type: 'expanded | collapsed', default: 'expanded', description: 'How multiple toasts display' },
-          { name: 'maxToasts', type: 'number', default: '5', description: 'Maximum visible toasts before oldest dismissed' },
-        ]"
-      />
-    </div>
-
-    <!-- Toast Options -->
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Toast Options (useToast)</h2>
-      <PropTable
-        :props="[
-          { name: 'title', type: 'string', default: '-', description: 'Title text' },
-          { name: 'description', type: 'string', default: '-', description: 'Description text' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role with auto-icon' },
-          { name: 'dismissible', type: 'boolean', default: 'true', description: 'Show X dismiss button' },
-          { name: 'autoDismiss', type: 'number', default: '5000', description: 'Auto-dismiss after N ms (0 to disable)' },
-          { name: 'showProgress', type: 'boolean', default: 'true', description: 'Show countdown progress bar' },
-          { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
-          { name: 'icon', type: 'string', default: '-', description: 'Custom icon (emoji/text)' },
-          { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the auto-icon' },
-          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status).' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <!-- Composable API -->
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">useToast() API</h2>
+    <template #extra>
+      <div>
+      <h2 id="usetoast-api" class="mb-4 text-2xl font-semibold">useToast() API</h2>
       <CuiCard>
         <CuiCardBody>
           <pre class="cui-pre"><code>import { useToast } from '@itguy614/clean-ui'
@@ -166,19 +160,9 @@ dismissAll()</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'dismiss', payload: '—', description: 'Fires when the toast is dismissed' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Basic Colors -->
         <Example title="Color Roles" :code="`import { useToast } from '@itguy614/clean-ui'
@@ -335,7 +319,6 @@ watch(
           </div>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

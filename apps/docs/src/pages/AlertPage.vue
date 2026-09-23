@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { CuiAlert, CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
+import meta from "../meta/alert";
 import Example from "../components/Example.vue";
-import Playground from "../components/Playground.vue";
 
 const showDismissible = ref(true);
 const showAuto = ref(false);
@@ -15,91 +14,40 @@ const showPulse = ref(true);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Alert</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Contextual feedback messages with role-specific icons, entrance
-        animations, persistent attention effects, dismissible and auto-dismiss.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiAlert color=&quot;success&quot; title=&quot;Saved&quot;&gt;
+  Your changes are live.
+&lt;/CuiAlert&gt;`"
+      >
+        <CuiAlert color="success" title="Saved">Your changes are live.</CuiAlert>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        An alert announces itself: <code>error</code> becomes an assertive
+        <code>role="alert"</code>, every other colour a polite <code>role="status"</code>.
+        Set <code>live="off"</code> where the message is decorative.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The role icon is decorative and the text carries the meaning, so colour is never
+          the only signal. <code>error</code> uses an octagon rather than an <code>✕</code>,
+          which reads as "close" — and is distinct from the warning glyph, so the two are
+          tellable apart without hue.
+        </li>
+        <li>
+          <code>animation="pulse"</code> and friends respect
+          <code>prefers-reduced-motion</code>.
+        </li>
+        <li>The dismiss button is icon-only and carries a localized accessible name.</li>
+      </ul>
+    </template>
 
-    <CuiCard variant="outline">
-      <CuiCardBody>
-        <p class="text-sm text-surface-700 dark:text-surface-300">
-          <strong><code>color</code> vs <code>variant</code>:</strong>
-          <code>color</code> sets the semantic role (<code>primary</code>,
-          <code>success</code>, <code>error</code>, <code>warning</code>,
-          <code>info</code>, …); <code>variant</code> sets the visual style
-          (<code>solid</code>, <code>subtle</code>, <code>outline</code>).
-          Passing a role name to <code>variant</code> (e.g.
-          <code>variant="danger"</code>) won't work — use
-          <code>color="error"</code> (the role for “danger” is
-          <code>error</code>).
-        </p>
-      </CuiCardBody>
-    </CuiCard>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'info', description: 'Color role (auto-selects icon)' },
-          { name: 'variant', type: 'solid | subtle | outline', default: 'subtle', description: 'Visual style' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
-          { name: 'title', type: 'string', default: '-', description: 'Bold title text' },
-          { name: 'noIcon', type: 'boolean', default: 'false', description: 'Hide the default role icon' },
-          { name: 'dismissible', type: 'boolean', default: 'false', description: 'Show X dismiss button' },
-          { name: 'autoDismiss', type: 'number', default: '-', description: 'Auto-dismiss after N milliseconds' },
-          { name: 'entrance', type: 'fade | slide-down | slide-left | none', default: 'fade', description: 'Entrance animation on mount' },
-          { name: 'animation', type: 'pulse | glow | shake | none', default: 'none', description: 'Persistent attention animation' },
-          { name: 'live', type: 'off | polite | assertive', default: 'from color', description: 'Screen-reader live region. error -> assertive (role=alert), else polite (role=status). off to silence.' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: 'default', type: 'slot', default: '-', description: 'Description/body text' },
-          { name: '#icon', type: 'slot', default: '-', description: 'Custom icon (overrides auto-icon)' },
-          { name: '#actions', type: 'slot', default: '-', description: 'Action buttons in the footer' },
-        ]"
-      />
-    </div>
-
-    <!-- Events -->
-    <div>
-      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Events</h2>
-      <EventTable :events="[
-        { name: 'dismiss', payload: '—', description: 'Fires when the alert is dismissed' },
-      ]" />
-    </div>
-
-    <!-- Playground -->
-    <div>
-      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
-      <Playground
-        :component="CuiAlert"
-        component-name="CuiAlert"
-        :props="{
-          variant: { type: 'select', options: ['subtle', 'solid', 'outline'], default: 'subtle' },
-          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'info' },
-          title: { type: 'string', default: '' },
-          noIcon: { type: 'boolean', default: false },
-          dismissible: { type: 'boolean', default: false },
-          entrance: { type: 'select', options: ['fade', 'slide-down', 'slide-left', 'none'], default: 'fade' },
-          animation: { type: 'select', options: ['pulse', 'glow', 'shake', 'none'], default: 'none' },
-        }"
-        slot-content="This is an alert message."
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- All Colors (subtle) -->
         <Example title="Colors (subtle — default)" :code="`<CuiAlert color=&quot;success&quot; title=&quot;Success&quot; entrance=&quot;none&quot;>Your changes have been saved.</CuiAlert>
@@ -411,7 +359,6 @@ const showPulse = ref(true);
           </CuiStack>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

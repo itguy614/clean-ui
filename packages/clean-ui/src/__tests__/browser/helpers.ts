@@ -31,6 +31,16 @@ export function installTokens(css: string): () => void {
       --color-surface-900:#18181b; --color-surface-950:#09090b;
       --color-primary-100:#e0e7ff; --color-primary-300:#a5b4fc; --color-primary-500:#4f46e5;
       --color-primary-600:#4338ca; --color-primary-700:#3730a3; --color-primary-900:#1e1b4b;
+      --color-success-100:#dcfce7; --color-success-300:#86efac; --color-success-500:#22c55e;
+      --color-success-700:#15803d; --color-success-900:#14532d;
+      --color-error-100:#fee2e2; --color-error-300:#fca5a5; --color-error-500:#ef4444;
+      --color-error-700:#b91c1c; --color-error-900:#7f1d1d;
+      --color-warning-100:#fef3c7; --color-warning-300:#fcd34d; --color-warning-500:#f59e0b;
+      --color-warning-700:#b45309; --color-warning-900:#78350f;
+      --color-info-100:#dbeafe; --color-info-300:#93c5fd; --color-info-500:#3b82f6;
+      --color-info-700:#1d4ed8; --color-info-900:#1e3a8a;
+      --color-secondary-100:#f1f5f9; --color-secondary-300:#cbd5e1; --color-secondary-500:#64748b;
+      --color-secondary-700:#334155; --color-secondary-900:#0f172a;
     }`;
   document.head.append(style);
   return () => style.remove();
