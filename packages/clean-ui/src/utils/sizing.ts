@@ -74,12 +74,30 @@ export const scaleControlHeight = (v: string) =>
 const d = scaleDensity;
 const dh = scaleControlHeight;
 
+/**
+ * The size one step down the scale — for a control nested inside another, where matching
+ * the parent's size would crowd it: the tag chips inside a combobox or tag input, the
+ * +/- buttons inside an input stepper. `xs` has nowhere lower to go and stays `xs`.
+ *
+ * This is the only sizing concept those three composite controls genuinely shared; the
+ * rest of what their private tables carried derives from `INPUT_SIZE_SCALE` (#123).
+ */
+export const nestedSize = (size: CuiSize): CuiSize =>
+  SIZE_ORDER[Math.max(0, SIZE_ORDER.indexOf(size) - 1)];
+
+/**
+ * Horizontal padding was rebalanced in #123/#124: `md` was 1rem (16px), equal to its own
+ * font size, which read as a lot of dead space beside a short value and sat well above
+ * comparable systems. The whole curve moved rather than just `md`, because dropping `md`
+ * alone to 12px would have made it identical to `sm` and flattened the two most-used
+ * steps. Heights and font sizes are unchanged.
+ */
 export const INPUT_SIZE_SCALE: Record<string, SizeStyle> = {
   xs: { height: dh("1.75rem"), px: d("0.5rem"), fontSize: "0.75rem" },
-  sm: { height: dh("2rem"), px: d("0.75rem"), fontSize: "0.8125rem" },
-  md: { height: dh("2.5rem"), px: d("1rem"), fontSize: "1rem" },
-  lg: { height: dh("3rem"), px: d("1.25rem"), fontSize: "1.0625rem" },
-  xl: { height: dh("3.5rem"), px: d("1.5rem"), fontSize: "1.125rem" },
+  sm: { height: dh("2rem"), px: d("0.625rem"), fontSize: "0.8125rem" },
+  md: { height: dh("2.5rem"), px: d("0.75rem"), fontSize: "1rem" },
+  lg: { height: dh("3rem"), px: d("0.875rem"), fontSize: "1.0625rem" },
+  xl: { height: dh("3.5rem"), px: d("1rem"), fontSize: "1.125rem" },
 };
 
 export const BUTTON_SIZE_SCALE: Record<string, ButtonSizeStyle> = {

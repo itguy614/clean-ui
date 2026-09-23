@@ -63,34 +63,28 @@ import meta from "../meta/card";
     </template>
 
     <template #accessibility>
-      <CuiCard variant="outline">
-        <CuiCardBody>
-          <CuiStack spacing="3">
-            <p class="text-surface-700 dark:text-surface-300">
-              A card is a presentational container — it adds no landmark, role or
-              semantics of its own, so it never interferes with the structure of what you
-              put inside it.
-            </p>
-            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-              <li>
-                <code>CuiCardHeader</code>'s <code>title</code> renders as a
-                <code>&lt;div&gt;</code>, not a heading. If the title is a heading for the
-                surrounding document, put a real <code>&lt;h2&gt;</code>/<code>&lt;h3&gt;</code>
-                in the default slot instead — see issue #129.
-              </li>
-              <li>
-                <code>CuiCardMedia</code> renders an <code>&lt;img&gt;</code>: give it
-                <code>alt</code> text, or <code>alt=""</code> when the image is decorative.
-              </li>
-              <li>
-                A whole card that acts as a link or button should wrap its content in a real
-                <code>&lt;a&gt;</code> or <code>&lt;button&gt;</code>; a click handler on the
-                card is not keyboard-operable.
-              </li>
-            </ul>
-          </CuiStack>
-        </CuiCardBody>
-      </CuiCard>
+      <p class="text-surface-700 dark:text-surface-300">
+        A card is a presentational container — it adds no landmark, role or
+        semantics of its own, so it never interferes with the structure of what you
+        put inside it.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          <code>CuiCardHeader</code>'s <code>title</code> renders as a
+          <code>&lt;div&gt;</code>, not a heading. If the title is a heading for the
+          surrounding document, put a real <code>&lt;h2&gt;</code>/<code>&lt;h3&gt;</code>
+          in the default slot instead — see issue #129.
+        </li>
+        <li>
+          <code>CuiCardMedia</code> renders an <code>&lt;img&gt;</code>: give it
+          <code>alt</code> text, or <code>alt=""</code> when the image is decorative.
+        </li>
+        <li>
+          A whole card that acts as a link or button should wrap its content in a real
+          <code>&lt;a&gt;</code> or <code>&lt;button&gt;</code>; a click handler on the
+          card is not keyboard-operable.
+        </li>
+      </ul>
     </template>
 
     <template #examples>

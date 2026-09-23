@@ -213,6 +213,10 @@ const messages = useMessages();
 .cui-input {
   display: flex;
   align-items: stretch;
+  /* The scale's height is the control's OUTER height, as it is for CuiSelect and the rest.
+     It used to sit on `__inner`, which put the 1px borders outside it and made every input
+     2px taller than a select or combobox of the same size (#123). */
+  height: var(--_input-height);
   border: 1px solid var(--_input-border);
   background: var(--cui-surface-base);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -235,7 +239,7 @@ const messages = useMessages();
   align-items: center;
   flex: 1;
   min-width: 0;
-  height: var(--_input-height);
+  height: 100%;
   padding: 0 var(--_input-px);
   gap: calc(0.5rem * var(--cui-density-scale, 1));
 }

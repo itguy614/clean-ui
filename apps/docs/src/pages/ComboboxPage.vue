@@ -5,15 +5,14 @@ import {
   CuiBadge,
   CuiCombobox,
   CuiFlex,
-  CuiIcon,
-  CuiStack,
   type ComboboxOption,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
+import meta from "../meta/combobox";
 import Example from "../components/Example.vue";
 
 // Simple options
+const usageValue = ref<string | null>(null);
 const fruits: ComboboxOption[] = [
   { value: "apple", label: "Apple" },
   { value: "banana", label: "Banana" },
@@ -79,60 +78,39 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Combobox</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A searchable select with type-ahead filtering. Supports single and multiple selection,
-        rich option rendering (icons, images, descriptions), async server-side search,
-        and custom option templates via scoped slots.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; label=&quot;Fruit&quot; />`"
+      >
+        <CuiCombobox v-model="usageValue" :options="fruits" label="Fruit" :style="{ maxWidth: '20rem' }" />
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The control is a text field with a listbox popup: typing filters, the arrow
+        keys move through the results, <code>Enter</code> selects and
+        <code>Escape</code> closes.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The dropdown is teleported to <code>&lt;body&gt;</code> so it is never clipped
+          by an ancestor, and it anchors to the control rather than the wrapper.
+        </li>
+        <li>
+          Sizes come from the shared input scale, so a combobox is the same height and
+          indent as a <code>CuiInput</code> or <code>CuiSelect</code> beside it.
+        </li>
+        <li>
+          Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
+          <code>CuiFormField</code> wires both up automatically.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'modelValue', type: 'string | number | array | null', default: 'null', description: 'Selected value(s)' },
-          { name: 'options', type: 'ComboboxOption[]', default: '[]', description: 'Static options array' },
-          { name: 'multiple', type: 'boolean', default: 'false', description: 'Allow multiple selection' },
-          { name: 'fetchOptions', type: '(query) => Promise<Option[]>', default: '—', description: 'Async search function' },
-          { name: 'debounce', type: 'number', default: '300', description: 'Debounce delay for search (ms)' },
-          { name: 'minChars', type: 'number', default: '0', description: 'Min characters before searching' },
-          { name: 'maxVisible', type: 'number', default: '8', description: 'Max visible items before scrolling' },
-          { name: 'placeholder', type: 'string', default: 'Search...', description: 'Placeholder text' },
-          { name: 'noResultsText', type: 'string', default: 'No results found', description: 'Text when no options match' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
-          { name: 'label', type: 'string', default: '—', description: 'Label text' },
-          { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
-          { name: 'errorMessage', type: 'string', default: '—', description: 'Error message' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
-          { name: 'loading', type: 'boolean', default: 'false', description: 'External loading state' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-          { name: 'id', type: 'string', default: '-', description: 'id of the native control — what a label for attribute must point at. CuiFormField supplies it automatically' },
-          { name: 'name', type: 'string', default: '-', description: 'Native control name, for form serialization and browser autofill' },
-          { name: 'autocomplete', type: 'string', default: '-', description: 'Native autocomplete hint, e.g. email, street-address, off' },
-          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
-          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:modelValue', payload: 'string | number | Array | null', description: 'Fires when the selection changes (v-model)' },
-          { name: 'search', payload: 'string', description: 'Fires on input change with the current search query' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Basic single -->
         <Example title="Single Select" :code="`<CuiCombobox v-model=&quot;value&quot; :options=&quot;fruits&quot; label=&quot;Fruit&quot; />`">
@@ -261,7 +239,6 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           </div>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>
