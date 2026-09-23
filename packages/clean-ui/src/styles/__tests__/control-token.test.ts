@@ -23,6 +23,11 @@ const COMPONENTS = resolve(__dirname, "../../components");
  */
 const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiButton.vue", issue: "#114" },
+  { file: "CuiCard.vue", issue: "#115" },
+  { file: "CuiCardHeader.vue", issue: "#115" },
+  { file: "CuiCardBody.vue", issue: "#115" },
+  { file: "CuiCardFooter.vue", issue: "#115" },
+  { file: "CuiCardMedia.vue", issue: "#115" },
 ];
 
 /** Properties a consumer has a legitimate claim on. Layout and geometry are not here. */

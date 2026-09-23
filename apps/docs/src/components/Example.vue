@@ -3,12 +3,17 @@ import { ref } from "vue";
 import { CuiCard, CuiCardHeader, CuiCardBody, CuiButton, CuiCodeBlock } from "@itguy614/clean-ui";
 import { slug } from "../utils/slug";
 
-defineProps<{
-  title?: string;
-  code?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    code?: string;
+    /** Start with the code visible — for the canonical usage example at the top of a page. */
+    codeOpen?: boolean;
+  }>(),
+  { codeOpen: false },
+);
 
-const showCode = ref(false);
+const showCode = ref(props.codeOpen);
 </script>
 
 <template>

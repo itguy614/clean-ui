@@ -12,78 +12,88 @@ import {
   CuiIcon,
   CuiStack,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/card";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Card</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Structured container built with sub-components: CuiCard, CuiCardHeader,
-        CuiCardBody, CuiCardFooter, CuiCardMedia. Assemble the pieces you need.
-      </p>
-    </div>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiCard>
+  <CuiCardHeader title=&quot;Monthly report&quot; subtitle=&quot;Updated 2 hours ago&quot; />
+  <CuiCardBody>Revenue is up 12% on last month.</CuiCardBody>
+  <CuiCardFooter>
+    <CuiButton size=&quot;sm&quot;>View</CuiButton>
+  </CuiCardFooter>
+</CuiCard>`"
+      >
+        <CuiCard :style="{ maxWidth: '22rem' }">
+          <CuiCardHeader title="Monthly report" subtitle="Updated 2 hours ago" />
+          <CuiCardBody>Revenue is up 12% on last month.</CuiCardBody>
+          <CuiCardFooter>
+            <CuiButton size="sm">View</CuiButton>
+          </CuiCardFooter>
+        </CuiCard>
+      </Example>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiCard Props</h2>
-      <PropTable
-        :props="[
-          { name: 'variant', type: 'elevated | outline | ghost', default: 'elevated', description: 'Visual style (elevated: border + shadow, outline: border only, ghost: none)' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'lg', description: 'Border radius' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
+    <template #customization>
+      <CuiCard variant="outline" class="mt-4">
+        <CuiCardBody>
+          <pre class="cui-pre"><code>/* a quieter card, scoped to one region */
+.settings-panel {
+  --cui-card-bg: var(--cui-surface-bg);
+  --cui-card-shadow: none;
+  --cui-card-header-padding: 0.75rem 0.875rem 0.25rem;
+  --cui-card-body-padding: 0.25rem 0.875rem 0.75rem;
+}</code></pre>
+          <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
+            <strong>How it works:</strong> the paddings do not vary with any prop, so they
+            are plain defaults in the stylesheet rather than inline styles — the token
+            simply overrides them. Only <code>variant</code> and <code>rounded</code> are
+            computed, and those are emitted as private <code>--_card-*</code> properties
+            that the public token takes precedence over. Asymmetric paddings take a single
+            shorthand token, since <code>px</code>/<code>py</code> cannot express them.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiCardHeader Props</h2>
-      <PropTable
-        :props="[
-          { name: 'title', type: 'string', default: '—', description: 'Convenience title text' },
-          { name: 'subtitle', type: 'string', default: '—', description: 'Convenience subtitle text' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
+    <template #accessibility>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="3">
+            <p class="text-surface-700 dark:text-surface-300">
+              A card is a presentational container — it adds no landmark, role or
+              semantics of its own, so it never interferes with the structure of what you
+              put inside it.
+            </p>
+            <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+              <li>
+                <code>CuiCardHeader</code>'s <code>title</code> renders as a
+                <code>&lt;div&gt;</code>, not a heading. If the title is a heading for the
+                surrounding document, put a real <code>&lt;h2&gt;</code>/<code>&lt;h3&gt;</code>
+                in the default slot instead — see issue #129.
+              </li>
+              <li>
+                <code>CuiCardMedia</code> renders an <code>&lt;img&gt;</code>: give it
+                <code>alt</code> text, or <code>alt=""</code> when the image is decorative.
+              </li>
+              <li>
+                A whole card that acts as a link or button should wrap its content in a real
+                <code>&lt;a&gt;</code> or <code>&lt;button&gt;</code>; a click handler on the
+                card is not keyboard-operable.
+              </li>
+            </ul>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiCardBody Props</h2>
-      <PropTable
-        :props="[
-          { name: 'noPadding', type: 'boolean', default: 'false', description: 'Remove default padding' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiCardFooter Props</h2>
-      <PropTable
-        :props="[
-          { name: 'align', type: 'left | right | center | between', default: 'right', description: 'Align footer content' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiCardMedia Props</h2>
-      <PropTable
-        :props="[
-          { name: 'src', type: 'string', default: '—', description: 'Image URL' },
-          { name: 'alt', type: 'string', default: '\'\'', description: 'Alt text for the image' },
-          { name: 'aspect', type: 'auto | video | square | string', default: 'video', description: 'Aspect ratio (video = 16:9, square = 1:1, or custom e.g. &quot;4 / 3&quot;)' },
-          { name: 'position', type: 'top | bottom', default: 'top', description: 'Position in the card' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Basic -->
         <Example title="Basic Card" :code="`<CuiCard>
@@ -375,8 +385,6 @@ import Example from "../components/Example.vue";
             </CuiCard>
           </div>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>
