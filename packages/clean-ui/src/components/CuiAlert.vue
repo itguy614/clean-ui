@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps } from "../types/common";
+import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import { COLOR_ICON_MAP, isIconName } from "../utils/colorIconMap";
+import { resolveRoleIcon } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
@@ -19,18 +19,11 @@ export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
 export type AlertAnimation = "pulse" | "glow" | "shake" | "none";
 
-export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegionProps {
+export interface CuiAlertProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Visual variant */
   variant?: AlertVariant;
   /** Title text */
   title?: string;
-  /** Hide the default role icon */
-  noIcon?: boolean;
-  /**
-   * Replace the role icon. A registered icon name renders that icon; anything else — an
-   * emoji, a character — renders as text. For arbitrary content use the `#icon` slot.
-   */
-  icon?: string;
   /** Show dismiss X button */
   dismissible?: boolean;
   /** Auto-dismiss after N milliseconds */
@@ -125,9 +118,7 @@ const alertStyle = computed(() => {
   return base;
 });
 
-const defaultIconName = computed(() => (isIconName(props.icon) ? props.icon : (COLOR_ICON_MAP[props.color] ?? "info")));
-/** A non-registered `icon` is literal content — an emoji or a character. */
-const iconText = computed(() => (props.icon && !isIconName(props.icon) ? props.icon : null));
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -149,8 +140,8 @@ const messages = useMessages();
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-alert__icon">
       <slot name="icon">
-        <template v-if="iconText">{{ iconText }}</template>
-        <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
+        <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
+        <CuiIcon v-else :name="roleIcon.name!" size="1.25rem" />
       </slot>
     </div>
 

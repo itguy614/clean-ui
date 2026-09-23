@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
-import { COLOR_ICON_MAP, isIconName } from "../utils/colorIconMap";
+import { resolveRoleIcon } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps {
+export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Internal toast id */
   toastId?: string;
   /** Title text */
@@ -24,14 +24,6 @@ export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegion
   showProgress?: boolean;
   /** Persistent animation */
   animation?: AlertAnimation;
-  /**
-   * Replace the role icon. A registered icon name renders that icon; anything else — an
-   * emoji, a character — renders as text, which is what this prop has always done.
-   * Programmatic toasts have no slot, so the prop covers both cases.
-   */
-  icon?: string;
-  /** Hide the default role icon */
-  noIcon?: boolean;
   /** Whether this toast is the topmost (active) — timer only runs when true */
   active?: boolean;
 }
@@ -146,9 +138,7 @@ const toastStyle = computed(() => {
   return base;
 });
 
-const defaultIconName = computed(() => (isIconName(props.icon) ? props.icon : (COLOR_ICON_MAP[props.color] ?? "info")));
-/** A non-registered `icon` is literal content — an emoji or a character. */
-const iconText = computed(() => (props.icon && !isIconName(props.icon) ? props.icon : null));
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -169,8 +159,8 @@ const messages = useMessages();
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-toast__icon">
       <slot name="icon">
-        <template v-if="iconText">{{ iconText }}</template>
-        <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
+        <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
+        <CuiIcon v-else :name="roleIcon.name!" size="1.25rem" />
       </slot>
     </div>
 

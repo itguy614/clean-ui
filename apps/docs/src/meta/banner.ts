@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp } from "./shared";
+import { colorProp, hiddenProp, liveProp, roleIconProps, roleIconSlot } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Banner",
@@ -8,12 +8,7 @@ const meta: ComponentMeta = {
   interactive: true,
 
   props: [
-    {
-      name: "color",
-      type: "primary | secondary | success | error | warning | info | surface | surface-light | surface-dark",
-      default: "primary",
-      description: "Color role, which also picks the default icon",
-    },
+    colorProp("Color role, which also picks the default icon", "primary"),
     { name: "variant", type: "solid | subtle", default: "subtle", description: "Visual variant" },
     {
       name: "inline",
@@ -24,27 +19,15 @@ const meta: ComponentMeta = {
     },
     { name: "position", type: "top | bottom", default: "top", description: "Which edge to pin to. Ignored when inline" },
     { name: "dismissible", type: "boolean", default: "true", description: "Show dismiss button" },
-    {
-      name: "icon",
-      type: "string",
-      description:
-        "Replace the role icon. A registered icon name renders that icon; anything else — an emoji, a character — renders as text",
-    },
-    { name: "noIcon", type: "boolean", default: "false", description: "Hide the role icon entirely" },
+    ...roleIconProps,
     { name: "storageKey", type: "string", description: "Persist dismissal to localStorage under this key" },
-    {
-      name: "live",
-      type: "off | polite | assertive",
-      default: "from color",
-      description:
-        "Screen-reader live region. error → assertive (role=alert), else polite (role=status). off to silence promotional banners",
-    },
+    liveProp,
     hiddenProp,
   ],
 
   slots: [
     { name: "default", description: "Banner message content" },
-    { name: "icon", description: "Replaces the role icon entirely — a spinner, an avatar, anything" },
+    roleIconSlot,
     { name: "actions", description: "Action buttons, e.g. Learn More / Accept" },
   ],
 

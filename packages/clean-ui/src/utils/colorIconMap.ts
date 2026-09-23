@@ -1,15 +1,11 @@
 import { hasIcon } from "../icons/registry";
 
 /**
- * Maps color roles to their default Phosphor icon names.
- * Used by CuiAlert, CuiToast and CuiBanner for auto-icons.
+ * Default icon per color role, for CuiAlert, CuiToast and CuiBanner.
  *
- * `error` is an octagon, not an ✕: a cross reads as "close" far more strongly than it
- * reads as "error", and beside a dismissible component's own ✕ it renders as a second
- * close button (#119). It is deliberately not `warning-circle` either — error and warning
- * are adjacent severities, and giving them the same glyph would leave colour as the only
- * thing telling them apart (WCAG 1.4.1). The octagon is the stop-sign silhouette, so it
- * reads as the more severe of the two without relying on hue.
+ * `error` is an octagon rather than an ✕ (which reads as "close") and rather than
+ * `warning-circle` (which would leave hue as the only thing separating the two roles).
+ * `components/__tests__/feedbackRoleIcon.test.ts` holds that invariant.
  */
 export const COLOR_ICON_MAP: Record<string, string> = {
   success: "check-circle",
@@ -21,16 +17,25 @@ export const COLOR_ICON_MAP: Record<string, string> = {
 };
 
 /**
- * Whether an `icon` prop should render as an icon or as literal text.
+ * Resolve the icon a feedback component should render, from its color role and an
+ * optional `icon` override.
  *
- * `CuiToast` has always taken an emoji or a character here — `toast({ icon: "🚀" })` —
- * and a programmatic toast has no slot to fall back on, so that had to keep working while
- * Banner and Alert gained the same prop for Phosphor names. One rule covers both: a
- * registered name renders the icon, anything else renders as text (#119).
+ *  - no override            → the role's default, as an icon
+ *  - override names a registered icon → that icon
+ *  - anything else          → the override rendered as literal text
  *
- * Registration is checked against the built-in set plus anything a consumer has added
- * through `registerIcons()`, so a custom icon name works here too.
+ * The text branch exists because `CuiToast.icon` has always taken an emoji or a character
+ * and a programmatic toast has no slot to fall back on, so one prop had to cover both.
+ *
+ * The discriminator is the STATIC registry — built-ins plus `registerIcons()`. A name that
+ * only resolves through the optional lazy resolver (`@itguy614/clean-ui/icons/lazy`) is
+ * not known here and renders as text. Mirrors `resolveLiveRegion` in shape: a pure
+ * resolver the components read once (#119).
  */
-export function isIconName(icon: string | undefined): icon is string {
-  return !!icon && hasIcon(icon);
+export function resolveRoleIcon(
+  icon: string | undefined,
+  color: string,
+): { name: string | null; text: string | null } {
+  if (!icon) return { name: COLOR_ICON_MAP[color] ?? "info", text: null };
+  return hasIcon(icon) ? { name: icon, text: null } : { name: null, text: icon };
 }

@@ -49,10 +49,11 @@ describe("CuiBanner inline (real browser)", () => {
     const top = banner();
     expect(css(top).position).toBe("sticky");
     expect(css(top).top).toBe("0px");
+    expect(sides(top)).toEqual(["0px", "0px", "1px", "0px"]);
   });
 
   it("draws a rule only against the edge it sits on", () => {
-    expect(sides(banner({ position: "top" }))).toEqual(["0px", "0px", "1px", "0px"]);
+    // `top` is the default and is covered above; this is the other edge.
     expect(sides(banner({ position: "bottom" }))).toEqual(["1px", "0px", "0px", "0px"]);
   });
 
@@ -67,8 +68,8 @@ describe("CuiBanner inline (real browser)", () => {
     const el = banner({ inline: true, position: "bottom" });
 
     expect(css(el).position).toBe("static");
-    // A sticky banner sets the named edge to 0; an inline one must not.
-    expect(sides(el)).toEqual(["1px", "1px", "1px", "1px"]);
+    // A sticky banner sets the named edge to 0; an inline one leaves it alone.
+    expect(css(el).bottom).toBe("auto");
   });
 
   it("composes with the colour treatment rather than replacing it", () => {
@@ -78,7 +79,6 @@ describe("CuiBanner inline (real browser)", () => {
     const subtle = banner({ inline: true, variant: "subtle", color: "error" });
 
     expect(css(solid).backgroundColor).not.toBe(css(subtle).backgroundColor);
-    expect(css(solid).position).toBe("static");
   });
 
   it("lets a plain consumer rule restyle it, with no !important", () => {

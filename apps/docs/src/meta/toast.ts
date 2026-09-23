@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp } from "./shared";
+import { colorProp, hiddenProp, liveProp, roleIconProps, roleIconSlot } from "./shared";
 
 /**
  * Toast is a compound in an unusual way: `CuiToastProvider` takes the placement props,
@@ -36,35 +36,20 @@ const meta: ComponentMeta = {
       props: [
         { name: "title", type: "string", description: "Title text" },
         { name: "description", type: "string", description: "Description text" },
-        {
-          name: "color",
-          type: "primary | secondary | success | error | warning | info | surface | surface-light | surface-dark",
-          default: "primary",
-          description: "Color role, which also picks the default icon",
-        },
+        colorProp("Color role, which also picks the default icon"),
         { name: "dismissible", type: "boolean", default: "true", description: "Show dismiss button" },
         { name: "autoDismiss", type: "number", default: "5000", description: "Auto-dismiss after N ms (0 to disable)" },
         { name: "showProgress", type: "boolean", default: "true", description: "Show countdown progress bar" },
         { name: "animation", type: "pulse | glow | shake | none", default: "none", description: "Persistent attention animation" },
-        {
-          name: "icon",
-          type: "string",
-          description:
-            "Replace the role icon. A registered icon name renders that icon; anything else — an emoji, a character — renders as text",
-        },
-        { name: "noIcon", type: "boolean", default: "false", description: "Hide the role icon entirely" },
-        {
-          name: "live",
-          type: "off | polite | assertive",
-          default: "from color",
-          description: "Screen-reader live region. error → assertive (role=alert), else polite (role=status)",
-        },
+        ...roleIconProps,
+        liveProp,
         hiddenProp,
       ],
       slots: [
         {
-          name: "icon",
-          description: "Replaces the role icon — only for a rendered <CuiToast>; a programmatic toast uses the icon option",
+          ...roleIconSlot,
+          description:
+            "Replaces the role icon — only for a rendered <CuiToast>; a programmatic toast uses the icon option",
         },
       ],
     },

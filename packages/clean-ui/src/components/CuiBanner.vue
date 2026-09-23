@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
+import type { HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
-import { COLOR_ICON_MAP, isIconName } from "../utils/colorIconMap";
+import { resolveRoleIcon } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { useMessages } from "../composables/useMessages";
@@ -11,20 +11,13 @@ import { useMessages } from "../composables/useMessages";
 export type BannerPosition = "top" | "bottom";
 export type BannerVariant = "solid" | "subtle";
 
-export interface CuiBannerProps extends HideableProps, ColorableProps, LiveRegionProps {
+export interface CuiBannerProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Visual variant */
   variant?: BannerVariant;
   /** Sticky position */
   position?: BannerPosition;
   /** Show dismiss button */
   dismissible?: boolean;
-  /** Hide the role icon entirely */
-  noIcon?: boolean;
-  /**
-   * Replace the role icon. A registered icon name renders that icon; anything else — an
-   * emoji, a character — renders as text. For arbitrary content use the `#icon` slot.
-   */
-  icon?: string;
   /**
    * Render in the flow rather than pinned to a page edge: no edge border, a radius, and
    * `position` no longer applies. For a notice inside a card or panel, where the edge
@@ -62,9 +55,7 @@ function dismiss() {
   emit("dismiss");
 }
 
-const iconName = computed(() => (isIconName(props.icon) ? props.icon : (COLOR_ICON_MAP[props.color] ?? "info")));
-/** A non-registered `icon` is literal content — an emoji or a character. */
-const iconText = computed(() => (props.icon && !isIconName(props.icon) ? props.icon : null));
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
 
 // The dismiss button is icon-only, so it needs a name — CuiAlert already uses this key.
 const messages = useMessages();
@@ -112,8 +103,8 @@ const containerStyle = computed(() => {
          sits beside the text rather than stacking above it (#119). -->
     <span v-if="!noIcon" class="cui-banner__icon">
       <slot name="icon">
-        <template v-if="iconText">{{ iconText }}</template>
-        <CuiIcon v-else :name="iconName" size="1.125rem" />
+        <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
+        <CuiIcon v-else :name="roleIcon.name!" size="1.125rem" />
       </slot>
     </span>
 
