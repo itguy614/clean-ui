@@ -161,7 +161,13 @@
    Same hue/saturation, adjusted lightness for dark backgrounds.
    ============================================================ */
 
-:where(.dark, .dark *) {
+/* Scoping root only, never `:where(.dark, .dark *)` — the blanket form declares
+   these on every descendant and defeats inheritance, so a subtree cannot be
+   re-themed. `:root.dark` and not a bare `:where(.dark)` because the light slots
+   above sit on `:root` and `dark` lands on that same <html>. Both rules and the
+   reasoning: see "Color System" in CLAUDE.md (#121). */
+:root.dark,
+.dark {
   --cui-surface-base: var(--color-surface-900);
 
   /* Neutral color role — dark mode (intensity = contrast against the dark base) */
@@ -354,7 +360,8 @@
 }
 
 /* --- Dark mode text color overrides --- */
-:where(.dark, .dark *) {
+:root.dark,
+.dark {
   --cui-text-body: var(--color-surface-200);
   --cui-text-secondary: var(--color-surface-400);
   --cui-text-tertiary: var(--color-surface-500);
