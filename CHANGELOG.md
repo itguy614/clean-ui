@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Docs site: the Form Controls group — 18 pages — converted to the `DocPage` shell, each with an Accessibility section. That completes the conversion for all 61 component pages; the Foundations and Getting Started pages are not component pages and keep their free-form layout (#130)
 - Docs site: a `Methods` section in the `DocPage` shell, so a component's imperative API sits in the fixed section order instead of being hand-rolled into `#extra` after Accessibility — which is where Tree View's nine-method `defineExpose` and Context Menu's were. `MethodRow` moved from `MethodTable.vue` to `meta/types.ts`, since `<script setup>` cannot carry module exports (#165)
 - `titleId` on `CuiModalHeader` and `ariaLabelledby` on `CuiModal`, which is what fixes every dialog in the library being announced unnamed. `CuiModal` and `CuiSlideover` generated a title id, pointed `aria-labelledby` at it and never rendered it on anything; `CuiConfirmDialog` assembles its own header, so the modal had no `title` to name itself from and emitted no `aria-labelledby` at all. Both paths are wired now, and the test asserts the reference *resolves* rather than merely that the attribute is present (#158)
 - Docs site: the Layout, Data Display, Navigation and Overlay groups — 30 pages — converted to the `DocPage` shell, each with an Accessibility section. Modal, Slideover and ConfirmDialog also gained the `titleAs` rows they were missing after #129 (#130)
