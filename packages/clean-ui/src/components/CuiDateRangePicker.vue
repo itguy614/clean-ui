@@ -417,6 +417,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :name="name"
           :autocomplete="autocomplete"
           :aria-describedby="ariaDescribedby"
+          :aria-required="ariaRequired || undefined"
           :aria-labelledby="ariaLabelledby"
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"

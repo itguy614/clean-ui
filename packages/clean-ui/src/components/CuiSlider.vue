@@ -157,6 +157,7 @@ defineExpose({ el: inputRef, focus, blur });
         :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         type="range"
         :value="modelValue"

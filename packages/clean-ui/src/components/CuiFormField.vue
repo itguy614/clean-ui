@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount } from "vue";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
@@ -59,6 +60,7 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
 // `for`/`id` alone is not enough: it only forms an association with *labelable*
 // elements, which leaves a control like CuiSelect — whose focusable surface is a
 // `div[role="combobox"]` — with no accessible name at all (#78).
+const messages = useMessages();
 const labelId = `${fieldId}-label`;
 const descriptionId = `${fieldId}-description`;
 
@@ -71,6 +73,9 @@ const slotBindings = computed(() => {
     disabled: isDisabled.value,
   };
   if (props.label) base.ariaLabelledby = labelId;
+  // Required-ness is a *state*, not part of the name: exposed in forms mode and in AT field
+  // summaries, and independent of whether the field has a label at all (#175).
+  if (props.required) base.ariaRequired = true;
   // Only when there is something to describe — a dangling aria-describedby
   // pointing at an element that isn't rendered is worse than none.
   if (showError.value || props.helpText) base.ariaDescribedby = descriptionId;
@@ -106,8 +111,16 @@ onBeforeUnmount(() => {
       class="cui-form-field__label"
     >
       <span>{{ label }}</span>
-      <span v-if="required && !requiredText" class="cui-form-field__required" aria-hidden="true">*</span>
-      <span v-else-if="required && requiredText" class="cui-form-field__required-text">{{ requiredText }}</span>
+      <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
+           state is carried by `aria-required` (forwarded through the slot bindings); this
+           puts it in the visible label's text too, which is what a sighted screen-reader
+           user hears when the label is read (#175). A `<template>` rather than two
+           identical `v-if`s, so the `v-else-if` cannot silently re-anchor. -->
+      <template v-if="required && !requiredText">
+        <span class="cui-form-field__required" aria-hidden="true">*</span>
+        <span class="cui-sr-only">{{ messages.formField.required }}</span>
+      </template>
+      <span v-else-if="required" class="cui-form-field__required-text">{{ requiredText }}</span>
     </label>
 
     <!-- Control + footer -->
@@ -129,6 +142,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+
 /* --- Base layout --- */
 .cui-form-field {
   display: flex;

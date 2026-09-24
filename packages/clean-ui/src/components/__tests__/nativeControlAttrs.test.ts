@@ -27,13 +27,24 @@ import CuiFormField from "../CuiFormField.vue";
  *
  * Each entry names the control's *focusable* element — the one a label has to
  * resolve to.
+ *
+ * For Checkbox, Radio and Toggle that element is the component root: it carries the role,
+ * `tabindex="0"` and the state, while the native input inside is `tabindex="-1"` and
+ * `aria-hidden="true"` and exists only so the value serializes in a form post. Those three
+ * therefore split the attributes — `ariaTarget` takes `id` and the ARIA references, while
+ * `target` keeps `name`/`autocomplete`, which the browser reads off a real form control and
+ * which `aria-hidden` does not affect. Binding the ARIA references to the hidden input put
+ * them on an element removed from the accessibility tree, which made CuiFormField's whole
+ * labelling contract inert for the three of them (#173).
  */
 const CONTROLS: {
   name: string;
   component: unknown;
   props?: Record<string, unknown>;
-  /** Selector for the element the id must land on. */
+  /** Selector for the element `name`/`autocomplete` must land on. */
   target: string;
+  /** Element carrying `id` and the ARIA references, when it is not `target`. */
+  ariaTarget?: string;
   /** Controls with no native form element can't carry name/autocomplete. */
   nativeAttrs?: boolean;
 }[] = [
@@ -45,9 +56,9 @@ const CONTROLS: {
   { name: "CuiFileUpload", component: CuiFileUpload, target: "input" },
   { name: "CuiSlider", component: CuiSlider, target: "input" },
   { name: "CuiColorPicker", component: CuiColorPicker, target: "input" },
-  { name: "CuiCheckbox", component: CuiCheckbox, target: "input" },
-  { name: "CuiRadio", component: CuiRadio, props: { value: "a" }, target: "input" },
-  { name: "CuiToggle", component: CuiToggle, target: "input" },
+  { name: "CuiCheckbox", component: CuiCheckbox, target: "input", ariaTarget: '[role="checkbox"]' },
+  { name: "CuiRadio", component: CuiRadio, props: { value: "a" }, target: "input", ariaTarget: '[role="radio"]' },
+  { name: "CuiToggle", component: CuiToggle, target: "input", ariaTarget: '[role="switch"]' },
   { name: "CuiMaskedInput", component: CuiMaskedInput, props: { mask: "00/00" }, target: "input" },
   { name: "CuiDatePicker", component: CuiDatePicker, target: "input" },
   { name: "CuiDateRangePicker", component: CuiDateRangePicker, target: "input" },
@@ -57,28 +68,42 @@ const CONTROLS: {
 ];
 
 describe("native control attributes land on the focusable element", () => {
-  for (const { name, component, props, target, nativeAttrs = true } of CONTROLS) {
-    it(`${name} puts id on ${target}`, () => {
+  for (const { name, component, props, target, ariaTarget, nativeAttrs = true } of CONTROLS) {
+    const aria = ariaTarget ?? target;
+    it(`${name} puts id on ${aria}`, () => {
       const wrapper = mount(component as never, {
         props: { ...props, id: "my-field" },
       });
 
-      const el = wrapper.find(target);
-      expect(el.exists(), `${name}: no ${target}`).toBe(true);
+      const el = wrapper.find(aria);
+      expect(el.exists(), `${name}: no ${aria}`).toBe(true);
       expect(el.attributes("id")).toBe("my-field");
-      // ...and NOT on the wrapper, which is what the bug did.
-      expect(wrapper.element.getAttribute("id")).toBeNull();
+      // When the ARIA attributes live on a different element from the native one, the
+      // native one must not *also* carry them: CuiRadio kept `:id` on its hidden input
+      // while gaining it on the root, and rendered a duplicate id. `findAll` cannot express
+      // this — these components have v-if branches, so their root is a fragment and
+      // `wrapper.element` is a comment node — but the native element can be asked directly.
+      if (ariaTarget) {
+        expect(wrapper.find(target).attributes("id"), `${name}: id also on ${target}`).toBeUndefined();
+      } else {
+        expect(wrapper.element.getAttribute("id")).toBeNull();
+      }
     });
 
-    it(`${name} puts aria-describedby and aria-labelledby on ${target}`, () => {
+    it(`${name} puts aria-describedby and aria-labelledby on ${aria}`, () => {
       const wrapper = mount(component as never, {
         props: { ...props, ariaDescribedby: "d1", ariaLabelledby: "l1" },
       });
 
-      const el = wrapper.find(target);
+      const el = wrapper.find(aria);
       expect(el.attributes("aria-describedby")).toBe("d1");
       expect(el.attributes("aria-labelledby")).toBe("l1");
-      expect(wrapper.element.getAttribute("aria-describedby")).toBeNull();
+      if (ariaTarget) {
+        expect(wrapper.find(target).attributes("aria-describedby"), `${name}: also on ${target}`).toBeUndefined();
+        expect(wrapper.find(target).attributes("aria-labelledby")).toBeUndefined();
+      } else {
+        expect(wrapper.element.getAttribute("aria-describedby")).toBeNull();
+      }
     });
 
     if (nativeAttrs) {

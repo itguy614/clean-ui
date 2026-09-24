@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -63,6 +64,9 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
   rounded: "md",
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -339,7 +343,8 @@ defineExpose({ el: wrapperRef, focus, blur });
         :id="id"
         :name="name"
         :autocomplete="autocomplete"
-        :aria-describedby="ariaDescribedby"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         v-if="!atMax"
         ref="inputRef"
@@ -354,7 +359,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Error -->
-    <div v-if="error && errorMessage" class="cui-tag-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-tag-input__error">
       {{ errorMessage }}
     </div>
 

@@ -435,6 +435,7 @@ defineExpose({ el: rootEl, focus, blur });
           :name="name"
           :autocomplete="autocomplete"
           :aria-describedby="ariaDescribedby"
+          :aria-required="ariaRequired || undefined"
           :aria-labelledby="ariaLabelledby"
           v-model="textInput"
           :style="{

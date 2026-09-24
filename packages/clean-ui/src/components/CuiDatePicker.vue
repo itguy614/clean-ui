@@ -381,6 +381,7 @@ watch(popoverVisible, (open) => {
         :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :model-value="inputRaw"
         :mask="mask"

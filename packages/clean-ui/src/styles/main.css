@@ -401,6 +401,22 @@
   line-height: var(--cui-body-line-height);
 }
 
+/* Visually hidden, still announced. Not `display: none`, which drops the element from the
+   accessibility tree along with whatever it was there to say. Shared rather than copied:
+   this technique was hand-written in six places, in three different spellings, before it
+   lived here — and the `clip` → `clip-path` migration was half-done across them. */
+.cui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* --- Headings (h1–h6) --- */
 
 /* Prose headings only. The `:where()` exclusion skips any element carrying a `cui-*`

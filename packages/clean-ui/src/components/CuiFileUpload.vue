@@ -217,6 +217,7 @@ const messages = useMessages();
       :name="name"
       :autocomplete="autocomplete"
       :aria-describedby="ariaDescribedby"
+      :aria-required="ariaRequired || undefined"
       :aria-labelledby="ariaLabelledby"
       type="file"
       :accept="accept"

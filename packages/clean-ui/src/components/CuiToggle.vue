@@ -100,7 +100,11 @@ const dims = computed(() => trackSizes[clampedSize.value]);
       'cui-toggle--disabled': isDisabled,
       'cui-toggle--readonly': isReadonly,
     }"
+    :id="id"
     role="switch"
+    :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -109,11 +113,8 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   >
     <!-- Hidden native input -->
     <input
-      :id="id"
       :name="name"
       :autocomplete="autocomplete"
-      :aria-describedby="ariaDescribedby"
-      :aria-labelledby="ariaLabelledby"
       type="checkbox"
       :value="value !== undefined ? String(value) : undefined"
       :checked="isChecked"

@@ -88,7 +88,11 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       'cui-checkbox--disabled': isDisabled,
       'cui-checkbox--readonly': isReadonly,
     }"
+    :id="id"
     role="checkbox"
+    :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="indeterminate && !isChecked ? 'mixed' : isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -97,11 +101,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   >
     <!-- Hidden native input -->
     <input
-      :id="id"
       :name="name"
       :autocomplete="autocomplete"
-      :aria-describedby="ariaDescribedby"
-      :aria-labelledby="ariaLabelledby"
       type="checkbox"
       :value="value !== undefined ? String(value) : undefined"
       :checked="isChecked"

@@ -172,6 +172,18 @@ export interface AriaLabelableProps {
    * silently forms no association with either, so without this they are unnamed.
    */
   ariaLabelledby?: string;
+  /**
+   * Marks the control as required for assistive tech.
+   *
+   * `CuiFormField`'s visible marker is an asterisk, which is decorative and `aria-hidden`,
+   * so required-ness reached assistive tech through no path at all (#175). This rides the
+   * same plumbing as `ariaDescribedby`: declared once here, inherited by every control, and
+   * supplied automatically by `CuiFormField`.
+   *
+   * Deliberately `aria-required` rather than the native `required` attribute — the latter
+   * switches on browser validation and would change form behaviour, not just announce it.
+   */
+  ariaRequired?: boolean;
 }
 
 export interface NativeControlProps extends AriaLabelableProps {

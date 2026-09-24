@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
 import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
@@ -33,6 +34,9 @@ const props = withDefaults(defineProps<CuiRadioGroupProps>(), {
   error: false,
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | boolean];
@@ -105,7 +109,8 @@ function onKeydown(e: KeyboardEvent) {
     role="radiogroup"
     :id="id"
     :aria-labelledby="ariaLabelledby"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="describedBy"
+    :aria-required="ariaRequired || undefined"
     :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-radio-group"
@@ -125,7 +130,7 @@ function onKeydown(e: KeyboardEvent) {
         <slot />
       </template>
     </div>
-    <div v-if="error && errorMessage" class="cui-radio-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error">
       {{ errorMessage }}
     </div>
   </div>

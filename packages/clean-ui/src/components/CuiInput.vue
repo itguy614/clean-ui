@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
@@ -55,6 +56,9 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   rounded: "md",
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const emit = defineEmits<{
   "update:modelValue": [value: string | number];
   clear: [];
@@ -104,6 +108,7 @@ defineExpose({ el: inputRef, focus, blur });
 
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
+
 </script>
 
 <template>
@@ -146,7 +151,8 @@ const messages = useMessages();
           :id="id"
           :name="name"
           :autocomplete="autocomplete"
-          :aria-describedby="ariaDescribedby"
+          :aria-describedby="describedBy"
+          :aria-required="ariaRequired || undefined"
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
@@ -163,7 +169,6 @@ const messages = useMessages();
           v-if="showClear"
           type="button"
           class="cui-input__clear"
-          tabindex="-1"
           :aria-label="messages.input.clear"
           @click="clear"
         >
@@ -175,7 +180,6 @@ const messages = useMessages();
           v-if="isPassword"
           type="button"
           class="cui-input__password-toggle"
-          tabindex="-1"
           :aria-label="passwordVisible ? messages.input.hidePassword : messages.input.showPassword"
           @click="passwordVisible = !passwordVisible"
         >
@@ -198,7 +202,7 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" class="cui-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-input__error">
       {{ errorMessage }}
     </div>
   </div>
