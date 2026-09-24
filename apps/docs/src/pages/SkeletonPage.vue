@@ -1,40 +1,43 @@
 <script setup lang="ts">
 import { CuiCard, CuiCardBody, CuiCardHeader, CuiCardMedia, CuiFlex, CuiGrid, CuiSkeleton, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/skeleton";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Skeleton</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Placeholder loading indicators that hint at the shape of content before it arrives.
-        Supports text lines, rectangles, and circles with shimmer or pulse animations.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example code-open :code="`<CuiSkeleton />`">
+        <div class="max-w-lg">
+          <CuiSkeleton />
+        </div>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        Each skeleton carries <code>role="status"</code> and <code>aria-busy="true"</code>
+        with a localized label, so a screen reader hears that content is loading rather
+        than nothing at all. The label comes from the message catalog — override it through
+        localization, not per instance.
       </p>
-    </div>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        Use one skeleton per loading region, not one per line. A card that renders a
+        heading, an avatar and three text lines as four separate skeletons announces
+        "loading" four times; wrap the region instead and let the shapes inside it be
+        decorative.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        <code>animation="none"</code> is the right choice when a user has asked for reduced
+        motion and you are driving that preference yourself. The shimmer is a background
+        animation rather than movement across the screen, so it is mild, but a static
+        placeholder is never wrong.
+      </p>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'variant', type: 'text | rectangle | circle', default: 'text', description: 'Shape variant' },
-          { name: 'animation', type: 'shimmer | pulse | none', default: 'shimmer', description: 'Animation style' },
-          { name: 'lines', type: 'number', default: '3', description: 'Number of lines (text variant only)' },
-          { name: 'lastLineWidth', type: 'string', default: '60%', description: 'Width of the last text line for a natural trailing-off look' },
-          { name: 'width', type: 'string', default: '100%', description: 'CSS width (rectangle variant)' },
-          { name: 'height', type: 'string', default: '1rem', description: 'CSS height (rectangle variant)' },
-          { name: 'size', type: 'string', default: '3rem', description: 'Diameter (circle variant)' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'sm', description: 'Border radius (rectangle variant only)' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
+    <template #examples>
       <CuiStack spacing="6">
-
         <!-- Basic text -->
         <Example title="Text Lines (Default)" :code="`<CuiSkeleton />\n<CuiSkeleton :lines=&quot;2&quot; />\n<CuiSkeleton :lines=&quot;5&quot; />`">
           <CuiStack spacing="6" class="max-w-lg">
@@ -207,6 +210,6 @@ import Example from "../components/Example.vue";
         </Example>
 
       </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

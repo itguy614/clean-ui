@@ -1,64 +1,55 @@
 <script setup lang="ts">
 import { CuiButton, CuiCard, CuiCardBody, CuiEmptyState, CuiGrid, CuiIcon, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/empty-state";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Empty State</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A centered placeholder for when there's no content to display — empty lists, search results, tables, or first-time experiences.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'icon', type: 'string', default: '—', description: 'Phosphor icon name' },
-          { name: 'title', type: 'string', default: '—', description: 'Heading text' },
-          { name: 'description', type: 'string', default: '—', description: 'Supporting text below the title' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Controls icon size, font sizes, and spacing' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role for the icon area' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: 'icon', type: 'slot', default: '—', description: 'Override the icon area (custom illustration, image, etc.)' },
-          { name: 'default', type: 'slot', default: '—', description: 'Override everything below the icon (replaces title + description + actions)' },
-          { name: 'actions', type: 'slot', default: '—', description: 'Action buttons below the description' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic" :code="`<CuiEmptyState
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiEmptyState
   icon=&quot;package&quot;
   title=&quot;No items yet&quot;
   description=&quot;Add your first item to get started.&quot;
-/>`">
-          <CuiCard variant="outline">
-            <CuiCardBody>
-              <CuiEmptyState
-                icon="package"
-                title="No items yet"
-                description="Add your first item to get started."
-              />
-            </CuiCardBody>
-          </CuiCard>
-        </Example>
+/>`"
+      >
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <CuiEmptyState
+              icon="package"
+              title="No items yet"
+              description="Add your first item to get started."
+            />
+          </CuiCardBody>
+        </CuiCard>
+      </Example>
+    </template>
 
+    <template #accessibility>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        The title renders as an <code>&lt;h3&gt;</code>, so an empty state is reachable by
+        heading navigation and appears in the document outline — it is a real region
+        heading, not decoration. Set <code>titleAs</code> so the level fits where the empty
+        state sits: <code>h2</code> when it replaces a whole page's content,
+        <code>h4</code> inside an already-nested panel.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        The icon is decorative and is not announced. The title and description carry the
+        meaning, so write them to stand on their own — "No invoices match this filter"
+        rather than a bare "Nothing here" beside a magnifying glass.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        An empty state is a dead end without a way out. Put the next action in the
+        <code>#actions</code> slot — creating the first item, clearing the filter — rather
+        than leaving the user to find it elsewhere on the page.
+      </p>
+    </template>
+
+    <template #examples>
+      <CuiStack spacing="6">
         <!-- With actions -->
         <Example title="With Actions" :code="`<CuiEmptyState
   icon=&quot;plus-circle&quot;
@@ -252,6 +243,6 @@ import Example from "../components/Example.vue";
         </Example>
 
       </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

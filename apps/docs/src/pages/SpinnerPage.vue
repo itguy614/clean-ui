@@ -1,50 +1,42 @@
 <script setup lang="ts">
 import { CuiCard, CuiCardBody, CuiFlex, CuiGrid, CuiSpinner, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
-import Playground from "../components/Playground.vue";
+import meta from "../meta/spinner";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Spinner</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Standalone loading indicator with three visual variants.
-        Use for async operations, page loads, or content placeholders.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example code-open :code="`<CuiSpinner />`">
+        <CuiSpinner />
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        The spinner is a <code>role="status"</code> region labelled by <code>label</code>,
+        which defaults to "Loading". The label is always announced — when
+        <code>show-label</code> is false it renders as visually hidden text rather than
+        being dropped, so the spinner is never a silent animation.
       </p>
-    </div>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        Make the label say what is loading when there is more than one on a page: "Loading
+        invoices" beats three regions all announcing "Loading". A spinner with no
+        surrounding context is the one case where the default is not enough.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        All three variants animate continuously, which is motion a user may have asked to
+        avoid. The animation is small and in place rather than travelling, so it stays
+        within what <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.3.3
+        contemplates — but prefer <code>CuiSkeleton</code> with
+        <code>animation="none"</code> when a whole region is loading and you are honouring
+        reduced motion.
+      </p>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Size' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role' },
-          { name: 'variant', type: 'ring | dots | bars', default: 'ring', description: 'Visual variant' },
-          { name: 'label', type: 'string', default: 'Loading', description: 'Accessible label (always present for screen readers)' },
-          { name: 'showLabel', type: 'boolean', default: 'false', description: 'Show label text below the spinner' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <Playground
-      :component="CuiSpinner"
-      component-name="CuiSpinner"
-      :props="{
-        size: { type: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], default: 'md' },
-        color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
-        variant: { type: 'select', options: ['ring', 'dots', 'bars'], default: 'ring' },
-        label: { type: 'string', default: 'Loading' },
-        showLabel: { type: 'boolean', default: false },
-      }"
-    />
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
+    <template #examples>
       <CuiStack spacing="6">
-
         <!-- Variants -->
         <Example title="Variants" :code="`<CuiSpinner variant=&quot;ring&quot; />
 <CuiSpinner variant=&quot;dots&quot; />
@@ -158,6 +150,6 @@ import Playground from "../components/Playground.vue";
         </Example>
 
       </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

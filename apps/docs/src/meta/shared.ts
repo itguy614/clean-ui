@@ -98,3 +98,12 @@ export const roleIconSlot: SlotRow = {
   name: "icon",
   description: "Replaces the role icon entirely — a spinner, an avatar, anything",
 };
+
+/** `TitleAsProps` — the components whose `title` prop renders a heading. */
+export const titleAsProp = (dflt: string): PropRow => ({
+  name: "titleAs",
+  type: "h1 | h2 | h3 | h4 | h5 | h6 | div",
+  default: dflt,
+  description:
+    "Element the title renders as. Set it to match the surrounding document's heading level, or div for a decorative title",
+});

@@ -3,6 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import CuiCardHeader from "../CuiCardHeader.vue";
 import CuiModalHeader from "../CuiModalHeader.vue";
 import CuiConfirmDialog from "../CuiConfirmDialog.vue";
+import CuiEmptyState from "../CuiEmptyState.vue";
 
 /**
  * #129 — a title that looks like a heading should be one. `CuiCardHeader` rendered a
@@ -23,6 +24,7 @@ describe("header titles are headings at a level the consumer controls", () => {
     ["CuiCardHeader", CuiCardHeader, ".cui-card-header__title", "H3", {}],
     ["CuiModalHeader", CuiModalHeader, ".cui-modal-header__title", "H2", {}],
     ["CuiConfirmDialog", CuiConfirmDialog, ".cui-confirm-dialog__title", "H2", { visible: true }],
+    ["CuiEmptyState", CuiEmptyState, ".cui-empty-state__title", "H3", {}],
   ])("%s", (_name, component, selector, defaultTag, extraProps) => {
     /** Mount with a title and read the tag it rendered as. */
     async function titleTag(props: Record<string, unknown> = {}) {
