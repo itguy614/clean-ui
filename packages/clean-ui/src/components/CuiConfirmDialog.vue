@@ -42,6 +42,10 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   titleAs: "h2",
 });
 
+// The dialog assembles its own header, so CuiModal has no `title` to name itself from —
+// without this the confirm dialog had no accessible name at all (#158).
+const titleId = `cui-confirm-dialog-title-${Math.random().toString(36).slice(2, 8)}`;
+
 const messages = useMessages();
 
 // Prop override > provider catalog > built-in default.
@@ -97,7 +101,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
+  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" @update:visible="emit('update:visible', $event)">
     <!-- Custom header with icon badge -->
     <div
       :style="{
@@ -129,6 +133,7 @@ function onCancel() {
         <!-- Title -->
         <component
           :is="titleAs"
+          :id="titleId"
           class="cui-confirm-dialog__title"
           :style="{
             fontSize: '1.0625rem',
