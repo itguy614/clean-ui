@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { disabledProp, hiddenProp, roundedProp } from "./shared";
+import { disabledProp, hiddenProp, roundedProp, visibleProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Popover",
@@ -36,7 +36,7 @@ const meta: ComponentMeta = {
     { name: "noArrow", type: "boolean", default: "false", description: "Hide the arrow" },
     { name: "width", type: "string", description: "Fixed panel width, e.g. \"320px\". Otherwise 12–24rem by content" },
     { ...roundedProp, default: "lg" },
-    { name: "v-model:visible", type: "boolean", description: "Drive the panel yourself instead of by trigger" },
+    visibleProp(),
     { ...disabledProp, description: "Prevents the panel opening" },
     {
       name: "closable",

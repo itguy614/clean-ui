@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, hiddenProp, roundedProp } from "./shared";
+import { clampedSizeProp, colorProp, hiddenProp, roundedProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Badge",
@@ -9,12 +9,7 @@ const meta: ComponentMeta = {
   props: [
     { name: "variant", type: "solid | subtle | outline", default: "subtle", description: "Visual style" },
     colorProp("Colour role from the colour system"),
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "sm",
-      description: "Badge size. Only sm and md are styled — the others clamp to the nearest of those",
-    },
+    clampedSizeProp("sm and md", "sm", "Badge size"),
     { ...roundedProp, default: "full", description: "Border radius. Badges default to a pill" },
     { name: "dot", type: "boolean", default: "false", description: "Render as a bare coloured dot with no text" },
     {

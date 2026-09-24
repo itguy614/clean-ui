@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, hiddenProp } from "./shared";
+import { clampedSizeProp, colorProp, hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Progress",
@@ -11,12 +11,7 @@ const meta: ComponentMeta = {
     { name: "max", type: "number", default: "100", description: "Value that counts as complete" },
     { name: "variant", type: "bar | circle", default: "bar", description: "Horizontal bar, or a ring" },
     colorProp("Colour role. The fill uses --cui-{role}, the track --cui-{role}-bg"),
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Bar thickness (0.375–1rem) or ring diameter (40–96px). Only sm, md and lg are styled",
-    },
+    clampedSizeProp("sm, md and lg", "md", "Bar thickness (0.375–1rem) or ring diameter (40–96px)"),
     {
       name: "showLabel",
       type: "boolean",

@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp } from "./shared";
+import { hiddenProp, spacingProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Flex",
@@ -31,19 +31,9 @@ const meta: ComponentMeta = {
       default: "—",
       description: "Main-axis distribution (justify-content)",
     },
-    {
-      name: "gap",
-      type: "TailwindSpacing",
-      default: "—",
-      description: "Gap on both axes, on the Tailwind spacing scale",
-    },
-    {
-      name: "rowGap",
-      type: "TailwindSpacing",
-      default: "—",
-      description: "Row gap. Setting either rowGap or colGap replaces gap entirely rather than overriding one axis of it",
-    },
-    { name: "colGap", type: "TailwindSpacing", default: "—", description: "Column gap. Same caveat as rowGap" },
+    spacingProp("gap", "Gap on both axes"),
+    spacingProp("rowGap", "Row gap. Setting either rowGap or colGap replaces gap entirely rather than overriding one axis of it"),
+    spacingProp("colGap", "Column gap. Same caveat as rowGap"),
     {
       name: "debug",
       type: "boolean",

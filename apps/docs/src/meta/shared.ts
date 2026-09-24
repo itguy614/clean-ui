@@ -107,3 +107,59 @@ export const titleAsProp = (dflt: string): PropRow => ({
   description:
     "Element the title renders as. Set it to match the surrounding document's heading level, or div for a decorative title",
 });
+
+/**
+ * `SizeableProps` for a component that takes the full `CuiSize` but styles only a subset
+ * via `clampSize()` — the majority of them.
+ *
+ * Written out by hand in seven modules during the #130 batches, with the wording already
+ * drifting between them.
+ */
+export const clampedSizeProp = (supported: string, dflt = "md", what = "Size"): PropRow => ({
+  name: "size",
+  type: "xs | sm | md | lg | xl",
+  default: dflt,
+  description: `${what}. Only ${supported} are styled — the others clamp to the nearest of those`,
+});
+
+/**
+ * `CuiColorOrCss` — the paint components (Icon, Divider, Backdrop), which take a role name
+ * *or* any raw CSS colour.
+ *
+ * `type` deliberately stays as the role list with no `| <css-color>` pseudo-member: the
+ * Playground splits `type` on `|` to build its select, so a pseudo-token would become a
+ * bogus option. The raw-CSS half belongs in the description.
+ */
+export const colorOrCssProp = (description: string, dflt = "—"): PropRow => ({
+  name: "color",
+  type: COLOR_ROLES,
+  default: dflt,
+  description: `${description}. A role name maps to its token; any other CSS color passes straight through`,
+});
+
+/**
+ * `v-model:visible`, on every overlay.
+ *
+ * A factory rather than a constant because Popover and Tooltip have no `false` default —
+ * `visible` is optional there.
+ */
+export const visibleProp = (dflt?: string): PropRow => ({
+  name: "v-model:visible",
+  type: "boolean",
+  ...(dflt ? { default: dflt } : {}),
+  description: "Whether the overlay is open",
+});
+
+/**
+ * A Tailwind spacing-scale prop, as the layout components take it.
+ *
+ * Spelling the 35-member union in the `type` column is useless to a reader, and printing
+ * the TypeScript name (`ResponsiveValue<TailwindSpacing>`) is unresolvable on a docs page —
+ * so the type column names the scale and the description carries the responsive half.
+ */
+export const spacingProp = (name: string, description: string, dflt?: string): PropRow => ({
+  name,
+  type: "TailwindSpacing",
+  ...(dflt ? { default: dflt } : {}),
+  description: `${description}. Accepts a responsive object, e.g. { base: 2, md: 4 }`,
+});

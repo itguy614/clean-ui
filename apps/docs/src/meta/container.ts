@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp } from "./shared";
+import { hiddenProp, spacingProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Container",
@@ -14,18 +14,8 @@ const meta: ComponentMeta = {
       description:
         "Width cap — sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px, full 100%. Accepts a responsive object, e.g. { sm: 'full', lg: 'xl' }",
     },
-    {
-      name: "px",
-      type: "TailwindSpacing",
-      default: "4",
-      description: "Horizontal padding, on the Tailwind spacing scale. Responsive object accepted",
-    },
-    {
-      name: "py",
-      type: "TailwindSpacing",
-      default: "—",
-      description: "Vertical padding. Unset by default, so a container adds no rhythm of its own",
-    },
+    spacingProp("px", "Horizontal padding", "4"),
+    spacingProp("py", "Vertical padding. Unset by default, so a container adds no rhythm of its own"),
     {
       name: "centered",
       type: "boolean",

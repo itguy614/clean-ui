@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, disabledProp, hiddenProp } from "./shared";
+import { colorProp, disabledProp, hiddenProp, visibleProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Tooltip",
@@ -32,7 +32,7 @@ const meta: ComponentMeta = {
     {
       ...colorProp("Color role for the panel. Unset renders the neutral dark tooltip", "—"),
     },
-    { name: "v-model:visible", type: "boolean", description: "Drive the tooltip yourself instead of by trigger" },
+    visibleProp(),
     { ...disabledProp, description: "Prevents the tooltip showing" },
     hiddenProp,
   ],

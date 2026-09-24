@@ -41,6 +41,18 @@ const meta: ComponentMeta = {
     { name: "open", payload: "x: number, y: number", description: "Opened, with the viewport coordinates it opened at" },
     { name: "close", payload: "—", description: "Closed, by Escape, a click outside, a scroll, or a selection" },
   ],
+
+  methods: [
+    {
+      name: "openAt",
+      signature: "(x: number, y: number) => void",
+      description:
+        "Open the menu at viewport coordinates, for driving it from your own gesture — a kebab button, or a long press on a list row",
+    },
+    { name: "open", signature: "() => void", description: "Open at the last position used" },
+    { name: "close", signature: "() => void", description: "Close the menu" },
+    { name: "isOpen", signature: "boolean", description: "Whether the menu is currently open" },
+  ],
 };
 
 export default meta;

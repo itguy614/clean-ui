@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, hiddenProp } from "./shared";
+import { clampedSizeProp, colorProp, hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Copy Button",
@@ -9,12 +9,7 @@ const meta: ComponentMeta = {
 
   props: [
     { name: "value", type: "string", default: "required", description: "Text to copy" },
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "sm",
-      description: "Size. Only xs, sm and md differ — larger values clamp to md",
-    },
+    clampedSizeProp("xs, sm and md", "sm", "Size"),
     colorProp("Color role for the resting state. The copied state is always success", "primary"),
     { name: "variant", type: "ghost | outline", default: "ghost", description: "Button variant" },
     {

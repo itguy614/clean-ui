@@ -28,6 +28,19 @@ export interface EventRow {
   description: string;
 }
 
+/**
+ * A method a component exposes through `defineExpose`, reached via a template ref.
+ *
+ * Lives here rather than in `MethodTable.vue` because `<script setup>` cannot carry module
+ * exports — the repo has broken builds on that before (see CLAUDE.md § Critical Gotchas).
+ */
+export interface MethodRow {
+  name: string;
+  /** e.g. `(id: string) => void` */
+  signature: string;
+  description: string;
+}
+
 /** A public `--cui-*` custom property (see "Themeable Properties" in CLAUDE.md). */
 export interface TokenRow {
   name: string;
@@ -50,6 +63,7 @@ export interface ComponentPart {
   props?: PropRow[];
   slots?: SlotRow[];
   events?: EventRow[];
+  methods?: MethodRow[];
 }
 
 export interface ComponentMeta {
@@ -60,6 +74,8 @@ export interface ComponentMeta {
   props?: PropRow[];
   slots?: SlotRow[];
   events?: EventRow[];
+  /** Imperative API, for components with a `defineExpose`. */
+  methods?: MethodRow[];
   tokens?: TokenRow[];
   /** Sub-components, for compound components. Each renders as an h3 within each section. */
   parts?: ComponentPart[];

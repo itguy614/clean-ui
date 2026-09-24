@@ -13,7 +13,6 @@ import {
   CuiButton,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
-import MethodTable from "../components/MethodTable.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/context-menu";
 
@@ -100,18 +99,6 @@ function openFromButton(e: MouseEvent) {
     </template>
 
     <template #extra>
-      <div>
-        <h2 id="methods" class="mb-4 text-2xl font-semibold">Methods</h2>
-        <p class="mb-4" style="color: var(--cui-text-secondary);">Reached through a template ref.</p>
-        <MethodTable
-          :methods="[
-            { name: 'openAt', signature: '(x, y) => void', description: 'Open the menu at viewport coordinates, for driving it from your own gesture such as a kebab button or a long press on a list row' },
-            { name: 'open', signature: '() => void', description: 'Open at the last position used' },
-            { name: 'close', signature: '() => void', description: 'Close the menu' },
-            { name: 'isOpen', signature: 'boolean', description: 'Whether the menu is currently open' },
-          ]"
-        />
-      </div>
 
       <div>
         <h2 id="reaching-it-without-a-right-click" class="mb-4 text-2xl font-semibold">

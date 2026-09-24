@@ -1,5 +1,5 @@
 import type { ComponentMeta, PropRow } from "./types";
-import { hiddenProp, roundedProp, titleAsProp } from "./shared";
+import { hiddenProp, roundedProp, titleAsProp, visibleProp } from "./shared";
 
 /** Shared by CuiModal and CuiSlideover — both drive the same CuiBackdrop. */
 export const backdropProps: PropRow[] = [
@@ -43,7 +43,7 @@ const meta: ComponentMeta = {
     {
       name: "CuiModal",
       props: [
-        { name: "v-model:visible", type: "boolean", default: "false", description: "Whether the modal is open" },
+        visibleProp("false"),
         {
           name: "size",
           type: "sm | md | lg | xl | full | string",

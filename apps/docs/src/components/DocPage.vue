@@ -4,6 +4,7 @@ import { CuiCard, CuiCardBody, CuiStack } from "@itguy614/clean-ui";
 import PropTable from "./PropTable.vue";
 import SlotTable from "./SlotTable.vue";
 import EventTable from "./EventTable.vue";
+import MethodTable from "./MethodTable.vue";
 import TokenTable from "./TokenTable.vue";
 import type { ComponentMeta } from "../meta/types";
 import { slug } from "../utils/slug";
@@ -13,9 +14,9 @@ import { slug } from "../utils/slug";
  *
  * Section order is fixed here rather than left to each page to remember:
  *
- *   Props → Slots → Events → Customization → Accessibility → (extra) → Examples
+ *   Props → Slots → Events → Methods → Customization → Accessibility → (extra) → Examples
  *
- * The four API sections render from the component's metadata module and disappear when
+ * The API sections render from the component's metadata module and disappear when
  * they have nothing to show, so a component with no events simply has no Events heading —
  * no per-page conditionals, and nothing to keep in sync. Heading ids come from the same
  * `slug()` that `Example` uses, so `PageNav` can read them straight off the document.
@@ -27,7 +28,7 @@ import { slug } from "../utils/slug";
  */
 const props = defineProps<{ meta: ComponentMeta }>();
 
-type ApiKey = "props" | "slots" | "events";
+type ApiKey = "props" | "slots" | "events" | "methods";
 
 /** Rows for one section, as (part name | null, rows) pairs. `null` is the root component. */
 function groups(key: ApiKey) {
@@ -45,6 +46,7 @@ const api = computed(() => ({
   props: groups("props"),
   slots: groups("slots"),
   events: groups("events"),
+  methods: groups("methods"),
 }));
 
 const id = (s: string) => slug(s);
@@ -95,6 +97,16 @@ const id = (s: string) => slug(s);
         <div v-for="g in api.events" :key="g.name ?? 'root'">
           <h3 v-if="g.name" :id="id(`${g.name} events`)" class="mb-2 text-lg font-semibold">{{ g.name }}</h3>
           <EventTable :events="(g.rows as never)" />
+        </div>
+      </CuiStack>
+    </div>
+
+    <div v-if="api.methods.length">
+      <h2 :id="id('Methods')" class="mb-4 text-2xl font-semibold">Methods</h2>
+      <CuiStack spacing="5">
+        <div v-for="g in api.methods" :key="g.name ?? 'root'">
+          <h3 v-if="g.name" :id="id(`${g.name} methods`)" class="mb-2 text-lg font-semibold">{{ g.name }}</h3>
+          <MethodTable :methods="(g.rows as never)" />
         </div>
       </CuiStack>
     </div>

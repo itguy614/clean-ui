@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, hiddenProp, titleAsProp } from "./shared";
+import { clampedSizeProp, colorProp, hiddenProp, titleAsProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Empty State",
@@ -11,12 +11,7 @@ const meta: ComponentMeta = {
     { name: "title", type: "string", description: "Heading text" },
     titleAsProp("h3"),
     { name: "description", type: "string", description: "Supporting text below the title" },
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Icon size, font sizes and spacing. Only sm, md and lg differ — xs and xl clamp to the nearest",
-    },
+    clampedSizeProp("sm, md and lg", "md", "Icon size, font sizes and spacing"),
     colorProp("Color role for the icon circle — its tint and the icon itself"),
     hiddenProp,
   ],
