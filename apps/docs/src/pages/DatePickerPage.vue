@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiDatePicker, CuiFlex, CuiGrid, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import { CuiDatePicker, CuiFlex, CuiGrid } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/date-picker";
 
 const date1 = ref("2025-01-15");
 const date2 = ref("2025-03-20");
@@ -15,207 +15,195 @@ const dateObj = ref<Date | null>(new Date());
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Date Picker</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A date input with masked text entry and a calendar popover.
-        Supports custom formats, min/max ranges, blackout dates, month-only mode,
-        and quick month/year selection.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiDatePicker v-model=&quot;date&quot; label=&quot;Start Date&quot; />`"
+      >
+        <CuiFlex gap="4" class="items-start">
+          <CuiDatePicker v-model="date1" label="Start Date" />
+          <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+            Value: <code class="cui-code">{{ date1 }}</code>
+          </div>
+        </CuiFlex>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The field is a real text input — you can type a date into it without ever opening
+        the calendar. The calendar itself is a <code>role="grid"</code> of
+        <code>role="gridcell"</code> cells with roving focus: exactly one cell is in the
+        tab order at a time, and the arrow keys move it.
       </p>
-    </div>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'modelValue', type: 'string | Date | null', default: '—', description: 'Date value (v-model, ISO string or Date object)' },
-          { name: 'format', type: 'string', default: 'MM/DD/YYYY', description: 'Display format pattern (MM, DD, YYYY, MMM, etc.)' },
-          { name: 'valueType', type: 'iso | date', default: 'iso', description: 'v-model output type' },
-          { name: 'mode', type: 'date | month', default: 'date', description: 'Full date or month-only picker' },
-          { name: 'fillDay', type: 'first | last', default: 'first', description: 'In month mode, auto-fill day 1 or last day' },
-          { name: 'highlightToday', type: 'boolean', default: 'true', description: 'Highlight today in the calendar' },
-          { name: 'minDate', type: 'string', default: '—', description: 'Minimum selectable date (ISO)' },
-          { name: 'maxDate', type: 'string', default: '—', description: 'Maximum selectable date (ISO)' },
-          { name: 'disabledDate', type: '(date: Date) => boolean', default: '—', description: 'Function to disable specific dates' },
-          { name: 'disabledDates', type: '(string | { from, to })[]', default: '—', description: 'Array of disabled dates or ranges' },
-          { name: 'placeholder', type: 'string', default: '—', description: 'Placeholder (auto-generated from format if omitted)' },
-          { name: 'label', type: 'string', default: '—', description: 'Label text' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-          { name: 'id', type: 'string', default: '-', description: 'id of the native control — what a label for attribute must point at. CuiFormField supplies it automatically' },
-          { name: 'name', type: 'string', default: '-', description: 'Native control name, for form serialization and browser autofill' },
-          { name: 'autocomplete', type: 'string', default: '-', description: 'Native autocomplete hint, e.g. email, street-address, off' },
-          { name: 'aria-describedby', type: 'string', default: '-', description: 'id(s) of describing text. CuiFormField points this at its help text or error message' },
-          { name: 'aria-labelledby', type: 'string', default: '-', description: 'id(s) of the labelling element. CuiFormField points this at its label' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:modelValue', payload: 'string | Date | null', description: 'Fires when the selected date changes (v-model)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Keyboard</h2>
-      <p class="mb-4" style="color: var(--cui-text-secondary);">
-        The calendar is a grid with roving focus: opening the panel puts focus on the selected date
-        (or today), and closing it hands focus back to the field. Disabled dates are reachable and
-        announced &mdash; a calendar is a grid whose shape carries meaning, so movement never skips
-        cells; it is selection that refuses.
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Opening and closing.</strong> <code>↓</code> on the field opens the
+        calendar. <code>Enter</code> is deliberately <em>not</em> bound: in a form it
+        submits, and the field accepts typed input, so taking it would cost more than it
+        gives. Opening puts focus on the selected date, or today when there is none, so
+        the arrows start somewhere meaningful rather than at the first cell.
+        <code>Escape</code> closes and hands focus back to the field — as does selecting a
+        date.
       </p>
-      <PropTable
-        :props="[
-          { name: 'Down (on the field)', type: 'key', default: '-', description: 'Open the calendar. Enter is deliberately left alone so a form can still submit, and so typing a date into the field keeps working' },
-          { name: 'Left / Right', type: 'key', default: '-', description: 'Previous / next day. In the month and year grids, previous / next cell' },
-          { name: 'Up / Down', type: 'key', default: '-', description: 'Same weekday, previous / next week. One row in the month and year grids' },
-          { name: 'Home / End', type: 'key', default: '-', description: 'First / last day of the week. January / December, or the ends of the year range' },
-          { name: 'PageUp / PageDown', type: 'key', default: '-', description: 'Previous / next month. In the year grid, previous / next page of years' },
-          { name: 'Shift + PageUp / PageDown', type: 'key', default: '-', description: 'Previous / next year' },
-          { name: 'Enter / Space', type: 'key', default: '-', description: 'Select the focused cell' },
-          { name: 'Escape', type: 'key', default: '-', description: 'Close the panel and return focus to the field' },
-        ]"
-      />
-      <p class="mb-4 mt-6" style="color: var(--cui-text-secondary);">
-        Moving past the edge of a month pages the calendar, so the focused cell is always one you
-        can see. The grid carries <code class="cui-code">role="grid"</code> with
-        <code class="cui-code">role="gridcell"</code> cells,
-        <code class="cui-code">aria-selected</code> and
-        <code class="cui-code">aria-disabled</code>.
+
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Inside the grid.</strong> <code>←</code>/<code>→</code> move a day,
+        <code>↑</code>/<code>↓</code> a week, <code>Home</code>/<code>End</code> to the
+        ends of the week, <code>PageUp</code>/<code>PageDown</code> a month, and
+        <code>Shift</code> with those a year. <code>Enter</code> or <code>Space</code>
+        selects the focused cell. The month and year grids use the same keys in their own
+        units — a month, three months to a row, a page of twelve years.
       </p>
-    </div>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          Moving past the edge of a month pages the calendar, so the focused cell is
+          always one you can see.
+        </li>
+        <li>
+          Movement does not skip disabled dates. A calendar is a grid whose shape carries
+          meaning, and holes in it make it impossible to navigate predictably — so a
+          blacked-out date is reachable and carries <code>aria-disabled</code>. It is
+          <em>selection</em> that refuses, not movement.
+        </li>
+        <li>
+          The selected cell carries <code>aria-selected</code>, and every cell an
+          <code>aria-label</code> with its full date, so a cell is announced as a date
+          rather than as a bare number.
+        </li>
+        <li>
+          Each grid has an <code>aria-label</code> naming what is on screen — the month
+          and year, the year, or the year range.
+        </li>
+        <li>
+          Focus is only reclaimed on close when it is the picker's to reclaim: still
+          inside its own panel, or already on <code>&lt;body&gt;</code>. With two pickers
+          on a page, opening the second no longer yanks the ring back to the first.
+        </li>
+      </ul>
 
-        <!-- Basic -->
-        <Example title="Basic" :code="`<CuiDatePicker v-model=&quot;date&quot; label=&quot;Start Date&quot; />`">
-          <CuiFlex gap="4" class="items-start">
-            <CuiDatePicker v-model="date1" label="Start Date" />
-            <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
-              Value: <code class="cui-code">{{ date1 }}</code>
-            </div>
-          </CuiFlex>
-        </Example>
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Known gaps.</strong> The <code>label</code> prop renders plain text with no
+        <code>for</code> attribute, so it forms no association with the field — clicking it
+        does nothing and assistive technology does not read it with the input. Wrap the
+        picker in a <code>CuiFormField</code> instead, which supplies <code>id</code>,
+        <code>aria-labelledby</code> and <code>aria-describedby</code> through its slot
+        bindings, or pass those props yourself.
+      </p>
+    </template>
 
-        <!-- Different formats -->
-        <Example title="Custom Formats" :code="`<CuiDatePicker v-model=&quot;date&quot; format=&quot;MM/DD/YYYY&quot; label=&quot;US Format&quot; />
+    <template #examples>
+      <!-- Different formats -->
+      <Example title="Custom Formats" :code="`<CuiDatePicker v-model=&quot;date&quot; format=&quot;MM/DD/YYYY&quot; label=&quot;US Format&quot; />
 <CuiDatePicker v-model=&quot;date&quot; format=&quot;DD/MM/YYYY&quot; label=&quot;EU Format&quot; />
 <CuiDatePicker v-model=&quot;date&quot; format=&quot;YYYY-MM-DD&quot; label=&quot;ISO Format&quot; />`">
-          <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
-            <CuiDatePicker v-model="date2" format="MM/DD/YYYY" label="US Format" />
-            <CuiDatePicker v-model="date2" format="DD/MM/YYYY" label="EU Format" />
-            <CuiDatePicker v-model="date2" format="YYYY-MM-DD" label="ISO Format" />
-          </CuiGrid>
-        </Example>
+        <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
+          <CuiDatePicker v-model="date2" format="MM/DD/YYYY" label="US Format" />
+          <CuiDatePicker v-model="date2" format="DD/MM/YYYY" label="EU Format" />
+          <CuiDatePicker v-model="date2" format="YYYY-MM-DD" label="ISO Format" />
+        </CuiGrid>
+      </Example>
 
-        <!-- Min/max range -->
-        <Example title="Min/Max Range" :code="`<CuiDatePicker min-date=&quot;2025-01-01&quot; max-date=&quot;2025-12-31&quot; />`">
-          <CuiDatePicker
-            v-model="date3"
-            label="2025 Only"
-            min-date="2025-01-01"
-            max-date="2025-12-31"
-          />
-        </Example>
+      <!-- Min/max range -->
+      <Example title="Min/Max Range" :code="`<CuiDatePicker min-date=&quot;2025-01-01&quot; max-date=&quot;2025-12-31&quot; />`">
+        <CuiDatePicker
+          v-model="date3"
+          label="2025 Only"
+          min-date="2025-01-01"
+          max-date="2025-12-31"
+        />
+      </Example>
 
-        <!-- No past dates -->
-        <Example title="No Past Dates (Today Onward)" :code="`<CuiDatePicker
+      <!-- No past dates -->
+      <Example title="No Past Dates (Today Onward)" :code="`<CuiDatePicker
   v-model=&quot;date&quot;
   label=&quot;Future Date&quot;
   :min-date=&quot;new Date().toISOString().slice(0, 10)&quot;
 />`">
-          <CuiDatePicker
-            v-model="date4"
-            label="Future Date"
-            :min-date="new Date().toISOString().slice(0, 10)"
-          />
-        </Example>
+        <CuiDatePicker
+          v-model="date4"
+          label="Future Date"
+          :min-date="new Date().toISOString().slice(0, 10)"
+        />
+      </Example>
 
-        <!-- Blackout dates -->
-        <Example title="Blackout Dates" :code="`<CuiDatePicker
+      <!-- Blackout dates -->
+      <Example title="Blackout Dates" :code="`<CuiDatePicker
   :disabled-dates=&quot;['2025-04-15', { from: '2025-04-20', to: '2025-04-25' }]&quot;
   :disabled-date=&quot;(d) => d.getDay() === 0 || d.getDay() === 6&quot;
 />`">
+        <CuiDatePicker
+          v-model="date5"
+          label="No Weekends, No Apr 15, No Apr 20-25"
+          :disabled-dates="['2025-04-15', { from: '2025-04-20', to: '2025-04-25' }]"
+          :disabled-date="(d: Date) => d.getDay() === 0 || d.getDay() === 6"
+        />
+      </Example>
+
+      <!-- Month-only mode -->
+      <Example title="Month-Only (Fill Last Day)" :code="`<CuiDatePicker mode=&quot;month&quot; fill-day=&quot;last&quot; format=&quot;MM/YYYY&quot; />`">
+        <CuiFlex gap="4" class="items-start">
           <CuiDatePicker
-            v-model="date5"
-            label="No Weekends, No Apr 15, No Apr 20-25"
-            :disabled-dates="['2025-04-15', { from: '2025-04-20', to: '2025-04-25' }]"
-            :disabled-date="(d: Date) => d.getDay() === 0 || d.getDay() === 6"
+            v-model="date6"
+            mode="month"
+            fill-day="last"
+            format="MM/YYYY"
+            label="Reporting Period End"
           />
-        </Example>
+          <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+            Value: <code class="cui-code">{{ date6 }}</code>
+          </div>
+        </CuiFlex>
+      </Example>
 
-        <!-- Month-only mode -->
-        <Example title="Month-Only (Fill Last Day)" :code="`<CuiDatePicker mode=&quot;month&quot; fill-day=&quot;last&quot; format=&quot;MM/YYYY&quot; />`">
-          <CuiFlex gap="4" class="items-start">
-            <CuiDatePicker
-              v-model="date6"
-              mode="month"
-              fill-day="last"
-              format="MM/YYYY"
-              label="Reporting Period End"
-            />
-            <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
-              Value: <code class="cui-code">{{ date6 }}</code>
-            </div>
-          </CuiFlex>
-        </Example>
-
-        <!-- Month-only first day -->
-        <Example title="Month-Only (Fill First Day)" :code="`<CuiDatePicker
+      <!-- Month-only first day -->
+      <Example title="Month-Only (Fill First Day)" :code="`<CuiDatePicker
   v-model=&quot;date&quot;
   mode=&quot;month&quot;
   fill-day=&quot;first&quot;
   format=&quot;MMM YYYY&quot;
   label=&quot;Billing Start&quot;
 />`">
-          <CuiFlex gap="4" class="items-start">
-            <CuiDatePicker
-              v-model="date5"
-              mode="month"
-              fill-day="first"
-              format="MMM YYYY"
-              label="Billing Start"
-            />
-            <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
-              Value: <code class="cui-code">{{ date5 }}</code>
-            </div>
-          </CuiFlex>
-        </Example>
+        <CuiFlex gap="4" class="items-start">
+          <CuiDatePicker
+            v-model="date5"
+            mode="month"
+            fill-day="first"
+            format="MMM YYYY"
+            label="Billing Start"
+          />
+          <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+            Value: <code class="cui-code">{{ date5 }}</code>
+          </div>
+        </CuiFlex>
+      </Example>
 
-        <!-- Date object value type -->
-        <Example title="Date Object Output" :code="`<CuiDatePicker value-type=&quot;date&quot; />`">
-          <CuiFlex gap="4" class="items-start">
-            <CuiDatePicker
-              v-model="dateObj"
-              value-type="date"
-              label="Date Object"
-            />
-            <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
-              Value: <code class="cui-code">{{ dateObj?.toLocaleDateString() ?? 'null' }}</code>
-            </div>
-          </CuiFlex>
-        </Example>
+      <!-- Date object value type -->
+      <Example title="Date Object Output" :code="`<CuiDatePicker value-type=&quot;date&quot; />`">
+        <CuiFlex gap="4" class="items-start">
+          <CuiDatePicker
+            v-model="dateObj"
+            value-type="date"
+            label="Date Object"
+          />
+          <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+            Value: <code class="cui-code">{{ dateObj?.toLocaleDateString() ?? 'null' }}</code>
+          </div>
+        </CuiFlex>
+      </Example>
 
-        <!-- Sizes -->
-        <Example title="Sizes" :code="`<CuiDatePicker size=&quot;sm&quot; label=&quot;Small&quot; />
+      <!-- Sizes -->
+      <Example title="Sizes" :code="`<CuiDatePicker size=&quot;sm&quot; label=&quot;Small&quot; />
 <CuiDatePicker size=&quot;md&quot; label=&quot;Medium&quot; />
 <CuiDatePicker size=&quot;lg&quot; label=&quot;Large&quot; />`">
-          <CuiFlex gap="4" class="items-end flex-wrap">
-            <CuiDatePicker :model-value="'2025-06-15'" size="sm" label="Small" />
-            <CuiDatePicker :model-value="'2025-06-15'" size="md" label="Medium" />
-            <CuiDatePicker :model-value="'2025-06-15'" size="lg" label="Large" />
-          </CuiFlex>
-        </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+        <CuiFlex gap="4" class="items-end flex-wrap">
+          <CuiDatePicker :model-value="'2025-06-15'" size="sm" label="Small" />
+          <CuiDatePicker :model-value="'2025-06-15'" size="md" label="Medium" />
+          <CuiDatePicker :model-value="'2025-06-15'" size="lg" label="Large" />
+        </CuiFlex>
+      </Example>
+    </template>
+  </DocPage>
 </template>
