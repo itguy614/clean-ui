@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -71,6 +72,9 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   rounded: "md",
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -403,7 +407,8 @@ const messages = useMessages();
         :id="id"
         :name="name"
         :autocomplete="autocomplete"
-        :aria-describedby="ariaDescribedby"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :value="isOpen ? query : displayText"
         :placeholder="selectedOptions.length > 0 ? '' : placeholder"
@@ -422,7 +427,7 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" :id="errorId" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
       {{ errorMessage }}
     </div>
 

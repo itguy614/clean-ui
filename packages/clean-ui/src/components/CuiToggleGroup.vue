@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
 import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { ToggleGroupKey } from "./multi-select-group-context";
 
 export interface CuiToggleGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
@@ -27,6 +28,9 @@ const props = withDefaults(defineProps<CuiToggleGroupProps>(), {
   error: false,
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: Array<string | number>];
@@ -74,7 +78,8 @@ provide(ToggleGroupKey, {
     role="group"
     :id="id"
     :aria-labelledby="ariaLabelledby"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="describedBy"
+    :aria-required="ariaRequired || undefined"
     :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-toggle-group"
@@ -86,7 +91,7 @@ provide(ToggleGroupKey, {
     <div class="cui-toggle-group__options">
       <slot />
     </div>
-    <div v-if="error && errorMessage" class="cui-toggle-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-toggle-group__error">
       {{ errorMessage }}
     </div>
   </div>

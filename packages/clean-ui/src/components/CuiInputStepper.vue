@@ -214,6 +214,7 @@ defineExpose({ el: rootEl, focus, blur });
         :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         role="spinbutton"
         :aria-valuenow="modelValue"

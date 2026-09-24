@@ -110,12 +110,12 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     :id="id"
     role="radio"
     :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
     :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     @click="select"
   >
     <input
-      :id="id"
       :autocomplete="autocomplete"
       type="radio"
       :name="resolvedName"
@@ -154,7 +154,6 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   >
     <!-- Hidden native input for form submission -->
     <input
-      :id="id"
       :autocomplete="autocomplete"
       type="radio"
       :name="resolvedName"

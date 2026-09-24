@@ -78,9 +78,14 @@ describe("native control attributes land on the focusable element", () => {
       const el = wrapper.find(aria);
       expect(el.exists(), `${name}: no ${aria}`).toBe(true);
       expect(el.attributes("id")).toBe("my-field");
-      // ...and NOT on the wrapper, which is what the bug did — unless the root *is* the
-      // control, as it is for the three that carry their role on it.
-      if (el.element !== wrapper.element) {
+      // When the ARIA attributes live on a different element from the native one, the
+      // native one must not *also* carry them: CuiRadio kept `:id` on its hidden input
+      // while gaining it on the root, and rendered a duplicate id. `findAll` cannot express
+      // this — these components have v-if branches, so their root is a fragment and
+      // `wrapper.element` is a comment node — but the native element can be asked directly.
+      if (ariaTarget) {
+        expect(wrapper.find(target).attributes("id"), `${name}: id also on ${target}`).toBeUndefined();
+      } else {
         expect(wrapper.element.getAttribute("id")).toBeNull();
       }
     });
@@ -93,7 +98,10 @@ describe("native control attributes land on the focusable element", () => {
       const el = wrapper.find(aria);
       expect(el.attributes("aria-describedby")).toBe("d1");
       expect(el.attributes("aria-labelledby")).toBe("l1");
-      if (el.element !== wrapper.element) {
+      if (ariaTarget) {
+        expect(wrapper.find(target).attributes("aria-describedby"), `${name}: also on ${target}`).toBeUndefined();
+        expect(wrapper.find(target).attributes("aria-labelledby")).toBeUndefined();
+      } else {
         expect(wrapper.element.getAttribute("aria-describedby")).toBeNull();
       }
     });

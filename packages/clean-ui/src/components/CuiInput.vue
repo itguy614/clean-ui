@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
@@ -55,6 +56,9 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   rounded: "md",
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const emit = defineEmits<{
   "update:modelValue": [value: string | number];
   clear: [];
@@ -105,16 +109,6 @@ defineExpose({ el: inputRef, focus, blur });
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
 
-// The error message needs an id for `aria-describedby`, or `aria-invalid` announces that
-// something is wrong without ever saying what (#175). Falls back to a generated id when
-// the caller gave no `id` — CuiFormField always supplies one.
-const errorId = computed(() => `${props.id ?? `cui-input-${Math.random().toString(36).slice(2, 8)}`}-error`);
-/** Caller-supplied descriptions first, then our own message, per the spec's id-list order. */
-const describedBy = computed(() =>
-  [props.ariaDescribedby, props.error && props.errorMessage ? errorId.value : null]
-    .filter(Boolean)
-    .join(" ") || undefined,
-);
 </script>
 
 <template>
@@ -158,6 +152,7 @@ const describedBy = computed(() =>
           :name="name"
           :autocomplete="autocomplete"
           :aria-describedby="describedBy"
+          :aria-required="ariaRequired || undefined"
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"

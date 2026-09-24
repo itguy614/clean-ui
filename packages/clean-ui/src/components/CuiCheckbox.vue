@@ -91,6 +91,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     :id="id"
     role="checkbox"
     :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
     :aria-labelledby="ariaLabelledby"
     :aria-checked="indeterminate && !isChecked ? 'mixed' : isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
 import type { CuiColor, CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { CheckboxGroupKey } from "./multi-select-group-context";
 
 export interface CuiCheckboxGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
@@ -27,6 +28,9 @@ const props = withDefaults(defineProps<CuiCheckboxGroupProps>(), {
   error: false,
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: Array<string | number>];
@@ -75,7 +79,8 @@ provide(CheckboxGroupKey, {
     role="group"
     :id="id"
     :aria-labelledby="ariaLabelledby"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="describedBy"
+    :aria-required="ariaRequired || undefined"
     :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-checkbox-group"
@@ -87,7 +92,7 @@ provide(CheckboxGroupKey, {
     <div class="cui-checkbox-group__options">
       <slot />
     </div>
-    <div v-if="error && errorMessage" class="cui-checkbox-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-checkbox-group__error">
       {{ errorMessage }}
     </div>
   </div>

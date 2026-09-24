@@ -103,6 +103,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     :id="id"
     role="switch"
     :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
     :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"

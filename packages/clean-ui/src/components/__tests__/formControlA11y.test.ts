@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import CuiCheckbox from "../CuiCheckbox.vue";
 import CuiRadio from "../CuiRadio.vue";
 import CuiToggle from "../CuiToggle.vue";
@@ -28,26 +28,15 @@ describe("the role-carrying element is the one that is described and named", () 
       props: { id: "f1", ariaDescribedby: "help1", ariaLabelledby: "lab1", label: "L", ...extra },
     });
 
-    const el = w.find(`[role="${role}"]`);
-    expect(el.exists(), "role element rendered").toBe(true);
-    expect(el.attributes("aria-describedby")).toBe("help1");
-    expect(el.attributes("aria-labelledby")).toBe("lab1");
-    expect(el.attributes("id")).toBe("f1");
-
-    // The native input is still there for form serialization, and still hidden from AT —
-    // but it must no longer hold the attributes that only work in the accessibility tree.
+    // That the role element carries the attributes is asserted by the table in
+    // `nativeControlAttrs.test.ts`. What is new here is the other half: the hidden input
+    // must no longer hold attributes that only work inside the accessibility tree.
     const input = w.find("input");
     expect(input.attributes("aria-hidden")).toBe("true");
     expect(input.attributes("aria-describedby")).toBeUndefined();
     expect(input.attributes("aria-labelledby")).toBeUndefined();
   });
 
-  it("leaves name and autocomplete on the native input, where the browser reads them", () => {
-    const w = mount(CuiCheckbox, { props: { name: "terms", autocomplete: "off", label: "L" } });
-    const input = w.find("input");
-    expect(input.attributes("name")).toBe("terms");
-    expect(input.attributes("autocomplete")).toBe("off");
-  });
 });
 
 describe("an invalid control says why", () => {
@@ -62,13 +51,10 @@ describe("an invalid control says why", () => {
     const control = w.find(tag);
     expect(control.attributes("aria-invalid")).toBeTruthy();
 
-    const ids = (control.attributes("aria-describedby") ?? "").split(" ").filter(Boolean);
-    expect(ids.length, "aria-describedby is set").toBeGreaterThan(0);
-
-    // The reference has to resolve, and to the text the user needs.
-    const described = ids.map((id) => w.find(`#${id}`)).filter((el) => el.exists());
-    expect(described.length, "aria-describedby resolves").toBeGreaterThan(0);
-    expect(described.map((el) => el.text()).join(" ")).toContain("Enter an email address");
+    // The reference has to resolve, and to the text the user needs — with no caller-supplied
+    // description here, it is exactly the one error id.
+    const id = control.attributes("aria-describedby");
+    expect(w.get(`#${id}`).text()).toContain("Enter an email address");
   });
 
   it("keeps a caller's own aria-describedby alongside the error", () => {
@@ -92,13 +78,33 @@ describe("a required field says so", () => {
 
     // The visible marker stays decorative...
     expect(w.find(".cui-form-field__required").attributes("aria-hidden")).toBe("true");
-    // ...and the label, which aria-labelledby points at, now carries the word.
+    // ...the label carries the word for anyone reading it...
     expect(w.find("label").text()).toContain("(required)");
+  });
+
+  it("forwards required as aria-required, which is a state rather than part of the name", async () => {
+    const w = mount(CuiFormField, {
+      props: { label: "Email", required: true },
+      slots: { default: `<template #default="f"><input v-bind="f" /></template>` },
+    });
+    await flushPromises();
+    expect(w.find("input").attributes("aria-required")).toBe("true");
+  });
+
+  it("reaches a control even when the field has no label to fold the word into", async () => {
+    // The sr-only text rides on aria-labelledby, which CuiFormField only emits when there
+    // is a label — so the state has to travel independently of it.
+    const w = mount(CuiFormField, {
+      props: { required: true },
+      slots: { default: `<template #default="f"><input v-bind="f" /></template>` },
+    });
+    await flushPromises();
+    expect(w.find("input").attributes("aria-required")).toBe("true");
   });
 
   it("does not repeat itself when requiredText already says it visibly", () => {
     const w = mount(CuiFormField, { props: { label: "Email", required: true, requiredText: "Required" } });
     expect(w.find("label").text()).toContain("Required");
-    expect(w.find(".cui-form-field__required-sr").exists()).toBe(false);
+    expect(w.find(".cui-sr-only").exists()).toBe(false);
   });
 });

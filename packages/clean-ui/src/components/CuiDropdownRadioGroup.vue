@@ -31,6 +31,7 @@ provide(DropdownRadioKey, {
     :id="id"
     :aria-labelledby="ariaLabelledby"
     :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
     :aria-label="ariaLabelledby ? undefined : label"
   >
     <slot />

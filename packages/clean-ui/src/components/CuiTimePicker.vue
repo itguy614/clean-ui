@@ -315,6 +315,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-disabled="disabled || undefined"
         :id="id"
         :aria-describedby="ariaDescribedby"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :tabindex="disabled ? -1 : 0"
         @keydown="onTriggerKeydown"

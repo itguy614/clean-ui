@@ -2,6 +2,7 @@
 import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
@@ -47,22 +48,15 @@ const props = withDefaults(defineProps<CuiTextareaProps>(), {
   rounded: "md",
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
 
 const textareaRef = useTemplateRef<HTMLTextAreaElement>("textareaEl");
 
-// The error message needs an id for `aria-describedby`, or `aria-invalid` announces that
-// something is wrong without ever saying what (#175). Falls back to a generated id when the
-// caller gave no `id` — CuiFormField always supplies one.
-const errorId = computed(() => `${props.id ?? `cui-textarea-${Math.random().toString(36).slice(2, 8)}`}-error`);
-/** Caller-supplied descriptions first, then our own message, per the spec's id-list order. */
-const describedBy = computed(() =>
-  [props.ariaDescribedby, props.error && props.errorMessage ? errorId.value : null]
-    .filter(Boolean)
-    .join(" ") || undefined,
-);
 
 const charCount = computed(() => props.modelValue.length);
 const isOverLimit = computed(() => props.maxLength !== undefined && charCount.value > props.maxLength);
@@ -163,6 +157,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :value="modelValue"
         :placeholder="placeholder"

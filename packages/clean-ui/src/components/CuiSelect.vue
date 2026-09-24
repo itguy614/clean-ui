@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
@@ -61,6 +62,9 @@ const props = withDefaults(defineProps<CuiSelectProps>(), {
   hidden: false,
   rounded: "md",
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | null | Array<string | number>];
@@ -347,7 +351,8 @@ const messages = useMessages();
       <div
         ref="triggerRef"
         :id="id"
-        :aria-describedby="ariaDescribedby"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         class="cui-select__trigger"
         :style="{ borderRadius: radiusMap[rounded] }"
@@ -373,7 +378,7 @@ const messages = useMessages();
               <button
                 type="button"
                 class="cui-select__chip-remove"
-                      :aria-label="messages.remove"
+                :aria-label="messages.remove"
                 @click.stop="removeChip(val)"
               >
                 <CuiIcon name="x" size="0.75rem" />
@@ -478,7 +483,7 @@ const messages = useMessages();
     </Teleport>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" class="cui-select__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
       {{ errorMessage }}
     </div>
   </div>

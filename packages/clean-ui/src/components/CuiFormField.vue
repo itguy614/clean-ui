@@ -73,6 +73,9 @@ const slotBindings = computed(() => {
     disabled: isDisabled.value,
   };
   if (props.label) base.ariaLabelledby = labelId;
+  // Required-ness is a *state*, not part of the name: exposed in forms mode and in AT field
+  // summaries, and independent of whether the field has a label at all (#175).
+  if (props.required) base.ariaRequired = true;
   // Only when there is something to describe — a dangling aria-describedby
   // pointing at an element that isn't rendered is worse than none.
   if (showError.value || props.helpText) base.ariaDescribedby = descriptionId;
@@ -108,12 +111,16 @@ onBeforeUnmount(() => {
       class="cui-form-field__label"
     >
       <span>{{ label }}</span>
-      <span v-if="required && !requiredText" class="cui-form-field__required" aria-hidden="true">*</span>
-      <!-- The asterisk is decorative and aria-hidden, so required-ness reached no one. The
-           label is what `aria-labelledby` points at, so saying it here reaches every control,
-           including the ones with no `required` prop of their own (#175). -->
-      <span v-if="required && !requiredText" class="cui-form-field__required-sr">{{ messages.formField.required }}</span>
-      <span v-else-if="required && requiredText" class="cui-form-field__required-text">{{ requiredText }}</span>
+      <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
+           state is carried by `aria-required` (forwarded through the slot bindings); this
+           puts it in the visible label's text too, which is what a sighted screen-reader
+           user hears when the label is read (#175). A `<template>` rather than two
+           identical `v-if`s, so the `v-else-if` cannot silently re-anchor. -->
+      <template v-if="required && !requiredText">
+        <span class="cui-form-field__required" aria-hidden="true">*</span>
+        <span class="cui-sr-only">{{ messages.formField.required }}</span>
+      </template>
+      <span v-else-if="required" class="cui-form-field__required-text">{{ requiredText }}</span>
     </label>
 
     <!-- Control + footer -->
@@ -135,19 +142,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Visually hidden, still announced. Not `display: none`, which would drop it from the
-   accessibility tree along with the announcement. */
-.cui-form-field__required-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
 
 /* --- Base layout --- */
 .cui-form-field {

@@ -395,6 +395,7 @@ defineExpose({
     :name="name"
     :autocomplete="autocomplete"
     :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
     :aria-labelledby="ariaLabelledby"
     :model-value="displayValue"
     type="text"
