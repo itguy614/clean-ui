@@ -150,7 +150,6 @@ function toggleDark() {
       v-model:visible="mobileNavOpen"
       side="left"
       size="sm"
-      :no-header="true"
     >
       <Navigation @navigate="mobileNavOpen = false" />
     </CuiSlideover>
