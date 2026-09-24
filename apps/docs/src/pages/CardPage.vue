@@ -70,10 +70,9 @@ import meta from "../meta/card";
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          <code>CuiCardHeader</code>'s <code>title</code> renders as a
-          <code>&lt;div&gt;</code>, not a heading. If the title is a heading for the
-          surrounding document, put a real <code>&lt;h2&gt;</code>/<code>&lt;h3&gt;</code>
-          in the default slot instead — see issue #129.
+          <code>CuiCardHeader</code>'s <code>title</code> renders as a heading, so a card
+          title is reachable by heading navigation and appears in the document outline. Set
+          <code>titleAs</code> so the level fits where the card sits.
         </li>
         <li>
           <code>CuiCardMedia</code> renders an <code>&lt;img&gt;</code>: give it

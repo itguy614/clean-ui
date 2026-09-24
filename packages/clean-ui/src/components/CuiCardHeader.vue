@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { HideableProps } from "../types/common";
+import type { HideableProps, TitleAsProps } from "../types/common";
 
-export interface CuiCardHeaderProps extends HideableProps {
+export interface CuiCardHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
   title?: string;
   /** Convenience: subtitle text */
@@ -10,6 +10,7 @@ export interface CuiCardHeaderProps extends HideableProps {
 
 withDefaults(defineProps<CuiCardHeaderProps>(), {
   hidden: false,
+  titleAs: "h3",
 });
 </script>
 
@@ -17,7 +18,7 @@ withDefaults(defineProps<CuiCardHeaderProps>(), {
   <div class="cui-card-header" v-show="!hidden">
     <div class="cui-card-header__content">
       <slot>
-        <div v-if="title" class="cui-card-header__title">{{ title }}</div>
+        <component :is="titleAs" v-if="title" class="cui-card-header__title">{{ title }}</component>
         <div v-if="subtitle" class="cui-card-header__subtitle">{{ subtitle }}</div>
       </slot>
     </div>

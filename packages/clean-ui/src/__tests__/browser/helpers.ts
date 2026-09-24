@@ -45,3 +45,39 @@ export function installTokens(css: string): () => void {
   document.head.append(style);
   return () => style.remove();
 }
+
+/**
+ * A per-suite registry of mounts and their host elements, with one teardown.
+ *
+ * Browser suites measure laid-out geometry, so components have to be attached to a real
+ * host in the document rather than mounted detached. Tracking the hosts is enough —
+ * removing one detaches the tree — but the mount has to be unmounted too, or a component
+ * with a global listener or an open teleport outlives its test. This pairs them so a
+ * suite writes one `afterEach`, rather than the copy-pasted pair that had already drifted
+ * between suites once.
+ */
+export function mountHosts() {
+  const mounted: Array<{ unmount: () => void }> = [];
+  const hosts: HTMLElement[] = [];
+
+  return {
+    /** Create an attached host, apply `style`, and register it for teardown. */
+    host(style: Partial<CSSStyleDeclaration> = {}): HTMLElement {
+      const host = document.createElement("div");
+      Object.assign(host.style, style);
+      document.body.append(host);
+      hosts.push(host);
+      return host;
+    },
+    /** Register a mount so it is unmounted with the hosts. */
+    track<T extends { unmount: () => void }>(w: T): T {
+      mounted.push(w);
+      return w;
+    },
+    /** Pass to `afterEach`. */
+    cleanup(): void {
+      mounted.splice(0).forEach((w) => w.unmount());
+      hosts.splice(0).forEach((h) => h.remove());
+    },
+  };
+}

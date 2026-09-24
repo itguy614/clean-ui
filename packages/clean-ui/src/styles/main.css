@@ -403,31 +403,38 @@
 
 /* --- Headings (h1–h6) --- */
 
-.cui-typography h1,
-.cui-typography h2,
-.cui-typography h3,
-.cui-typography h4,
-.cui-typography h5,
-.cui-typography h6 {
+/* Prose headings only. The `:where()` exclusion skips any element carrying a `cui-*`
+   class — the same idiom and reason as the prose link rule below: a component that
+   renders a heading (CuiCardHeader's title, CuiModalHeader's) styles itself, and the
+   typography layer must not repaint it. Without this, giving CuiCardHeader a real `<h3>`
+   would hand every card title the prose h3 size and a bottom margin (#129).
+
+   Nested so the 51-character predicate is written once. The per-level selectors are
+   `&:where(hN)`, not `&:is(hN)`: nesting against a complex parent flattens to
+   `<parent><child>`, so `:is(h1)` would append (0,0,1) and quietly make these rules
+   (0,1,2) — raising the bar for a consumer's own `.cui-typography h3` override.
+   `:where()` contributes 0, so every rule here stays (0,1,1), exactly what it was when
+   each selector spelled the exclusion out. */
+.cui-typography :is(h1, h2, h3, h4, h5, h6):where(:not([class^="cui-"]):not([class*=" cui-"])) {
   font-weight: var(--cui-heading-font-weight);
   line-height: var(--cui-heading-line-height);
   margin-top: 0;
   margin-bottom: var(--cui-heading-margin-bottom);
   color: var(--cui-text-emphasis);
-}
 
-.cui-typography h1 { font-size: var(--cui-font-size-h1); }
-.cui-typography h2 { font-size: var(--cui-font-size-h2); }
-.cui-typography h3 { font-size: var(--cui-font-size-h3); }
-.cui-typography h4 { font-size: var(--cui-font-size-h4); }
-.cui-typography h5 { font-size: var(--cui-font-size-h5); }
-.cui-typography h6 { font-size: var(--cui-font-size-h6); }
+  &:where(h1) { font-size: var(--cui-font-size-h1); }
+  &:where(h2) { font-size: var(--cui-font-size-h2); }
+  &:where(h3) { font-size: var(--cui-font-size-h3); }
+  &:where(h4) { font-size: var(--cui-font-size-h4); }
+  &:where(h5) { font-size: var(--cui-font-size-h5); }
+  &:where(h6) { font-size: var(--cui-font-size-h6); }
 
-/* --- Responsive heading sizes (breakpoint-based, scales down on mobile) --- */
-@media (max-width: 767px) {
-  .cui-typography h1 { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
-  .cui-typography h2 { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
-  .cui-typography h3 { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+  /* Responsive heading sizes (breakpoint-based, scales down on mobile) */
+  @media (max-width: 767px) {
+    &:where(h1) { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
+    &:where(h2) { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
+    &:where(h3) { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+  }
 }
 
 /* --- Paragraphs --- */
