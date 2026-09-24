@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { colorProp, hiddenProp } from "./shared";
+import { clampedSizeProp, colorProp, hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Pagination",
@@ -32,12 +32,7 @@ const meta: ComponentMeta = {
       description: 'Hide the "Showing X to Y of Z results" summary',
     },
     colorProp("Color of the current-page button (tinted background, colored text)"),
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Control size. Only sm and md are styled — anything else clamps into that range",
-    },
+    clampedSizeProp("sm and md", "md", "Control size"),
     {
       name: "maxButtons",
       type: "number",

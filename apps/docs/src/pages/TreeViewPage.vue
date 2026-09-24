@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import { CuiBadge, CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiInput, CuiStack, CuiTreeView, type TreeNode } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
-import MethodTable from "../components/MethodTable.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/tree-view";
 
@@ -271,30 +270,6 @@ function revealMatch() {
           key handling.
         </li>
       </ul>
-    </template>
-
-    <template #extra>
-      <div>
-      <h2 class="mb-4 text-2xl font-semibold">Methods</h2>
-      <p class="mb-4" style="color: var(--cui-text-secondary);">
-        Reached through a template ref. Each one works whether expansion is controlled
-        (<code class="cui-code">v-model:expanded</code>) or not — when it is controlled they
-        emit <code class="cui-code">update:expanded</code> rather than moving the tree themselves.
-      </p>
-      <MethodTable
-        :methods="[
-          { name: 'expand', signature: '(id) => void', description: 'Expand one node. No-op if already expanded' },
-          { name: 'collapse', signature: '(id) => void', description: 'Collapse one node. No-op if already collapsed' },
-          { name: 'toggleExpand', signature: '(id) => void', description: 'Flip a single node between expanded and collapsed' },
-          { name: 'expandAll', signature: '() => void', description: 'Expand every node that has children, at any depth' },
-          { name: 'collapseAll', signature: '() => void', description: 'Collapse everything' },
-          { name: 'reveal', signature: '(id) => void', description: 'Expand every ancestor of a node so it becomes visible — for jumping to a search hit' },
-          { name: 'isExpanded', signature: '(id) => boolean', description: 'Whether a node id is currently expanded' },
-          { name: 'expandedIds', signature: '() => (string | number)[]', description: 'The ids currently expanded' },
-          { name: 'el', signature: 'HTMLElement', description: 'The root element' },
-        ]"
-      />
-          </div>
     </template>
 
     <template #examples>

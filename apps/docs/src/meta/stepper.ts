@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp } from "./shared";
+import { clampedSizeProp, hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Stepper",
@@ -15,12 +15,7 @@ const meta: ComponentMeta = {
     },
     { name: "modelValue", type: "number", default: "0", description: "Active step, 0-based (v-model)" },
     { name: "orientation", type: "horizontal | vertical", default: "horizontal", description: "Layout direction" },
-    {
-      name: "size",
-      type: "xs | sm | md | lg | xl",
-      default: "md",
-      description: "Circle, label and connector scale. Only sm, md and lg are styled — anything else clamps",
-    },
+    clampedSizeProp("sm, md and lg", "md", "Circle, label and connector scale"),
     {
       name: "clickable",
       type: "boolean",

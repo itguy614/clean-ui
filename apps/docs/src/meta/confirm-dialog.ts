@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp, titleAsProp } from "./shared";
+import { hiddenProp, titleAsProp, visibleProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Confirm Dialog",
@@ -8,7 +8,7 @@ const meta: ComponentMeta = {
   interactive: true,
 
   props: [
-    { name: "v-model:visible", type: "boolean", default: "false", description: "Whether the dialog is open" },
+    visibleProp("false"),
     {
       name: "title",
       type: "string",

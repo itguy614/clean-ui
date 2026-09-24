@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp, titleAsProp } from "./shared";
+import { hiddenProp, titleAsProp, visibleProp } from "./shared";
 import { backdropProps, modalBodyProps, modalFooterProps, modalHeaderProps } from "./modal";
 
 /**
@@ -18,7 +18,7 @@ const meta: ComponentMeta = {
     {
       name: "CuiSlideover",
       props: [
-        { name: "v-model:visible", type: "boolean", default: "false", description: "Whether the panel is open" },
+        visibleProp("false"),
         {
           name: "side",
           type: "right | left | top | bottom",

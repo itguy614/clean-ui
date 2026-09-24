@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { hiddenProp, COLOR_ROLES } from "./shared";
+import { colorOrCssProp, hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Divider",
@@ -28,13 +28,9 @@ const meta: ComponentMeta = {
       description:
         "Margin above and below (horizontal) or left and right (vertical). A raw CSS length, not the Tailwind spacing scale",
     },
-    {
-      name: "color",
-      type: COLOR_ROLES,
-      default: "—",
-      description:
-        "Line and label color. A role name maps to its token; any other CSS color — a hex value, a var() — passes straight through. Unset means var(--cui-border) for the line and the tertiary text color for the label",
-    },
+    colorOrCssProp(
+      "Line and label color — unset means var(--cui-border) for the line and the tertiary text color for the label",
+    ),
     hiddenProp,
   ],
 

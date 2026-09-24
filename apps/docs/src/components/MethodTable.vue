@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { CuiTable, CuiTableHead, CuiTableBody, CuiTableRow, CuiTableCell } from "@itguy614/clean-ui";
-
-/** A method a component exposes through `defineExpose`, reached via a template ref. */
-export interface MethodRow {
-  name: string;
-  signature: string;
-  description: string;
-}
+import type { MethodRow } from "../meta/types";
 
 defineProps<{
   methods: MethodRow[];

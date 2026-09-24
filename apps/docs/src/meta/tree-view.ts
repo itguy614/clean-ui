@@ -64,6 +64,22 @@ const meta: ComponentMeta = {
       description: "One node was expanded or collapsed, however it was caused. Bulk changes report once through update:expanded instead",
     },
   ],
+
+  methods: [
+    { name: "expand", signature: "(id) => void", description: "Expand one node. No-op if already expanded" },
+    { name: "collapse", signature: "(id) => void", description: "Collapse one node. No-op if already collapsed" },
+    { name: "toggleExpand", signature: "(id) => void", description: "Flip a single node between expanded and collapsed" },
+    { name: "expandAll", signature: "() => void", description: "Expand every node that has children, at any depth" },
+    { name: "collapseAll", signature: "() => void", description: "Collapse everything" },
+    {
+      name: "reveal",
+      signature: "(id) => void",
+      description: "Expand every ancestor of a node so it becomes visible — for jumping to a search hit",
+    },
+    { name: "isExpanded", signature: "(id) => boolean", description: "Whether a node id is currently expanded" },
+    { name: "expandedIds", signature: "() => (string | number)[]", description: "The ids currently expanded" },
+    { name: "el", signature: "HTMLElement", description: "The root element" },
+  ],
 };
 
 export default meta;
