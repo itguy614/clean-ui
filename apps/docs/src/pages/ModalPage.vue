@@ -14,16 +14,17 @@ import {
   CuiStack,
   CuiTextarea,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/modal";
 
-const basic = ref(false);
+const usage = ref(false);
 const sized = ref({ sm: false, lg: false, xl: false, full: false, custom: false });
 const withFooter = ref(false);
 const scrolling = ref(false);
 const persistent = ref(false);
 const noClose = ref(false);
+const headingLevel = ref(false);
 const blurred = ref(false);
 const blurLight = ref(false);
 const blurHeavy = ref(false);
@@ -49,79 +50,70 @@ const formAgree = ref(false);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Modal</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Dialog overlay with focus trap, scroll lock, configurable backdrop,
-        and smart closing behavior. Uses <code class="cui-code">CuiBackdrop</code>
-        internally.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiModal v-model:visible=&quot;show&quot; title=&quot;Basic Modal&quot;>
+  <p>Click the X, press Escape, or click the backdrop to close.</p>
+</CuiModal>`"
+      >
+        <CuiButton variant="solid" size="sm" @click="usage = true">Open Modal</CuiButton>
+        <CuiModal v-model:visible="usage" title="Basic Modal">
+          <p>This is a basic modal with a title and body content. Click the X, press Escape, or click the backdrop to close.</p>
+        </CuiModal>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The panel is a <code>role="dialog"</code> with <code>aria-modal="true"</code>, and the
+        overlay behaviour — focus, trapping, Escape and the scroll lock — lives in the shared
+        <code>useOverlay</code> composable, so Modal, Slideover and Confirm Dialog all behave
+        identically.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          On open, focus moves to the panel itself (it carries <code>tabindex="-1"</code>); on
+          close it is returned to whatever held it before. That is what stops the reader being
+          dropped back at the top of the page.
+        </li>
+        <li>
+          Tab and Shift+Tab wrap inside the panel while it is open, so focus cannot reach the
+          page behind it.
+        </li>
+        <li>
+          Escape closes, unless <code>persistent</code> is set — which blocks Escape and the
+          backdrop click together, on the grounds that a dialog you must answer should not have
+          an accidental way out. The X button still closes, so set
+          <code>noCloseButton</code> too if you really mean it, and always give the reader an
+          explicit action.
+        </li>
+        <li>
+          Background scrolling is locked while any overlay is open. The lock is reference
+          counted, so nested overlays release it exactly once.
+        </li>
+        <li>
+          <code>titleAs</code> sets the element the title renders as — it defaults to
+          <code>h2</code>. Pick the level that fits the page the modal was opened from.
+        </li>
+        <li>
+          A modal is not announced by its title today: <code>aria-labelledby</code> is emitted,
+          but the id it names is never put on the title element, so the dialog has no accessible
+          name. Until that is fixed, give the panel its own <code>aria-label</code> if the name
+          matters to you.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiModal Props</h2>
-      <PropTable
-        :props="[
-          { name: 'v-model:visible', type: 'boolean', default: 'false', description: 'Controls visibility' },
-          { name: 'size', type: 'sm | md | lg | xl | full | string', default: 'md', description: 'Modal width (named or custom CSS value)' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
-          { name: 'title', type: 'string', default: '—', description: 'Header title text (simple mode)' },
-          { name: 'persistent', type: 'boolean', default: 'false', description: 'Disable Escape and backdrop click closing' },
-          { name: 'noCloseButton', type: 'boolean', default: 'false', description: 'Hide the X close button' },
-          { name: 'allowNested', type: 'boolean', default: 'false', description: 'Allow stacking on top of another modal' },
-          { name: 'backdropOpacity', type: 'number', default: '0.5', description: 'Backdrop darkness (0–1)' },
-          { name: 'backdropBlur', type: 'none | sm | md | lg | string', default: 'none', description: 'Backdrop blur amount' },
-          { name: 'backdropColor', type: 'string', default: 'black', description: 'Backdrop color' },
-          { name: 'backdropImage', type: 'string', default: '—', description: 'Backdrop image URL' },
-          { name: 'backdropGradient', type: 'string', default: '—', description: 'Backdrop CSS gradient' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: '#header', type: 'slot', default: '-', description: 'Custom header (overrides title prop)' },
-          { name: 'default', type: 'slot', default: '-', description: 'Body content (scrollable)' },
-          { name: '#footer', type: 'slot', default: '-', description: 'Footer actions' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:visible', payload: 'boolean', description: 'Controls modal visibility (v-model:visible)' },
-          { name: 'close', payload: '—', description: 'Fires when the modal is closed' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic Modal" :code="`<CuiModal v-model:visible=&quot;show&quot; title=&quot;Hello&quot;>
-  <p>Modal content here.</p>
-</CuiModal>`">
-          <CuiButton variant="solid" size="sm" @click="basic = true">Open Modal</CuiButton>
-          <CuiModal v-model:visible="basic" title="Basic Modal">
-            <p>This is a basic modal with a title and body content. Click the X, press Escape, or click the backdrop to close.</p>
-          </CuiModal>
-        </Example>
-
+    <template #examples>
         <!-- Sizes -->
         <Example title="Sizes" :code="`<CuiModal v-model:visible=&quot;show&quot; title=&quot;Small Modal&quot; size=&quot;sm&quot;>...</CuiModal>
 <CuiModal v-model:visible=&quot;show&quot; title=&quot;Large Modal&quot; size=&quot;lg&quot;>...</CuiModal>
 <CuiModal v-model:visible=&quot;show&quot; title=&quot;Custom Width&quot; size=&quot;700px&quot;>...</CuiModal>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="sized.sm = true">Small (24rem)</CuiButton>
-            <CuiButton variant="outline" size="sm" @click="withFooter = true">Medium (default)</CuiButton>
+            <CuiButton variant="outline" size="sm" @click="usage = true">Medium (default)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.lg = true">Large (48rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.xl = true">XL (64rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.full = true">Full</CuiButton>
@@ -141,6 +133,22 @@ const formAgree = ref(false);
           </CuiModal>
           <CuiModal v-model:visible="sized.custom" title="Custom Width" size="700px">
             <p>This modal uses a custom width of 700px.</p>
+          </CuiModal>
+        </Example>
+
+        <!-- Heading level -->
+        <Example title="Heading level (titleAs)" :code="`<!-- opened from a section already under an h2 -->
+<CuiModal v-model:visible=&quot;show&quot; title=&quot;Rename project&quot; title-as=&quot;h3&quot;>
+  <p>The title is a real heading, so pick the level that fits.</p>
+</CuiModal>`">
+          <CuiButton variant="outline" size="sm" @click="headingLevel = true">Open with an h3 title</CuiButton>
+          <CuiModal v-model:visible="headingLevel" title="Rename project" title-as="h3">
+            <p>
+              The title renders as an <code class="cui-code">h3</code> here rather than the default
+              <code class="cui-code">h2</code>, because this page's examples already sit under an
+              <code class="cui-code">h2</code>. Use <code class="cui-code">div</code> when the title
+              is decorative and should stay out of the document outline.
+            </p>
           </CuiModal>
         </Example>
 
@@ -165,12 +173,15 @@ const formAgree = ref(false);
         </Example>
 
         <!-- With Footer -->
-        <Example title="With Footer Actions" :code="`<CuiModal v-model:visible=&quot;show&quot; title=&quot;Confirm&quot;>
-  <p>Are you sure?</p>
-  <template #footer>
-    <CuiButton variant=&quot;ghost&quot;>Cancel</CuiButton>
-    <CuiButton variant=&quot;solid&quot;>Confirm</CuiButton>
-  </template>
+        <Example title="With Footer Actions" :code="`<CuiModal v-model:visible=&quot;show&quot;>
+  <CuiModalHeader title=&quot;Save Changes&quot; @close=&quot;show = false&quot; />
+  <CuiModalBody>
+    <p>You have unsaved changes.</p>
+  </CuiModalBody>
+  <CuiModalFooter>
+    <CuiButton variant=&quot;ghost&quot;>Discard</CuiButton>
+    <CuiButton variant=&quot;solid&quot; color=&quot;success&quot;>Save</CuiButton>
+  </CuiModalFooter>
 </CuiModal>`">
           <CuiButton variant="solid" size="sm" @click="withFooter = true">Open with Footer</CuiButton>
           <CuiModal v-model:visible="withFooter">
@@ -466,9 +477,11 @@ const formAgree = ref(false);
               <CuiButton variant="solid" color="error" @click="confirmModal = false">Delete</CuiButton>
             </CuiModalFooter>
           </CuiModal>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            Reach for <code class="cui-code">CuiConfirmDialog</code> before hand-rolling this —
+            it already has the role icon, the matching confirm colour and the type-the-word gate.
+          </p>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

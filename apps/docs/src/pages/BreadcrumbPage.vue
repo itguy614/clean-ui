@@ -1,132 +1,119 @@
 <script setup lang="ts">
-import {
-  CuiBreadcrumb,
-  CuiBreadcrumbItem,
-  CuiIcon,
-  CuiStack,
-} from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import { CuiBreadcrumb, CuiBreadcrumbItem, CuiIcon, CuiStack } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/breadcrumb";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Breadcrumb</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Navigation trail showing the current page's location within the site hierarchy.
-        Semantic <code class="cui-code">&lt;nav&gt;</code> + <code class="cui-code">&lt;ol&gt;</code>
-        with configurable separator.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiBreadcrumb Props</h2>
-      <PropTable
-        :props="[
-          { name: 'separator', type: 'string', default: '/', description: 'Separator character between items' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiBreadcrumbItem Props</h2>
-      <PropTable
-        :props="[
-          { name: 'href', type: 'string', default: '—', description: 'Link URL (renders as &lt;a&gt;)' },
-          { name: 'to', type: 'string | object', default: '—', description: 'Vue Router route (renders as &lt;router-link&gt;)' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic (slash separator)" :code="`<CuiBreadcrumb>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiBreadcrumb>
   <CuiBreadcrumbItem href=&quot;/&quot;>Home</CuiBreadcrumbItem>
   <CuiBreadcrumbItem href=&quot;/products&quot;>Products</CuiBreadcrumbItem>
   <CuiBreadcrumbItem>Widget Pro</CuiBreadcrumbItem>
-</CuiBreadcrumb>`">
-          <CuiBreadcrumb>
-            <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Products</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem>Widget Pro</CuiBreadcrumbItem>
-          </CuiBreadcrumb>
-        </Example>
+</CuiBreadcrumb>`"
+      >
+        <CuiBreadcrumb>
+          <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Products</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem>Widget Pro</CuiBreadcrumbItem>
+        </CuiBreadcrumb>
+      </Example>
+    </template>
 
-        <!-- Chevron separator -->
-        <Example title="Chevron Separator" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Home</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Dashboard</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>Profile</CuiBreadcrumbItem>
-</CuiBreadcrumb>`">
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The trail renders as a <code>&lt;nav&gt;</code> labelled "Breadcrumb" wrapping an
+        <code>&lt;ol&gt;</code> of <code>&lt;li&gt;</code> items, so screen-reader users can
+        jump to it from the landmarks list and hear how many levels deep the page sits.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          The last item carries <code>aria-current="page"</code> and is rendered as a
+          <code>&lt;span&gt;</code>, not a link — a link to the page you are already on is
+          noise in a link list.
+        </li>
+        <li>
+          The separator is a <code>&lt;span aria-hidden="true"&gt;</code>, so
+          <code>Home / Products</code> is not read as "Home slash Products". Choosing a
+          different <code>separator</code> changes nothing for assistive technology.
+        </li>
+        <li>
+          The <code>&lt;nav&gt;</code> label comes from the message catalogue
+          (<code>breadcrumb.label</code>), so it translates with the rest of the library.
+        </li>
+        <li>
+          An item whose content is only an icon has no accessible name — the icon is
+          <code>aria-hidden</code>. Put text beside the icon, as the example below does,
+          rather than leaving a link that announces as nothing.
+        </li>
+      </ul>
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Known limitation:</strong> which item is "last" is measured once, in
+        <code>onMounted</code>, by counting siblings in the DOM. A trail whose items are
+        added, removed or <code>hidden</code> after mount keeps the original item marked as
+        the current page.
+      </p>
+    </template>
+
+    <template #examples>
+      <!-- Separators -->
+      <Example title="Separators" :code="`<CuiBreadcrumb separator=&quot;›&quot;>…</CuiBreadcrumb>
+<CuiBreadcrumb separator=&quot;→&quot;>…</CuiBreadcrumb>
+<CuiBreadcrumb separator=&quot;·&quot;>…</CuiBreadcrumb>`">
+        <CuiStack spacing="3">
           <CuiBreadcrumb separator="›">
             <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Dashboard</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Settings</CuiBreadcrumbItem>
             <CuiBreadcrumbItem>Profile</CuiBreadcrumbItem>
           </CuiBreadcrumb>
-        </Example>
-
-        <!-- Arrow separator -->
-        <Example title="Arrow Separator" :code="`<CuiBreadcrumb separator=&quot;→&quot;>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Store</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Electronics</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>MacBook Pro</CuiBreadcrumbItem>
-</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="→">
             <CuiBreadcrumbItem href="#">Store</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Electronics</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">Laptops</CuiBreadcrumbItem>
             <CuiBreadcrumbItem>MacBook Pro</CuiBreadcrumbItem>
           </CuiBreadcrumb>
-        </Example>
-
-        <!-- Dot separator -->
-        <Example title="Dot Separator" :code="`<CuiBreadcrumb separator=&quot;·&quot;>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Blog</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>2024</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>Building a Component Library</CuiBreadcrumbItem>
-</CuiBreadcrumb>`">
           <CuiBreadcrumb separator="·">
             <CuiBreadcrumbItem href="#">Blog</CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">2024</CuiBreadcrumbItem>
             <CuiBreadcrumbItem>Building a Component Library</CuiBreadcrumbItem>
           </CuiBreadcrumb>
-        </Example>
+        </CuiStack>
+      </Example>
 
-        <!-- With router-link (to prop) -->
-        <Example title="Router Links (to prop)" :code="`<CuiBreadcrumb>
-  <CuiBreadcrumbItem to=&quot;/&quot;>Home</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem to=&quot;/foundations/colors&quot;>Colors</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>Primary</CuiBreadcrumbItem>
+      <!-- With router-link (to prop) -->
+      <Example title="Router Links (to prop)" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
+<CuiBreadcrumbItem to=&quot;/&quot;>Home</CuiBreadcrumbItem>
+<CuiBreadcrumbItem to=&quot;/foundations/colors&quot;>Colors</CuiBreadcrumbItem>
+<CuiBreadcrumbItem>Primary</CuiBreadcrumbItem>
 </CuiBreadcrumb>`">
-          <CuiBreadcrumb separator="›">
-            <CuiBreadcrumbItem to="/">Home</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem to="/foundations/colors">Colors</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem>Primary</CuiBreadcrumbItem>
-          </CuiBreadcrumb>
-        </Example>
+        <CuiBreadcrumb separator="›">
+          <CuiBreadcrumbItem to="/">Home</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem to="/foundations/colors">Colors</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem>Primary</CuiBreadcrumbItem>
+        </CuiBreadcrumb>
+      </Example>
 
-        <!-- With icons in slot -->
-        <Example title="With Icons" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
-  <CuiBreadcrumbItem href=&quot;#&quot;>
-    <CuiIcon name=&quot;house&quot; size=&quot;sm&quot; />
-  </CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>
-    <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;folder&quot; size=&quot;sm&quot; /> Projects</span>
-  </CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>
-    <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;file&quot; size=&quot;sm&quot; /> CuiButton.vue</span>
-  </CuiBreadcrumbItem>
+      <!-- With icons in slot -->
+      <Example title="With Icons" :code="`<CuiBreadcrumb separator=&quot;›&quot;>
+<CuiBreadcrumbItem href=&quot;#&quot;>
+  <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;house&quot; size=&quot;sm&quot; /> Home</span>
+</CuiBreadcrumbItem>
+<CuiBreadcrumbItem href=&quot;#&quot;>
+  <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;folder&quot; size=&quot;sm&quot; /> Projects</span>
+</CuiBreadcrumbItem>
+<CuiBreadcrumbItem>
+  <span class=&quot;flex items-center gap-1&quot;><CuiIcon name=&quot;file&quot; size=&quot;sm&quot; /> CuiButton.vue</span>
+</CuiBreadcrumbItem>
 </CuiBreadcrumb>`">
+        <CuiStack spacing="3">
           <CuiBreadcrumb separator="›">
             <CuiBreadcrumbItem href="#">
-              <CuiIcon name="house" size="sm" />
+              <span class="flex items-center gap-1"><CuiIcon name="house" size="sm" /> Home</span>
             </CuiBreadcrumbItem>
             <CuiBreadcrumbItem href="#">
               <span class="flex items-center gap-1"><CuiIcon name="folder" size="sm" /> Projects</span>
@@ -138,36 +125,39 @@ import Example from "../components/Example.vue";
               <span class="flex items-center gap-1"><CuiIcon name="file" size="sm" /> CuiButton.vue</span>
             </CuiBreadcrumbItem>
           </CuiBreadcrumb>
-        </Example>
+          <p class="text-sm text-surface-500">
+            The icons are decorative and are not announced — each item keeps its text so the
+            link has an accessible name.
+          </p>
+        </CuiStack>
+      </Example>
 
-        <!-- Long breadcrumbs -->
-        <Example title="Long Path" :code="`<CuiBreadcrumb>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Home</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Organization</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem href=&quot;#&quot;>Projects</CuiBreadcrumbItem>
-  <CuiBreadcrumbItem>Breadcrumb</CuiBreadcrumbItem>
+      <!-- Long breadcrumbs -->
+      <Example title="Long Path" :code="`<CuiBreadcrumb>
+<CuiBreadcrumbItem href=&quot;#&quot;>Home</CuiBreadcrumbItem>
+<CuiBreadcrumbItem href=&quot;#&quot;>Organization</CuiBreadcrumbItem>
+<CuiBreadcrumbItem href=&quot;#&quot;>Projects</CuiBreadcrumbItem>
+<CuiBreadcrumbItem>Breadcrumb</CuiBreadcrumbItem>
 </CuiBreadcrumb>`">
-          <CuiBreadcrumb>
-            <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Organization</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Team</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Projects</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Clean UI</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem href="#">Components</CuiBreadcrumbItem>
-            <CuiBreadcrumbItem>Breadcrumb</CuiBreadcrumbItem>
-          </CuiBreadcrumb>
-        </Example>
+        <CuiBreadcrumb>
+          <CuiBreadcrumbItem href="#">Home</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Organization</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Team</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Projects</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Clean UI</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem href="#">Components</CuiBreadcrumbItem>
+          <CuiBreadcrumbItem>Breadcrumb</CuiBreadcrumbItem>
+        </CuiBreadcrumb>
+      </Example>
 
-        <!-- Single item -->
-        <Example title="Single Item (root)" :code="`<CuiBreadcrumb>
-  <CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
+      <!-- Single item -->
+      <Example title="Single Item (root)" :code="`<CuiBreadcrumb>
+<CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
 </CuiBreadcrumb>`">
-          <CuiBreadcrumb>
-            <CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
-          </CuiBreadcrumb>
-        </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+        <CuiBreadcrumb>
+          <CuiBreadcrumbItem>Home</CuiBreadcrumbItem>
+        </CuiBreadcrumb>
+      </Example>
+    </template>
+  </DocPage>
 </template>

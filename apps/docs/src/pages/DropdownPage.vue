@@ -16,9 +16,9 @@ import {
   CuiIcon,
   CuiStack,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/dropdown";
 
 const showGrid = ref(true);
 const showSidebar = ref(true);
@@ -27,82 +27,92 @@ const theme = ref("system");
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Dropdown</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Floating menu with action items, check items, radio groups, headers,
-        dividers, and nested sub-menus. Built with sub-components.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiDropdown Props</h2>
-      <PropTable
-        :props="[
-          { name: 'trigger', type: 'click | hover | hover-focus', default: 'click', description: 'How the dropdown is triggered' },
-          { name: 'placement', type: 'bottom | top | left | right | ...', default: 'bottom', description: 'Preferred placement of the menu' },
-          { name: 'pinned', type: 'boolean', default: 'false', description: 'Keep dropdown anchored to trigger on scroll instead of closing' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state — prevents opening' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Sub-Components</h2>
-      <PropTable
-        :props="[
-          { name: 'CuiDropdownTrigger', type: 'wrapper', default: '—', description: 'Wraps the element that opens the menu' },
-          { name: 'CuiDropdownMenu', type: 'panel', default: '—', description: 'The floating menu panel. minWidth prop (default 12rem)' },
-          { name: 'CuiDropdownItem', type: 'action', default: '—', description: 'Action item. #icon slot, shortcut + description props, emits select' },
-          { name: 'CuiDropdownCheckItem', type: 'toggle', default: '—', description: 'Toggleable checkbox item. v-model boolean' },
-          { name: 'CuiDropdownRadioGroup', type: 'group', default: '—', description: 'Single-select group. v-model string | number' },
-          { name: 'CuiDropdownRadioItem', type: 'option', default: '—', description: 'Radio item within a group. value prop' },
-          { name: 'CuiDropdownSub', type: 'nested', default: '—', description: 'Sub-menu. Inherits parent trigger, optional trigger override. #menu slot for items.' },
-          { name: 'CuiDropdownDivider', type: 'separator', default: '—', description: 'Horizontal line separator' },
-          { name: 'CuiDropdownHeader', type: 'label', default: '—', description: 'Non-interactive group label' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'select', payload: '\u2014', description: 'Fires when a dropdown item is selected' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic Action Menu" :code="`<CuiDropdown>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiDropdown>
   <CuiDropdownTrigger>
     <CuiButton>Options</CuiButton>
   </CuiDropdownTrigger>
   <CuiDropdownMenu>
-    <CuiDropdownItem @select=&quot;...&quot;>Edit</CuiDropdownItem>
-    <CuiDropdownItem @select=&quot;...&quot;>Delete</CuiDropdownItem>
+    <CuiDropdownItem>Edit</CuiDropdownItem>
+    <CuiDropdownItem>Duplicate</CuiDropdownItem>
+    <CuiDropdownDivider />
+    <CuiDropdownItem>Delete</CuiDropdownItem>
   </CuiDropdownMenu>
-</CuiDropdown>`">
-          <CuiDropdown>
-            <CuiDropdownTrigger>
-              <CuiButton>Options</CuiButton>
-            </CuiDropdownTrigger>
-            <CuiDropdownMenu>
-              <CuiDropdownItem>Edit</CuiDropdownItem>
-              <CuiDropdownItem>Duplicate</CuiDropdownItem>
-              <CuiDropdownDivider />
-              <CuiDropdownItem>Archive</CuiDropdownItem>
-              <CuiDropdownItem>Delete</CuiDropdownItem>
-            </CuiDropdownMenu>
-          </CuiDropdown>
-        </Example>
+</CuiDropdown>`"
+      >
+        <CuiDropdown>
+          <CuiDropdownTrigger>
+            <CuiButton>Options</CuiButton>
+          </CuiDropdownTrigger>
+          <CuiDropdownMenu>
+            <CuiDropdownItem>Edit</CuiDropdownItem>
+            <CuiDropdownItem>Duplicate</CuiDropdownItem>
+            <CuiDropdownDivider />
+            <CuiDropdownItem>Archive</CuiDropdownItem>
+            <CuiDropdownItem>Delete</CuiDropdownItem>
+          </CuiDropdownMenu>
+        </CuiDropdown>
+      </Example>
+      <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+        <code class="cui-code">CuiDropdownDivider</code> draws a
+        <code class="cui-code">role="separator"</code> rule between groups and takes no props.
+      </p>
+    </template>
 
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The panel is a <code>role="menu"</code>, and each item carries the matching role:
+        <code>menuitem</code> for actions, <code>menuitemcheckbox</code> with
+        <code>aria-checked</code> for check items, <code>menuitemradio</code> inside a
+        <code>radiogroup</code> for radio items, <code>separator</code> for a divider and
+        <code>presentation</code> for a header, which keeps the group label out of the item
+        sequence.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          On open, focus moves to the first enabled item. Arrow Down and Arrow Up move between
+          items and wrap at the ends; Home and End jump to the first and last. Enter and Space
+          activate.
+        </li>
+        <li>
+          Disabled items get <code>aria-disabled</code> and <code>tabindex="-1"</code>, and are
+          skipped by the arrow keys rather than being focusable dead ends.
+        </li>
+        <li>
+          A sub-menu's row is an <code>aria-haspopup</code> item with <code>aria-expanded</code>.
+          Arrow Right opens it, Arrow Left closes it and returns to the parent row, and Escape
+          closes the sub-menu on its own. Only one sub-menu is open at a time.
+        </li>
+        <li>
+          <code>CuiDropdownRadioGroup</code> takes <code>label</code>, or
+          <code>aria-labelledby</code> when something on screen already names the group — a
+          <code>CuiDropdownHeader</code> with an <code>id</code>, say. Without one, the group is
+          announced as an unnamed radiogroup.
+        </li>
+        <li>
+          <code>CuiDropdownTrigger</code> is a plain wrapper: it adds no role,
+          <code>aria-haspopup</code> or <code>aria-expanded</code>, and it does not make its
+          contents focusable. Put a real <code>CuiButton</code> or <code>&lt;button&gt;</code>
+          inside it — with anything else the menu cannot be opened from the keyboard at all.
+        </li>
+        <li>
+          Two gaps worth knowing about. Escape does not close the top-level menu: the handler
+          sits on the wrapper, and the panel is teleported to <code>&lt;body&gt;</code>, so once
+          focus is inside the menu the key never reaches it. And closing the menu does not
+          return focus to the trigger. Both are on the list to fix; until then a click outside
+          is the reliable way out.
+        </li>
+        <li>
+          <code>trigger="hover"</code> makes the menu unreachable for anyone who cannot use a
+          pointer. Keep it for redundant conveniences, not for the only route to an action.
+        </li>
+      </ul>
+    </template>
+
+    <template #examples>
         <!-- With Icons + Shortcuts -->
         <Example title="Icons &amp; Keyboard Shortcuts" :code="`<CuiDropdown>
   <CuiDropdownTrigger>
@@ -150,6 +160,10 @@ const theme = ref("system");
               </CuiDropdownItem>
             </CuiDropdownMenu>
           </CuiDropdown>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            <code class="cui-code">shortcut</code> is a hint, not a binding — register the real
+            key handler yourself.
+          </p>
         </Example>
 
         <!-- With Descriptions -->
@@ -212,7 +226,7 @@ const theme = ref("system");
         <!-- Radio Items -->
         <Example title="Radio Items (single select)" :code="`<CuiDropdownMenu>
   <CuiDropdownHeader>Sort By</CuiDropdownHeader>
-  <CuiDropdownRadioGroup v-model=&quot;sortBy&quot;>
+  <CuiDropdownRadioGroup v-model=&quot;sortBy&quot; label=&quot;Sort by&quot;>
     <CuiDropdownRadioItem value=&quot;name&quot;>Name</CuiDropdownRadioItem>
     <CuiDropdownRadioItem value=&quot;date&quot;>Date</CuiDropdownRadioItem>
     <CuiDropdownRadioItem value=&quot;size&quot;>Size</CuiDropdownRadioItem>
@@ -225,7 +239,7 @@ const theme = ref("system");
               </CuiDropdownTrigger>
               <CuiDropdownMenu>
                 <CuiDropdownHeader>Sort By</CuiDropdownHeader>
-                <CuiDropdownRadioGroup v-model="sortBy">
+                <CuiDropdownRadioGroup v-model="sortBy" label="Sort by">
                   <CuiDropdownRadioItem value="name">Name</CuiDropdownRadioItem>
                   <CuiDropdownRadioItem value="date">Date</CuiDropdownRadioItem>
                   <CuiDropdownRadioItem value="size">Size</CuiDropdownRadioItem>
@@ -243,7 +257,7 @@ const theme = ref("system");
   <CuiDropdownSub>
     Theme
     <template #menu>
-      <CuiDropdownRadioGroup v-model=&quot;theme&quot;>
+      <CuiDropdownRadioGroup v-model=&quot;theme&quot; label=&quot;Theme&quot;>
         <CuiDropdownRadioItem value=&quot;light&quot;>Light</CuiDropdownRadioItem>
         <CuiDropdownRadioItem value=&quot;dark&quot;>Dark</CuiDropdownRadioItem>
       </CuiDropdownRadioGroup>
@@ -266,7 +280,7 @@ const theme = ref("system");
                 <template #icon><CuiIcon name="palette" size="sm" /></template>
                 Theme
                 <template #menu>
-                  <CuiDropdownRadioGroup v-model="theme">
+                  <CuiDropdownRadioGroup v-model="theme" label="Theme">
                     <CuiDropdownRadioItem value="light">Light</CuiDropdownRadioItem>
                     <CuiDropdownRadioItem value="dark">Dark</CuiDropdownRadioItem>
                     <CuiDropdownRadioItem value="system">System</CuiDropdownRadioItem>
@@ -345,10 +359,10 @@ const theme = ref("system");
           </CuiDropdown>
         </Example>
 
-        <!-- Mixed: real-world context menu -->
-        <Example title="Real-World: Context Menu" :code="`<CuiDropdown>
+        <!-- Mixed: real-world overflow menu -->
+        <Example title="Real-World: Overflow Menu" :code="`<CuiDropdown>
   <CuiDropdownTrigger>
-    <CuiButton variant=&quot;ghost&quot; size=&quot;sm&quot;>
+    <CuiButton variant=&quot;ghost&quot; size=&quot;sm&quot; icon aria-label=&quot;More actions&quot;>
       <CuiIcon name=&quot;dots-three&quot; size=&quot;md&quot; weight=&quot;bold&quot; />
     </CuiButton>
   </CuiDropdownTrigger>
@@ -366,7 +380,7 @@ const theme = ref("system");
 </CuiDropdown>`">
           <CuiDropdown>
             <CuiDropdownTrigger>
-              <CuiButton variant="ghost" size="sm">
+              <CuiButton variant="ghost" size="sm" aria-label="More actions">
                 <CuiIcon name="dots-three" size="md" weight="bold" />
               </CuiButton>
             </CuiDropdownTrigger>
@@ -399,9 +413,11 @@ const theme = ref("system");
               </CuiDropdownItem>
             </CuiDropdownMenu>
           </CuiDropdown>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            An icon-only trigger has no text, so it needs an <code class="cui-code">aria-label</code>
+            of its own — the menu behind it supplies no name.
+          </p>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

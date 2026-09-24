@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CuiCodeBlock, CuiGrid, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import { CuiCodeBlock, CuiStack } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/code-block";
 
 const vueExample = `<script setup lang="ts">
 import { ref } from "vue";
@@ -90,88 +91,93 @@ export function useDataGrid(options: UseDataGridOptions) {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Code Block</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A styled code display with copy button, line numbers, line highlighting,
-        and a language/filename header. Dark theme by default for contrast.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiCodeBlock :code=&quot;code&quot; language=&quot;bash&quot; />`"
+      >
+        <CuiCodeBlock :code="bashExample" language="bash" />
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The block is dark in both colour modes on purpose — code is read character by
+        character, and a fixed palette keeps that contrast the same everywhere rather than
+        leaving it to whichever theme is active.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          There is no syntax highlighting, so no meaning is ever carried by colour alone.
+          <code>highlightLines</code> is the one exception, and it marks a line with a left
+          edge and a tint rather than by hue — but the reason a line matters still belongs
+          in the surrounding prose.
+        </li>
+        <li>
+          <code>code</code> is rendered verbatim, never interpreted, so angle brackets and
+          braces are safe to pass through.
+        </li>
+        <li>
+          The line-number gutter is <code>user-select: none</code>, so dragging a selection
+          across the block copies the code without the numbers — and the copy button copies
+          the <code>code</code> string exactly, including trailing whitespace.
+        </li>
+        <li>
+          Give a long or unlabelled block a heading or a <code>filename</code>. A page of
+          several blocks with nothing between them is very hard to navigate by anything
+          other than sight.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'code', type: 'string', default: '—', description: 'Code content (required)' },
-          { name: 'language', type: 'string', default: '—', description: 'Language label (e.g., typescript, css)' },
-          { name: 'filename', type: 'string', default: '—', description: 'File name (overrides language in header)' },
-          { name: 'lineNumbers', type: 'boolean', default: 'false', description: 'Show line numbers' },
-          { name: 'startLine', type: 'number', default: '1', description: 'Starting line number' },
-          { name: 'highlightLines', type: 'number[]', default: '—', description: 'Line numbers to highlight' },
-          { name: 'copyable', type: 'boolean', default: 'true', description: 'Show copy button' },
-          { name: 'maxHeight', type: 'string', default: '—', description: 'Max height before scrolling' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Font size' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
+    <template #examples>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+      <!-- With filename -->
+      <Example title="With Filename" :code="`<CuiCodeBlock :code=&quot;code&quot; filename=&quot;package.json&quot; />`">
+        <CuiCodeBlock :code="jsonExample" filename="package.json" />
+      </Example>
 
-        <!-- Basic -->
-        <Example title="Basic" :code="`<CuiCodeBlock :code=&quot;code&quot; language=&quot;bash&quot; />`">
-          <CuiCodeBlock :code="bashExample" language="bash" />
-        </Example>
+      <!-- Line numbers -->
+      <Example title="Line Numbers" :code="`<CuiCodeBlock :code=&quot;code&quot; line-numbers />`">
+        <CuiCodeBlock :code="vueExample" filename="Counter.vue" line-numbers />
+      </Example>
 
-        <!-- With filename -->
-        <Example title="With Filename" :code="`<CuiCodeBlock :code=&quot;code&quot; filename=&quot;package.json&quot; />`">
-          <CuiCodeBlock :code="jsonExample" filename="package.json" />
-        </Example>
+      <!-- Line highlighting -->
+      <Example title="Highlighted Lines" :code="`<CuiCodeBlock :highlight-lines=&quot;[4, 5, 6]&quot; line-numbers />`">
+        <CuiCodeBlock :code="cssExample" filename="main.css" line-numbers :highlight-lines="[4, 5, 6]" />
+      </Example>
 
-        <!-- Line numbers -->
-        <Example title="Line Numbers" :code="`<CuiCodeBlock :code=&quot;code&quot; line-numbers />`">
-          <CuiCodeBlock :code="vueExample" filename="Counter.vue" line-numbers />
-        </Example>
+      <!-- With max height -->
+      <Example title="Max Height (Scrollable)" :code="`<CuiCodeBlock :code=&quot;code&quot; max-height=&quot;240px&quot; line-numbers :highlight-lines=&quot;[14, 15, 16]&quot; />`">
+        <CuiCodeBlock :code="tsExample" filename="useDataGrid.ts" line-numbers max-height="240px" :highlight-lines="[14, 15, 16, 17, 18, 19]" />
+      </Example>
 
-        <!-- Line highlighting -->
-        <Example title="Highlighted Lines" :code="`<CuiCodeBlock :highlight-lines=&quot;[4, 5, 6]&quot; line-numbers />`">
-          <CuiCodeBlock :code="cssExample" filename="main.css" line-numbers :highlight-lines="[4, 5, 6]" />
-        </Example>
-
-        <!-- With max height -->
-        <Example title="Max Height (Scrollable)" :code="`<CuiCodeBlock :code=&quot;code&quot; max-height=&quot;240px&quot; line-numbers :highlight-lines=&quot;[14, 15, 16]&quot; />`">
-          <CuiCodeBlock :code="tsExample" filename="useDataGrid.ts" line-numbers max-height="240px" :highlight-lines="[14, 15, 16, 17, 18, 19]" />
-        </Example>
-
-        <!-- Sizes -->
-        <Example title="Sizes" :code="`<CuiCodeBlock :code=&quot;code&quot; size=&quot;sm&quot; />
+      <!-- Sizes -->
+      <Example title="Sizes" :code="`<CuiCodeBlock :code=&quot;code&quot; size=&quot;sm&quot; />
 <CuiCodeBlock :code=&quot;code&quot; size=&quot;md&quot; />
 <CuiCodeBlock :code=&quot;code&quot; size=&quot;lg&quot; />`">
-          <CuiStack spacing="4">
-            <div>
-              <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Small:</div>
-              <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="sm" />
-            </div>
-            <div>
-              <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Medium (default):</div>
-              <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="md" />
-            </div>
-            <div>
-              <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Large:</div>
-              <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="lg" />
-            </div>
-          </CuiStack>
-        </Example>
+        <CuiStack spacing="4">
+          <div>
+            <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Small:</div>
+            <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="sm" />
+          </div>
+          <div>
+            <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Medium (default):</div>
+            <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="md" />
+          </div>
+          <div>
+            <div class="text-xs font-medium mb-1" style="color: var(--cui-text-secondary);">Large:</div>
+            <CuiCodeBlock :code="'const greeting = &quot;Hello, world!&quot;;'" language="javascript" size="lg" />
+          </div>
+        </CuiStack>
+      </Example>
 
-        <!-- No copy button -->
-        <Example title="Without Copy Button" :code="`<CuiCodeBlock :code=&quot;code&quot; language=&quot;bash&quot; :copyable=&quot;false&quot; />`">
-          <CuiCodeBlock :code="'npm install @itguy614/clean-ui'" language="bash" :copyable="false" />
-        </Example>
+      <!-- No copy button -->
+      <Example title="Without Copy Button" :code="`<CuiCodeBlock :code=&quot;code&quot; language=&quot;bash&quot; :copyable=&quot;false&quot; />`">
+        <CuiCodeBlock :code="'npm install @itguy614/clean-ui'" language="bash" :copyable="false" />
+      </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

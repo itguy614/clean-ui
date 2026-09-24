@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Docs site: the Layout, Data Display, Navigation and Overlay groups — 30 pages — converted to the `DocPage` shell, each with an Accessibility section. Modal, Slideover and ConfirmDialog also gained the `titleAs` rows they were missing after #129 (#130)
 - `titleAs` on `CuiEmptyState`, which rendered its title as a `<div>` — the same defect #129 fixed in `CuiCardHeader`, and an empty state's title is a genuine region heading. Defaults to `h3`. The line is that static structural containers get headings, while transient or live-region announcements (`CuiAlert`, `CuiToast`) do not (#148)
 - `CuiCopyButton` is announced properly. Its default is icon-only, so the button had no accessible name at all — empty text, no `aria-label`, no `aria-describedby`, no `title` — and a screen reader read it as just "button". The `tooltip` prop looked like it covered this but did not: `CuiTooltip` never points the trigger at its panel, and a tooltip is a description rather than a name. It now names the button from `tooltip` when there is no visible label, and announces a successful copy through a polite live region — the copied state was otherwise colour, an icon swap and a tooltip, all visual (#150)
 - Docs site: Button Group and Copy Button converted to the `DocPage` shell, both with an Accessibility section. The Copy Button page also documents `useCopyToClipboard`, which the page mentioned but never specified (#130)
