@@ -325,7 +325,7 @@ defineExpose({ el: rootEl, focus, blur });
           height: triggerDims.height,
           padding: `0 ${triggerDims.px}`,
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
-          borderRadius: 'var(--cui-button-radius, 0.375rem)',
+          borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
           background: 'var(--cui-surface-base, white)',
           cursor: disabled ? 'default' : 'pointer',
           opacity: disabled ? '0.5' : '1',

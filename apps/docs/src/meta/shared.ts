@@ -1,4 +1,4 @@
-import type { PropRow } from "./types";
+import type { PropRow, SlotRow } from "./types";
 
 /**
  * Prop rows shared by many components, mirroring the mixins in the library's
@@ -59,4 +59,42 @@ export const roundedProp: PropRow = {
   type: "none | sm | md | lg | full",
   default: "md",
   description: "Border radius",
+};
+
+/** The nine color roles, as the type column spells them. The Playground splits this on `|`. */
+export const COLOR_ROLES =
+  "primary | secondary | success | error | warning | info | surface | surface-light | surface-dark";
+
+/** `ColorableProps`. */
+export const colorProp = (description: string, dflt = "primary"): PropRow => ({
+  name: "color",
+  type: COLOR_ROLES,
+  default: dflt,
+  description,
+});
+
+/** `LiveRegionProps` — the feedback components. */
+export const liveProp: PropRow = {
+  name: "live",
+  type: "off | polite | assertive",
+  default: "from color",
+  description:
+    "Screen-reader live region. error → assertive (role=alert), else polite (role=status). off to silence",
+};
+
+/** `RoleIconProps` — CuiAlert, CuiToast, CuiBanner. */
+export const roleIconProps: PropRow[] = [
+  {
+    name: "icon",
+    type: "string",
+    description:
+      "Replace the role icon. A name in the static icon registry renders that icon; anything else — an emoji, a character — renders as text",
+  },
+  { name: "noIcon", type: "boolean", default: "false", description: "Hide the role icon entirely" },
+];
+
+/** The `#icon` slot that accompanies `roleIconProps`. */
+export const roleIconSlot: SlotRow = {
+  name: "icon",
+  description: "Replaces the role icon entirely — a spinner, an avatar, anything",
 };

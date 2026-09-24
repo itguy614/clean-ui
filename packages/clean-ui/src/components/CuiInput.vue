@@ -7,9 +7,9 @@ import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -359,12 +359,12 @@ const messages = useMessages();
 
 /* Prefix button: outer left matches input radius, inner right is flat */
 .cui-input__prefix-button :deep(.cui-button) {
-  border-radius: calc(var(--cui-button-radius, 0.375rem) - 1px) 0 0 calc(var(--cui-button-radius, 0.375rem) - 1px);
+  border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
 }
 
 /* Suffix button: inner left is flat, outer right matches input radius */
 .cui-input__suffix-button :deep(.cui-button) {
-  border-radius: 0 calc(var(--cui-button-radius, 0.375rem) - 1px) calc(var(--cui-button-radius, 0.375rem) - 1px) 0;
+  border-radius: 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0;
 }
 
 /* Suppress button's own focus ring inside input — the input's focus-within handles it */

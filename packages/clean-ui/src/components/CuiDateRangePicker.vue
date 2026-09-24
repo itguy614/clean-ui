@@ -402,7 +402,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           alignItems: 'center',
           gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
-          borderRadius: 'var(--cui-button-radius, 0.375rem)',
+          borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
           padding: '0 calc(0.5rem * var(--cui-density-scale, 1))',
           background: 'var(--cui-surface-base, white)',
           opacity: disabled ? '0.5' : '1',

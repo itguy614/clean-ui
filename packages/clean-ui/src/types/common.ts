@@ -73,6 +73,22 @@ export interface DisableableProps {
 export type LiveRegionMode = "off" | "polite" | "assertive";
 
 /** Components that announce to screen readers via an ARIA live region. */
+/**
+ * The role icon on a feedback component — CuiAlert, CuiToast, CuiBanner. Alongside an
+ * `#icon` slot, which replaces the icon with arbitrary content.
+ */
+export interface RoleIconProps {
+  /**
+   * Replace the role icon. A name in the static icon registry (built-ins plus
+   * `registerIcons()`) renders that icon; anything else — an emoji, a character —
+   * renders as text. A name resolvable only through the optional lazy resolver is not
+   * known statically and renders as text.
+   */
+  icon?: string;
+  /** Hide the role icon entirely. */
+  noIcon?: boolean;
+}
+
 export interface LiveRegionProps {
   /**
    * Screen-reader live-region mode. Defaults from `color`: `error` → assertive

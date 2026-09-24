@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
-import { COLOR_ICON_MAP } from "../utils/colorIconMap";
+import { resolveRoleIcon } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps {
+export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Internal toast id */
   toastId?: string;
   /** Title text */
@@ -24,10 +24,6 @@ export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegion
   showProgress?: boolean;
   /** Persistent animation */
   animation?: AlertAnimation;
-  /** Custom icon (emoji or text) */
-  icon?: string;
-  /** Hide the default role icon */
-  noIcon?: boolean;
   /** Whether this toast is the topmost (active) — timer only runs when true */
   active?: boolean;
 }
@@ -142,7 +138,7 @@ const toastStyle = computed(() => {
   return base;
 });
 
-const defaultIconName = computed(() => COLOR_ICON_MAP[props.color] ?? "info");
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -162,8 +158,10 @@ const messages = useMessages();
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-toast__icon">
-      <template v-if="icon">{{ icon }}</template>
-      <CuiIcon v-else :name="defaultIconName" size="1.25rem" />
+      <slot name="icon">
+        <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
+        <CuiIcon v-else :name="roleIcon.name!" size="1.25rem" />
+      </slot>
     </div>
 
     <!-- Body -->
@@ -208,7 +206,7 @@ const messages = useMessages();
   align-items: flex-start;
   gap: calc(0.75rem * var(--cui-density-scale, 1));
   padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   min-width: 280px;
   max-width: 420px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);

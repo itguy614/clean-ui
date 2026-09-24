@@ -180,7 +180,7 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__menu {
   min-width: 10rem;
   padding: calc(0.25rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);

@@ -118,7 +118,7 @@ provide(ToggleGroupKey, {
 .cui-toggle-group--error .cui-toggle-group__options {
   border: 1px solid var(--cui-error-border);
   background: var(--cui-error-bg);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 

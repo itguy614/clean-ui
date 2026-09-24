@@ -7,9 +7,9 @@ import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -644,7 +644,7 @@ const messages = useMessages();
 .cui-select__dropdown {
   z-index: 50;
   overflow-y: auto;
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
