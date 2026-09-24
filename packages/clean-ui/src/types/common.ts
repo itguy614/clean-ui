@@ -37,6 +37,14 @@ export type CuiVariant = "solid" | "outline" | "subtle" | "ghost" | "dash";
  *  color string. Used by paint components (Icon, Divider, Backdrop). */
 export type CuiColorOrCss = CuiColor | (string & {});
 
+/**
+ * Element a component's title renders as — a heading level, or `div` to opt out.
+ *
+ * Shared by every component with a `title` convenience prop (`CuiCardHeader`,
+ * `CuiModalHeader`, `CuiConfirmDialog`), so the vocabulary stays one thing.
+ */
+export type CuiTitleAs = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
+
 // --- Base prop "mixins" ---
 
 /** Every component can be hidden via `v-show`. */
@@ -77,6 +85,23 @@ export type LiveRegionMode = "off" | "polite" | "assertive";
  * The role icon on a feedback component — CuiAlert, CuiToast, CuiBanner. Alongside an
  * `#icon` slot, which replaces the icon with arbitrary content.
  */
+/**
+ * For components whose `title` prop renders a heading.
+ *
+ * A title that looks like a heading should be one — a `<div>` is invisible to heading
+ * navigation and absent from the document outline (#129). The right *level* depends on
+ * where the component sits, which the component cannot know, so it is the caller's:
+ * `h2` under a page `h1`, `h4` inside an `h3` section. `div` opts out for a title that
+ * is decorative rather than structural.
+ *
+ * Each component sets its own default in `withDefaults` — `h3` for a card, `h2` for a
+ * dialog, which starts a fresh accessible context.
+ */
+export interface TitleAsProps {
+  /** Element the title renders as. See {@link CuiTitleAs}. */
+  titleAs?: CuiTitleAs;
+}
+
 export interface RoleIconProps {
   /**
    * Replace the role icon. A name in the static icon registry (built-ins plus

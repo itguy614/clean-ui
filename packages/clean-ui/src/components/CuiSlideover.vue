@@ -5,12 +5,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps } from "../types/common";
+import type { HideableProps, TitleAsProps } from "../types/common";
 
 export type SlideoverSide = "right" | "left" | "top" | "bottom";
 export type SlideoverSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiSlideoverProps extends HideableProps {
+export interface CuiSlideoverProps extends HideableProps, TitleAsProps {
   /** Controls slideover visibility (v-model:visible) */
   visible?: boolean;
   /** Which edge the panel slides from */
@@ -174,6 +174,7 @@ const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
         <template v-if="title">
           <CuiModalHeader
             :title="title"
+            :title-as="titleAs"
             :no-close-button="noCloseButton"
             @close="closeOverlay"
           />

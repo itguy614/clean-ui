@@ -5,11 +5,11 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, CuiRounded } from "../types/common";
+import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiModalProps extends HideableProps {
+export interface CuiModalProps extends HideableProps, TitleAsProps {
   /** Controls modal visibility (v-model:visible) */
   visible?: boolean;
   /** Modal width — named size or custom CSS value */
@@ -124,6 +124,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           <template v-if="title">
             <CuiModalHeader
               :title="title"
+              :title-as="titleAs"
               :no-close-button="noCloseButton"
               @close="closeOverlay"
             />

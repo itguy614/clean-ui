@@ -1,21 +1,11 @@
 <script setup lang="ts">
-import type { HideableProps } from "../types/common";
+import type { HideableProps, TitleAsProps } from "../types/common";
 
-export interface CuiCardHeaderProps extends HideableProps {
+export interface CuiCardHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
   title?: string;
   /** Convenience: subtitle text */
   subtitle?: string;
-  /**
-   * Element the title renders as. A card title is usually a section heading, so it is one
-   * by default — a `<div>` is invisible to heading navigation and absent from the document
-   * outline (#129).
-   *
-   * The right level depends on where the card sits, which this component cannot know, so
-   * set it to match the surrounding document: `h2` under a page `h1`, `h4` inside an `h3`
-   * section. Use `div` for a card whose title is decorative rather than structural.
-   */
-  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
 }
 
 withDefaults(defineProps<CuiCardHeaderProps>(), {

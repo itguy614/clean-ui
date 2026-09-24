@@ -70,11 +70,9 @@ import meta from "../meta/card";
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          <code>CuiCardHeader</code>'s <code>title</code> renders as an
-          <code>&lt;h3&gt;</code>, so a card title is reachable by heading navigation and
-          appears in the document outline. The right level depends on where the card sits,
-          which the component cannot know — set <code>titleAs</code> to match the
-          surrounding document, or to <code>div</code> for a decorative title.
+          <code>CuiCardHeader</code>'s <code>title</code> renders as a heading, so a card
+          title is reachable by heading navigation and appears in the document outline. Set
+          <code>titleAs</code> so the level fits where the card sits.
         </li>
         <li>
           <code>CuiCardMedia</code> renders an <code>&lt;img&gt;</code>: give it

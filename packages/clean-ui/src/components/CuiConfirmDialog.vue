@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { CuiColor, HideableProps } from "../types/common";
+import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
@@ -11,17 +11,11 @@ import { useMessages } from "../composables/useMessages";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
-export interface CuiConfirmDialogProps extends HideableProps {
+export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps {
   /** Control visibility (v-model:visible) */
   visible?: boolean;
   /** Dialog title */
   title?: string;
-  /**
-   * Element the title renders as. A dialog title is a heading, so it is one by default.
-   * The right level depends on the surrounding document, which this component cannot
-   * know — set it to match (#129).
-   */
-  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
   /** Confirmation message */
   message?: string;
   /** Variant — affects icon and confirm button color */

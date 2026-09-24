@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { mount } from "@vue/test-utils";
+import { describe, it, expect, afterEach } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
 import CuiCardHeader from "../CuiCardHeader.vue";
 import CuiModalHeader from "../CuiModalHeader.vue";
+import CuiConfirmDialog from "../CuiConfirmDialog.vue";
 
 /**
  * #129 — a title that looks like a heading should be one. `CuiCardHeader` rendered a
@@ -10,23 +11,40 @@ import CuiModalHeader from "../CuiModalHeader.vue";
  * which had the opposite problem: the level was not the consumer's to choose.
  */
 describe("header titles are headings at a level the consumer controls", () => {
-  const title = (w: ReturnType<typeof mount>, sel: string) => w.find(sel).element.tagName;
+  // CuiConfirmDialog, CuiModal and CuiSlideover teleport into <body>, so their titles
+  // are queried there rather than through the wrapper.
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  const tagOf = (sel: string) => document.body.querySelector(sel)?.tagName ?? "";
 
   describe.each([
-    ["CuiCardHeader", CuiCardHeader, ".cui-card-header__title", "H3"],
-    ["CuiModalHeader", CuiModalHeader, ".cui-modal-header__title", "H2"],
-  ])("%s", (_name, component, selector, defaultTag) => {
-    it(`defaults to ${defaultTag}`, () => {
-      expect(title(mount(component as never, { props: { title: "T" } }), selector)).toBe(defaultTag);
+    ["CuiCardHeader", CuiCardHeader, ".cui-card-header__title", "H3", {}],
+    ["CuiModalHeader", CuiModalHeader, ".cui-modal-header__title", "H2", {}],
+    ["CuiConfirmDialog", CuiConfirmDialog, ".cui-confirm-dialog__title", "H2", { visible: true }],
+  ])("%s", (_name, component, selector, defaultTag, extraProps) => {
+    /** Mount with a title and read the tag it rendered as. */
+    async function titleTag(props: Record<string, unknown> = {}) {
+      const w = mount(component as never, {
+        props: { title: "T", ...extraProps, ...props },
+        attachTo: document.body,
+      });
+      await flushPromises();
+      return (w.element as HTMLElement).querySelector?.(selector)?.tagName ?? tagOf(selector);
+    }
+
+    it(`defaults to ${defaultTag}`, async () => {
+      expect(await titleTag()).toBe(defaultTag);
     });
 
-    it("takes the level it is given", () => {
+    it("takes the level it is given", async () => {
       // The component cannot know where it sits, so the level has to be the caller's.
-      expect(title(mount(component as never, { props: { title: "T", titleAs: "h4" } }), selector)).toBe("H4");
+      expect(await titleTag({ titleAs: "h4" })).toBe("H4");
     });
 
-    it("can opt out to a div for a decorative title", () => {
-      expect(title(mount(component as never, { props: { title: "T", titleAs: "div" } }), selector)).toBe("DIV");
+    it("can opt out to a div for a decorative title", async () => {
+      expect(await titleTag({ titleAs: "div" })).toBe("DIV");
     });
   });
 
@@ -39,5 +57,17 @@ describe("header titles are headings at a level the consumer controls", () => {
     const w = mount(CuiCardHeader, { props: { title: "T" }, slots: { default: "<span id='mine'>x</span>" } });
     expect(w.find("#mine").exists()).toBe(true);
     expect(w.find(".cui-card-header__title").exists()).toBe(false);
+  });
+
+  it.each([
+    ["CuiModal", () => import("../CuiModal.vue")],
+    ["CuiSlideover", () => import("../CuiSlideover.vue")],
+  ])("%s forwards titleAs into the header it renders in simple mode", async (_n, load) => {
+    // Simple mode renders CuiModalHeader internally, so without forwarding the level
+    // is unreachable for anyone using the `title` convenience prop.
+    const component = (await load()).default;
+    mount(component as never, { props: { visible: true, title: "T", titleAs: "h5" } });
+    await flushPromises();
+    expect(tagOf(".cui-modal-header__title")).toBe("H5");
   });
 });

@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import CuiIcon from "./CuiIcon.vue";
-import type { HideableProps } from "../types/common";
+import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiModalHeaderProps extends HideableProps {
+export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
   title?: string;
-  /**
-   * Element the title renders as. A dialog title is a heading, so it is one by default.
-   * The right level depends on the surrounding document, which this component cannot
-   * know — set it to match (#129).
-   */
-  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
   /** Hide the close button */
   noCloseButton?: boolean;
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens, mountHosts } from "./helpers";
 import CuiCardHeader from "../../components/CuiCardHeader.vue";
 
 /**
@@ -13,6 +13,9 @@ import CuiCardHeader from "../../components/CuiCardHeader.vue";
  * take the prose size and margin unless the typography layer skips `cui-*` elements — the
  * same exclusion the prose link rule needed when a solid link button drew its label in its
  * own background colour (#114).
+ *
+ * The tag-level assertions (default, chosen level, `div` opt-out) need no layout engine and
+ * live in `components/__tests__/headingSemantics.test.ts`. Everything here measures.
  */
 describe("card titles are headings without being restyled (real browser)", () => {
   let removeTokens: () => void;
@@ -21,36 +24,18 @@ describe("card titles are headings without being restyled (real browser)", () =>
   });
   afterAll(() => removeTokens());
 
-  const mounted: Array<{ unmount: () => void }> = [];
-  const hosts: HTMLElement[] = [];
-  afterEach(() => {
-    mounted.splice(0).forEach((w) => w.unmount());
-    hosts.splice(0).forEach((h) => h.remove());
-  });
+  const dom = mountHosts();
+  afterEach(() => dom.cleanup());
 
   /** Mount inside a `.cui-typography` scope, which is where the conflict lives. */
   function header(props: Record<string, unknown> = {}, prose = true) {
-    const host = document.createElement("div");
+    const host = dom.host();
     if (prose) host.className = "cui-typography";
-    document.body.append(host);
-    hosts.push(host);
-    const w = mount(CuiCardHeader, { props: { title: "Recent activity", ...props }, attachTo: host });
-    mounted.push(w);
+    const w = dom.track(
+      mount(CuiCardHeader, { props: { title: "Recent activity", ...props }, attachTo: host }),
+    );
     return (w.element as HTMLElement).querySelector<HTMLElement>(".cui-card-header__title")!;
   }
-
-  it("renders a heading by default", () => {
-    expect(header().tagName).toBe("H3");
-  });
-
-  it("takes the level it is given, because the component cannot know it", () => {
-    expect(header({ titleAs: "h2" }).tagName).toBe("H2");
-    expect(header({ titleAs: "h5" }).tagName).toBe("H5");
-  });
-
-  it("can still opt out for a decorative title", () => {
-    expect(header({ titleAs: "div" }).tagName).toBe("DIV");
-  });
 
   it("is not restyled by the prose heading rules", () => {
     // The whole reason this needed a browser: inside `.cui-typography` an unexcluded h3
@@ -64,7 +49,8 @@ describe("card titles are headings without being restyled (real browser)", () =>
   });
 
   it("looks identical whether it is a heading or a div", () => {
-    // The change is to the document outline, not to the rendering.
+    // The change is to the document outline, not to the rendering. A `div` is never
+    // matched by the prose rule, so this also catches the UA stylesheet's own h3 margin.
     const heading = getComputedStyle(header());
     const div = getComputedStyle(header({ titleAs: "div" }));
 
@@ -74,11 +60,9 @@ describe("card titles are headings without being restyled (real browser)", () =>
   });
 
   it("leaves ordinary prose headings alone", () => {
-    const host = document.createElement("div");
+    const host = dom.host();
     host.className = "cui-typography";
     host.innerHTML = '<h3 id="prose">Section</h3>';
-    document.body.append(host);
-    hosts.push(host);
 
     const prose = getComputedStyle(host.querySelector("#prose")!);
     expect(parseFloat(prose.marginBottom)).toBeGreaterThan(0);
