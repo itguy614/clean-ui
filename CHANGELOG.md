@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-24
+
 ### Upgrading to 1.3
 
 Eleven breaking changes, grouped by what they affect. Most consumers will notice the first

@@ -3,11 +3,16 @@ import { computed } from "vue";
 import { CuiStack, CuiCard, CuiCardBody, CuiBadge, type CuiColor } from "@itguy614/clean-ui";
 import changelogRaw from "../../../../CHANGELOG.md?raw";
 
+interface Item {
+  text: string;
+  /** An indented bullet — several entries break their detail into sub-points. */
+  sub: boolean;
+}
 interface Section {
   title: string;
   /** Prose lines between the heading and the list — the Upgrading guide uses these. */
   paragraphs: string[];
-  items: string[];
+  items: Item[];
 }
 interface Release {
   version: string;
@@ -22,8 +27,9 @@ interface Release {
 //                               date was previously required, so the whole section, and
 //                               therefore the entire release in progress, rendered nowhere.
 //   ### Section               → section
-//   - item                    → list item
-//   anything else             → a paragraph within the section
+//   - item                    → list item ("  - item" → nested under the one above)
+//   anything else             → a paragraph within the section, or a continuation of the
+//                               previous item, since the file hard-wraps
 const releases = computed<Release[]>(() => {
   const out: Release[] = [];
   let release: Release | null = null;
@@ -50,15 +56,16 @@ const releases = computed<Release[]>(() => {
       continue;
     }
 
-    const item = line.match(/^[-*]\s+(.+)$/);
+    const item = line.match(/^(\s*)[-*]\s+(.+)$/);
     if (item && section) {
-      section.items.push(item[1].trim());
+      section.items.push({ text: item[2].trim(), sub: item[1].length > 0 });
       continue;
     }
 
-    // Continuation of the previous list item — the file wraps long entries.
+    // Continuation of the previous list item — the file wraps long entries, and without
+    // this they were truncated at the first line break.
     if (section && /^\s+\S/.test(raw) && section.items.length) {
-      section.items[section.items.length - 1] += ` ${line.trim()}`;
+      section.items[section.items.length - 1].text += ` ${line.trim()}`;
       continue;
     }
 
@@ -133,7 +140,12 @@ function inlineMd(text: string): string {
               v-html="inlineMd(para)"
             />
             <ul v-if="section.items.length" style="margin-top: 0.5rem;">
-              <li v-for="(item, i) in section.items" :key="i" v-html="inlineMd(item)" />
+              <li
+                v-for="(item, i) in section.items"
+                :key="i"
+                :style="item.sub ? 'margin-left: 1.25rem; list-style-type: circle;' : undefined"
+                v-html="inlineMd(item.text)"
+              />
             </ul>
           </div>
         </CuiCardBody>
