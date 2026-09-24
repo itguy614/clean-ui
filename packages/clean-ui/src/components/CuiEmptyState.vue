@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, TitleAsProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
-export interface CuiEmptyStateProps extends HideableProps, ColorableProps, SizeableProps {
+export interface CuiEmptyStateProps extends HideableProps, ColorableProps, SizeableProps, TitleAsProps {
   /** Phosphor icon name */
   icon?: string;
   /** Heading text */
@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
   size: "md",
   color: "primary",
   hidden: false,
+  titleAs: "h3",
 });
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
@@ -61,9 +62,9 @@ const circleStyle = computed(() => ({
 
     <!-- Content -->
     <slot>
-      <div v-if="title" class="cui-empty-state__title" :style="{ fontSize: cfg.titleFont }">
+      <component :is="titleAs" v-if="title" class="cui-empty-state__title" :style="{ fontSize: cfg.titleFont }">
         {{ title }}
-      </div>
+      </component>
       <div
         v-if="description"
         class="cui-empty-state__description"
