@@ -7,9 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-24
+
+### Upgrading to 1.3
+
+Eleven breaking changes, grouped by what they affect. Most consumers will notice the first
+group and nothing else.
+
+**Things that move pixels**
+
+- **Form control padding and heights changed across the board.** `INPUT_SIZE_SCALE`'s
+  horizontal padding was rebalanced to 8/10/12/14/16px (`xs`–`xl`); `md` was 16px, equal to
+  its own font size. `CuiInput` now applies its height to the bordered element, so an input
+  and a `CuiSelect` beside it are finally the same height — inputs used to be 2px taller.
+  `CuiCombobox`, `CuiTagInput` and `CuiInputStepper` dropped their private size tables and
+  take the shared scale, so they line up with everything else and accept the full `xs`–`xl`
+  range. If a layout was tuned against the old metrics, this is the change to look at first
+  (#123, #124).
+- **The `error` role's icon is `warning-octagon`, not `x-circle`,** in `CuiAlert`, `CuiToast`
+  and `CuiBanner`. Override per call site with `icon`, or app-wide with
+  `registerRoleIcons({ error: "…" })` (#119, #140).
+
+**Things that change which CSS wins**
+
+- **The distributed stylesheet no longer ships Tailwind's preflight.** If you were relying on
+  clean-ui for a global reset without realising it, you now need one of your own. The reset
+  still applies inside `cui-*` subtrees (#72).
+- **`CuiButton`'s themeable rules are zero-specificity now,** so your own
+  `.cui-button { … }` rule wins where it used to lose. That is the point — plain CSS themes a
+  button again — but a rule written expecting the library to win will start taking effect.
+  Structural rules keep their normal specificity (#114).
+
+**Things that change the DOM — check selectors, snapshots and audits**
+
+- **Form controls put `id`, `name` and `autocomplete` on their native element** rather than
+  the wrapper `<div>`, so `<label for>` finally associates. Selectors keyed on the wrapper
+  carrying an `id` need updating (#78).
+- **`CuiCardHeader` and `CuiEmptyState` render their `title` as an `<h3>`** rather than a
+  `<div>`. Rendering is unchanged; the document outline is not. An automated audit may now
+  flag heading order where a card's level does not suit its surroundings — set `titleAs` to
+  the right level, or to `div` to restore the old markup (#129, #148).
+- **`CuiInputStepper`'s `+`/`−` buttons left the tab order.** The input is the control and is
+  fully keyboard-operable, matching a native number input. This changes tab order wherever
+  the component is used, not only inside `CuiTimePicker` (#74).
+- **`CuiDropdownRadioGroup` is `role="radiogroup"`,** not `role="group"` (#103).
+
+**Not breaking, but worth knowing**
+
+`CuiBanner`'s `position` gained an `inline` value rather than losing its `"top"` default, so
+the change that was planned to break did not (#119, #120).
+
 ### Added
 - `ariaRequired` on `AriaLabelableProps`, so every control can be marked required for assistive tech through the same plumbing that already carries `ariaDescribedby` (#175)
-- `useFieldDescribedBy()` composable — merges a control's own error message id into `aria-describedby`, keeping caller-supplied ids first. Eight components render an error message; this is the one place the rule lives. Uses Vue's `useId()`, which unlike the library's nine hand-rolled `Math.random()` id sites is stable across re-renders and identical between a server render and its hydration (#175)
+- Internally, a shared `useFieldDescribedBy()` merges a control's own error message id into `aria-describedby`, keeping caller-supplied ids first — eight components render an error message, and this is the one place that rule lives. Not exported: it takes a control's props object, so it is plumbing rather than public API. It uses Vue's `useId()`, which unlike the library's nine hand-rolled `Math.random()` id sites is stable across re-renders and identical between a server render and its hydration (#175)
 - `.cui-sr-only` in `main.css`, alongside the shared keyframes. The visually-hidden technique had been hand-written in six places in three different spellings, with the `clip` → `clip-path` migration half-done across them (#175)
 - Docs site: the Form Controls group — 18 pages — converted to the `DocPage` shell, each with an Accessibility section. That completes the conversion for all 61 component pages; the Foundations and Getting Started pages are not component pages and keep their free-form layout (#130)
 - Docs site: a `Methods` section in the `DocPage` shell, so a component's imperative API sits in the fixed section order instead of being hand-rolled into `#extra` after Accessibility — which is where Tree View's nine-method `defineExpose` and Context Menu's were. `MethodRow` moved from `MethodTable.vue` to `meta/types.ts`, since `<script setup>` cannot carry module exports (#165)
@@ -71,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CuiCoreMessages` is exported — the message keys this package itself ships, as distinct from `CuiMessages`, which is those plus whatever satellite packages have merged into `CuiMessageNamespaces` (#107)
 
 ### Changed
+- **BREAKING:** `CuiEmptyState` renders its `title` as an `<h3>` rather than a `<div>`, for the same reason and with the same consequence as `CuiCardHeader` below: an empty state's title is a genuine region heading, so it now appears in the document outline and an audit may flag its level against its surroundings. Set `titleAs`, or `div` to restore the old behaviour (#148)
 - **BREAKING:** `CuiCardHeader` renders its `title` as an `<h3>` rather than a `<div>`. A card title looks like a heading and now is one, so it is reachable by heading navigation and appears in the document outline; `CuiModalHeader` and `CuiConfirmDialog` already did this. Rendering is unchanged — what changes is the outline, and automated audits may now flag heading order where a card's level does not match its surroundings. Set `titleAs` to the right level, or to `div` to restore the old behaviour (#129)
 - The `.cui-typography` heading rules skip elements carrying a `cui-*` class, as the prose link rules already did. A component that renders a heading styles itself, and the prose layer was repainting it — an unexcluded card title took the prose h3 size and margin, including from the mobile responsive block (#129)
 - **BREAKING:** the `error` role's default icon is `warning-octagon`, not `x-circle` — in `CuiAlert`, `CuiToast` and `CuiBanner` alike. A cross reads as "close" far more strongly than it reads as "error", and beside a dismissible component's own ✕ it rendered as a second close button. It is deliberately not `warning-circle` either: error and warning are adjacent severities, and sharing a glyph would leave colour as the only thing telling them apart (#119)
