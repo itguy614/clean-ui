@@ -40,11 +40,18 @@ export function useScrollShadows() {
 
 // Fade-to-background gradient — text dissolves into the surface color.
 // Works in both light and dark mode via --cui-surface-base.
+//
+// `borderRadius: "inherit"` on each: the fade is a painted rectangle sitting flush inside
+// its scroller, so on a rounded container it squares off the corner it covers — the
+// editor toolbar's fade was erasing the control's top-right corner whenever the toolbar
+// overflowed (#125). Inheriting means the fade takes whatever corner its scroller has, and
+// costs nothing where that is 0.
 const fadeTo = "var(--cui-surface-base, white)";
 
 /** Inline style for a top edge fade */
 export const scrollShadowTopStyle = {
   position: "absolute" as const,
+  borderRadius: "inherit",
   top: "0",
   left: "0",
   right: "0",
@@ -57,6 +64,7 @@ export const scrollShadowTopStyle = {
 /** Inline style for a bottom edge fade */
 export const scrollShadowBottomStyle = {
   position: "absolute" as const,
+  borderRadius: "inherit",
   bottom: "0",
   left: "0",
   right: "0",
@@ -69,6 +77,7 @@ export const scrollShadowBottomStyle = {
 /** Inline style for a right edge fade */
 export const scrollShadowRightStyle = {
   position: "absolute" as const,
+  borderRadius: "inherit",
   right: "0",
   top: "0",
   bottom: "0",

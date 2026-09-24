@@ -78,15 +78,19 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
+  <!-- The fades are siblings of the scroller, not children of it — the arrangement
+       CuiTable uses. An absolutely-positioned child of a scroll container scrolls with
+       the content, so as children they slid out of view the moment the toolbar was
+       scrolled, which is the opposite of what an edge fade is for (#125). -->
   <div
-    ref="bar"
     class="cui-markdown-editor-toolbar"
     role="toolbar"
     :aria-label="messages.toolbarAriaLabel"
     @keydown="onKeydown"
-    @scroll="onScroll"
   >
-    <div v-if="canScrollLeft" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowLeftStyle" />
+    <!-- `scroll` does not bubble, so it binds to the scroller itself; `keydown` stays on
+         the toolbar, which is the element the roving tabindex belongs to. -->
+    <div ref="bar" class="cui-markdown-editor-toolbar__scroller" @scroll="onScroll">
     <!-- `solid` for the active/pressed state is a deliberate, sign-off exception
          to the library's general "subtle by default, bold by choice" rule
          (tinted `-bg`/`-border` for resting/selected state elsewhere — toggles,
@@ -111,6 +115,9 @@ function onKeydown(event: KeyboardEvent) {
         <CuiIcon :name="entry.spec.icon" size="1em" />
       </template>
     </CuiButton>
+    </div>
+
+    <div v-if="canScrollLeft" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowLeftStyle" />
     <div v-if="canScrollRight" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowRightStyle" />
   </div>
 </template>
@@ -118,6 +125,14 @@ function onKeydown(event: KeyboardEvent) {
 <style scoped>
 .cui-markdown-editor-toolbar {
   position: relative;
+  /* The control owns the radius and does not clip (`overflow: visible`), so the toolbar
+     carries its top corners down to the overflow fades, which inherit from here. Inset by
+     the control's 1px border, the way CuiInput nests its attached buttons (#125). */
+  border-top-left-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
+  border-top-right-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
+}
+
+.cui-markdown-editor-toolbar__scroller {
   display: flex;
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
@@ -125,9 +140,10 @@ function onKeydown(event: KeyboardEvent) {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  border-radius: inherit;
 }
 
-.cui-markdown-editor-toolbar::-webkit-scrollbar {
+.cui-markdown-editor-toolbar__scroller::-webkit-scrollbar {
   display: none;
 }
 
@@ -153,8 +169,4 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-.cui-markdown-editor-toolbar__shadow {
-  position: sticky;
-  z-index: 1;
-}
 </style>
