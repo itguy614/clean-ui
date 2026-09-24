@@ -175,6 +175,7 @@ const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
           <CuiModalHeader
             :title="title"
             :title-as="titleAs"
+            :title-id="titleId"
             :no-close-button="noCloseButton"
             @close="closeOverlay"
           />

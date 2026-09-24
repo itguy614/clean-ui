@@ -230,6 +230,7 @@ const messages = useMessages();
         <button
           v-for="tab in tabs"
           :key="tab.value"
+          type="button"
           :data-cui-tab-value="tab.value"
           class="cui-tabs__tab"
           :class="{

@@ -12,6 +12,14 @@ export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 export interface CuiModalProps extends HideableProps, TitleAsProps {
   /** Controls modal visibility (v-model:visible) */
   visible?: boolean;
+  /**
+   * id of the element naming this dialog, for sub-component mode.
+   *
+   * Simple mode (the `title` prop) wires this up on its own. A wrapper that assembles its
+   * own header — `CuiConfirmDialog` does — has no `title` for the modal to name itself
+   * from, and so had no accessible name at all (#158).
+   */
+  ariaLabelledby?: string;
   /** Modal width — named size or custom CSS value */
   size?: ModalSize | string;
   /** Title text (rendered in header) */
@@ -117,7 +125,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="title ? titleId : undefined"
+          :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"
           tabindex="-1"
         >
           <!-- Simple mode: title prop renders header + body wrapper automatically -->
@@ -125,6 +133,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
             <CuiModalHeader
               :title="title"
               :title-as="titleAs"
+              :title-id="titleId"
               :no-close-button="noCloseButton"
               @close="closeOverlay"
             />

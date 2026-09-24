@@ -6,6 +6,14 @@ import { useMessages } from "../composables/useMessages";
 export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
   title?: string;
+  /**
+   * id for the title element, so the dialog can point `aria-labelledby` at it.
+   *
+   * `CuiModal` and `CuiSlideover` generate one and pass it down. Without it their
+   * `aria-labelledby` referenced an id that was never rendered, so every titled dialog
+   * in the library was announced unnamed (#158).
+   */
+  titleId?: string;
   /** Hide the close button */
   noCloseButton?: boolean;
 }
@@ -42,6 +50,7 @@ const messages = useMessages();
         <component
           :is="titleAs"
           v-if="title"
+          :id="titleId"
           class="cui-modal-header__title"
           :style="{
             fontSize: '1.125rem',
