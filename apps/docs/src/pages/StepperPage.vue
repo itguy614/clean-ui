@@ -5,14 +5,13 @@ import {
   CuiCard,
   CuiCardBody,
   CuiFlex,
-  CuiIcon,
   CuiStack,
   CuiStepper,
   type StepDef,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/stepper";
 
 const basicSteps: StepDef[] = [
   { label: "Account" },
@@ -20,7 +19,7 @@ const basicSteps: StepDef[] = [
   { label: "Review" },
   { label: "Complete" },
 ];
-const basicStep = ref(1);
+const usageStep = ref(1);
 
 const detailSteps: StepDef[] = [
   { label: "Account Setup", description: "Create your credentials" },
@@ -55,142 +54,152 @@ const verticalStep = ref(1);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Stepper</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A step-by-step progress indicator for multi-step workflows.
-        Supports horizontal and vertical orientations, clickable navigation,
-        custom icons, descriptions, and error states.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;currentStep&quot; />
+
+// steps = [
+//   { label: 'Account' },
+//   { label: 'Profile' },
+//   { label: 'Review' },
+//   { label: 'Complete' },
+// ]`"
+      >
+        <CuiStack spacing="4">
+          <CuiStepper :steps="basicSteps" v-model="usageStep" />
+          <CuiFlex gap="2">
+            <CuiButton size="sm" variant="outline" :disabled="usageStep === 0" @click="usageStep--">Back</CuiButton>
+            <CuiButton
+              size="sm"
+              variant="solid"
+              :disabled="usageStep === basicSteps.length - 1"
+              @click="usageStep++"
+            >
+              Next
+            </CuiButton>
+          </CuiFlex>
+        </CuiStack>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The stepper is a <code>role="navigation"</code> region labelled "Progress" from the
+        message catalogue, and the step the flow is on carries
+        <code>aria-current="step"</code> — so a screen-reader user can find the indicator
+        and hear which step is live.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          Status is not carried by colour alone: a completed step swaps its number for a
+          check icon and a failed one for a warning icon. Current and upcoming steps differ
+          only by ring colour and label weight, so keep the labels themselves meaningful.
+        </li>
+        <li>
+          The step number, label and description are all real text — nothing about a step
+          is conveyed by a background image or a colour swatch that a high-contrast mode
+          would flatten.
+        </li>
+      </ul>
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Known gaps — read before relying on this as navigation.</strong> With
+        <code>clickable</code> (the default) each step is a <code>&lt;div&gt;</code> with a
+        click handler: no <code>tabindex</code>, no <code>role="button"</code> and no key
+        handler, so steps can only be reached with a pointer. Give the user real controls —
+        Back/Next buttons, as every example here does — and treat the stepper itself as an
+        indicator. The markup is also a flat set of divs rather than an ordered list, and
+        nothing announces "step 2 of 4", so the count and position are visual only.
+      </p>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'steps', type: 'StepDef[]', default: '—', description: 'Step definitions: { label, description?, icon?, error? }' },
-          { name: 'modelValue', type: 'number', default: '0', description: 'Current active step (0-based, v-model)' },
-          { name: 'orientation', type: 'horizontal | vertical', default: 'horizontal', description: 'Layout direction' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'clickable', type: 'boolean', default: 'true', description: 'Allow clicking completed steps to go back' },
-          { name: 'linear', type: 'boolean', default: 'true', description: 'Linear mode — can only progress forward, no skipping' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:modelValue', payload: 'number', description: 'Fires when the active step changes (v-model)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic Stepper" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;currentStep&quot; />`">
-          <CuiStack spacing="4">
-            <CuiStepper :steps="basicSteps" v-model="basicStep" />
-            <CuiFlex gap="2">
-              <CuiButton size="sm" variant="outline" :disabled="basicStep === 0" @click="basicStep--">Back</CuiButton>
-              <CuiButton size="sm" variant="solid" :disabled="basicStep === basicSteps.length - 1" @click="basicStep++">Next</CuiButton>
-            </CuiFlex>
-          </CuiStack>
-        </Example>
-
-        <!-- With descriptions -->
-        <Example title="With Descriptions" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />
+    <template #examples>
+      <!-- With descriptions -->
+      <Example title="With Descriptions" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />
 // steps = [
 //   { label: 'Account Setup', description: 'Create your credentials' },
 //   { label: 'Personal Info', description: 'Name, email, and phone' },
 // ]`">
-          <CuiStack spacing="4">
-            <CuiStepper :steps="detailSteps" v-model="detailStep" />
-            <CuiFlex gap="2">
-              <CuiButton size="sm" variant="outline" :disabled="detailStep === 0" @click="detailStep--">Back</CuiButton>
-              <CuiButton size="sm" variant="solid" :disabled="detailStep === detailSteps.length - 1" @click="detailStep++">Next</CuiButton>
-            </CuiFlex>
-          </CuiStack>
-        </Example>
+        <CuiStack spacing="4">
+          <CuiStepper :steps="detailSteps" v-model="detailStep" />
+          <CuiFlex gap="2">
+            <CuiButton size="sm" variant="outline" :disabled="detailStep === 0" @click="detailStep--">Back</CuiButton>
+            <CuiButton size="sm" variant="solid" :disabled="detailStep === detailSteps.length - 1" @click="detailStep++">Next</CuiButton>
+          </CuiFlex>
+        </CuiStack>
+      </Example>
 
-        <!-- Custom icons -->
-        <Example title="Custom Icons" :code="`// steps = [
+      <!-- Custom icons -->
+      <Example title="Custom Icons" :code="`// steps = [
 //   { label: 'Cart', icon: 'shopping-cart' },
 //   { label: 'Shipping', icon: 'truck' },
 //   { label: 'Payment', icon: 'credit-card' },
 // ]
 <CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
-          <CuiStack spacing="4">
-            <CuiStepper :steps="iconSteps" v-model="iconStep" />
-            <CuiFlex gap="2">
-              <CuiButton size="sm" variant="outline" :disabled="iconStep === 0" @click="iconStep--">Back</CuiButton>
-              <CuiButton size="sm" variant="solid" :disabled="iconStep === iconSteps.length - 1" @click="iconStep++">Next</CuiButton>
-            </CuiFlex>
-          </CuiStack>
-        </Example>
+        <CuiStack spacing="4">
+          <CuiStepper :steps="iconSteps" v-model="iconStep" />
+          <CuiFlex gap="2">
+            <CuiButton size="sm" variant="outline" :disabled="iconStep === 0" @click="iconStep--">Back</CuiButton>
+            <CuiButton size="sm" variant="solid" :disabled="iconStep === iconSteps.length - 1" @click="iconStep++">Next</CuiButton>
+          </CuiFlex>
+        </CuiStack>
+      </Example>
 
-        <!-- Sizes -->
-        <Example title="Sizes" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;sm&quot; :clickable=&quot;false&quot; />
+      <!-- Sizes -->
+      <Example title="Sizes" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;sm&quot; :clickable=&quot;false&quot; />
 <CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;md&quot; :clickable=&quot;false&quot; />
 <CuiStepper :steps=&quot;steps&quot; :model-value=&quot;2&quot; size=&quot;lg&quot; :clickable=&quot;false&quot; />`">
-          <CuiStack spacing="6">
-            <div>
-              <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Small:</div>
-              <CuiStepper :steps="basicSteps" :model-value="2" size="sm" :clickable="false" />
-            </div>
-            <div>
-              <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Medium (default):</div>
-              <CuiStepper :steps="basicSteps" :model-value="2" size="md" :clickable="false" />
-            </div>
-            <div>
-              <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Large:</div>
-              <CuiStepper :steps="basicSteps" :model-value="2" size="lg" :clickable="false" />
-            </div>
-          </CuiStack>
-        </Example>
+        <CuiStack spacing="6">
+          <div>
+            <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Small:</div>
+            <CuiStepper :steps="basicSteps" :model-value="2" size="sm" :clickable="false" />
+          </div>
+          <div>
+            <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Medium (default):</div>
+            <CuiStepper :steps="basicSteps" :model-value="2" size="md" :clickable="false" />
+          </div>
+          <div>
+            <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Large:</div>
+            <CuiStepper :steps="basicSteps" :model-value="2" size="lg" :clickable="false" />
+          </div>
+        </CuiStack>
+      </Example>
 
-        <!-- Error state -->
-        <Example title="Error State" :code="`// steps = [
+      <!-- Error state -->
+      <Example title="Error State" :code="`// steps = [
 //   { label: 'Details', description: 'Basic information' },
 //   { label: 'Verification', description: 'Identity check', error: true },
 //   { label: 'Approval', description: 'Final review' },
 // ]
 <CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
-          <CuiStack spacing="4">
-            <CuiStepper :steps="errorSteps" v-model="errorStep" />
-            <p class="text-sm" style="color: var(--cui-error);">Verification failed — please try again.</p>
-          </CuiStack>
-        </Example>
+        <CuiStack spacing="4">
+          <CuiStepper :steps="errorSteps" v-model="errorStep" />
+          <p class="text-sm" style="color: var(--cui-error);">Verification failed — please try again.</p>
+        </CuiStack>
+      </Example>
 
-        <!-- Vertical -->
-        <Example title="Vertical Orientation" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; orientation=&quot;vertical&quot; />`">
-          <div style="max-width: 24rem;">
-            <CuiCard variant="outline">
-              <CuiCardBody>
-                <CuiStack spacing="4">
-                  <CuiStepper :steps="verticalSteps" v-model="verticalStep" orientation="vertical" />
-                  <CuiFlex gap="2">
-                    <CuiButton size="sm" variant="outline" :disabled="verticalStep === 0" @click="verticalStep--">Back</CuiButton>
-                    <CuiButton size="sm" variant="solid" :disabled="verticalStep === verticalSteps.length - 1" @click="verticalStep++">Next</CuiButton>
-                  </CuiFlex>
-                </CuiStack>
-              </CuiCardBody>
-            </CuiCard>
-          </div>
-        </Example>
+      <!-- Vertical -->
+      <Example title="Vertical Orientation" :code="`<CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; orientation=&quot;vertical&quot; />`">
+        <div style="max-width: 24rem;">
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <CuiStack spacing="4">
+                <CuiStepper :steps="verticalSteps" v-model="verticalStep" orientation="vertical" />
+                <CuiFlex gap="2">
+                  <CuiButton size="sm" variant="outline" :disabled="verticalStep === 0" @click="verticalStep--">Back</CuiButton>
+                  <CuiButton size="sm" variant="solid" :disabled="verticalStep === verticalSteps.length - 1" @click="verticalStep++">Next</CuiButton>
+                </CuiFlex>
+              </CuiStack>
+            </CuiCardBody>
+          </CuiCard>
+        </div>
+      </Example>
 
-        <!-- All complete -->
-        <Example title="All Complete" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;steps.length&quot; :clickable=&quot;false&quot; />`">
-          <CuiStepper :steps="basicSteps" :model-value="basicSteps.length" :clickable="false" />
-        </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+      <!-- All complete -->
+      <Example title="All Complete" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;steps.length&quot; :clickable=&quot;false&quot; />`">
+        <CuiStepper :steps="basicSteps" :model-value="basicSteps.length" :clickable="false" />
+      </Example>
+    </template>
+  </DocPage>
 </template>

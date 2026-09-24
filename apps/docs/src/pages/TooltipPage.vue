@@ -1,79 +1,67 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { CuiBadge, CuiButton, CuiFlex, CuiInput, CuiStack, CuiTooltip } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/tooltip";
 
 const manualVisible = ref(false);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Tooltip</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Contextual overlay that appears on hover, focus, or click. Powered by
-        <code class="cui-code">@floating-ui/vue</code> for smart positioning
-        with auto-flip.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'text', type: 'string', default: '-', description: 'Simple text content' },
-          { name: 'placement', type: 'top | bottom | left | right | auto', default: 'top', description: 'Preferred position (auto-flips near edges)' },
-          { name: 'trigger', type: 'hover | focus | click | hover-focus', default: 'hover-focus', description: 'How the tooltip is activated' },
-          { name: 'showDelay', type: 'number', default: '200', description: 'Delay before showing (ms)' },
-          { name: 'hideDelay', type: 'number', default: '100', description: 'Delay before hiding (ms)' },
-          { name: 'noArrow', type: 'boolean', default: 'false', description: 'Hide the pointing arrow' },
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: '-', description: 'Semantic color (default is dark neutral)' },
-          { name: 'v-model:visible', type: 'boolean', default: '-', description: 'Manual visibility control' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevent tooltip from showing' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: 'default', type: 'slot', default: '-', description: 'The trigger element' },
-          { name: '#content', type: 'slot', default: '-', description: 'Rich tooltip content (overrides text prop)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:visible', payload: 'boolean', description: 'Controls tooltip visibility (v-model:visible)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic Tooltip" :code="`<CuiTooltip text=&quot;Hello, world!&quot;>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiTooltip text=&quot;Hello, world!&quot;>
   <CuiButton>Hover me</CuiButton>
-</CuiTooltip>`">
-          <CuiFlex gap="4" class="flex-wrap">
-            <CuiTooltip text="Hello, world!">
-              <CuiButton>Hover me</CuiButton>
-            </CuiTooltip>
-            <CuiTooltip text="I appear on focus too — try tabbing">
-              <CuiButton variant="outline">Hover or focus</CuiButton>
-            </CuiTooltip>
-          </CuiFlex>
-        </Example>
+</CuiTooltip>`"
+      >
+        <CuiFlex gap="4" class="flex-wrap">
+          <CuiTooltip text="Hello, world!">
+            <CuiButton>Hover me</CuiButton>
+          </CuiTooltip>
+          <CuiTooltip text="I appear on focus too — try tabbing">
+            <CuiButton variant="outline">Hover or focus</CuiButton>
+          </CuiTooltip>
+        </CuiFlex>
+      </Example>
+    </template>
 
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        The default <code>trigger="hover-focus"</code> shows the tooltip on focus as well as
+        hover, so it is reachable by keyboard — provided the element you wrap is focusable. The
+        wrapper adds no <code>tabindex</code> of its own: wrap a real control, or wrap plain
+        text and accept that the tooltip is pointer-only.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          <strong>The tooltip is not announced by assistive technology.</strong> The panel
+          carries <code>role="tooltip"</code>, but nothing points the trigger at it — no
+          <code>aria-describedby</code>, no generated id — so a screen reader reads the trigger
+          and never the tooltip. This is a known bug. Until it is fixed, treat the tooltip as a
+          sighted-pointer convenience: never put anything in it that is not also available as
+          visible text or an <code>aria-label</code> on the trigger.
+        </li>
+        <li>
+          Escape hides a visible tooltip while the trigger has focus, and the panel stays open
+          while the pointer is over it, so a tooltip can be read without being chased. Between
+          them, that covers the dismissible and hoverable halves of WCAG 1.4.13.
+        </li>
+        <li>
+          An icon-only button needs an <code>aria-label</code> whether or not it has a tooltip.
+          The tooltip is not a substitute for a name.
+        </li>
+        <li>
+          <code>trigger="hover"</code> takes away the focus route entirely, and
+          <code>trigger="click"</code> steals the click from whatever is inside. Both are worth
+          choosing deliberately rather than by habit.
+        </li>
+      </ul>
+    </template>
+
+    <template #examples>
         <!-- Placements -->
         <Example title="Placements" :code="`<CuiTooltip text=&quot;Top&quot; placement=&quot;top&quot;>...</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap items-center justify-center">
@@ -165,6 +153,11 @@ const manualVisible = ref(false);
               </template>
             </CuiTooltip>
           </CuiFlex>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            The panel is not reachable by Tab, so anything interactive placed in it is
+            unreachable by keyboard. Rich content here means layout, not controls — for those,
+            use <code class="cui-code">CuiPopover</code>.
+          </p>
         </Example>
 
         <!-- Colors -->
@@ -258,6 +251,10 @@ const manualVisible = ref(false);
               </CuiFlex>
             </CuiTooltip>
           </CuiFlex>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            A badge and a bare <code class="cui-code">&lt;span&gt;</code> are not focusable, so
+            those two tooltips are pointer-only. If the text matters, it belongs in the page.
+          </p>
         </Example>
 
         <!-- Disabled -->
@@ -273,8 +270,6 @@ const manualVisible = ref(false);
             </CuiTooltip>
           </CuiFlex>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>
