@@ -16,6 +16,12 @@ export interface CuiConfirmDialogProps extends HideableProps {
   visible?: boolean;
   /** Dialog title */
   title?: string;
+  /**
+   * Element the title renders as. A dialog title is a heading, so it is one by default.
+   * The right level depends on the surrounding document, which this component cannot
+   * know — set it to match (#129).
+   */
+  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
   /** Confirmation message */
   message?: string;
   /** Variant — affects icon and confirm button color */
@@ -39,6 +45,7 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   variant: "danger",
   loading: false,
   hidden: false,
+  titleAs: "h2",
 });
 
 const messages = useMessages();
@@ -126,7 +133,9 @@ function onCancel() {
 
       <div style="flex: 1; min-width: 0;">
         <!-- Title -->
-        <h2
+        <component
+          :is="titleAs"
+          class="cui-confirm-dialog__title"
           :style="{
             fontSize: '1.0625rem',
             fontWeight: '600',
@@ -136,7 +145,7 @@ function onCancel() {
           }"
         >
           {{ resolvedTitle }}
-        </h2>
+        </component>
 
         <!-- Message -->
         <div

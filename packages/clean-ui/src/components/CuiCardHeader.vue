@@ -6,10 +6,21 @@ export interface CuiCardHeaderProps extends HideableProps {
   title?: string;
   /** Convenience: subtitle text */
   subtitle?: string;
+  /**
+   * Element the title renders as. A card title is usually a section heading, so it is one
+   * by default — a `<div>` is invisible to heading navigation and absent from the document
+   * outline (#129).
+   *
+   * The right level depends on where the card sits, which this component cannot know, so
+   * set it to match the surrounding document: `h2` under a page `h1`, `h4` inside an `h3`
+   * section. Use `div` for a card whose title is decorative rather than structural.
+   */
+  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
 }
 
 withDefaults(defineProps<CuiCardHeaderProps>(), {
   hidden: false,
+  titleAs: "h3",
 });
 </script>
 
@@ -17,7 +28,7 @@ withDefaults(defineProps<CuiCardHeaderProps>(), {
   <div class="cui-card-header" v-show="!hidden">
     <div class="cui-card-header__content">
       <slot>
-        <div v-if="title" class="cui-card-header__title">{{ title }}</div>
+        <component :is="titleAs" v-if="title" class="cui-card-header__title">{{ title }}</component>
         <div v-if="subtitle" class="cui-card-header__subtitle">{{ subtitle }}</div>
       </slot>
     </div>

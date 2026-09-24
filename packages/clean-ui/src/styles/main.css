@@ -403,12 +403,13 @@
 
 /* --- Headings (h1–h6) --- */
 
-.cui-typography h1,
-.cui-typography h2,
-.cui-typography h3,
-.cui-typography h4,
-.cui-typography h5,
-.cui-typography h6 {
+/* Prose headings only. The `:where()` exclusion skips any element carrying a `cui-*`
+   class — the same rule the prose link styles use, and for the same reason: a component
+   that renders a heading (CuiCardHeader's title, CuiModalHeader's) styles itself, and the
+   typography layer must not repaint it. Without this, giving CuiCardHeader a real `<h3>`
+   would hand every card title the prose h3 size and a bottom margin, because component
+   title rules are zero-specificity and this one is (0,1,1) (#129). */
+.cui-typography :is(h1, h2, h3, h4, h5, h6):where(:not([class^="cui-"]):not([class*=" cui-"])) {
   font-weight: var(--cui-heading-font-weight);
   line-height: var(--cui-heading-line-height);
   margin-top: 0;
@@ -416,18 +417,18 @@
   color: var(--cui-text-emphasis);
 }
 
-.cui-typography h1 { font-size: var(--cui-font-size-h1); }
-.cui-typography h2 { font-size: var(--cui-font-size-h2); }
-.cui-typography h3 { font-size: var(--cui-font-size-h3); }
-.cui-typography h4 { font-size: var(--cui-font-size-h4); }
-.cui-typography h5 { font-size: var(--cui-font-size-h5); }
-.cui-typography h6 { font-size: var(--cui-font-size-h6); }
+.cui-typography h1:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h1); }
+.cui-typography h2:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h2); }
+.cui-typography h3:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h3); }
+.cui-typography h4:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h4); }
+.cui-typography h5:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h5); }
+.cui-typography h6:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: var(--cui-font-size-h6); }
 
 /* --- Responsive heading sizes (breakpoint-based, scales down on mobile) --- */
 @media (max-width: 767px) {
-  .cui-typography h1 { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
-  .cui-typography h2 { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
-  .cui-typography h3 { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+  .cui-typography h1:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
+  .cui-typography h2:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
+  .cui-typography h3:where(:not([class^="cui-"]):not([class*=" cui-"])) { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
 }
 
 /* --- Paragraphs --- */

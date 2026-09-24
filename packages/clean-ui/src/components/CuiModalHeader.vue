@@ -6,6 +6,12 @@ import { useMessages } from "../composables/useMessages";
 export interface CuiModalHeaderProps extends HideableProps {
   /** Convenience: title text */
   title?: string;
+  /**
+   * Element the title renders as. A dialog title is a heading, so it is one by default.
+   * The right level depends on the surrounding document, which this component cannot
+   * know — set it to match (#129).
+   */
+  titleAs?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
   /** Hide the close button */
   noCloseButton?: boolean;
 }
@@ -13,6 +19,7 @@ export interface CuiModalHeaderProps extends HideableProps {
 const props = withDefaults(defineProps<CuiModalHeaderProps>(), {
   noCloseButton: false,
   hidden: false,
+  titleAs: "h2",
 });
 
 const emit = defineEmits<{
@@ -38,8 +45,10 @@ const messages = useMessages();
   >
     <div style="flex: 1; min-width: 0;">
       <slot>
-        <h2
+        <component
+          :is="titleAs"
           v-if="title"
+          class="cui-modal-header__title"
           :style="{
             fontSize: '1.125rem',
             fontWeight: '600',
@@ -49,7 +58,7 @@ const messages = useMessages();
           }"
         >
           {{ title }}
-        </h2>
+        </component>
       </slot>
     </div>
     <div v-if="$slots.actions" style="display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1)); flex-shrink: 0;">

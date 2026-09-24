@@ -31,6 +31,13 @@ const meta: ComponentMeta = {
       name: "CuiCardHeader",
       props: [
         { name: "title", type: "string", description: "Convenience title text" },
+        {
+          name: "titleAs",
+          type: "h1 | h2 | h3 | h4 | h5 | h6 | div",
+          default: "h3",
+          description:
+            "Element the title renders as. Set it to match the surrounding document's heading level, or div for a decorative title",
+        },
         { name: "subtitle", type: "string", description: "Convenience subtitle text" },
         hidden,
       ],
