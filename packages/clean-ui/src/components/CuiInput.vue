@@ -104,6 +104,17 @@ defineExpose({ el: inputRef, focus, blur });
 
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
+
+// The error message needs an id for `aria-describedby`, or `aria-invalid` announces that
+// something is wrong without ever saying what (#175). Falls back to a generated id when
+// the caller gave no `id` — CuiFormField always supplies one.
+const errorId = computed(() => `${props.id ?? `cui-input-${Math.random().toString(36).slice(2, 8)}`}-error`);
+/** Caller-supplied descriptions first, then our own message, per the spec's id-list order. */
+const describedBy = computed(() =>
+  [props.ariaDescribedby, props.error && props.errorMessage ? errorId.value : null]
+    .filter(Boolean)
+    .join(" ") || undefined,
+);
 </script>
 
 <template>
@@ -146,7 +157,7 @@ const messages = useMessages();
           :id="id"
           :name="name"
           :autocomplete="autocomplete"
-          :aria-describedby="ariaDescribedby"
+          :aria-describedby="describedBy"
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
@@ -163,7 +174,6 @@ const messages = useMessages();
           v-if="showClear"
           type="button"
           class="cui-input__clear"
-          tabindex="-1"
           :aria-label="messages.input.clear"
           @click="clear"
         >
@@ -175,7 +185,6 @@ const messages = useMessages();
           v-if="isPassword"
           type="button"
           class="cui-input__password-toggle"
-          tabindex="-1"
           :aria-label="passwordVisible ? messages.input.hidePassword : messages.input.showPassword"
           @click="passwordVisible = !passwordVisible"
         >
@@ -198,7 +207,7 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" class="cui-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-input__error">
       {{ errorMessage }}
     </div>
   </div>

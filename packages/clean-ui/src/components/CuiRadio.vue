@@ -107,15 +107,16 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       fontSize: buttonSizeStyles.fontSize,
     }"
     :disabled="isDisabled"
+    :id="id"
     role="radio"
+    :aria-describedby="ariaDescribedby"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     @click="select"
   >
     <input
       :id="id"
       :autocomplete="autocomplete"
-      :aria-describedby="ariaDescribedby"
-      :aria-labelledby="ariaLabelledby"
       type="radio"
       :name="resolvedName"
       :value="String(value)"
@@ -141,7 +142,10 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       'cui-radio--disabled': isDisabled,
       'cui-radio--readonly': isReadonly,
     }"
+    :id="id"
     role="radio"
+    :aria-describedby="ariaDescribedby"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -152,8 +156,6 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     <input
       :id="id"
       :autocomplete="autocomplete"
-      :aria-describedby="ariaDescribedby"
-      :aria-labelledby="ariaLabelledby"
       type="radio"
       :name="resolvedName"
       :value="String(value)"

@@ -373,8 +373,7 @@ const messages = useMessages();
               <button
                 type="button"
                 class="cui-select__chip-remove"
-                tabindex="-1"
-                :aria-label="messages.remove"
+                      :aria-label="messages.remove"
                 @click.stop="removeChip(val)"
               >
                 <CuiIcon name="x" size="0.75rem" />
@@ -402,8 +401,7 @@ const messages = useMessages();
             v-if="clearable && hasValue && !disabled && !readonly"
             type="button"
             class="cui-select__clear"
-            tabindex="-1"
-            :aria-label="messages.clear"
+              :aria-label="messages.clear"
             @click.stop="clear"
           >
             <CuiIcon name="x" size="0.75rem" />

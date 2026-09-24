@@ -53,6 +53,17 @@ const emit = defineEmits<{
 
 const textareaRef = useTemplateRef<HTMLTextAreaElement>("textareaEl");
 
+// The error message needs an id for `aria-describedby`, or `aria-invalid` announces that
+// something is wrong without ever saying what (#175). Falls back to a generated id when the
+// caller gave no `id` — CuiFormField always supplies one.
+const errorId = computed(() => `${props.id ?? `cui-textarea-${Math.random().toString(36).slice(2, 8)}`}-error`);
+/** Caller-supplied descriptions first, then our own message, per the spec's id-list order. */
+const describedBy = computed(() =>
+  [props.ariaDescribedby, props.error && props.errorMessage ? errorId.value : null]
+    .filter(Boolean)
+    .join(" ") || undefined,
+);
+
 const charCount = computed(() => props.modelValue.length);
 const isOverLimit = computed(() => props.maxLength !== undefined && charCount.value > props.maxLength);
 
@@ -151,7 +162,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         :id="id"
         :name="name"
         :autocomplete="autocomplete"
-        :aria-describedby="ariaDescribedby"
+        :aria-describedby="describedBy"
         :aria-labelledby="ariaLabelledby"
         :value="modelValue"
         :placeholder="placeholder"
@@ -169,7 +180,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
       v-if="(error && errorMessage) || maxLength !== undefined"
       class="cui-textarea__footer"
     >
-      <div v-if="error && errorMessage" class="cui-textarea__error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-textarea__spacer" />

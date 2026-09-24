@@ -77,6 +77,13 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  formField: {
+    /**
+     * Appended to a required field's label for screen readers. The visible marker is an
+     * asterisk, which is `aria-hidden` — without this, required-ness reached no one (#175).
+     */
+    required: string;
+  };
   tabs: { closeTab: string };
   table: {
     /** Accessible name for the scroll region a table gets when it overflows. */
@@ -135,6 +142,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },
   dataGrid: {

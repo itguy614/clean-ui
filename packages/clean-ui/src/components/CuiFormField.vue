@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount } from "vue";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
@@ -59,6 +60,7 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
 // `for`/`id` alone is not enough: it only forms an association with *labelable*
 // elements, which leaves a control like CuiSelect — whose focusable surface is a
 // `div[role="combobox"]` — with no accessible name at all (#78).
+const messages = useMessages();
 const labelId = `${fieldId}-label`;
 const descriptionId = `${fieldId}-description`;
 
@@ -107,6 +109,10 @@ onBeforeUnmount(() => {
     >
       <span>{{ label }}</span>
       <span v-if="required && !requiredText" class="cui-form-field__required" aria-hidden="true">*</span>
+      <!-- The asterisk is decorative and aria-hidden, so required-ness reached no one. The
+           label is what `aria-labelledby` points at, so saying it here reaches every control,
+           including the ones with no `required` prop of their own (#175). -->
+      <span v-if="required && !requiredText" class="cui-form-field__required-sr">{{ messages.formField.required }}</span>
       <span v-else-if="required && requiredText" class="cui-form-field__required-text">{{ requiredText }}</span>
     </label>
 
@@ -129,6 +135,20 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Visually hidden, still announced. Not `display: none`, which would drop it from the
+   accessibility tree along with the announcement. */
+.cui-form-field__required-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* --- Base layout --- */
 .cui-form-field {
   display: flex;
