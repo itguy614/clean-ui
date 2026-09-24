@@ -230,6 +230,7 @@ const messages = useMessages();
         <button
           v-for="tab in tabs"
           :key="tab.value"
+          type="button"
           :data-cui-tab-value="tab.value"
           class="cui-tabs__tab"
           :class="{
@@ -390,7 +391,7 @@ const messages = useMessages();
    across both so the active pill's drop shadow isn't clipped by the scroller. */
 .cui-tabs--segmented .cui-tabs__bar-outer {
   background: var(--color-surface-100);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
@@ -451,7 +452,7 @@ const messages = useMessages();
 
 /* --- Segmented active --- */
 .cui-tabs--segmented .cui-tabs__tab {
-  border-radius: calc(var(--cui-button-radius, 0.375rem) - 0.125rem);
+  border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 0.125rem);
 }
 
 .cui-tabs--segmented .cui-tabs__tab--active {

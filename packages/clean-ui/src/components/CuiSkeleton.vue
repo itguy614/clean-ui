@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<CuiSkeletonProps>(), {
 
 const radiusMap: Record<SkeletonRounded, string> = {
   none: "0",
-  sm: "0.25rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
   md: "0.5rem",
   lg: "0.75rem",
   full: "9999px",

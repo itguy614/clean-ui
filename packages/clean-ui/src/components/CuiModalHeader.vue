@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import CuiIcon from "./CuiIcon.vue";
-import type { HideableProps } from "../types/common";
+import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiModalHeaderProps extends HideableProps {
+export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
   title?: string;
+  /**
+   * id for the title element, so the dialog can point `aria-labelledby` at it.
+   *
+   * `CuiModal` and `CuiSlideover` generate one and pass it down. Without it their
+   * `aria-labelledby` referenced an id that was never rendered, so every titled dialog
+   * in the library was announced unnamed (#158).
+   */
+  titleId?: string;
   /** Hide the close button */
   noCloseButton?: boolean;
 }
@@ -13,6 +21,7 @@ export interface CuiModalHeaderProps extends HideableProps {
 const props = withDefaults(defineProps<CuiModalHeaderProps>(), {
   noCloseButton: false,
   hidden: false,
+  titleAs: "h2",
 });
 
 const emit = defineEmits<{
@@ -23,6 +32,7 @@ const messages = useMessages();
 
 <template>
   <div
+    class="cui-modal-header"
     v-show="!hidden"
     :style="{
       display: 'flex',
@@ -37,8 +47,11 @@ const messages = useMessages();
   >
     <div style="flex: 1; min-width: 0;">
       <slot>
-        <h2
+        <component
+          :is="titleAs"
           v-if="title"
+          :id="titleId"
+          class="cui-modal-header__title"
           :style="{
             fontSize: '1.125rem',
             fontWeight: '600',
@@ -48,7 +61,7 @@ const messages = useMessages();
           }"
         >
           {{ title }}
-        </h2>
+        </component>
       </slot>
     </div>
     <div v-if="$slots.actions" style="display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1)); flex-shrink: 0;">

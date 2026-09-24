@@ -38,26 +38,26 @@ describe("form parity: CuiMarkdownEditor vs. a sibling CuiTextarea", () => {
     return { bioField: formFields[0], notesField: formFields[1] };
   }
 
-  it("associates the editor's editable surface with the field's label, unlike its sibling", async () => {
+  it("associates each field's label with the control's own focusable element", async () => {
     wrapper = mount(Harness);
     await nextTick();
 
     const { bioField, notesField } = fields(wrapper);
-    const notesLabel = notesField.find("label");
-    expect(notesLabel.attributes("for")).toBe(
+
+    // The editor puts `id` on the editable surface itself — see
+    // `buildContentAttributes` in CuiMarkdownEditor.vue.
+    expect(notesField.find("label").attributes("for")).toBe(
       notesField.find('[data-testid="cui-markdown-editor-content"]').attributes("id"),
     );
 
-    // Documented pre-existing gap, not something this plan's scope covers:
-    // CuiTextarea has no `id` prop, so CuiFormField's generated id falls
-    // through to `.cui-textarea-wrapper` (attrs fallthrough default), never
-    // reaching the native `<textarea>` the label's `for` is meant to target.
-    // Filed as https://github.com/itguy614/clean-ui/issues/78 — CuiMarkdownEditor
-    // deliberately does NOT copy this bug (see `buildContentAttributes` in
-    // CuiMarkdownEditor.vue, which places `id` on the editable surface itself).
-    const bioLabel = bioField.find("label");
-    expect(bioField.find(".cui-textarea__native").attributes("id")).toBeUndefined();
-    expect(bioField.find(".cui-textarea-wrapper").attributes("id")).toBe(bioLabel.attributes("for"));
+    // Its sibling now does the same. This used to be the asymmetry the file was
+    // named for: CuiTextarea declared no `id`, so CuiFormField's generated id
+    // fell through to `.cui-textarea-wrapper` and the label's `for` pointed at a
+    // div that cannot be focused. Fixed in clean-ui#78.
+    expect(bioField.find(".cui-textarea__native").attributes("id")).toBe(
+      bioField.find("label").attributes("for"),
+    );
+    expect(bioField.find(".cui-textarea-wrapper").attributes("id")).toBeUndefined();
   });
 
   it("renders the same required indicator next to both labels", async () => {

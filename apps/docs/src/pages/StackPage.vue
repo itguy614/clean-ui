@@ -1,53 +1,48 @@
 <script setup lang="ts">
-import { inject, computed, type Ref } from "vue";
+import { inject, computed } from "vue";
 import { ShowDebugKey } from "../keys";
 import { CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/stack";
 
 const showDebugRef = inject(ShowDebugKey);
 const showDebug = computed(() => showDebugRef?.value ?? false);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Stack</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Convenience wrapper for simple vertical/horizontal spacing
-      </p>
-    </div>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiStack spacing=&quot;4&quot;>
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</CuiStack>`"
+      >
+        <CuiStack spacing="4" :debug="showDebug">
+          <div class="rounded-lg bg-primary-500 p-3 text-white">Item 1</div>
+          <div class="rounded-lg bg-primary-500 p-3 text-white">Item 2</div>
+          <div class="rounded-lg bg-primary-500 p-3 text-white">Item 3</div>
+        </CuiStack>
+      </Example>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'orientation', type: 'vertical | horizontal', default: 'vertical', description: 'Stack direction' },
-          { name: 'spacing', type: 'ResponsiveValue<TailwindSpacing>', default: '4', description: 'Space between items' },
-          { name: 'debug', type: 'boolean', default: 'false', description: 'Enable debug visualization' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-        <Example title="Vertical Stack (default)">
-          <CuiStack spacing="4" :debug="showDebug">
-            <div class="rounded-lg bg-primary-500 p-3 text-white">Item 1</div>
-            <div class="rounded-lg bg-primary-500 p-3 text-white">Item 2</div>
-            <div class="rounded-lg bg-primary-500 p-3 text-white">Item 3</div>
-          </CuiStack>
-        </Example>
-
-        <Example title="Horizontal Stack">
-          <CuiStack orientation="horizontal" spacing="3" :debug="showDebug">
-            <div class="rounded-lg bg-info-500 p-3 text-white">Item 1</div>
-            <div class="rounded-lg bg-info-500 p-3 text-white">Item 2</div>
-            <div class="rounded-lg bg-info-500 p-3 text-white">Item 3</div>
-          </CuiStack>
-        </Example>
-      </CuiStack>
-    </div>
-  </CuiStack>
+    <template #examples>
+      <Example
+        title="Horizontal Stack"
+        :code="`<CuiStack orientation=&quot;horizontal&quot; spacing=&quot;3&quot;>
+<div>Item 1</div>
+<div>Item 2</div>
+</CuiStack>`"
+      >
+        <CuiStack orientation="horizontal" spacing="3" :debug="showDebug">
+          <div class="rounded-lg bg-info-500 p-3 text-white">Item 1</div>
+          <div class="rounded-lg bg-info-500 p-3 text-white">Item 2</div>
+          <div class="rounded-lg bg-info-500 p-3 text-white">Item 3</div>
+        </CuiStack>
+      </Example>
+    </template>
+  </DocPage>
 </template>

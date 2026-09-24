@@ -51,9 +51,9 @@ function toggle() {
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -211,19 +211,30 @@ const rootStyle = computed(() => {
 }
 
 /* --- Content --- */
+/* The gutter is room for a child's focus ring. `overflow: hidden` is required for the
+   collapse animation, but it also clips the ring a field draws OUTSIDE its own box — a
+   2px box-shadow on inputs, a 2px outline at 2px offset on checkboxes and radios. A
+   full-width field sits flush against this box, so the ring was cut off on the left and
+   right of every field, and on the top and bottom of the first and last. The padding
+   gives it somewhere to land and the negative margin puts the layout back where it was.
+
+   Vertical padding is dropped while collapsed: with `box-sizing: border-box`, padding
+   survives `max-height: 0`, so the content would never animate away to nothing. */
 .cui-fieldset__content {
   display: flex;
   flex-direction: column;
   gap: calc(1rem * var(--cui-density-scale, 1));
-  margin-top: 0;
+  padding: 4px;
+  margin: -4px;
   overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease;
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
 }
 
 .cui-fieldset__content--hidden {
   max-height: 0;
   opacity: 0;
-  margin-top: 0;
+  padding-block: 0;
+  margin-block: 0;
   pointer-events: none;
 }
 </style>

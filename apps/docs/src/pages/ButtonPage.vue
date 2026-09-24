@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
+import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiIcon, CuiStack } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
-import Playground from "../components/Playground.vue";
+import meta from "../meta/button";
 
 const isLoading = ref(false);
 
@@ -16,70 +16,110 @@ function simulateLoad() {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Button</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Interactive button component with semantic colors, multiple variants,
-        sizes, and loading state.
+  <DocPage :meta="meta">
+    <template #intro>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="text-sm text-surface-700 dark:text-surface-300">
+            <strong><code>color</code> vs <code>variant</code>:</strong>
+            <code>color</code> sets the semantic role (<code>primary</code>,
+            <code>success</code>, <code>error</code>, <code>warning</code>,
+            <code>info</code>, …); <code>variant</code> sets the visual style
+            (<code>solid</code>, <code>outline</code>, <code>dash</code>,
+            <code>ghost</code>). Passing a role name to <code>variant</code> (e.g.
+            <code>variant="primary"</code>) won't work — use
+            <code>color="primary"</code>. Note the role for “danger” is
+            <code>error</code>.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
+    </template>
+
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiButton>Cancel</CuiButton>
+<CuiButton variant=&quot;solid&quot;>Save</CuiButton>
+<CuiButton variant=&quot;solid&quot; color=&quot;error&quot;>Delete</CuiButton>`"
+      >
+        <CuiFlex gap="3" class="items-center flex-wrap">
+          <CuiButton>Cancel</CuiButton>
+          <CuiButton variant="solid">Save</CuiButton>
+          <CuiButton variant="solid" color="error">Delete</CuiButton>
+        </CuiFlex>
+      </Example>
+    </template>
+
+    <template #customization>
+      <CuiCard variant="outline" class="mt-4">
+        <CuiCardBody>
+          <pre class="cui-pre"><code>/* every button in a subtree */
+.admin-toolbar {
+  --cui-button-bg: var(--cui-surface-bg);
+  --cui-button-hover-bg: var(--cui-surface-hover);
+  --cui-button-height: 2.25rem;
+}</code></pre>
+          <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
+            <strong>How it works:</strong> the button computes its per-variant values into
+            private <code>--_button-*</code> properties and reads each one back as
+            <code>var(--cui-button-bg, var(--_button-bg))</code>, so your token wins
+            wherever you set it and the variant supplies the default. The rules themselves
+            are wrapped in <code>:where()</code>, which makes them zero-specificity — so a
+            plain <code>.cui-button { background: … }</code> rule of your own works too.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        Renders a native <code>&lt;button&gt;</code>, or an <code>&lt;a&gt;</code> when
+        <code>href</code>/<code>to</code> is set, so keyboard activation, focus order
+        and assistive-technology semantics come from the element itself.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>Focus ring on <code>:focus-visible</code> only, so pointer users never see it.</li>
+        <li>
+          <code>loading</code> sets <code>aria-busy</code> and blocks interaction; the
+          label stays in the accessible name rather than being replaced by the spinner.
+        </li>
+        <li>
+          Disabled links use <code>aria-disabled</code> with <code>tabindex="-1"</code>
+          — an <code>&lt;a&gt;</code> has no <code>disabled</code> attribute.
+        </li>
+        <li>
+          An icon-only button has no text, so give it an accessible name with
+          <code>aria-label</code>.
+        </li>
+      </ul>
+    </template>
 
-    <CuiCard variant="outline">
-      <CuiCardBody>
-        <p class="text-sm text-surface-700 dark:text-surface-300">
-          <strong><code>color</code> vs <code>variant</code>:</strong>
-          <code>color</code> sets the semantic role (<code>primary</code>,
-          <code>success</code>, <code>error</code>, <code>warning</code>,
-          <code>info</code>, …); <code>variant</code> sets the visual style
-          (<code>solid</code>, <code>outline</code>, <code>dash</code>,
-          <code>ghost</code>). Passing a role name to <code>variant</code> (e.g.
-          <code>variant="primary"</code>) won't work — use
-          <code>color="primary"</code>. Note the role for “danger” is
-          <code>error</code>.
-        </p>
-      </CuiCardBody>
-    </CuiCard>
+    <template #extra>
+      <div>
+        <h2 id="minimum-target-size" class="mb-4 text-2xl font-semibold">Minimum target size</h2>
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="mb-3 text-surface-600 dark:text-surface-400">
+              Control heights are floored at 24px — the WCAG 2.5.8 minimum target size.
+              The floor only binds at <code>size="xs"</code> under compact density; at every
+              other size the computed height already clears it.
+            </p>
+            <pre class="cui-pre"><code>/* relax it for a dense strip — buttons AND inputs inside */
+.dense-toolbar {
+  --cui-control-min-target: 0px;
+}</code></pre>
+            <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+              <code>icon</code> opts out on its own, since an icon-only button is usually
+              deliberately small. Both routes take you below the accessibility minimum, so
+              they are worth using knowingly rather than by habit — the property exists
+              so that going below the floor is a deliberate, greppable act.
+            </p>
+          </CuiCardBody>
+        </CuiCard>
+      </div>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'color', type: 'primary | secondary | success | error | warning | info | surface | surface-light | surface-dark', default: 'primary', description: 'Color role from the color system' },
-          { name: 'variant', type: 'solid | outline | dash | ghost', default: 'outline', description: 'Visual variant' },
-          { name: 'size', type: 'xs | sm | md | lg | xl', default: 'md', description: 'Button size (md matches 1rem body text)' },
-          { name: 'rounded', type: 'sm | md | lg | full', default: 'md', description: 'Border radius (md uses --cui-button-radius)' },
-          { name: 'type', type: 'button | submit | reset', default: 'button', description: 'HTML button type attribute' },
-          { name: 'href', type: 'string', default: '-', description: 'Renders as <a> link with this URL' },
-          { name: 'to', type: 'string | object', default: '-', description: 'Renders as <router-link> with this route' },
-          { name: 'loading', type: 'boolean', default: 'false', description: 'Shows spinner and disables interaction' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state (uses aria-disabled for links)' },
-        ]"
-      />
-    </div>
-
-    <!-- Playground -->
-    <div>
-      <h2 style="margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Playground</h2>
-      <Playground
-        :component="CuiButton"
-        component-name="CuiButton"
-        :props="{
-          variant: { type: 'select', options: ['solid', 'outline', 'dash', 'ghost'], default: 'outline' },
-          color: { type: 'select', options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'], default: 'primary' },
-          size: { type: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'], default: 'md' },
-          rounded: { type: 'select', options: ['sm', 'md', 'lg', 'full'], default: 'md' },
-          type: { type: 'select', options: ['button', 'submit', 'reset'], default: 'button' },
-          loading: { type: 'boolean', default: false },
-          disabled: { type: 'boolean', default: false },
-        }"
-        slot-content="Click Me"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Colors -->
         <Example title="Colors" :code="`<CuiButton color=&quot;primary&quot;>Primary</CuiButton>
@@ -223,6 +263,20 @@ function simulateLoad() {
           </CuiFlex>
         </Example>
 
+        <!-- Icon-only -->
+        <Example title="Icon Buttons" :code="`<CuiButton icon variant=&quot;solid&quot; color=&quot;error&quot;>
+  <CuiIcon name=&quot;trash&quot; />
+</CuiButton>`">
+          <CuiFlex gap="3" class="items-center flex-wrap">
+            <CuiButton icon size="sm"><CuiIcon name="copy" /></CuiButton>
+            <CuiButton icon variant="solid"><CuiIcon name="check" /></CuiButton>
+            <CuiButton icon variant="solid" color="error"><CuiIcon name="trash" /></CuiButton>
+            <CuiButton icon variant="ghost" color="secondary"><CuiIcon name="dots-three" /></CuiButton>
+            <CuiButton icon size="lg" variant="outline" color="info"><CuiIcon name="eye" /></CuiButton>
+            <CuiButton icon rounded="full" variant="solid" color="success"><CuiIcon name="plus" /></CuiButton>
+          </CuiFlex>
+        </Example>
+
         <!-- Button Type -->
         <Example title="Button Types">
           <CuiFlex gap="3" class="flex-wrap">
@@ -231,23 +285,6 @@ function simulateLoad() {
             <CuiButton type="reset" color="secondary">type=reset</CuiButton>
           </CuiFlex>
         </Example>
-
-      </CuiStack>
-    </div>
-
-    <!-- Customization -->
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Customization</h2>
-      <CuiCard>
-        <CuiCardBody>
-          <p class="mb-3 text-surface-600 dark:text-surface-400">
-            Override the global border radius for all buttons:
-          </p>
-          <pre class="cui-pre"><code>:root {
-  --cui-button-radius: 0.5rem;   /* rounder */
-}</code></pre>
-        </CuiCardBody>
-      </CuiCard>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

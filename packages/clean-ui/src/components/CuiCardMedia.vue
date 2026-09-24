@@ -26,8 +26,9 @@ const aspectMap: Record<string, string> = {
   square: "1 / 1",
 };
 
+/** Emitted as a private property so the whole Card family overrides the same way. */
 const aspectStyle = computed(() => ({
-  aspectRatio: aspectMap[props.aspect] ?? props.aspect,
+  "--_card-media-aspect": aspectMap[props.aspect] ?? props.aspect,
 }));
 </script>
 
@@ -50,9 +51,13 @@ const aspectStyle = computed(() => ({
   overflow: hidden;
 }
 
+:where(.cui-card-media__img) {
+  aspect-ratio: var(--cui-card-media-aspect, var(--_card-media-aspect));
+  object-fit: var(--cui-card-media-fit, cover);
+}
+
 .cui-card-media__img {
   display: block;
   width: 100%;
-  object-fit: cover;
 }
 </style>

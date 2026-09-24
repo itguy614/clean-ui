@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiConfirmDialog, CuiFlex, CuiStack } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import { CuiButton, CuiConfirmDialog } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/confirm-dialog";
 
-const showBasic = ref(false);
+const showUsage = ref(false);
 const showDanger = ref(false);
 const showWarning = ref(false);
 const showTyped = ref(false);
 const showCustom = ref(false);
+const showHeading = ref(false);
 const showLoading = ref(false);
 const loadingState = ref(false);
 
 const lastAction = ref("(no action yet)");
 
-function onBasicConfirm() {
+function onUsageConfirm() {
   lastAction.value = "Basic: confirmed";
-  showBasic.value = false;
+  showUsage.value = false;
 }
 
 function onDangerConfirm() {
@@ -40,6 +41,11 @@ function onCustomConfirm() {
   showCustom.value = false;
 }
 
+function onHeadingConfirm() {
+  lastAction.value = "Heading level: confirmed";
+  showHeading.value = false;
+}
+
 function onLoadingConfirm() {
   loadingState.value = true;
   setTimeout(() => {
@@ -51,68 +57,72 @@ function onLoadingConfirm() {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Confirm Dialog</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A specialized modal for confirming destructive or important actions.
-        Supports typed confirmation where users must enter a specific word to proceed.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'visible', type: 'boolean', default: 'false', description: 'Control visibility (v-model:visible)' },
-          { name: 'title', type: 'string', default: 'Are you sure?', description: 'Dialog title' },
-          { name: 'message', type: 'string', default: '—', description: 'Confirmation message' },
-          { name: 'variant', type: 'danger | warning | info', default: 'danger', description: 'Affects icon and confirm button color' },
-          { name: 'confirmText', type: 'string', default: 'Confirm', description: 'Confirm button text' },
-          { name: 'cancelText', type: 'string', default: 'Cancel', description: 'Cancel button text' },
-          { name: 'confirmWord', type: 'string', default: '—', description: 'Word user must type to enable confirm button' },
-          { name: 'confirmPrompt', type: 'string', default: '—', description: 'Custom prompt text above the input (supports HTML)' },
-          { name: 'icon', type: 'string', default: '—', description: 'Custom icon (auto-selected by variant if omitted)' },
-          { name: 'loading', type: 'boolean', default: 'false', description: 'Loading state on confirm button' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:visible', payload: 'boolean', description: 'Controls dialog visibility (v-model:visible)' },
-          { name: 'confirm', payload: '—', description: 'Fires when the confirm button is clicked' },
-          { name: 'cancel', payload: '—', description: 'Fires when the cancel button is clicked' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-
-      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">Last action: {{ lastAction }}</p>
-
-      <CuiStack spacing="6">
-
-        <!-- Basic -->
-        <Example title="Basic Confirmation" :code="`<CuiConfirmDialog
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiConfirmDialog
   v-model:visible=&quot;show&quot;
   title=&quot;Discard changes?&quot;
-  message=&quot;You have unsaved changes...&quot;
+  message=&quot;You have unsaved changes that will be lost.&quot;
+  confirm-text=&quot;Discard&quot;
   @confirm=&quot;onConfirm&quot;
-/>`">
-          <CuiButton variant="outline" @click="showBasic = true">Discard Changes</CuiButton>
-          <CuiConfirmDialog
-            v-model:visible="showBasic"
-            title="Discard changes?"
-            message="You have unsaved changes that will be lost. This action cannot be undone."
-            confirm-text="Discard"
-            @confirm="onBasicConfirm"
-          />
-        </Example>
+/>`"
+      >
+        <CuiButton variant="outline" @click="showUsage = true">Discard Changes</CuiButton>
+        <CuiConfirmDialog
+          v-model:visible="showUsage"
+          title="Discard changes?"
+          message="You have unsaved changes that will be lost. This action cannot be undone."
+          confirm-text="Discard"
+          @confirm="onUsageConfirm"
+        />
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        It renders a <code>CuiModal</code>, so the dialog semantics and the overlay behaviour
+        are the Modal's: <code>role="dialog"</code>, <code>aria-modal="true"</code>, focus moved
+        onto the panel on open and returned to the opener on close, Tab wrapping inside it, and
+        a background scroll lock while it is up.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          Escape and a backdrop click both close it. They emit <code>update:visible</code> only,
+          <em>not</em> <code>cancel</code> — so put clean-up in the <code>update:visible</code>
+          handler rather than in <code>@cancel</code>, which fires only for the Cancel and X
+          buttons. <code>persistent</code> is not forwarded, so there is no way to make the
+          dialog unclosable, which for a confirmation is the right default.
+        </li>
+        <li>
+          <code>confirm</code> fires but the dialog does not close itself. That is deliberate —
+          it leaves room to run the work, show <code>loading</code>, and close on success.
+        </li>
+        <li>
+          <code>titleAs</code> sets the element the title renders as, defaulting to
+          <code>h2</code>. Match the heading level of whatever the dialog was opened from.
+        </li>
+        <li>
+          The variant icon is decorative and marked <code>aria-hidden</code>, so the meaning has
+          to be carried by the words. Write a title and message that still read correctly with
+          no icon: “Delete account?”, not “Warning”.
+        </li>
+        <li>
+          The type-to-confirm input is not focused on open — focus lands on the panel, and Tab
+          reaches the input. Its prompt is rendered as plain text, so markup passed to
+          <code>confirmPrompt</code> appears literally.
+        </li>
+        <li>
+          The dialog carries no accessible name today: the inner modal is used in
+          sub-component mode, so no <code>aria-labelledby</code> is emitted and the title is not
+          associated with the dialog.
+        </li>
+      </ul>
+    </template>
+
+    <template #examples>
+        <p class="text-sm" style="color: var(--cui-text-secondary);">Last action: {{ lastAction }}</p>
 
         <!-- Danger -->
         <Example title="Danger — Delete Item" :code="`<CuiConfirmDialog
@@ -156,8 +166,13 @@ function onLoadingConfirm() {
 
         <!-- Typed confirmation -->
         <Example title="Typed Confirmation" :code="`<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Delete project?&quot;
+  message=&quot;This will permanently delete the project and all of its resources.&quot;
+  variant=&quot;danger&quot;
+  confirm-text=&quot;Delete Project&quot;
   confirm-word=&quot;delete&quot;
-  ...
+  @confirm=&quot;onConfirm&quot;
 />`">
           <CuiButton variant="solid" color="error" @click="showTyped = true">Delete Project</CuiButton>
           <CuiConfirmDialog
@@ -172,14 +187,15 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Custom prompt -->
-        <Example title="Custom Typed Prompt" :code="`<CuiConfirmDialog
+        <Example title="Custom Typed Prompt" :code="`<!-- confirmPrompt is plain text — markup in it is not parsed -->
+<CuiConfirmDialog
   v-model:visible=&quot;show&quot;
   title=&quot;Transfer ownership?&quot;
   message=&quot;You are about to transfer ownership of this organization.&quot;
   variant=&quot;danger&quot;
   confirm-text=&quot;Transfer&quot;
   confirm-word=&quot;transfer&quot;
-  confirm-prompt=&quot;Type &lt;strong&gt;transfer&lt;/strong&gt; to confirm this irreversible action.&quot;
+  confirm-prompt=&quot;Type transfer below to confirm this irreversible action.&quot;
   @confirm=&quot;onConfirm&quot;
 />`">
           <CuiButton variant="outline" color="error" @click="showCustom = true">Transfer Ownership</CuiButton>
@@ -190,8 +206,29 @@ function onLoadingConfirm() {
             variant="danger"
             confirm-text="Transfer"
             confirm-word="transfer"
-            confirm-prompt="Type <strong>transfer</strong> to confirm this irreversible action."
+            confirm-prompt="Type transfer below to confirm this irreversible action."
             @confirm="onCustomConfirm"
+          />
+        </Example>
+
+        <!-- Heading level -->
+        <Example title="Heading level (titleAs)" :code="`<!-- opened from a section already under an h2 -->
+<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Revoke API key?&quot;
+  message=&quot;Anything using this key will stop working immediately.&quot;
+  title-as=&quot;h3&quot;
+  confirm-text=&quot;Revoke&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
+          <CuiButton variant="outline" @click="showHeading = true">Revoke API Key</CuiButton>
+          <CuiConfirmDialog
+            v-model:visible="showHeading"
+            title="Revoke API key?"
+            message="Anything using this key will stop working immediately. The title here is an h3 rather than the default h2, because this example already sits under one."
+            title-as="h3"
+            confirm-text="Revoke"
+            @confirm="onHeadingConfirm"
           />
         </Example>
 
@@ -216,8 +253,6 @@ function onLoadingConfirm() {
             @confirm="onLoadingConfirm"
           />
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

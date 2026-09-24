@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export interface CuiSliderProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiSliderProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -83,7 +83,7 @@ defineExpose({ el: inputRef, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden" :style="{ opacity: disabled ? 0.5 : 1 }">
+  <div class="cui-slider" v-show="!hidden" :style="{ opacity: disabled ? 0.5 : 1 }">
     <!-- Label + value row -->
     <div
       v-if="label || showValue"
@@ -153,6 +153,12 @@ defineExpose({ el: inputRef, focus, blur });
       <!-- Invisible native range input on top for interaction -->
       <input
         ref="inputEl"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="ariaDescribedby"
+        :aria-required="ariaRequired || undefined"
+        :aria-labelledby="ariaLabelledby"
         type="range"
         :value="modelValue"
         :min="min"

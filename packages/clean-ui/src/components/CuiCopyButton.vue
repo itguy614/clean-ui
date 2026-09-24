@@ -51,11 +51,12 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
-  <CuiTooltip v-show="!hidden" :text="copied ? copiedTooltip : tooltip" placement="top" :show-delay="300">
+  <CuiTooltip class="cui-copy-button" v-show="!hidden" :text="copied ? copiedTooltip : tooltip" placement="top" :show-delay="300">
     <CuiButton
       :size="size"
       :variant="variant"
       :color="copied ? 'success' : color"
+      :aria-label="showLabel ? undefined : tooltip"
       @click="onClick"
     >
       <template #prefix>
@@ -67,5 +68,24 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
       </template>
       <span v-if="showLabel">{{ copied ? "Copied" : "Copy" }}</span>
     </CuiButton>
+    <!-- The copied state is otherwise conveyed by colour, an icon swap and a tooltip, none
+         of which reach assistive tech — a success a screen reader never hears about (#150). -->
+    <span class="cui-copy-button__status" role="status" aria-live="polite">{{ copied ? copiedTooltip : "" }}</span>
   </CuiTooltip>
 </template>
+
+<style scoped>
+/* Visually hidden, still announced. Not `display: none`, which removes it from the
+   accessibility tree along with the announcement. */
+.cui-copy-button__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+</style>

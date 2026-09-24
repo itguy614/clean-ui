@@ -139,7 +139,7 @@ defineExpose({ scrollWrapper, measure });
 <template>
   <!-- The wrapper always renders; it only becomes a scroll container when the
        table overflows (or maxHeight is set). See `wrapperStyle` above. -->
-  <div v-show="!hidden" style="position: relative;">
+  <div v-show="!hidden" class="cui-table-container" style="position: relative;">
     <div
       ref="scrollWrapper"
       class="cui-table-wrapper"

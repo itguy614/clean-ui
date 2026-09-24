@@ -39,6 +39,7 @@ const dotStyle = computed(() => ({
 
 <template>
   <div
+    class="cui-timeline-item"
     v-show="!hidden"
     :style="{
       display: 'flex',

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount } from "vue";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
@@ -55,6 +56,13 @@ const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? fal
 
 // Auto-generate a stable id once (not a computed — Math.random() must not re-run on re-render)
 const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)}`;
+// Ids for the label and the help/error text, so the control can point at them.
+// `for`/`id` alone is not enough: it only forms an association with *labelable*
+// elements, which leaves a control like CuiSelect — whose focusable surface is a
+// `div[role="combobox"]` — with no accessible name at all (#78).
+const messages = useMessages();
+const labelId = `${fieldId}-label`;
+const descriptionId = `${fieldId}-description`;
 
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires
 // v-model + error in one shot. Standalone mode omits the model bindings.
@@ -64,6 +72,13 @@ const slotBindings = computed(() => {
     error: resolvedError.value,
     disabled: isDisabled.value,
   };
+  if (props.label) base.ariaLabelledby = labelId;
+  // Required-ness is a *state*, not part of the name: exposed in forms mode and in AT field
+  // summaries, and independent of whether the field has a label at all (#175).
+  if (props.required) base.ariaRequired = true;
+  // Only when there is something to describe — a dangling aria-describedby
+  // pointing at an element that isn't rendered is worse than none.
+  if (showError.value || props.helpText) base.ariaDescribedby = descriptionId;
   if (formBound.value) {
     base.modelValue = form!.getValue(props.name!);
     base["onUpdate:modelValue"] = (value: unknown) => form!.setValue(props.name!, value);
@@ -91,12 +106,21 @@ onBeforeUnmount(() => {
     <!-- Label -->
     <label
       v-if="label"
+      :id="labelId"
       :for="fieldId"
       class="cui-form-field__label"
     >
       <span>{{ label }}</span>
-      <span v-if="required && !requiredText" class="cui-form-field__required" aria-hidden="true">*</span>
-      <span v-else-if="required && requiredText" class="cui-form-field__required-text">{{ requiredText }}</span>
+      <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
+           state is carried by `aria-required` (forwarded through the slot bindings); this
+           puts it in the visible label's text too, which is what a sighted screen-reader
+           user hears when the label is read (#175). A `<template>` rather than two
+           identical `v-if`s, so the `v-else-if` cannot silently re-anchor. -->
+      <template v-if="required && !requiredText">
+        <span class="cui-form-field__required" aria-hidden="true">*</span>
+        <span class="cui-sr-only">{{ messages.formField.required }}</span>
+      </template>
+      <span v-else-if="required" class="cui-form-field__required-text">{{ requiredText }}</span>
     </label>
 
     <!-- Control + footer -->
@@ -107,10 +131,10 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer: help text or error message -->
-      <div v-if="showError" class="cui-form-field__error">
+      <div v-if="showError" class="cui-form-field__error" :id="descriptionId">
         {{ resolvedMessage }}
       </div>
-      <div v-else-if="helpText" class="cui-form-field__help">
+      <div v-else-if="helpText" class="cui-form-field__help" :id="descriptionId">
         {{ helpText }}
       </div>
     </div>
@@ -118,6 +142,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+
 /* --- Base layout --- */
 .cui-form-field {
   display: flex;
@@ -151,12 +176,24 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
+/* The label is a flex row, so its height is whatever its tallest child is — and that must
+   not depend on whether the field happens to be required, or a required field's control
+   sits lower than the optional one beside it (#134).
+
+   `line-height: inherit` on the markers, not a height on the label: the label already
+   declares `line-height: 1.4`, but inheritance loses to any rule that matches the child
+   directly, and the docs' prose styles set spans to 1.5. That made the marker's line box
+   21px against the label text's 19.6px, and no height on the label can cap a child that
+   is taller than it. Forcing the child to take the parent's computed value is what
+   actually closes it. */
 .cui-form-field__required {
   color: var(--cui-error);
   font-weight: 600;
+  line-height: inherit;
 }
 
 .cui-form-field__required-text {
+  line-height: inherit;
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--cui-error);

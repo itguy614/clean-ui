@@ -57,19 +57,47 @@ const DS = "var(--cui-density-scale, 1)";
  * Use this in JS-emitted size maps instead of hand-writing the calc() string.
  */
 export const scaleDensity = (v: string) => `calc(${v} * ${DS})`;
-/** Like {@link scaleDensity} but floored at the 24px minimum touch target (WCAG 2.5.8) — for interactive control heights. */
-export const scaleControlHeight = (v: string) => `max(24px, calc(${v} * ${DS}))`;
+/**
+ * Like {@link scaleDensity} but floored at the minimum touch target — for interactive
+ * control heights.
+ *
+ * The floor is `--cui-control-min-target`, defaulting to the 24px of WCAG 2.5.8. It is a
+ * custom property so that going below the minimum is a deliberate, greppable act rather
+ * than an accident: set it on a container and every control inside relaxes together, which
+ * is the realistic case (a dense toolbar holds buttons *and* inputs). At the shipped sizes
+ * the floor only actually binds at `xs` + compact density.
+ */
+export const scaleControlHeight = (v: string) =>
+  `max(var(--cui-control-min-target, 24px), calc(${v} * ${DS}))`;
 
 // Short local aliases for the dense scale tables below.
 const d = scaleDensity;
 const dh = scaleControlHeight;
 
+/**
+ * The size one step down the scale — for a control nested inside another, where matching
+ * the parent's size would crowd it: the tag chips inside a combobox or tag input, the
+ * +/- buttons inside an input stepper. `xs` has nowhere lower to go and stays `xs`.
+ *
+ * This is the only sizing concept those three composite controls genuinely shared; the
+ * rest of what their private tables carried derives from `INPUT_SIZE_SCALE` (#123).
+ */
+export const nestedSize = (size: CuiSize): CuiSize =>
+  SIZE_ORDER[Math.max(0, SIZE_ORDER.indexOf(size) - 1)];
+
+/**
+ * Horizontal padding was rebalanced in #123/#124: `md` was 1rem (16px), equal to its own
+ * font size, which read as a lot of dead space beside a short value and sat well above
+ * comparable systems. The whole curve moved rather than just `md`, because dropping `md`
+ * alone to 12px would have made it identical to `sm` and flattened the two most-used
+ * steps. Heights and font sizes are unchanged.
+ */
 export const INPUT_SIZE_SCALE: Record<string, SizeStyle> = {
   xs: { height: dh("1.75rem"), px: d("0.5rem"), fontSize: "0.75rem" },
-  sm: { height: dh("2rem"), px: d("0.75rem"), fontSize: "0.8125rem" },
-  md: { height: dh("2.5rem"), px: d("1rem"), fontSize: "1rem" },
-  lg: { height: dh("3rem"), px: d("1.25rem"), fontSize: "1.0625rem" },
-  xl: { height: dh("3.5rem"), px: d("1.5rem"), fontSize: "1.125rem" },
+  sm: { height: dh("2rem"), px: d("0.625rem"), fontSize: "0.8125rem" },
+  md: { height: dh("2.5rem"), px: d("0.75rem"), fontSize: "1rem" },
+  lg: { height: dh("3rem"), px: d("0.875rem"), fontSize: "1.0625rem" },
+  xl: { height: dh("3.5rem"), px: d("1rem"), fontSize: "1.125rem" },
 };
 
 export const BUTTON_SIZE_SCALE: Record<string, ButtonSizeStyle> = {

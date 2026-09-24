@@ -114,11 +114,15 @@ export type {
   CuiOrientation,
   CuiVariant,
   CuiColorOrCss,
+  CuiTitleAs,
   HideableProps,
   ColorableProps,
   SizeableProps,
   DisableableProps,
+  TitleAsProps,
   FormControlProps,
+  AriaLabelableProps,
+  NativeControlProps,
   LiveRegionMode,
   LiveRegionProps,
 } from "./types/common";
@@ -167,7 +171,7 @@ export { useToast } from "./composables/useToast";
 export { useMessages } from "./composables/useMessages";
 export type { CuiConfigProviderProps } from "./components/CuiConfigProvider.vue";
 export { defaultMessages, mergeMessages } from "./messages";
-export type { CuiMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";
+export type { CuiMessages, CuiCoreMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";
 export type { CuiIconProps, IconWeight, IconSize } from "./components/CuiIcon.vue";
 export type { CuiTabsProps } from "./components/CuiTabs.vue";
 export type { CuiTabProps } from "./components/CuiTab.vue";
@@ -296,6 +300,9 @@ export {
   type IconFallbackResolver,
 } from "./icons/registry";
 export { BUILTIN_ICONS } from "./icons/builtin";
+// Role → icon for the feedback components. Overridable app-wide, the same way colours
+// are, rather than only per call site (#140).
+export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";

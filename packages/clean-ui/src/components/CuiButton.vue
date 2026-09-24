@@ -32,6 +32,14 @@ export interface CuiButtonProps
   to?: string | object;
   /** Loading state — shows spinner and disables interaction */
   loading?: boolean;
+  /**
+   * Icon-only button: square, with no horizontal padding.
+   *
+   * Also opts out of the `--cui-control-min-target` floor, so an `xs` button at compact
+   * density can go below the 24px WCAG 2.5.8 minimum. That is the only size/density
+   * combination where the floor currently binds.
+   */
+  icon?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiButtonProps>(), {
@@ -43,6 +51,7 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   loading: false,
   disabled: false,
   hidden: false,
+  icon: false,
 });
 
 warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
@@ -90,73 +99,72 @@ defineExpose({ el: elRef, focus, blur });
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
+/**
+ * Every value this component computes is emitted as a PRIVATE `--_button-*` custom
+ * property, never as a bare declaration. The stylesheet below reads each one as
+ * `var(--cui-button-<slot>, var(--_button-<slot>))`, so the public token wins wherever a
+ * consumer sets it — including on an ancestor — and this computed value is the default.
+ *
+ * Emitting the *public* token here instead would look simpler and be wrong: an inline
+ * custom property beats an inherited one, so `.toolbar { --cui-button-bg: … }` on a
+ * container could never take effect. See "Themeable properties" in CLAUDE.md (#114).
+ */
 const buttonStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const s = BUTTON_SIZE_SCALE[props.size];
 
   const base: Record<string, string> = {
-    height: s.height,
-    paddingLeft: s.px,
-    paddingRight: s.px,
-    fontSize: s.fontSize,
-    gap: s.gap,
-    borderRadius: radiusMap[props.rounded],
-    "--_btn-focus-ring": `var(--cui-${c}-focus-ring)`,
+    "--_button-height": s.height,
+    "--_button-px": props.icon ? "0px" : s.px,
+    "--_button-font-size": s.fontSize,
+    "--_button-gap": s.gap,
+    "--_button-radius": radiusMap[props.rounded],
+    "--_button-focus-ring": `var(--cui-${c}-focus-ring)`,
+    // An icon button is its own opt-out of the target-size floor (#118). Set on the
+    // element itself, so it relaxes this button without touching anything around it.
+    ...(props.icon ? { "--cui-control-min-target": "0px" } : {}),
   };
 
   if (v === "solid") {
     return {
       ...base,
-      background: `var(--cui-${c}-solid, var(--cui-${c}))`,
-      color: `var(--cui-${c}-text)`,
-      border: "1px solid transparent",
-      "--_btn-hover-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
-      "--_btn-active-bg": `var(--cui-${c}-solid-active, var(--cui-${c}-active))`,
+      "--_button-bg": `var(--cui-${c}-solid, var(--cui-${c}))`,
+      "--_button-color": `var(--cui-${c}-text)`,
+      "--_button-border": "1px solid transparent",
+      "--_button-hover-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
+      "--_button-active-bg": `var(--cui-${c}-solid-active, var(--cui-${c}-active))`,
     };
   }
 
-  if (v === "outline") {
+  if (v === "outline" || v === "dash") {
     return {
       ...base,
-      background: "transparent",
-      color: `var(--cui-${c})`,
-      border: `1px solid var(--cui-border-strong)`,
-      "--_btn-hover-bg": `var(--cui-${c}-bg)`,
-      "--_btn-hover-color": `var(--cui-${c}-hover)`,
-      "--_btn-hover-border": `var(--cui-${c})`,
-      "--_btn-active-bg": `var(--cui-${c}-subtle)`,
-    };
-  }
-
-  if (v === "dash") {
-    return {
-      ...base,
-      background: "transparent",
-      color: `var(--cui-${c})`,
-      border: `1px dashed var(--cui-border-strong)`,
-      "--_btn-hover-bg": `var(--cui-${c}-bg)`,
-      "--_btn-hover-color": `var(--cui-${c}-hover)`,
-      "--_btn-hover-border": `var(--cui-${c})`,
-      "--_btn-active-bg": `var(--cui-${c}-subtle)`,
+      "--_button-bg": "transparent",
+      "--_button-color": `var(--cui-${c})`,
+      "--_button-border": `1px ${v === "dash" ? "dashed" : "solid"} var(--cui-border-strong)`,
+      "--_button-hover-bg": `var(--cui-${c}-bg)`,
+      "--_button-hover-color": `var(--cui-${c}-hover)`,
+      "--_button-hover-border": `var(--cui-${c})`,
+      "--_button-active-bg": `var(--cui-${c}-subtle)`,
     };
   }
 
   // ghost
   return {
     ...base,
-    background: "transparent",
-    color: `var(--cui-${c})`,
-    border: "1px solid transparent",
-    "--_btn-hover-bg": `var(--cui-${c}-bg)`,
-    "--_btn-hover-color": `var(--cui-${c}-hover)`,
-    "--_btn-active-bg": `var(--cui-${c}-subtle)`,
+    "--_button-bg": "transparent",
+    "--_button-color": `var(--cui-${c})`,
+    "--_button-border": "1px solid transparent",
+    "--_button-hover-bg": `var(--cui-${c}-bg)`,
+    "--_button-hover-color": `var(--cui-${c}-hover)`,
+    "--_button-active-bg": `var(--cui-${c}-subtle)`,
   };
 });
 </script>
@@ -167,7 +175,7 @@ const buttonStyle = computed(() => {
     v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
-    :class="{ 'cui-button--disabled': isDisabled }"
+    :class="{ 'cui-button--disabled': isDisabled, 'cui-button--icon': icon }"
     :style="buttonStyle"
     v-bind="rootAttrs"
     :aria-busy="loading || undefined"
@@ -195,11 +203,63 @@ const buttonStyle = computed(() => {
 </template>
 
 <style scoped>
+/* --- Themeable ---
+   Wrapped in `:where()` so these land at specificity (0,0,0). Vue's scoped compiler puts
+   the `[data-v-…]` attribute INSIDE the bracket, where `:where()` zeroes it along with
+   everything else — scoping still works, the specificity does not. That is what lets a
+   consumer override with a plain `.cui-button { … }` rule instead of `!important` (#114).
+
+   Note the state rules put the whole compound inside the bracket: `:where(.cui-button):hover`
+   would be (0,1,0), because the `:hover` sits outside it. */
+:where(.cui-button) {
+  height: var(--cui-button-height, var(--_button-height));
+  padding-inline: var(--cui-button-px, var(--_button-px));
+  font-size: var(--cui-button-font-size, var(--_button-font-size));
+  gap: var(--cui-button-gap, var(--_button-gap));
+  border-radius: var(--cui-button-radius, var(--_button-radius));
+  background: var(--cui-button-bg, var(--_button-bg));
+  color: var(--cui-button-color, var(--_button-color));
+  border: var(--cui-button-border, var(--_button-border));
+  /* For the spinner overlay. Themeable so a consumer can reposition the button — the
+     editor's floating mode-toggle needed `position: absolute !important` without this. */
+  position: relative;
+}
+
+/* The hover colour falls back to the RESTING colour, not to `inherit`. Only the outline,
+   dash and ghost variants change colour on hover; solid keeps its own. With `inherit` the
+   solid variant took the surrounding text colour on hover — dark text on a dark fill —
+   because both rules are stylesheet rules now and this one comes later. It was masked
+   while the resting colour was an inline declaration, which outranked this rule outright
+   (#114). Falling back to the resting value means a variant that omits a hover colour
+   simply keeps the one it has. */
+:where(.cui-button:hover:not(.cui-button--disabled)) {
+  background: var(--cui-button-hover-bg, var(--_button-hover-bg));
+  color: var(--cui-button-hover-color, var(--_button-hover-color, var(--cui-button-color, var(--_button-color))));
+  border-color: var(--cui-button-hover-border, var(--_button-hover-border, transparent));
+}
+
+:where(.cui-button:active:not(.cui-button--disabled)) {
+  background: var(--cui-button-active-bg, var(--_button-active-bg));
+}
+
+:where(.cui-button:focus-visible) {
+  outline: 2px solid var(--cui-button-focus-ring, var(--_button-focus-ring));
+  outline-offset: 2px;
+}
+
+/* Square. The horizontal padding is already 0 via `--_button-px` from the style binding;
+   the aspect ratio is what makes the width track the height. */
+:where(.cui-button--icon) {
+  aspect-ratio: 1;
+}
+
+/* --- Structural ---
+   Not themeable, so left at normal specificity: changing these breaks the component
+   rather than restyling it. */
 .cui-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
@@ -207,21 +267,6 @@ const buttonStyle = computed(() => {
   white-space: nowrap;
   user-select: none;
   text-decoration: none;
-}
-
-.cui-button:hover:not(.cui-button--disabled) {
-  background: var(--_btn-hover-bg) !important;
-  color: var(--_btn-hover-color, inherit);
-  border-color: var(--_btn-hover-border, transparent);
-}
-
-.cui-button:active:not(.cui-button--disabled) {
-  background: var(--_btn-active-bg) !important;
-}
-
-.cui-button:focus-visible {
-  outline: 2px solid var(--_btn-focus-ring);
-  outline-offset: 2px;
 }
 
 .cui-button--disabled {

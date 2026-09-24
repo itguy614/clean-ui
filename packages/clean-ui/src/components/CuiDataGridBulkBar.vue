@@ -86,7 +86,7 @@ function onAction(action: DataGridBulkAction) {
   background: var(--cui-primary-bg);
   border: 1px solid var(--cui-primary-border);
   color: var(--cui-primary);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   box-shadow: 0 -2px 12px rgb(0 0 0 / 0.15);
   max-width: 48rem;
   margin: 0 auto;

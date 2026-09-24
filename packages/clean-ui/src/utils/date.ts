@@ -22,6 +22,28 @@ export function firstDayOfMonth(year: number, month: number): number {
 }
 
 /** Check if two dates are the same calendar day */
+/** How many years one page of a year picker shows. */
+export const YEARS_PER_PAGE = 12;
+
+/**
+ * Calendar arithmetic. Here rather than private to a component so the next
+ * picker doesn't hand-roll its own — this file is already the home for
+ * `daysInMonth`, `firstDayOfMonth` and friends. Date's constructor normalises
+ * overflow for us, so adding 1 to 31 January lands on 1 February.
+ */
+export const addDays = (date: Date, days: number): Date =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+
+export const addMonths = (date: Date, months: number): Date =>
+  new Date(date.getFullYear(), date.getMonth() + months, date.getDate());
+
+export const addYears = (date: Date, years: number): Date =>
+  new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
+
+/** First year of the page `date` falls in, for a year grid. */
+export const yearPageStart = (year: number, perPage: number = YEARS_PER_PAGE): number =>
+  Math.floor(year / perPage) * perPage;
+
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear()
     && a.getMonth() === b.getMonth()

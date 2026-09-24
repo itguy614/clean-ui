@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded } from "../types/common";
-import { clampSize, scaleDensity } from "../utils/sizing";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -24,7 +25,7 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiComboboxProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -72,11 +73,14 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   hidden: false,
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -94,6 +98,7 @@ const asyncOptions = ref<ComboboxOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const dropdownRef = ref<HTMLElement | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
+const controlRef = ref<HTMLElement | null>(null);
 const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -143,37 +148,63 @@ const filteredOptions = computed(() => {
 
 const isLoading = computed(() => props.loading || internalLoading.value);
 
-// Size config
-const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: string; itemPadding: string; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: `${scaleDensity("0.25rem")} ${scaleDensity("0.5rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.375rem")} ${scaleDensity("0.625rem")}`, inputHeight: scaleDensity("2rem") },
-  md: { fontSize: "0.875rem", padding: `${scaleDensity("0.3125rem")} ${scaleDensity("0.625rem")}`, tagSize: "sm", itemPadding: `${scaleDensity("0.5rem")} ${scaleDensity("0.75rem")}`, inputHeight: scaleDensity("2.375rem") },
-  lg: { fontSize: "0.9375rem", padding: `${scaleDensity("0.4375rem")} ${scaleDensity("0.75rem")}`, tagSize: "md", itemPadding: `${scaleDensity("0.625rem")} ${scaleDensity("0.875rem")}`, inputHeight: scaleDensity("2.75rem") },
-};
-const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+// Size config — from the shared scale, so a combobox lines up with a CuiInput or
+// CuiSelect of the same size. It used to carry a private table with different heights,
+// paddings and font sizes, and only sm|md|lg (#123).
+//
+// The scale gives height, horizontal padding and font size. What it has no concept of is
+// derived here rather than re-tabulated: vertical padding falls out of the height, the
+// tag chips take `nestedSize`, and a dropdown item reuses the control's own padding.
+/**
+ * The control grows with its tag rows, so the scale's height is a floor rather than a
+ * fixed height — and the chips inside need room, hence the reduced vertical padding.
+ * Constant, so it is built once rather than per size change.
+ */
+const CHIP_ROW_PY = scaleDensity("0.25rem");
+
+const cfg = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  return {
+    tagSize: nestedSize(props.size),
+    style: {
+      "--_combobox-font-size": s.fontSize,
+      "--_combobox-padding": `${CHIP_ROW_PY} ${s.px}`,
+      "--_combobox-item-padding": `${scaleDensity("0.5rem")} ${s.px}`,
+      "--_combobox-min-height": s.height,
+    },
+  };
+});
 
 // Dropdown positioning
 function updateDropdownPosition() {
-  if (!wrapperRef.value) return;
-  const rect = wrapperRef.value.getBoundingClientRect();
+  // The CONTROL, not the wrapper. The wrapper also holds the label above the
+  // control and the error message below it, so anchoring to it opened the panel
+  // 4px above the *label* — a gap the height of the label, which read as the
+  // dropdown detaching from the field. CuiSelect has always measured its
+  // trigger; this matches it.
+  const anchor = controlRef.value ?? wrapperRef.value;
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
   const vh = window.innerHeight;
   const spaceBelow = vh - rect.bottom;
   const spaceAbove = rect.top;
-  const maxH = Math.min(320, Math.max(spaceBelow, spaceAbove) - 16);
   const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+  // Bound by the side actually being opened to. Taking the roomier side
+  // regardless let a panel opened upward be taller than the room above it, and
+  // run off the top of the viewport.
+  const maxH = Math.max(0, Math.min(320, (openAbove ? spaceAbove : spaceBelow) - 16));
 
   const s: Record<string, string> = {
+    // The panel is teleported to <body>, so it inherits nothing from the component — it
+    // has to carry the size-derived properties itself (#123).
+    ...cfg.value.style,
     position: "fixed",
     zIndex: "9990",
     left: `${rect.left}px`,
     width: `${rect.width}px`,
     maxHeight: `${maxH}px`,
-    overflowY: "auto",
-    background: "var(--cui-surface-base)",
-    border: "1px solid var(--cui-border)",
-    borderRadius: "0.5rem",
-    boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
+    // Only the geometry the positioner computes stays inline; the panel's paint lives in
+    // the stylesheet so it can be themed (#123).
   };
 
   if (openAbove) {
@@ -323,28 +354,22 @@ function blur() {
 defineExpose({ el: wrapperRef, focus, blur });
 
 // Option styling
-function optionStyle(index: number, option: ComboboxOption) {
-  const selected = selectedSet.value.has(option.value);
-  const focused = focusedIndex.value === index;
+function optionClass(index: number, option: ComboboxOption) {
   return {
-    display: "flex",
-    alignItems: "center",
-    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
-    padding: cfg.value.itemPadding,
-    cursor: option.disabled ? "default" : "pointer",
-    fontSize: cfg.value.fontSize,
-    color: option.disabled ? "var(--cui-text-tertiary)" : "var(--cui-text-body)",
-    opacity: option.disabled ? "0.5" : "1",
-    background: focused ? "var(--cui-primary-bg)" : selected ? "color-mix(in srgb, var(--cui-primary-bg) 50%, transparent)" : "transparent",
-    transition: "background 0.1s ease",
-    borderRadius: "0.25rem",
+    "cui-combobox__option": true,
+    "cui-combobox__option--focused": focusedIndex.value === index,
+    "cui-combobox__option--selected": selectedSet.value.has(option.value),
+    "cui-combobox__option--disabled": !!option.disabled,
   };
 }
 const messages = useMessages();
 </script>
 
 <template>
-  <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
+  <!-- The size-derived properties live on the ROOT, not the control: the dropdown is a
+       sibling of the control, not a descendant, so properties set on the control would
+       never reach the options. -->
+  <div class="cui-combobox" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
@@ -352,18 +377,14 @@ const messages = useMessages();
 
     <!-- Input area -->
     <div
+      ref="controlRef"
       class="cui-combobox__control"
       :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
-        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        padding: cfg.padding,
-        borderRadius: radiusMap[rounded],
-        cursor: disabled ? 'default' : 'text',
-        opacity: disabled ? '0.5' : '1',
-        minHeight: cfg.inputHeight,
-        '--_cb-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
-        '--_cb-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
-        '--_cb-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
+        '--_combobox-radius': radiusMap[rounded],
+        '--_combobox-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
+        '--_combobox-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
+        '--_combobox-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
       }"
       @click="inputRef?.focus()"
     >
@@ -372,7 +393,7 @@ const messages = useMessages();
         v-for="opt in (multiple ? selectedOptions : [])"
         :key="String(opt.value)"
         :color="color"
-        :size="cfg.tagSize as 'sm' | 'md'"
+        :size="cfg.tagSize"
         removable
         @remove="removeTag(opt.value)"
       >
@@ -383,20 +404,16 @@ const messages = useMessages();
       <!-- Search input -->
       <input
         ref="inputRef"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
+        :aria-labelledby="ariaLabelledby"
         :value="isOpen ? query : displayText"
         :placeholder="selectedOptions.length > 0 ? '' : placeholder"
         :disabled="disabled"
-        :style="{
-          flex: '1',
-          minWidth: '4rem',
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          fontSize: cfg.fontSize,
-          color: 'var(--cui-text-body)',
-          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
-          fontFamily: 'inherit',
-        }"
+        class="cui-combobox__input"
         @input="onInput"
         @focus="onFocus"
         @keydown="onKeydown"
@@ -410,13 +427,13 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" :id="errorId" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
       {{ errorMessage }}
     </div>
 
     <!-- Dropdown (teleported) -->
     <Teleport to="body">
-      <div v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
+      <div v-if="isOpen" ref="dropdownRef" class="cui-combobox__dropdown" :style="dropdownStyle">
         <!-- Loading -->
         <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
@@ -443,7 +460,7 @@ const messages = useMessages();
           v-for="(option, i) in filteredOptions"
           :key="String(option.value)"
           :data-index="i"
-          :style="optionStyle(i, option)"
+          :class="optionClass(i, option)"
           @click.stop="selectOption(option)"
           @mouseenter="focusedIndex = i"
         >
@@ -495,17 +512,105 @@ const messages = useMessages();
    over `border-color` below, so the focus border could never apply. The
    dynamic halves stay as custom properties set on this same element — the rule
    that consumes them is on the element itself, per CLAUDE.md. */
+/* --- Themeable ---
+   Zero specificity, so a consumer's own rule wins without `!important`. See the note in
+   CuiButton.vue. The private values come from the style binding; a public token set
+   anywhere in the ancestor chain takes precedence (#123). */
+:where(.cui-combobox__control) {
+  min-height: var(--cui-combobox-min-height, var(--_combobox-min-height));
+  padding: var(--cui-combobox-padding, var(--_combobox-padding));
+  border-radius: var(--cui-combobox-radius, var(--_combobox-radius));
+  border: var(--cui-combobox-border-width, 1px) solid var(--_combobox-border);
+  background: var(--cui-combobox-bg, var(--cui-surface-base, white));
+  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
+}
+
+:where(.cui-combobox__dropdown) {
+  background: var(--cui-combobox-panel-bg, var(--cui-surface-base));
+  border: var(--cui-combobox-panel-border, 1px solid var(--cui-border));
+  border-radius: var(--cui-combobox-panel-radius, 0.5rem);
+  box-shadow: var(
+    --cui-combobox-panel-shadow,
+    0 8px 24px -4px rgba(0, 0, 0, 0.12),
+    0 2px 8px -2px rgba(0, 0, 0, 0.08)
+  );
+  padding: var(--cui-combobox-panel-padding, calc(0.25rem * var(--cui-density-scale, 1)));
+}
+
+:where(.cui-combobox__option) {
+  padding: var(--cui-combobox-item-padding, var(--_combobox-item-padding));
+  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
+  color: var(--cui-combobox-item-color, var(--cui-text-body));
+  border-radius: var(--cui-combobox-item-radius, 0.25rem);
+}
+
+:where(.cui-combobox__option--selected) {
+  background: var(--cui-combobox-item-selected-bg, color-mix(in srgb, var(--cui-primary-bg) 50%, transparent));
+}
+
+:where(.cui-combobox__option--focused) {
+  background: var(--cui-combobox-item-focus-bg, var(--cui-primary-bg));
+}
+
+:where(.cui-combobox__option--disabled) {
+  color: var(--cui-combobox-item-disabled-color, var(--cui-text-tertiary));
+}
+
+/* --- Structural --- */
 .cui-combobox__control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  border: 1px solid var(--_cb-border);
-  background: var(--cui-surface-base, white);
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  cursor: text;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.cui-combobox__control--disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.cui-combobox {
+  position: relative;
+}
+
+.cui-combobox__dropdown {
+  overflow-y: auto;
+}
+
+.cui-combobox__input {
+  flex: 1;
+  min-width: 4rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
+  color: var(--cui-combobox-color, var(--cui-text-body));
+  /* A determinate line-height, so the field's intrinsic height cannot push the control
+     past the shared scale's height: at `sm` the browser default plus the field's own
+     padding came to 24px, which with the control's padding and borders made the box 34px
+     against a 32px input (#123). */
+  line-height: 1.25;
+}
+
+.cui-combobox__option {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.cui-combobox__option--disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .cui-combobox__control:focus-within:not(.cui-combobox__control--disabled) {
-  border-color: var(--_cb-focus-border);
-  box-shadow: 0 0 0 2px var(--_cb-focus-ring);
+  border-color: var(--_combobox-focus-border);
+  box-shadow: 0 0 0 2px var(--_combobox-focus-ring);
 }
 </style>

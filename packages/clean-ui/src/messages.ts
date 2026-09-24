@@ -31,7 +31,19 @@ export interface PaginationRange {
  */
 export interface CuiMessageNamespaces {}
 
-export interface CuiMessages extends CuiMessageNamespaces {
+/**
+ * The message keys this package itself ships.
+ *
+ * Separate from `CuiMessages` so `defaultMessages` below can be annotated with
+ * a shape the library can actually satisfy. Declaration merging is
+ * whole-program: once a satellite augments `CuiMessageNamespaces`, `CuiMessages`
+ * requires a namespace only that satellite can provide, so annotating the
+ * literal with `CuiMessages` made it fail its own check in any program
+ * containing an augmentation — which is why the type test had to target the
+ * built `.d.ts` and why `apps/editor-docs` could not resolve this package to
+ * source (#107).
+ */
+export interface CuiCoreMessages {
   // --- Shared action / aria labels (reused across components) ---
   close: string;
   dismiss: string;
@@ -65,6 +77,13 @@ export interface CuiMessages extends CuiMessageNamespaces {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  formField: {
+    /**
+     * Appended to a required field's label for screen readers. The visible marker is an
+     * asterisk, which is `aria-hidden` — without this, required-ness reached no one (#175).
+     */
+    required: string;
+  };
   tabs: { closeTab: string };
   table: {
     /** Accessible name for the scroll region a table gets when it overflows. */
@@ -84,8 +103,14 @@ export interface CuiMessages extends CuiMessageNamespaces {
   };
 }
 
+/**
+ * The full catalog a component resolves against: this package's own keys plus
+ * whatever satellite packages have merged into `CuiMessageNamespaces`.
+ */
+export interface CuiMessages extends CuiCoreMessages, CuiMessageNamespaces {}
+
 /** Built-in English defaults. */
-export const defaultMessages: CuiMessages = {
+export const defaultMessages: CuiCoreMessages = {
   close: "Close",
   dismiss: "Dismiss",
   remove: "Remove",
@@ -117,6 +142,7 @@ export const defaultMessages: CuiMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },
   dataGrid: {
@@ -143,12 +169,22 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Overlay a partial onto a full message set (one level of nesting). */
+/**
+ * Overlay a partial onto a full message set (one level of nesting).
+ *
+ * Takes `CuiCoreMessages` so `defaultMessages` can be passed directly, and
+ * returns `CuiMessages`. That widening is the one place the seam is asserted
+ * rather than proven, and it is sound in the direction that matters: a satellite
+ * package ships its own namespace defaults and merges them itself (see
+ * `mergeMarkdownEditorMessages` in @itguy614/clean-ui-editor), so a namespace
+ * missing from this package's catalog is supplied by the package that declared
+ * it, not left undefined.
+ */
 export function mergeMessages(
-  base: CuiMessages,
+  base: CuiCoreMessages,
   override?: DeepPartialMessages,
 ): CuiMessages {
-  if (!override) return base;
+  if (!override) return base as CuiMessages;
   const baseRecord = base as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = { ...baseRecord };
   for (const key of Object.keys(override)) {

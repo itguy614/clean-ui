@@ -25,11 +25,16 @@
   dependency pre-bundling cache goes stale (rare — usually right after adding a new source file
   under an aliased path), clear it: `rm -rf apps/docs/node_modules/.vite`.
 - Color scale (`@theme`) is single-source in `packages/clean-ui/src/styles/theme.css`; both the library `main.css` and the docs `apps/docs/src/styles/main.css` `@import` it (no mirroring). The contrast audit reads the scale from `theme.css` too.
+- **Verify with the root `pnpm -r` scripts, not `--filter <one package>`.** CI runs `pnpm -r build`, `pnpm -r --if-present check:imports` and `pnpm -r --if-present test` across every workspace. A change inside `packages/clean-ui` routinely breaks `packages/clean-ui-editor`, which consumes it — a filtered run is green while CI is red. The fixture checks (`scripts/verify-fixture.mjs`, then `check-fixture-guarantees.mjs` and `check-bundle-budget.mjs`, in that order — the latter two need the fixture built first) and `pnpm --filter @itguy614/clean-ui test:browser` are part of the same job.
 - Build = `vite build` + `vue-tsc --emitDeclarationOnly`
 
 ## Critical Gotchas
 - **A Vite `define` constant used in library source must be replicated by every app that aliases the library to source.** `src/version.ts` (in clean-ui and clean-ui-editor) reads a `__CUI_*_VERSION__` global, replaced at build time by that package's own `vite.config.ts`/`vitest.config.ts` — but since `apps/docs` (and any future docs app) aliases published packages to workspace *source* instead of `dist`, that file gets bundled through the *consuming app's own* Vite config, not the library's. Forgetting the matching `define` there doesn't fail the build or `vue-tsc` (an undeclared global identifier is only a runtime `ReferenceError`, not a build-time or type error) — it fails silently until something actually imports the barrel in a browser, crashing the whole module before anything mounts (a blank page, no build/test signal at all). `config/workspace-aliases.ts`'s `workspaceVersionDefines()` is the fix; any app using `workspaceAliases()` must also spread it into its own `define`. This class of bug is exactly why `pnpm build`/`pnpm test` passing isn't sufficient for a docs-site change — load it in a browser.
 - **`vue` and `@vue/server-renderer` must resolve to the exact same version across the workspace.** Mixing them (e.g. `vue@3.5.32` with `@vue/server-renderer@3.5.40` — easy to end up with, since `pnpm add @vue/server-renderer` resolves independently of whatever `vue` version is already in the lockfile) breaks `useTemplateRef` specifically under server rendering: `renderToString` throws `Cannot define property <name>, object is not extensible`, while a plain `ref()` template ref works fine on the same mismatched pair. Neither `vue-tsc` nor a build catches this — only an actual `renderToString()` call does, and only if the rendered component happens to use `useTemplateRef` (clean-ui's own SSR test didn't, at first, and so didn't catch it even though `useTemplateRef` is the library's own documented convention — see `CuiButton.vue`). Fix: pin `vue`'s **devDependency** (not the consumer-facing `^3.5.0` peerDependency range) to match `@vue/server-renderer` exactly in every package that has both, e.g. `pnpm update vue --recursive --latest`.
+- **The library ships no global CSS — never `@import "tailwindcss"` in `packages/clean-ui`.** The entrypoint drags in preflight (`@layer base`) and the utilities layer, both of which land in `dist/clean-ui.css` and restyle the consumer's own page (#62, #72). `main.css` imports `tailwindcss/theme.css` only — enough to run the engine over `theme.css`'s `@theme`, which otherwise ships **raw** as an `@theme{…}` at-rule the browser drops, leaving the whole `--color-*` scale undefined. Preflight is replaced by `styles/preflight.css`: the same reset scoped to `:where([class^="cui-"], [class*=" cui-"])` and its descendants, every selector at zero specificity, imported with **`layer(base)`** under an explicit `@layer theme, base, components, utilities;`. The layer is load-bearing — an unlayered rule outranks every layered one whatever its specificity, so an unlayered reset beats the consumer's `@layer utilities` and a `cui-*` subtree's `px-3 py-2` loses to our `padding: 0` (this broke the docs site's own left nav). Two consequences for new components: **(a)** no component sets `box-sizing` itself — they all inherit it from that scoped base, so anything rendering outside a `cui-*` subtree gets nothing; **(b)** **every** component root must carry a `cui-*` class, teleported panels included, or that whole subtree falls out of scope — see step 3 of the checklist below. `src/styles/__tests__/preflight.test.ts` fails on both.
+- **An app that aliases a package to source must map TypeScript's `paths` too, not just Vite's `alias`.** `config/workspace-aliases.ts` points Vite at workspace source; `config/tsconfig.workspace-source.json` is its TypeScript half. Without the second, `vue-tsc` falls back to node resolution and reads the package's built `dist/*.d.ts` — so the bundler and the type checker disagree about what the code is, and a docs typecheck fails on anything added to the library since its last build, naming a prop or method that plainly exists, then passes after a rebuild for no visible reason. `apps/docs` extends the shared config and needs no `dist` at all. `apps/editor-docs` extends it too. Also drop `rootDir` from such an app's tsconfig: it only governs emit, these apps build with Vite, and it rejects the source files as "not under rootDir".
+- **A running docs dev server does not pick up new exports in `types/common.ts`.** `@vue/compiler-sfc` resolves `defineProps<Props>()`'s `extends` chain by parsing the imported `.ts` file, and caches that parse — but only the `.vue` file is watched for invalidation. Add a mixin to `types/common.ts` and `extends` it while `pnpm dev` is running, and every SFC using it fails with `[@vue/compiler-sfc] Failed to resolve extends base type`, naming an interface that is plainly exported and that `vue-tsc` and `pnpm build` both accept. It is a stale in-memory cache, not a real error: **restart the dev server**. (`rm -rf apps/docs/node_modules/.vite` is a different cache and is not what fixes this.) Since `types/common.ts` is the designated home for every shared prop mixin, expect this on each one.
+- **A component-authored element whose tag has a `.cui-typography` prose rule must carry a `cui-*` class.** The prose layer is opt-in but consumers legitimately put `.cui-typography` *around* components (the docs site puts it on `<main>`, and on `CuiCardBody` in several places), so prose rules reach inside them. Those rules are `(0,1,1)`; a component's own themeable rules are zero-specificity by the `:where()` contract, so prose wins and repaints the component — this is how a solid link button came to draw its label in its own background colour (#114) and why a real `<h3>` card title would have taken the prose size and bottom margin (#129). The fix on the typography side is an exclusion, `:where(:not([class^="cui-"]):not([class*=" cui-"]))`, written once on the nested prose block; the fix on the component side is that the element has to be *selectable* by it. `CuiModalHeader` and `CuiConfirmDialog` gained `__title` classes in #129 for exactly this reason. The exclusion keys on *carrying* the class, so an unclassed internal element (`preflight.css`'s header notes components are full of bare `thead`/`tr`/`td`/`legend`) is still exposed — the general "not a descendant of a `cui-*` element" predicate cannot be used, because it would break the `class="cui-typography"`-on-`CuiCardBody` pattern outright. Nothing enforces this yet; `styles/__tests__/preflight.test.ts` checks component *roots*, not inner elements.
 - **Tailwind v4 cannot detect dynamic classes** — never use template literals for Tailwind classes. Layout components use inline `:style` bindings instead.
 - **`<script setup>` cannot have ES module exports** — shared types, injection keys, and context interfaces MUST go in separate `.ts` files (e.g., `radio-context.ts`, `multi-select-group-context.ts`, `dropdown-context.ts`, `tabs-context.ts`, `breadcrumb-context.ts`). This has caused build failures multiple times.
 - **Label + hidden input double-toggle** — when a `<label>` contains a hidden `<input>`, clicking fires toggle twice. Always add `@click.stop.prevent` on hidden inputs inside labels.
@@ -39,6 +44,8 @@
 - **Semantic border token** — use `var(--cui-border)` for borders, not surface scale steps directly. The token auto-swaps: light=s-500, dark=s-600. `var(--cui-border-strong)` for input/form control borders: light=s-600, dark=s-500. Both modes use 500+600, just swapped.
 - **Semantic surface token** — use `var(--cui-surface-base)` for component backgrounds, not `white`. Auto-swaps in dark mode. For a neutral *tinted* fill/border (parallel to the role `-bg`/`-border` slots), use `var(--cui-surface-bg)` / `var(--cui-surface-border)` — these let a component treat `surface` as a 7th neutral color role (e.g. CuiFieldset `color="surface"`).
 - **All semantic slots must reference the scale** — `--cui-primary` must be `var(--color-primary-500)`, NOT a hardcoded oklch value. This is critical for theme compatibility. Both light and dark mode slots must reference `--color-primary-*` variables so theme class overrides propagate correctly.
+
+- **`defaultMessages` is typed `CuiCoreMessages`, not `CuiMessages` — don't "tidy" that.** `CuiMessages` is `CuiCoreMessages` plus whatever satellite packages merge into `CuiMessageNamespaces`. Declaration merging is whole-program, so annotating the literal with `CuiMessages` makes it fail its own check in any program containing an augmentation: the augmented interface requires a namespace this package cannot provide for itself. That previously forced `messages.test-d.ts` to assert against the built `.d.ts` and blocked `apps/editor-docs` from resolving clean-ui to source (#107). The one widening lives in `mergeMessages`, which returns `CuiMessages` from a `CuiCoreMessages` base — sound because a satellite ships and merges its own namespace defaults (see `mergeMarkdownEditorMessages`).
 
 ## Shared Prop Types & Mixins (`types/common.ts`)
 - **All cross-cutting prop types live in `types/common.ts`** — never re-declare them per component. Exports: `CuiColor` (9 roles, below), `CuiSize` (`xs|sm|md|lg|xl`), `CuiRounded` (`none|sm|md|lg|full`), `CuiOrientation` (`horizontal|vertical`), `CuiAutoOrientation` (+`auto`, for form-control groups), `CuiVariant` (`solid|outline|subtle|ghost|dash`), `CuiColorOrCss` (role OR raw CSS string).
@@ -53,7 +60,10 @@
 - Primary & surface: full 50–950 scale. Others: condensed 100/300/500/700/900.
 - 9 semantic slots per role: `--cui-{role}`, `-hover`, `-active`, `-bg`, `-border`, `-text`, `-focus-ring`, `-subtle`, `-muted`
 - 3 solid-specific dark-mode slots: `--cui-{role}-solid`, `-solid-hover`, `-solid-active` — darker shades for white-text-on-colored-bg. In light mode these are undefined (components fall back to `--cui-{role}`). Use pattern: `var(--cui-${c}-solid, var(--cui-${c}))` in solid variant backgrounds.
-- Dark mode: `:where(.dark, .dark *)` overrides with adjusted lightness (same hue/saturation). Primary text uses 300 (was 400) for better outline contrast; solid buttons use 600+ via `-solid` tokens.
+- Dark mode: **`:root.dark, .dark`** overrides with adjusted lightness (same hue/saturation). Primary text uses 300 (was 400) for better outline contrast; solid buttons use 600+ via `-solid` tokens.
+- **Declare tokens on the scoping root, never on `:where(.dark, .dark *)`.** The blanket form sets the token on *every* element in the subtree, which defeats custom-property inheritance: an ancestor re-declaring a token is overridden by the library on each descendant individually, so a subtree cannot be re-themed (#121). It belongs only on the `@custom-variant dark` declaration, where a Tailwind variant genuinely has to match the element itself. Descendant *rules* (`:where(.dark) .cui-code`) are fine — it is declarations of `--cui-*` / `--color-*` that must sit on the root. `src/styles/__tests__/dark-token-scope.test.ts` fails on any that don't.
+- **Scoping to the root brings a specificity trap.** The light tokens live on `:root` (0,1,0) and `dark` normally lands on `<html>`, the *same* element, so a zero-specificity `:where(.dark)` loses the tie and the whole page silently renders light. Use `:root.dark, .dark`. The old blanket form hid this because `.dark *` matched `<body>` and below, where `:root` cannot reach — which is also why a test fixture hanging off a `<div>` cannot catch it.
+- **A theme class and `dark` usually land on the same element.** `useTheme` writes `cui-theme-*` to `document.documentElement`, which is where `dark` normally goes too, so each theme's dark block needs all three forms — `.dark .cui-theme-x`, `.cui-theme-x.dark`, `.cui-theme-x .dark`. Omitting the middle one silently leaves the themed element itself on the *light* values while its descendants get the dark ones.
 - Light + dark mode: Warning role uses white text on amber: `--cui-warning-text: white` (light) / `var(--color-surface-950)` (dark, dark text on bright amber)
 - WCAG AA compliance target (4.5:1 normal text, 3:1 large text). Run `node scripts/check-contrast.mjs` to audit all themes.
 - For focus-ring and subtle (transparency needed): use `color-mix(in srgb, var(--color-primary-500) 40%, transparent)` — NOT oklch alpha syntax with var()
@@ -75,6 +85,40 @@
 - Breakpoint-based responsive sizing (scales down below 768px)
 - Display headings: `.cui-display-1/2/3`, Lead text: `.cui-lead`
 - Code text color references primary scale: `--cui-text-code: var(--color-primary-700)` (light) / `var(--color-primary-300)` (dark)
+
+## Themeable Properties (`--cui-<component>-<slot>`)
+
+**Never write a themeable property as a bare declaration in a style binding.** An inline
+declaration outranks every stylesheet rule, so each one forces `!important` on any consumer
+who wants to restyle it — and on the library itself: CuiButtonGroup carried ten, CuiInput
+three, and CuiButton needed one to beat its *own* inline background on hover (#114).
+
+- **Two layers.** The component still computes its values; it emits them as **private**
+  `--_<component>-<slot>` properties inline, and its stylesheet reads each back as
+  `var(--cui-<component>-<slot>, var(--_<component>-<slot>))`. Emitting the *public* token
+  inline instead looks simpler and is wrong: an inline custom property beats an inherited
+  one, so `.toolbar { --cui-button-bg: … }` on a container could never take effect.
+  `src/__tests__/browser/button-themeable.test.ts` has that case.
+- **Slot vocabulary** — a closed set, like the 9 colour-role slots: `bg`, `color`, `border`,
+  `height`, `px`, `py`, `gap`, `font-size`, `radius`, `hover-bg`, `hover-color`,
+  `hover-border`, `active-bg`, `focus-ring`, `focus-border`. Private prefix matches the
+  public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
+  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
+- **Wrap themeable rules in `:where()`.** Vue's scoped compiler puts the `[data-v-…]`
+  attribute *inside* the bracket, where `:where()` zeroes it along with everything else —
+  scoping still works, the specificity does not. Without this the rule is (0,2,0) and a
+  consumer's plain `.cui-button { … }` at (0,1,0) still loses silently, which is what forced
+  `position: absolute !important` in the editor's `editor.css`. Put the **whole compound**
+  inside: `:where(.cui-button:hover)` is (0,0,0), but `:where(.cui-button):hover` is (0,1,0).
+- **Structural rules stay at normal specificity** — `display`, `align-items`, `cursor`,
+  `white-space`, the disabled rules, sub-element rules. Changing those breaks the component
+  rather than restyling it.
+- **`--cui-control-min-target`** (default `24px`, WCAG 2.5.8) is the shared floor in
+  `scaleControlHeight`, so a dense container relaxes its buttons and inputs together. It
+  only binds at `xs` + compact density.
+- `src/styles/__tests__/control-token.test.ts` enforces this, via an **opt-in** `CONVERTED`
+  list — "once converted, stays converted". ~50 of the ~106 components still write paint
+  inline; add yours to the list when its PR converts it.
 
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
@@ -188,14 +232,16 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 ## Adding a New Component — Checklist
 1. Read this file first. Follow established patterns.
 2. Create the `.vue` file in `src/components/`. If it needs shared context, create a `{name}-context.ts` file (NOT exports in the .vue file).
-3. Use `CuiIcon` for all icons (never inline SVGs). Add any new icon name to `src/icons/builtin.ts`.
-4. Import sizes from `utils/sizing.ts`, not local maps.
-5. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
-6. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.
-7. Default to subtle color usage. Solid fill only via explicit `variant="solid"`.
-8. Add `aria-*` attributes, keyboard navigation, focus rings.
-9. `defineExpose({ el, focus, blur })` on interactive components.
-10. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
+3. **Give the root element a `cui-*` class** — kebab-case of the component name (`CuiTreeView` → `cui-tree-view`). The scoped base in `styles/preflight.css` only reaches an element carrying such a class *and its descendants*, so a root without one renders its whole subtree outside the reset: no `box-sizing: border-box`, no `font: inherit` on form controls. It fails silently for anyone using Tailwind (their preflight covers it) and only breaks for consumers who supply no global reset of their own. Every top-level root counts — a `v-if`/`v-else` chain needs the class on each branch (see `CuiDivider`, which has four). A root that is not an element — `<Teleport>`, `<Transition>`, `<slot />`, or another Cui component that renders one of those — cannot take it: put the class on the element actually rendered, and add the file to the exemption list in `src/styles/__tests__/preflight.test.ts` with the reason. Passing a class to a component with a non-element root doesn't just get dropped, it makes Vue warn. That test fails on any unclassed root, and on a stale exemption.
+4. Use `CuiIcon` for all icons (never inline SVGs). Add any new icon name to `src/icons/builtin.ts`.
+5. Import sizes from `utils/sizing.ts`, not local maps.
+6. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
+7. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.
+7b. **Emit themeable properties as custom properties, not bare inline declarations**, and wrap the rules that consume them in `:where()`. See "Themeable Properties" above, and add the component to the `CONVERTED` list in `src/styles/__tests__/control-token.test.ts`.
+8. Default to subtle color usage. Solid fill only via explicit `variant="solid"`.
+9. Add `aria-*` attributes, keyboard navigation, focus rings.
+10. `defineExpose({ el, focus, blur })` on interactive components.
+11. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
     **Exception: satellite packages with a heavy dependency graph (e.g. a CodeMirror-based editor)
     must NOT do this.** A global `app.component()` install puts that package's entire dependency
     tree in every consumer's main bundle, whether or not they ever render the component, and
@@ -214,6 +260,6 @@ Compound sub-components for top-level composition, targeted slots inside them fo
     );
     </script>
     ```
-11. Create a docs page, add route, add nav entry in the correct group.
-12. Use `CuiCard` for example containers in docs, not hand-rolled divs.
-13. Build and verify: `pnpm build` must pass with zero TypeScript errors.
+12. Create a docs page, add route, add nav entry in the correct group.
+13. Use `CuiCard` for example containers in docs, not hand-rolled divs.
+14. Build and verify: `pnpm build` must pass with zero TypeScript errors.

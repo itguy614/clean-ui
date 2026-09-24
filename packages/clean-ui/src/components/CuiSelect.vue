@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -21,7 +22,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface CuiSelectProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiSelectProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value (single) or values (multiple) */
   modelValue?: string | number | null | Array<string | number>;
   /** Options — array of strings or { value, label, group?, disabled? } objects */
@@ -61,6 +62,9 @@ const props = withDefaults(defineProps<CuiSelectProps>(), {
   hidden: false,
   rounded: "md",
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | null | Array<string | number>];
@@ -346,6 +350,10 @@ const messages = useMessages();
       <!-- Trigger -->
       <div
         ref="triggerRef"
+        :id="id"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
+        :aria-labelledby="ariaLabelledby"
         class="cui-select__trigger"
         :style="{ borderRadius: radiusMap[rounded] }"
         role="combobox"
@@ -370,7 +378,6 @@ const messages = useMessages();
               <button
                 type="button"
                 class="cui-select__chip-remove"
-                tabindex="-1"
                 :aria-label="messages.remove"
                 @click.stop="removeChip(val)"
               >
@@ -399,8 +406,7 @@ const messages = useMessages();
             v-if="clearable && hasValue && !disabled && !readonly"
             type="button"
             class="cui-select__clear"
-            tabindex="-1"
-            :aria-label="messages.clear"
+              :aria-label="messages.clear"
             @click.stop="clear"
           >
             <CuiIcon name="x" size="0.75rem" />
@@ -477,7 +483,7 @@ const messages = useMessages();
     </Teleport>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" class="cui-select__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
       {{ errorMessage }}
     </div>
   </div>
@@ -641,7 +647,7 @@ const messages = useMessages();
 .cui-select__dropdown {
   z-index: 50;
   overflow-y: auto;
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);

@@ -6,6 +6,16 @@
     "declaration": true,
     "declarationDir": "./dist"
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test-d.ts", "src/test-setup.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.test-d.ts",
+    "src/test-setup.ts",
+    "src/__tests__/**"
+  ]
 }

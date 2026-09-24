@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiFlex, CuiStack, CuiTagInput, type TagOption } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import { CuiFlex, CuiTagInput, type TagOption } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
+import meta from "../meta/tag-input";
 import Example from "../components/Example.vue";
 
+const usageTags = ref<string[]>(["vue"]);
 const tags1 = ref<string[]>(["vue", "typescript"]);
 const tags2 = ref<string[]>([]);
 const tags3 = ref<string[]>(["bug"]);
@@ -46,54 +47,36 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Tag Input</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A multi-value text input with removable tags, suggestions dropdown,
-        and optional creation of new tags. Supports async server search.
-        Type and press Enter, comma, or Tab to add. Backspace removes the last tag.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiTagInput v-model=&quot;tags&quot; label=&quot;Technologies&quot; />`"
+      >
+        <CuiTagInput v-model="usageTags" label="Technologies" :style="{ maxWidth: '20rem' }" />
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        A text field with an optional suggestions popup. <code>Enter</code> commits the
+        typed value, <code>Backspace</code> on an empty field removes the last tag, and
+        the arrow keys move through suggestions when they are shown.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>Each tag's remove control is a real button, reachable by keyboard.</li>
+        <li>
+          Sizes come from the shared input scale, so a tag input is the same height and
+          indent as a <code>CuiInput</code> beside it.
+        </li>
+        <li>
+          Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
+          <code>CuiFormField</code> wires both up automatically.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'modelValue', type: 'string[]', default: '[]', description: 'Selected tags (v-model)' },
-          { name: 'suggestions', type: 'TagOption[]', default: '[]', description: 'Predefined tag suggestions' },
-          { name: 'fetchSuggestions', type: '(query) => Promise<TagOption[]>', default: '—', description: 'Async search function' },
-          { name: 'allowCreate', type: 'boolean', default: 'true', description: 'Allow creating tags not in suggestions' },
-          { name: 'maxTags', type: 'number', default: '0', description: 'Maximum tags allowed (0 = unlimited)' },
-          { name: 'debounce', type: 'number', default: '300', description: 'Debounce for async search (ms)' },
-          { name: 'minChars', type: 'number', default: '0', description: 'Min chars before searching' },
-          { name: 'placeholder', type: 'string', default: 'Add tag...', description: 'Placeholder text' },
-          { name: 'color', type: 'primary | ...', default: 'primary', description: 'Default tag color' },
-          { name: 'createText', type: 'string', default: 'Create', description: 'Text for the create option' },
-          { name: 'label', type: 'string', default: '—', description: 'Label text' },
-          { name: 'size', type: 'sm | md | lg', default: 'md', description: 'Size' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'md', description: 'Border radius' },
-          { name: 'error', type: 'boolean', default: 'false', description: 'Error state' },
-          { name: 'errorMessage', type: 'string', default: '—', description: 'Error message text' },
-          { name: 'noSuggestionsText', type: 'string', default: 'No suggestions', description: 'Text when no suggestions match' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Disabled state' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:modelValue', payload: 'string[]', description: 'Fires when tags change (v-model)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
+    <template #examples>
 
         <!-- Free-form tags -->
         <Example title="Free-Form (Create Any Tag)" :code="`<CuiTagInput v-model=&quot;tags&quot; label=&quot;Skills&quot; />`">
@@ -221,7 +204,6 @@ async function fetchSkills(query: string): Promise<TagOption[]> {
           </div>
         </Example>
 
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

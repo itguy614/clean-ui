@@ -3,9 +3,20 @@ import { computed } from "vue";
 import { CuiStack, CuiCard, CuiCardBody, CuiBadge, type CuiColor } from "@itguy614/clean-ui";
 import changelogRaw from "../../../../CHANGELOG.md?raw";
 
+/**
+ * One rendered block. Prose and list items share an ordered list rather than sitting in two
+ * arrays, because a section is not "prose then a list": the Upgrading guide alternates
+ * between them, and a two-bucket model silently drops whichever comes second.
+ */
+interface Block {
+  kind: "p" | "li";
+  text: string;
+  /** An indented bullet — several entries break their detail into sub-points. */
+  sub?: boolean;
+}
 interface Section {
   title: string;
-  items: string[];
+  blocks: Block[];
 }
 interface Release {
   version: string;
@@ -15,19 +26,27 @@ interface Release {
 
 // Parse the Keep a Changelog structure:
 //   ## [x.y.z] - YYYY-MM-DD   → release
+//   ## [Unreleased]           → release, no date. Keep a Changelog's own convention, and
+//                               what every entry sits under until a version is cut — the
+//                               date was previously required, so the whole section, and
+//                               therefore the entire release in progress, rendered nowhere.
 //   ### Section               → section
-//   - item                    → list item
+//   - item                    → list item ("  - item" → nested under the one above)
+//   indented continuation     → appended to the block above, since the file hard-wraps
+//   anything else             → a paragraph
 const releases = computed<Release[]>(() => {
   const out: Release[] = [];
   let release: Release | null = null;
   let section: Section | null = null;
+  /** Whether the block above is still accepting wrapped continuation lines. */
+  let open = false;
 
   for (const raw of changelogRaw.split("\n")) {
     const line = raw.trimEnd();
 
-    const rel = line.match(/^##\s+\[([^\]]+)\]\s*-\s*(.+)$/);
+    const rel = line.match(/^##\s+\[([^\]]+)\](?:\s*-\s*(.+))?$/);
     if (rel) {
-      release = { version: rel[1], date: rel[2].trim(), sections: [] };
+      release = { version: rel[1], date: (rel[2] ?? "").trim(), sections: [] };
       out.push(release);
       section = null;
       continue;
@@ -35,15 +54,38 @@ const releases = computed<Release[]>(() => {
 
     const sec = line.match(/^###\s+(.+)$/);
     if (sec && release) {
-      section = { title: sec[1].trim(), items: [] };
+      section = { title: sec[1].trim(), blocks: [] };
       release.sections.push(section);
+      open = false;
       continue;
     }
 
-    const item = line.match(/^[-*]\s+(.+)$/);
-    if (item && section) {
-      section.items.push(item[1].trim());
+    if (!section) continue;
+
+    const item = line.match(/^(\s*)[-*]\s+(.+)$/);
+    if (item) {
+      section.blocks.push({ kind: "li", text: item[2].trim(), sub: item[1].length > 0 });
+      open = true;
+      continue;
     }
+
+    const last = section.blocks[section.blocks.length - 1];
+
+    // A blank line ends whatever block was open; the next content starts a new one.
+    if (!line.trim()) {
+      open = false;
+      continue;
+    }
+
+    // An indented line continues the block above — the file hard-wraps, and without this
+    // long entries were truncated at the first line break.
+    if (open && last && (/^\s/.test(line) || last.kind === "p")) {
+      last.text += ` ${line.trim()}`;
+      continue;
+    }
+
+    section.blocks.push({ kind: "p", text: line.trim() });
+    open = true;
   }
   return out;
 });
@@ -96,9 +138,15 @@ function inlineMd(text: string): string {
 
           <div v-for="section in release.sections" :key="section.title" style="margin-top: 1rem;">
             <CuiBadge :color="sectionColor(section.title)" size="sm">{{ section.title }}</CuiBadge>
-            <ul style="margin-top: 0.5rem;">
-              <li v-for="(item, i) in section.items" :key="i" v-html="inlineMd(item)" />
-            </ul>
+            <template v-for="(block, i) in section.blocks" :key="i">
+              <p v-if="block.kind === 'p'" style="margin-top: 0.75rem;" v-html="inlineMd(block.text)" />
+              <ul v-else style="margin-top: 0.25rem;">
+                <li
+                  :style="block.sub ? 'margin-left: 1.25rem; list-style-type: circle;' : undefined"
+                  v-html="inlineMd(block.text)"
+                />
+              </ul>
+            </template>
           </div>
         </CuiCardBody>
       </CuiCard>

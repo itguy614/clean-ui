@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
-export interface CuiTextareaProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
   modelValue?: string;
   /** Placeholder text */
@@ -47,11 +48,15 @@ const props = withDefaults(defineProps<CuiTextareaProps>(), {
   rounded: "md",
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const emit = defineEmits<{
   "update:modelValue": [value: string];
 }>();
 
 const textareaRef = useTemplateRef<HTMLTextAreaElement>("textareaEl");
+
 
 const charCount = computed(() => props.modelValue.length);
 const isOverLimit = computed(() => props.maxLength !== undefined && charCount.value > props.maxLength);
@@ -148,6 +153,12 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
     >
       <textarea
         ref="textareaEl"
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
+        :aria-labelledby="ariaLabelledby"
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
@@ -164,7 +175,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
       v-if="(error && errorMessage) || maxLength !== undefined"
       class="cui-textarea__footer"
     >
-      <div v-if="error && errorMessage" class="cui-textarea__error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-textarea__spacer" />

@@ -5,13 +5,21 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, CuiRounded } from "../types/common";
+import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiModalProps extends HideableProps {
+export interface CuiModalProps extends HideableProps, TitleAsProps {
   /** Controls modal visibility (v-model:visible) */
   visible?: boolean;
+  /**
+   * id of the element naming this dialog, for sub-component mode.
+   *
+   * Simple mode (the `title` prop) wires this up on its own. A wrapper that assembles its
+   * own header — `CuiConfirmDialog` does — has no `title` for the modal to name itself
+   * from, and so had no accessible name at all (#158).
+   */
+  ariaLabelledby?: string;
   /** Modal width — named size or custom CSS value */
   size?: ModalSize | string;
   /** Title text (rendered in header) */
@@ -51,9 +59,9 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -117,13 +125,15 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="title ? titleId : undefined"
+          :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"
           tabindex="-1"
         >
           <!-- Simple mode: title prop renders header + body wrapper automatically -->
           <template v-if="title">
             <CuiModalHeader
               :title="title"
+              :title-as="titleAs"
+              :title-id="titleId"
               :no-close-button="noCloseButton"
               @close="closeOverlay"
             />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { CuiColor, HideableProps } from "../types/common";
+import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
@@ -11,7 +11,7 @@ import { useMessages } from "../composables/useMessages";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
-export interface CuiConfirmDialogProps extends HideableProps {
+export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps {
   /** Control visibility (v-model:visible) */
   visible?: boolean;
   /** Dialog title */
@@ -39,7 +39,12 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   variant: "danger",
   loading: false,
   hidden: false,
+  titleAs: "h2",
 });
+
+// The dialog assembles its own header, so CuiModal has no `title` to name itself from —
+// without this the confirm dialog had no accessible name at all (#158).
+const titleId = `cui-confirm-dialog-title-${Math.random().toString(36).slice(2, 8)}`;
 
 const messages = useMessages();
 
@@ -96,7 +101,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button @update:visible="emit('update:visible', $event)">
+  <CuiModal :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" @update:visible="emit('update:visible', $event)">
     <!-- Custom header with icon badge -->
     <div
       :style="{
@@ -126,7 +131,10 @@ function onCancel() {
 
       <div style="flex: 1; min-width: 0;">
         <!-- Title -->
-        <h2
+        <component
+          :is="titleAs"
+          :id="titleId"
+          class="cui-confirm-dialog__title"
           :style="{
             fontSize: '1.0625rem',
             fontWeight: '600',
@@ -136,7 +144,7 @@ function onCancel() {
           }"
         >
           {{ resolvedTitle }}
-        </h2>
+        </component>
 
         <!-- Message -->
         <div

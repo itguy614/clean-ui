@@ -47,9 +47,9 @@ const props = withDefaults(defineProps<CuiPopoverProps>(), {
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -149,6 +149,31 @@ const panelStyle = computed(() => {
   return s;
 });
 
+/**
+ * How the panel is hidden for the frame or two before Floating UI has
+ * positioned it (#88).
+ *
+ * NOT `visibility: hidden`, which was the original guard: `focus()` on a
+ * `visibility: hidden` element is a silent no-op, so any consumer moving focus
+ * into the panel on open was racing the positioning, and lost intermittently
+ * (#112). Two of them grew retry loops to work around it.
+ *
+ * `animation: none` is load-bearing, not tidiness. A CSS animation overrides
+ * inline styles, and the panel's scale-in animates `opacity` from 0 to 1 — so
+ * `opacity: 0` alone would be overridden the moment it started, and the panel
+ * would appear at the origin before being positioned, which is exactly the
+ * flash #88 fixed. Withholding the animation also means it plays from the final
+ * position rather than starting mid-move.
+ */
+const hiddenUntilPositioned = computed(() => {
+  const styles: Record<string, string> = {};
+  if (isPositioned.value) return styles;
+  styles.opacity = "0";
+  styles.pointerEvents = "none";
+  styles.animation = "none";
+  return styles;
+});
+
 const arrowElStyle = computed(() => ({
   width: "8px",
   height: "8px",
@@ -171,6 +196,7 @@ const messages = useMessages();
 
 <template>
   <div
+    class="cui-popover"
     ref="wrapperRef"
     v-show="!hidden"
     :style="{ display: 'inline-flex' }"
@@ -188,7 +214,8 @@ const messages = useMessages();
       <div
         v-if="isVisible"
         ref="floatingRef"
-        :style="{ ...floatingStyles, ...panelStyle, visibility: isPositioned ? 'visible' : 'hidden' }"
+        class="cui-popover__panel"
+        :style="{ ...floatingStyles, ...panelStyle, ...hiddenUntilPositioned }"
         role="dialog"
         :aria-labelledby="headerId"
         @mouseenter="onPopoverMouseEnter"

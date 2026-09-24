@@ -65,6 +65,14 @@ jobs:
         run: pnpm --filter @itguy614/clean-ui test:browser
         continue-on-error: true
 
+      # VERSION, every publishable package.json and the CHANGELOG heading all
+      # have to agree. The publish workflow reads them from different sources,
+      # so drift is silent *and green*: the wrong one bumped means npm and the
+      # git tag disagree about what shipped, with no step failing. Cheap to
+      # check here, where a release PR fails before it reaches master.
+      - name: Check version lockstep
+        run: node scripts/check-version-lockstep.mjs
+
       # Packs every publishable package and installs it with npm (not the pnpm
       # workspace) into a throwaway consumer app — the only place the exports
       # map, peer resolution and published file list are exercised at all.

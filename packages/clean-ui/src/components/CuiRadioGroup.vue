@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
-export interface CuiRadioGroupProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiRadioGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected value */
   modelValue?: string | number | boolean;
   /** Shared name attribute for all radios */
@@ -33,6 +34,9 @@ const props = withDefaults(defineProps<CuiRadioGroupProps>(), {
   error: false,
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | boolean];
@@ -103,7 +107,11 @@ function onKeydown(e: KeyboardEvent) {
   <div
     v-show="!hidden"
     role="radiogroup"
-    :aria-label="label"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="describedBy"
+    :aria-required="ariaRequired || undefined"
+    :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-radio-group"
     :class="[
@@ -122,7 +130,7 @@ function onKeydown(e: KeyboardEvent) {
         <slot />
       </template>
     </div>
-    <div v-if="error && errorMessage" class="cui-radio-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error">
       {{ errorMessage }}
     </div>
   </div>
@@ -162,7 +170,7 @@ function onKeydown(e: KeyboardEvent) {
 .cui-radio-group--error .cui-radio-group__options {
   border: 1px solid var(--cui-error-border);
   background: var(--cui-error-bg);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 

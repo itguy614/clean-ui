@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
-import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { ToggleGroupKey } from "./multi-select-group-context";
 
-export interface CuiToggleGroupProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiToggleGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
   /** Array of selected values */
   modelValue?: Array<string | number>;
   /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
@@ -27,6 +28,9 @@ const props = withDefaults(defineProps<CuiToggleGroupProps>(), {
   error: false,
   hidden: false,
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: Array<string | number>];
@@ -72,7 +76,11 @@ provide(ToggleGroupKey, {
   <div
     v-show="!hidden"
     role="group"
-    :aria-label="label"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="describedBy"
+    :aria-required="ariaRequired || undefined"
+    :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
     class="cui-toggle-group"
     :class="[
@@ -83,7 +91,7 @@ provide(ToggleGroupKey, {
     <div class="cui-toggle-group__options">
       <slot />
     </div>
-    <div v-if="error && errorMessage" class="cui-toggle-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-toggle-group__error">
       {{ errorMessage }}
     </div>
   </div>
@@ -115,7 +123,7 @@ provide(ToggleGroupKey, {
 .cui-toggle-group--error .cui-toggle-group__options {
   border: 1px solid var(--cui-error-border);
   background: var(--cui-error-bg);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
 }
 

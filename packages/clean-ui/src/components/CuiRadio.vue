@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
-import type { CuiColor, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
 
-export interface CuiRadioProps extends HideableProps, ColorableProps, DisableableProps {
+export interface CuiRadioProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
   /** The value this radio represents */
   value: string | number | boolean;
   /** v-model binding (standalone mode) */
@@ -13,8 +13,6 @@ export interface CuiRadioProps extends HideableProps, ColorableProps, Disableabl
   label?: string;
   /** Description text (or use #description slot) */
   description?: string;
-  /** Name attribute (standalone mode) */
-  name?: string;
   /** Readonly state */
   readonly?: boolean;
 }
@@ -109,11 +107,16 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       fontSize: buttonSizeStyles.fontSize,
     }"
     :disabled="isDisabled"
+    :id="id"
     role="radio"
+    :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     @click="select"
   >
     <input
+      :autocomplete="autocomplete"
       type="radio"
       :name="resolvedName"
       :value="String(value)"
@@ -139,7 +142,10 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       'cui-radio--disabled': isDisabled,
       'cui-radio--readonly': isReadonly,
     }"
+    :id="id"
     role="radio"
+    :aria-describedby="ariaDescribedby"
+    :aria-labelledby="ariaLabelledby"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -148,6 +154,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   >
     <!-- Hidden native input for form submission -->
     <input
+      :autocomplete="autocomplete"
       type="radio"
       :name="resolvedName"
       :value="String(value)"
@@ -296,7 +303,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
   border: 1px solid var(--cui-border-strong);
   background: transparent;
   color: var(--_rb-color);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 

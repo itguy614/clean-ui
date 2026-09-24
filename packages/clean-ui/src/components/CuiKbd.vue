@@ -24,6 +24,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 
 <template>
   <kbd
+    class="cui-kbd"
     v-show="!hidden"
     :style="{
       display: 'inline-flex',

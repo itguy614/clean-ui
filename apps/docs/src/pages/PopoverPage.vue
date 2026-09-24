@@ -1,81 +1,80 @@
 <script setup lang="ts">
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiGrid, CuiPopover, CuiStack, CuiBadge, CuiIcon } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import { CuiButton, CuiFlex, CuiPopover, CuiStack, CuiBadge, CuiIcon } from "@itguy614/clean-ui";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/popover";
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Popover</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A floating panel anchored to a trigger element for displaying rich interactive content.
-        Supports click, hover, and focus triggers with optional header, footer, and arrow.
-      </p>
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Props</h2>
-      <PropTable
-        :props="[
-          { name: 'title', type: 'string', default: '—', description: 'Optional header title — renders header bar with close button' },
-          { name: 'placement', type: 'top | bottom | left | right | auto', default: 'bottom', description: 'Preferred placement' },
-          { name: 'trigger', type: 'click | hover | focus | hover-focus', default: 'click', description: 'How the popover is triggered' },
-          { name: 'showDelay', type: 'number', default: '0', description: 'Delay before showing (ms)' },
-          { name: 'hideDelay', type: 'number', default: '100', description: 'Delay before hiding (ms)' },
-          { name: 'noArrow', type: 'boolean', default: 'false', description: 'Hide the arrow' },
-          { name: 'offset', type: 'number', default: '10', description: 'Distance from trigger (px)' },
-          { name: 'width', type: 'string', default: '—', description: 'Fixed width (e.g., &quot;320px&quot;)' },
-          { name: 'rounded', type: 'none | sm | md | lg | full', default: 'lg', description: 'Border radius' },
-          { name: 'visible', type: 'boolean', default: '—', description: 'Manual v-model:visible control' },
-          { name: 'disabled', type: 'boolean', default: 'false', description: 'Prevents showing' },
-          { name: 'closable', type: 'boolean', default: 'true', description: 'Show close button in header (when title is set)' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Slots</h2>
-      <PropTable
-        :props="[
-          { name: 'default', type: 'slot', default: '—', description: 'Trigger element' },
-          { name: 'content', type: 'slot', default: '—', description: 'Popover body content' },
-          { name: 'header', type: 'slot', default: '—', description: 'Override entire header (replaces title + close button)' },
-          { name: 'footer', type: 'slot', default: '—', description: 'Optional footer area' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:visible', payload: 'boolean', description: 'Controls popover visibility (v-model:visible)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic click -->
-        <Example title="Basic Click Trigger" :code="`<CuiPopover title=&quot;Notifications&quot;>
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiPopover title=&quot;Notifications&quot;>
   <CuiButton variant=&quot;outline&quot;>Click me</CuiButton>
   <template #content>
     <p>You have 3 unread messages.</p>
   </template>
-</CuiPopover>`">
-          <CuiPopover title="Notifications">
-            <CuiButton variant="outline">Click me</CuiButton>
-            <template #content>
-              <p>You have 3 unread messages.</p>
-            </template>
-          </CuiPopover>
-        </Example>
+</CuiPopover>`"
+      >
+        <CuiPopover title="Notifications">
+          <CuiButton variant="outline">Click me</CuiButton>
+          <template #content>
+            <p>You have 3 unread messages.</p>
+          </template>
+        </CuiPopover>
+      </Example>
+      <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+        The default slot is the trigger; the panel's body goes in <code class="cui-code">#content</code>.
+        That split is what lets the panel be teleported to <code class="cui-code">&lt;body&gt;</code>,
+        so it is never clipped by an <code class="cui-code">overflow: hidden</code> ancestor.
+      </p>
+    </template>
 
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        A popover holds content you interact with, so it is a <code>role="dialog"</code> — but a
+        non-modal one: it does not trap focus, does not lock the page scroll, and the rest of
+        the page stays live behind it. If you need the reader to answer before going on, that is
+        a <code>CuiModal</code>, not this.
+      </p>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          Escape closes it, from anywhere — the listener is on the document rather than the
+          wrapper, because the panel is teleported to <code>&lt;body&gt;</code> and a
+          wrapper-scoped handler would miss it once focus moved inside.
+        </li>
+        <li>
+          With <code>trigger="click"</code> a click outside the trigger or the panel closes it
+          too.
+        </li>
+        <li>
+          The wrapper adds no role and does not make its contents focusable — put a real
+          <code>CuiButton</code> or <code>&lt;button&gt;</code> in the default slot. It also sets
+          no <code>aria-haspopup</code> or <code>aria-expanded</code> on that trigger, so add
+          them yourself if the state matters.
+        </li>
+        <li>
+          Focus is not moved into the panel when it opens, and the panel lives at the end of the
+          document rather than after the trigger — so tabbing onward from the trigger does not
+          reach the panel's buttons. Move focus yourself on open when the panel contains
+          controls the reader has to reach.
+        </li>
+        <li>
+          <code>trigger="hover"</code> puts the content out of reach of anyone not using a
+          pointer. Use <code>hover-focus</code>, or keep hover for things that are merely
+          convenient.
+        </li>
+        <li>
+          The <code>title</code> prop names the panel, but the id it uses is a fixed string
+          rather than a generated one — so two titled popovers on the same page produce
+          duplicate ids and the naming becomes unreliable. A single titled popover per page is
+          safe; beyond that, name the panel yourself.
+        </li>
+      </ul>
+    </template>
+
+    <template #examples>
         <!-- Without title (no header) -->
         <Example title="Without Title" :code="`<CuiPopover>
   <CuiButton variant=&quot;outline&quot;>Simple</CuiButton>
@@ -200,6 +199,10 @@ import Example from "../components/Example.vue";
               </CuiFlex>
             </template>
           </CuiPopover>
+          <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
+            Actions in the panel are not reached by tabbing on from the trigger — for a genuine
+            confirmation, <code class="cui-code">CuiConfirmDialog</code> is the safer shape.
+          </p>
         </Example>
 
         <!-- Rich content -->
@@ -293,8 +296,6 @@ import Example from "../components/Example.vue";
             </template>
           </CuiPopover>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

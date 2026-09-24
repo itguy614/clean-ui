@@ -33,7 +33,7 @@ const grid = useDataGridState();
   align-items: center;
   gap: calc(0.125rem * var(--cui-density-scale, 1));
   border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.125rem * var(--cui-density-scale, 1));
 }
 </style>

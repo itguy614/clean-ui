@@ -14,7 +14,7 @@ provide(TableSectionContextKey, { isHead: false });
 </script>
 
 <template>
-  <tfoot v-show="!hidden">
+  <tfoot class="cui-table-foot" v-show="!hidden">
     <slot />
   </tfoot>
 </template>

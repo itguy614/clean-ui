@@ -207,7 +207,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" v-show="!hidden" :style="containerStyle">
+  <div class="cui-resizable-panels" ref="containerRef" v-show="!hidden" :style="containerStyle">
     <!-- First panel -->
     <div :style="firstPanelStyle">
       <slot name="first" />

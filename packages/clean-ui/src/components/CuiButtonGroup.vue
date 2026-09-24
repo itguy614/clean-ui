@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { HideableProps } from "../types/common";
+import type { HideableProps, AriaLabelableProps } from "../types/common";
 
 export type ButtonGroupOrientation = "horizontal" | "vertical";
 
-export interface CuiButtonGroupProps extends HideableProps {
+export interface CuiButtonGroupProps extends AriaLabelableProps, HideableProps {
+  /** Accessible group name, when no `aria-labelledby` target exists. */
+  label?: string;
   /** Layout direction */
   orientation?: ButtonGroupOrientation;
 }
@@ -20,6 +22,10 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
     class="cui-button-group"
     :class="`cui-button-group--${orientation}`"
     role="group"
+    :id="id"
+    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="ariaDescribedby"
+    :aria-label="ariaLabelledby ? undefined : label"
   >
     <slot />
   </div>
@@ -41,19 +47,19 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 /* Strip inner border-radius on horizontal buttons */
 .cui-button-group--horizontal > :deep(.cui-button:not(:first-child):not(:last-child)),
 .cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-radius: 0 !important;
+  border-radius: 0;
 }
 
 .cui-button-group--horizontal > :deep(.cui-button:first-child:not(:last-child)),
 .cui-button-group--horizontal > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button) {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .cui-button-group--horizontal > :deep(.cui-button:last-child:not(:first-child)),
 .cui-button-group--horizontal > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button) {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 /* Remove double borders between horizontal buttons */
@@ -67,19 +73,19 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 /* Strip inner border-radius on vertical buttons */
 .cui-button-group--vertical > :deep(.cui-button:not(:first-child):not(:last-child)),
 .cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-radius: 0 !important;
+  border-radius: 0;
 }
 
 .cui-button-group--vertical > :deep(.cui-button:first-child:not(:last-child)),
 .cui-button-group--vertical > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button) {
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .cui-button-group--vertical > :deep(.cui-button:last-child:not(:first-child)),
 .cui-button-group--vertical > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button) {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 /* Remove double borders between vertical buttons */

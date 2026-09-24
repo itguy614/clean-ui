@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -13,7 +14,7 @@ export interface TagOption {
   [key: string]: unknown;
 }
 
-export interface CuiTagInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTagInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Selected tags */
   modelValue?: string[];
   /** Predefined tag suggestions */
@@ -64,11 +65,14 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
   hidden: false,
 });
 
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -84,6 +88,7 @@ const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const dropdownRef = ref<HTMLElement | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
+const controlRef = ref<HTMLElement | null>(null);
 const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -125,35 +130,54 @@ const canCreate = computed(() => {
 const isLoading = computed(() => internalLoading.value);
 
 // Size config
-const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; padding: string; tagSize: "sm" | "md"; inputHeight: string }> = {
-  sm: { fontSize: "0.8125rem", padding: "calc(0.25rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2rem" },
-  md: { fontSize: "0.875rem", padding: "calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))", tagSize: "sm", inputHeight: "2.375rem" },
-  lg: { fontSize: "0.9375rem", padding: "calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))", tagSize: "md", inputHeight: "2.75rem" },
-};
-const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+// From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
+// size. The private table it replaces had different metrics, only sm|md|lg, and an
+// `inputHeight` that was never density-scaled at all (#123).
+/**
+ * The control grows with its tag rows, so the scale's height is a floor rather than a
+ * fixed height — and the chips inside need room, hence the reduced vertical padding.
+ * Constant, so it is built once rather than per size change.
+ */
+const CHIP_ROW_PY = scaleDensity("0.25rem");
+
+const cfg = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size];
+  return {
+    tagSize: nestedSize(props.size),
+    style: {
+      "--_tag-input-font-size": s.fontSize,
+      "--_tag-input-padding": `${CHIP_ROW_PY} ${s.px}`,
+      "--_tag-input-min-height": s.height,
+    },
+  };
+});
 
 // Dropdown positioning
 function updateDropdownPosition() {
-  if (!wrapperRef.value) return;
-  const rect = wrapperRef.value.getBoundingClientRect();
+  // The CONTROL, not the wrapper — the wrapper also holds the label above and
+  // the error message below, so anchoring to it left a label-sized gap between
+  // the field and the panel. See CuiSelect, which measures its trigger.
+  const anchor = controlRef.value ?? wrapperRef.value;
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
   const vh = window.innerHeight;
   const spaceBelow = vh - rect.bottom;
-  const openAbove = spaceBelow < 200 && rect.top > spaceBelow;
-  const maxH = Math.min(240, Math.max(spaceBelow, rect.top) - 16);
+  const spaceAbove = rect.top;
+  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+  // Bound by the side actually being opened to, not the roomier one.
+  const maxH = Math.max(0, Math.min(240, (openAbove ? spaceAbove : spaceBelow) - 16));
 
   const s: Record<string, string> = {
+    // The panel is teleported to <body>, so it inherits nothing from the component — it
+    // has to carry the size-derived properties itself (#123).
+    ...cfg.value.style,
     position: "fixed",
     zIndex: "9990",
     left: `${rect.left}px`,
     width: `${rect.width}px`,
     maxHeight: `${maxH}px`,
-    overflowY: "auto",
-    background: "var(--cui-surface-base)",
-    border: "1px solid var(--cui-border)",
-    borderRadius: "0.5rem",
-    boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.08)",
-    padding: "calc(0.25rem * var(--cui-density-scale, 1))",
+    // Only the geometry the positioner computes stays inline; the panel's paint lives in
+    // the stylesheet so it can be themed (#123).
   };
 
   if (openAbove) s.bottom = `${vh - rect.top + 4}px`;
@@ -283,26 +307,22 @@ defineExpose({ el: wrapperRef, focus, blur });
 </script>
 
 <template>
-  <div v-show="!hidden" ref="wrapperRef" :style="{ position: 'relative' }">
+  <!-- Size-derived properties on the ROOT: the dropdown is a sibling of the control, so
+       anything set on the control would never reach the suggestions. -->
+  <div class="cui-tag-input" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
-      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      class="cui-tag-input__label"
     >{{ label }}</label>
 
     <!-- Input area -->
     <div
+      ref="controlRef"
+      class="cui-tag-input__control"
+      :class="{ 'cui-tag-input__control--disabled': disabled }"
       :style="{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        padding: cfg.padding,
-        border: `1px solid ${error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))'}`,
-        borderRadius: radiusMap[rounded],
-        background: 'var(--cui-surface-base, white)',
-        cursor: disabled ? 'default' : 'text',
-        opacity: disabled ? '0.5' : '1',
-        minHeight: cfg.inputHeight,
+        '--_tag-input-radius': radiusMap[rounded],
+        '--_tag-input-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
       }"
       @click="inputRef?.focus()"
     >
@@ -320,22 +340,18 @@ defineExpose({ el: wrapperRef, focus, blur });
 
       <!-- Input -->
       <input
+        :id="id"
+        :name="name"
+        :autocomplete="autocomplete"
+        :aria-describedby="describedBy"
+        :aria-required="ariaRequired || undefined"
+        :aria-labelledby="ariaLabelledby"
         v-if="!atMax"
         ref="inputRef"
         :value="query"
         :placeholder="modelValue.length > 0 ? '' : placeholder"
         :disabled="disabled"
-        :style="{
-          flex: '1',
-          minWidth: '4rem',
-          border: 'none',
-          outline: 'none',
-          background: 'transparent',
-          fontSize: cfg.fontSize,
-          color: 'var(--cui-text-body)',
-          padding: 'calc(0.125rem * var(--cui-density-scale, 1)) 0',
-          fontFamily: 'inherit',
-        }"
+        class="cui-tag-input__input"
         @input="onInput"
         @focus="onFocus"
         @keydown="onKeydown"
@@ -343,13 +359,18 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Error -->
-    <div v-if="error && errorMessage" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-tag-input__error">
       {{ errorMessage }}
     </div>
 
     <!-- Dropdown -->
     <Teleport to="body">
-      <div v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)" ref="dropdownRef" :style="dropdownStyle">
+      <div
+        v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)"
+        ref="dropdownRef"
+        class="cui-tag-input__dropdown"
+        :style="dropdownStyle"
+      >
         <!-- Loading -->
         <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
           <CuiSpinner size="xs" show-label label="Searching..." />
@@ -360,18 +381,8 @@ defineExpose({ el: wrapperRef, focus, blur });
           v-for="(suggestion, i) in filteredSuggestions"
           :key="suggestion.value"
           :data-index="i"
-          :style="{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-            cursor: 'pointer',
-            fontSize: cfg.fontSize,
-            borderRadius: '0.25rem',
-            background: focusedIndex === i ? 'var(--cui-primary-bg)' : 'transparent',
-            color: 'var(--cui-text-body)',
-            transition: 'background 0.1s ease',
-          }"
+          class="cui-tag-input__suggestion"
+          :class="{ 'cui-tag-input__suggestion--focused': focusedIndex === i }"
           @click.stop="selectSuggestion(suggestion)"
           @mouseenter="focusedIndex = i"
         >
@@ -383,21 +394,10 @@ defineExpose({ el: wrapperRef, focus, blur });
         <!-- Create new -->
         <div
           v-if="canCreate"
-          :style="{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
-            padding: 'calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-            cursor: 'pointer',
-            fontSize: cfg.fontSize,
-            borderRadius: '0.25rem',
-            background: focusedIndex === filteredSuggestions.length ? 'var(--cui-primary-bg)' : 'transparent',
-            color: 'var(--cui-primary)',
-            fontWeight: '500',
-            transition: 'background 0.1s ease',
-            borderTop: filteredSuggestions.length > 0 ? '1px solid color-mix(in srgb, var(--cui-border) 50%, transparent)' : 'none',
-            marginTop: filteredSuggestions.length > 0 ? 'calc(0.125rem * var(--cui-density-scale, 1))' : '0',
-            paddingTop: filteredSuggestions.length > 0 ? 'calc(0.5rem * var(--cui-density-scale, 1))' : undefined,
+          class="cui-tag-input__create"
+          :class="{
+            'cui-tag-input__suggestion--focused': focusedIndex === filteredSuggestions.length,
+            'cui-tag-input__create--divided': filteredSuggestions.length > 0,
           }"
           @click.stop="createTag"
           @mouseenter="focusedIndex = filteredSuggestions.length"
@@ -409,3 +409,118 @@ defineExpose({ el: wrapperRef, focus, blur });
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable ---
+   Zero specificity, so a consumer's own rule wins without `!important`. See the note in
+   CuiButton.vue. The private values come from the style binding; a public token set
+   anywhere in the ancestor chain takes precedence (#123). */
+:where(.cui-tag-input__control) {
+  min-height: var(--cui-tag-input-min-height, var(--_tag-input-min-height));
+  padding: var(--cui-tag-input-padding, var(--_tag-input-padding));
+  border-radius: var(--cui-tag-input-radius, var(--_tag-input-radius));
+  border: var(--cui-tag-input-border-width, 1px) solid var(--_tag-input-border);
+  background: var(--cui-tag-input-bg, var(--cui-surface-base, white));
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+}
+
+:where(.cui-tag-input__dropdown) {
+  background: var(--cui-tag-input-panel-bg, var(--cui-surface-base));
+  border: var(--cui-tag-input-panel-border, 1px solid var(--cui-border));
+  border-radius: var(--cui-tag-input-panel-radius, 0.5rem);
+  box-shadow: var(
+    --cui-tag-input-panel-shadow,
+    0 8px 24px -4px rgba(0, 0, 0, 0.12),
+    0 2px 8px -2px rgba(0, 0, 0, 0.08)
+  );
+  padding: var(--cui-tag-input-panel-padding, calc(0.25rem * var(--cui-density-scale, 1)));
+}
+
+:where(.cui-tag-input__suggestion, .cui-tag-input__create) {
+  padding: var(
+    --cui-tag-input-item-padding,
+    calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))
+  );
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+  border-radius: var(--cui-tag-input-item-radius, 0.25rem);
+}
+
+:where(.cui-tag-input__suggestion) {
+  color: var(--cui-tag-input-item-color, var(--cui-text-body));
+}
+
+:where(.cui-tag-input__suggestion--focused) {
+  background: var(--cui-tag-input-item-focus-bg, var(--cui-primary-bg));
+}
+
+/* --- Structural --- */
+.cui-tag-input {
+  position: relative;
+}
+
+.cui-tag-input__label {
+  display: block;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+
+.cui-tag-input__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  cursor: text;
+}
+
+.cui-tag-input__control--disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.cui-tag-input__input {
+  flex: 1;
+  min-width: 4rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+  color: var(--cui-tag-input-color, var(--cui-text-body));
+  /* A determinate line-height, so the field's intrinsic height cannot push the control
+     past the shared scale's height — see the matching note in CuiCombobox (#123). */
+  line-height: 1.25;
+}
+
+.cui-tag-input__dropdown {
+  overflow-y: auto;
+}
+
+.cui-tag-input__suggestion,
+.cui-tag-input__create {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.cui-tag-input__create {
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  color: var(--cui-primary);
+  font-weight: 500;
+}
+
+.cui-tag-input__create--divided {
+  border-top: 1px solid color-mix(in srgb, var(--cui-border) 50%, transparent);
+  margin-top: calc(0.125rem * var(--cui-density-scale, 1));
+}
+
+.cui-tag-input__error {
+  font-size: 0.75rem;
+  color: var(--cui-error);
+  margin-top: calc(0.25rem * var(--cui-density-scale, 1));
+}
+</style>

@@ -67,6 +67,7 @@ import {
   PhVideoCamera,
   PhWarning,
   PhWarningCircle,
+  PhWarningOctagon,
   PhX,
   PhXCircle,
 } from "@phosphor-icons/vue";
@@ -108,6 +109,7 @@ export const BUILTIN_ICONS: Record<string, Component> = {
   info: PhInfo,
   warning: PhWarning,
   "warning-circle": PhWarningCircle,
+  "warning-octagon": PhWarningOctagon,
   "x-circle": PhXCircle,
 
   // --- Structure / display ---

@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
 const radiusMap: Record<CuiRounded, string> = {
   none: "0",
-  sm: "0.25rem",
-  md: "var(--cui-button-radius, 0.375rem)",
-  lg: "0.5rem",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };
 
@@ -23,7 +24,7 @@ export type InputType =
   | "number"
   | "range";
 
-export interface CuiInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding. `string | number` so `type="number"` / `v-model.number` bind without a cast. */
   modelValue?: string | number;
   /** Input type */
@@ -54,6 +55,9 @@ const props = withDefaults(defineProps<CuiInputProps>(), {
   hidden: false,
   rounded: "md",
 });
+
+// Link our own error message into aria-describedby (#175).
+const { errorId, describedBy } = useFieldDescribedBy(props);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number];
@@ -104,6 +108,7 @@ defineExpose({ el: inputRef, focus, blur });
 
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
+
 </script>
 
 <template>
@@ -143,6 +148,12 @@ const messages = useMessages();
         <!-- Native input -->
         <input
           ref="inputEl"
+          :id="id"
+          :name="name"
+          :autocomplete="autocomplete"
+          :aria-describedby="describedBy"
+          :aria-required="ariaRequired || undefined"
+          :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
           :placeholder="placeholder"
@@ -158,7 +169,6 @@ const messages = useMessages();
           v-if="showClear"
           type="button"
           class="cui-input__clear"
-          tabindex="-1"
           :aria-label="messages.input.clear"
           @click="clear"
         >
@@ -170,7 +180,6 @@ const messages = useMessages();
           v-if="isPassword"
           type="button"
           class="cui-input__password-toggle"
-          tabindex="-1"
           :aria-label="passwordVisible ? messages.input.hidePassword : messages.input.showPassword"
           @click="passwordVisible = !passwordVisible"
         >
@@ -193,7 +202,7 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" class="cui-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-input__error">
       {{ errorMessage }}
     </div>
   </div>
@@ -208,6 +217,10 @@ const messages = useMessages();
 .cui-input {
   display: flex;
   align-items: stretch;
+  /* The scale's height is the control's OUTER height, as it is for CuiSelect and the rest.
+     It used to sit on `__inner`, which put the 1px borders outside it and made every input
+     2px taller than a select or combobox of the same size (#123). */
+  height: var(--_input-height);
   border: 1px solid var(--_input-border);
   background: var(--cui-surface-base);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -230,7 +243,7 @@ const messages = useMessages();
   align-items: center;
   flex: 1;
   min-width: 0;
-  height: var(--_input-height);
+  height: 100%;
   padding: 0 var(--_input-px);
   gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
@@ -349,21 +362,20 @@ const messages = useMessages();
 }
 
 /* Prefix button: outer left matches input radius, inner right is flat */
-/* !important needed to override button's inline :style border-radius */
 .cui-input__prefix-button :deep(.cui-button) {
-  border-radius: calc(var(--cui-button-radius, 0.375rem) - 1px) 0 0 calc(var(--cui-button-radius, 0.375rem) - 1px) !important;
+  border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
 }
 
 /* Suffix button: inner left is flat, outer right matches input radius */
 .cui-input__suffix-button :deep(.cui-button) {
-  border-radius: 0 calc(var(--cui-button-radius, 0.375rem) - 1px) calc(var(--cui-button-radius, 0.375rem) - 1px) 0 !important;
+  border-radius: 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0;
 }
 
 /* Suppress button's own focus ring inside input — the input's focus-within handles it */
 .cui-input__prefix-button :deep(.cui-button:focus-visible),
 .cui-input__suffix-button :deep(.cui-button:focus-visible) {
   outline: none;
-  background: var(--_btn-hover-bg);
+  background: var(--cui-button-hover-bg, var(--_button-hover-bg));
 }
 
 /* --- Error state --- */

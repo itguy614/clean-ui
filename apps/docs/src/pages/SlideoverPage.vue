@@ -14,11 +14,11 @@ import {
   CuiStack,
   CuiTextarea,
 } from "@itguy614/clean-ui";
-import PropTable from "../components/PropTable.vue";
-import EventTable from "../components/EventTable.vue";
+import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import meta from "../meta/slideover";
 
-const basic = ref(false);
+const usage = ref(false);
 const leftPanel = ref(false);
 const topPanel = ref(false);
 const bottomPanel = ref(false);
@@ -39,70 +39,65 @@ const formAgree = ref(false);
 </script>
 
 <template>
-  <CuiStack spacing="8">
-    <div>
-      <h1 class="text-4xl font-bold">Slideover</h1>
-      <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        A panel that slides in from any edge of the viewport. Shares overlay
-        behavior with <code class="cui-code">CuiModal</code> (focus trap, scroll lock,
-        backdrop) and reuses <code class="cui-code">CuiModalHeader</code>,
-        <code class="cui-code">CuiModalBody</code>, and
-        <code class="cui-code">CuiModalFooter</code> sub-components.
+  <DocPage :meta="meta">
+    <template #usage>
+      <Example
+        code-open
+        :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Detail Panel&quot;>
+  <p>Click the X, press Escape, or click the backdrop to close.</p>
+</CuiSlideover>`"
+      >
+        <CuiButton variant="solid" size="sm" @click="usage = true">Open Right</CuiButton>
+        <CuiSlideover v-model:visible="usage" title="Detail Panel">
+          <p>This is a basic slideover from the right edge. Click the X, press Escape, or click the backdrop to close.</p>
+        </CuiSlideover>
+      </Example>
+    </template>
+
+    <template #accessibility>
+      <p class="text-surface-700 dark:text-surface-300">
+        A slideover is a modal dialog that happens to arrive from an edge. The panel is a
+        <code>role="dialog"</code> with <code>aria-modal="true"</code>, and it runs the same
+        <code>useOverlay</code> composable as <code>CuiModal</code> — so everything below is
+        true of both, and a reader who has learned one has learned the other.
       </p>
-    </div>
+      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          On open, focus moves to the panel; on close it is returned to the control that opened
+          it. Tab and Shift+Tab wrap inside the panel while it is open.
+        </li>
+        <li>
+          Escape closes, unless <code>persistent</code> is set — which blocks Escape and the
+          backdrop click together. The X button is unaffected, so pair it with
+          <code>noCloseButton</code> and an explicit footer action.
+        </li>
+        <li>Background scrolling is locked while the panel is open.</li>
+        <li>
+          <code>titleAs</code> sets the element the title renders as, defaulting to
+          <code>h2</code>. It is forwarded to <code>CuiModalHeader</code>, so it works in simple
+          mode and when you assemble the header yourself.
+        </li>
+        <li>
+          Because it is modal, a slideover is the wrong shape for a persistent sidebar or a
+          navigation rail — those should stay in the page, reachable by Tab, rather than
+          trapping focus and locking the scroll.
+        </li>
+        <li>
+          The panel has no accessible name today: <code>aria-labelledby</code> is emitted, but
+          the id it names is never put on the title element. Add your own
+          <code>aria-label</code> if the name matters to you.
+        </li>
+      </ul>
+    </template>
 
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">CuiSlideover Props</h2>
-      <PropTable
-        :props="[
-          { name: 'v-model:visible', type: 'boolean', default: 'false', description: 'Controls visibility' },
-          { name: 'side', type: 'right | left | top | bottom', default: 'right', description: 'Which edge the panel slides from' },
-          { name: 'size', type: 'sm | md | lg | xl | full | string', default: 'md', description: 'Panel width/height (named or custom CSS value)' },
-          { name: 'title', type: 'string', default: '—', description: 'Header title text (simple mode)' },
-          { name: 'persistent', type: 'boolean', default: 'false', description: 'Disable Escape and backdrop click closing' },
-          { name: 'noCloseButton', type: 'boolean', default: 'false', description: 'Hide the X close button' },
-          { name: 'allowNested', type: 'boolean', default: 'false', description: 'Allow stacking on top of another overlay' },
-          { name: 'backdropOpacity', type: 'number', default: '0.5', description: 'Backdrop darkness (0–1)' },
-          { name: 'backdropBlur', type: 'none | sm | md | lg | string', default: 'none', description: 'Backdrop blur amount' },
-          { name: 'backdropColor', type: 'string', default: 'black', description: 'Backdrop color' },
-          { name: 'backdropImage', type: 'string', default: '—', description: 'Backdrop image URL' },
-          { name: 'backdropGradient', type: 'string', default: '—', description: 'Backdrop CSS gradient' },
-          { name: 'hidden', type: 'boolean', default: 'false', description: 'Hide the component (v-show)' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Events</h2>
-      <EventTable
-        :events="[
-          { name: 'update:visible', payload: 'boolean', description: 'Controls slideover visibility (v-model:visible)' },
-          { name: 'close', payload: '—', description: 'Fires when the slideover is closed' },
-        ]"
-      />
-    </div>
-
-    <div>
-      <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
-      <CuiStack spacing="6">
-
-        <!-- Basic (right) -->
-        <Example title="Basic (Right)" :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Details&quot;>
-  <p>Panel content here.</p>
-</CuiSlideover>`">
-          <CuiButton variant="solid" size="sm" @click="basic = true">Open Right</CuiButton>
-          <CuiSlideover v-model:visible="basic" title="Detail Panel">
-            <p>This is a basic slideover from the right edge. Click the X, press Escape, or click the backdrop to close.</p>
-          </CuiSlideover>
-        </Example>
-
+    <template #examples>
         <!-- Sides -->
         <Example title="All Sides" :code="`<CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Right Panel&quot; side=&quot;right&quot;>...</CuiSlideover>
 <CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Left Panel&quot; side=&quot;left&quot;>...</CuiSlideover>
 <CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Top Panel&quot; side=&quot;top&quot;>...</CuiSlideover>
 <CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Bottom Panel&quot; side=&quot;bottom&quot;>...</CuiSlideover>`">
           <CuiFlex gap="3" class="flex-wrap">
-            <CuiButton variant="outline" size="sm" @click="basic = true">Right (default)</CuiButton>
+            <CuiButton variant="outline" size="sm" @click="usage = true">Right (default)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="leftPanel = true">Left</CuiButton>
             <CuiButton variant="outline" size="sm" @click="topPanel = true">Top</CuiButton>
             <CuiButton variant="outline" size="sm" @click="bottomPanel = true">Bottom</CuiButton>
@@ -124,7 +119,7 @@ const formAgree = ref(false);
 <CuiSlideover v-model:visible=&quot;show&quot; title=&quot;Custom Width&quot; size=&quot;600px&quot;>...</CuiSlideover>`">
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton variant="outline" size="sm" @click="sized.sm = true">Small (20rem)</CuiButton>
-            <CuiButton variant="outline" size="sm" @click="basic = true">Medium (default)</CuiButton>
+            <CuiButton variant="outline" size="sm" @click="usage = true">Medium (default)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.lg = true">Large (36rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.xl = true">XL (48rem)</CuiButton>
             <CuiButton variant="outline" size="sm" @click="sized.full = true">Full</CuiButton>
@@ -322,8 +317,6 @@ const formAgree = ref(false);
             </CuiModalFooter>
           </CuiSlideover>
         </Example>
-
-      </CuiStack>
-    </div>
-  </CuiStack>
+    </template>
+  </DocPage>
 </template>

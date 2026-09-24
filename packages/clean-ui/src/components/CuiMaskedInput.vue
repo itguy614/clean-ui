@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, useTemplateRef } from "vue";
 import CuiInput from "./CuiInput.vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export interface MaskToken {
   pattern: RegExp;
 }
 
-export interface CuiMaskedInputProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiMaskedInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Raw value (no separators) */
   modelValue?: string;
   /** Mask pattern: # = digit, A = letter, * = alphanumeric, others are literal */
@@ -379,15 +379,24 @@ function onFocus() {
 defineExpose({
   el: inputRef,
   formattedValue,
-  focus: () => (inputRef.value as any)?.focus(),
+  // Forwards FocusOptions, as CuiInput.focus() and the native focus() both do —
+  // callers need { preventScroll } when restoring focus from an overlay (#112).
+  focus: (opts?: FocusOptions) => (inputRef.value as any)?.focus(opts),
   blur: () => (inputRef.value as any)?.blur(),
 });
 </script>
 
 <template>
   <CuiInput
+    class="cui-masked-input"
     v-show="!hidden"
     ref="maskedInputRef"
+    :id="id"
+    :name="name"
+    :autocomplete="autocomplete"
+    :aria-describedby="ariaDescribedby"
+    :aria-required="ariaRequired || undefined"
+    :aria-labelledby="ariaLabelledby"
     :model-value="displayValue"
     type="text"
     :placeholder="placeholder"
