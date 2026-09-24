@@ -5,6 +5,8 @@ import changelogRaw from "../../../../CHANGELOG.md?raw";
 
 interface Section {
   title: string;
+  /** Prose lines between the heading and the list — the Upgrading guide uses these. */
+  paragraphs: string[];
   items: string[];
 }
 interface Release {
@@ -15,19 +17,26 @@ interface Release {
 
 // Parse the Keep a Changelog structure:
 //   ## [x.y.z] - YYYY-MM-DD   → release
+//   ## [Unreleased]           → release, no date. Keep a Changelog's own convention, and
+//                               what every entry sits under until a version is cut — the
+//                               date was previously required, so the whole section, and
+//                               therefore the entire release in progress, rendered nowhere.
 //   ### Section               → section
 //   - item                    → list item
+//   anything else             → a paragraph within the section
 const releases = computed<Release[]>(() => {
   const out: Release[] = [];
   let release: Release | null = null;
   let section: Section | null = null;
+  let inParagraph = false;
 
   for (const raw of changelogRaw.split("\n")) {
     const line = raw.trimEnd();
 
-    const rel = line.match(/^##\s+\[([^\]]+)\]\s*-\s*(.+)$/);
+    const rel = line.match(/^##\s+\[([^\]]+)\](?:\s*-\s*(.+))?$/);
     if (rel) {
-      release = { version: rel[1], date: rel[2].trim(), sections: [] };
+      release = { version: rel[1], date: (rel[2] ?? "").trim(), sections: [] };
+      inParagraph = false;
       out.push(release);
       section = null;
       continue;
@@ -35,7 +44,8 @@ const releases = computed<Release[]>(() => {
 
     const sec = line.match(/^###\s+(.+)$/);
     if (sec && release) {
-      section = { title: sec[1].trim(), items: [] };
+      section = { title: sec[1].trim(), paragraphs: [], items: [] };
+      inParagraph = false;
       release.sections.push(section);
       continue;
     }
@@ -43,6 +53,26 @@ const releases = computed<Release[]>(() => {
     const item = line.match(/^[-*]\s+(.+)$/);
     if (item && section) {
       section.items.push(item[1].trim());
+      continue;
+    }
+
+    // Continuation of the previous list item — the file wraps long entries.
+    if (section && /^\s+\S/.test(raw) && section.items.length) {
+      section.items[section.items.length - 1] += ` ${line.trim()}`;
+      continue;
+    }
+
+    // Prose before the list. The file hard-wraps, so consecutive lines continue the same
+    // paragraph and a blank line starts a new one.
+    if (section && !section.items.length) {
+      if (!line.trim()) {
+        inParagraph = false;
+      } else if (inParagraph) {
+        section.paragraphs[section.paragraphs.length - 1] += ` ${line.trim()}`;
+      } else {
+        section.paragraphs.push(line.trim());
+        inParagraph = true;
+      }
     }
   }
   return out;
@@ -96,7 +126,13 @@ function inlineMd(text: string): string {
 
           <div v-for="section in release.sections" :key="section.title" style="margin-top: 1rem;">
             <CuiBadge :color="sectionColor(section.title)" size="sm">{{ section.title }}</CuiBadge>
-            <ul style="margin-top: 0.5rem;">
+            <p
+              v-for="(para, i) in section.paragraphs"
+              :key="`p${i}`"
+              style="margin-top: 0.5rem;"
+              v-html="inlineMd(para)"
+            />
+            <ul v-if="section.items.length" style="margin-top: 0.5rem;">
               <li v-for="(item, i) in section.items" :key="i" v-html="inlineMd(item)" />
             </ul>
           </div>
