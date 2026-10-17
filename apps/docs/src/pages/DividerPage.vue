@@ -33,7 +33,9 @@ import meta from "../meta/divider";
       <p class="text-sm text-surface-700 dark:text-surface-300">
         A label, from the <code>label</code> prop or the default slot, becomes the
         separator's accessible name, so "OR" between two sign-in methods is announced as
-        "separator, OR". The lines either side are hidden from assistive tech.
+        "separator, OR". The lines either side are hidden from assistive tech. Keep the
+        label to text: a separator's contents are not interactive to assistive tech, so a
+        button or link placed there is announced as part of the name, not as a control.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         A divider is a visual grouping device, not a document structure. If the content on

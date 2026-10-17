@@ -99,7 +99,7 @@ const labelStyle = computed(() => ({
     class="cui-divider"
     :style="containerStyle"
     role="separator"
-    :aria-orientation="orientation"
+    :aria-orientation="orientation === 'vertical' ? 'vertical' : 'horizontal'"
     :aria-labelledby="labelId"
   >
     <div v-if="labelPosition !== 'start'" :style="lineStyle" aria-hidden="true" />
