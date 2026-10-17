@@ -1,10 +1,21 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { syntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree } from "@codemirror/language";
 import CuiMarkdownEditor from "../../components/CuiMarkdownEditor.vue";
 import { editorThemeExtension } from "../editor-theme";
 import { cuiMarkdownHighlightStyle } from "../syntax-highlight";
+
+/**
+ * The whole document's syntax tree. syntaxTree() returns only what the parser has reached
+ * so far — it works to a time budget and continues in the background — so under load a
+ * node near the end of the document can be missing (#250).
+ */
+function completeTree(state: import("@codemirror/state").EditorState) {
+  const tree = ensureSyntaxTree(state, state.doc.length, 5000);
+  if (!tree) throw new Error("the document did not finish parsing within 5s");
+  return tree;
+}
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView()!;
@@ -47,7 +58,7 @@ describe("theme", () => {
       const view = getView(wrapper);
 
       const taggedNodeNames = new Set<string>();
-      syntaxTree(view.state).iterate({
+      completeTree(view.state).iterate({
         enter: (ref) => {
           taggedNodeNames.add(ref.name);
         },
