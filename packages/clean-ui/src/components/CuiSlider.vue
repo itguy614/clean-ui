@@ -55,7 +55,7 @@ const dragging = ref(false);
 // The visible label has to point at the native input to name it; generate an id when
 // the caller supplies none (#172).
 const generatedId = `cui-slider-${useId()}`;
-const inputId = computed(() => props.id ?? generatedId);
+const inputId = computed(() => props.id || generatedId);
 
 function onInput(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value);

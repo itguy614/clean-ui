@@ -109,3 +109,12 @@ describe("CuiSlider accessibility", () => {
     expect(wrapper.get("input[type=range]").attributes("aria-valuetext")).toBeUndefined();
   });
 });
+
+describe("CuiSlider id fallback", () => {
+  it("falls back to a generated id for an empty id, so the label still names the input", () => {
+    const wrapper = mount(CuiSlider, { props: { label: "Volume", id: "" } });
+    const id = wrapper.get("input[type=range]").attributes("id");
+    expect(id).toBeTruthy();
+    expect(wrapper.get("label").attributes("for")).toBe(id);
+  });
+});
