@@ -1,19 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { ensureSyntaxTree } from "@codemirror/language";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
-
-/**
- * The whole document's syntax tree. syntaxTree() returns only what the parser has reached
- * so far — it works to a time budget and continues in the background — so under load a
- * node near the end of the document can be missing (#250).
- */
-function completeTree(state: import("@codemirror/state").EditorState) {
-  const tree = ensureSyntaxTree(state, state.doc.length, 5000);
-  if (!tree) throw new Error("the document did not finish parsing within 5s");
-  return tree;
-}
+import { completeTree } from "../../test-utils";
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView();
