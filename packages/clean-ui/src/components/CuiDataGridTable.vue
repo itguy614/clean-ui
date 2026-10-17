@@ -119,39 +119,50 @@ function getSortOpacity(key: string): string {
   return grid.sort.value?.key === sortKey ? "1" : "0.3";
 }
 
-// Compute table min-width from column widths (enables horizontal scroll)
+// The bulk-select column's width. Its cells drop their horizontal padding
+// (SELECT_CELL_STYLE) so they render at exactly this width — padding plus the
+// checkbox would otherwise overflow it at md and lg — which is what lets the
+// sticky offsets below add this value rather than assume a pixel width.
+const SELECT_COLUMN_WIDTH = "3rem";
+const SELECT_CELL_STYLE = { paddingInline: 0 };
+
+const PINNED_BG = "var(--cui-table-head-bg, var(--color-surface-50))";
+const PINNED_EDGE_SHADOW = "2px 0 4px -1px rgba(0,0,0,0.08)";
+
+/** A width usable in calc(); a keyword like "auto" (or "") is not, and would void the sum. */
+const isLength = (width: string | undefined): width is string => !!width && /^(\d|\.|calc\()/.test(width);
+
+/** Sums CSS lengths as written, so a "10rem" or "20%" column is not read as 10px. */
+function sumLengths(lengths: string[]): string {
+  if (lengths.length === 0) return "0px";
+  return lengths.length === 1 ? lengths[0] : `calc(${lengths.join(" + ")})`;
+}
+
+// Compute table min-width from column widths (enables horizontal scroll). It has
+// to agree with the sticky offsets below: a min-width short of the declared
+// widths lets the table squeeze its columns, and the offsets then overshoot them.
 const tableMinWidth = computed(() => {
   const cols = grid.visibleColumns.value;
-  const hasWidths = cols.some((c) => c.width);
-  if (!hasWidths) return undefined;
+  if (!cols.some((c) => c.width)) return undefined;
 
-  let total = 0;
-  if (hasBulkActions.value) total += 48;
-  for (const col of cols) {
-    total += parseInt(col.width ?? "150", 10) || 150;
-  }
-  if (hasRowActions.value) total += 48;
-  return `${total}px`;
+  return sumLengths([
+    ...(hasBulkActions.value ? [SELECT_COLUMN_WIDTH] : []),
+    ...cols.map((col) => (isLength(col.width) ? col.width : "150px")),
+    ...(hasRowActions.value ? ["48px"] : []),
+  ]);
 });
 
-// Sticky column offsets — compute left position for each sticky column
+// Sticky column offsets: each frozen column is pinned at the summed widths of
+// the frozen columns before it, starting after the bulk-select column.
 const stickyColumnOffsets = computed(() => {
   const offsets = new Map<string, string>();
-  let left = 0;
-
-  // Account for bulk actions checkbox column
-  if (hasBulkActions.value) {
-    left += 48; // 3rem ~ 48px
-  }
+  const before = hasBulkActions.value ? [SELECT_COLUMN_WIDTH] : [];
 
   for (const col of grid.visibleColumns.value) {
-    if (col.sticky && col.width) {
-      offsets.set(col.key, `${left}px`);
-      left += parseInt(col.width, 10) || 0;
-    } else if (col.sticky) {
-      // Sticky without explicit width — pin at current offset
-      offsets.set(col.key, `${left}px`);
-    }
+    if (!col.sticky) continue;
+    offsets.set(col.key, sumLengths(before));
+    // Sticky without a usable width contributes nothing to later offsets.
+    if (isLength(col.width)) before.push(col.width);
   }
   return offsets;
 });
@@ -165,20 +176,26 @@ const lastStickyKey = computed(() => {
   return null;
 });
 
-function stickyBodyColStyle(colKey: string): Record<string, string | number> | undefined {
-  const leftVal = stickyColumnOffsets.value.get(colKey);
-  if (!leftVal) return undefined;
-  const style: Record<string, string | number> = {
-    position: "sticky",
-    left: leftVal,
-    zIndex: 4,
-    background: "var(--cui-table-head-bg, var(--color-surface-50))",
-  };
-  if (colKey === lastStickyKey.value) {
-    style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
-  }
+// The bulk-select column sits left of every data column, so once any data
+// column is frozen it has to be frozen too — otherwise it scrolls away and
+// leaves its width, which the frozen columns' offsets start from, as a gap (#233).
+const pinSelectColumn = computed(() => hasBulkActions.value && lastStickyKey.value !== null);
+
+function pinnedBodyCellStyle(left: string, lastPinned: boolean): Record<string, string | number> {
+  const style: Record<string, string | number> = { position: "sticky", left, zIndex: 4, background: PINNED_BG };
+  if (lastPinned) style.boxShadow = PINNED_EDGE_SHADOW;
   return style;
 }
+
+function stickyBodyColStyle(colKey: string): Record<string, string | number> | undefined {
+  const leftVal = stickyColumnOffsets.value.get(colKey);
+  return leftVal ? pinnedBodyCellStyle(leftVal, colKey === lastStickyKey.value) : undefined;
+}
+
+const selectBodyCellStyle = computed(() => ({
+  ...SELECT_CELL_STYLE,
+  ...(pinSelectColumn.value ? pinnedBodyCellStyle("0", false) : {}),
+}));
 
 // Header cells pin at the CELL level (never via a sticky <thead> — that nests
 // same-axis sticky and detaches sticky-column headers). Every header cell gets
@@ -189,43 +206,38 @@ function stickyBodyColStyle(colKey: string): Record<string, string | number> | u
 // These cells are <th>, so `.cui-table--sticky-header thead th` also applies:
 // it agrees on position/top, and deliberately leaves z-index and left alone so
 // the inline values here still win.
-function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
-  const leftVal = stickyColumnOffsets.value.get(col.key);
-  const stickyCol = !!leftVal;
+function headerPinStyle(left: string | undefined, lastPinned = false): Record<string, string | number> {
   const stickyTop = props.stickyHeader;
+  if (!left && !stickyTop) return {};
 
-  const style: Record<string, string | number> = col.sortable
-    ? { cursor: "pointer", userSelect: "none" }
-    : {};
-
-  if (stickyCol || stickyTop) {
-    style.position = "sticky";
-    style.background = "var(--cui-table-head-bg, var(--color-surface-50))";
-    style.zIndex = stickyCol && stickyTop ? 11 : stickyCol ? 5 : 10;
-  }
+  const style: Record<string, string | number> = {
+    position: "sticky",
+    background: PINNED_BG,
+    zIndex: left && stickyTop ? 11 : left ? 5 : 10,
+  };
   if (stickyTop) style.top = 0;
-  if (stickyCol) {
-    style.left = leftVal!;
-    if (col.key === lastStickyKey.value) {
-      style.boxShadow = "2px 0 4px -1px rgba(0,0,0,0.08)";
-    }
-  }
+  if (left) style.left = left;
+  if (left && lastPinned) style.boxShadow = PINNED_EDGE_SHADOW;
   return style;
 }
 
-// Top-pin style for the non-column header cells (bulk-select checkbox, row
-// actions). They aren't in visibleColumns so they don't get headerCellStyle,
-// but they still need to ride the sticky header rather than scroll away.
-const auxHeaderCellStyle = computed(() =>
-  props.stickyHeader
-    ? {
-        position: "sticky" as const,
-        top: 0,
-        zIndex: 10,
-        background: "var(--cui-table-head-bg, var(--color-surface-50))",
-      }
-    : {},
-);
+function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
+  return {
+    ...(col.sortable ? { cursor: "pointer", userSelect: "none" } : {}),
+    ...headerPinStyle(stickyColumnOffsets.value.get(col.key), col.key === lastStickyKey.value),
+  };
+}
+
+// The non-column header cells (bulk-select checkbox, row actions) aren't in
+// visibleColumns so they don't get headerCellStyle, but they still need to ride
+// the sticky header rather than scroll away — and the checkbox cell is also
+// pinned left alongside the frozen columns. Pinned on both axes it takes the
+// corner z-index (11), above the regular header cells (10) that scroll under it.
+const selectHeaderCellStyle = computed(() => ({
+  ...SELECT_CELL_STYLE,
+  ...headerPinStyle(pinSelectColumn.value ? "0" : undefined),
+}));
+const auxHeaderCellStyle = computed(() => headerPinStyle(undefined));
 
 // ---------------------------------------------------------------------------
 // Virtualization
@@ -281,7 +293,7 @@ const totalCols = computed(() => {
       <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
       <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
         <!-- Bulk selection checkbox -->
-        <CuiTableCell v-if="hasBulkActions" width="3rem" align="center" :style="auxHeaderCellStyle">
+        <CuiTableCell v-if="hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :style="selectHeaderCellStyle">
           <CuiCheckbox
             v-if="showSelectAll"
             :model-value="selectAllState === true"
@@ -343,7 +355,7 @@ const totalCols = computed(() => {
           @click="emit('row-click', { row })"
         >
           <!-- Bulk selection checkbox -->
-          <CuiTableCell v-if="hasBulkActions" align="center" @click.stop>
+          <CuiTableCell v-if="hasBulkActions" align="center" :style="selectBodyCellStyle" @click.stop>
             <CuiCheckbox
               :model-value="isSelected(row)"
               @update:model-value="grid.toggleSelection(getRowId(row))"
