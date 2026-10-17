@@ -174,6 +174,7 @@ const perPageSelectOptions = computed(() =>
       <nav class="cui-pagination__nav" aria-label="Pagination">
         <!-- Previous -->
         <button
+          type="button"
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isFirst }"
           :disabled="isFirst"
@@ -187,6 +188,7 @@ const perPageSelectOptions = computed(() =>
         <template v-for="(p, idx) in pageNumbers" :key="idx">
           <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis">...</span>
           <button
+            type="button"
             v-else
             class="cui-pagination__btn"
             :class="{
@@ -208,6 +210,7 @@ const perPageSelectOptions = computed(() =>
 
         <!-- Next -->
         <button
+          type="button"
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isLast }"
           :disabled="isLast"

@@ -112,6 +112,7 @@ function onReset() {
               {{ view.name }}
             </span>
             <button
+              type="button"
               style="border: none; background: none; cursor: pointer; padding: calc(0.125rem * var(--cui-density-scale, 1)); color: var(--cui-text-tertiary); opacity: 0.6;"
               @click.stop="onRemove(view.id)"
             >
