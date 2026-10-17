@@ -66,10 +66,9 @@ import meta from "../meta/popover";
           convenient.
         </li>
         <li>
-          The <code>title</code> prop names the panel, but the id it uses is a fixed string
-          rather than a generated one — so two titled popovers on the same page produce
-          duplicate ids and the naming becomes unreliable. A single titled popover per page is
-          safe; beyond that, name the panel yourself.
+          The header names the panel: the <code>title</code> prop, or whatever you put in the
+          <code>#header</code> slot. The close button is not part of the name. A popover with
+          neither has no name, so give its content a heading the reader can find.
         </li>
       </ul>
     </template>
