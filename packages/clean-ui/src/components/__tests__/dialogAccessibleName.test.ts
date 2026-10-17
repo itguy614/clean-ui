@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mount, flushPromises } from "@vue/test-utils";
+import { mount, flushPromises, enableAutoUnmount } from "@vue/test-utils";
 import { defineComponent, h, nextTick, ref } from "vue";
 import CuiModal from "../CuiModal.vue";
 import CuiSlideover from "../CuiSlideover.vue";
@@ -29,6 +29,9 @@ function labelOf(dialog: Element): string {
  * review, and only an actual lookup catches it.
  */
 describe("dialogs are announced with their title as the accessible name", () => {
+  // Unmount each app, not just wipe the DOM: an open popover holds a document keydown
+  // listener that would otherwise outlive its test.
+  enableAutoUnmount(afterEach);
   afterEach(() => {
     document.body.innerHTML = "";
   });
@@ -90,6 +93,27 @@ describe("dialogs are announced with their title as the accessible name", () => 
     it("is named by a #header slot used without the title prop, leaving out the close button", async () => {
       const [dialog] = await openPopovers([{ closable: true, slots: { header: () => h("strong", "Custom header") } }]);
       expect(labelOf(dialog)).toBe("Custom header");
+    });
+
+    it("picks up a #header slot the parent adds after first render", async () => {
+      const withHeader = ref(false);
+      const visible = ref(false);
+      mount(
+        defineComponent(() => () =>
+          h(CuiPopover, { visible: visible.value }, {
+            default: () => h("button", "Open"),
+            content: () => "Body",
+            ...(withHeader.value ? { header: () => h("strong", "Late header") } : {}),
+          }),
+        ),
+        { attachTo: document.body },
+      );
+      visible.value = true;
+      await nextTick();
+      withHeader.value = true;
+      await nextTick();
+      const dialog = document.body.querySelector('[role="dialog"]')!;
+      expect(labelOf(dialog)).toBe("Late header");
     });
 
     it("has no aria-labelledby without a header", async () => {
