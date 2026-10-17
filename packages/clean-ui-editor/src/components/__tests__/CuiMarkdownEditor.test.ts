@@ -2,7 +2,9 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import { syntaxTree } from "@codemirror/language";
+import { EditorState } from "@codemirror/state";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
+import { definePlugin } from "../../plugins";
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView();
@@ -194,6 +196,30 @@ describe("CuiMarkdownEditor", () => {
 
         expect(view.state.doc.toString()).toBe("from the host");
         expect(wrapper.emitted("update:modelValue")).toEqual([["ab"]]);
+      });
+
+      it("reports a host value that a plugin's filter rewrote on the way in", async () => {
+        // Otherwise the editor shows the rewritten text while the host keeps
+        // what it sent, and nothing reconciles them.
+        const upcase = definePlugin({
+          id: "upcase",
+          commands: {},
+          extensions: [
+            EditorState.transactionFilter.of((tr) =>
+              tr.docChanged && tr.newDoc.toString() !== tr.newDoc.toString().toUpperCase()
+                ? [tr, { changes: { from: 0, to: tr.newDoc.length, insert: tr.newDoc.toString().toUpperCase() }, sequential: true }]
+                : tr,
+            ),
+          ],
+        });
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [upcase] } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+
+        expect(getView(wrapper)!.state.doc.toString()).toBe("FROM THE HOST");
+        expect(wrapper.emitted("update:modelValue")).toEqual([["FROM THE HOST"]]);
       });
 
       it("updates the counter after a host-driven change", async () => {

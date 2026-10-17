@@ -407,10 +407,12 @@ function createView(): EditorView {
           if (update.docChanged) {
             // A host-driven sync is not an edit: re-emitting it would hand the
             // parent back the value it just set, which a buffering or
-            // autosaving host reads as the user typing (#237).
-            if (!update.transactions.some((tr) => tr.annotation(externalSync))) {
-              emitModelValue.call(update.state.doc.toString());
-            }
+            // autosaving host reads as the user typing (#237). The one
+            // exception is a sync that a plugin's filter rewrote on the way
+            // in — the host must hear about the text the editor actually shows.
+            const doc = update.state.doc.toString();
+            const external = update.transactions.some((tr) => tr.annotation(externalSync));
+            if (!external || doc !== lastKnownValue) emitModelValue.call(doc);
             docLength.value = update.state.doc.length;
           }
           if (update.docChanged || update.selectionSet) selectionVersion.value++;
