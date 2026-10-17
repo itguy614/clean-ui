@@ -143,7 +143,8 @@ const contentAttrsCompartment = new Compartment();
 // that would exceed the limit, but a host is free to supply — and this
 // component must still faithfully display, per the value contract's "never
 // rewrites content the user did not edit" — a document already over length
-// (e.g. legacy content saved before a limit existed).
+// (e.g. legacy content saved before a limit existed). The updateListener
+// also skips emitting `update:modelValue` for these: they are not edits.
 const externalSync = Annotation.define<boolean>();
 
 // Live doc length for the counter (task 5.2.1) — tracked from the
@@ -331,10 +332,6 @@ function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
   return mode === "wysiwyg" ? [revealExtension(activeConstructsFromRegistry(currentRegistry))] : [];
 }
 
-function onDocChanged(value: string) {
-  emitModelValue(value);
-}
-
 /**
  * FR28: HTML paste converts to markdown through the active plugins' own
  * `paste` rules; a modifier/"paste as plain text" action naturally has no
@@ -408,7 +405,12 @@ function createView(): EditorView {
         keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap, ...completionKeymap]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            onDocChanged(update.state.doc.toString());
+            // A host-driven sync is not an edit: re-emitting it would hand the
+            // parent back the value it just set, which a buffering or
+            // autosaving host reads as the user typing (#237).
+            if (!update.transactions.some((tr) => tr.annotation(externalSync))) {
+              emitModelValue.call(update.state.doc.toString());
+            }
             docLength.value = update.state.doc.length;
           }
           if (update.docChanged || update.selectionSet) selectionVersion.value++;
@@ -448,6 +450,10 @@ watch(
   (newValue) => {
     if (newValue === lastKnownValue) return;
     lastKnownValue = newValue;
+    // The host's value replaces whatever the user had typed, so an edit still
+    // queued in the throttle is superseded — letting it fire would leave the
+    // host holding text the editor no longer shows.
+    emitModelValue.cancel();
     if (!view) return;
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: newValue },
