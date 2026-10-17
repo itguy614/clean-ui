@@ -27,7 +27,13 @@ import meta from "../meta/divider";
       <p class="text-sm text-surface-700 dark:text-surface-300">
         Every rendering carries <code>role="separator"</code>, and the plain horizontal
         divider is a real <code>&lt;hr&gt;</code> — so the boundary is announced rather
-        than being a line only sighted readers can see.
+        than being a line only sighted readers can see. It also carries
+        <code>aria-orientation</code>, so a vertical divider is announced as vertical.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
+        A label, from the <code>label</code> prop or the default slot, becomes the
+        separator's accessible name, so "OR" between two sign-in methods is announced as
+        "separator, OR". The lines either side are hidden from assistive tech.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         A divider is a visual grouping device, not a document structure. If the content on

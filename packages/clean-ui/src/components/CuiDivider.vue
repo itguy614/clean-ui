@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useSlots } from "vue";
+import { computed, useId, useSlots } from "vue";
 import type { CuiColorOrCss, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
 
@@ -31,7 +31,13 @@ const props = withDefaults(defineProps<CuiDividerProps>(), {
 });
 
 const slots = useSlots();
-const hasLabel = computed(() => !!props.label || !!slots.default);
+// A function, not a computed: `slots` is not reactive, so a computed would cache the
+// first render's answer and miss a label slot the parent adds or removes later.
+const hasLabel = () => !!props.label || !!slots.default;
+
+// A separator's contents are presentational, so a label inside one is not announced
+// on its own; aria-labelledby makes it the separator's name instead (#157).
+const labelId = `cui-divider-label-${useId()}`;
 
 const borderStyle = computed(() => {
   const c = props.color ? resolveColor(props.color) : "var(--cui-border)";
@@ -86,13 +92,21 @@ const labelStyle = computed(() => ({
 </script>
 
 <template>
-  <!-- Horizontal with label -->
-  <div v-if="orientation === 'horizontal' && hasLabel" v-show="!hidden" class="cui-divider" :style="containerStyle" role="separator">
-    <div v-if="labelPosition !== 'start'" :style="lineStyle" />
-    <span :style="labelStyle">
+  <!-- With label (either orientation; the styles switch on it) -->
+  <div
+    v-if="hasLabel()"
+    v-show="!hidden"
+    class="cui-divider"
+    :style="containerStyle"
+    role="separator"
+    :aria-orientation="orientation"
+    :aria-labelledby="labelId"
+  >
+    <div v-if="labelPosition !== 'start'" :style="lineStyle" aria-hidden="true" />
+    <span :id="labelId" :style="labelStyle">
       <slot>{{ label }}</slot>
     </span>
-    <div v-if="labelPosition !== 'end'" :style="lineStyle" />
+    <div v-if="labelPosition !== 'end'" :style="lineStyle" aria-hidden="true" />
   </div>
 
   <!-- Horizontal without label -->
@@ -108,16 +122,8 @@ const labelStyle = computed(() => ({
       marginBottom: spacing,
     }"
     role="separator"
+    aria-orientation="horizontal"
   />
-
-  <!-- Vertical with label -->
-  <div v-else-if="hasLabel" v-show="!hidden" class="cui-divider" :style="containerStyle" role="separator">
-    <div v-if="labelPosition !== 'start'" :style="lineStyle" />
-    <span :style="labelStyle">
-      <slot>{{ label }}</slot>
-    </span>
-    <div v-if="labelPosition !== 'end'" :style="lineStyle" />
-  </div>
 
   <!-- Vertical without label -->
   <div
@@ -134,5 +140,6 @@ const labelStyle = computed(() => ({
       minHeight: '1rem',
     }"
     role="separator"
+    aria-orientation="vertical"
   />
 </template>
