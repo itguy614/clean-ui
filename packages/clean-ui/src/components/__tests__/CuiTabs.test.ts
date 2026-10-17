@@ -229,6 +229,26 @@ describe("CuiTabs overflow", () => {
     wrapper.unmount();
   });
 
+  it("keyboard nav works with a tab value containing a quote or backslash", async () => {
+    const host = defineComponent({
+      components: { CuiTabs, CuiTab },
+      template: `
+        <CuiTabs>
+          <CuiTab value="one" label="One">One</CuiTab>
+          <CuiTab value='say "hi" \\ there' label="Two">Two</CuiTab>
+        </CuiTabs>
+      `,
+    });
+    const wrapper = mount(host, { attachTo: document.body });
+    await wrapper.vm.$nextTick();
+
+    await wrapper.get('[role="tablist"]').trigger("keydown", { key: "ArrowRight" });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.findAll('[role="tab"]')[1].element);
+    wrapper.unmount();
+  });
+
   it("scopes the keyboard-nav tab lookup to its own tablist", async () => {
     // Two tab sets sharing tab values: arrow-key nav must focus the local tab
     const host = defineComponent({

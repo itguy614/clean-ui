@@ -149,7 +149,10 @@ function onKeydown(e: KeyboardEvent) {
 
 /** Scoped lookup — a global querySelector would hit another CuiTabs on the page. */
 function tabElement(value: string): HTMLElement | null {
-  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${value}"]`) ?? null;
+  // Escape for the quoted attribute selector — a `"` or `\` in a tab value would
+  // otherwise make querySelector throw.
+  const escaped = value.replace(/["\\]/g, "\\$&");
+  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${escaped}"]`) ?? null;
 }
 
 /** Which edges have content scrolled out of view — drives the edge fade mask. */
