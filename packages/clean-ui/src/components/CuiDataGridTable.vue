@@ -129,10 +129,26 @@ const SELECT_CELL_STYLE = { paddingInline: 0 };
 const PINNED_BG = "var(--cui-table-head-bg, var(--color-surface-50))";
 const PINNED_EDGE_SHADOW = "2px 0 4px -1px rgba(0,0,0,0.08)";
 
-/** A width usable in calc(); a keyword like "auto" (or "") is not, and would void the sum. */
-const isLength = (width: string | undefined): width is string => !!width && /^(\d|\.|calc\()/.test(width);
+const ROW_ACTIONS_COLUMN_WIDTH = "3rem";
 
-/** Sums CSS lengths as written, so a "10rem" or "20%" column is not read as 10px. */
+/**
+ * A width usable in calc(), or undefined. A keyword like "auto" (or "") is not
+ * one and would void the sum. A bare number is read as px, as parseInt did —
+ * left as-is it is invalid inside calc() and would void the sum too.
+ */
+function toLength(width: string | undefined): string | undefined {
+  const w = width?.trim();
+  if (!w) return undefined;
+  if (/^\d*\.?\d+$/.test(w)) return `${w}px`;
+  return /^(\d|\.|(calc|min|max|clamp|var)\()/.test(w) ? w : undefined;
+}
+
+/**
+ * Sums CSS lengths as written, so a "10rem" column is not read as 10px. Not
+ * exact for every unit: a % in a sticky `left` resolves against the scroller,
+ * not the table, and declared widths are minimums under auto layout. Doing
+ * better means measuring the rendered header cells.
+ */
 function sumLengths(lengths: string[]): string {
   if (lengths.length === 0) return "0px";
   return lengths.length === 1 ? lengths[0] : `calc(${lengths.join(" + ")})`;
@@ -147,8 +163,8 @@ const tableMinWidth = computed(() => {
 
   return sumLengths([
     ...(hasBulkActions.value ? [SELECT_COLUMN_WIDTH] : []),
-    ...cols.map((col) => (isLength(col.width) ? col.width : "150px")),
-    ...(hasRowActions.value ? ["48px"] : []),
+    ...cols.map((col) => toLength(col.width) ?? "150px"),
+    ...(hasRowActions.value ? [ROW_ACTIONS_COLUMN_WIDTH] : []),
   ]);
 });
 
@@ -162,7 +178,8 @@ const stickyColumnOffsets = computed(() => {
     if (!col.sticky) continue;
     offsets.set(col.key, sumLengths(before));
     // Sticky without a usable width contributes nothing to later offsets.
-    if (isLength(col.width)) before.push(col.width);
+    const width = toLength(col.width);
+    if (width) before.push(width);
   }
   return offsets;
 });
@@ -324,7 +341,7 @@ const totalCols = computed(() => {
         </CuiTableCell>
 
         <!-- Row actions column -->
-        <CuiTableCell v-if="hasRowActions" width="3rem" :style="auxHeaderCellStyle" />
+        <CuiTableCell v-if="hasRowActions" :width="ROW_ACTIONS_COLUMN_WIDTH" :style="auxHeaderCellStyle" />
       </CuiTableRow>
     </CuiTableHead>
 

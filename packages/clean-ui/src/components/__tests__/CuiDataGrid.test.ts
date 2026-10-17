@@ -102,6 +102,20 @@ describe("CuiDataGrid sticky columns", () => {
     wrapper.unmount();
   });
 
+  it("reads a bare-number width as px, rather than voiding the sum", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: {
+        columns: [{ ...columns[0], width: "120" }, columns[1], columns[2]],
+        data,
+        bulkActions,
+        maxHeight: "320px",
+        hideToolbar: true,
+      },
+    });
+    expect(headerCells(wrapper)[2].attributes("style")).toMatch(/left:\s*calc\((3rem \+ 120px|120px \+ 3rem)\)/);
+    wrapper.unmount();
+  });
+
   it("leaves the bulk-select column unpinned when no data column is frozen", () => {
     const wrapper = mount(CuiDataGrid, {
       props: {
