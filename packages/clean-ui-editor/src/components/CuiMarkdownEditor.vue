@@ -313,16 +313,20 @@ function emitNow(value: string) {
   emit("update:modelValue", value);
 }
 
-let emitModelValue = throttle(emitNow, props.throttle);
+// The interval is read on every call, so a changed `throttle` prop applies to
+// the next edit without rebuilding the throttle (which would forget when it
+// last fired and emit early).
+const emitModelValue = throttle(emitNow, () => props.throttle);
 
-// Flush before swapping, so an edit queued under the old interval is
-// delivered rather than lost with the old timer.
+// An edit already queued under the old interval is delivered now rather than
+// left waiting on it. Post-flush, so that when the host changes `modelValue`
+// in the same tick its watcher is guaranteed to run first and cancel the
+// superseded edit, rather than that resting on the scheduler's ordering of two
+// pre-flush watchers — flushing first would overwrite the host's new value.
 watch(
   () => props.throttle,
-  (wait) => {
-    emitModelValue.flush();
-    emitModelValue = throttle(emitNow, wait);
-  },
+  () => emitModelValue.flush(),
+  { flush: "post" },
 );
 
 function resolveCspNonce(): string | undefined {
@@ -430,7 +434,13 @@ function createView(): EditorView {
           if (update.docChanged || update.selectionSet) selectionVersion.value++;
         }),
         EditorState.transactionFilter.of(maxLengthFilter),
-        EditorView.domEventHandlers({ paste: handlePaste }),
+        // Flush on blur as well as on unmount. Clicking a host button blurs the
+        // editor before the click handler runs, so a "Discard and close" that
+        // resets modelValue and unmounts in one tick sees the draft arrive
+        // first and overwrites it — the unmount flush alone would deliver the
+        // discarded draft after the reset, with no prop update in between to
+        // cancel it.
+        EditorView.domEventHandlers({ paste: handlePaste, blur: () => emitModelValue.flush() }),
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(currentMode.value)),
         themeCompartment.of(themeExtensions()),

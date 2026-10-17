@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { nextTick } from "vue";
+import { defineComponent, h, nextTick, reactive, ref } from "vue";
 import { syntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
@@ -253,6 +253,53 @@ describe("CuiMarkdownEditor", () => {
         expect(onUpdate.mock.calls).toEqual([["a"], ["ab"]]);
       });
 
+      it("delivers a queued edit when the editor loses focus", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        view.contentDOM.dispatchEvent(new FocusEvent("blur"));
+
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("a discard-and-close that resets the value and unmounts in one tick keeps the reset", async () => {
+        // Clicking the host's button blurs the editor first, delivering the
+        // draft; the click then resets the value and unmounts. Without the blur
+        // flush, the unmount flush would write the discarded draft back.
+        vi.useFakeTimers();
+        const state = reactive({ open: true, value: "saved" });
+        const editor = ref<{ getView: () => import("@codemirror/view").EditorView }>();
+        wrapper = mount(
+          defineComponent({
+            setup: () => () =>
+              state.open
+                ? h(CuiMarkdownEditor, {
+                    ref: editor,
+                    modelValue: state.value,
+                    throttle: 50,
+                    "onUpdate:modelValue": (v: string) => (state.value = v),
+                  })
+                : null,
+          }),
+        );
+        await nextTick();
+        const view = editor.value!.getView();
+
+        view.dispatch({ changes: { from: 5, insert: "!" } });
+        view.dispatch({ changes: { from: 6, insert: "?" } });
+        view.contentDOM.dispatchEvent(new FocusEvent("blur"));
+        state.value = "saved";
+        state.open = false;
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(state.value).toBe("saved");
+      });
+
       it("applies a throttle changed after mount, delivering any edit queued under the old one", async () => {
         vi.useFakeTimers();
         wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 0 } });
@@ -269,6 +316,41 @@ describe("CuiMarkdownEditor", () => {
         expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
         vi.advanceTimersByTime(100);
         expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("does not deliver a queued edit that a same-tick host value supersedes", async () => {
+        // The throttle watcher flushes a queued edit; the modelValue watcher
+        // cancels one the host has superseded. The cancel has to win, or the
+        // flush overwrites the value the host just set.
+        vi.useFakeTimers();
+        const state = reactive({ throttle: 50, value: "" });
+        const onUpdate = vi.fn((v: string) => (state.value = v));
+        const editor = ref<{ getView: () => import("@codemirror/view").EditorView }>();
+        wrapper = mount(
+          defineComponent({
+            setup: () => () =>
+              h(CuiMarkdownEditor, {
+                ref: editor,
+                modelValue: state.value,
+                throttle: state.throttle,
+                "onUpdate:modelValue": onUpdate,
+              }),
+          }),
+        );
+        await nextTick();
+        const view = editor.value!.getView();
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        state.throttle = 0;
+        state.value = "host";
+        await nextTick();
+        vi.advanceTimersByTime(100);
+        await nextTick();
+
+        expect(onUpdate.mock.calls).toEqual([["a"]]);
+        expect(state.value).toBe("host");
+        expect(view.state.doc.toString()).toBe("host");
       });
     });
   });

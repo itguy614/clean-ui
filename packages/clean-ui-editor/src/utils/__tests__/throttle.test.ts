@@ -65,4 +65,23 @@ describe("throttle", () => {
     t.flush();
     expect(fn.mock.calls).toEqual([["a"], ["b"]]);
   });
+
+  it("reads a getter wait on every call, keeping its last-fire time across a change", () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    let wait = 50;
+    const t = throttle(fn, () => wait);
+    t.call("a");
+    wait = 100;
+    vi.advanceTimersByTime(60);
+    // Past the old interval but inside the new one: trailing, not immediate.
+    t.call("b");
+    expect(fn.mock.calls).toEqual([["a"]]);
+    vi.advanceTimersByTime(40);
+    expect(fn.mock.calls).toEqual([["a"], ["b"]]);
+
+    wait = 0;
+    t.call("c");
+    expect(fn.mock.calls).toEqual([["a"], ["b"], ["c"]]);
+  });
 });

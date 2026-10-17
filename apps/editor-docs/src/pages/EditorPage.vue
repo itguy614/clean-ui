@@ -64,7 +64,7 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
           { name: 'modelValue', type: 'string', default: '(empty)', description: 'The markdown document (v-model).' },
           { name: 'mode', type: 'wysiwyg | source', default: 'wysiwyg', description: 'wysiwyg hides syntax markers away from the cursor; source shows raw markdown. v-model:mode.' },
           { name: 'placeholder', type: 'string', description: 'Shown only when the document is empty; not selectable, never part of the value.' },
-          { name: 'throttle', type: 'number', default: '0', description: 'Minimum ms between update:modelValue emissions. 0 emits on every change.' },
+          { name: 'throttle', type: 'number', default: '0', description: 'Minimum ms between update:modelValue emissions. 0 emits on every change. A pending emission is delivered early when the editor loses focus or unmounts, and dropped when modelValue is replaced.' },
           { name: 'id', type: 'string', description: 'Applied to the editable surface itself, not the outer wrapper — a <label for> pointing at it actually focuses the editor.' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Recolors the border to --cui-error and sets aria-invalid, matching CuiInput/CuiTextarea.' },
           { name: 'errorMessage', type: 'string', description: 'Shown below the editor when error is true.' },
