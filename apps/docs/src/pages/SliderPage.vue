@@ -48,37 +48,21 @@ const temp = ref(72);
           <code>id</code> forms a real association and the value serializes in a form post.
         </li>
         <li>
+          The <code>label</code> prop is a real <code>&lt;label for&gt;</code> on that
+          input, using your <code>id</code> or a generated one, so it names the control.
+        </li>
+        <li>
+          When the input has keyboard focus the thumb draws a focus ring in the slider's
+          colour. Override it with <code>--cui-slider-focus-ring</code> on the slider or any
+          ancestor.
+        </li>
+        <li>
+          <code>formatValue</code> also sets <code>aria-valuetext</code>, so a slider
+          showing “$250” is announced as “$250” rather than the bare number.
+        </li>
+        <li>
           <code>showValue</code> prints the current value in text, which is worth turning
           on: the thumb's position is otherwise the only indication of where the value is.
-        </li>
-      </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> Three things need handling on your side:
-      </p>
-      <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-        <li>
-          <strong>The <code>label</code> prop names nothing.</strong> It renders a bare
-          <code>&lt;label&gt;</code> with no <code>for</code>, so it is a visual caption
-          only. Name the control with <code>aria-labelledby</code>, or wrap it in
-          <code>CuiFormField</code> and <code>v-bind="f"</code>, and keep
-          <code>label</code> for layout if you like the value sitting opposite it.
-        </li>
-        <li>
-          <strong>There is no visible focus indicator.</strong> The focusable element is the
-          transparent range input, and nothing draws a ring when it takes focus. Add one
-          yourself until the component does:
-          <pre class="cui-pre"><code>.cui-slider:focus-within &#123;
-  outline: 2px solid var(--cui-primary-focus-ring);
-  outline-offset: 2px;
-  border-radius: 0.25rem;
-&#125;</code></pre>
-        </li>
-        <li>
-          <strong><code>formatValue</code> does not reach assistive technology.</strong> It
-          formats the printed value and the min/max labels only; a screen reader still
-          announces the raw number, so a slider showing “$250” or “80%” is read as
-          “250” or “0.8”. Where the unit matters, put it in the accessible name — “Budget
-          in dollars” — so the bare number lands in context.
         </li>
       </ul>
     </template>
