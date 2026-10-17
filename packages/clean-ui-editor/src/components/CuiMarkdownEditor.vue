@@ -308,10 +308,22 @@ let currentRegistry: PluginRegistry = (() => {
 // throttle was in flight.
 let lastKnownValue = props.modelValue;
 
-const emitModelValue = throttle((value: string) => {
+function emitNow(value: string) {
   lastKnownValue = value;
   emit("update:modelValue", value);
-}, props.throttle);
+}
+
+let emitModelValue = throttle(emitNow, props.throttle);
+
+// Flush before swapping, so an edit queued under the old interval is
+// delivered rather than lost with the old timer.
+watch(
+  () => props.throttle,
+  (wait) => {
+    emitModelValue.flush();
+    emitModelValue = throttle(emitNow, wait);
+  },
+);
 
 function resolveCspNonce(): string | undefined {
   if (props.cspNonce) return props.cspNonce;
@@ -443,6 +455,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // Vue drops emits from an unmounted instance, so an edit still queued in the
+  // throttle has to go now or the host never hears the last keystrokes.
+  emitModelValue.flush();
   view?.destroy();
   view = null;
 });

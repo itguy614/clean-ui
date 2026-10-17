@@ -51,4 +51,18 @@ describe("throttle", () => {
     vi.advanceTimersByTime(50);
     expect(fn.mock.calls).toEqual([["a"], ["c"]]);
   });
+
+  it("flush runs a pending trailing call immediately, once", () => {
+    vi.useFakeTimers();
+    const fn = vi.fn();
+    const t = throttle(fn, 50);
+    t.call("a");
+    t.call("b");
+    t.flush();
+    expect(fn.mock.calls).toEqual([["a"], ["b"]]);
+
+    vi.advanceTimersByTime(100);
+    t.flush();
+    expect(fn.mock.calls).toEqual([["a"], ["b"]]);
+  });
 });

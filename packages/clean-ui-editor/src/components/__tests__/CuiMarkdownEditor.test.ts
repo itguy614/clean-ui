@@ -69,6 +69,10 @@ describe("CuiMarkdownEditor", () => {
   });
 
   describe("value contract", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it("never rewrites content the user did not edit, including unknown syntax, an HTML block and frontmatter", async () => {
       const doc = [
         "---",
@@ -149,10 +153,6 @@ describe("CuiMarkdownEditor", () => {
     // #237: a host-driven change used to come straight back as
     // update:modelValue, which a buffering or autosaving host reads as an edit.
     describe("does not echo host-driven changes", () => {
-      afterEach(() => {
-        vi.useRealTimers();
-      });
-
       it("emits nothing when the parent changes modelValue under a throttle", async () => {
         vi.useFakeTimers();
         wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "original", throttle: 50 } });
@@ -230,6 +230,45 @@ describe("CuiMarkdownEditor", () => {
         await nextTick();
 
         expect(wrapper.find('[data-testid="cui-markdown-editor-counter"]').text()).toBe("6/10");
+      });
+    });
+
+    // #239: the throttle is built once at setup and its trailing timer is not
+    // tied to the component's lifetime.
+    describe("throttle lifecycle", () => {
+      it("emits an edit still queued in the throttle when the editor unmounts", async () => {
+        // test-utils clears emitted() on unmount, so listen with a spy.
+        vi.useFakeTimers();
+        const onUpdate = vi.fn();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50, "onUpdate:modelValue": onUpdate } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        wrapper.unmount();
+        wrapper = undefined;
+        vi.advanceTimersByTime(100);
+
+        expect(onUpdate.mock.calls).toEqual([["a"], ["ab"]]);
+      });
+
+      it("applies a throttle changed after mount, delivering any edit queued under the old one", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 0 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        await wrapper.setProps({ throttle: 50 });
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"]]);
+
+        // Switching back flushes "ab" rather than dropping it with the old timer.
+        await wrapper.setProps({ throttle: 0 });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+        vi.advanceTimersByTime(100);
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
       });
     });
   });
