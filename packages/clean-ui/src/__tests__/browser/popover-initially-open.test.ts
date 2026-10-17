@@ -30,10 +30,13 @@ describe("CuiPopover open at mount (real browser)", () => {
 
     const panel = document.querySelector<HTMLElement>(".cui-popover__panel")!;
     expect(panel).not.toBeNull();
-    expect(getComputedStyle(panel).visibility).toBe("visible");
+    // The pre-positioning guard is opacity, not visibility (see hiddenUntilPositioned).
+    expect(getComputedStyle(panel).opacity).toBe("1");
     const trigger = el.querySelector("button")!.getBoundingClientRect();
     const rect = panel.getBoundingClientRect();
     expect(rect.top).toBeGreaterThanOrEqual(trigger.bottom - 1);
-    expect(Math.abs(rect.left - trigger.left)).toBeLessThan(300);
+    // placement "bottom" centres the panel on its trigger.
+    const center = (r: DOMRect) => r.left + r.width / 2;
+    expect(Math.abs(center(rect) - center(trigger))).toBeLessThan(4);
   });
 });
