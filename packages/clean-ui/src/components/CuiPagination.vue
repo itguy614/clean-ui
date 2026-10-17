@@ -188,8 +188,8 @@ const perPageSelectOptions = computed(() =>
         <template v-for="(p, idx) in pageNumbers" :key="idx">
           <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis">...</span>
           <button
-            type="button"
             v-else
+            type="button"
             class="cui-pagination__btn"
             :class="{
               'cui-pagination__btn--active': p === page,

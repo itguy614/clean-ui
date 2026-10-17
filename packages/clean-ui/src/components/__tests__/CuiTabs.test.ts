@@ -272,7 +272,7 @@ describe("CuiTabs inside a form", () => {
     await wrapper.vm.$nextTick();
 
     await wrapper.findAll('[role="tab"]')[1].trigger("click");
-    await wrapper.get("button[aria-label]").trigger("click");
+    await wrapper.get(".cui-tabs__tab-close").trigger("click");
     expect(onSubmit).not.toHaveBeenCalled();
     wrapper.unmount();
   });

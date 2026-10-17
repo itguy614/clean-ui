@@ -16,8 +16,18 @@ import { resolve } from "node:path";
 const COMPONENTS = resolve(__dirname, "..");
 
 /** `<button ...>` open tags in a template, attribute values allowed to contain `>`. */
-const BUTTON_TAG = /<button\b((?:[^>"]|"[^"]*")*)>/g;
+const BUTTON_TAG = /<button\b((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const HAS_TYPE = /(^|\s)(:|v-bind:)?type\s*=/;
+/** Quoted attribute values, blanked so a `type =` inside one (e.g. in a handler) is not read as the attribute. */
+const QUOTED = /"[^"]*"|'[^']*'/g;
+
+/** The `<template>` block only, with HTML comments blanked (newlines kept, so line numbers hold). */
+function templateOf(source: string): string {
+  const start = source.indexOf("<template");
+  const end = source.lastIndexOf("</template>");
+  if (start < 0 || end < start) return "";
+  return source.slice(start, end).replace(/<!--[\s\S]*?-->/g, (c) => c.replace(/[^\n]/g, " "));
+}
 
 describe("every <button> a component renders has an explicit type", () => {
   const files = readdirSync(COMPONENTS).filter((f) => f.endsWith(".vue"));
@@ -28,9 +38,9 @@ describe("every <button> a component renders has an explicit type", () => {
 
   it.each(files)("%s", (file) => {
     const source = readFileSync(resolve(COMPONENTS, file), "utf8");
-    const template = source.slice(Math.max(0, source.indexOf("<template")));
+    const template = templateOf(source);
     const untyped = [...template.matchAll(BUTTON_TAG)]
-      .filter(([, attrs]) => !HAS_TYPE.test(attrs))
+      .filter(([, attrs]) => !HAS_TYPE.test(attrs.replace(QUOTED, '""')))
       .map((m) => `line ${template.slice(0, m.index).split("\n").length}: ${m[0].replace(/\s+/g, " ").slice(0, 60)}`);
     expect(untyped).toEqual([]);
   });
