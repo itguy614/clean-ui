@@ -408,7 +408,12 @@ function resetTabs() {
           <p class="text-sm text-surface-500">
             When the tabs are wider than their container the bar scrolls horizontally, and the
             clipped edge fades to show there's more. Drag the width to see it engage — the active
-            tab is always scrolled into view.
+            tab is always scrolled into view, clear of the fade.
+          </p>
+          <p class="text-sm text-surface-500">
+            From the keyboard: click a tab, then use <kbd>←</kbd> <kbd>→</kbd>
+            <kbd>Home</kbd> <kbd>End</kbd>. The newly active tab lands fully visible with its
+            focus ring intact, never half under the faded edge.
           </p>
 
           <CuiSlider
@@ -444,6 +449,9 @@ function resetTabs() {
               label="Segmented variant"
               @update:model-value="overflowVariant = $event ? 'segmented' : 'underline'"
             />
+            <CuiButton size="sm" @click="overflow = 'integrations'">
+              Activate a middle tab
+            </CuiButton>
             <CuiButton
               size="sm"
               @click="overflow = overflowTabs[overflowTabs.length - 1].value"
