@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, useSlots } from "vue";
+import { ref, computed, watch, onUnmounted, useSlots, useId } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import CuiIcon from "./CuiIcon.vue";
@@ -132,9 +132,14 @@ onUnmounted(() => {
   if (typeof document !== "undefined") document.removeEventListener("keydown", onKeydown);
 });
 
-const hasHeader = computed(() => props.title || slots.header);
-const hasFooter = computed(() => !!slots.footer);
-const headerId = computed(() => props.title ? "cui-popover-title" : undefined);
+// Plain functions, not computeds: `slots` is not reactive, so a computed would cache the
+// first render's answer and miss a #header/#footer the parent adds or removes later.
+const hasHeader = () => !!(props.title || slots.header);
+const hasFooter = () => !!slots.footer;
+// Per instance (a literal id collided across every titled popover on a page,
+// #159), and whenever there is a header — prop or slot — so a custom #header
+// still names the dialog. useId() is stable across SSR and hydration.
+const headerId = `cui-popover-title-${useId()}`;
 
 const panelStyle = computed(() => {
   const s: Record<string, string> = {
@@ -221,13 +226,13 @@ const messages = useMessages();
         class="cui-popover__panel"
         :style="{ ...floatingStyles, ...panelStyle, ...hiddenUntilPositioned }"
         role="dialog"
-        :aria-labelledby="headerId"
+        :aria-labelledby="hasHeader() ? headerId : undefined"
         @mouseenter="onPopoverMouseEnter"
         @mouseleave="onPopoverMouseLeave"
       >
         <!-- Header -->
         <div
-          v-if="hasHeader"
+          v-if="hasHeader()"
           :style="{
             display: 'flex',
             alignItems: 'flex-start',
@@ -236,14 +241,16 @@ const messages = useMessages();
             padding: 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))',
           }"
         >
-          <slot name="header">
-            <span
-              :id="headerId"
-              :style="{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--cui-text-body)' }"
-            >
-              {{ title }}
-            </span>
-          </slot>
+          <!-- The id sits on a wrapper so slotted header content is named too, and the
+               close button is left out of the name. display: contents keeps the slot's
+               children laid out as direct flex items of the header row, as before. -->
+          <div :id="headerId" style="display: contents">
+            <slot name="header">
+              <span :style="{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
+                {{ title }}
+              </span>
+            </slot>
+          </div>
           <button
             v-if="closable"
             type="button"
@@ -272,7 +279,7 @@ const messages = useMessages();
         <!-- Body -->
         <div
           :style="{
-            padding: hasHeader ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
+            padding: hasHeader() ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
             fontSize: '0.875rem',
             lineHeight: '1.55',
             color: 'var(--cui-text-secondary)',
@@ -283,7 +290,7 @@ const messages = useMessages();
 
         <!-- Footer -->
         <div
-          v-if="hasFooter"
+          v-if="hasFooter()"
           :style="{
             padding: '0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
           }"

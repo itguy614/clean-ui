@@ -66,10 +66,9 @@ import meta from "../meta/popover";
           convenient.
         </li>
         <li>
-          The <code>title</code> prop names the panel, but the id it uses is a fixed string
-          rather than a generated one — so two titled popovers on the same page produce
-          duplicate ids and the naming becomes unreliable. A single titled popover per page is
-          safe; beyond that, name the panel yourself.
+          The header names the panel: the <code>title</code> prop, or whatever you put in the
+          <code>#header</code> slot. The close button is not part of the name. A popover with
+          neither has no name, so give its content a heading the reader can find.
         </li>
       </ul>
     </template>
@@ -88,6 +87,40 @@ import meta from "../meta/popover";
               <p>Just body content, no header bar.</p>
             </template>
           </CuiPopover>
+        </Example>
+
+        <!-- Custom header slot -->
+        <Example title="Custom Header" :code="`<CuiPopover>
+  <CuiButton variant=&quot;outline&quot;>Billing</CuiButton>
+  <template #header>
+    <CuiFlex gap=&quot;2&quot; align=&quot;center&quot;>
+      <CuiIcon name=&quot;file-text&quot; size=&quot;1rem&quot; />
+      <strong>Billing</strong>
+      <CuiBadge size=&quot;sm&quot; color=&quot;warning&quot;>Due soon</CuiBadge>
+    </CuiFlex>
+  </template>
+  <template #content>Your next invoice is issued on the 1st.</template>
+</CuiPopover>`">
+          <CuiStack spacing="3">
+            <p class="text-sm text-surface-500">
+              Replace the title bar with the <code>#header</code> slot. The close button stays
+              beside it, and the slot's content becomes the panel's accessible name — no
+              <code>title</code> prop needed.
+            </p>
+            <div>
+              <CuiPopover>
+                <CuiButton variant="outline">Billing</CuiButton>
+                <template #header>
+                  <CuiFlex gap="2" align="center">
+                    <CuiIcon name="file-text" size="1rem" />
+                    <strong>Billing</strong>
+                    <CuiBadge size="sm" color="warning">Due soon</CuiBadge>
+                  </CuiFlex>
+                </template>
+                <template #content>Your next invoice is issued on the 1st.</template>
+              </CuiPopover>
+            </div>
+          </CuiStack>
         </Example>
 
         <!-- Placements -->

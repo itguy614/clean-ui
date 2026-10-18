@@ -1,8 +1,22 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mount, flushPromises } from "@vue/test-utils";
+import { mount, flushPromises, enableAutoUnmount } from "@vue/test-utils";
+import { defineComponent, h, nextTick, ref } from "vue";
 import CuiModal from "../CuiModal.vue";
 import CuiSlideover from "../CuiSlideover.vue";
 import CuiConfirmDialog from "../CuiConfirmDialog.vue";
+import CuiPopover from "../CuiPopover.vue";
+
+/** The text of the element `aria-labelledby` points at — asserting that it resolves. */
+function labelOf(dialog: Element): string {
+  const id = dialog.getAttribute("aria-labelledby");
+  expect(id, "aria-labelledby present").toBeTruthy();
+  // The part that was broken: the id has to point at something real, and at this
+  // dialog's own title rather than another's with the same id.
+  const label = document.getElementById(id!);
+  expect(label, `aria-labelledby="${id}" resolves to an element`).not.toBeNull();
+  expect(dialog.contains(label), "the label is inside this dialog").toBe(true);
+  return label!.textContent!.trim();
+}
 
 /**
  * #158 — all three dialogs advertised a name they did not have. `CuiModal` and
@@ -15,6 +29,9 @@ import CuiConfirmDialog from "../CuiConfirmDialog.vue";
  * review, and only an actual lookup catches it.
  */
 describe("dialogs are announced with their title as the accessible name", () => {
+  // Unmount each app, not just wipe the DOM: an open popover holds a document keydown
+  // listener that would otherwise outlive its test.
+  enableAutoUnmount(afterEach);
   afterEach(() => {
     document.body.innerHTML = "";
   });
@@ -29,14 +46,7 @@ describe("dialogs are announced with their title as the accessible name", () => 
 
     const dialog = document.body.querySelector('[role="dialog"]');
     expect(dialog, "dialog rendered").not.toBeNull();
-
-    const id = dialog!.getAttribute("aria-labelledby");
-    expect(id, "aria-labelledby present").toBeTruthy();
-
-    // The part that was broken: the id has to point at something real.
-    const label = document.getElementById(id!);
-    expect(label, `aria-labelledby="${id}" resolves to an element`).not.toBeNull();
-    expect(label!.textContent?.trim()).toBe(expected);
+    expect(labelOf(dialog!)).toBe(expected);
   });
 
   it("gives each instance its own id, so two dialogs do not collide", async () => {
@@ -49,5 +59,66 @@ describe("dialogs are announced with their title as the accessible name", () => 
     );
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size, "ids are distinct").toBe(2);
+  });
+
+  // #159: the popover's header id was the literal "cui-popover-title", so every titled
+  // popover on a page shared it, and a #header slot without the title prop gave no name.
+  // A popover opens from its trigger or a prop change, not on mount, hence the toggle.
+  describe("CuiPopover", () => {
+    async function openPopovers(popovers: Array<Record<string, unknown>>) {
+      const visible = ref(false);
+      // One app, as on a real page: useId() is unique per app.
+      mount(
+        defineComponent(() => () =>
+          popovers.map(({ slots, ...props }) =>
+            h(CuiPopover, { ...props, visible: visible.value }, {
+              default: () => h("button", "Open"),
+              content: () => "Body",
+              ...(slots as object),
+            }),
+          ),
+        ),
+        { attachTo: document.body },
+      );
+      visible.value = true;
+      await nextTick();
+      return [...document.body.querySelectorAll('[role="dialog"]')];
+    }
+
+    it("gives each titled popover on a page its own title", async () => {
+      const dialogs = await openPopovers([{ title: "First" }, { title: "Second" }]);
+      expect(dialogs.map(labelOf)).toEqual(["First", "Second"]);
+    });
+
+    it("is named by a #header slot used without the title prop, leaving out the close button", async () => {
+      const [dialog] = await openPopovers([{ closable: true, slots: { header: () => h("strong", "Custom header") } }]);
+      expect(labelOf(dialog)).toBe("Custom header");
+    });
+
+    it("picks up a #header slot the parent adds after first render", async () => {
+      const withHeader = ref(false);
+      const visible = ref(false);
+      mount(
+        defineComponent(() => () =>
+          h(CuiPopover, { visible: visible.value }, {
+            default: () => h("button", "Open"),
+            content: () => "Body",
+            ...(withHeader.value ? { header: () => h("strong", "Late header") } : {}),
+          }),
+        ),
+        { attachTo: document.body },
+      );
+      visible.value = true;
+      await nextTick();
+      withHeader.value = true;
+      await nextTick();
+      const dialog = document.body.querySelector('[role="dialog"]')!;
+      expect(labelOf(dialog)).toBe("Late header");
+    });
+
+    it("has no aria-labelledby without a header", async () => {
+      const [dialog] = await openPopovers([{}]);
+      expect(dialog.hasAttribute("aria-labelledby")).toBe(false);
+    });
   });
 });
