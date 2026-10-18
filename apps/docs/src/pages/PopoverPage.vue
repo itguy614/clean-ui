@@ -89,6 +89,40 @@ import meta from "../meta/popover";
           </CuiPopover>
         </Example>
 
+        <!-- Custom header slot -->
+        <Example title="Custom Header" :code="`<CuiPopover>
+  <CuiButton variant=&quot;outline&quot;>Billing</CuiButton>
+  <template #header>
+    <CuiFlex gap=&quot;2&quot; align=&quot;center&quot;>
+      <CuiIcon name=&quot;file-text&quot; size=&quot;1rem&quot; />
+      <strong>Billing</strong>
+      <CuiBadge size=&quot;sm&quot; color=&quot;warning&quot;>Due soon</CuiBadge>
+    </CuiFlex>
+  </template>
+  <template #content>Your next invoice is issued on the 1st.</template>
+</CuiPopover>`">
+          <CuiStack spacing="3">
+            <p class="text-sm text-surface-500">
+              Replace the title bar with the <code>#header</code> slot. The close button stays
+              beside it, and the slot's content becomes the panel's accessible name — no
+              <code>title</code> prop needed.
+            </p>
+            <div>
+              <CuiPopover>
+                <CuiButton variant="outline">Billing</CuiButton>
+                <template #header>
+                  <CuiFlex gap="2" align="center">
+                    <CuiIcon name="file-text" size="1rem" />
+                    <strong>Billing</strong>
+                    <CuiBadge size="sm" color="warning">Due soon</CuiBadge>
+                  </CuiFlex>
+                </template>
+                <template #content>Your next invoice is issued on the 1st.</template>
+              </CuiPopover>
+            </div>
+          </CuiStack>
+        </Example>
+
         <!-- Placements -->
         <Example title="Placements" :code="`<CuiPopover placement=&quot;top&quot; title=&quot;Top&quot;>
   <CuiButton variant=&quot;outline&quot; size=&quot;sm&quot;>Top</CuiButton>
