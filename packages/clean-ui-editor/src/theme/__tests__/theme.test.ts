@@ -1,10 +1,10 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { syntaxTree } from "@codemirror/language";
 import CuiMarkdownEditor from "../../components/CuiMarkdownEditor.vue";
 import { editorThemeExtension } from "../editor-theme";
 import { cuiMarkdownHighlightStyle } from "../syntax-highlight";
+import { completeTree } from "../../test-utils";
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView()!;
@@ -47,7 +47,7 @@ describe("theme", () => {
       const view = getView(wrapper);
 
       const taggedNodeNames = new Set<string>();
-      syntaxTree(view.state).iterate({
+      completeTree(view.state).iterate({
         enter: (ref) => {
           taggedNodeNames.add(ref.name);
         },
