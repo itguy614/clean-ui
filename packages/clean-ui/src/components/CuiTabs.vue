@@ -128,9 +128,17 @@ function onKeydown(e: KeyboardEvent) {
   }
 
   if (nextIdx >= 0) {
-    activate(enabledTabs[nextIdx].value);
+    const target = enabledTabs[nextIdx].value;
+    const changed = target !== activeTab.value;
+    activate(target);
     nextTick(() => {
-      tabElement(enabledTabs[nextIdx].value)?.focus();
+      // focus() would do its own instant scroll-into-view, interrupting the
+      // activeTab watcher's smooth one mid-animation and stopping with the tab
+      // half clipped (#235). So focus without scrolling, and leave the scroll
+      // to the watcher — which only fires on a change, so an already-active
+      // tab (Home on the first, End on the last) scrolls here instead.
+      tabElement(target)?.focus({ preventScroll: true });
+      if (!changed) scrollActiveIntoView();
     });
   }
 }
@@ -141,7 +149,10 @@ function onKeydown(e: KeyboardEvent) {
 
 /** Scoped lookup — a global querySelector would hit another CuiTabs on the page. */
 function tabElement(value: string): HTMLElement | null {
-  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${value}"]`) ?? null;
+  // Escape for the quoted attribute selector — a `"` or `\` in a tab value would
+  // otherwise make querySelector throw.
+  const escaped = value.replace(/["\\]/g, "\\$&");
+  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${escaped}"]`) ?? null;
 }
 
 /** Which edges have content scrolled out of view — drives the edge fade mask. */
@@ -166,8 +177,10 @@ function updateOverflow() {
   overflowEdges.value = atStart ? "end" : atEnd ? "start" : "both";
 }
 
+// The one way the bar brings the active tab into view — keyboard nav, v-model
+// changes and mount all land here. The bar's scroll-padding keeps the tab clear
+// of the edge fade rather than flush under it.
 function scrollActiveIntoView() {
-  // Keyboard nav scrolls via focus(); this covers v-model changes and mount.
   tabElement(activeTab.value)?.scrollIntoView?.({ inline: "nearest", block: "nearest" });
 }
 
@@ -300,6 +313,8 @@ const messages = useMessages();
 }
 
 .cui-tabs__bar {
+  /* Width of the edge fade, and the scroll padding that keeps a tab clear of it. */
+  --_tab-fade-size: 1.5rem;
   display: flex;
   flex: 1;
   min-width: 0;
@@ -327,6 +342,8 @@ const messages = useMessages();
   gap: 0;
   overflow-x: auto;
   overflow-y: hidden;
+  /* So a tab scrolled into view clears the fade instead of landing under it. */
+  scroll-padding-inline: var(--_tab-fade-size);
 }
 
 .cui-tabs--vertical .cui-tabs__bar-outer {
@@ -339,41 +356,42 @@ const messages = useMessages();
   gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-padding-block: var(--_tab-fade-size);
 }
 
 /* Edge fade — set by the `data-overflow` state, which tracks scroll position */
 .cui-tabs--horizontal .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent 100%);
+  --_tab-fade: linear-gradient(to right, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
 }
 
 .cui-tabs--horizontal .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to left, #000 calc(100% - 1.5rem), transparent 100%);
+  --_tab-fade: linear-gradient(to left, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
 }
 
 .cui-tabs--horizontal .cui-tabs__bar[data-overflow="both"] {
   --_tab-fade: linear-gradient(
     to right,
     transparent 0,
-    #000 1.5rem,
-    #000 calc(100% - 1.5rem),
+    #000 var(--_tab-fade-size),
+    #000 calc(100% - var(--_tab-fade-size)),
     transparent 100%
   );
 }
 
 .cui-tabs--vertical .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent 100%);
+  --_tab-fade: linear-gradient(to bottom, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
 }
 
 .cui-tabs--vertical .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to top, #000 calc(100% - 1.5rem), transparent 100%);
+  --_tab-fade: linear-gradient(to top, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
 }
 
 .cui-tabs--vertical .cui-tabs__bar[data-overflow="both"] {
   --_tab-fade: linear-gradient(
     to bottom,
     transparent 0,
-    #000 1.5rem,
-    #000 calc(100% - 1.5rem),
+    #000 var(--_tab-fade-size),
+    #000 calc(100% - var(--_tab-fade-size)),
     transparent 100%
   );
 }
