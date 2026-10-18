@@ -14,6 +14,8 @@ const data: DataGridRow[] = [
   { id: "2", name: "Bob", email: "b@x.com", role: "Design" },
 ];
 
+const bulkActions = [{ key: "delete", label: "Delete" }];
+
 function headerCells(wrapper: ReturnType<typeof mount>) {
   return wrapper.findAll("thead th");
 }
@@ -56,7 +58,7 @@ describe("CuiDataGrid sticky columns", () => {
       props: {
         columns,
         data: data.map((r) => ({ ...r, _actions: [{ key: "edit", label: "Edit" }] })),
-        bulkActions: [{ key: "delete", label: "Delete" }],
+        bulkActions,
         maxHeight: "320px",
         hideToolbar: true,
       },
@@ -65,6 +67,67 @@ describe("CuiDataGrid sticky columns", () => {
     const style = headerCells(wrapper)[0].attributes("style") ?? "";
     expect(style).toContain("position: sticky");
     expect(style).toContain("top:");
+    wrapper.unmount();
+  });
+
+  it("pins the bulk-select column left, on both axes, when a data column is frozen", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: { columns, data, bulkActions, maxHeight: "320px", hideToolbar: true },
+    });
+    const header = headerCells(wrapper)[0].attributes("style") ?? "";
+    expect(header).toMatch(/left:\s*0(px)?;/);
+    expect(header).toMatch(/z-index:\s*11/);
+    const body = wrapper.find("tbody tr td").attributes("style") ?? "";
+    expect(body).toContain("position: sticky");
+    expect(body).toMatch(/left:\s*0(px)?;/);
+    // The frozen data columns start after it, at the summed widths as written.
+    expect(headerCells(wrapper)[1].attributes("style")).toMatch(/left:\s*3rem/);
+    expect(headerCells(wrapper)[2].attributes("style")).toMatch(/left:\s*calc\((3rem \+ 160px|160px \+ 3rem)\)/);
+    wrapper.unmount();
+  });
+
+  it("falls back for a width that is not a length, rather than voiding the sum", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: {
+        columns: [{ ...columns[0], width: "auto" }, columns[1], columns[2]],
+        data,
+        bulkActions,
+        maxHeight: "320px",
+        hideToolbar: true,
+      },
+    });
+    // "auto" pins at the start and adds nothing, as parseInt's 0 used to.
+    expect(headerCells(wrapper)[2].attributes("style")).toMatch(/left:\s*3rem/);
+    expect(wrapper.find("table").attributes("style")).toMatch(/min-width:\s*calc\(/);
+    wrapper.unmount();
+  });
+
+  it("reads a bare-number width as px, rather than voiding the sum", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: {
+        columns: [{ ...columns[0], width: "120" }, columns[1], columns[2]],
+        data,
+        bulkActions,
+        maxHeight: "320px",
+        hideToolbar: true,
+      },
+    });
+    expect(headerCells(wrapper)[2].attributes("style")).toMatch(/left:\s*calc\((3rem \+ 120px|120px \+ 3rem)\)/);
+    wrapper.unmount();
+  });
+
+  it("leaves the bulk-select column unpinned when no data column is frozen", () => {
+    const wrapper = mount(CuiDataGrid, {
+      props: {
+        columns: columns.map((c) => ({ ...c, sticky: false })),
+        data,
+        bulkActions,
+        maxHeight: "320px",
+        hideToolbar: true,
+      },
+    });
+    expect(headerCells(wrapper)[0].attributes("style")).not.toContain("left:");
+    expect(wrapper.find("tbody tr td").attributes("style") ?? "").not.toContain("position: sticky");
     wrapper.unmount();
   });
 
