@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
+import { EditorState } from "@codemirror/state";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
+import { definePlugin } from "../../plugins";
 import { completeTree } from "../../test-utils";
 
 function getView(wrapper: VueWrapper) {
@@ -128,6 +130,8 @@ describe("CuiMarkdownEditor", () => {
       await nextTick();
 
       expect(view.state.doc.toString()).toBe("replaced entirely");
+      // #237: a host-driven change is not an edit, so it is not echoed back.
+      expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     });
 
     it("emits update:modelValue when the user edits the document", async () => {
@@ -140,6 +144,93 @@ describe("CuiMarkdownEditor", () => {
 
       const emitted = wrapper.emitted("update:modelValue");
       expect(emitted?.at(-1)).toEqual(["typed"]);
+    });
+
+    // #237: a host-driven change used to come straight back as
+    // update:modelValue, which a buffering or autosaving host reads as an edit.
+    describe("does not echo host-driven changes", () => {
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("emits nothing when the parent changes modelValue under a throttle", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "original", throttle: 50 } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(getView(wrapper)!.state.doc.toString()).toBe("from the host");
+        expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+      });
+
+      it("still emits typing under a throttle, including the trailing value", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"]]);
+
+        vi.advanceTimersByTime(50);
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("drops an edit still queued in the throttle when the parent replaces the value", async () => {
+        // Otherwise the queued "abc" fires after the host's value, leaving the
+        // host holding text the editor no longer shows.
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "ab" } });
+        view.dispatch({ changes: { from: 2, insert: "c" } });
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(view.state.doc.toString()).toBe("from the host");
+        expect(wrapper.emitted("update:modelValue")).toEqual([["ab"]]);
+      });
+
+      it("reports a host value that a plugin's filter rewrote on the way in", async () => {
+        // Otherwise the editor shows the rewritten text while the host keeps
+        // what it sent, and nothing reconciles them.
+        const upcase = definePlugin({
+          id: "upcase",
+          commands: {},
+          extensions: [
+            EditorState.transactionFilter.of((tr) =>
+              tr.docChanged && tr.newDoc.toString() !== tr.newDoc.toString().toUpperCase()
+                ? [tr, { changes: { from: 0, to: tr.newDoc.length, insert: tr.newDoc.toString().toUpperCase() }, sequential: true }]
+                : tr,
+            ),
+          ],
+        });
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [upcase] } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+
+        expect(getView(wrapper)!.state.doc.toString()).toBe("FROM THE HOST");
+        expect(wrapper.emitted("update:modelValue")).toEqual([["FROM THE HOST"]]);
+      });
+
+      it("updates the counter after a host-driven change", async () => {
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abc", maxLength: 10 } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "abcdef" });
+        await nextTick();
+
+        expect(wrapper.find('[data-testid="cui-markdown-editor-counter"]').text()).toBe("6/10");
+      });
     });
   });
 
@@ -393,6 +484,7 @@ describe("CuiMarkdownEditor", () => {
 
       const view = getView(wrapper)!;
       expect(view.state.doc.toString()).toBe("way over the limit");
+      expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     });
 
     it("refuses an oversized paste and reports the overage, inserting nothing", async () => {
