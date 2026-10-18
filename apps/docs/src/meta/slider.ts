@@ -18,18 +18,22 @@ const meta: ComponentMeta = {
     {
       name: "label",
       type: "string",
-      description: "Text above the track. It renders as a bare label element with no for, so it labels nothing — see Accessibility",
+      description: "Text above the track. It renders as a label element pointing at the native input (your id, or a generated one), so it names the control",
     },
     { name: "showValue", type: "boolean", default: "false", description: "Print the current value above the track, right-aligned" },
     {
       name: "formatValue",
       type: "(value: number) => string",
-      description: "Formats the printed value and the min/max labels. It does not reach assistive technology — see Accessibility",
+      description: "Formats the printed value and the min/max labels, and sets aria-valuetext so assistive technology announces the formatted value",
     },
     { name: "showRange", type: "boolean", default: "false", description: "Print the min and max below the track" },
     { name: "thumbIcon", type: "string", description: "Icon name drawn inside the thumb. The #thumb slot replaces it" },
     hiddenProp,
     ...nativeControlProps,
+  ],
+
+  tokens: [
+    { name: "--cui-slider-focus-ring", default: "var(--cui-{color}-focus-ring)", description: "Outline color drawn on the thumb while the input has keyboard focus" },
   ],
 
   slots: [

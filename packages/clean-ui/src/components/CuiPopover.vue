@@ -63,11 +63,14 @@ const isVisible = ref(false);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Immediate, so a controlled popover that starts open renders open (#248). An absent
+// `visible` is cast to false, which is the initial state anyway.
 watch(
   () => props.visible,
   (val) => {
     if (val !== undefined) isVisible.value = val;
   },
+  { immediate: true },
 );
 
 const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
@@ -87,11 +90,12 @@ useClickOutside(
 
 // Close on Escape from anywhere — the panel is teleported to <body>, so a
 // wrapper-scoped keydown misses it once focus moves into the panel.
+// Immediate too, so a popover that starts open (#248) gets the listener as well.
 watch(isVisible, (v) => {
   if (typeof document === "undefined") return;
   if (v) document.addEventListener("keydown", onKeydown);
   else document.removeEventListener("keydown", onKeydown);
-});
+}, { immediate: true });
 
 function doShow() {
   if (props.disabled) return;

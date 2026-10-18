@@ -278,13 +278,21 @@ function onFocus() {
   }
 }
 
+// Named, not inline, so onUnmounted can remove them — an anonymous listener
+// can't be, and leaked two per mount along with the closure's whole setup scope (#202).
+function onScrollOrResize() {
+  if (isOpen.value) updateDropdownPosition();
+}
+
 onMounted(() => {
   document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", () => { if (isOpen.value) updateDropdownPosition(); }, true);
-  window.addEventListener("resize", () => { if (isOpen.value) updateDropdownPosition(); });
+  window.addEventListener("scroll", onScrollOrResize, true);
+  window.addEventListener("resize", onScrollOrResize);
 });
 onUnmounted(() => {
   document.removeEventListener("mousedown", onClickOutside);
+  window.removeEventListener("scroll", onScrollOrResize, true);
+  window.removeEventListener("resize", onScrollOrResize);
   if (debounceTimer) clearTimeout(debounceTimer);
 });
 
