@@ -38,6 +38,31 @@ function replaceFromParent() {
   controlledDoc.value = `Replaced by the parent (${++replaceCount}).`;
 }
 
+// Edit session: a throttled editor whose parent can discard the draft and close it in
+// one click. Clicking the button blurs the editor first, which delivers the queued
+// draft, so the discard that follows overwrites it — the saved value survives.
+const savedNote = ref("The saved note.");
+const draftNote = ref(savedNote.value);
+const sessionOpen = ref(true);
+const sessionLog = ref<string[]>([]);
+function onDraftUpdate(value: string) {
+  draftNote.value = value;
+  sessionLog.value = [`update:modelValue  ${JSON.stringify(value)}`, ...sessionLog.value].slice(0, 6);
+}
+function saveAndClose() {
+  savedNote.value = draftNote.value;
+  sessionOpen.value = false;
+}
+function discardAndClose() {
+  draftNote.value = savedNote.value;
+  sessionOpen.value = false;
+}
+function reopenSession() {
+  draftNote.value = savedNote.value;
+  sessionLog.value = [];
+  sessionOpen.value = true;
+}
+
 const controlledMode = ref<CuiMarkdownEditorMode>("wysiwyg");
 
 const formValues = ref<{ bio: string; notes: string }>({ bio: "", notes: "" });
@@ -84,7 +109,7 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
           { name: 'modelValue', type: 'string', default: '(empty)', description: 'The markdown document (v-model).' },
           { name: 'mode', type: 'wysiwyg | source', default: 'wysiwyg', description: 'wysiwyg hides syntax markers away from the cursor; source shows raw markdown. v-model:mode.' },
           { name: 'placeholder', type: 'string', description: 'Shown only when the document is empty; not selectable, never part of the value.' },
-          { name: 'throttle', type: 'number', default: '0', description: 'Minimum ms between update:modelValue emissions. 0 emits on every change.' },
+          { name: 'throttle', type: 'number', default: '0', description: 'Minimum ms between update:modelValue emissions. 0 emits on every change. A pending emission is delivered early when the editor loses focus or unmounts, and dropped when modelValue is replaced.' },
           { name: 'id', type: 'string', description: 'Applied to the editable surface itself, not the outer wrapper — a <label for> pointing at it actually focuses the editor.' },
           { name: 'error', type: 'boolean', default: 'false', description: 'Recolors the border to --cui-error and sets aria-invalid, matching CuiInput/CuiTextarea.' },
           { name: 'errorMessage', type: 'string', description: 'Shown below the editor when error is true.' },
@@ -191,9 +216,7 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
               <CuiRadio :value="300" label="300 ms" />
               <CuiRadio :value="1000" label="1000 ms" />
             </CuiRadioGroup>
-            <!-- Keyed by throttle: on this release the editor reads throttle once, at setup. -->
             <CuiMarkdownEditor
-              :key="controlledThrottle"
               :model-value="controlledDoc"
               :throttle="controlledThrottle"
               @update:model-value="onControlledUpdate"
@@ -205,6 +228,45 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
               Parent value: <code class="cui-code">{{ controlledDoc }}</code>
             </p>
             <pre class="cui-pre" style="min-height: 4rem;"><code>{{ emitLog.length ? emitLog.join("\n") : "(no emissions yet)" }}</code></pre>
+          </CuiStack>
+        </Example>
+
+        <Example
+          title="Edit session — save or discard, then close, with a throttle"
+          :code="`&lt;CuiMarkdownEditor
+  v-if=&quot;open&quot;
+  :model-value=&quot;draft&quot;
+  :throttle=&quot;1000&quot;
+  @update:model-value=&quot;draft = $event&quot;
+/&gt;
+&lt;CuiButton @click=&quot;saved = draft; open = false&quot;&gt;Save &amp; close&lt;/CuiButton&gt;
+&lt;CuiButton @click=&quot;draft = saved; open = false&quot;&gt;Discard &amp; close&lt;/CuiButton&gt;`"
+        >
+          <CuiStack spacing="3">
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              The editor emits at most once a second. Type a few characters and immediately
+              click <strong>Save &amp; close</strong>: the last keystrokes still arrive, because a
+              pending emission is delivered when the editor loses focus or unmounts. Or click
+              <strong>Discard &amp; close</strong>: the saved note survives, rather than the
+              discarded draft being written back as the editor closes.
+            </p>
+            <CuiMarkdownEditor
+              v-if="sessionOpen"
+              :model-value="draftNote"
+              :throttle="1000"
+              @update:model-value="onDraftUpdate"
+            />
+            <div class="flex gap-2">
+              <template v-if="sessionOpen">
+                <CuiButton size="sm" @click="saveAndClose">Save &amp; close</CuiButton>
+                <CuiButton size="sm" variant="ghost" @click="discardAndClose">Discard &amp; close</CuiButton>
+              </template>
+              <CuiButton v-else size="sm" @click="reopenSession">Reopen</CuiButton>
+            </div>
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              Saved: <code class="cui-code">{{ savedNote }}</code> · Draft: <code class="cui-code">{{ draftNote }}</code>
+            </p>
+            <pre class="cui-pre" style="min-height: 3rem;"><code>{{ sessionLog.length ? sessionLog.join("\n") : "(no emissions yet)" }}</code></pre>
           </CuiStack>
         </Example>
 
