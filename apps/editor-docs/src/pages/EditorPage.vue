@@ -10,6 +10,8 @@ import {
   CuiFormField,
   CuiButtonGroup,
   CuiButton,
+  CuiRadioGroup,
+  CuiRadio,
 } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor, DEFAULT_PLUGINS, type CuiMarkdownEditorMode } from "@itguy614/clean-ui-editor";
 import PropTable from "../components/PropTable.vue";
@@ -17,6 +19,24 @@ import EventTable from "../components/EventTable.vue";
 import Example from "../components/Example.vue";
 
 const basicDoc = ref("# Hello\n\nEdit **this** document.");
+
+// Controlled value: what the parent sees. update:modelValue fires for edits only —
+// never for a value the parent set itself — so a buffering or autosaving parent can
+// treat every emission as a real change.
+const controlledDoc = ref("Type here, or replace the value from the parent.");
+const controlledThrottle = ref(0);
+const emitLog = ref<string[]>([]);
+let replaceCount = 0;
+function onControlledUpdate(value: string) {
+  controlledDoc.value = value;
+  const stamp = new Date().toLocaleTimeString([], { hour12: false });
+  // The tail, since that is where typing lands.
+  const shown = value.length > 40 ? `…${value.slice(-40)}` : value;
+  emitLog.value = [`${stamp}  update:modelValue  ${JSON.stringify(shown)}`, ...emitLog.value].slice(0, 8);
+}
+function replaceFromParent() {
+  controlledDoc.value = `Replaced by the parent (${++replaceCount}).`;
+}
 
 const controlledMode = ref<CuiMarkdownEditorMode>("wysiwyg");
 
@@ -149,6 +169,45 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
+        <Example
+          title="Controlled value — the parent's own changes are not echoed back"
+          :code="`&lt;CuiMarkdownEditor
+  :model-value=&quot;doc&quot;
+  :throttle=&quot;throttle&quot;
+  @update:model-value=&quot;onUpdate&quot;
+/&gt;
+&lt;CuiButton @click=&quot;doc = 'Replaced by the parent.'&quot;&gt;Replace from parent&lt;/CuiButton&gt;`"
+        >
+          <CuiStack spacing="3">
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              Typing emits <code class="cui-code">update:modelValue</code>, throttled if you pick
+              an interval. <strong>Replace from parent</strong> changes the editor without
+              emitting anything — the log should not grow. Type, then replace within the
+              throttle window: the queued keystrokes are dropped rather than overwriting the
+              parent's value.
+            </p>
+            <CuiRadioGroup v-model="controlledThrottle" variant="buttons" label="Throttle">
+              <CuiRadio :value="0" label="0 ms" />
+              <CuiRadio :value="300" label="300 ms" />
+              <CuiRadio :value="1000" label="1000 ms" />
+            </CuiRadioGroup>
+            <!-- Keyed by throttle: on this release the editor reads throttle once, at setup. -->
+            <CuiMarkdownEditor
+              :key="controlledThrottle"
+              :model-value="controlledDoc"
+              :throttle="controlledThrottle"
+              @update:model-value="onControlledUpdate"
+            />
+            <div>
+              <CuiButton size="sm" @click="replaceFromParent">Replace from parent</CuiButton>
+            </div>
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              Parent value: <code class="cui-code">{{ controlledDoc }}</code>
+            </p>
+            <pre class="cui-pre" style="min-height: 4rem;"><code>{{ emitLog.length ? emitLog.join("\n") : "(no emissions yet)" }}</code></pre>
+          </CuiStack>
+        </Example>
+
         <Example
           title="Mode switching"
           :code="`&lt;CuiMarkdownEditor v-model=&quot;doc&quot; v-model:mode=&quot;mode&quot; /&gt;
