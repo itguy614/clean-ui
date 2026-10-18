@@ -119,17 +119,20 @@ function getSortOpacity(key: string): string {
   return grid.sort.value?.key === sortKey ? "1" : "0.3";
 }
 
-// The bulk-select column's width. Its cells drop their horizontal padding
-// (SELECT_CELL_STYLE) so they render at exactly this width — padding plus the
-// checkbox would otherwise overflow it at md and lg — which is what lets the
-// sticky offsets below add this value rather than assume a pixel width.
+// The bulk-select and row-actions columns' width. Their cells drop their horizontal
+// padding (AUX_CELL_STYLE) so they render at exactly this width — padding plus the
+// checkbox or the actions button would otherwise overflow it. That is what lets the
+// sticky offsets below add this value rather than assume a pixel width, and lets the
+// table's min-width sum to what the columns actually take: an overflowing actions
+// column made the table squeeze every other column to fit, so each frozen column came
+// out narrower than the offset of the one after it, leaving a gap (#233).
 const SELECT_COLUMN_WIDTH = "3rem";
-const SELECT_CELL_STYLE = { paddingInline: 0 };
+const AUX_CELL_STYLE = { paddingInline: 0 };
 
 const PINNED_BG = "var(--cui-table-head-bg, var(--color-surface-50))";
 const PINNED_EDGE_SHADOW = "2px 0 4px -1px rgba(0,0,0,0.08)";
 
-const ROW_ACTIONS_COLUMN_WIDTH = "3rem";
+const ROW_ACTIONS_COLUMN_WIDTH = SELECT_COLUMN_WIDTH;
 
 /**
  * A width usable in calc(), or undefined. A keyword like "auto" (or "") is not
@@ -210,7 +213,7 @@ function stickyBodyColStyle(colKey: string): Record<string, string | number> | u
 }
 
 const selectBodyCellStyle = computed(() => ({
-  ...SELECT_CELL_STYLE,
+  ...AUX_CELL_STYLE,
   ...(pinSelectColumn.value ? pinnedBodyCellStyle("0", false) : {}),
 }));
 
@@ -251,10 +254,10 @@ function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolea
 // pinned left alongside the frozen columns. Pinned on both axes it takes the
 // corner z-index (11), above the regular header cells (10) that scroll under it.
 const selectHeaderCellStyle = computed(() => ({
-  ...SELECT_CELL_STYLE,
+  ...AUX_CELL_STYLE,
   ...headerPinStyle(pinSelectColumn.value ? "0" : undefined),
 }));
-const auxHeaderCellStyle = computed(() => headerPinStyle(undefined));
+const auxHeaderCellStyle = computed(() => ({ ...AUX_CELL_STYLE, ...headerPinStyle(undefined) }));
 
 // ---------------------------------------------------------------------------
 // Virtualization
@@ -393,7 +396,7 @@ const totalCols = computed(() => {
           </CuiTableCell>
 
           <!-- Row actions dropdown -->
-          <CuiTableCell v-if="hasRowActions" align="right" @click.stop>
+          <CuiTableCell v-if="hasRowActions" align="center" :style="AUX_CELL_STYLE" @click.stop>
             <CuiDropdown v-if="rowActions(row).length > 0">
               <CuiDropdownTrigger>
                 <CuiButton variant="ghost" size="xs" style="opacity: 0.4;">

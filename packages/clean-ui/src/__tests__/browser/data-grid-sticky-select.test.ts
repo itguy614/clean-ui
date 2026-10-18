@@ -30,14 +30,20 @@ describe("CuiDataGrid bulk-select column with frozen columns (real browser)", ()
     a: "1", b: "2", c: "3", d: "4", e: "5",
   }));
 
-  async function scrolledGrid(size: string, cols = columns) {
+  async function scrolledGrid(
+    size: string,
+    cols = columns,
+    rows: Record<string, unknown>[] = data,
+    hostStyle: Record<string, string> = {},
+  ) {
     const el = host({ width: "400px" });
+    for (const [prop, value] of Object.entries(hostStyle)) el.style.setProperty(prop, value);
     const wrapper = track(
       mount(CuiDataGrid, {
         attachTo: el,
         props: {
           columns: cols,
-          data,
+          data: rows,
           bulkActions: [{ key: "delete", label: "Delete" }],
           maxHeight: "300px",
           hideToolbar: true,
@@ -74,6 +80,22 @@ describe("CuiDataGrid bulk-select column with frozen columns (real browser)", ()
       ...columns.slice(2),
     ]);
     const [, name, a] = Array.from(table.querySelector("tbody tr")!.children) as HTMLElement[];
+    expect(a.getBoundingClientRect().left).toBeCloseTo(name.getBoundingClientRect().right, 0);
+  });
+
+  it("leaves no gap between adjacent frozen columns when rows have actions", async () => {
+    // The actions button plus cell padding overflowed the column's 3rem, so the table
+    // squeezed every other column to fit its min-width; each frozen column then came
+    // out narrower than the next one's offset, and scrolled content showed through.
+    // A roomier density widens the padding, which is what made the actions cell overflow.
+    const { table } = await scrolledGrid(
+      "md",
+      [{ key: "name", label: "Name", sticky: true, width: "120px" }, { key: "a", label: "A", sticky: true, width: "100px" }, ...columns.slice(2)],
+      data.map((r) => ({ ...r, _actions: [{ key: "edit", label: "Edit" }] })),
+      { "--cui-density-scale": "3" } as Record<string, string>,
+    );
+    const [, name, a] = Array.from(table.querySelector("tbody tr")!.children) as HTMLElement[];
+    expect(name.getBoundingClientRect().width).toBeCloseTo(120, 1);
     expect(a.getBoundingClientRect().left).toBeCloseTo(name.getBoundingClientRect().right, 0);
   });
 
