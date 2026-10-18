@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
-import { syntaxTree } from "@codemirror/language";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
+import { completeTree } from "../../test-utils";
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView();
@@ -60,7 +60,7 @@ describe("CuiMarkdownEditor", () => {
     expect(view.state.doc.toString()).toBe(gfmDoc);
 
     const seen = new Set<string>();
-    syntaxTree(view.state).iterate({ enter: (node) => void seen.add(node.name) });
+    completeTree(view.state).iterate({ enter: (node) => void seen.add(node.name) });
     for (const gfmNodeName of ["Strikethrough", "TaskMarker", "Table", "URL", "ATXHeading1"]) {
       expect(seen, `expected the GFM parser to recognize a ${gfmNodeName} node`).toContain(gfmNodeName);
     }

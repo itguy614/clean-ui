@@ -106,3 +106,37 @@ describe("CuiPopover behavior", () => {
     wrapper.unmount();
   });
 });
+
+// #248: the prop→state watcher was not immediate, so v-model:visible already true at
+// mount was ignored and the popover started closed.
+describe("CuiPopover initial visibility", () => {
+  afterEach(() => {
+    document.body.querySelectorAll('[role="dialog"]').forEach((el) => el.remove());
+  });
+
+  it("renders open when mounted with visible: true", async () => {
+    const wrapper = mount(CuiPopover, {
+      attachTo: document.body,
+      props: { visible: true },
+      slots: { default: "<button>Open</button>", content: "Body" },
+    });
+    await wrapper.vm.$nextTick();
+    expect(panel()).not.toBeNull();
+    wrapper.unmount();
+  });
+
+  it("closes on Escape when it started open", async () => {
+    // The Escape listener is attached by a watcher on the open state, which also has to
+    // run for the initial value.
+    const wrapper = mount(CuiPopover, {
+      attachTo: document.body,
+      props: { visible: true, hideDelay: 0 },
+      slots: { default: "<button>Open</button>", content: "Body" },
+    });
+    await wrapper.vm.$nextTick();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await wrapper.vm.$nextTick();
+    expect(wrapper.emitted("update:visible")?.at(-1)).toEqual([false]);
+    wrapper.unmount();
+  });
+});

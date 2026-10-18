@@ -70,3 +70,51 @@ describe("CuiSlider", () => {
     expect((input.element as HTMLInputElement).value).toBe("60");
   });
 });
+
+// #172: the label prop rendered a <label> with no `for`, and formatValue never reached
+// assistive tech. (The focus ring is checked in the browser suite.)
+describe("CuiSlider accessibility", () => {
+  it("names the range input with its label prop", () => {
+    const wrapper = mount(CuiSlider, { props: { label: "Volume" }, attachTo: document.body });
+    const input = wrapper.get("input[type=range]").element as HTMLInputElement;
+    expect(input.id).toBeTruthy();
+    expect([...input.labels!].map((l) => l.textContent!.trim())).toEqual(["Volume"]);
+    wrapper.unmount();
+  });
+
+  it("points the label at a caller-supplied id", () => {
+    const wrapper = mount(CuiSlider, { props: { label: "Volume", id: "vol" } });
+    expect(wrapper.get("label").attributes("for")).toBe("vol");
+    expect(wrapper.get("input[type=range]").attributes("id")).toBe("vol");
+  });
+
+  it("gives two sliders distinct ids", () => {
+    const wrapper = mount({
+      components: { CuiSlider },
+      template: `<div><CuiSlider label="A" /><CuiSlider label="B" /></div>`,
+    });
+    const ids = wrapper.findAll("input[type=range]").map((i) => i.attributes("id"));
+    expect(new Set(ids).size).toBe(2);
+  });
+
+  it("announces the formatted value via aria-valuetext", async () => {
+    const wrapper = mount(CuiSlider, { props: { modelValue: 250, max: 1000, formatValue: (v: number) => `$${v}` } });
+    expect(wrapper.get("input[type=range]").attributes("aria-valuetext")).toBe("$250");
+    await wrapper.setProps({ modelValue: 300 });
+    expect(wrapper.get("input[type=range]").attributes("aria-valuetext")).toBe("$300");
+  });
+
+  it("leaves aria-valuetext off without formatValue, so the number is announced as-is", () => {
+    const wrapper = mount(CuiSlider, { props: { modelValue: 40 } });
+    expect(wrapper.get("input[type=range]").attributes("aria-valuetext")).toBeUndefined();
+  });
+});
+
+describe("CuiSlider id fallback", () => {
+  it("falls back to a generated id for an empty id, so the label still names the input", () => {
+    const wrapper = mount(CuiSlider, { props: { label: "Volume", id: "" } });
+    const id = wrapper.get("input[type=range]").attributes("id");
+    expect(id).toBeTruthy();
+    expect(wrapper.get("label").attributes("for")).toBe(id);
+  });
+});
