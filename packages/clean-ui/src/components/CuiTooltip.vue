@@ -40,12 +40,13 @@ const isVisible = ref(false);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Sync with v-model:visible
+// Sync with v-model:visible. Immediate, so one that starts visible renders visible (#248).
 watch(
   () => props.visible,
   (val) => {
     if (val !== undefined) isVisible.value = val;
   },
+  { immediate: true },
 );
 
 const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
