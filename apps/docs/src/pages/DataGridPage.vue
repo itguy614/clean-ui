@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import {
   CuiDataGrid,
   CuiBadge,
   CuiCard,
   CuiCardBody,
   CuiIcon,
+  CuiStack,
+  CuiToggle,
   type DataGridColumn,
   type DataGridRow,
   type DataGridBulkAction,
@@ -103,6 +105,15 @@ const wideData: DataGridRow[] = data.map((row) => ({
   startDate: "2024-01-15",
   manager: "Jane Manager",
 }));
+
+// Sticky columns + bulk selection: the checkbox column pins with the frozen columns,
+// whatever unit the frozen widths are written in.
+const stickyBulkRem = ref(false);
+const stickyBulkColumns = computed<DataGridColumn[]>(() =>
+  wideColumns.map((col) =>
+    stickyBulkRem.value && col.key === "name" ? { ...col, width: "12rem" } : col,
+  ),
+);
 
 // Large dataset to demonstrate virtualization (10,000 rows)
 const roles = ["Engineering", "Design", "Marketing", "Sales", "Support"];
@@ -299,6 +310,38 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
           size="sm"
           hide-toolbar
         />
+      </Example>
+
+      <!-- Sticky columns + bulk selection -->
+      <Example title="Sticky Columns with Bulk Selection" :code="`<CuiDataGrid
+  :columns=&quot;[
+    { key: 'name', label: 'Name', sticky: true, width: '160px' }, // or '12rem'
+    { key: 'email', label: 'Email', sticky: true, width: '200px' },
+    ...
+  ]&quot;
+  :data=&quot;data&quot;
+  :bulk-actions=&quot;bulkActions&quot;
+  max-height=&quot;320px&quot;
+/>`">
+        <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            With bulk selection on, the checkbox column freezes along with the sticky columns.
+            Scroll right: the checkboxes stay at the left edge, the frozen columns sit flush
+            against each other with nothing showing through between them, and the select-all
+            header stays on top. Switch Name to a width written in <code>rem</code> to see the
+            offsets follow it.
+          </p>
+          <CuiToggle v-model="stickyBulkRem" label="Name width in rem (12rem)" />
+          <!-- Keyed so the toggle remounts it: the grid reads columns once, at setup. -->
+          <CuiDataGrid
+            :key="stickyBulkRem ? 'rem' : 'px'"
+            :columns="stickyBulkColumns"
+            :data="wideData"
+            :bulk-actions="bulkActions"
+            max-height="320px"
+            hide-toolbar
+          />
+        </CuiStack>
       </Example>
 
       <!-- Virtualized -->
