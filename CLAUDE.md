@@ -13,7 +13,7 @@
 - pnpm monorepo: `packages/clean-ui` (library) + `apps/docs` (docs site)
 - Vue 3.5+ / TypeScript / Tailwind CSS v4 / Vite 6
 - Component prefix: `Cui` (CuiButton, CuiGrid, etc.)
-- Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon name the library renders must be statically imported into `src/icons/builtin.ts`** — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
+- Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon the library renders *by name* must be statically imported into `src/icons/builtin.ts`** (new components pass the icon component instead — see "Conventions ahead of migration") — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
 - Positioning: `@floating-ui/vue` for tooltips; manual `computeDropdownPosition` for dropdowns/select
 
 ## Build & Dev
@@ -49,10 +49,12 @@
 
 ## Shared Prop Types & Mixins (`types/common.ts`)
 - **All cross-cutting prop types live in `types/common.ts`** — never re-declare them per component. Exports: `CuiColor` (9 roles, below), `CuiSize` (`xs|sm|md|lg|xl`), `CuiRounded` (`none|sm|md|lg|full`), `CuiOrientation` (`horizontal|vertical`), `CuiAutoOrientation` (+`auto`, for form-control groups), `CuiVariant` (`solid|outline|subtle|ghost|dash`), `CuiColorOrCss` (role OR raw CSS string).
-- **Base prop "mixins"** — compose via `extends`: `HideableProps` (`hidden`), `ColorableProps` (`color: CuiColor`), `SizeableProps` (`size: CuiSize`), `DisableableProps` (`disabled`), `FormControlProps` (label/description/error/errorMessage/required/readonly). Pattern: `export interface CuiXProps extends HideableProps, ColorableProps, SizeableProps { /* component-specific only */ }`. `defineProps<Props>()` resolves imported `extends` interfaces (Vue 3.5). `withDefaults` still sets defaults per component.
+- **Base prop "mixins"** — compose via `extends`: `HideableProps` (`hidden`), `ColorableProps` (`color: CuiColor`), `SizeableProps` (`size: CuiSize`), `DisableableProps` (`disabled`), `FormControlProps` (label/description/error/errorMessage/required/readonly — **new form controls extend it**; the existing ones still re-declare these props and migrate in #180, 2.0). Pattern: `export interface CuiXProps extends HideableProps, ColorableProps, SizeableProps { /* component-specific only */ }`. `defineProps<Props>()` resolves imported `extends` interfaces (Vue 3.5). `withDefaults` still sets defaults per component.
 - **Size**: every `size` prop is the flat `CuiSize`. Components that only style a subset narrow via `clampSize(props.size, ["sm","md","lg"] as const)` (from `utils/sizing.ts`) before indexing a scale map (type the map `Record<(typeof SUPPORTED)[number], …>`). Width-preset sizes (Modal/Slideover/Container) and raw dimensions (Spacer/Skeleton) are NOT `CuiSize`.
 - **Color**: role-only components use `color: CuiColor`. Paint components (Icon, Divider, Backdrop) use `color: CuiColorOrCss` + `resolveColor(color)` (from `utils/color.ts`) — a role maps to `var(--cui-{role})`, anything else passes through as raw CSS.
 - **Naming conventions** (clean break — no legacy aliases): visibility = `v-model:visible` on overlays (Modal/Slideover/Popover/Tooltip/Backdrop/ConfirmDialog); `expanded` only on collapsibles (Fieldset/Accordion). Layout axis = `orientation` (`horizontal|vertical`) everywhere EXCEPT `CuiFlex` which keeps `direction` (CSS `row|col|row-reverse|col-reverse`). Border radius = `rounded: CuiRounded` with the shared radiusMap (`none:0, sm:.25rem, md:var(--cui-button-radius,.375rem), lg:.5rem, full:9999px`).
+- **Close vs dismiss**: overlays *close* — Modal, Slideover, ModalHeader and ContextMenu emit `close`, and so will a Drawer. (Tabs also emits `close`, for a closeable tab — the same verb for removing a thing the user opened.) Notifications are *dismissed* — Alert, Banner, Toast emit `dismiss`. A new component picks by kind; nothing is renamed.
+- **Event names**: `<noun>-<verb>`, kebab-case, present tense — `row-click`, `node-expand`, `node-select`, `node-focus`, `bulk-action`. A bare verb for the component itself (`close`, `select`, `change`); `update:<prop>` only for `v-model`. The odd ones out (`select-node`, `toggle-expand`, `node-focused`) are internal events of the unexported `CuiTreeNode` — `CuiTreeView`'s public events already follow the rule — so they can be renamed whenever it's touched (#218).
 - **Variant vocab**: reuse `solid|outline|subtle|ghost|dash` when the meaning matches (subtle=tinted bg, ghost=no border/bg). Card uses `elevated|outline|ghost`. Structural variants (Progress `bar|circle`, Spinner `ring|dots|bars`, Skeleton `text|rectangle|circle`) stay component-specific.
 
 ## Color System
@@ -135,6 +137,29 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 
 ## Component Patterns
 
+### Conventions ahead of migration (decided in #274)
+New components follow these from day one, even where existing components don't yet — each
+existing one migrates in the 2.0 issue named. A PR adding a component that ignores them
+should not need a later "make it consistent" PR.
+
+- **Family context as a composable pair.** A component family (parent + sub-components)
+  exports `useXProvider()` / `useXContext()` wrapping provide/inject; sub-components never
+  call `inject()` directly, and `useXContext()` throws a clear error outside its parent. The
+  key and context type still live in a separate `{name}-context.ts`. `provideDataGrid()` /
+  `useDataGridState()` is the existing example, named before this convention. (Existing
+  families migrate when touched.)
+- **Icons are `string | Component`.** A public icon prop accepts a registered name *or* an
+  icon component. Internally a component imports the Phosphor icon it draws and passes the
+  component — `<CuiIcon :icon="PhCaretDown" />` — never a name, so the icons a consumer pays
+  for follow the components they use (#207 restructures the existing ones). Names still
+  resolve through `registerIcons()` for consumers and JSON-driven configs.
+- **Collapsed content** (Accordion, Fieldset, TreeView, sidebar groups) is hidden with
+  `hidden="until-found"` — out of the tab order and the accessibility tree, still reachable
+  by find-in-page, which auto-expands it via `beforematch` — falling back to `inert` plus
+  `visibility: hidden` where unsupported. Apply it after the collapse animation ends and
+  remove it before expand starts. The animation itself is `grid-template-rows: 0fr → 1fr`
+  (#270 migrates the existing three).
+
 ### Layout Components (CuiGrid, CuiFlex, CuiStack, etc.)
 - Use inline styles for all computed layout (grid-template-columns, flex-direction, gap)
 - `useBreakpoint()` + `resolveResponsive()` for responsive values
@@ -152,7 +177,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 
 ### Form Controls (Radio, Checkbox, Toggle, Input, Select, etc.)
 - Group + individual pattern: `CuiRadioGroup`/`CuiCheckboxGroup`/`CuiToggleGroup` + individual components
-- Group provides context via provide/inject (context type in separate `.ts` file)
+- Group provides context via provide/inject (context type in separate `.ts` file) — new groups through a `useXProvider`/`useXContext` pair (see "Conventions ahead of migration")
 - `MultiSelectGroupContext` shared between CheckboxGroup and ToggleGroup (identical shape)
 - `v-model` on group (managed state) OR on individual (standalone mode)
 - Radio: `v-model` is `string | number | boolean`. Checkbox/Toggle group: `v-model` is `Array<string | number>`. Standalone checkbox/toggle: `v-model` is `boolean`.
@@ -198,7 +223,7 @@ Once you have more than a couple named slots, or when slot names describe compon
 ### Use sub-components for:
 - **Composition patterns**: Card (CardHeader, CardBody, CardFooter, CardMedia), Modal (ModalHeader, ModalBody, ModalFooter), Tabs (Tabs + Tab), Dropdown (Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, etc.), Breadcrumb (Breadcrumb + BreadcrumbItem)
 - **Group + individual patterns**: RadioGroup + Radio, CheckboxGroup + Checkbox, ToggleGroup + Toggle
-- Sub-components use provide/inject for shared context (context type in separate `.ts` file)
+- Sub-components use provide/inject for shared context (context type in separate `.ts` file) — new families through a `useXProvider`/`useXContext` pair (see "Conventions ahead of migration")
 
 ### Use slots for:
 - **Content adornments**: Button (#prefix, #suffix), Badge (default), Alert (#icon, #actions), Input (#prefix, #suffix, #prefix-button, #suffix-button)
@@ -233,7 +258,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 1. Read this file first. Follow established patterns.
 2. Create the `.vue` file in `src/components/`. If it needs shared context, create a `{name}-context.ts` file (NOT exports in the .vue file).
 3. **Give the root element a `cui-*` class** — kebab-case of the component name (`CuiTreeView` → `cui-tree-view`). The scoped base in `styles/preflight.css` only reaches an element carrying such a class *and its descendants*, so a root without one renders its whole subtree outside the reset: no `box-sizing: border-box`, no `font: inherit` on form controls. It fails silently for anyone using Tailwind (their preflight covers it) and only breaks for consumers who supply no global reset of their own. Every top-level root counts — a `v-if`/`v-else` chain needs the class on each branch (see `CuiDivider`, which has three). A root that is not an element — `<Teleport>`, `<Transition>`, `<slot />`, or another Cui component that renders one of those — cannot take it: put the class on the element actually rendered, and add the file to the exemption list in `src/styles/__tests__/preflight.test.ts` with the reason. Passing a class to a component with a non-element root doesn't just get dropped, it makes Vue warn. That test fails on any unclassed root, and on a stale exemption.
-4. Use `CuiIcon` for all icons (never inline SVGs). Add any new icon name to `src/icons/builtin.ts`.
+4. Use `CuiIcon` for all icons (never inline SVGs). In a new component, import the Phosphor icon and pass the component (`<CuiIcon :icon="PhCaretDown" />`); a public icon prop is typed `string | Component` (see "Conventions ahead of migration"). Only an icon referenced by *name* needs an entry in `src/icons/builtin.ts`.
 5. Import sizes from `utils/sizing.ts`, not local maps.
 6. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
 7. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.
@@ -241,6 +266,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 8. Default to subtle color usage. Solid fill only via explicit `variant="solid"`.
 9. Add `aria-*` attributes, keyboard navigation, focus rings.
 10. `defineExpose({ el, focus, blur })` on interactive components.
+10b. Follow the event-name and close/dismiss rules ("Shared Prop Types & Mixins"), and the family-context, icon and collapsed-content conventions ("Conventions ahead of migration"). Form controls extend `FormControlProps`.
 11. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
     **Exception: satellite packages with a heavy dependency graph (e.g. a CodeMirror-based editor)
     must NOT do this.** A global `app.component()` install puts that package's entire dependency
