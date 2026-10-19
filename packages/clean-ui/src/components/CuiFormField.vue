@@ -56,7 +56,10 @@ const showError = computed(() => resolvedError.value && resolvedMessage.value);
 const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? false));
 
 // Generated once in setup, so it is stable across re-renders and matches the server render.
-const fieldId = props.for ?? useCuiId("field");
+// Called unconditionally: skipping useId() when `for` is set would shift the id of every
+// later component in the app, so a server/client difference in `for` would mismatch them all.
+const generatedId = useCuiId("field");
+const fieldId = props.for ?? generatedId;
 // Ids for the label and the help/error text, so the control can point at them.
 // `for`/`id` alone is not enough: it only forms an association with *labelable*
 // elements, which leaves a control like CuiSelect — whose focusable surface is a
