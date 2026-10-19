@@ -8,18 +8,21 @@ function isShown(el: Element): boolean {
   return (el as HTMLElement).style.display !== "none";
 }
 
-function makeHost(extra: { tabsProps?: string; tabTwoExtra?: string } = {}) {
+function makeHost(extra: { tabsProps?: string; tabTwoExtra?: string; onSubmit?: (e: Event) => void } = {}) {
   return defineComponent({
     components: { CuiTabs, CuiTab },
     setup() {
       const active = ref("one");
-      return { active };
+      return { active, onSubmit: extra.onSubmit ?? (() => {}) };
     },
+    // Wrapped in a form so a tab button that defaults to type="submit" shows up (#238).
     template: `
-      <CuiTabs v-model="active" ${extra.tabsProps ?? ""}>
-        <CuiTab value="one" label="One">Panel one</CuiTab>
-        <CuiTab value="two" label="Two" ${extra.tabTwoExtra ?? ""}>Panel two</CuiTab>
-      </CuiTabs>
+      <form @submit="onSubmit">
+        <CuiTabs v-model="active" ${extra.tabsProps ?? ""}>
+          <CuiTab value="one" label="One">Panel one</CuiTab>
+          <CuiTab value="two" label="Two" ${extra.tabTwoExtra ?? ""}>Panel two</CuiTab>
+        </CuiTabs>
+      </form>
     `,
   });
 }
@@ -229,6 +232,26 @@ describe("CuiTabs overflow", () => {
     wrapper.unmount();
   });
 
+  it("keyboard nav works with a tab value containing a quote or backslash", async () => {
+    const host = defineComponent({
+      components: { CuiTabs, CuiTab },
+      template: `
+        <CuiTabs>
+          <CuiTab value="one" label="One">One</CuiTab>
+          <CuiTab value='say "hi" \\ there' label="Two">Two</CuiTab>
+        </CuiTabs>
+      `,
+    });
+    const wrapper = mount(host, { attachTo: document.body });
+    await wrapper.vm.$nextTick();
+
+    await wrapper.get('[role="tablist"]').trigger("keydown", { key: "ArrowRight" });
+    await wrapper.vm.$nextTick();
+
+    expect(document.activeElement).toBe(wrapper.findAll('[role="tab"]')[1].element);
+    wrapper.unmount();
+  });
+
   it("scopes the keyboard-nav tab lookup to its own tablist", async () => {
     // Two tab sets sharing tab values: arrow-key nav must focus the local tab
     const host = defineComponent({
@@ -255,6 +278,22 @@ describe("CuiTabs overflow", () => {
 
     const focused = document.activeElement as HTMLElement;
     expect(second.element.contains(focused)).toBe(true);
+    wrapper.unmount();
+  });
+});
+
+// #238: a <button> with no type is a submit button, so a tab set inside a <form>
+// submitted the form on every tab switch. Fixed in #167; button-type.test.ts guards every
+// component statically, and this checks the behaviour end to end.
+describe("CuiTabs inside a form", () => {
+  it("switching or closing a tab does not submit the form", async () => {
+    const onSubmit = vi.fn((e: Event) => e.preventDefault());
+    const wrapper = mount(makeHost({ tabTwoExtra: "closeable", onSubmit }), { attachTo: document.body });
+    await wrapper.vm.$nextTick();
+
+    await wrapper.findAll('[role="tab"]')[1].trigger("click");
+    await wrapper.get(".cui-tabs__tab-close").trigger("click");
+    expect(onSubmit).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 });

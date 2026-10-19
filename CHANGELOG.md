@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-10-18
+
+### Fixed
+
+- CuiMarkdownEditor no longer emits `update:modelValue` for a value the parent set.
+  The echo looked like the user typing to a buffering or autosaving host, and could
+  trigger a save that overwrote newer data (#237).
+- CuiMarkdownEditor delivers a throttled emit still pending when it loses focus or
+  unmounts, so the last keystrokes are no longer lost on a route change. A changed
+  `throttle` prop now takes effect without a remount (#239).
+- CuiDataGrid freezes the bulk-select checkbox column along with frozen data columns.
+  It used to scroll away, leaving a gap, and its header cell was painted over. Frozen
+  offsets and the table's min-width now sum column widths as written, so `rem` and
+  `calc()` widths line up (#233).
+- CuiTabs: arrow-key, Home and End navigation leaves the newly active tab fully in
+  view, clear of the edge fade, rather than half clipped. A tab value containing a
+  quote or backslash no longer throws (#235).
+- CuiCombobox and CuiTagInput remove the window scroll and resize listeners they add
+  on mount. Each mount used to leak two (#202).
+- CuiPopover gives each popover its own title id, so several titled popovers on a page
+  are each named correctly. A `#header` slot now names the dialog too (#159).
+- CuiPopover and CuiTooltip open when `v-model:visible` is already `true` at mount, and
+  a popover that starts open closes on Escape (#248).
+- CuiDivider announces vertical dividers as vertical, and a label becomes the
+  separator's accessible name (#157).
+- CuiSlider draws a focus ring on the thumb (overridable with
+  `--cui-slider-focus-ring`), its `label` prop names the input, and `formatValue` sets
+  `aria-valuetext` (#172).
+- Every component `<button>` now has an explicit `type`. CuiPagination's buttons and
+  one in CuiDataGridViewManager used to submit a surrounding form (#238).
+
+### Changed
+
+- CuiDataGrid's checkbox and row-actions columns are exactly `3rem` wide, with no
+  horizontal cell padding. That makes them 4–12px narrower, and the row-actions button
+  is now centred.
+- CuiTabs: a tab scrolled into view stops 1.5rem in from an edge that has more tabs
+  beyond it, instead of flush against it.
+- CuiPopover's title id is now `cui-popover-title-<id>`, not the fixed
+  `cui-popover-title`.
+- CuiMarkdownEditor: code that relied on the `update:modelValue` echo to learn that a
+  value was applied no longer receives it. This matches native inputs.
+
 ## [1.3.0] - 2026-09-24
 
 ### Upgrading to 1.3

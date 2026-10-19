@@ -143,7 +143,8 @@ const contentAttrsCompartment = new Compartment();
 // that would exceed the limit, but a host is free to supply — and this
 // component must still faithfully display, per the value contract's "never
 // rewrites content the user did not edit" — a document already over length
-// (e.g. legacy content saved before a limit existed).
+// (e.g. legacy content saved before a limit existed). The updateListener
+// also skips emitting `update:modelValue` for these: they are not edits.
 const externalSync = Annotation.define<boolean>();
 
 // Live doc length for the counter (task 5.2.1) — tracked from the
@@ -307,10 +308,26 @@ let currentRegistry: PluginRegistry = (() => {
 // throttle was in flight.
 let lastKnownValue = props.modelValue;
 
-const emitModelValue = throttle((value: string) => {
+function emitNow(value: string) {
   lastKnownValue = value;
   emit("update:modelValue", value);
-}, props.throttle);
+}
+
+// The interval is read on every call, so a changed `throttle` prop applies to
+// the next edit without rebuilding the throttle (which would forget when it
+// last fired and emit early).
+const emitModelValue = throttle(emitNow, () => props.throttle);
+
+// An edit already queued under the old interval is delivered now rather than
+// left waiting on it. Post-flush, so that when the host changes `modelValue`
+// in the same tick its watcher is guaranteed to run first and cancel the
+// superseded edit, rather than that resting on the scheduler's ordering of two
+// pre-flush watchers — flushing first would overwrite the host's new value.
+watch(
+  () => props.throttle,
+  () => emitModelValue.flush(),
+  { flush: "post" },
+);
 
 function resolveCspNonce(): string | undefined {
   if (props.cspNonce) return props.cspNonce;
@@ -329,10 +346,6 @@ function activeConstructsFromRegistry(registry: PluginRegistry): ReadonlySet<str
  * `source` stays the base editor with nothing added, per FR4. */
 function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
   return mode === "wysiwyg" ? [revealExtension(activeConstructsFromRegistry(currentRegistry))] : [];
-}
-
-function onDocChanged(value: string) {
-  emitModelValue(value);
 }
 
 /**
@@ -408,13 +421,26 @@ function createView(): EditorView {
         keymap.of([...markdownKeymap, indentWithTab, ...defaultKeymap, ...historyKeymap, ...completionKeymap]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            onDocChanged(update.state.doc.toString());
+            // A host-driven sync is not an edit: re-emitting it would hand the
+            // parent back the value it just set, which a buffering or
+            // autosaving host reads as the user typing (#237). The one
+            // exception is a sync that a plugin's filter rewrote on the way
+            // in — the host must hear about the text the editor actually shows.
+            const doc = update.state.doc.toString();
+            const external = update.transactions.some((tr) => tr.annotation(externalSync));
+            if (!external || doc !== lastKnownValue) emitModelValue.call(doc);
             docLength.value = update.state.doc.length;
           }
           if (update.docChanged || update.selectionSet) selectionVersion.value++;
         }),
         EditorState.transactionFilter.of(maxLengthFilter),
-        EditorView.domEventHandlers({ paste: handlePaste }),
+        // Flush on blur as well as on unmount. Clicking a host button blurs the
+        // editor before the click handler runs, so a "Discard and close" that
+        // resets modelValue and unmounts in one tick sees the draft arrive
+        // first and overwrites it — the unmount flush alone would deliver the
+        // discarded draft after the reset, with no prop update in between to
+        // cancel it.
+        EditorView.domEventHandlers({ paste: handlePaste, blur: () => emitModelValue.flush() }),
         placeholderExtension(props.placeholder ?? ""),
         modeCompartment.of(buildModeExtensions(currentMode.value)),
         themeCompartment.of(themeExtensions()),
@@ -439,6 +465,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // Vue drops emits from an unmounted instance, so an edit still queued in the
+  // throttle has to go now or the host never hears the last keystrokes.
+  emitModelValue.flush();
   view?.destroy();
   view = null;
 });
@@ -448,6 +477,10 @@ watch(
   (newValue) => {
     if (newValue === lastKnownValue) return;
     lastKnownValue = newValue;
+    // The host's value replaces whatever the user had typed, so an edit still
+    // queued in the throttle is superseded — letting it fire would leave the
+    // host holding text the editor no longer shows.
+    emitModelValue.cancel();
     if (!view) return;
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: newValue },

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { nextTick } from "vue";
-import { syntaxTree } from "@codemirror/language";
+import { defineComponent, h, nextTick, reactive, ref } from "vue";
+import { EditorState } from "@codemirror/state";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
+import { definePlugin } from "../../plugins";
+import { completeTree } from "../../test-utils";
 
 function getView(wrapper: VueWrapper) {
   return (wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView }).getView();
@@ -60,13 +62,17 @@ describe("CuiMarkdownEditor", () => {
     expect(view.state.doc.toString()).toBe(gfmDoc);
 
     const seen = new Set<string>();
-    syntaxTree(view.state).iterate({ enter: (node) => void seen.add(node.name) });
+    completeTree(view.state).iterate({ enter: (node) => void seen.add(node.name) });
     for (const gfmNodeName of ["Strikethrough", "TaskMarker", "Table", "URL", "ATXHeading1"]) {
       expect(seen, `expected the GFM parser to recognize a ${gfmNodeName} node`).toContain(gfmNodeName);
     }
   });
 
   describe("value contract", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it("never rewrites content the user did not edit, including unknown syntax, an HTML block and frontmatter", async () => {
       const doc = [
         "---",
@@ -128,6 +134,8 @@ describe("CuiMarkdownEditor", () => {
       await nextTick();
 
       expect(view.state.doc.toString()).toBe("replaced entirely");
+      // #237: a host-driven change is not an edit, so it is not echoed back.
+      expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     });
 
     it("emits update:modelValue when the user edits the document", async () => {
@@ -140,6 +148,210 @@ describe("CuiMarkdownEditor", () => {
 
       const emitted = wrapper.emitted("update:modelValue");
       expect(emitted?.at(-1)).toEqual(["typed"]);
+    });
+
+    // #237: a host-driven change used to come straight back as
+    // update:modelValue, which a buffering or autosaving host reads as an edit.
+    describe("does not echo host-driven changes", () => {
+      it("emits nothing when the parent changes modelValue under a throttle", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "original", throttle: 50 } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(getView(wrapper)!.state.doc.toString()).toBe("from the host");
+        expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+      });
+
+      it("still emits typing under a throttle, including the trailing value", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"]]);
+
+        vi.advanceTimersByTime(50);
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("drops an edit still queued in the throttle when the parent replaces the value", async () => {
+        // Otherwise the queued "abc" fires after the host's value, leaving the
+        // host holding text the editor no longer shows.
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "ab" } });
+        view.dispatch({ changes: { from: 2, insert: "c" } });
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(view.state.doc.toString()).toBe("from the host");
+        expect(wrapper.emitted("update:modelValue")).toEqual([["ab"]]);
+      });
+
+      it("reports a host value that a plugin's filter rewrote on the way in", async () => {
+        // Otherwise the editor shows the rewritten text while the host keeps
+        // what it sent, and nothing reconciles them.
+        const upcase = definePlugin({
+          id: "upcase",
+          commands: {},
+          extensions: [
+            EditorState.transactionFilter.of((tr) =>
+              tr.docChanged && tr.newDoc.toString() !== tr.newDoc.toString().toUpperCase()
+                ? [tr, { changes: { from: 0, to: tr.newDoc.length, insert: tr.newDoc.toString().toUpperCase() }, sequential: true }]
+                : tr,
+            ),
+          ],
+        });
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", plugins: [upcase] } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "from the host" });
+        await nextTick();
+
+        expect(getView(wrapper)!.state.doc.toString()).toBe("FROM THE HOST");
+        expect(wrapper.emitted("update:modelValue")).toEqual([["FROM THE HOST"]]);
+      });
+
+      it("updates the counter after a host-driven change", async () => {
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "abc", maxLength: 10 } });
+        await nextTick();
+
+        await wrapper.setProps({ modelValue: "abcdef" });
+        await nextTick();
+
+        expect(wrapper.find('[data-testid="cui-markdown-editor-counter"]').text()).toBe("6/10");
+      });
+    });
+
+    // #239: the throttle is built once at setup and its trailing timer is not
+    // tied to the component's lifetime.
+    describe("throttle lifecycle", () => {
+      it("emits an edit still queued in the throttle when the editor unmounts", async () => {
+        // test-utils clears emitted() on unmount, so listen with a spy.
+        vi.useFakeTimers();
+        const onUpdate = vi.fn();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50, "onUpdate:modelValue": onUpdate } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        wrapper.unmount();
+        wrapper = undefined;
+        vi.advanceTimersByTime(100);
+
+        expect(onUpdate.mock.calls).toEqual([["a"], ["ab"]]);
+      });
+
+      it("delivers a queued edit when the editor loses focus", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 50 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        view.contentDOM.dispatchEvent(new FocusEvent("blur"));
+
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("a discard-and-close that resets the value and unmounts in one tick keeps the reset", async () => {
+        // Clicking the host's button blurs the editor first, delivering the
+        // draft; the click then resets the value and unmounts. Without the blur
+        // flush, the unmount flush would write the discarded draft back.
+        vi.useFakeTimers();
+        const state = reactive({ open: true, value: "saved" });
+        const editor = ref<{ getView: () => import("@codemirror/view").EditorView }>();
+        wrapper = mount(
+          defineComponent({
+            setup: () => () =>
+              state.open
+                ? h(CuiMarkdownEditor, {
+                    ref: editor,
+                    modelValue: state.value,
+                    throttle: 50,
+                    "onUpdate:modelValue": (v: string) => (state.value = v),
+                  })
+                : null,
+          }),
+        );
+        await nextTick();
+        const view = editor.value!.getView();
+
+        view.dispatch({ changes: { from: 5, insert: "!" } });
+        view.dispatch({ changes: { from: 6, insert: "?" } });
+        view.contentDOM.dispatchEvent(new FocusEvent("blur"));
+        state.value = "saved";
+        state.open = false;
+        await nextTick();
+        vi.advanceTimersByTime(100);
+
+        expect(state.value).toBe("saved");
+      });
+
+      it("applies a throttle changed after mount, delivering any edit queued under the old one", async () => {
+        vi.useFakeTimers();
+        wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", throttle: 0 } });
+        await nextTick();
+        const view = getView(wrapper)!;
+
+        await wrapper.setProps({ throttle: 50 });
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"]]);
+
+        // Switching back flushes "ab" rather than dropping it with the old timer.
+        await wrapper.setProps({ throttle: 0 });
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+        vi.advanceTimersByTime(100);
+        expect(wrapper.emitted("update:modelValue")).toEqual([["a"], ["ab"]]);
+      });
+
+      it("does not deliver a queued edit that a same-tick host value supersedes", async () => {
+        // The throttle watcher flushes a queued edit; the modelValue watcher
+        // cancels one the host has superseded. The cancel has to win, or the
+        // flush overwrites the value the host just set.
+        vi.useFakeTimers();
+        const state = reactive({ throttle: 50, value: "" });
+        const onUpdate = vi.fn((v: string) => (state.value = v));
+        const editor = ref<{ getView: () => import("@codemirror/view").EditorView }>();
+        wrapper = mount(
+          defineComponent({
+            setup: () => () =>
+              h(CuiMarkdownEditor, {
+                ref: editor,
+                modelValue: state.value,
+                throttle: state.throttle,
+                "onUpdate:modelValue": onUpdate,
+              }),
+          }),
+        );
+        await nextTick();
+        const view = editor.value!.getView();
+
+        view.dispatch({ changes: { from: 0, insert: "a" } });
+        view.dispatch({ changes: { from: 1, insert: "b" } });
+        state.throttle = 0;
+        state.value = "host";
+        await nextTick();
+        vi.advanceTimersByTime(100);
+        await nextTick();
+
+        expect(onUpdate.mock.calls).toEqual([["a"]]);
+        expect(state.value).toBe("host");
+        expect(view.state.doc.toString()).toBe("host");
+      });
     });
   });
 
@@ -393,6 +605,7 @@ describe("CuiMarkdownEditor", () => {
 
       const view = getView(wrapper)!;
       expect(view.state.doc.toString()).toBe("way over the limit");
+      expect(wrapper.emitted("update:modelValue")).toBeUndefined();
     });
 
     it("refuses an oversized paste and reports the overage, inserting nothing", async () => {

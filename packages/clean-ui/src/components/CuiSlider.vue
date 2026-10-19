@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref, useId, useTemplateRef } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
@@ -52,6 +52,11 @@ const displayValue = computed(() =>
 
 const dragging = ref(false);
 
+// The visible label has to point at the native input to name it; generate an id when
+// the caller supplies none (#172).
+const generatedId = `cui-slider-${useId()}`;
+const inputId = computed(() => props.id || generatedId);
+
 function onInput(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value);
   emit("update:modelValue", val);
@@ -83,7 +88,11 @@ defineExpose({ el: inputRef, focus, blur });
 </script>
 
 <template>
-  <div class="cui-slider" v-show="!hidden" :style="{ opacity: disabled ? 0.5 : 1 }">
+  <div
+    class="cui-slider"
+    v-show="!hidden"
+    :style="{ opacity: disabled ? 0.5 : 1, '--_slider-focus-ring': `var(--cui-${color}-focus-ring)` }"
+  >
     <!-- Label + value row -->
     <div
       v-if="label || showValue"
@@ -91,6 +100,7 @@ defineExpose({ el: inputRef, focus, blur });
     >
       <label
         v-if="label"
+        :for="inputId"
         :style="{ fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
       >
         {{ label }}
@@ -126,39 +136,18 @@ defineExpose({ el: inputRef, focus, blur });
         transition: dragging ? 'none' : 'width 0.1s ease',
       }" />
 
-      <!-- Custom thumb -->
-      <div :style="{
-        position: 'absolute',
-        left: `${percent}%`,
-        transform: 'translateX(-50%)',
-        width: cfg.thumbSize,
-        height: cfg.thumbSize,
-        borderRadius: '50%',
-        background: thumbColor,
-        border: '2px solid var(--cui-surface-base, white)',
-        boxShadow: dragging ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 3px rgba(0,0,0,0.15)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'left 0.1s ease, box-shadow 0.15s ease, transform 0.15s ease',
-        pointerEvents: 'none',
-        zIndex: 2,
-      }">
-        <slot name="thumb">
-          <CuiIcon v-if="thumbIcon" :name="thumbIcon" :size="cfg.thumbIcon" />
-        </slot>
-      </div>
-
-      <!-- Invisible native range input on top for interaction -->
+      <!-- Invisible native range input on top for interaction. It precedes the thumb so
+           the thumb can draw the focus ring with a sibling selector. -->
       <input
         ref="inputEl"
-        :id="id"
+        :id="inputId"
         :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby"
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
+        :aria-valuetext="formatValue ? displayValue : undefined"
+        class="cui-slider__input"
         type="range"
         :value="modelValue"
         :min="min"
@@ -181,6 +170,29 @@ defineExpose({ el: inputRef, focus, blur });
         @touchstart="dragging = true"
         @touchend="dragging = false"
       />
+      <!-- Custom thumb -->
+      <div class="cui-slider__thumb" :style="{
+        position: 'absolute',
+        left: `${percent}%`,
+        transform: 'translateX(-50%)',
+        width: cfg.thumbSize,
+        height: cfg.thumbSize,
+        borderRadius: '50%',
+        background: thumbColor,
+        border: '2px solid var(--cui-surface-base, white)',
+        boxShadow: dragging ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 3px rgba(0,0,0,0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--cui-surface-base, white)',
+        transition: dragging ? 'none' : 'left 0.1s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        pointerEvents: 'none',
+        zIndex: 2,
+      }">
+        <slot name="thumb">
+          <CuiIcon v-if="thumbIcon" :name="thumbIcon" :size="cfg.thumbIcon" />
+        </slot>
+      </div>
     </div>
 
     <!-- Min/max range labels -->
@@ -193,3 +205,11 @@ defineExpose({ el: inputRef, focus, blur });
     </div>
   </div>
 </template>
+
+<style scoped>
+/* The native input is transparent, so the ring goes on the thumb it drives (#172). */
+:where(.cui-slider__input:focus-visible ~ .cui-slider__thumb) {
+  outline: 2px solid var(--cui-slider-focus-ring, var(--_slider-focus-ring));
+  outline-offset: 2px;
+}
+</style>
