@@ -314,7 +314,7 @@ export { useOverlay, type UseOverlayOptions } from "./composables/useOverlay";
 export { useClickOutside } from "./composables/useClickOutside";
 export { useColorScheme } from "./composables/useColorScheme";
 // Public since 1.3.2: the editor is its second consumer (#221).
-export { useFieldDescribedBy } from "./composables/useFieldDescribedBy";
+export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";
 export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
 
 export function createCleanUI(_options: CleanUIOptions = {}) {

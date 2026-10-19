@@ -108,9 +108,15 @@ export interface CuiMarkdownEditorProps {
 // The ARIA props are declared by hand, not via `extends AriaLabelableProps`:
 // defineProps resolves an imported interface with TypeScript's own module resolution,
 // which reaches clean-ui only through its built dist. This fails the build if the copy
-// drifts from clean-ui's contract — a missing key, or a different type.
-type AriaContractHolds =
-  Pick<CuiMarkdownEditorProps, keyof AriaLabelableProps> extends AriaLabelableProps ? true : never;
+// drifts from clean-ui's contract — a missing key, or a different type. Checked both
+// ways: one-way assignability would let the contract widen (say, to `string | string[]`)
+// while the editor's narrower copy still passed.
+type AriaCopy = Pick<CuiMarkdownEditorProps, keyof AriaLabelableProps>;
+type AriaContractHolds = [AriaCopy] extends [AriaLabelableProps]
+  ? [AriaLabelableProps] extends [AriaCopy]
+    ? true
+    : never
+  : never;
 const ariaContractHolds: AriaContractHolds = true;
 void ariaContractHolds;
 
@@ -192,6 +198,9 @@ function buildContentAttributes(): Record<string, string> {
     ...(props.ariaLabelledby ? { "aria-labelledby": props.ariaLabelledby } : {}),
   };
 }
+
+// Watched below rather than a hand-kept list of the props behind it, and read once at mount.
+const contentAttributes = computed(buildContentAttributes);
 
 const isAtLimit = computed(() => props.maxLength !== undefined && docLength.value >= props.maxLength);
 
@@ -472,7 +481,7 @@ function createView(): EditorView {
         themeCompartment.of(themeExtensions()),
         pluginsCompartment.of(registryExtensions(currentRegistry)),
         readOnlyCompartment.of(EditorState.readOnly.of(Boolean(props.disabled || props.readonly))),
-        contentAttrsCompartment.of(EditorView.contentAttributes.of(buildContentAttributes())),
+        contentAttrsCompartment.of(EditorView.contentAttributes.of(contentAttributes.value)),
         EditorView.editable.of(!props.disabled),
         ...(nonce ? [EditorView.cspNonce.of(nonce)] : []),
       ],
@@ -551,8 +560,7 @@ watch(isDark, () => {
   view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions()) });
 });
 
-// Watch the attributes themselves rather than a hand-kept list of the props behind them.
-watch(computed(buildContentAttributes), (attrs) => {
+watch(contentAttributes, (attrs) => {
   if (!view) return;
   view.dispatch({ effects: contentAttrsCompartment.reconfigure(EditorView.contentAttributes.of(attrs)) });
 });

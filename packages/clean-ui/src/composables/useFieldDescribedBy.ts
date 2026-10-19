@@ -1,7 +1,7 @@
 import { computed, useId, type ComputedRef } from "vue";
 
 /** The props any control needs for this: its own id, a caller's descriptions, and an error. */
-interface DescribableProps {
+export interface DescribableProps {
   id?: string;
   ariaDescribedby?: string;
   error?: boolean;
