@@ -126,8 +126,8 @@ describe("CuiPopover initial visibility", () => {
   });
 
   it("closes on Escape when it started open", async () => {
-    // The Escape listener is attached by a watcher on the open state, which also has to
-    // run for the initial value.
+    // The popover joins the Escape layer stack from a watcher on the open state, which
+    // also has to run for the initial value.
     const wrapper = mount(CuiPopover, {
       attachTo: document.body,
       props: { visible: true, hideDelay: 0 },

@@ -256,7 +256,9 @@ function onKeydown(e: KeyboardEvent) {
       e.preventDefault();
       createTag();
     }
-  } else if (e.key === "Escape") {
+  } else if (e.key === "Escape" && isOpen.value) {
+    // Marked handled, so an enclosing modal or popover stays open (#278)
+    e.preventDefault();
     isOpen.value = false;
   } else if (e.key === "Backspace" && !query.value && props.modelValue.length > 0) {
     removeTag(props.modelValue[props.modelValue.length - 1]);

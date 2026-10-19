@@ -2,6 +2,7 @@
 import { ref, computed, watch, onUnmounted, useSlots, useId } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
+import { useLayerStack } from "../composables/useLayerStack";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -88,14 +89,10 @@ useClickOutside(
   },
 );
 
-// Close on Escape from anywhere — the panel is teleported to <body>, so a
-// wrapper-scoped keydown misses it once focus moves into the panel.
-// Immediate too, so a popover that starts open (#248) gets the listener as well.
-watch(isVisible, (v) => {
-  if (typeof document === "undefined") return;
-  if (v) document.addEventListener("keydown", onKeydown);
-  else document.removeEventListener("keydown", onKeydown);
-}, { immediate: true });
+// Close on Escape from anywhere — the panel is teleported to <body>, so a wrapper-scoped
+// keydown misses it once focus moves into the panel. Through the shared layer stack
+// (#278), so only the topmost of a popover and the overlays around it closes.
+useLayerStack({ active: isVisible, onEscape: doHide });
 
 function doShow() {
   if (props.disabled) return;
@@ -122,14 +119,12 @@ function onMouseLeave() { if (props.trigger === "hover" || props.trigger === "ho
 function onFocusIn() { if (props.trigger === "focus" || props.trigger === "hover-focus") doShow(); }
 function onFocusOut() { if (props.trigger === "focus" || props.trigger === "hover-focus") doHide(); }
 function onClick() { if (props.trigger === "click") toggle(); }
-function onKeydown(e: KeyboardEvent) { if (e.key === "Escape" && isVisible.value) doHide(); }
 function onPopoverMouseEnter() { if (props.trigger === "hover" || props.trigger === "hover-focus") { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } } }
 function onPopoverMouseLeave() { if (props.trigger === "hover" || props.trigger === "hover-focus") doHide(); }
 
 onUnmounted(() => {
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
-  if (typeof document !== "undefined") document.removeEventListener("keydown", onKeydown);
 });
 
 // Plain functions, not computeds: `slots` is not reactive, so a computed would cache the

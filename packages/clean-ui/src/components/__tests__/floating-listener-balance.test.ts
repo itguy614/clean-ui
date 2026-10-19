@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, h, type Component } from "vue";
+import { defineComponent, h, nextTick, type Component } from "vue";
 import CuiCombobox from "../CuiCombobox.vue";
 import CuiTagInput from "../CuiTagInput.vue";
 import CuiSelect from "../CuiSelect.vue";
@@ -10,6 +10,8 @@ import CuiDropdownMenu from "../CuiDropdownMenu.vue";
 import CuiDropdownItem from "../CuiDropdownItem.vue";
 import CuiContextMenu from "../CuiContextMenu.vue";
 import CuiTooltip from "../CuiTooltip.vue";
+import CuiPopover from "../CuiPopover.vue";
+import CuiModal from "../CuiModal.vue";
 
 /**
  * #202 — CuiCombobox and CuiTagInput registered their window scroll/resize listeners as
@@ -56,8 +58,11 @@ const cases: Array<[string, Component, Record<string, unknown>]> = [
   ["CuiSelect", CuiSelect, { options }],
   ["CuiDropdown", Dropdown, {}],
   ["CuiContextMenu", CuiContextMenu, {}],
-  // Mounted open: its Escape listener exists only while visible (#254).
+  // Mounted open: the shared layer stack's Escape listener exists only while a layer is
+  // open (#254, #278).
   ["CuiTooltip (visible)", CuiTooltip, { text: "Hint", visible: true }],
+  ["CuiPopover (visible)", CuiPopover, { visible: true }],
+  ["CuiModal (visible)", CuiModal, { visible: true, title: "Dialog" }],
 ];
 
 describe("floating components remove every window/document listener they add", () => {
@@ -73,9 +78,10 @@ describe("floating components remove every window/document listener they add", (
     document.body.innerHTML = "";
   });
 
-  it.each(cases)("%s", (_name, component, props) => {
+  it.each(cases)("%s", async (_name, component, props) => {
     const { added, unremoved } = recordListeners();
     const wrapper = mount(component, { props, attachTo: document.body });
+    await nextTick(); // a modal opens in onMounted and joins the layer stack a tick later
     expect(added().length).toBeGreaterThan(0);
 
     wrapper.unmount();
