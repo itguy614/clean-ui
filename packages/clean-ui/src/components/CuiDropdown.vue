@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, provide, toRef, onMounted, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -88,7 +89,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 // Click outside -- check both the wrapper and any teleported menus
-const dropdownId = `cui-dd-${Math.random().toString(36).slice(2, 8)}`;
+const dropdownId = useCuiId("dropdown");
 
 function onClickOutside(e: MouseEvent) {
   const wrapper = document.querySelector(`[data-cui-dropdown-id="${dropdownId}"]`);

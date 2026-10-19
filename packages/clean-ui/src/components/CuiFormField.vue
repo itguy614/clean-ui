@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
 
@@ -54,8 +55,8 @@ const showError = computed(() => resolvedError.value && resolvedMessage.value);
 
 const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? false));
 
-// Auto-generate a stable id once (not a computed — Math.random() must not re-run on re-render)
-const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)}`;
+// Generated once in setup, so it is stable across re-renders and matches the server render.
+const fieldId = props.for ?? useCuiId("field");
 // Ids for the label and the help/error text, so the control can point at them.
 // `for`/`id` alone is not enough: it only forms an association with *labelable*
 // elements, which leaves a control like CuiSelect — whose focusable surface is a

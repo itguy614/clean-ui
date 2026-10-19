@@ -126,6 +126,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `types/common.ts` — shared cross-component prop types + base mixin interfaces (see "Shared Prop Types & Mixins"). Compose component props from these.
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
+- `composables/useCuiId.ts` — `useCuiId(prefix)` → `cui-<prefix>-<useId()>`, for every id a component generates itself (titles, labels, ARIA references). SSR-stable; never `Math.random()` (#182). Call it in setup; unique per Vue app.
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
 - `composables/useClickOutside.ts` — shared click-outside detection
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
