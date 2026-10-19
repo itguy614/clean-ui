@@ -49,12 +49,12 @@
 
 ## Shared Prop Types & Mixins (`types/common.ts`)
 - **All cross-cutting prop types live in `types/common.ts`** — never re-declare them per component. Exports: `CuiColor` (9 roles, below), `CuiSize` (`xs|sm|md|lg|xl`), `CuiRounded` (`none|sm|md|lg|full`), `CuiOrientation` (`horizontal|vertical`), `CuiAutoOrientation` (+`auto`, for form-control groups), `CuiVariant` (`solid|outline|subtle|ghost|dash`), `CuiColorOrCss` (role OR raw CSS string).
-- **Base prop "mixins"** — compose via `extends`: `HideableProps` (`hidden`), `ColorableProps` (`color: CuiColor`), `SizeableProps` (`size: CuiSize`), `DisableableProps` (`disabled`), `FormControlProps` (label/description/error/errorMessage/required/readonly — **new form controls extend it**; the existing ones still re-declare these props and migrate in #180, 2.0). Pattern: `export interface CuiXProps extends HideableProps, ColorableProps, SizeableProps { /* component-specific only */ }`. `defineProps<Props>()` resolves imported `extends` interfaces (Vue 3.5). `withDefaults` still sets defaults per component.
+- **Base prop "mixins"** — compose via `extends`: `HideableProps` (`hidden`), `ColorableProps` (`color: CuiColor`), `SizeableProps` (`size: CuiSize`), `DisableableProps` (`disabled`), `FormControlProps` (label/description/error/errorMessage/required/readonly, plus `disabled` — it already extends `DisableableProps`, so don't list both — **new form controls extend it**; the existing ones still re-declare these props and migrate in #180, 2.0), `NativeControlProps` (`id`/`ariaDescribedby`/`ariaLabelledby`/…/`name`/`autocomplete`, bound on the native focusable element rather than the wrapper — #78; every control wrapping a native input extends it, as `CuiInput` does). Pattern: `export interface CuiXProps extends HideableProps, ColorableProps, SizeableProps { /* component-specific only */ }`. `defineProps<Props>()` resolves imported `extends` interfaces (Vue 3.5). `withDefaults` still sets defaults per component.
 - **Size**: every `size` prop is the flat `CuiSize`. Components that only style a subset narrow via `clampSize(props.size, ["sm","md","lg"] as const)` (from `utils/sizing.ts`) before indexing a scale map (type the map `Record<(typeof SUPPORTED)[number], …>`). Width-preset sizes (Modal/Slideover/Container) and raw dimensions (Spacer/Skeleton) are NOT `CuiSize`.
 - **Color**: role-only components use `color: CuiColor`. Paint components (Icon, Divider, Backdrop) use `color: CuiColorOrCss` + `resolveColor(color)` (from `utils/color.ts`) — a role maps to `var(--cui-{role})`, anything else passes through as raw CSS.
 - **Naming conventions** (clean break — no legacy aliases): visibility = `v-model:visible` on overlays (Modal/Slideover/Popover/Tooltip/Backdrop/ConfirmDialog); `expanded` only on collapsibles (Fieldset/Accordion). Layout axis = `orientation` (`horizontal|vertical`) everywhere EXCEPT `CuiFlex` which keeps `direction` (CSS `row|col|row-reverse|col-reverse`). Border radius = `rounded: CuiRounded` with the shared radiusMap (`none:0, sm:.25rem, md:var(--cui-button-radius,.375rem), lg:.5rem, full:9999px`).
 - **Close vs dismiss**: overlays *close* — Modal, Slideover, ModalHeader and ContextMenu emit `close`, and so will a Drawer. (Tabs also emits `close`, for a closeable tab — the same verb for removing a thing the user opened.) Notifications are *dismissed* — Alert, Banner, Toast emit `dismiss`. A new component picks by kind; nothing is renamed.
-- **Event names**: `<noun>-<verb>`, kebab-case, present tense — `row-click`, `node-expand`, `node-select`, `node-focus`, `bulk-action`. A bare verb for the component itself (`close`, `select`, `change`); `update:<prop>` only for `v-model`. The odd ones out (`select-node`, `toggle-expand`, `node-focused`) are internal events of the unexported `CuiTreeNode` — `CuiTreeView`'s public events already follow the rule — so they can be renamed whenever it's touched (#218).
+- **Event names**: `<noun>-<verb>`, kebab-case, present tense — `row-click`, `node-click`, `node-expand` (and, for new events, e.g. `node-select`, `node-focus`). A bare verb for the component itself (`close`, `select`, `change`); `update:<prop>` only for `v-model`. Existing events that don't fit stay as they are (nothing is renamed): `CuiDataGrid`'s `row-action` / `bulk-action` (noun-noun), `selection-change`, and `CuiForm`'s `submit-invalid`. The internal events of the unexported `CuiTreeNode` (`select-node`, `toggle-expand`, `node-focused`) can be renamed whenever it's touched (#218) — `CuiTreeView`'s public events already follow the rule.
 - **Variant vocab**: reuse `solid|outline|subtle|ghost|dash` when the meaning matches (subtle=tinted bg, ghost=no border/bg). Card uses `elevated|outline|ghost`. Structural variants (Progress `bar|circle`, Spinner `ring|dots|bars`, Skeleton `text|rectangle|circle`) stay component-specific.
 
 ## Color System
@@ -152,8 +152,12 @@ should not need a later "make it consistent" PR.
   icon component. Internally a component imports the Phosphor icon it draws and passes the
   component — `<CuiIcon :icon="PhCaretDown" />` — never a name, so the icons a consumer pays
   for follow the components they use (#207 restructures the existing ones). Names still
-  resolve through `registerIcons()` for consumers and JSON-driven configs.
-- **Collapsed content** (Accordion, Fieldset, TreeView, sidebar groups) is hidden with
+  resolve through `registerIcons()` for consumers and JSON-driven configs. `CuiIcon` itself
+  takes the two forms as separate props (`name: string`, `icon: Component`), so forward a
+  union prop by type — a string to `name`, anything else to `icon` — rather than binding it
+  to `:icon` whole. (`RoleIconProps.icon` on Alert/Toast/Banner is still `string`-only and
+  also renders unregistered strings as text, e.g. an emoji; it widens in #207.)
+- **Collapsed content** (Accordion, Fieldset, TreeView via `CuiTreeNode`, and any future collapsible such as sidebar groups) is hidden with
   `hidden="until-found"` — out of the tab order and the accessibility tree, still reachable
   by find-in-page, which auto-expands it via `beforematch` — falling back to `inert` plus
   `visibility: hidden` where unsupported. Apply it after the collapse animation ends and
@@ -266,7 +270,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 8. Default to subtle color usage. Solid fill only via explicit `variant="solid"`.
 9. Add `aria-*` attributes, keyboard navigation, focus rings.
 10. `defineExpose({ el, focus, blur })` on interactive components.
-10b. Follow the event-name and close/dismiss rules ("Shared Prop Types & Mixins"), and the family-context, icon and collapsed-content conventions ("Conventions ahead of migration"). Form controls extend `FormControlProps`.
+10b. Follow the event-name and close/dismiss rules ("Shared Prop Types & Mixins"), and the family-context, icon and collapsed-content conventions ("Conventions ahead of migration"). Form controls extend `FormControlProps` (and `NativeControlProps` when they wrap a native input).
 11. Register in `index.ts`: import, component export, type export, `app.component()` in plugin.
     **Exception: satellite packages with a heavy dependency graph (e.g. a CodeMirror-based editor)
     must NOT do this.** A global `app.component()` install puts that package's entire dependency
