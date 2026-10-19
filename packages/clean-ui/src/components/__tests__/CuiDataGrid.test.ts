@@ -141,3 +141,29 @@ describe("CuiDataGrid sticky columns", () => {
     wrapper.unmount();
   });
 });
+
+// #258: CuiDataGrid passed `props.columns` into useDataGrid once, at setup, so changing
+// the prop after mount (a width, a label, adding or removing a column) did nothing until
+// the grid was remounted.
+describe("CuiDataGrid follows column changes after mount", () => {
+  const labels = (wrapper: ReturnType<typeof mount>) => headerCells(wrapper).map((th) => th.text());
+
+  it("applies a changed label and width", async () => {
+    const wrapper = mount(CuiDataGrid, { props: { columns, data, hideToolbar: true } });
+    await wrapper.setProps({ columns: [{ ...columns[0], label: "Full name", width: "12rem" }, columns[1], columns[2]] });
+    expect(labels(wrapper)[0]).toBe("Full name");
+    expect(headerCells(wrapper)[0].attributes("style")).toContain("width: 12rem");
+  });
+
+  it("adds and removes columns", async () => {
+    const wrapper = mount(CuiDataGrid, { props: { columns, data, hideToolbar: true } });
+    await wrapper.setProps({ columns: [columns[0], { key: "team", label: "Team" }, columns[2]] });
+    expect(labels(wrapper)).toEqual(["Name", "Team", "Role"]);
+  });
+
+  it("applies a definition whose own `visible` changed", async () => {
+    const wrapper = mount(CuiDataGrid, { props: { columns, data, hideToolbar: true } });
+    await wrapper.setProps({ columns: [columns[0], { ...columns[1], visible: false }, columns[2]] });
+    expect(labels(wrapper)).toEqual(["Name", "Role"]);
+  });
+});
