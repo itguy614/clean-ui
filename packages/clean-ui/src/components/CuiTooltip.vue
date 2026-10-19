@@ -67,15 +67,24 @@ function show() {
   }, props.showDelay);
 }
 
+function clearTimers() {
+  if (showTimer) clearTimeout(showTimer);
+  if (hideTimer) clearTimeout(hideTimer);
+  showTimer = hideTimer = null;
+}
+
+function hideNow() {
+  clearTimers();
+  isVisible.value = false;
+  emit("update:visible", false);
+}
+
 function hide() {
   if (showTimer) {
     clearTimeout(showTimer);
     showTimer = null;
   }
-  hideTimer = setTimeout(() => {
-    isVisible.value = false;
-    emit("update:visible", false);
-  }, props.hideDelay);
+  hideTimer = setTimeout(hideNow, props.hideDelay);
 }
 
 function toggle() {
@@ -107,12 +116,27 @@ function onClick() {
   if (props.trigger === "click") toggle();
 }
 
-// Close on Escape
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === "Escape" && isVisible.value) {
-    hide();
-  }
+// Escape dismisses a visible tooltip wherever focus is (WCAG 1.4.13), not only from
+// inside its trigger (#254). The listener lives on the document in the capture phase,
+// so it runs before an enclosing overlay's own Escape handler: the first Escape closes
+// just the tooltip, and stopping the event there keeps the modal or popover around it
+// open. It is attached only while the tooltip is visible, so an idle tooltip never
+// consumes Escape. The tooltip closes at once — a dismissal shouldn't wait out hideDelay.
+function onDocumentKeydown(e: KeyboardEvent) {
+  if (e.key !== "Escape") return;
+  e.stopPropagation();
+  hideNow();
 }
+
+watch(
+  isVisible,
+  (visible) => {
+    if (typeof document === "undefined") return;
+    if (visible) document.addEventListener("keydown", onDocumentKeydown, true);
+    else document.removeEventListener("keydown", onDocumentKeydown, true);
+  },
+  { immediate: true },
+);
 
 // Keep tooltip open when hovering over it
 function onTooltipMouseEnter() {
@@ -131,8 +155,8 @@ function onTooltipMouseLeave() {
 }
 
 onUnmounted(() => {
-  if (showTimer) clearTimeout(showTimer);
-  if (hideTimer) clearTimeout(hideTimer);
+  clearTimers();
+  if (typeof document !== "undefined") document.removeEventListener("keydown", onDocumentKeydown, true);
 });
 
 // Tooltip background/text colors
@@ -184,7 +208,6 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
     @focusin="onFocusIn"
     @focusout="onFocusOut"
     @click="onClick"
-    @keydown="onKeydown"
   >
     <!-- Trigger (default slot) -->
     <div ref="referenceRef" class="cui-tooltip__trigger">

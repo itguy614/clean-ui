@@ -45,9 +45,10 @@ const manualVisible = ref(false);
           visible text or an <code>aria-label</code> on the trigger.
         </li>
         <li>
-          Escape hides a visible tooltip while the trigger has focus, and the panel stays open
-          while the pointer is over it, so a tooltip can be read without being chased. Between
-          them, that covers the dismissible and hoverable halves of WCAG 1.4.13.
+          Escape hides a visible tooltip wherever focus is, and the panel stays open while the
+          pointer is over it, so a tooltip can be read without being chased. Between them, that
+          covers the dismissible and hoverable halves of WCAG 1.4.13. Inside a dialog, the first
+          Escape closes only the tooltip; the next one closes the dialog.
         </li>
         <li>
           An icon-only button needs an <code>aria-label</code> whether or not it has a tooltip.

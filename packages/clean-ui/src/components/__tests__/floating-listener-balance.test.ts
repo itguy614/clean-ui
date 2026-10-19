@@ -9,6 +9,7 @@ import CuiDropdownTrigger from "../CuiDropdownTrigger.vue";
 import CuiDropdownMenu from "../CuiDropdownMenu.vue";
 import CuiDropdownItem from "../CuiDropdownItem.vue";
 import CuiContextMenu from "../CuiContextMenu.vue";
+import CuiTooltip from "../CuiTooltip.vue";
 
 /**
  * #202 — CuiCombobox and CuiTagInput registered their window scroll/resize listeners as
@@ -55,6 +56,8 @@ const cases: Array<[string, Component, Record<string, unknown>]> = [
   ["CuiSelect", CuiSelect, { options }],
   ["CuiDropdown", Dropdown, {}],
   ["CuiContextMenu", CuiContextMenu, {}],
+  // Mounted open: its Escape listener exists only while visible (#254).
+  ["CuiTooltip (visible)", CuiTooltip, { text: "Hint", visible: true }],
 ];
 
 describe("floating components remove every window/document listener they add", () => {
