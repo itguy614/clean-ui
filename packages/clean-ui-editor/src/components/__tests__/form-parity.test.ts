@@ -112,4 +112,29 @@ describe("form parity: CuiMarkdownEditor vs. a sibling CuiTextarea", () => {
     expect(bioField.find(".cui-textarea--error").exists()).toBe(false);
     expect(notesField.find(".cui-markdown-editor--error").exists()).toBe(false);
   });
+
+  // #221: CuiFormField's ariaLabelledby / ariaDescribedby / ariaRequired fell through
+  // $attrs onto the editor's wrapper <div>, where they reached nothing.
+  it("puts the name, description and required state on both controls, resolving to the same text", async () => {
+    wrapper = mount(Harness, { attachTo: document.body });
+    await nextTick();
+    const textOf = (ids: string | undefined) =>
+      (ids ?? "").split(/\s+/).filter(Boolean).map((id) => document.getElementById(id)?.textContent?.trim());
+    const { bioField, notesField } = fields(wrapper);
+    const bio = bioField.find(".cui-textarea__native");
+    const notes = notesField.find('[data-testid="cui-markdown-editor-content"]');
+
+    expect(textOf(notes.attributes("aria-labelledby"))[0]).toContain("Notes");
+    expect(textOf(bio.attributes("aria-labelledby"))[0]).toContain("Bio");
+    expect(textOf(notes.attributes("aria-describedby"))).toEqual(["Tell us about yourself"]);
+    expect(textOf(bio.attributes("aria-describedby"))).toEqual(["Tell us about yourself"]);
+    expect(notes.attributes("aria-required")).toBe("true");
+    expect(bio.attributes("aria-required")).toBe("true");
+
+    // And none of it lands on the wrapper any more.
+    const root = notesField.find(".cui-markdown-editor");
+    for (const attr of ["aria-labelledby", "aria-describedby", "aria-required"]) {
+      expect(root.attributes(attr)).toBeUndefined();
+    }
+  });
 });

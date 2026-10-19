@@ -443,6 +443,31 @@ describe("CuiMarkdownEditor", () => {
   });
 
   describe("form control props (FR31)", () => {
+    // #221: the editor's own error message was referenced by nothing.
+    it("references its error message from the surface, after any caller description", async () => {
+      wrapper = mount(CuiMarkdownEditor, {
+        props: { modelValue: "", error: true, errorMessage: "Too short", ariaDescribedby: "hint" },
+        attachTo: document.body,
+      });
+      await nextTick();
+      const ids = (wrapper.find('[data-testid="cui-markdown-editor-content"]').attributes("aria-describedby") ?? "").split(" ");
+      expect(ids[0]).toBe("hint");
+      expect(document.getElementById(ids[1])?.textContent?.trim()).toBe("Too short");
+    });
+
+    it("reacts to ariaLabelledby, ariaDescribedby and ariaRequired changing after mount", async () => {
+      wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "x" } });
+      await nextTick();
+      const content = () => wrapper!.find('[data-testid="cui-markdown-editor-content"]');
+      expect(content().attributes("aria-labelledby")).toBeUndefined();
+
+      await wrapper.setProps({ ariaLabelledby: "lbl", ariaDescribedby: "desc", ariaRequired: true });
+      await nextTick();
+      expect(content().attributes("aria-labelledby")).toBe("lbl");
+      expect(content().attributes("aria-describedby")).toBe("desc");
+      expect(content().attributes("aria-required")).toBe("true");
+    });
+
     it("applies id, aria-invalid and aria-required to the editable surface, not the wrapper", async () => {
       wrapper = mount(CuiMarkdownEditor, {
         props: { modelValue: "", id: "doc-field", error: true, required: true },

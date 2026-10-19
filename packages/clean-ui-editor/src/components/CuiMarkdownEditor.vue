@@ -15,7 +15,7 @@ import { syntaxHighlighting } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
-import { CuiButton, CuiIcon, useColorScheme } from "@itguy614/clean-ui";
+import { CuiButton, CuiIcon, useColorScheme, useFieldDescribedBy, type AriaLabelableProps } from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { exitListWithBlankLine } from "../language/exit-list-blank-line";
@@ -58,6 +58,14 @@ export interface CuiMarkdownEditorProps {
    * `CuiForm` validates through a resolver, not native required validation,
    * so this never blocks submission by itself (FR31). */
   required?: boolean;
+  /** id(s) of text describing the editor — help text, an outside error message.
+   * Applied to the editable surface, ahead of the editor's own error message. The
+   * same contract as clean-ui's `AriaLabelableProps`, which `CuiFormField` relies on. */
+  ariaDescribedby?: string;
+  /** id(s) of the element labelling the editor, applied to the editable surface. */
+  ariaLabelledby?: string;
+  /** Marks the editor required for assistive tech; `CuiFormField` passes it. */
+  ariaRequired?: boolean;
   /**
    * Counts markdown source characters (what a storage column holds), and
    * shows a counter like `CuiTextarea`. Unlike `CuiTextarea`, this never
@@ -96,6 +104,15 @@ export interface CuiMarkdownEditorProps {
    * would be redundant, or a host wants only the mode toggle. */
   showToolbar?: boolean;
 }
+
+// The ARIA props are declared by hand, not via `extends AriaLabelableProps`:
+// defineProps resolves an imported interface with TypeScript's own module resolution,
+// which reaches clean-ui only through its built dist. This fails the build if the copy
+// drifts from clean-ui's contract — a missing key, or a different type.
+type AriaContractHolds =
+  Pick<CuiMarkdownEditorProps, keyof AriaLabelableProps> extends AriaLabelableProps ? true : never;
+const ariaContractHolds: AriaContractHolds = true;
+void ariaContractHolds;
 
 const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
   modelValue: "",
@@ -152,10 +169,17 @@ const externalSync = Annotation.define<boolean>();
 // prop can lag behind the real buffer under a throttle (see `emitModelValue`).
 const docLength = ref(0);
 
-/** `id`/`error`/`required` all belong on the editable surface itself (FR31)
- * — the same element that already carries `role="textbox"` — not the outer
- * wrapper, so a `<label for>` and a screen reader's error/required state
- * both target the thing that's actually focusable and editable. */
+// Caller descriptions first, then the editor's own error message, as clean-ui's
+// controls do (#175). Without this the message rendered below the editor was
+// referenced by nothing (#221).
+const { errorId, describedBy } = useFieldDescribedBy(props);
+
+/** `id`, the ARIA name/description/state attributes and `error` all belong on the
+ * editable surface itself (FR31) — the same element that already carries
+ * `role="textbox"` — not the outer wrapper, so a `<label for>` and a screen
+ * reader's name, description and error/required state all target the thing that's
+ * actually focusable and editable. Declared as props rather than left to fall
+ * through, which landed them on the wrapper `<div>` where they reached nothing (#221). */
 function buildContentAttributes(): Record<string, string> {
   return {
     role: "textbox",
@@ -163,7 +187,9 @@ function buildContentAttributes(): Record<string, string> {
     "data-testid": "cui-markdown-editor-content",
     ...(props.id ? { id: props.id } : {}),
     ...(props.error ? { "aria-invalid": "true" } : {}),
-    ...(props.required ? { "aria-required": "true" } : {}),
+    ...(props.required || props.ariaRequired ? { "aria-required": "true" } : {}),
+    ...(describedBy.value ? { "aria-describedby": describedBy.value } : {}),
+    ...(props.ariaLabelledby ? { "aria-labelledby": props.ariaLabelledby } : {}),
   };
 }
 
@@ -525,15 +551,11 @@ watch(isDark, () => {
   view.dispatch({ effects: themeCompartment.reconfigure(themeExtensions()) });
 });
 
-watch(
-  () => [props.id, props.error, props.required],
-  () => {
-    if (!view) return;
-    view.dispatch({
-      effects: contentAttrsCompartment.reconfigure(EditorView.contentAttributes.of(buildContentAttributes())),
-    });
-  },
-);
+// Watch the attributes themselves rather than a hand-kept list of the props behind them.
+watch(computed(buildContentAttributes), (attrs) => {
+  if (!view) return;
+  view.dispatch({ effects: contentAttrsCompartment.reconfigure(EditorView.contentAttributes.of(attrs)) });
+});
 
 // FR22: build and validate the replacement configuration before applying
 // it. On failure, `currentRegistry` and the live compartment content are
@@ -651,7 +673,7 @@ defineExpose({
       </div>
     </div>
     <div v-if="(error && errorMessage) || maxLength !== undefined" class="cui-markdown-editor__footer">
-      <div v-if="error && errorMessage" class="cui-markdown-editor__error" data-testid="cui-markdown-editor-error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-markdown-editor__error" data-testid="cui-markdown-editor-error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-markdown-editor__spacer" />
