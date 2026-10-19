@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-10-19
+
+### Added
+
+- `useFieldDescribedBy` (and its `DescribableProps` type) is now a public export of
+  clean-ui. It wires a control's own error message into `aria-describedby` after any
+  caller descriptions. clean-ui-editor now requires clean-ui 1.3.2 or later (#221).
+
+### Fixed
+
+- CuiColorPicker ends a drag when it unmounts, or when the browser cancels the pointer.
+  An interrupted drag used to leave document listeners attached. Touch drags now work
+  on all three surfaces, only the pointer that started a drag moves it, and disabling
+  the picker mid-drag ends the drag (#246).
+- CuiDataGrid follows changes to its `columns` prop after mount: widths, labels,
+  `sticky`, added and removed columns. Your hidden columns and order are kept. Saved
+  views and the unsaved-changes indicator stay in step with the change, and
+  "Save current" now clears the indicator (#258).
+- CuiTooltip dismisses on Escape wherever focus is, not only inside its trigger. Inside
+  a dialog, the first Escape closes the tooltip and the next closes the dialog. An open
+  select on the same trigger still receives the Escape (#254).
+- CuiMarkdownEditor puts CuiFormField's label, help text and required state on its
+  editable surface instead of a wrapper div, and references its own error message, so
+  all of them reach assistive technology (#221).
+
+### Changed
+
+- `useDataGrid` accepts `columns` as a ref or getter as well as an array. A plain array
+  is still read once.
+- CuiColorPicker's drag surfaces set `touch-action: none` and gain
+  `cui-color-picker__gradient`, `__hue` and `__alpha` classes.
+
 ## [1.3.1] - 2026-10-18
 
 ### Fixed
