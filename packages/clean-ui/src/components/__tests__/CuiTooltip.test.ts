@@ -11,7 +11,6 @@ const tooltip = () => document.body.querySelector('[role="tooltip"]');
 // #248 found CuiPopover ignoring v-model:visible already true at mount; CuiTooltip had
 // the same non-immediate prop→state watcher.
 describe("CuiTooltip controlled visibility", () => {
-
   it("renders visible when mounted with visible: true", async () => {
     const wrapper = mount(CuiTooltip, {
       attachTo: document.body,
@@ -36,6 +35,13 @@ describe("CuiTooltip controlled visibility", () => {
 // #254: Escape only dismissed a tooltip while focus was inside its trigger. WCAG 1.4.13
 // wants hover/focus content dismissible without moving pointer or focus.
 describe("CuiTooltip Escape", () => {
+  // Restore here rather than at the end of each test, so a failing assertion can't leak
+  // fake timers or document spies into the rest of the file.
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const escape = (target: EventTarget = document.body) =>
     target.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
 
@@ -80,7 +86,22 @@ describe("CuiTooltip Escape", () => {
     vi.runAllTimers();
     await nextTick();
     expect(onModal).toHaveBeenLastCalledWith(false);
-    vi.useRealTimers();
+  });
+
+  it("lets Escape through to an expanded trigger so its popup closes too", async () => {
+    const onTrigger = vi.fn();
+    mount(CuiTooltip, {
+      attachTo: document.body,
+      props: { text: "Hint", visible: true },
+      slots: { default: '<button id="expanded" aria-expanded="true">Target</button>' },
+    });
+    await nextTick();
+    const trigger = document.getElementById("expanded")!;
+    trigger.addEventListener("keydown", onTrigger);
+    escape(trigger);
+    await nextTick();
+    expect(onTrigger).toHaveBeenCalledOnce();
+    expect(tooltip()).toBeNull();
   });
 
   it("listens for Escape only while visible", async () => {
@@ -111,6 +132,5 @@ describe("CuiTooltip Escape", () => {
     expect(keydown()).toBe(0);
 
     // Unmounting while visible is covered by floating-listener-balance.test.ts.
-    vi.restoreAllMocks();
   });
 });

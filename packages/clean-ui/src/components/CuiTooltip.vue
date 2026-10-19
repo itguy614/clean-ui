@@ -80,10 +80,7 @@ function hideNow() {
 }
 
 function hide() {
-  if (showTimer) {
-    clearTimeout(showTimer);
-    showTimer = null;
-  }
+  clearTimers();
   hideTimer = setTimeout(hideNow, props.hideDelay);
 }
 
@@ -122,9 +119,13 @@ function onClick() {
 // just the tooltip, and stopping the event there keeps the modal or popover around it
 // open. It is attached only while the tooltip is visible, so an idle tooltip never
 // consumes Escape. The tooltip closes at once — a dismissal shouldn't wait out hideDelay.
+// When focus sits on an expanded widget (a select, combobox or dropdown trigger — the
+// usual thing a tooltip is attached to), that widget owns the Escape too: let it through
+// so its own popup closes on the same key instead of the tooltip silently eating it.
 function onDocumentKeydown(e: KeyboardEvent) {
-  if (e.key !== "Escape") return;
-  e.stopPropagation();
+  if (e.key !== "Escape" || e.isComposing) return;
+  const target = e.target as Element | null;
+  if (!target?.closest?.('[aria-expanded="true"]')) e.stopPropagation();
   hideNow();
 }
 
@@ -156,7 +157,7 @@ function onTooltipMouseLeave() {
 
 onUnmounted(() => {
   clearTimers();
-  if (typeof document !== "undefined") document.removeEventListener("keydown", onDocumentKeydown, true);
+  document.removeEventListener("keydown", onDocumentKeydown, true);
 });
 
 // Tooltip background/text colors
