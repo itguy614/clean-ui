@@ -102,7 +102,12 @@ onMounted(() => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
   }
 });
-onUnmounted(() => { observer?.disconnect(); });
+onUnmounted(() => {
+  observer?.disconnect();
+  // A drag in progress at unmount (e.g. inside a popover closed with Escape) would
+  // otherwise leave its document listeners firing against a dead instance (#246).
+  endDrag?.();
+});
 
 function emitColor() {
   textInput.value = outputValue.value;
@@ -119,27 +124,40 @@ const resolvedPalette = computed(() => {
   return [];
 });
 
-// --- Gradient area interaction ---
-const gradientRef = ref<HTMLElement | null>(null);
-let gradientDragging = false;
+// --- Drag on the gradient, hue and alpha surfaces ---
+// One drag at a time: pointerdown calls `update` and follows that pointer on the
+// document until its pointerup or pointercancel (a touch the browser takes over ends a
+// pointer without a pointerup). Ending removes all three listeners together, so no
+// surface can forget one. Explicit removal rather than an AbortSignal, which Safari
+// before 15 ignores — within the default build target.
+let endDrag: (() => void) | null = null;
 
-function onGradientPointerDown(e: PointerEvent) {
+function startDrag(e: PointerEvent, update: (e: PointerEvent) => void) {
   if (props.disabled) return;
-  gradientDragging = true;
-  updateGradient(e);
-  document.addEventListener("pointermove", onGradientPointerMove);
-  document.addEventListener("pointerup", onGradientPointerUp);
+  endDrag?.();
+  update(e);
+  // Follow only the pointer that started the drag: a second finger or a stray
+  // mouse must neither move the thumb nor end the drag.
+  const own = (ev: PointerEvent) => ev.pointerId === e.pointerId;
+  const onMove = (ev: PointerEvent) => { if (own(ev)) update(ev); };
+  const onEnd = (ev: PointerEvent) => { if (own(ev)) end(); };
+  const end = () => {
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onEnd);
+    document.removeEventListener("pointercancel", onEnd);
+    if (endDrag === end) endDrag = null;
+  };
+  endDrag = end;
+  document.addEventListener("pointermove", onMove);
+  document.addEventListener("pointerup", onEnd);
+  document.addEventListener("pointercancel", onEnd);
 }
 
-function onGradientPointerMove(e: PointerEvent) {
-  if (gradientDragging) updateGradient(e);
-}
+// Disabling mid-drag ends the drag, so a held pointer cannot keep changing the value.
+watch(() => props.disabled, (disabled) => { if (disabled) endDrag?.(); });
 
-function onGradientPointerUp() {
-  gradientDragging = false;
-  document.removeEventListener("pointermove", onGradientPointerMove);
-  document.removeEventListener("pointerup", onGradientPointerUp);
-}
+const gradientRef = ref<HTMLElement | null>(null);
+const onGradientPointerDown = (e: PointerEvent) => startDrag(e, updateGradient);
 
 function updateGradient(e: PointerEvent) {
   if (!gradientRef.value) return;
@@ -149,27 +167,8 @@ function updateGradient(e: PointerEvent) {
   emitColor();
 }
 
-// --- Hue slider interaction ---
 const hueRef = ref<HTMLElement | null>(null);
-let hueDragging = false;
-
-function onHuePointerDown(e: PointerEvent) {
-  if (props.disabled) return;
-  hueDragging = true;
-  updateHue(e);
-  document.addEventListener("pointermove", onHuePointerMove);
-  document.addEventListener("pointerup", onHuePointerUp);
-}
-
-function onHuePointerMove(e: PointerEvent) {
-  if (hueDragging) updateHue(e);
-}
-
-function onHuePointerUp() {
-  hueDragging = false;
-  document.removeEventListener("pointermove", onHuePointerMove);
-  document.removeEventListener("pointerup", onHuePointerUp);
-}
+const onHuePointerDown = (e: PointerEvent) => startDrag(e, updateHue);
 
 function updateHue(e: PointerEvent) {
   if (!hueRef.value) return;
@@ -178,27 +177,8 @@ function updateHue(e: PointerEvent) {
   emitColor();
 }
 
-// --- Alpha slider interaction ---
 const alphaRef = ref<HTMLElement | null>(null);
-let alphaDragging = false;
-
-function onAlphaPointerDown(e: PointerEvent) {
-  if (props.disabled) return;
-  alphaDragging = true;
-  updateAlpha(e);
-  document.addEventListener("pointermove", onAlphaPointerMove);
-  document.addEventListener("pointerup", onAlphaPointerUp);
-}
-
-function onAlphaPointerMove(e: PointerEvent) {
-  if (alphaDragging) updateAlpha(e);
-}
-
-function onAlphaPointerUp() {
-  alphaDragging = false;
-  document.removeEventListener("pointermove", onAlphaPointerMove);
-  document.removeEventListener("pointerup", onAlphaPointerUp);
-}
+const onAlphaPointerDown = (e: PointerEvent) => startDrag(e, updateAlpha);
 
 function updateAlpha(e: PointerEvent) {
   if (!alphaRef.value) return;
@@ -287,12 +267,14 @@ defineExpose({ el: rootEl, focus, blur });
     <div
       v-if="!swatchOnly"
       ref="gradientRef"
+      class="cui-color-picker__gradient"
       :style="{
         position: 'relative',
         width: '100%',
         height: cfg.gradientHeight,
         borderRadius: '0.5rem 0.5rem 0 0',
         cursor: 'crosshair',
+        touchAction: 'none',
         overflow: 'hidden',
         background: hueColor,
       }"
@@ -355,11 +337,13 @@ defineExpose({ el: rootEl, focus, blur });
           <!-- Hue slider -->
           <div
             ref="hueRef"
+            class="cui-color-picker__hue"
             :style="{
               position: 'relative',
               height: cfg.sliderHeight,
               borderRadius: '9999px',
               cursor: 'pointer',
+              touchAction: 'none',
               background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)',
             }"
             @pointerdown.prevent="onHuePointerDown"
@@ -385,11 +369,13 @@ defineExpose({ el: rootEl, focus, blur });
           <div
             v-if="showAlpha"
             ref="alphaRef"
+            class="cui-color-picker__alpha"
             :style="{
               position: 'relative',
               height: cfg.sliderHeight,
               borderRadius: '9999px',
               cursor: 'pointer',
+              touchAction: 'none',
               background: checkerboard,
               overflow: 'hidden',
             }"

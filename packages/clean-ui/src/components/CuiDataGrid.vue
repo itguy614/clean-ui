@@ -140,7 +140,7 @@ type BulkActionPayload = { action: DataGridBulkAction; rows: T[] };
 const slots = useSlots();
 
 const grid = useDataGrid({
-  columns: props.columns,
+  columns: () => props.columns,
   // The grid internals operate on the loose DataGridRow shape; T is a public-API
   // refinement, so cast once here at the boundary.
   data: toRef(props, "data") as Ref<DataGridRow[] | PaginatedData>,

@@ -332,9 +332,7 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
             offsets follow it.
           </p>
           <CuiToggle v-model="stickyBulkRem" label="Name width in rem (12rem)" />
-          <!-- Keyed so the toggle remounts it: the grid reads columns once, at setup. -->
           <CuiDataGrid
-            :key="stickyBulkRem ? 'rem' : 'px'"
             :columns="stickyBulkColumns"
             :data="wideData"
             :bulk-actions="bulkActions"
