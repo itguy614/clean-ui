@@ -1,4 +1,4 @@
-import { ref, computed, inject, provide, type Ref } from "vue";
+import { ref, computed, inject, provide, shallowReactive, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import type {
   DataGridColumn,
   DataGridColumnState,
@@ -13,7 +13,8 @@ import type {
 import { DataGridContextKey, type DataGridContext } from "../components/data-grid-context";
 
 export interface UseDataGridOptions {
-  columns: DataGridColumn[];
+  /** A plain array is read once; pass a ref or getter to follow later changes. */
+  columns: MaybeRefOrGetter<DataGridColumn[]>;
   data: Ref<DataGridRow[] | PaginatedData>;
   serverSide?: boolean;
   rowKey?: string;
@@ -24,7 +25,6 @@ export interface UseDataGridOptions {
 
 export function useDataGrid(options: UseDataGridOptions) {
   const {
-    columns,
     serverSide = false,
     rowKey = "id",
     defaultPerPage = 15,
@@ -32,15 +32,55 @@ export function useDataGrid(options: UseDataGridOptions) {
     hydrateFromUrl = false,
   } = options;
 
-  // --- Default config (for reset) ---
-  const defaultColumnState: DataGridColumnState[] = columns.map((col) => ({
+  // --- Column definitions ---
+  // Shallow-reactive and updated in place, so `context.columns` stays the same plain
+  // array consumers already hold while still re-rendering when the definitions change
+  // (#258). Shallow: the definitions themselves are the caller's objects, not proxied.
+  const columns = shallowReactive<DataGridColumn[]>([...toValue(options.columns)]);
+
+  const defaultStateOf = (col: DataGridColumn): DataGridColumnState => ({
     key: col.key,
     visible: col.visible !== false,
-  }));
+  });
 
   // --- Column state ---
   const columnState = ref<DataGridColumnState[]>(
-    initialView?.columns ?? defaultColumnState.map((cs) => ({ ...cs })),
+    initialView?.columns ?? columns.map(defaultStateOf),
+  );
+
+  // Follow later definition changes. Columns that remain keep the user's visibility and
+  // order — unless the definition's own `visible` changed, which is an intentional
+  // update; removed columns drop out; new ones appear at their position in the list.
+  watch(
+    () => toValue(options.columns),
+    (next) => {
+      const previous = new Map(columns.map((c) => [c.key, c]));
+      const nextByKey = new Map(next.map((c) => [c.key, c]));
+      const isVisible = (c: DataGridColumn) => c.visible !== false;
+
+      const state = columnState.value
+        .filter((cs) => nextByKey.has(cs.key))
+        .map((cs) => {
+          const before = previous.get(cs.key);
+          const after = nextByKey.get(cs.key)!;
+          return before && isVisible(before) !== isVisible(after) ? defaultStateOf(after) : cs;
+        });
+      const present = new Set(state.map((cs) => cs.key));
+      next.forEach((col, i) => {
+        if (!present.has(col.key)) state.splice(i, 0, defaultStateOf(col));
+      });
+
+      // A definition change is not a user edit: a grid that was clean stays clean, so
+      // the view manager doesn't report unsaved changes nobody made.
+      const wasClean = !isDirty.value;
+      columns.splice(0, columns.length, ...next);
+      const changed =
+        state.length !== columnState.value.length ||
+        state.some((cs, i) => cs !== columnState.value[i]);
+      if (changed) columnState.value = state;
+      if (wasClean) markClean();
+    },
+    { deep: 1 },
   );
 
   const visibleColumns = computed(() =>
@@ -323,7 +363,7 @@ export function useDataGrid(options: UseDataGridOptions) {
 
   function getDefaultConfig(): DataGridViewConfig {
     return {
-      columns: defaultColumnState.map((cs) => ({ ...cs })),
+      columns: columns.map(defaultStateOf),
       sort: null,
       filters: [],
       perPage: defaultPerPage,
