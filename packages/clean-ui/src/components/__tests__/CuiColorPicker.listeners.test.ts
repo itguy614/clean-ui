@@ -58,4 +58,44 @@ describe("CuiColorPicker drag listeners", () => {
     expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
     wrapper.unmount();
   });
+
+  it("a pointerup ends a drag", async () => {
+    const wrapper = mountPicker();
+    const unremoved = recordDocumentListeners();
+    await wrapper.get(".cui-color-picker__hue").trigger("pointerdown", { clientX: 5, clientY: 5 });
+    document.dispatchEvent(new Event("pointerup"));
+    expect(unremoved()).toEqual([]);
+    wrapper.unmount();
+  });
+
+  it("ignores pointers other than the one that started the drag", async () => {
+    const wrapper = mountPicker();
+    const unremoved = recordDocumentListeners();
+    await wrapper.get(".cui-color-picker__hue").trigger("pointerdown", { clientX: 5, clientY: 5, pointerId: 1 });
+    const before = wrapper.emitted("update:modelValue")?.length ?? 0;
+
+    document.dispatchEvent(pointer("pointermove", 2, 50));
+    document.dispatchEvent(pointer("pointerup", 2));
+    expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
+    expect(unremoved()).toEqual(expect.arrayContaining(["pointermove", "pointerup"]));
+
+    document.dispatchEvent(pointer("pointerup", 1));
+    expect(unremoved()).toEqual([]);
+    wrapper.unmount();
+  });
+
+  it("disabling mid-drag ends the drag", async () => {
+    const wrapper = mountPicker();
+    const unremoved = recordDocumentListeners();
+    await wrapper.get(".cui-color-picker__gradient").trigger("pointerdown", { clientX: 5, clientY: 5 });
+    await wrapper.setProps({ disabled: true });
+    expect(unremoved()).toEqual([]);
+    wrapper.unmount();
+  });
 });
+
+function pointer(type: string, pointerId: number, clientX = 0) {
+  const ev = new MouseEvent(type, { clientX });
+  Object.defineProperty(ev, "pointerId", { value: pointerId });
+  return ev;
+}

@@ -125,26 +125,36 @@ const resolvedPalette = computed(() => {
 });
 
 // --- Drag on the gradient, hue and alpha surfaces ---
-// One drag at a time: pointerdown calls `update` and follows the pointer on the
-// document until pointerup or pointercancel (a touch turning into a scroll ends a
-// pointer without a pointerup). The AbortController removes all three listeners at
-// once, so no surface can forget one.
+// One drag at a time: pointerdown calls `update` and follows that pointer on the
+// document until its pointerup or pointercancel (a touch the browser takes over ends a
+// pointer without a pointerup). Ending removes all three listeners together, so no
+// surface can forget one. Explicit removal rather than an AbortSignal, which Safari
+// before 15 ignores — within the default build target.
 let endDrag: (() => void) | null = null;
 
 function startDrag(e: PointerEvent, update: (e: PointerEvent) => void) {
   if (props.disabled) return;
   endDrag?.();
   update(e);
-  const controller = new AbortController();
-  const { signal } = controller;
-  endDrag = () => {
-    controller.abort();
-    endDrag = null;
+  // Follow only the pointer that started the drag: a second finger or a stray
+  // mouse must neither move the thumb nor end the drag.
+  const own = (ev: PointerEvent) => ev.pointerId === e.pointerId;
+  const onMove = (ev: PointerEvent) => { if (own(ev)) update(ev); };
+  const onEnd = (ev: PointerEvent) => { if (own(ev)) end(); };
+  const end = () => {
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onEnd);
+    document.removeEventListener("pointercancel", onEnd);
+    if (endDrag === end) endDrag = null;
   };
-  document.addEventListener("pointermove", update, { signal });
-  document.addEventListener("pointerup", endDrag, { signal });
-  document.addEventListener("pointercancel", endDrag, { signal });
+  endDrag = end;
+  document.addEventListener("pointermove", onMove);
+  document.addEventListener("pointerup", onEnd);
+  document.addEventListener("pointercancel", onEnd);
 }
+
+// Disabling mid-drag ends the drag, so a held pointer cannot keep changing the value.
+watch(() => props.disabled, (disabled) => { if (disabled) endDrag?.(); });
 
 const gradientRef = ref<HTMLElement | null>(null);
 const onGradientPointerDown = (e: PointerEvent) => startDrag(e, updateGradient);
@@ -264,6 +274,7 @@ defineExpose({ el: rootEl, focus, blur });
         height: cfg.gradientHeight,
         borderRadius: '0.5rem 0.5rem 0 0',
         cursor: 'crosshair',
+        touchAction: 'none',
         overflow: 'hidden',
         background: hueColor,
       }"
@@ -332,6 +343,7 @@ defineExpose({ el: rootEl, focus, blur });
               height: cfg.sliderHeight,
               borderRadius: '9999px',
               cursor: 'pointer',
+              touchAction: 'none',
               background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)',
             }"
             @pointerdown.prevent="onHuePointerDown"
@@ -363,6 +375,7 @@ defineExpose({ el: rootEl, focus, blur });
               height: cfg.sliderHeight,
               borderRadius: '9999px',
               cursor: 'pointer',
+              touchAction: 'none',
               background: checkerboard,
               overflow: 'hidden',
             }"
