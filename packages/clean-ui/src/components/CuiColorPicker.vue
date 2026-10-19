@@ -102,7 +102,12 @@ onMounted(() => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
   }
 });
-onUnmounted(() => { observer?.disconnect(); });
+onUnmounted(() => {
+  observer?.disconnect();
+  // A drag in progress at unmount (e.g. inside a popover closed with Escape) would
+  // otherwise leave its document listeners firing against a dead instance (#246).
+  endDrag?.();
+});
 
 function emitColor() {
   textInput.value = outputValue.value;
@@ -119,27 +124,30 @@ const resolvedPalette = computed(() => {
   return [];
 });
 
-// --- Gradient area interaction ---
-const gradientRef = ref<HTMLElement | null>(null);
-let gradientDragging = false;
+// --- Drag on the gradient, hue and alpha surfaces ---
+// One drag at a time: pointerdown calls `update` and follows the pointer on the
+// document until pointerup or pointercancel (a touch turning into a scroll ends a
+// pointer without a pointerup). The AbortController removes all three listeners at
+// once, so no surface can forget one.
+let endDrag: (() => void) | null = null;
 
-function onGradientPointerDown(e: PointerEvent) {
+function startDrag(e: PointerEvent, update: (e: PointerEvent) => void) {
   if (props.disabled) return;
-  gradientDragging = true;
-  updateGradient(e);
-  document.addEventListener("pointermove", onGradientPointerMove);
-  document.addEventListener("pointerup", onGradientPointerUp);
+  endDrag?.();
+  update(e);
+  const controller = new AbortController();
+  const { signal } = controller;
+  endDrag = () => {
+    controller.abort();
+    endDrag = null;
+  };
+  document.addEventListener("pointermove", update, { signal });
+  document.addEventListener("pointerup", endDrag, { signal });
+  document.addEventListener("pointercancel", endDrag, { signal });
 }
 
-function onGradientPointerMove(e: PointerEvent) {
-  if (gradientDragging) updateGradient(e);
-}
-
-function onGradientPointerUp() {
-  gradientDragging = false;
-  document.removeEventListener("pointermove", onGradientPointerMove);
-  document.removeEventListener("pointerup", onGradientPointerUp);
-}
+const gradientRef = ref<HTMLElement | null>(null);
+const onGradientPointerDown = (e: PointerEvent) => startDrag(e, updateGradient);
 
 function updateGradient(e: PointerEvent) {
   if (!gradientRef.value) return;
@@ -149,27 +157,8 @@ function updateGradient(e: PointerEvent) {
   emitColor();
 }
 
-// --- Hue slider interaction ---
 const hueRef = ref<HTMLElement | null>(null);
-let hueDragging = false;
-
-function onHuePointerDown(e: PointerEvent) {
-  if (props.disabled) return;
-  hueDragging = true;
-  updateHue(e);
-  document.addEventListener("pointermove", onHuePointerMove);
-  document.addEventListener("pointerup", onHuePointerUp);
-}
-
-function onHuePointerMove(e: PointerEvent) {
-  if (hueDragging) updateHue(e);
-}
-
-function onHuePointerUp() {
-  hueDragging = false;
-  document.removeEventListener("pointermove", onHuePointerMove);
-  document.removeEventListener("pointerup", onHuePointerUp);
-}
+const onHuePointerDown = (e: PointerEvent) => startDrag(e, updateHue);
 
 function updateHue(e: PointerEvent) {
   if (!hueRef.value) return;
@@ -178,27 +167,8 @@ function updateHue(e: PointerEvent) {
   emitColor();
 }
 
-// --- Alpha slider interaction ---
 const alphaRef = ref<HTMLElement | null>(null);
-let alphaDragging = false;
-
-function onAlphaPointerDown(e: PointerEvent) {
-  if (props.disabled) return;
-  alphaDragging = true;
-  updateAlpha(e);
-  document.addEventListener("pointermove", onAlphaPointerMove);
-  document.addEventListener("pointerup", onAlphaPointerUp);
-}
-
-function onAlphaPointerMove(e: PointerEvent) {
-  if (alphaDragging) updateAlpha(e);
-}
-
-function onAlphaPointerUp() {
-  alphaDragging = false;
-  document.removeEventListener("pointermove", onAlphaPointerMove);
-  document.removeEventListener("pointerup", onAlphaPointerUp);
-}
+const onAlphaPointerDown = (e: PointerEvent) => startDrag(e, updateAlpha);
 
 function updateAlpha(e: PointerEvent) {
   if (!alphaRef.value) return;
@@ -287,6 +257,7 @@ defineExpose({ el: rootEl, focus, blur });
     <div
       v-if="!swatchOnly"
       ref="gradientRef"
+      class="cui-color-picker__gradient"
       :style="{
         position: 'relative',
         width: '100%',
@@ -355,6 +326,7 @@ defineExpose({ el: rootEl, focus, blur });
           <!-- Hue slider -->
           <div
             ref="hueRef"
+            class="cui-color-picker__hue"
             :style="{
               position: 'relative',
               height: cfg.sliderHeight,
@@ -385,6 +357,7 @@ defineExpose({ el: rootEl, focus, blur });
           <div
             v-if="showAlpha"
             ref="alphaRef"
+            class="cui-color-picker__alpha"
             :style="{
               position: 'relative',
               height: cfg.sliderHeight,
