@@ -53,6 +53,7 @@ export function useLayerStack({ active, onEscape }: UseLayerStackOptions): void 
   if (typeof document === "undefined") return;
   // Its own function per call, so two layers sharing a handler stay distinct entries.
   const layer: Layer = () => onEscape();
-  watch(active, (open) => (open ? register(layer) : unregister(layer)), { immediate: true });
+  // Sync, so a layer that closes on one Escape has left the stack before the next arrives.
+  watch(active, (open) => (open ? register(layer) : unregister(layer)), { immediate: true, flush: "sync" });
   onScopeDispose(() => unregister(layer));
 }

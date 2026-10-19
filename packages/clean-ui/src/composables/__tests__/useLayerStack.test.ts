@@ -6,6 +6,10 @@ import CuiModal from "../../components/CuiModal.vue";
 import CuiTooltip from "../../components/CuiTooltip.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
+import CuiDropdown from "../../components/CuiDropdown.vue";
+import CuiDropdownTrigger from "../../components/CuiDropdownTrigger.vue";
+import CuiDropdownMenu from "../../components/CuiDropdownMenu.vue";
+import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 
 enableAutoUnmount(afterEach);
 
@@ -169,5 +173,54 @@ describe("useLayerStack across overlays", () => {
     await settle();
     expect(list()).toBeNull();
     expect(onModal).not.toHaveBeenCalled();
+  });
+
+  it("Escape on an item of a dropdown inside a modal closes the dropdown, not the modal", async () => {
+    vi.useFakeTimers();
+    const onModal = vi.fn();
+    mount(
+      defineComponent(() => () =>
+        h(CuiModal, { visible: true, title: "Dialog", "onUpdate:visible": onModal }, () =>
+          h(CuiDropdown, null, () => [
+            h(CuiDropdownTrigger, null, () => h("button", { id: "open" }, "Open")),
+            h(CuiDropdownMenu, null, () => h(CuiDropdownItem, null, () => "Item")),
+          ]),
+        ),
+      ),
+      { attachTo: document.body },
+    );
+    await settle();
+    document.getElementById("open")!.click();
+    await settle();
+    const item = document.querySelector<HTMLElement>(".cui-dropdown-item")!;
+    expect(item).not.toBeNull();
+
+    escape(item); // the menu is teleported: this never passes through the dropdown wrapper
+    await settle();
+    expect(document.querySelector(".cui-dropdown-item")).toBeNull();
+    expect(onModal).not.toHaveBeenCalled();
+  });
+
+  it("a popover dismissed by Escape leaves the next Escape to the modal beneath", async () => {
+    vi.useFakeTimers();
+    const onModal = vi.fn();
+    const onPopover = vi.fn();
+    const popoverOpen = ref(false);
+    mount(
+      defineComponent(() => () => [
+        h(CuiModal, { visible: true, title: "Dialog", "onUpdate:visible": onModal }),
+        h(CuiPopover, { visible: popoverOpen.value, hideDelay: 100, "onUpdate:visible": onPopover }, { default: () => h("button", "Trigger"), content: () => "Panel" }),
+      ]),
+      { attachTo: document.body },
+    );
+    await settle();
+    popoverOpen.value = true;
+    await settle();
+
+    escape();
+    escape(); // before hideDelay would have elapsed
+    await settle();
+    expect(onPopover).toHaveBeenLastCalledWith(false);
+    expect(onModal).toHaveBeenLastCalledWith(false);
   });
 });

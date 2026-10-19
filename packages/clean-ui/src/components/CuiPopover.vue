@@ -92,7 +92,7 @@ useClickOutside(
 // Close on Escape from anywhere — the panel is teleported to <body>, so a wrapper-scoped
 // keydown misses it once focus moves into the panel. Through the shared layer stack
 // (#278), so only the topmost of a popover and the overlays around it closes.
-useLayerStack({ active: isVisible, onEscape: doHide });
+useLayerStack({ active: isVisible, onEscape: hideNow });
 
 function doShow() {
   if (props.disabled) return;
@@ -111,6 +111,14 @@ function doHide() {
   } else {
     isVisible.value = false; emit("update:visible", false);
   }
+}
+
+// A dismissal doesn't wait out hideDelay: the popover would stay top of the layer stack
+// meanwhile and swallow the next Escape, meant for the layer beneath.
+function hideNow() {
+  if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  isVisible.value = false; emit("update:visible", false);
 }
 
 function toggle() { isVisible.value ? doHide() : doShow(); }
