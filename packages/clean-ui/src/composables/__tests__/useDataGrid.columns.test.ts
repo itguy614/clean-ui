@@ -65,4 +65,51 @@ describe("useDataGrid column definitions", () => {
     await nextTick();
     expect(grid.columns.map((c) => c.key)).toEqual(["name", "email", "role"]);
   });
+
+  it("a dirty grid becomes clean again once the user reverts, after a definition change", async () => {
+    const columns = ref<DataGridColumn[]>([...base]);
+    const grid = useDataGrid({ columns, data });
+    grid.toggleColumnVisibility("email");
+    columns.value = [...base, { key: "team", label: "Team" }];
+    await nextTick();
+    expect(grid.isDirty.value).toBe(true);
+    grid.toggleColumnVisibility("email");
+    expect(grid.isDirty.value).toBe(false);
+  });
+
+  it("a new column is placed after its neighbour in the user's order", async () => {
+    const columns = ref<DataGridColumn[]>([...base]);
+    const grid = useDataGrid({ columns, data });
+    grid.reorderColumns(0, 2); // email, role, name
+    columns.value = [base[0], { key: "team", label: "Team" }, base[1], base[2]];
+    await nextTick();
+    expect(grid.columnState.value.map((cs) => cs.key)).toEqual(["email", "role", "name", "team"]);
+  });
+
+  it("a fresh array of the same definitions is a no-op", async () => {
+    const columns = ref<DataGridColumn[]>([...base]);
+    const grid = useDataGrid({ columns, data });
+    const before = grid.columnState.value;
+    columns.value = [...columns.value];
+    await nextTick();
+    expect(grid.columnState.value).toBe(before);
+  });
+
+  it("loading a view saved before a column was added keeps that column", async () => {
+    const columns = ref<DataGridColumn[]>([...base]);
+    const grid = useDataGrid({ columns, data });
+    const view = grid.getConfig();
+    columns.value = [...base, { key: "team", label: "Team" }];
+    await nextTick();
+    grid.loadConfig(view);
+    expect(grid.columnState.value.map((cs) => cs.key)).toEqual(["name", "email", "role", "team"]);
+  });
+
+  it("markClean clears isDirty even when no state changed", () => {
+    const grid = useDataGrid({ columns: [...base], data });
+    grid.toggleColumnVisibility("email");
+    expect(grid.isDirty.value).toBe(true);
+    grid.markClean();
+    expect(grid.isDirty.value).toBe(false);
+  });
 });

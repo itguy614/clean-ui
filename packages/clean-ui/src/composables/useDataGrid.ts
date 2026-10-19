@@ -43,42 +43,76 @@ export function useDataGrid(options: UseDataGridOptions) {
     visible: col.visible !== false,
   });
 
+  /**
+   * Fit a column state to a set of definitions. Entries for definitions that remain
+   * keep their visibility and order — unless `previous` is given and the definition's
+   * own `visible` changed, which is an intentional update; entries for removed
+   * definitions drop out; new definitions are inserted after their nearest preceding
+   * neighbour that is already in the state (or first). Unchanged entries are returned
+   * as the same objects, so callers can detect a no-op by identity.
+   */
+  function reconcileColumnState(
+    state: DataGridColumnState[],
+    defs: DataGridColumn[],
+    previous?: DataGridColumn[],
+  ): DataGridColumnState[] {
+    const byKey = new Map(defs.map((c) => [c.key, c]));
+    const before = new Map(previous?.map((c) => [c.key, c]));
+    const isVisible = (c: DataGridColumn) => c.visible !== false;
+
+    const result = state
+      .filter((cs) => byKey.has(cs.key))
+      .map((cs) => {
+        const prev = before.get(cs.key);
+        const next = byKey.get(cs.key)!;
+        return prev && isVisible(prev) !== isVisible(next) ? defaultStateOf(next) : cs;
+      });
+    defs.forEach((col, i) => {
+      if (result.some((cs) => cs.key === col.key)) return;
+      let at = 0;
+      for (let j = i - 1; j >= 0; j--) {
+        const idx = result.findIndex((cs) => cs.key === defs[j].key);
+        if (idx >= 0) {
+          at = idx + 1;
+          break;
+        }
+      }
+      result.splice(at, 0, defaultStateOf(col));
+    });
+    return result;
+  }
+
   // --- Column state ---
   const columnState = ref<DataGridColumnState[]>(
-    initialView?.columns ?? columns.map(defaultStateOf),
+    initialView?.columns
+      ? reconcileColumnState(initialView.columns.map((cs) => ({ ...cs })), columns)
+      : columns.map(defaultStateOf),
   );
 
-  // Follow later definition changes. Columns that remain keep the user's visibility and
-  // order — unless the definition's own `visible` changed, which is an intentional
-  // update; removed columns drop out; new ones appear at their position in the list.
+  // Follow later definition changes (#258).
   watch(
     () => toValue(options.columns),
     (next) => {
-      const previous = new Map(columns.map((c) => [c.key, c]));
-      const nextByKey = new Map(next.map((c) => [c.key, c]));
-      const isVisible = (c: DataGridColumn) => c.visible !== false;
+      // A fresh array holding the same definitions (an inline literal re-created on each
+      // parent render) is not a change; splicing anyway would re-run every computed that
+      // reads `columns`, including the client-side sort and filter passes.
+      if (next.length === columns.length && next.every((c, i) => c === columns[i])) return;
 
-      const state = columnState.value
-        .filter((cs) => nextByKey.has(cs.key))
-        .map((cs) => {
-          const before = previous.get(cs.key);
-          const after = nextByKey.get(cs.key)!;
-          return before && isVisible(before) !== isVisible(after) ? defaultStateOf(after) : cs;
-        });
-      const present = new Set(state.map((cs) => cs.key));
-      next.forEach((col, i) => {
-        if (!present.has(col.key)) state.splice(i, 0, defaultStateOf(col));
-      });
-
-      // A definition change is not a user edit: a grid that was clean stays clean, so
-      // the view manager doesn't report unsaved changes nobody made.
-      const wasClean = !isDirty.value;
+      const previous = [...columns];
       columns.splice(0, columns.length, ...next);
+
+      const state = reconcileColumnState(columnState.value, next, previous);
       const changed =
         state.length !== columnState.value.length ||
         state.some((cs, i) => cs !== columnState.value[i]);
       if (changed) columnState.value = state;
-      if (wasClean) markClean();
+
+      // A definition change is not a user edit: rebase the saved snapshot the same way,
+      // so a clean grid stays clean and a dirty one becomes clean again once the user
+      // reverts their own edits, instead of staying dirty against a stale column list.
+      const saved = JSON.parse(savedConfigSnapshot.value) as DataGridViewConfig;
+      saved.columns = reconcileColumnState(saved.columns, next, previous);
+      savedConfigSnapshot.value = JSON.stringify(saved);
     },
     { deep: 1 },
   );
@@ -359,7 +393,9 @@ export function useDataGrid(options: UseDataGridOptions) {
   }
 
   // --- View config (for saved views) ---
-  let savedConfigSnapshot = JSON.stringify(getDefaultConfig());
+  // A ref, not a plain variable: `isDirty` is a computed, and must re-evaluate when only
+  // the snapshot moves (markClean() right after a save, with no state change).
+  const savedConfigSnapshot = ref(JSON.stringify(getDefaultConfig()));
 
   function getDefaultConfig(): DataGridViewConfig {
     return {
@@ -384,7 +420,9 @@ export function useDataGrid(options: UseDataGridOptions) {
   }
 
   function loadConfig(config: DataGridViewConfig) {
-    columnState.value = config.columns.map((cs) => ({ ...cs }));
+    // A view saved before the definitions last changed may lack a column (it would
+    // otherwise vanish from the grid and the column manager) or name a removed one.
+    columnState.value = reconcileColumnState(config.columns.map((cs) => ({ ...cs })), columns);
     sort.value = config.sort ? { ...config.sort } : null;
     filters.value = config.filters.map((f) => ({ ...f }));
     perPage.value = config.perPage;
@@ -395,11 +433,11 @@ export function useDataGrid(options: UseDataGridOptions) {
   }
 
   const isDirty = computed(() =>
-    JSON.stringify(getConfig()) !== savedConfigSnapshot,
+    JSON.stringify(getConfig()) !== savedConfigSnapshot.value,
   );
 
   function markClean() {
-    savedConfigSnapshot = JSON.stringify(getConfig());
+    savedConfigSnapshot.value = JSON.stringify(getConfig());
   }
 
   function resetToDefaults() {
@@ -410,7 +448,7 @@ export function useDataGrid(options: UseDataGridOptions) {
 
   // Initialize from saved view
   if (initialView) {
-    savedConfigSnapshot = JSON.stringify(initialView);
+    savedConfigSnapshot.value = JSON.stringify({ ...initialView, columns: columnState.value });
   }
 
   // --- URL hydration ---
