@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { nextTick } from "vue";
+import { h, nextTick } from "vue";
 import CuiTransferList from "../CuiTransferList.vue";
 import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
@@ -109,6 +109,66 @@ describe("CuiTransferList keyboard and ARIA", () => {
     await nextTick();
     expect(options("Available")[2].attributes("aria-selected")).toBe("false");
     expect(w!.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("leaves keys in a control inside an #item slot to that control", async () => {
+    w = mount(CuiTransferList, {
+      props: { items, modelValue: [] },
+      slots: { item: ({ item }: { item: { label: string } }) => h("input", { class: "note", value: item.label }) },
+      attachTo: document.body,
+    });
+    const note = w.find(".note").element as HTMLInputElement;
+    const space = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+    note.dispatchEvent(space);
+    note.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    await nextTick();
+    expect(space.defaultPrevented).toBe(false);
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("follows the last item of a list to where it went", async () => {
+    mountList({ items: [{ value: "a", label: "Alpha" }] });
+    const alpha = options("Available")[0].element as HTMLElement;
+    alpha.focus();
+    press(alpha, "Enter");
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement).toBe(options("Selected")[0].element);
+  });
+
+  it("treats a disabled item in the selected list as disabled for the mouse too", async () => {
+    mountList({ modelValue: ["c"] });
+    const charlie = options("Selected")[0];
+    expect(charlie.attributes("aria-disabled")).toBe("true");
+    await charlie.trigger("click");
+    await charlie.trigger("dblclick");
+    expect(charlie.attributes("aria-selected")).toBe("false");
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("leaves no tab stop on a list whose items are all disabled", async () => {
+    mountList({ disabled: true });
+    await nextTick(); // the stop settles after the first render
+    expect(w!.findAll('[role="option"]').every((o) => o.attributes("tabindex") === "-1")).toBe(true);
+  });
+
+  it("moves only the marked items the filter shows", async () => {
+    mountList();
+    const opts = options("Available");
+    press(opts[0].element, " "); // Alpha
+    press(opts[3].element, " "); // Delta
+    await nextTick();
+    await w!.findAll("input")[0].setValue("del");
+    await w!.find('button[aria-label="Move selected to Selected"]').trigger("click");
+    expect(w!.props("modelValue")).toEqual(["d"]);
+    await w!.findAll("input")[0].setValue("");
+    expect(options("Available")[0].attributes("aria-selected")).toBe("true"); // Alpha still marked
+  });
+
+  it("focus() focuses the list's tab stop", () => {
+    mountList();
+    (w!.vm as unknown as { focus: () => void }).focus();
+    expect(document.activeElement).toBe(options("Available")[0].element);
   });
 
   it("names the filter fields", () => {

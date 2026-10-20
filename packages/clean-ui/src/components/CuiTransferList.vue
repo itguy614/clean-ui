@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, useTemplateRef, type Ref } from "vue";
+import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
@@ -94,11 +94,13 @@ const filteredTargetItems = computed(() => {
 });
 
 // Actions
+// Only the marked items the filter shows move: a mark on an item filtered out of sight
+// stays, rather than moving something the user can't see.
 function moveToTarget() {
   if (props.disabled) return;
-  const next = [...props.modelValue, ...sourceSelected.value];
-  sourceSelected.value = new Set();
-  emit("update:modelValue", next);
+  const moving = filteredSourceItems.value.filter((i) => sourceSelected.value.has(i.value)).map((i) => i.value);
+  sourceSelected.value = new Set([...sourceSelected.value].filter((v) => !moving.includes(v)));
+  emit("update:modelValue", [...props.modelValue, ...moving]);
 }
 
 function moveAllToTarget() {
@@ -110,10 +112,9 @@ function moveAllToTarget() {
 
 function moveToSource() {
   if (props.disabled) return;
-  const remove = targetSelected.value;
-  const next = props.modelValue.filter((v) => !remove.has(v));
-  targetSelected.value = new Set();
-  emit("update:modelValue", next);
+  const remove = new Set(filteredTargetItems.value.filter((i) => targetSelected.value.has(i.value)).map((i) => i.value));
+  targetSelected.value = new Set([...targetSelected.value].filter((v) => !remove.has(v)));
+  emit("update:modelValue", props.modelValue.filter((v) => !remove.has(v)));
 }
 
 function moveAllToSource() {
@@ -168,7 +169,7 @@ function dblClickSource(item: TransferListItem) {
 }
 
 function dblClickTarget(item: TransferListItem) {
-  if (props.disabled) return;
+  if (props.disabled || item.disabled) return;
   toggle(targetSelected, item.value, false);
   emit("update:modelValue", props.modelValue.filter((v) => v !== item.value));
 }
@@ -284,22 +285,49 @@ const sourceRoving = useRovingFocus({ container: sourceListEl, itemSelector: OPT
 const targetRoving = useRovingFocus({ container: targetListEl, itemSelector: OPTION });
 
 function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, side: "source" | "target", index: number) {
+  // Only a key on the option itself: one in a control inside an #item slot is that control's.
+  if (e.target !== e.currentTarget) return;
   if (e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
   if (e.key === " ") {
     e.preventDefault();
     toggle(side === "source" ? sourceSelected : targetSelected, item.value);
   } else if (e.key === "Enter") {
     e.preventDefault();
-    // Focus moves on to what takes the item's place, not to <body>.
-    if (side === "source") {
-      dblClickSource(item);
-      sourceRoving.focusNearest(index);
-    } else {
-      dblClickTarget(item);
-      targetRoving.focusNearest(index);
-    }
+    if (side === "source") dblClickSource(item);
+    else dblClickTarget(item);
+    followMovedItem(side, item, index);
   }
 }
+
+/**
+ * After Enter moves an item across, focus what took its place in the list it left — or, if
+ * that list is now empty, the item itself where it went — so focus is never dropped on <body>.
+ */
+function followMovedItem(from: "source" | "target", item: TransferListItem, index: number) {
+  const [left, leftRoving, arrived, arrivedRoving] =
+    from === "source"
+      ? [sourceListEl, sourceRoving, targetListEl, targetRoving]
+      : [targetListEl, targetRoving, sourceListEl, sourceRoving];
+  nextTick(() => {
+    if (left.value?.querySelector(OPTION)) return leftRoving.focusNearest(index);
+    const opts = Array.from(arrived.value?.querySelectorAll<HTMLElement>(OPTION) ?? []);
+    const at = opts.findIndex((o) => o.dataset.value === String(item.value));
+    if (at !== -1) arrivedRoving.focusItem(at, opts);
+  });
+}
+
+// Expose imperative handle — the source list's tab stop, else the selected list's.
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const tabStop = () =>
+  sourceListEl.value?.querySelector<HTMLElement>('[tabindex="0"]') ?? targetListEl.value?.querySelector<HTMLElement>('[tabindex="0"]');
+defineExpose({
+  el: rootEl,
+  focus: (opts?: FocusOptions) => tabStop()?.focus(opts),
+  blur: () => {
+    const a = document.activeElement;
+    if (a instanceof HTMLElement && rootEl.value?.contains(a)) a.blur();
+  },
+});
 
 // Size config
 const sizeConfig: Record<string, { fontSize: string; itemPad: string; titleFont: string }> = {
@@ -340,6 +368,7 @@ const panelStyle = computed(() => ({
 
 <template>
   <div
+    ref="rootEl"
     class="cui-transfer-list"
     v-show="!hidden"
     :style="{
@@ -389,6 +418,7 @@ const panelStyle = computed(() => ({
             :aria-selected="sourceSelected.has(item.value) ? 'true' : 'false'"
             :aria-disabled="item.disabled || disabled || undefined"
             :tabindex="sourceRoving.tabIndex(i)"
+            :data-value="String(item.value)"
             @keydown="onOptionKeydown($event, item, 'source', i)"
             :draggable="!item.disabled && !disabled"
             :style="{ ...itemStyle(sourceSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'source') }"
@@ -477,10 +507,11 @@ const panelStyle = computed(() => ({
             :aria-selected="targetSelected.has(item.value) ? 'true' : 'false'"
             :aria-disabled="item.disabled || disabled || undefined"
             :tabindex="targetRoving.tabIndex(i)"
+            :data-value="String(item.value)"
             @keydown="onOptionKeydown($event, item, 'target', i)"
-            draggable="true"
-            :style="{ ...itemStyle(targetSelected.has(item.value)), ...dropIndicatorStyle(item.value, 'target') }"
-            @click="toggleTarget(item.value)"
+            :draggable="!item.disabled && !disabled"
+            :style="{ ...itemStyle(targetSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'target') }"
+            @click="!item.disabled && toggleTarget(item.value)"
             @dblclick="dblClickTarget(item)"
             @dragstart="onDragStart($event, item.value, 'target')"
             @dragend="onDragEnd"

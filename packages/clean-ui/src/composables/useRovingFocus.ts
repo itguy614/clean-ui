@@ -67,10 +67,11 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
 
   // The stop when `activeIndex` can't hold it: its item is gone or disabled. Kept apart
   // from `activeIndex`, which may be the consumer's selection and isn't ours to rewrite.
-  const fallback = ref(-1);
+  // null: no override, the stop is activeIndex. -1: no item can hold it (all disabled).
+  const fallback = ref<number | null>(null);
 
   function tabIndex(i: number): 0 | -1 {
-    return i === (fallback.value === -1 ? activeIndex.value : fallback.value) ? 0 : -1;
+    return i === (fallback.value ?? activeIndex.value) ? 0 : -1;
   }
 
   function focusItem(i: number, els = query()) {
@@ -119,7 +120,7 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
   function settle() {
     const els = query();
     const active = els[activeIndex.value];
-    fallback.value = active && !active.matches(DISABLED) ? -1 : firstIndex(asItems(els));
+    fallback.value = active && !active.matches(DISABLED) ? null : firstIndex(asItems(els));
   }
   onMounted(settle);
   onUpdated(settle);

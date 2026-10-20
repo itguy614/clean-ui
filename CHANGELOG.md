@@ -35,7 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   icon-only buttons and the filter fields are named, and "No items" is translatable
   (`transferList.*` in the message catalogue). This adds tab stops, so a focus-order
   snapshot will change. A double-clicked (or Enter-moved) item no longer stays marked, which
-  let "move selected" add it to the other list a second time.
+  let "move selected" add it to the other list a second time. "Move selected" now moves only the marked items
+  the filter shows; marks on filtered-out items stay. A disabled item in the selected list
+  can no longer be marked, double-clicked or dragged.
+- `useRovingFocus` leaves no tab stop when every item is disabled, rather than keeping one
+  on a disabled item (#170).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

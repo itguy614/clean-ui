@@ -51,9 +51,12 @@ export const lastIndex = (items: ListItems) => edge(items, -1);
  * or -1 if every item is disabled. For an item that has just gone: what is now at its place.
  */
 export function nearestIndex(items: ListItems, i: number): number {
-  for (let d = 0; d <= items.count; d++) {
-    if (i + d < items.count && i + d >= 0 && enabled(items, i + d)) return i + d;
-    if (d > 0 && i - d >= 0 && i - d < items.count && enabled(items, i - d)) return i - d;
+  const n = items.count;
+  if (n === 0) return -1;
+  const from = Math.min(Math.max(i, 0), n - 1);
+  for (let d = 0; d < n; d++) {
+    if (from + d < n && enabled(items, from + d)) return from + d;
+    if (d > 0 && from - d >= 0 && enabled(items, from - d)) return from - d;
   }
   return -1;
 }
