@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
+import { ref, provide, watch, onMounted, onUnmounted } from "vue";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -83,6 +83,15 @@ const VIEWPORT_PADDING = 16;
 /** Tallest the panel gets before it scrolls internally, however much room there is. */
 const MAX_PANEL_HEIGHT = 400;
 
+// Where the panel was last opened. A fresh object per open, so re-opening at the same spot
+// still re-measures.
+const anchor = ref<{ x: number; y: number } | null>(null);
+
+// Post-flush: runs after the render that mounts (or re-uses) the panel, whatever order the
+// caller set the open state and the position in. A nextTick here depended on that order,
+// and ran before the mount when the position came first (#291).
+watch(anchor, (at) => at && measure(at), { flush: "post" });
+
 function positionAtCursor(x: number, y: number) {
   // First pass: place the panel at the cursor with NO maxHeight, so it lays out
   // at its natural height and can be measured. It used to be clamped to the
@@ -102,59 +111,66 @@ function positionAtCursor(x: number, y: number) {
     visibility: "hidden",
   };
 
-  nextTick(() => {
-    if (!menuRef.value) return;
+  // Measured by the post-flush watcher below, once the panel has rendered.
+  anchor.value = { x, y };
+}
 
-    // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
-    // in with `transform: scale(0.95)` and a rect reports the *transformed* box,
-    // so measuring mid-animation reads about 5% small. Offsets are layout
-    // values and ignore the transform.
-    const height = menuRef.value.offsetHeight;
-    const width = menuRef.value.offsetWidth;
+function measure({ x, y }: { x: number; y: number }) {
+  // Not rendered after all: show it unadjusted rather than leave it hidden for good.
+  if (!menuRef.value) {
+    menuStyle.value = { ...menuStyle.value, visibility: "" };
+    return;
+  }
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+  // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
+  // in with `transform: scale(0.95)` and a rect reports the *transformed* box,
+  // so measuring mid-animation reads about 5% small. Offsets are layout
+  // values and ignore the transform.
+  const height = menuRef.value.offsetHeight;
+  const width = menuRef.value.offsetWidth;
 
-    const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
-    const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
-    const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
-    const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
-    const adjusted: Record<string, string> = {
-      position: "fixed",
-      zIndex: "9990",
-      left: `${x}px`,
-      top: `${y}px`,
-    };
+  const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
+  const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
+  const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
+  const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
 
-    if (height <= fitsBelow) {
-      adjusted.maxHeight = `${fitsBelow}px`;
-    } else if (height <= fitsAbove) {
-      // Flip up with the panel's BOTTOM on the cursor, so the first item stays
-      // next to the pointer and it still reads as the same control.
-      adjusted.top = `${Math.max(VIEWPORT_PADDING, y - height)}px`;
-      adjusted.maxHeight = `${fitsAbove}px`;
-    } else {
-      // Fits neither — scroll on the roomier side, still anchored to the cursor.
-      const useAbove = roomAbove > roomBelow;
-      const maxHeight = useAbove ? fitsAbove : fitsBelow;
-      adjusted.top = useAbove ? `${Math.max(VIEWPORT_PADDING, y - maxHeight)}px` : `${y}px`;
-      adjusted.maxHeight = `${maxHeight}px`;
-    }
+  const adjusted: Record<string, string> = {
+    position: "fixed",
+    zIndex: "9990",
+    left: `${x}px`,
+    top: `${y}px`,
+  };
 
-    // Flip left if it would overflow the right edge.
-    if (x + width > vw - VIEWPORT_PADDING) {
-      adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
-    }
+  if (height <= fitsBelow) {
+    adjusted.maxHeight = `${fitsBelow}px`;
+  } else if (height <= fitsAbove) {
+    // Flip up with the panel's BOTTOM on the cursor, so the first item stays
+    // next to the pointer and it still reads as the same control.
+    adjusted.top = `${Math.max(VIEWPORT_PADDING, y - height)}px`;
+    adjusted.maxHeight = `${fitsAbove}px`;
+  } else {
+    // Fits neither — scroll on the roomier side, still anchored to the cursor.
+    const useAbove = roomAbove > roomBelow;
+    const maxHeight = useAbove ? fitsAbove : fitsBelow;
+    adjusted.top = useAbove ? `${Math.max(VIEWPORT_PADDING, y - maxHeight)}px` : `${y}px`;
+    adjusted.maxHeight = `${maxHeight}px`;
+  }
 
-    menuStyle.value = adjusted;
+  // Flip left if it would overflow the right edge.
+  if (x + width > vw - VIEWPORT_PADDING) {
+    adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
+  }
 
-    // Focus first item
-    const firstItem = menuRef.value?.querySelector<HTMLElement>(
-      '[role="menuitem"]:not([aria-disabled="true"])',
-    );
-    firstItem?.focus();
-  });
+  menuStyle.value = adjusted;
+
+  // Focus first item
+  const firstItem = menuRef.value?.querySelector<HTMLElement>(
+    '[role="menuitem"]:not([aria-disabled="true"])',
+  );
+  firstItem?.focus();
 }
 
 /**
