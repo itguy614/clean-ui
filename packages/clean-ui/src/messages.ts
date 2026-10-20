@@ -66,6 +66,11 @@ export interface CuiCoreMessages {
   tagInput: {
     searching: string;
   };
+  /** Shared by the listbox-style fields: Combobox, TagInput. */
+  listbox: {
+    /** Announced as the listed options change, so a screen-reader user hears the filter narrow. */
+    results: (count: number) => string;
+  };
   confirmDialog: {
     title: string;
     confirm: string;
@@ -134,6 +139,9 @@ export const defaultMessages: CuiCoreMessages = {
   },
   tagInput: {
     searching: "Searching…",
+  },
+  listbox: {
+    results: (count) => (count === 0 ? "No results" : `${count} result${count === 1 ? "" : "s"} available`),
   },
   confirmDialog: {
     title: "Are you sure?",

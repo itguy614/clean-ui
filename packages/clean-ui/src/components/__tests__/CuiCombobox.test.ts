@@ -12,7 +12,7 @@ const OPTIONS: ComboboxOption[] = [
 
 // The dropdown teleports to document.body. Find option rows there.
 function dropdownOptionTexts(): string[] {
-  return [...document.body.querySelectorAll("[data-index]")].map(
+  return [...document.body.querySelectorAll('[role="option"]')].map(
     (el) => (el as HTMLElement).textContent?.trim() ?? "",
   );
 }
@@ -72,7 +72,7 @@ describe("CuiCombobox", () => {
     await wrapper.find("input").trigger("focus");
     await nextTick();
 
-    const cherry = [...document.body.querySelectorAll("[data-index]")].find(
+    const cherry = [...document.body.querySelectorAll('[role="option"]')].find(
       (el) => el.textContent?.trim() === "Cherry",
     ) as HTMLElement;
     cherry.dispatchEvent(new MouseEvent("click", { bubbles: true }));

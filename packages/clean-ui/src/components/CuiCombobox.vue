@@ -4,6 +4,8 @@ import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useListbox } from "../composables/useListbox";
+import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -225,34 +227,42 @@ function removeTag(value: string | number) {
 
 // Keyboard
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    if (!isOpen.value) { openDropdown(); return; }
-    focusedIndex.value = Math.min(focusedIndex.value + 1, filteredOptions.value.length - 1);
-    scrollToFocused();
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    focusedIndex.value = Math.max(focusedIndex.value - 1, 0);
-    scrollToFocused();
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (focusedIndex.value >= 0 && focusedIndex.value < filteredOptions.value.length) {
-      selectOption(filteredOptions.value[focusedIndex.value]);
-    }
-  } else if (e.key === "Escape" && isOpen.value) {
-    // Marked handled, so an enclosing modal or popover stays open (#278)
-    e.preventDefault();
-    isOpen.value = false;
-  } else if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
+  if (listbox.onKeydown(e)) return;
+  if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
     removeTag(selectedOptions.value[selectedOptions.value.length - 1].value);
   }
 }
 
-function scrollToFocused() {
-  nextTick(() => {
-    panelRef.value?.el?.querySelector(`[data-index="${focusedIndex.value}"]`)?.scrollIntoView({ block: "nearest" });
-  });
-}
+// The ARIA combobox pattern, editable (#205) — see useListbox. Ids build on the control's own
+// `id` when it has one; useCuiId runs either way, for SSR-stable ids.
+const messages = useMessages();
+const generatedId = useCuiId("combobox");
+const listbox = useListbox({
+  id: props.id ?? generatedId,
+  mode: "editable",
+  count: () => filteredOptions.value.length,
+  isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
+  activeIndex: focusedIndex,
+  isOpen: () => isOpen.value,
+  open: openDropdown,
+  select: (i) => selectOption(filteredOptions.value[i]),
+  close: () => (isOpen.value = false),
+  hasLabel: () => !!props.label,
+  labelledby: () => props.ariaLabelledby,
+  // Silent while searching, and while the min-chars hint shows instead; the panel's own
+  // empty text when nothing matches, so a localised noResultsText is what's heard.
+  announce: () => {
+    if (!isOpen.value || isLoading.value) return "";
+    if (props.fetchOptions && query.value.length < props.minChars) return "";
+    const n = filteredOptions.value.length;
+    return n === 0 ? props.noResultsText : messages.value.listbox.results(n);
+  },
+});
+
+// The highlight is an index into the list as it is now, and so is the option id the input
+// names: when the list changes under it — the query clears after a multiple selection,
+// async results arrive — it would point at a different option. Start over instead.
+watch(filteredOptions, () => (focusedIndex.value = -1));
 
 // Open/close
 function openDropdown() {
@@ -304,7 +314,6 @@ function optionClass(index: number, option: ComboboxOption) {
     "cui-combobox__option--disabled": !!option.disabled,
   };
 }
-const messages = useMessages();
 </script>
 
 <template>
@@ -313,6 +322,7 @@ const messages = useMessages();
   <div class="cui-combobox" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
+      :id="listbox.labelId"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
@@ -350,7 +360,7 @@ const messages = useMessages();
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        v-bind="listbox.inputAttrs.value"
         :value="isOpen ? query : displayText"
         :placeholder="selectedOptions.length > 0 ? '' : placeholder"
         :disabled="disabled"
@@ -373,6 +383,8 @@ const messages = useMessages();
     </div>
 
     <!-- Dropdown (teleported) -->
+    <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
+
     <CuiListboxPanel
       ref="panelRef"
       :open="isOpen"
@@ -381,16 +393,21 @@ const messages = useMessages();
       :max-height="320"
       :font-size="cfg.style['--_combobox-font-size']"
       :item-padding="cfg.style['--_combobox-item-padding']"
+      v-bind="listbox.panelAttrs.value"
+      :aria-multiselectable="multiple || undefined"
       class="cui-combobox__dropdown"
     >
       <!-- Loading -->
-      <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+      <!-- Status rows: presentational, since a listbox holds only options; the live region
+           above announces the results. -->
+      <div v-if="isLoading && filteredOptions.length === 0" role="presentation" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
         <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
       </div>
 
       <!-- No results -->
       <div
         v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)"
+        role="presentation"
         :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
       >
         {{ noResultsText }}
@@ -399,6 +416,7 @@ const messages = useMessages();
       <!-- Min chars hint -->
       <div
         v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
+        role="presentation"
         :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
       >
         {{ messages.combobox.typeMore(minChars - query.length) }}
@@ -408,7 +426,7 @@ const messages = useMessages();
       <CuiListboxOption
         v-for="(option, i) in filteredOptions"
         :key="String(option.value)"
-        :index="i"
+        :id="listbox.optionId(i)"
         :active="focusedIndex === i"
         :selected="selectedSet.has(option.value)"
         :disabled="!!option.disabled"
