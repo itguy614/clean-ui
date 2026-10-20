@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, provide, toRef, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
@@ -88,7 +89,7 @@ function onFocusOut(e: FocusEvent) {
 // closed instead. Focus handling on close is #160.
 useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
-const dropdownId = `cui-dd-${Math.random().toString(36).slice(2, 8)}`;
+const dropdownId = useCuiId("dropdown");
 
 // Only while open, so a closed dropdown holds no document listener (#203). Inside means
 // the wrapper, the teleported menu it owns, and any open sub-menu panel: those exist only

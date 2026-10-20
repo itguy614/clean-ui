@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, toRef, useSlots } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
@@ -42,7 +43,8 @@ const emit = defineEmits<{
   "update:modelValue": [value: string | number | boolean];
 }>();
 
-const groupName = computed(() => props.name ?? `cui-radio-${Math.random().toString(36).slice(2, 8)}`);
+const generatedName = useCuiId("radio");
+const groupName = computed(() => props.name ?? generatedName);
 
 const slots = useSlots();
 const childCount = computed(() => {

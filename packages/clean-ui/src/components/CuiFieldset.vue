@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { CuiRounded, HideableProps, ColorableProps, DisableableProps } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type FieldsetVariant = "outline" | "subtle" | "ghost";
 
@@ -49,14 +50,6 @@ function toggle() {
   emit("update:expanded", isExpanded.value);
 }
 
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
-
 const rootStyle = computed(() => {
   const c = props.color;
   const borderToken =
@@ -65,7 +58,7 @@ const rootStyle = computed(() => {
     c === "surface" ? "var(--cui-surface-bg)" : `var(--cui-${c}-bg)`;
 
   const style: Record<string, string> = {
-    borderRadius: radiusMap[props.rounded],
+    borderRadius: RADIUS_SCALE[props.rounded],
   };
 
   if (props.variant === "ghost") {

@@ -50,8 +50,13 @@ describe("dialogs are announced with their title as the accessible name", () => 
   });
 
   it("gives each instance its own id, so two dialogs do not collide", async () => {
-    mount(CuiModal, { props: { visible: true, title: "One" } });
-    mount(CuiModal, { props: { visible: true, title: "Two" } });
+    // One app, as on a real page: generated ids come from useId(), unique per app (#182).
+    mount(
+      defineComponent(() => () => [
+        h(CuiModal, { visible: true, title: "One" }),
+        h(CuiModal, { visible: true, title: "Two" }),
+      ]),
+    );
     await flushPromises();
 
     const ids = [...document.body.querySelectorAll('[role="dialog"]')].map((d) =>

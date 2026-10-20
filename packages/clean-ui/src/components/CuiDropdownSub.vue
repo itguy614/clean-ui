@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, inject, computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
-import { DropdownContextKey, computeDropdownPosition, type DropdownTrigger } from "./dropdown-context";
+import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
+import { computeDropdownPosition } from "../utils/position";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownSubProps extends DisableableProps {

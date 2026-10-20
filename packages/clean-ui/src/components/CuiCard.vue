@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { HideableProps, CuiRounded } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type CardVariant = "elevated" | "outline" | "ghost";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 export interface CuiCardProps extends HideableProps {
   /** Visual style */
@@ -34,7 +27,7 @@ const props = withDefaults(defineProps<CuiCardProps>(), {
  */
 const cardStyle = computed(() => {
   const base: Record<string, string> = {
-    "--_card-radius": radiusMap[props.rounded],
+    "--_card-radius": RADIUS_SCALE[props.rounded],
   };
 
   if (props.variant === "elevated") {
