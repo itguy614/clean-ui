@@ -122,7 +122,7 @@ export const TEXTAREA_SIZE_SCALE: Record<string, { px: string; py: string; fontS
  * radius-scale note describes (#141), so a card's `md` corners follow the button token.
  * Decoupling it changes behaviour; see #294.
  */
-export const RADIUS_SCALE: Record<CuiRounded, string> = {
+export const RADIUS_SCALE: Readonly<Record<CuiRounded, string>> = {
   none: "0",
   sm: "var(--cui-radius-sm, 0.25rem)",
   md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",

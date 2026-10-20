@@ -14,7 +14,7 @@ describe("rounded scale", () => {
 
   // A map by its usual names, or — whatever it is called — the scale's `md` value, which
   // only a copied map writes out in script.
-  const LOCAL_MAP = /const\s+radiusMap\b|Record<\s*CuiRounded\s*,|var\(--cui-button-radius, var\(--cui-radius-md, 0\.375rem\)\)/;
+  const LOCAL_MAP = /const\s+radiusMap\b|Record<\s*CuiRounded\s*,|var\(\s*--cui-button-radius\s*,\s*var\(\s*--cui-radius-md\s*,\s*0\.375rem\s*\)\s*\)/;
 
   it("no component declares its own radius map", () => {
     const dir = join(dirname(fileURLToPath(import.meta.url)), "../../components");
