@@ -6,7 +6,6 @@ import { readTag, splitSelectorList, walk } from "./css-helpers";
 const SRC = resolve(__dirname, "../..");
 const STYLES = resolve(__dirname, "..");
 
-
 /** Every top-level element of a component's <template>, as raw start tags. */
 function templateRoots(source: string): string[] {
   const open = source.indexOf("<template>");
@@ -39,8 +38,6 @@ function templateRoots(source: string): string[] {
   }
   return roots;
 }
-
-
 
 /**
  * #72 — the library must not ship a page-wide reset. Tailwind's preflight is

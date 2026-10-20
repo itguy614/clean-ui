@@ -25,8 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Components inside a `.cui-typography` scope are no longer restyled by its prose rules
   (#147). Every prose element rule (paragraphs, lists, code, `pre`, `kbd`, blockquotes, `hr`,
-  tables, `mark`, `small`) now skips elements carrying a `cui-*` class, as headings and links
-  already did. Under a prose scope, CuiTable and CuiDataGrid cells follow their `size` again
+  tables, `mark`, `small`) now skips elements carrying a component's `cui-*` class, as headings
+  and links already did. The typography layer's own classes (`cui-lead`, `cui-code`, …) still
+  take prose styling. Under a prose scope, CuiTable and CuiDataGrid cells follow their `size` again
   instead of a fixed prose padding, and a breadcrumb's list loses the prose markers and
   indent. Prose itself is unchanged.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen

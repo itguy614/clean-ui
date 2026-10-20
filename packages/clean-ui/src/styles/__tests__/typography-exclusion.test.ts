@@ -6,65 +6,74 @@ import { readTag, splitSelectorList, walk } from "./css-helpers";
 /**
  * #147 — `.cui-typography` is opt-in, but consumers put it *around* components (the docs
  * site's `<main>`, a `CuiCardBody`), so prose rules reach inside them. Prose rules are
- * (0,1,1) and a component's themeable rules zero-specificity, so an unexcluded prose rule
- * repaints the component: a breadcrumb's list took prose markers, a table's cells ignored
- * its `size`. Two halves keep that from coming back:
+ * (0,1,1) and a component's themeable rules zero-specificity, so a prose rule that reaches a
+ * component's element repaints it: a breadcrumb's list took prose markers, a table's cells
+ * ignored its `size`. Two halves keep that from coming back:
  *
- *  - every prose element selector carries the `cui-*` exclusion on its subject, and
- *  - every element a component renders that a prose rule targets carries a `cui-*` class,
+ *  - every prose element rule lives in main.css's one prose block, under its exclusion, and
+ *  - every element a component renders that the block styles carries a `cui-*` class,
  *    since the exclusion keys on *carrying* the class (CLAUDE.md § Critical Gotchas).
  */
-const EXCLUSION = ':where(:not([class^="cui-"]):not([class*=" cui-"]))';
-const PROSE_TAGS = ["p", "small", "a", "blockquote", "footer", "code", "kbd", "pre", "ul", "ol", "li", "hr", "table", "th", "td", "mark", "h1", "h2", "h3", "h4", "h5", "h6"];
+const main = readFileSync(resolve(__dirname, "../main.css"), "utf-8").replace(/\/\*[\s\S]*?\*\//g, "");
 const PACKAGES = resolve(__dirname, "../../../..");
 
-const main = readFileSync(resolve(__dirname, "../main.css"), "utf-8").replace(/\/\*[\s\S]*?\*\//g, "");
+/** `<component :is>` that never renders a prose element, by file and binding — with why. */
+const DYNAMIC_EXEMPT: Record<string, string> = {
+  "CuiIcon.vue:iconComponent": "an icon component, which renders an <svg>",
+  "CuiTabs.vue:tab.labelSlot": "a tab's label slot content, the consumer's own",
+};
 
-/** Every selector in main.css that reaches an element inside a `.cui-typography` scope. */
-function proseSelectors(): string[] {
-  return [...main.matchAll(/([^{}]+)\{/g)]
-    .flatMap((m) => splitSelectorList(m[1]))
-    .filter((s) => /\.cui-typography(\s*>\s*|\s+)(?!\*)[a-z:]/.test(s));
-}
+/** Top-level selectors that reach an element inside a `.cui-typography` scope (the font-family `*` aside). */
+const proseSelectors = [...main.matchAll(/(?:^|[}\n])\s*([^{}@]+)\{/g)]
+  .flatMap((m) => splitSelectorList(m[1]))
+  // A nested rule (`&…`) is inside the block already; its `:where(.cui-typography pre *)` is a condition.
+  .filter((s) => !s.includes("&") && /\.cui-typography(\s*>\s*|\s+)(?!\*)\S/.test(s));
 
-/** The selector's last compound — the element it styles — with combinators outside parentheses as the split points. */
-function subject(selector: string): string {
+/** The prose block's body, from its opening brace to its matching close. */
+function proseBlock(): string {
+  const start = main.indexOf(proseSelectors[0]);
+  const open = main.indexOf("{", start);
   let depth = 0;
-  let last = 0;
-  for (let i = 0; i < selector.length; i++) {
-    const c = selector[i];
-    if (c === "(" || c === "[") depth++;
-    else if (c === ")" || c === "]") depth--;
-    else if (depth === 0 && /[\s>+~]/.test(c)) last = i + 1;
+  for (let i = open; i < main.length; i++) {
+    if (main[i] === "{") depth++;
+    else if (main[i] === "}" && --depth === 0) return main.slice(open + 1, i);
   }
-  return selector.slice(last);
+  return "";
 }
+
+/** The tags the block styles, from its `&:is(…)` rules. */
+const proseTags = [...new Set([...proseBlock().matchAll(/&:is\(([^)]*)\)/g)].flatMap((m) => m[1].split(",").map((t) => t.trim())))];
 
 describe("the typography layer leaves components alone (#147)", () => {
-  it("finds the prose rules it is guarding", () => {
-    // A parser that silently matched nothing would pass every assertion below.
-    expect(proseSelectors().length).toBeGreaterThan(25);
+  it("writes every prose element rule in one block, under the exclusion", () => {
+    expect(proseSelectors).toHaveLength(1);
+    expect(proseSelectors[0]).toMatch(/^\.cui-typography :where\(\s*:not\(\[class\^="cui-"\]\):not\(\[class\*=" cui-"\]\)/);
   });
 
-  it("excludes cui-* elements on the subject of every prose selector", () => {
-    // The nested heading block writes the exclusion once, on its `:is(h1…h6)` parent.
-    const missing = proseSelectors().filter((s) => !subject(s).includes(EXCLUSION));
-    expect(missing).toEqual([]);
+  it("finds the elements the block styles", () => {
+    // A parser that silently matched nothing would pass the template check below.
+    expect(proseTags).toEqual(expect.arrayContaining(["h1", "p", "a", "code", "pre", "ul", "li", "td", "th", "table"]));
   });
 
-  it("gives every prose-targeted element a component renders a cui-* class", () => {
+  it("gives every element a component renders that the block styles a cui-* class", () => {
     const files = ["clean-ui", "clean-ui-editor"]
       .flatMap((pkg) => walk(resolve(PACKAGES, pkg, "src")))
       .filter((f) => f.endsWith(".vue"));
-    const open = new RegExp(`<(${PROSE_TAGS.join("|")})(?=[\\s/>])`, "g");
+    // `<component :is>` too: CuiTableCell's td/th, the titled headings, CuiButton's link.
+    const open = new RegExp(`<(${[...proseTags, "component"].join("|")})(?=[\\s/>])`, "g");
     const unclassed: string[] = [];
     for (const file of files) {
       const source = readFileSync(file, "utf-8");
-      const template = source.slice(source.indexOf("<template"), source.lastIndexOf("</template>"));
+      const start = source.search(/^<template>/m);
+      if (start === -1) continue;
+      const template = source.slice(start, source.lastIndexOf("</template>")).replace(/<!--[\s\S]*?-->/g, "");
       for (const m of template.matchAll(open)) {
         const tag = readTag(template, m.index!);
-        // A static `cui-*` class, or one a binding names — `:class="['cui-x', …]"`.
-        if (!/(^|\s):?class="[^"]*\bcui-/.test(tag)) unclassed.push(`${file.split("/src/")[1]}: ${tag.slice(0, 60)}`);
+        const binding = m[1] === "component" ? /:is="([^"]+)"/.exec(tag)?.[1] : undefined;
+        if (binding && `${file.split("/").pop()}:${binding}` in DYNAMIC_EXEMPT) continue;
+        // A static class, with a `cui-` token at a class boundary — the predicate's own terms.
+        // One only a binding adds can be conditional, so it doesn't count.
+        if (!/\sclass="(?:[^"]*\s)?cui-/.test(tag)) unclassed.push(`${file.split("/src/")[1]}: ${tag.slice(0, 70)}`);
       }
     }
     expect(unclassed).toEqual([]);
