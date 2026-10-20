@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiFileUpload can be operated from the keyboard (#169). The file input is visually hidden
+  but stays in the tab order (it was `display: none`), so Enter or Space opens the file
+  dialog, and the drop zone is a `<label>` for it that draws its focus ring. The `label`
+  prop now labels the input, the accept and size hint describes it, each remove button is
+  named after its file (`fileUpload.removeFile`), `focus()` focuses the input, and
+  `disabled` disables the input and the list's buttons. This adds a tab stop, so a
+  focus-order snapshot will change.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

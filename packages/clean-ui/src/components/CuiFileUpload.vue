@@ -5,6 +5,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export interface FileEntry {
   file: File;
@@ -152,10 +153,6 @@ function onUploadClick() {
   emit("upload", files.value.map((f) => f.file));
 }
 
-function onBrowse() {
-  inputRef.value?.click();
-}
-
 function onFileSelect(e: Event) {
   const input = e.target as HTMLInputElement;
   if (input.files) addFiles(input.files);
@@ -188,47 +185,70 @@ function onDrop(e: DragEvent) {
 
 const totalSize = computed(() => formatSize(files.value.reduce((sum, f) => sum + f.size, 0)));
 
-// Expose imperative handle — the file input is display:none, so focus the root
+// --- Keyboard and naming (#169) ---
+// The file input is the control: visually hidden but focusable (not display:none, which
+// took it out of the tab order), so Tab reaches it and Enter/Space open the native dialog.
+// The drop zone is a <label for> it, so a click opens the dialog natively and its text
+// names the input; it draws the input's focus ring.
+const messages = useMessages();
+const baseId = useCuiId("file-upload");
+const inputId = computed(() => props.id ?? `${baseId}-input`);
+const hintId = `${baseId}-hint`;
+const hasHint = computed(() => !!props.accept || props.maxFileSize > 0);
+const describedBy = computed(() => [props.ariaDescribedby, hasHint.value ? hintId : undefined].filter(Boolean).join(" ") || undefined);
+
+// Expose imperative handle — the file input
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
 
 function focus(opts?: FocusOptions) {
-  rootEl.value?.focus(opts);
+  inputRef.value?.focus(opts);
 }
 
 function blur() {
-  rootEl.value?.blur();
+  inputRef.value?.blur();
 }
 
 defineExpose({ el: rootEl, focus, blur });
-const messages = useMessages();
 </script>
 
 <template>
-  <div class="cui-file-upload" ref="rootEl" v-show="!hidden">
+  <div
+    class="cui-file-upload"
+    ref="rootEl"
+    v-show="!hidden"
+    :style="{ '--_file-upload-focus-ring': `var(--cui-${color}-focus-ring)` }"
+  >
     <label
       v-if="label"
+      :for="inputId"
+      class="cui-file-upload__label"
       :style="{ display: 'block', marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
-    <!-- Hidden file input -->
+    <!-- The file input: visually hidden, still focusable. The drop zone after it is its
+         label and draws its focus ring (a sibling selector, so the order matters). -->
     <input
       ref="inputRef"
-      :id="id"
+      :id="inputId"
+      class="cui-sr-only cui-file-upload__input"
       :name="name"
       :autocomplete="autocomplete"
-      :aria-describedby="ariaDescribedby"
+      :aria-describedby="describedBy"
       :aria-required="ariaRequired || undefined"
       :aria-labelledby="ariaLabelledby"
       type="file"
       :accept="accept"
       :multiple="multiple"
-      :style="{ display: 'none' }"
+      :disabled="disabled"
       @change="onFileSelect"
     />
 
     <!-- Drop zone -->
-    <div
+    <label
+      :for="inputId"
+      class="cui-file-upload__zone"
       :style="{
+        display: 'block',
         border: `2px dashed ${isDragging ? `var(--cui-${color})` : 'var(--cui-border)'}`,
         borderRadius: '0.625rem',
         padding: 'calc(1.5rem * var(--cui-density-scale, 1))',
@@ -238,7 +258,6 @@ const messages = useMessages();
         background: isDragging ? `var(--cui-${color}-bg)` : 'transparent',
         transition: 'border-color 0.15s ease, background 0.15s ease',
       }"
-      @click="onBrowse"
       @dragenter="onDragEnter"
       @dragover="onDragOver"
       @dragleave="onDragLeave"
@@ -249,22 +268,21 @@ const messages = useMessages();
         size="2rem"
         :style="{ color: isDragging ? `var(--cui-${color})` : 'var(--cui-text-tertiary)', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
       />
-      <div :style="{ fontSize: '0.875rem', color: 'var(--cui-text-secondary)' }">
+      <!-- Spans, not divs: a <label> holds phrasing content only. -->
+      <span :style="{ display: 'block', fontSize: '0.875rem', color: 'var(--cui-text-secondary)' }">
         {{ dragText }}
-        <span
-          :style="{ color: `var(--cui-${color})`, fontWeight: '600', cursor: 'pointer' }"
-          @click.stop="onBrowse"
-        >{{ browseText }}</span>
-      </div>
-      <div
-        v-if="accept || maxFileSize > 0"
-        :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))' }"
+        <span :style="{ color: `var(--cui-${color})`, fontWeight: '600' }">{{ browseText }}</span>
+      </span>
+      <span
+        v-if="hasHint"
+        :id="hintId"
+        :style="{ display: 'block', fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))' }"
       >
         <span v-if="accept">{{ accept }}</span>
         <span v-if="accept && maxFileSize > 0"> · </span>
         <span v-if="maxFileSize > 0">Max {{ formatSize(maxFileSize) }}</span>
-      </div>
-    </div>
+      </span>
+    </label>
 
     <!-- File list -->
     <div v-if="files.length > 0" :style="{ marginTop: 'calc(0.75rem * var(--cui-density-scale, 1))' }">
@@ -306,6 +324,9 @@ const messages = useMessages();
             borderRadius: '0.25rem',
             flexShrink: '0',
           }"
+          class="cui-file-upload__remove"
+          :aria-label="messages.fileUpload.removeFile(entry.name)"
+          :disabled="disabled"
           @click="removeFile(entry.id)"
         >
           <CuiIcon name="x" size="0.75rem" />
@@ -318,8 +339,8 @@ const messages = useMessages();
           {{ files.length }} file{{ files.length === 1 ? '' : 's' }} · {{ totalSize }}
         </span>
         <div :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))' }">
-          <CuiButton variant="ghost" size="xs" @click="clearAll">{{ messages.clearAll }}</CuiButton>
-          <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" @click="onUploadClick">
+          <CuiButton variant="ghost" size="xs" :disabled="disabled" @click="clearAll">{{ messages.clearAll }}</CuiButton>
+          <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" :disabled="disabled" @click="onUploadClick">
             <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>
             {{ uploadText }}
           </CuiButton>
@@ -328,3 +349,13 @@ const messages = useMessages();
     </div>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+/* The input is hidden; the drop zone it is labelled by shows that it has focus. */
+:where(.cui-file-upload__input:focus-visible + .cui-file-upload__zone),
+:where(.cui-file-upload__remove:focus-visible) {
+  outline: 2px solid var(--cui-file-upload-focus-ring, var(--_file-upload-focus-ring));
+  outline-offset: 2px;
+}
+</style>
