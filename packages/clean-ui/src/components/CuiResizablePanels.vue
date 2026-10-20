@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed } from "vue";
+import { useEventListener } from "../composables/useEventListener";
 import CuiIcon from "./CuiIcon.vue";
 import type { CuiOrientation, HideableProps } from "../types/common";
 
@@ -152,9 +153,6 @@ function onPointerDown(e: PointerEvent) {
   dragging.value = true;
   startPos = isHorizontal.value ? e.clientX : e.clientY;
   startPercent = firstPercent.value;
-
-  document.addEventListener("pointermove", onPointerMove);
-  document.addEventListener("pointerup", onPointerUp);
 }
 
 function onPointerMove(e: PointerEvent) {
@@ -189,9 +187,12 @@ function onPointerMove(e: PointerEvent) {
 
 function onPointerUp() {
   dragging.value = false;
-  document.removeEventListener("pointermove", onPointerMove);
-  document.removeEventListener("pointerup", onPointerUp);
 }
+
+// Document-level, so a drag keeps tracking when the pointer leaves the handle; only while
+// dragging, and removed on unmount mid-drag.
+useEventListener("document", "pointermove", onPointerMove, { enabled: dragging });
+useEventListener("document", "pointerup", onPointerUp, { enabled: dragging });
 
 function onDoubleClick() {
   firstPercent.value = props.initialSize;
@@ -200,10 +201,6 @@ function onDoubleClick() {
   emit("collapse", false);
 }
 
-onUnmounted(() => {
-  document.removeEventListener("pointermove", onPointerMove);
-  document.removeEventListener("pointerup", onPointerUp);
-});
 </script>
 
 <template>

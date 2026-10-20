@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, provide, toRef, onMounted, onUnmounted } from "vue";
+import { ref, provide, toRef, onUnmounted } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
@@ -86,41 +88,25 @@ function onFocusOut(e: FocusEvent) {
 // closed instead. Focus handling on close is #160.
 useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
-// Click outside -- check both the wrapper and any teleported menus
 const dropdownId = `cui-dd-${Math.random().toString(36).slice(2, 8)}`;
 
-function onClickOutside(e: MouseEvent) {
-  const wrapper = document.querySelector(`[data-cui-dropdown-id="${dropdownId}"]`);
-  const menus = document.querySelectorAll(`[data-cui-dropdown-owner="${dropdownId}"]`);
-  const target = e.target as Node;
-
-  if (wrapper?.contains(target)) return;
-  for (const menu of menus) {
-    if (menu.contains(target)) return;
-  }
-  close();
-}
+// Only while open, so a closed dropdown holds no document listener (#203). The wrapper
+// and every teleported menu it owns, sub-menus included.
+const wrapperRef = ref<HTMLElement | null>(null);
+useClickOutside(
+  () => [wrapperRef.value, ...document.querySelectorAll<HTMLElement>(`[data-cui-dropdown-owner="${dropdownId}"]`)],
+  close,
+  { enabled: isOpen },
+);
 
 function reposition() {
   // Menu handles its own repositioning via scroll listener
 }
 
-function onScroll() {
-  if (!isOpen.value) return;
-  if (!props.pinned) {
-    close();
-  }
-  // When pinned, the menu repositions itself via its own scroll listener
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScroll, true);
-});
+// A scroll closes an unpinned dropdown; a pinned one's menu repositions itself instead.
+useEventListener("window", "scroll", close, { enabled: () => isOpen.value && !props.pinned, capture: true });
 
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScroll, true);
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
   if (closeAnimTimer) clearTimeout(closeAnimTimer);
@@ -160,6 +146,7 @@ defineExpose({ open, close, toggle, isOpen });
 
 <template>
   <div
+    ref="wrapperRef"
     v-show="!hidden"
     class="cui-dropdown"
     :data-cui-dropdown-id="dropdownId"

@@ -127,7 +127,8 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
-- `composables/useClickOutside.ts` — shared click-outside detection
+- `composables/useClickOutside.ts` — the only click-outside detection: `useClickOutside(targets, handler, { enabled: isOpen })`. Pass `enabled`, so a closed panel holds no document listener (#203); see `useEventListener` below for the guard.
+- `composables/useEventListener.ts` (internal) — `useEventListener("window" | "document", type | type[], handler, { enabled, capture })`: removes exactly what it added on unmount, and with `enabled` attaches only while it's true. The target is a *name*, so it is SSR-safe (passing `window` itself throws on the server before any guard runs). Every window/document listener in a component goes through it or `useClickOutside` — the guard in `useClickOutside.test.ts` fails otherwise.
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
 - `composables/useTheme.ts` — theme switching, localStorage persistence

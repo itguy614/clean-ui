@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
+import { ref, provide, nextTick, onUnmounted } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -196,6 +198,9 @@ function onContextMenu(e: MouseEvent) {
 
 // --- Long press -----------------------------------------------------------
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+// Whether a long-press is armed — reactive, so the scroll listener that cancels it is
+// attached only then (and while open), not for the component's whole life (#203).
+const pressPending = ref(false);
 let pressOrigin: { x: number; y: number } | null = null;
 let suppressNextContextMenu = false;
 let suppressNextClick = false;
@@ -203,6 +208,7 @@ let suppressNextClick = false;
 function cancelLongPress() {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
   pressOrigin = null;
+  pressPending.value = false;
 }
 
 function onPointerDown(e: PointerEvent) {
@@ -212,8 +218,10 @@ function onPointerDown(e: PointerEvent) {
   if (e.pointerType === "mouse") return;
 
   pressOrigin = { x: e.clientX, y: e.clientY };
+  pressPending.value = true;
   longPressTimer = setTimeout(() => {
     longPressTimer = null;
+    pressPending.value = false;
     if (!pressOrigin) return;
     const { x, y } = pressOrigin;
     pressOrigin = null;
@@ -294,19 +302,9 @@ function onMenuKeydown(e: KeyboardEvent) {
   }
 }
 
-// Click outside detection
-function onClickOutside(e: MouseEvent) {
-  if (!isOpen.value) return;
-  const target = e.target as Node;
+// Only while open, so a closed context menu holds no document listener (#203).
+useClickOutside([wrapperRef, menuRef], close, { enabled: isOpen });
 
-  if (wrapperRef.value?.contains(target)) return;
-  const teleportedMenu = document.querySelector(`[data-cui-context-menu-id="${contextMenuId}"]`);
-  if (teleportedMenu?.contains(target)) return;
-
-  close();
-}
-
-// Close on scroll
 function onScroll() {
   // A scroll that starts under a held finger is a scroll, not a press — and
   // pointermove alone doesn't always fire once the browser takes the gesture.
@@ -314,14 +312,10 @@ function onScroll() {
   if (isOpen.value) close();
 }
 
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScroll, true);
-});
+// While open, and while a long-press is armed: a scroll cancels that too.
+useEventListener("window", "scroll", onScroll, { enabled: () => isOpen.value || pressPending.value, capture: true });
 
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScroll, true);
   if (closeAnimTimer) clearTimeout(closeAnimTimer);
   cancelLongPress();
 });

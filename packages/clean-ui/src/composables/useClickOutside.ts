@@ -1,24 +1,30 @@
-import { onMounted, onUnmounted, type Ref } from "vue";
+import { type MaybeRefOrGetter, type Ref } from "vue";
+import { useEventListener } from "./useEventListener";
+
+export interface UseClickOutsideOptions {
+  /**
+   * Listen only while this is true — pass the panel's open state, so a closed control
+   * holds no document listener (#203).
+   */
+  enabled?: MaybeRefOrGetter<boolean>;
+}
 
 /**
- * Calls the handler when a click occurs outside the target element(s).
+ * Calls the handler when a press lands outside the target element(s).
  * Supports multiple elements (e.g., trigger + teleported menu).
  */
 export function useClickOutside(
-  targets: Ref<HTMLElement | null>[] | (() => (HTMLElement | null)[]),
+  targets: Ref<HTMLElement | null | undefined>[] | (() => (HTMLElement | null | undefined)[]),
   handler: () => void,
+  options: UseClickOutsideOptions = {},
 ) {
-  function onMouseDown(e: MouseEvent) {
-    const elements = typeof targets === "function" ? targets() : targets.map((t) => t.value);
-    const clickedInside = elements.some((el) => el?.contains(e.target as Node));
-    if (!clickedInside) handler();
-  }
-
-  onMounted(() => {
-    document.addEventListener("mousedown", onMouseDown);
-  });
-
-  onUnmounted(() => {
-    document.removeEventListener("mousedown", onMouseDown);
-  });
+  useEventListener(
+    "document",
+    "mousedown",
+    (e) => {
+      const elements = typeof targets === "function" ? targets() : targets.map((t) => t.value);
+      if (!elements.some((el) => el?.contains(e.target as Node))) handler();
+    },
+    options,
+  );
 }

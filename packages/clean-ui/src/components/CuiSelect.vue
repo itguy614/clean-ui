@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
@@ -261,33 +263,9 @@ function scrollToHighlighted() {
   });
 }
 
-// Click outside
-function onClickOutside(e: MouseEvent) {
-  const target = e.target as Node;
-  if (
-    triggerRef.value?.contains(target) ||
-    dropdownRef.value?.contains(target)
-  ) {
-    return;
-  }
-  close();
-}
-
-function onScrollOrResize() {
-  if (isOpen.value) positionDropdown();
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScrollOrResize, true);
-  window.addEventListener("resize", onScrollOrResize);
-});
-
-onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScrollOrResize, true);
-  window.removeEventListener("resize", onScrollOrResize);
-});
+// Global listeners only while open, so a closed select holds none (#203).
+useClickOutside([triggerRef, dropdownRef], close, { enabled: isOpen });
+useEventListener("window", ["scroll", "resize"], positionDropdown, { enabled: isOpen, capture: true });
 
 // Dropdown positioning
 const dropdownStyle = ref<Record<string, string>>({});

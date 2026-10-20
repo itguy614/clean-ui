@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { inject, ref, watch, nextTick, computed, onMounted, onUnmounted } from "vue";
+import { inject, ref, watch, nextTick, computed, onUnmounted } from "vue";
+import { useEventListener } from "../composables/useEventListener";
 import { DropdownContextKey, computeDropdownPosition } from "./dropdown-context";
 
 export interface CuiDropdownMenuProps {
@@ -38,23 +39,19 @@ watch(
   },
 );
 
-// Reposition on scroll (for pinned mode -- parent won't close, so we track)
+// Reposition on scroll while open (a pinned dropdown stays open; an unpinned one closes)
 let scrollRAF: number | null = null;
 
 function onScroll() {
-  if (!ctx?.isOpen.value || ctx?.isClosing.value) return;
+  if (ctx?.isClosing.value) return;
   if (scrollRAF) cancelAnimationFrame(scrollRAF);
   scrollRAF = requestAnimationFrame(updatePosition);
 }
 
-onMounted(() => {
-  window.addEventListener("scroll", onScroll, true);
-  window.addEventListener("resize", onScroll);
-});
+const menuOpen = () => !!ctx?.isOpen.value;
+useEventListener("window", ["scroll", "resize"], onScroll, { enabled: menuOpen, capture: true });
 
 onUnmounted(() => {
-  window.removeEventListener("scroll", onScroll, true);
-  window.removeEventListener("resize", onScroll);
   if (scrollRAF) cancelAnimationFrame(scrollRAF);
 });
 
