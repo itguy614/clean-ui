@@ -126,3 +126,40 @@ describe("CuiSelect panel position", () => {
     }
   });
 });
+
+// #174: CuiSelect dropped `name`, so it never joined a native form post.
+describe("CuiSelect native form participation", () => {
+  const formData = (w: { element: Element }) => new FormData(w.element.closest("form")!);
+  const inForm = (props: Record<string, unknown>) =>
+    mount({ components: { CuiSelect }, template: `<form><CuiSelect v-bind="p" /></form>`, data: () => ({ p: { options: OPTIONS, ...props } }) }, { attachTo: document.body });
+
+  it("posts a single value under its name", () => {
+    const w = inForm({ name: "fruit", modelValue: "b" });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual(["b"]);
+    w.unmount();
+  });
+
+  it("posts an empty value when nothing is selected", () => {
+    const w = inForm({ name: "fruit", modelValue: null });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual([""]);
+    w.unmount();
+  });
+
+  it("posts one entry per value when multiple, and none when empty", async () => {
+    const w = inForm({ name: "fruit", multiple: true, modelValue: ["a", "c"] });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual(["a", "c"]);
+    w.unmount();
+    const empty = inForm({ name: "fruit", multiple: true, modelValue: [] });
+    expect(formData(empty.find("form")).getAll("fruit")).toEqual([]);
+    empty.unmount();
+  });
+
+  it("posts nothing while disabled, and renders no inputs without a name", () => {
+    const w = inForm({ name: "fruit", modelValue: "a", disabled: true });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual([]);
+    w.unmount();
+    const unnamed = inForm({ modelValue: "a" });
+    expect(unnamed.findAll('input[type="hidden"]')).toHaveLength(0);
+    unnamed.unmount();
+  });
+});

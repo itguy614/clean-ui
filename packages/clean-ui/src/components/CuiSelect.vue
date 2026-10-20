@@ -139,6 +139,16 @@ const hasValue = computed(() => {
   return props.modelValue != null && props.modelValue !== "";
 });
 
+// What a native form post carries (#174): one hidden input per value with `name`, as a
+// native <select> would post — one for a single value (empty when nothing is chosen),
+// one per value when multiple (none when empty). `autocomplete` has no effect: browsers
+// ignore it on hidden inputs, and there is no native control here to autofill.
+const formValues = computed<Array<string | number>>(() => {
+  const v = props.modelValue;
+  if (props.multiple) return Array.isArray(v) ? v : [];
+  return [v == null || Array.isArray(v) ? "" : v];
+});
+
 // Get the full selected option object (for #selected slot)
 const selectedOption = computed(() => {
   if (props.multiple || props.modelValue == null) return null;
@@ -392,6 +402,12 @@ const messages = useMessages();
         </div>
       </template>
     </CuiListboxPanel>
+
+    <!-- Native form participation (#174). Disabled, like a disabled native control, posts
+         nothing. -->
+    <template v-if="name">
+      <input v-for="(v, i) in formValues" :key="i" type="hidden" :name="name" :value="v" :disabled="disabled" />
+    </template>
 
     <!-- Error message -->
     <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
