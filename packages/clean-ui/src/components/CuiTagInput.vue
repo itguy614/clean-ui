@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, reactive, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
@@ -86,6 +86,7 @@ const focusedIndex = ref(-1);
 // fetchSuggestions: debounced, latest-only, cancelled below minChars and on unmount (#245).
 const asyncSearch = useAsyncSearch<TagOption>({
   fetch: () => props.fetchSuggestions,
+  query: () => query.value,
   debounce: () => props.debounce,
   minChars: () => props.minChars,
 });
@@ -94,7 +95,7 @@ const asyncSuggestions = asyncSearch.results;
 // pending for the old text can't fire afterwards and reopen the list (#245).
 function clearQuery() {
   query.value = "";
-  asyncSearch.cancel();
+  asyncSearch.reset();
 }
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
@@ -105,15 +106,20 @@ const controlRef = ref<HTMLElement | null>(null);
 const selectedSet = computed(() => new Set(props.modelValue));
 const atMax = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags);
 
+// Every suggestion seen, so a tag keeps its label and colour after the search that found
+// it is replaced, cleared or fails — as CuiCombobox's allKnownOptions does.
+// Reactive, so a chip re-renders with the label once the search that names it lands.
+const seenSuggestions = reactive(new Map<string, TagOption>());
+watch(asyncSuggestions, (found) => found.forEach((s) => seenSuggestions.set(s.value, s)));
+const findSuggestion = (value: string) => props.suggestions.find((s) => s.value === value) ?? seenSuggestions.get(value);
+
 // Resolve tag display
 function tagLabel(value: string): string {
-  const opt = [...props.suggestions, ...asyncSuggestions.value].find((s) => s.value === value);
-  return opt?.label ?? value;
+  return findSuggestion(value)?.label ?? value;
 }
 
 function tagColor(value: string): CuiColor {
-  const opt = [...props.suggestions, ...asyncSuggestions.value].find((s) => s.value === value);
-  return opt?.color ?? props.color;
+  return findSuggestion(value)?.color ?? props.color;
 }
 
 // Filtered suggestions
@@ -137,10 +143,9 @@ const canCreate = computed(() => {
   return !allValues.includes(q);
 });
 
-const isLoading = computed(() => asyncSearch.loading.value);
-// Whether the suggestions listed are an answer for what's typed: always for static ones;
-// for fetchSuggestions, only once a search for this query has come back (#245).
-const answered = computed(() => !props.fetchSuggestions || asyncSearch.answered.value === query.value);
+// The debounce counts as loading: the panel says "searching" rather than claim nothing.
+const isLoading = computed(() => asyncSearch.pending.value);
+const showFailed = computed(() => !!asyncSearch.error.value && asyncSearch.answered.value && !!query.value.trim());
 
 // Size config
 // From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
@@ -215,12 +220,15 @@ const nothingFound = computed(
     !isLoading.value &&
     filteredSuggestions.value.length === 0 &&
     !canCreate.value &&
-    answered.value,
+    !showFailed.value &&
+    asyncSearch.answered.value,
 );
 // The list shows when there is something in it, or to say nothing matched; aria-expanded
 // follows it.
 const panelOpen = computed(
-  () => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value),
+  () =>
+    isOpen.value &&
+    (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value || showFailed.value),
 );
 const showEmpty = computed(() => isOpen.value && nothingFound.value);
 const listbox = useListbox({
@@ -236,6 +244,7 @@ const listbox = useListbox({
   // The create row is an option too, so it counts: "No results" would hide a real choice.
   announce: () => {
     if (!panelOpen.value || isLoading.value) return "";
+    if (showFailed.value) return messages.value.listbox.searchFailed;
     if (showEmpty.value) return props.noSuggestionsText;
     return messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0));
   },
@@ -373,7 +382,8 @@ defineExpose({ el: wrapperRef, focus, blur });
       </CuiListboxStatus>
 
       <!-- Empty state -->
-      <CuiListboxStatus v-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
+      <CuiListboxStatus v-if="showFailed">{{ messages.listbox.searchFailed }}</CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
 
       <!-- Suggestions -->
       <CuiListboxOption

@@ -131,8 +131,8 @@ describe("CuiTagInput empty state with async suggestions", () => {
     input.element.dispatchEvent(new FocusEvent("focus"));
     await input.setValue("ab"); // below minChars
     expect(document.querySelector(".cui-listbox-status")).toBeNull();
-    await input.setValue("abc"); // debounce pending
-    expect(document.querySelector(".cui-listbox-status")).toBeNull();
+    await input.setValue("abc"); // debounce pending: searching, not "nothing found"
+    expect(document.body.textContent).not.toContain("No suggestions");
     await vi.advanceTimersByTimeAsync(200);
     await nextTick();
     expect(document.querySelector(".cui-listbox-status")?.textContent).toBe("No suggestions");

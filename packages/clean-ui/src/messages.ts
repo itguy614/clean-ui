@@ -70,6 +70,8 @@ export interface CuiCoreMessages {
   listbox: {
     /** Announced as the listed options change, so a screen-reader user hears the filter narrow. */
     results: (count: number) => string;
+    /** Shown and announced when a fetchOptions/fetchSuggestions search fails. */
+    searchFailed: string;
   };
   confirmDialog: {
     title: string;
@@ -142,6 +144,7 @@ export const defaultMessages: CuiCoreMessages = {
   },
   listbox: {
     results: (count) => (count === 0 ? "No results" : `${count} result${count === 1 ? "" : "s"} available`),
+    searchFailed: "Couldn't load results",
   },
   confirmDialog: {
     title: "Are you sure?",

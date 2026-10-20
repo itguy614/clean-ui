@@ -95,6 +95,7 @@ const focusedIndex = ref(-1);
 // fetchOptions: debounced, latest-only, cancelled below minChars and on unmount (#245).
 const asyncSearch = useAsyncSearch<ComboboxOption>({
   fetch: () => props.fetchOptions,
+  query: () => query.value,
   debounce: () => props.debounce,
   minChars: () => props.minChars,
 });
@@ -103,7 +104,7 @@ const asyncOptions = asyncSearch.results;
 // pending for the old text can't fire afterwards and reopen the list (#245).
 function clearQuery() {
   query.value = "";
-  asyncSearch.cancel();
+  asyncSearch.reset();
 }
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
@@ -154,10 +155,25 @@ const filteredOptions = computed(() => {
   );
 });
 
-const isLoading = computed(() => props.loading || asyncSearch.loading.value);
-// Whether the options listed are an answer for what's typed: always for static options;
-// for fetchOptions, only once a search for this query has come back (#245).
-const answered = computed(() => !props.fetchOptions || asyncSearch.answered.value === query.value);
+// The debounce counts as loading: the panel says "searching" rather than show an empty box.
+const isLoading = computed(() => props.loading || asyncSearch.pending.value);
+
+// What the panel can show, besides options (#245). "No results" only once a search for
+// what's typed has come back (always, for static options); a failed search says so.
+const showFailed = computed(() => !!asyncSearch.error.value && asyncSearch.answered.value);
+const showNoResults = computed(
+  () => filteredOptions.value.length === 0 && asyncSearch.answered.value && !showFailed.value && !isLoading.value,
+);
+const showTypeMore = computed(
+  () => filteredOptions.value.length === 0 && !!props.fetchOptions && query.value.length < props.minChars,
+);
+// Open only with something to show, as CuiTagInput; aria-expanded follows it. With
+// fetchOptions and nothing typed yet, that is nothing.
+const panelOpen = computed(
+  () =>
+    isOpen.value &&
+    (filteredOptions.value.length > 0 || isLoading.value || showFailed.value || showNoResults.value || showTypeMore.value),
+);
 
 // Size config — from the shared scale, so a combobox lines up with a CuiInput or
 // CuiSelect of the same size. It used to carry a private table with different heights,
@@ -213,8 +229,7 @@ function selectOption(option: ComboboxOption) {
     nextTick(() => inputRef.value?.focus());
   } else {
     emit("update:modelValue", option.value);
-    clearQuery();
-    isOpen.value = false;
+    isOpen.value = false; // the close watcher clears the query
     inputRef.value?.blur();
   }
 }
@@ -244,7 +259,7 @@ const listbox = useListbox({
   count: () => filteredOptions.value.length,
   isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
   activeIndex: focusedIndex,
-  isOpen: () => isOpen.value,
+  isOpen: () => panelOpen.value,
   open: openDropdown,
   select: (i) => selectOption(filteredOptions.value[i]),
   close: () => (isOpen.value = false),
@@ -253,10 +268,11 @@ const listbox = useListbox({
   // Silent while searching, and while the min-chars hint shows instead; the panel's own
   // empty text when nothing matches, so a localised noResultsText is what's heard.
   announce: () => {
-    if (!isOpen.value || isLoading.value) return "";
+    if (!panelOpen.value || isLoading.value) return "";
+    if (showFailed.value) return messages.value.listbox.searchFailed;
     const n = filteredOptions.value.length;
-    if (n === 0 && !answered.value) return ""; // not searched yet: the debounce, or below minChars
-    return n === 0 ? props.noResultsText : messages.value.listbox.results(n);
+    if (n > 0) return messages.value.listbox.results(n);
+    return showNoResults.value ? props.noResultsText : "";
   },
 });
 
@@ -384,7 +400,7 @@ function optionClass(index: number, option: ComboboxOption) {
 
     <CuiListboxPanel
       ref="panelRef"
-      :open="isOpen"
+      :open="panelOpen"
       :anchor="controlRef"
       token-prefix="combobox"
       :max-height="320"
@@ -401,10 +417,13 @@ function optionClass(index: number, option: ComboboxOption) {
       <CuiListboxStatus v-if="isLoading && filteredOptions.length === 0">
         <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && answered">
+      <CuiListboxStatus v-else-if="showFailed && filteredOptions.length === 0">
+        {{ messages.listbox.searchFailed }}
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showNoResults">
         {{ noResultsText }}
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars">
+      <CuiListboxStatus v-else-if="showTypeMore">
         {{ messages.combobox.typeMore(minChars - query.length) }}
       </CuiListboxStatus>
 
