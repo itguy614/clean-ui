@@ -359,7 +359,7 @@ const totalCols = computed(() => {
         aria-hidden="true"
         :style="{ height: `${vScroll.paddingTop.value}px`, padding: 0, border: 0 }"
       >
-        <td :colspan="totalCols" style="padding: 0; border: none;" />
+        <td class="cui-data-grid__spacer-cell" :colspan="totalCols" style="padding: 0; border: none;" />
       </tr>
 
       <CuiContextMenu
@@ -434,7 +434,7 @@ const totalCols = computed(() => {
         aria-hidden="true"
         :style="{ height: `${vScroll.paddingBottom.value}px`, padding: 0, border: 0 }"
       >
-        <td :colspan="totalCols" style="padding: 0; border: none;" />
+        <td class="cui-data-grid__spacer-cell" :colspan="totalCols" style="padding: 0; border: none;" />
       </tr>
     </CuiTableBody>
   </CuiTable>

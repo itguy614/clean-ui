@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Components inside a `.cui-typography` scope are no longer restyled by its prose rules
+  (#147). Every prose element rule (paragraphs, lists, code, `pre`, `kbd`, blockquotes, `hr`,
+  tables, `mark`, `small`) now skips elements carrying a `cui-*` class, as headings and links
+  already did. Under a prose scope, CuiTable and CuiDataGrid cells follow their `size` again
+  instead of a fixed prose padding, and a breadcrumb's list loses the prose markers and
+  indent. Prose itself is unchanged.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
