@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CuiContextMenu` takes `resolveTarget(el)`, for one menu serving many targets. It is
+  called with the element a right-click, long-press or Shift+F10 landed on. Return what
+  the menu is for, and the `menu` slot receives it as `target`; return nothing and that
+  spot gets the browser's own menu (#208).
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
@@ -23,15 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiDataGrid mounts one context menu for the whole grid instead of one per row: a 500-row
+  grid mounted 500. The menu shows the actions of the row it was opened on, and a row with
+  none still gets the browser's own menu (#208).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
   check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
   layer stack, so inside a modal it closes only the menu (#160).
 - Tab in an open dropdown or context menu closes it, and focus moves on from the trigger
-  as it would from any button, instead of leaving the page from the end of `<body>`. A sub-menu now handles its own
-  keys: Arrow Right moves focus into it, Arrow Up/Down move within it, and Escape or Arrow
-  Left closes only the sub-menu and returns to its row (#160).
+  as it would from any button, instead of leaving the page from the end of `<body>`. A
+  sub-menu now handles its own keys: Arrow Right moves focus into it, Arrow Up/Down move
+  within it, and Escape or Arrow Left closes only the sub-menu and returns to its row
+  (#160).
 - A dropdown shown by hover or focus (`trigger="hover"` / `"hover-focus"`) no longer takes
   focus from where it was, and a `hover-focus` one no longer closes when focus moves into
   its menu (#160).

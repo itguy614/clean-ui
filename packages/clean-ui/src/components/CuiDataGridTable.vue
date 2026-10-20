@@ -287,6 +287,15 @@ const renderedRows = computed<DataGridRow[]>(() =>
   props.virtualize ? vScroll.visibleRows.value : grid.displayData.value,
 );
 
+// One context menu for the whole grid (#208), not one per row: a 500-row grid mounted 500
+// CuiContextMenu instances. It asks which row a gesture landed on; a row without actions,
+// or anywhere else in the table, gets the browser's own menu.
+function rowWithActions(el: Element): DataGridRow | undefined {
+  const id = el.closest("[data-row-id]")?.getAttribute("data-row-id");
+  const row = id == null ? undefined : renderedRows.value.find((r) => getRowId(r) === id);
+  return row && rowActions(row).length > 0 ? row : undefined;
+}
+
 // Total column count — used for colspan on spacer rows
 const totalCols = computed(() => {
   let n = grid.visibleColumns.value.length;
@@ -297,77 +306,76 @@ const totalCols = computed(() => {
 </script>
 
 <template>
-  <CuiTable
-    class="cui-data-grid-table"
-    :ref="(instance: any) => setScrollContainer(instance?.scrollWrapper ?? null)"
-    :size="size"
-    :striped="striped"
-    :hoverable="hoverable"
-    :bordered="bordered"
-    :sticky-header="stickyHeader"
-    :max-height="maxHeight"
-    :min-width="tableMinWidth"
-    :aria-rowcount="virtualize ? grid.displayData.value.length + 1 : undefined"
-  >
-    <CuiTableHead>
-      <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
-      <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
-        <!-- Bulk selection checkbox -->
-        <CuiTableCell v-if="hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :style="selectHeaderCellStyle">
-          <CuiCheckbox
-            v-if="showSelectAll"
-            :model-value="selectAllState === true"
-            :indeterminate="selectAllState === 'indeterminate'"
-            @update:model-value="handleSelectAll"
-          />
-        </CuiTableCell>
-
-        <!-- Column headers -->
-        <CuiTableCell
-          v-for="col in grid.visibleColumns.value"
-          :key="col.key"
-          :align="col.align"
-          :width="col.width"
-          :nowrap="col.nowrap"
-          :style="headerCellStyle(col)"
-          @click="col.sortable ? grid.applySort(col.key) : undefined"
-        >
-          <span style="display: inline-flex; align-items: center; gap: calc(0.25rem * var(--cui-density-scale, 1));">
-            {{ col.label }}
-            <CuiIcon
-              v-if="col.sortable"
-              :name="getSortIcon(col.key)"
-              size="0.875rem"
-              :style="{ opacity: getSortOpacity(col.key) }"
+  <CuiContextMenu class="cui-data-grid-table__menu" :resolve-target="rowWithActions">
+    <CuiTable
+      class="cui-data-grid-table"
+      :ref="(instance: any) => setScrollContainer(instance?.scrollWrapper ?? null)"
+      :size="size"
+      :striped="striped"
+      :hoverable="hoverable"
+      :bordered="bordered"
+      :sticky-header="stickyHeader"
+      :max-height="maxHeight"
+      :min-width="tableMinWidth"
+      :aria-rowcount="virtualize ? grid.displayData.value.length + 1 : undefined"
+    >
+      <CuiTableHead>
+        <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
+        <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
+          <!-- Bulk selection checkbox -->
+          <CuiTableCell v-if="hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :style="selectHeaderCellStyle">
+            <CuiCheckbox
+              v-if="showSelectAll"
+              :model-value="selectAllState === true"
+              :indeterminate="selectAllState === 'indeterminate'"
+              @update:model-value="handleSelectAll"
             />
-          </span>
-        </CuiTableCell>
+          </CuiTableCell>
 
-        <!-- Row actions column -->
-        <CuiTableCell v-if="hasRowActions" :width="ROW_ACTIONS_COLUMN_WIDTH" :style="auxHeaderCellStyle" />
-      </CuiTableRow>
-    </CuiTableHead>
+          <!-- Column headers -->
+          <CuiTableCell
+            v-for="col in grid.visibleColumns.value"
+            :key="col.key"
+            :align="col.align"
+            :width="col.width"
+            :nowrap="col.nowrap"
+            :style="headerCellStyle(col)"
+            @click="col.sortable ? grid.applySort(col.key) : undefined"
+          >
+            <span style="display: inline-flex; align-items: center; gap: calc(0.25rem * var(--cui-density-scale, 1));">
+              {{ col.label }}
+              <CuiIcon
+                v-if="col.sortable"
+                :name="getSortIcon(col.key)"
+                size="0.875rem"
+                :style="{ opacity: getSortOpacity(col.key) }"
+              />
+            </span>
+          </CuiTableCell>
 
-    <CuiTableBody>
-      <!--
-        Virtual top spacer — replaces the rows above the render window.
-        A zero-height row with padding-top avoids collapsing border weirdness
-        that a plain <tr style="height:Npx"> can suffer in some browsers.
-      -->
-      <tr
-        v-if="virtualize && vScroll.paddingTop.value > 0"
-        aria-hidden="true"
-        :style="{ height: `${vScroll.paddingTop.value}px`, padding: 0, border: 0 }"
-      >
-        <td :colspan="totalCols" style="padding: 0; border: none;" />
-      </tr>
+          <!-- Row actions column -->
+          <CuiTableCell v-if="hasRowActions" :width="ROW_ACTIONS_COLUMN_WIDTH" :style="auxHeaderCellStyle" />
+        </CuiTableRow>
+      </CuiTableHead>
 
-      <CuiContextMenu
-        v-for="(row, idx) in renderedRows"
-        :key="getRowId(row)"
-        :disabled="rowActions(row).length === 0"
-      >
+      <CuiTableBody>
+        <!--
+          Virtual top spacer — replaces the rows above the render window.
+          A zero-height row with padding-top avoids collapsing border weirdness
+          that a plain <tr style="height:Npx"> can suffer in some browsers.
+        -->
+        <tr
+          v-if="virtualize && vScroll.paddingTop.value > 0"
+          aria-hidden="true"
+          :style="{ height: `${vScroll.paddingTop.value}px`, padding: 0, border: 0 }"
+        >
+          <td :colspan="totalCols" style="padding: 0; border: none;" />
+        </tr>
+
         <CuiTableRow
+          v-for="(row, idx) in renderedRows"
+          :key="getRowId(row)"
+          :data-row-id="getRowId(row)"
           :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
           :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"
@@ -416,26 +424,25 @@ const totalCols = computed(() => {
           </CuiTableCell>
         </CuiTableRow>
 
-        <!-- Context menu for right-click -->
-        <template #menu>
-          <CuiDropdownItem
-            v-for="action in rowActions(row)"
-            :key="action.key"
-            @select="emit('row-action', { action, row })"
-          >
-            {{ action.label }}
-          </CuiDropdownItem>
-        </template>
-      </CuiContextMenu>
+        <!-- Virtual bottom spacer -->
+        <tr
+          v-if="virtualize && vScroll.paddingBottom.value > 0"
+          aria-hidden="true"
+          :style="{ height: `${vScroll.paddingBottom.value}px`, padding: 0, border: 0 }"
+        >
+          <td :colspan="totalCols" style="padding: 0; border: none;" />
+        </tr>
+      </CuiTableBody>
+    </CuiTable>
 
-      <!-- Virtual bottom spacer -->
-      <tr
-        v-if="virtualize && vScroll.paddingBottom.value > 0"
-        aria-hidden="true"
-        :style="{ height: `${vScroll.paddingBottom.value}px`, padding: 0, border: 0 }"
+    <template #menu="{ target }">
+      <CuiDropdownItem
+        v-for="action in rowActions(target as DataGridRow)"
+        :key="action.key"
+        @select="emit('row-action', { action, row: target as DataGridRow })"
       >
-        <td :colspan="totalCols" style="padding: 0; border: none;" />
-      </tr>
-    </CuiTableBody>
-  </CuiTable>
+        {{ action.label }}
+      </CuiDropdownItem>
+    </template>
+  </CuiContextMenu>
 </template>

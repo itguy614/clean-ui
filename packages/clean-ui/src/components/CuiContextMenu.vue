@@ -35,6 +35,13 @@ export interface CuiContextMenuProps extends HideableProps, DisableableProps {
   longPressDelay?: number;
   /** Movement that cancels a hold, in px — a drag or a scroll, not a press. */
   longPressTolerance?: number;
+  /**
+   * For one menu serving many targets — rows in a list, cells in a grid (#208). Called with
+   * the element a gesture landed on; return what the menu is for (a row, an id), which the
+   * `menu` slot receives as `target`, or nothing to leave that spot to the browser's own
+   * menu. Without it, the whole wrapped content opens the menu.
+   */
+  resolveTarget?: (el: Element) => unknown;
 }
 
 const props = withDefaults(defineProps<CuiContextMenuProps>(), {
@@ -201,17 +208,31 @@ function openAt(x: number, y: number) {
 const respondsToContextMenu = () => props.trigger === "contextmenu" || props.trigger === "auto";
 const respondsToLongPress = () => props.trigger === "longpress" || props.trigger === "auto";
 
+// What the menu was last opened for: `resolveTarget`'s answer, for the `menu` slot.
+const menuTarget = shallowRef<unknown>(undefined);
+
+/** `resolveTarget`'s answer for a gesture on `el`, or null when the spot isn't ours. */
+function resolve(el: EventTarget | null): { value: unknown } | null {
+  if (!props.resolveTarget) return { value: undefined };
+  const value = el instanceof Element ? props.resolveTarget(el) : undefined;
+  return value == null || value === false ? null : { value };
+}
+
 function onContextMenu(e: MouseEvent) {
   if (props.disabled || !respondsToContextMenu()) return;
   // Android fires `contextmenu` after its own long-press, so with `auto` the
   // hold would open the menu and the synthesised event would immediately
   // reopen it. Swallow the event, but keep preventDefault so the OS menu
   // doesn't appear on top of ours either.
-  e.preventDefault();
   if (suppressNextContextMenu) {
+    e.preventDefault();
     suppressNextContextMenu = false;
     return;
   }
+  const hit = resolve(e.target);
+  if (!hit) return; // not a target: the browser's own menu
+  e.preventDefault();
+  menuTarget.value = hit.value;
   openAt(e.clientX, e.clientY);
 }
 
@@ -235,6 +256,8 @@ function onPointerDown(e: PointerEvent) {
   // Mouse already has `contextmenu`; holding a mouse button should not also
   // arm this, or a slow right-click would fire twice.
   if (e.pointerType === "mouse") return;
+  const hit = resolve(e.target);
+  if (!hit) return;
 
   pressOrigin = { x: e.clientX, y: e.clientY };
   pressPending.value = true;
@@ -248,6 +271,7 @@ function onPointerDown(e: PointerEvent) {
     // synthesise a `contextmenu` and a `click` from this same press.
     suppressNextContextMenu = true;
     suppressNextClick = true;
+    menuTarget.value = hit.value;
     openAt(x, y);
   }, props.longPressDelay);
 }
@@ -280,8 +304,11 @@ function onKeydown(e: KeyboardEvent) {
   const isMenuKey = e.key === "ContextMenu";
   const isShiftF10 = e.key === "F10" && e.shiftKey;
   if (!isMenuKey && !isShiftF10) return;
+  const hit = resolve(e.target);
+  if (!hit) return;
 
   e.preventDefault();
+  menuTarget.value = hit.value;
   const target = (e.target as HTMLElement | null) ?? wrapperRef.value;
   const rect = target?.getBoundingClientRect();
   if (rect) openAt(rect.left, rect.bottom);
@@ -300,7 +327,9 @@ useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close 
 // Only while open, so a closed context menu holds no document listener (#203).
 // Its open sub-menus are teleported panels of their own (see CuiDropdown).
 useClickOutside(
-  () => [wrapperRef.value, ...menuPanels(contextMenuId)],
+  // With resolveTarget the wrapper is a whole grid or list, and a press on another row or a
+  // header must close the menu like a press anywhere else.
+  () => [props.resolveTarget ? null : wrapperRef.value, ...menuPanels(contextMenuId)],
   close,
   { enabled: isOpen },
 );
@@ -382,7 +411,7 @@ defineExpose({ open, openAt, close, isOpen });
         role="menu"
         @keydown="onMenuKeydown"
       >
-        <slot name="menu" />
+        <slot name="menu" :target="menuTarget" />
       </div>
     </Teleport>
   </div>
