@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
+import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
@@ -26,8 +27,8 @@ export interface CuiTagInputProps extends NativeControlProps, HideableProps, Col
   modelValue?: string[];
   /** Predefined tag suggestions */
   suggestions?: TagOption[];
-  /** Async search for suggestions */
-  fetchSuggestions?: (query: string) => Promise<TagOption[]>;
+  /** Search for suggestions. `signal` is aborted when a newer search, or unmount, supersedes it. */
+  fetchSuggestions?: (query: string, context: { signal: AbortSignal }) => Promise<TagOption[]>;
   /** Allow creating new tags not in the suggestions list */
   allowCreate?: boolean;
   /** Debounce delay for async search (ms) */
@@ -82,16 +83,24 @@ const emit = defineEmits<{
 const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
-const internalLoading = ref(false);
-/** The query the last completed fetch answered, so an empty result is only claimed for it. */
-const searchedQuery = ref<string | null>(null);
-const asyncSuggestions = ref<TagOption[]>([]);
+// fetchSuggestions: debounced, latest-only, cancelled below minChars and on unmount (#245).
+const asyncSearch = useAsyncSearch<TagOption>({
+  fetch: () => props.fetchSuggestions,
+  debounce: () => props.debounce,
+  minChars: () => props.minChars,
+});
+const asyncSuggestions = asyncSearch.results;
+// Every reset of the query (a selection, a close) goes through here, so a search still
+// pending for the old text can't fire afterwards and reopen the list (#245).
+function clearQuery() {
+  query.value = "";
+  asyncSearch.cancel();
+}
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const messages = useMessages();
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedSet = computed(() => new Set(props.modelValue));
 const atMax = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags);
@@ -128,7 +137,10 @@ const canCreate = computed(() => {
   return !allValues.includes(q);
 });
 
-const isLoading = computed(() => internalLoading.value);
+const isLoading = computed(() => asyncSearch.loading.value);
+// Whether the suggestions listed are an answer for what's typed: always for static ones;
+// for fetchSuggestions, only once a search for this query has come back (#245).
+const answered = computed(() => !props.fetchSuggestions || asyncSearch.answered.value === query.value);
 
 // Size config
 // From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
@@ -162,20 +174,7 @@ function onInput(e: Event) {
   focusedIndex.value = -1;
   if (!isOpen.value) isOpen.value = true;
 
-  if (props.fetchSuggestions) {
-    if (query.value.length < props.minChars) { asyncSuggestions.value = []; return; }
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      internalLoading.value = true;
-      try {
-        const q = query.value;
-        asyncSuggestions.value = await props.fetchSuggestions!(q);
-        searchedQuery.value = q;
-      } finally {
-        internalLoading.value = false;
-      }
-    }, props.debounce);
-  }
+  if (props.fetchSuggestions) asyncSearch.search(query.value);
 }
 
 // Add tag
@@ -184,7 +183,7 @@ function addTag(value: string) {
   const trimmed = value.trim();
   if (!trimmed || selectedSet.value.has(trimmed)) return;
   emit("update:modelValue", [...props.modelValue, trimmed]);
-  query.value = "";
+  clearQuery();
   focusedIndex.value = -1;
   nextTick(() => inputRef.value?.focus());
 }
@@ -216,7 +215,7 @@ const nothingFound = computed(
     !isLoading.value &&
     filteredSuggestions.value.length === 0 &&
     !canCreate.value &&
-    (!props.fetchSuggestions || searchedQuery.value === query.value),
+    answered.value,
 );
 // The list shows when there is something in it, or to say nothing matched; aria-expanded
 // follows it.
@@ -279,12 +278,8 @@ function onFocus() {
   }
 }
 
-onUnmounted(() => {
-  if (debounceTimer) clearTimeout(debounceTimer);
-});
-
 watch(isOpen, (open) => {
-  if (!open) query.value = "";
+  if (!open) clearQuery();
 });
 
 // Expose imperative handle

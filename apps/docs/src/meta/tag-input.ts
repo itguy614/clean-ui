@@ -9,7 +9,7 @@ const meta: ComponentMeta = {
   props: [
     { name: "modelValue", type: "string[]", default: "[]", description: "Selected tags (v-model)" },
     { name: "suggestions", type: "TagOption[]", default: "[]", description: "Predefined tag suggestions" },
-    { name: "fetchSuggestions", type: "(query) => Promise<TagOption[]>", description: "Async search function" },
+    { name: "fetchSuggestions", type: "(query, { signal }) => Promise<TagOption[]>", description: "Async search function. Debounced; only the latest search's results are shown. `signal` is aborted when a newer search, or unmount, supersedes it." },
     { name: "allowCreate", type: "boolean", default: "true", description: "Allow creating tags not in suggestions" },
     { name: "maxTags", type: "number", default: "0", description: "Maximum tags allowed (0 = unlimited)" },
     { name: "debounce", type: "number", default: "300", description: "Debounce for async search (ms)" },
