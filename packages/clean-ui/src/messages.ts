@@ -110,6 +110,8 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /** Described on a clickable row (aria-description), which has no role to say so (#232). */
+    rowHint: string;
   };
 }
 
@@ -170,6 +172,7 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    rowHint: "Press Enter to open",
   },
 };
 

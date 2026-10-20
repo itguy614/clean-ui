@@ -29,7 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Space emits `row-click`, with a focus ring and a pointer cursor. Without one, rows get no
   tab stop and no pointer. An overlay opened from a row returns focus to it on close, even
   after it scrolled out of the virtualised window (`useOverlay` asks for an unmounted opener
-  back by key). `rowClickable` overrides the detection either way.
+  back by key, and so does a row's actions menu). `rowClickable` overrides the detection
+  either way. Interactive rows carry an `aria-description` ("Press Enter to open",
+  `dataGrid.rowHint`).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

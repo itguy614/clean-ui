@@ -5,6 +5,7 @@ import { useVirtualScroll } from "../composables/useVirtualScroll";
 import { useEventListener } from "../composables/useEventListener";
 import { useListNavigation } from "../composables/useListNavigation";
 import { useCuiId } from "../composables/useCuiId";
+import { useMessages } from "../composables/useMessages";
 import { RESTORE_FOCUS_ATTR } from "../utils/focusRestore";
 import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
@@ -306,26 +307,34 @@ const renderedRows = computed<DataGridRow[]>(() =>
 // useListNavigation, not useRovingFocus: that one finds its items in the DOM, and a
 // virtualised grid's rows outside the render window aren't there to reach.
 const gridId = useCuiId("data-grid");
+const messages = useMessages();
 const nav = useListNavigation();
 const activeKey = ref<string | null>(null);
 const stopKey = computed(() => {
   const rows = renderedRows.value;
   const active = activeKey.value;
   if (active !== null && rows.some((r) => getRowId(r) === active)) return active;
-  return rows[0] ? getRowId(rows[0]) : undefined;
+  // The first row in view — not the overscan above it, which is off-screen, and focusing
+  // it would scroll the grid out from under the user.
+  const first = props.virtualize ? vScroll.firstInViewIndex.value - vScroll.firstVisibleIndex.value : 0;
+  const row = rows[Math.max(0, Math.min(first, rows.length - 1))];
+  return row ? getRowId(row) : undefined;
 });
 const indexOfKey = (key: string | undefined) => grid.displayData.value.findIndex((r) => getRowId(r) === key);
 const rowFocusKey = (row: DataGridRow) => `${gridId}:${getRowId(row)}`;
+const bodyRef = ref<{ $el: HTMLElement } | null>(null);
+const bodyEl = () => bodyRef.value?.$el ?? null;
 
 function focusRowAt(index: number) {
   const row = grid.displayData.value[index];
   if (!row) return;
   activeKey.value = getRowId(row);
-  if (props.virtualize) vScroll.scrollToIndex(index);
-  // Matched by value, not in a selector, so a row key needs no escaping.
+  const body = bodyEl();
+  if (props.virtualize) vScroll.scrollToIndex(index, body?.parentElement?.querySelector("thead")?.offsetHeight ?? 0);
+  // In this table only, matched by value rather than in a selector, so a key needs no escaping.
   const key = rowFocusKey(row);
   nextTick(() =>
-    [...document.querySelectorAll<HTMLElement>(`[${RESTORE_FOCUS_ATTR}]`)].find((el) => el.getAttribute(RESTORE_FOCUS_ATTR) === key)?.focus(),
+    [...(bodyEl()?.querySelectorAll<HTMLElement>(`[${RESTORE_FOCUS_ATTR}]`) ?? [])].find((el) => el.getAttribute(RESTORE_FOCUS_ATTR) === key)?.focus(),
   );
 }
 
@@ -335,7 +344,8 @@ function onRowKeydown(e: KeyboardEvent, row: DataGridRow, index: number) {
   if (!props.rowsInteractive || e.target !== e.currentTarget) return;
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault(); // Space would scroll the grid
-    emit("row-click", { row });
+    // A held key auto-repeats; a button wouldn't activate again for it, nor does a row.
+    if (!e.repeat) emit("row-click", { row });
     return;
   }
   const to = nav.indexForKey(e, index, { count: grid.displayData.value.length });
@@ -419,7 +429,7 @@ const totalCols = computed(() => {
       </CuiTableRow>
     </CuiTableHead>
 
-    <CuiTableBody>
+    <CuiTableBody ref="bodyRef">
       <!--
         Virtual top spacer — replaces the rows above the render window.
         A zero-height row with padding-top avoids collapsing border weirdness
@@ -444,7 +454,8 @@ const totalCols = computed(() => {
           :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"
           :class="{ 'cui-data-grid-table__row--interactive': rowsInteractive }"
           :tabindex="rowsInteractive ? (getRowId(row) === stopKey ? 0 : -1) : undefined"
-:data-cui-restore-focus="rowsInteractive ? rowFocusKey(row) : undefined"
+          :data-cui-restore-focus="rowsInteractive ? rowFocusKey(row) : undefined"
+          :aria-description="rowsInteractive ? messages.dataGrid.rowHint : undefined"
           @click="emit('row-click', { row })"
           @keydown="onRowKeydown($event, row, virtualize ? vScroll.firstVisibleIndex.value + idx : idx)"
           @focus="activeKey = getRowId(row)"

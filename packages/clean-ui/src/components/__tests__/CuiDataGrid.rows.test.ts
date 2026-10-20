@@ -3,6 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import CuiDataGrid from "../CuiDataGrid.vue";
 import { RESTORE_FOCUS_EVENT, restoreKeyOf } from "../../utils/focusRestore";
+import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
 /**
  * #232 — every row was pointer-styled and click-only, whether or not anything listened for
@@ -73,6 +74,20 @@ describe("CuiDataGrid rows", () => {
     expect(clicked).toEqual([5, 5]);
   });
 
+  it("don't emit row-click again for a held key's auto-repeat", () => {
+    const clicked: unknown[] = [];
+    mountGrid({ onRowClick: (p: unknown) => clicked.push(p) });
+    const row = rows()[0].element;
+    row.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    row.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", repeat: true, bubbles: true, cancelable: true }));
+    expect(clicked).toHaveLength(1);
+  });
+
+  it("describe how to open themselves, having no role that says so", () => {
+    mountGrid({ onRowClick: () => {} });
+    expect(rows()[0].attributes("aria-description")).toBe("Press Enter to open");
+  });
+
   it("leave keys inside a cell's controls to them", () => {
     const clicked: unknown[] = [];
     mountGrid({
@@ -93,13 +108,26 @@ describe("CuiDataGrid rows", () => {
     expect(rows().map((r) => r.attributes("tabindex"))).toEqual(["0", "-1"]);
   });
 
-  it("restore focus by key to a row that unmounted while an overlay was open", async () => {
-    mountGrid({ onRowClick: () => {} });
-    const key = restoreKeyOf(rows()[3].element)!;
-    expect(key).toBeTruthy();
-    document.dispatchEvent(new CustomEvent(RESTORE_FOCUS_EVENT, { detail: key }));
+  it("restore focus by key to a row that is no longer rendered", async () => {
+    const many = Array.from({ length: 300 }, (_, i) => ({ id: i + 1, name: `Row ${i + 1}` }));
+    w = mount(CuiDataGrid, {
+      props: { columns, data: many, hideToolbar: true, hidePagination: true, perPageOptions: [300], virtualize: true, maxHeight: "200px", onRowClick: () => {} },
+      attachTo: document.body,
+    });
+    await nextTick();
+    const rendered = rows().length;
+    expect(rendered).toBeLessThan(300); // windowed
+    const prefix = restoreKeyOf(rows()[0].element)!.split(":").slice(0, -1).join(":");
+    document.dispatchEvent(new CustomEvent(RESTORE_FOCUS_EVENT, { detail: `${prefix}:250` }));
     await nextTick();
     await nextTick();
-    expect(document.activeElement).toBe(rows()[3].element);
+    expect((document.activeElement as HTMLElement).textContent).toContain("Row 250");
   });
+});
+
+describeRovingFocusContract("CuiDataGrid interactive rows", {
+  mount: () =>
+    mount(CuiDataGrid, { props: { columns, data, hideToolbar: true, onRowClick: () => {} }, attachTo: document.body }),
+  items: () => [...document.querySelectorAll<HTMLElement>("tbody tr[tabindex]")],
+  orientation: "vertical",
 });

@@ -38,7 +38,8 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
    * events are stripped from attrs, and `emit("row-click")` still calls it. A grid with one
    * has interactive rows: focusable, keyboard-operable and pointer-styled.
    */
-  onRowClick?: (payload: { row: T }) => void;
+  // An array too: Vue merges a listener bound twice (v-bind="$attrs" plus @row-click) into one.
+  onRowClick?: ((payload: { row: T }) => void) | Array<(payload: { row: T }) => void>;
   /**
    * Override whether rows are interactive: false for a row-click listener that is only
    * analytics, true for interactive rows without one. Default: whether one is bound.
