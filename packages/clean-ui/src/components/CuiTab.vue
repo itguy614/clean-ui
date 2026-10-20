@@ -72,8 +72,10 @@ const transitionName = computed(() => {
 });
 
 function findTabIndex(value: string): number {
-  // Approximate index from DOM order
-  const el = document.querySelector(`[data-cui-tab-value="${value}"]`);
+  // Index from DOM order, found by this tab set's own id: a value lookup across the document
+  // would hit another set sharing the value, and throw on a value with a quote in it.
+  const id = ctx?.tabId?.(value);
+  const el = id ? document.getElementById(id) : null;
   if (!el?.parentElement) return 0;
   return Array.from(el.parentElement.children).indexOf(el);
 }
@@ -87,7 +89,8 @@ function findTabIndex(value: string): number {
     class="cui-tab-panel"
     :class="[isActive ? transitionName : '']"
     role="tabpanel"
-    :aria-labelledby="value"
+    :id="ctx.panelId?.(value)"
+    :aria-labelledby="ctx.tabId?.(value)"
   >
     <slot />
   </div>
@@ -99,7 +102,8 @@ function findTabIndex(value: string): number {
     class="cui-tab-panel"
     :class="transitionName"
     role="tabpanel"
-    :aria-labelledby="value"
+    :id="ctx.panelId?.(value)"
+    :aria-labelledby="ctx.tabId?.(value)"
   >
     <slot />
   </div>

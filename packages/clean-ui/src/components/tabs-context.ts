@@ -30,6 +30,14 @@ export interface TabsContext {
   unregister: (value: string) => void;
   activate: (value: string) => void;
   close: (value: string) => void;
+  /**
+   * The ids linking a tab and its panel (#271): per tab set, so two sets sharing values
+   * never collide — the tab's aria-controls names the panel, the panel's aria-labelledby
+   * the tab. Optional only so that a context provided by hand (TabsContextKey is exported)
+   * still type-checks; without them the panel carries no reference.
+   */
+  tabId?: (value: string) => string;
+  panelId?: (value: string) => string;
 }
 
 export const TabsContextKey: InjectionKey<TabsContext> = Symbol("tabs-context");

@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiTabs links each tab to its panel (#271): a tab's `aria-controls` names its panel and the
+  panel's `aria-labelledby` its tab, with ids generated per tab set. Before, the panel named
+  the tab's value, which no element had as an id, and tabs had no `aria-controls`.
+
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

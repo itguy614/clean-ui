@@ -10,6 +10,7 @@ import {
 } from "./tabs-context";
 import type { HideableProps, ColorableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -87,6 +88,11 @@ function close(value: string) {
   emit("close", value);
 }
 
+// Per tab set; the value is encoded, since an id reference can't hold whitespace (#271).
+const tabsId = useCuiId("tabs");
+const tabId = (value: string) => `${tabsId}-tab-${encodeURIComponent(value)}`;
+const panelId = (value: string) => `${tabsId}-panel-${encodeURIComponent(value)}`;
+
 provide(TabsContextKey, {
   activeTab,
   variant: toRef(props, "variant"),
@@ -99,6 +105,8 @@ provide(TabsContextKey, {
   unregister,
   activate,
   close,
+  tabId,
+  panelId,
 });
 
 // Keyboard navigation
@@ -147,12 +155,9 @@ function onKeydown(e: KeyboardEvent) {
 // The bar scrolls when the tabs don't fit; without this the trailing tabs are
 // clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
 
-/** Scoped lookup — a global querySelector would hit another CuiTabs on the page. */
+/** By this tab set's own id — unique on the page, and already encoded (#271). */
 function tabElement(value: string): HTMLElement | null {
-  // Escape for the quoted attribute selector — a `"` or `\` in a tab value would
-  // otherwise make querySelector throw.
-  const escaped = value.replace(/["\\]/g, "\\$&");
-  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${escaped}"]`) ?? null;
+  return document.getElementById(tabId(value));
 }
 
 /** Which edges have content scrolled out of view — drives the edge fade mask. */
@@ -256,6 +261,8 @@ const messages = useMessages();
             '--_tab-bg': `var(--cui-${color}-bg)`,
           }"
           role="tab"
+          :id="tabId(tab.value)"
+          :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
           :aria-selected="activeTab === tab.value"
           :aria-disabled="tab.disabled || undefined"
           :tabindex="activeTab === tab.value ? 0 : -1"
