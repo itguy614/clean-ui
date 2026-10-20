@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiPagination's per-page selector is named "Results per page", and its landmark, previous,
+  next and page-button names come from the message catalogue (`pagination.label`,
+  `perPageLabel`, `previous`, `next`, `page(n)`) instead of hard-coded English. The
+  ellipsis is hidden from screen readers (#155).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

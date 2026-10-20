@@ -76,7 +76,19 @@ const sizePage = ref(1);
         <li>
           Prev and next are icon-only, so each gets an explicit
           <code>aria-label</code> ("Previous page", "Next page"). Each numbered button also
-          gets <code>aria-label="Page&nbsp;N"</code>.
+          gets <code>aria-label="Page&nbsp;N"</code>, and the ellipsis between them is hidden
+          from screen readers.
+        </li>
+        <li>
+          The per-page selector is named “Results per page”, through
+          <code>aria-labelledby</code> on a visually hidden label (a <code>CuiSelect</code> is
+          a <code>div[role=combobox]</code>, which a <code>&lt;label for&gt;</code> can't name).
+        </li>
+        <li>
+          Every one of these names — the landmark's, the buttons', the selector's — comes from
+          the message catalogue (<code>pagination.label</code>, <code>previous</code>,
+          <code>next</code>, <code>page(n)</code>, <code>perPageLabel</code>), so a translated
+          app is translated for screen readers too.
         </li>
         <li>
           At the first or last page the arrow button is genuinely
@@ -89,15 +101,6 @@ const sizePage = ref(1);
           heading, say) or announce the change yourself.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The per-page selector is a <code>CuiSelect</code> with
-        no label of any kind, so it announces as a combobox whose only text is its current
-        value. Until that is fixed, prefer <code>hide-per-page</code> and supply your own
-        labelled control where the accessible name matters. The
-        <code>&lt;nav&gt;</code> label and the button labels are also hard-coded English
-        rather than coming from the message catalogue, unlike the summary and the per-page
-        option text.
-      </p>
     </template>
 
     <template #examples>
