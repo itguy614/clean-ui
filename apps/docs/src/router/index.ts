@@ -99,6 +99,11 @@ const router = createRouter({
       component: () => import('../pages/UtilitiesPage.vue'),
     },
     {
+      path: '/foundations/roving-focus',
+      name: 'roving-focus',
+      component: () => import('../pages/RovingFocusPage.vue'),
+    },
+    {
       path: '/components/dropdown',
       name: 'dropdown',
       component: () => import('../pages/DropdownPage.vue'),
