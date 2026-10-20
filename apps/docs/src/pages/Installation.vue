@@ -30,6 +30,50 @@ app.mount('#app')</code></pre>
     </div>
 
     <div>
+      <h2 id="configure-defaults" class="mb-4 text-2xl font-semibold">Configure App-wide Defaults</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        Some choices an application makes once rather than at every call site. Pass them to
+        <code>createCleanUI()</code>; they belong to that app alone, so two apps on a page, or
+        two server-rendered requests, keep their own. A component's own prop still wins.
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { createCleanUI } from '@itguy614/clean-ui'
+
+app.use(createCleanUI({
+  // Every card here sits under the page's h1, so its title is an h2
+  headingLevels: { cardHeader: 'h2' },
+  // This design language has its own error glyph
+  roleIcons: { error: 'siren' },
+}))</code></pre>
+      <ul class="mt-3 list-disc space-y-1 pl-5 text-surface-600 dark:text-surface-400">
+        <li>
+          <code>headingLevels</code>: the element each titled component renders its title
+          as, unless its <code>titleAs</code> says otherwise. Keys are
+          <code>cardHeader</code> (default <code>h3</code>), <code>modalHeader</code>
+          (<code>h2</code>, and also CuiModal's and CuiSlideover's <code>title</code>),
+          <code>confirmDialog</code> (<code>h2</code>) and <code>emptyState</code>
+          (<code>h3</code>).
+        </li>
+        <li>
+          <code>roleIcons</code>: the icon each colour role shows in CuiAlert, CuiToast and
+          CuiBanner.
+        </li>
+      </ul>
+      <p class="mt-3 text-surface-600 dark:text-surface-400">
+        For part of a page, <code>CuiConfigProvider</code> takes the same
+        <code>headingLevels</code> and <code>roleIcons</code> props and applies them to what
+        it wraps, over the app's. And <code>configureCleanUI()</code> sets them
+        <em>globally</em>, as the fallback beneath every app: for code with no app to hand,
+        such as a test setup. On a server it is shared by every request, so prefer the app's
+        options. <code>registerRoleIcons()</code> is its alias for role icons.
+      </p>
+      <p class="mt-2 text-surface-600 dark:text-surface-400">
+        Order, first match wins: the component's prop, the nearest
+        <code>CuiConfigProvider</code>, the app's options, <code>configureCleanUI()</code>,
+        the library's default.
+      </p>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Import Individual Components</h2>
       <p class="mb-3 text-surface-600 dark:text-surface-400">
         You can also import individual components without the plugin:

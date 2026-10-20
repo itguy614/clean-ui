@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **App-wide defaults** (#149): `createCleanUI({ headingLevels, roleIcons })`, for one app.
+  `headingLevels` sets the default heading level of CuiCardHeader, CuiModalHeader (and so
+  CuiModal's and CuiSlideover's `title`), CuiConfirmDialog and CuiEmptyState; an explicit
+  `titleAs` still wins. `CuiConfigProvider` takes the same two props for a subtree, and
+  `configureCleanUI()` sets them globally, as the fallback beneath every app.
+  `registerRoleIcons()` stays as its alias for role icons.
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem

@@ -1,5 +1,7 @@
-import type { App } from "vue";
+import { computed, type App } from "vue";
 import type { CleanUIOptions } from "./types";
+import { mergeDefaults } from "./utils/configure";
+import { CuiDefaultsKey } from "./components/config-context";
 
 // Detect a second, different-version copy of clean-ui in the same page — see
 // duplicate-guard.ts. Runs as early as possible, before anything else loads.
@@ -303,6 +305,7 @@ export { BUILTIN_ICONS } from "./icons/builtin";
 // Role → icon for the feedback components. Overridable app-wide, the same way colours
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
+export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";
@@ -318,9 +321,13 @@ export { useColorScheme } from "./composables/useColorScheme";
 export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";
 export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
 
-export function createCleanUI(_options: CleanUIOptions = {}) {
+export function createCleanUI(options: CleanUIOptions = {}) {
   return {
     install(app: App) {
+      // This app's defaults (#149): provided, so two apps — or two server-rendered requests —
+      // keep their own. configureCleanUI() is the global fallback beneath them.
+      const defaults = mergeDefaults(undefined, options);
+      app.provide(CuiDefaultsKey, computed(() => defaults));
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
       app.component("CuiGrid", CuiGrid);

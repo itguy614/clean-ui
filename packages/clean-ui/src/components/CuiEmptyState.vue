@@ -3,6 +3,7 @@ import { computed } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, TitleAsProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useHeadingLevel } from "../utils/configure";
 
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
@@ -19,8 +20,10 @@ const props = withDefaults(defineProps<CuiEmptyStateProps>(), {
   size: "md",
   color: "primary",
   hidden: false,
-  titleAs: "h3",
 });
+
+// Its own `titleAs`, else the app's default (#149), else the library's.
+const headingTag = useHeadingLevel("emptyState", () => props.titleAs);
 
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], {
   circle: string;
@@ -62,7 +65,7 @@ const circleStyle = computed(() => ({
 
     <!-- Content -->
     <slot>
-      <component :is="titleAs" v-if="title" class="cui-empty-state__title" :style="{ fontSize: cfg.titleFont }">
+      <component :is="headingTag" v-if="title" class="cui-empty-state__title" :style="{ fontSize: cfg.titleFont }">
         {{ title }}
       </component>
       <div

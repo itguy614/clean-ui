@@ -72,6 +72,8 @@ const selectOptions = [
       <PropTable
         :props="[
           { name: 'messages', type: 'DeepPartialMessages', default: '{}', description: 'Partial overrides for the default message catalog. Unspecified keys fall back to defaults (or a parent provider).' },
+          { name: 'headingLevels', type: 'Partial<CuiHeadingLevels>', default: '{}', description: 'Heading levels for the titled components inside, over the app\'s. See Installation → Configure App-wide Defaults.' },
+          { name: 'roleIcons', type: 'Partial<Record<CuiColor, string>>', default: '{}', description: 'Role icons for CuiAlert, CuiToast and CuiBanner inside, over the app\'s.' },
         ]"
       />
     </div>

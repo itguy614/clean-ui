@@ -105,7 +105,7 @@ export const titleAsProp = (dflt: string): PropRow => ({
   type: "h1 | h2 | h3 | h4 | h5 | h6 | div",
   default: dflt,
   description:
-    "Element the title renders as. Set it to match the surrounding document's heading level, or div for a decorative title",
+    "Element the title renders as. Set it to match the surrounding document's heading level, or div for a decorative title. The default can be changed app-wide with configureCleanUI({ headingLevels })",
 });
 
 /**
