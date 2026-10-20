@@ -31,6 +31,8 @@ export interface UseVirtualScrollOptions {
 }
 
 export interface VirtualScrollResult<T> {
+  /** Bring row `i` into view and render it at once, so it can be focused */
+  scrollToIndex: (i: number) => void;
   /** Slice of rows currently in the render window */
   visibleRows: Ref<T[]>;
   /** Index of the first rendered row within the full dataset (for aria-rowindex) */
@@ -155,7 +157,23 @@ export function useVirtualScroll<T>(
     }
   }
 
+  /**
+   * Scroll just enough to bring row `i` into view, and render it now rather than on the next
+   * scroll frame — so it can be focused straight away (#232).
+   */
+  function scrollToIndex(i: number) {
+    const el = containerRef.value;
+    const rh = resolvedRowHeight.value;
+    if (!el || rh <= 0) return;
+    const top = i * rh;
+    const bottom = top + rh;
+    if (top < el.scrollTop) el.scrollTop = top;
+    else if (bottom > el.scrollTop + el.clientHeight) el.scrollTop = bottom - el.clientHeight;
+    scrollTop.value = el.scrollTop;
+  }
+
   return {
+    scrollToIndex,
     visibleRows,
     firstVisibleIndex,
     paddingTop,

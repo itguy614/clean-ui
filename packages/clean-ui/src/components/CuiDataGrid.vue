@@ -33,6 +33,17 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   serverSide?: boolean;
   /** Row identifier key */
   rowKey?: string;
+  /**
+   * Declared as a prop only to tell whether a `@row-click` listener is bound (#232) — emitted
+   * events are stripped from attrs, and `emit("row-click")` still calls it. A grid with one
+   * has interactive rows: focusable, keyboard-operable and pointer-styled.
+   */
+  onRowClick?: (payload: { row: T }) => void;
+  /**
+   * Override whether rows are interactive: false for a row-click listener that is only
+   * analytics, true for interactive rows without one. Default: whether one is bound.
+   */
+  rowClickable?: boolean;
   /** Bulk action definitions */
   bulkActions?: DataGridBulkAction[];
   /** Show select-all checkbox in header */
@@ -87,6 +98,8 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
 }
 
 const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
+  // undefined, not the boolean cast's false: "not set" means "whether a listener is bound".
+  rowClickable: undefined,
   serverSide: false,
   rowKey: "id",
   showSelectAll: true,
@@ -260,6 +273,7 @@ const messages = useMessages();
             :size="size"
             :virtualize="virtualize"
             :virtual-row-height="virtualRowHeight"
+            :rows-interactive="rowClickable ?? !!onRowClick"
             @row-click="emit('row-click', $event as RowClickPayload)"
             @row-action="emit('row-action', $event as RowActionPayload)"
           >
