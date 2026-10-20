@@ -87,6 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  resizablePanels: {
+    /** The splitter's accessible name (#156). */
+    handle: string;
+  };
   formField: {
     /**
      * Appended to a required field's label for screen readers. The visible marker is an
@@ -159,6 +163,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  resizablePanels: { handle: "Resize panels" },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },

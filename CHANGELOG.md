@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiResizablePanels' handle is keyboard-operable and announced (#156): a focusable
+  `role="separator"` (the WAI-ARIA window splitter) named "Resize panels"
+  (`resizablePanels.handle` in the message catalogue), with `aria-valuenow` and
+  `aria-controls`. The arrows along the split move it in 2% steps (10% with Shift), Home and
+  End go to the extremes, and Enter collapses and restores when `collapseThreshold` is set.
+  The arrows and the drag now follow the page direction side by side. This adds a tab
+  stop, so a focus-order snapshot will change.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
