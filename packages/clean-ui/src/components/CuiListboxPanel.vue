@@ -40,8 +40,6 @@ const props = defineProps<{
    * Measured from the rendered rows, so rows of any height count as one each.
    */
   maxVisible?: number;
-  /** How many options the component lists now; `maxVisible` re-measures when it changes. */
-  optionCount?: number;
   /**
    * Size-derived defaults for the rows. The panel is teleported to <body>, so it inherits
    * nothing from the component and has to carry them itself (#123).
@@ -61,10 +59,11 @@ let rowsHeight: number | undefined;
 function measureRows() {
   rowsHeight = undefined;
   const panel = el.value;
-  if (!panel || !props.maxVisible) return;
+  const n = props.maxVisible;
+  if (!panel || !n || !Number.isInteger(n) || n < 1) return; // off, or not a usable count
   const rows = panel.querySelectorAll<HTMLElement>('[role="option"]');
-  if (rows.length <= props.maxVisible) return; // nothing to cap
-  const bottom = rows[props.maxVisible - 1];
+  if (rows.length <= n) return; // nothing to cap
+  const bottom = rows[n - 1];
   // offsetTop runs from the panel's padding edge (the panel is fixed, so it is the rows'
   // offsetParent); add the bottom padding and the borders for a border-box max-height.
   const borders = panel.offsetHeight - panel.clientHeight;
@@ -79,16 +78,22 @@ function reposition() {
   position.value = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight }).styles;
 }
 
-// Re-measure once the rows for a new count have rendered.
+// Re-measure when the rows change — added, removed or replaced, including a new list of
+// the same length with taller rows. Arrow keys only change classes, which this ignores.
+let rowsObserver: MutationObserver | undefined;
 watch(
-  () => props.optionCount,
-  () => {
-    if (!props.open || !props.maxVisible) return;
-    nextTick(() => {
+  () => (props.open && props.maxVisible ? el.value : null),
+  (panel) => {
+    rowsObserver?.disconnect();
+    rowsObserver = undefined;
+    if (!panel || typeof MutationObserver === "undefined") return;
+    rowsObserver = new MutationObserver(() => {
       measureRows();
       reposition();
     });
+    rowsObserver.observe(panel, { childList: true, subtree: true });
   },
+  { flush: "post" },
 );
 
 // Placed before it renders, so no frame shows at the wrong spot; and again after, since
@@ -138,6 +143,7 @@ watch(
 onScopeDispose(() => {
   cancelAnimationFrame(frame);
   resizeObserver?.disconnect();
+  rowsObserver?.disconnect();
 });
 
 const tokens = computed(() => {

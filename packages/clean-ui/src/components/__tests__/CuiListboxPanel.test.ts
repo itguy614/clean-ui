@@ -66,4 +66,21 @@ describe("CuiListboxPanel", () => {
     await w.trigger("mouseenter");
     expect(w.emitted("hover")).toHaveLength(1); // a disabled row doesn't take the highlight
   });
+
+  it("ignores a maxVisible that isn't a positive whole number", async () => {
+    const anchor = document.createElement("div");
+    document.body.append(anchor);
+    const rows = Array.from({ length: 6 }, (_, i) => h(CuiListboxOption, { id: `o${i}` }, () => `Row ${i}`));
+    for (const maxVisible of [2.5, -1, 0]) {
+      const w = mount(CuiListboxPanel, {
+        attachTo: document.body,
+        props: { open: true, anchor, tokenPrefix: "combobox", maxHeight: 300, maxVisible, fontSize: "14px", itemPadding: "4px" },
+        slots: { default: () => rows },
+      });
+      await nextTick();
+      await nextTick();
+      expect(document.querySelector<HTMLElement>(".cui-listbox-panel")!.style.maxHeight).not.toBe("");
+      w.unmount();
+    }
+  });
 });

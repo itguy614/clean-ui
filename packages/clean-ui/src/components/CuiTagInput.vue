@@ -83,6 +83,8 @@ const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
 const internalLoading = ref(false);
+/** The query the last completed fetch answered, so an empty result is only claimed for it. */
+const searchedQuery = ref<string | null>(null);
 const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
@@ -166,7 +168,9 @@ function onInput(e: Event) {
     debounceTimer = setTimeout(async () => {
       internalLoading.value = true;
       try {
-        asyncSuggestions.value = await props.fetchSuggestions!(query.value);
+        const q = query.value;
+        asyncSuggestions.value = await props.fetchSuggestions!(q);
+        searchedQuery.value = q;
       } finally {
         internalLoading.value = false;
       }
@@ -203,15 +207,23 @@ function removeTag(value: string) {
 // The ARIA combobox pattern, editable (#205) — see useListbox. The create row is the last
 // option. Its own Enter stays here: it creates as well as selects.
 const generatedId = useCuiId("tag-input");
-// The list shows when there is something in it — suggestions, the create row, a search in
-// progress — or, once something is typed, to say nothing matched. aria-expanded follows it.
+// The empty state (#212): something typed, nothing to list, and nothing to create. With
+// async suggestions, only once a search for this query has actually come back — not below
+// minChars, nor during the debounce before the search starts.
+const nothingFound = computed(
+  () =>
+    !!query.value.trim() &&
+    !isLoading.value &&
+    filteredSuggestions.value.length === 0 &&
+    !canCreate.value &&
+    (!props.fetchSuggestions || searchedQuery.value === query.value),
+);
+// The list shows when there is something in it, or to say nothing matched; aria-expanded
+// follows it.
 const panelOpen = computed(
-  () => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || !!query.value.trim()),
+  () => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value),
 );
-// The empty state (#212): open, but with nothing to list.
-const showEmpty = computed(
-  () => panelOpen.value && !isLoading.value && filteredSuggestions.value.length === 0 && !canCreate.value,
-);
+const showEmpty = computed(() => isOpen.value && nothingFound.value);
 const listbox = useListbox({
   id: props.id ?? generatedId,
   mode: "editable",

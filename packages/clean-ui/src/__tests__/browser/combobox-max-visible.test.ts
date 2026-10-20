@@ -28,4 +28,17 @@ describe("CuiCombobox maxVisible (real browser)", () => {
     const panel = document.querySelector<HTMLElement>(".cui-combobox__dropdown")!;
     expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight); // the rest scrolls
   });
+
+  // Review of #212: the height was re-measured only when the option count changed, so a
+  // new list of the same length with taller rows kept the old height.
+  it("re-measures when the rows change but their count doesn't", async () => {
+    const el = host({ position: "fixed", left: "20px", top: "20px", width: "240px" });
+    const w = track(mount(CuiCombobox, { attachTo: el, props: { options, maxVisible: 4 } }));
+    await userEvent.click(el.querySelector("input")!);
+    await frames(4);
+    expect(visibleRows()).toBe(4);
+    await w.setProps({ options: options.map((o) => ({ ...o, description: "A second line of detail" })) });
+    await frames(6);
+    expect(visibleRows()).toBe(4);
+  });
 });

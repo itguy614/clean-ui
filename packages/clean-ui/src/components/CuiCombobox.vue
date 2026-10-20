@@ -393,7 +393,6 @@ function optionClass(index: number, option: ComboboxOption) {
       token-prefix="combobox"
       :max-height="320"
       :max-visible="maxVisible"
-      :option-count="filteredOptions.length"
       :font-size="cfg.style['--_combobox-font-size']"
       :item-padding="cfg.style['--_combobox-item-padding']"
       v-bind="listbox.panelAttrs.value"
