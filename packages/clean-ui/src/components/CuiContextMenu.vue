@@ -2,6 +2,7 @@
 import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 
 /**
  * How the menu can be summoned.
@@ -78,10 +79,6 @@ function closeAll() {
   close();
 }
 
-/** Gap kept between the panel and the viewport edge. */
-const VIEWPORT_PADDING = 16;
-/** Tallest the panel gets before it scrolls internally, however much room there is. */
-const MAX_PANEL_HEIGHT = 400;
 
 function positionAtCursor(x: number, y: number) {
   // First pass: place the panel at the cursor with NO maxHeight, so it lays out
@@ -96,7 +93,7 @@ function positionAtCursor(x: number, y: number) {
   // uses to avoid showing an unpositioned panel (#88).
   menuStyle.value = {
     position: "fixed",
-    zIndex: "9990",
+    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
     visibility: "hidden",
@@ -117,12 +114,12 @@ function positionAtCursor(x: number, y: number) {
 
     const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
     const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
-    const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
-    const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
+    const fitsBelow = Math.min(roomBelow, PANEL_MAX_HEIGHT);
+    const fitsAbove = Math.min(roomAbove, PANEL_MAX_HEIGHT);
 
     const adjusted: Record<string, string> = {
       position: "fixed",
-      zIndex: "9990",
+      zIndex: OVERLAY_Z_INDEX,
       left: `${x}px`,
       top: `${y}px`,
     };

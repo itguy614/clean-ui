@@ -14,7 +14,7 @@
 - Vue 3.5+ / TypeScript / Tailwind CSS v4 / Vite 6
 - Component prefix: `Cui` (CuiButton, CuiGrid, etc.)
 - Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon name the library renders must be statically imported into `src/icons/builtin.ts`** — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
-- Positioning: `@floating-ui/vue` for tooltips; manual `computeDropdownPosition` for dropdowns/select
+- Positioning: `@floating-ui/vue` for tooltips and popovers; `computeDropdownPosition` (`utils/position.ts`) for every trigger-anchored panel: dropdowns, select, combobox, tag input
 
 ## Build & Dev
 - This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
@@ -127,6 +127,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
+- `utils/position.ts` — `computeDropdownPosition(anchor, side, { matchWidth, maxHeight, offset, viewportPadding })` returns `{ styles, side }` (the side after flipping, for `transform-origin`); `OVERLAY_Z_INDEX` (`var(--cui-z-overlay, 9990)` — a consumer can re-layer the library), `PANEL_OFFSET`, `VIEWPORT_PADDING`, `PANEL_MAX_HEIGHT`. Never write a bare `9990`, inline or in CSS — `utils/__tests__/position.test.ts` fails on it.
 - `composables/useClickOutside.ts` — shared click-outside detection
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
@@ -172,7 +173,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 ### Floating Elements (Tooltip, Dropdown, Select)
 - CuiTooltip uses `usePopover` (Floating UI) — reactive positioning works here because tooltip has a show delay
 - CuiDropdown uses synchronous `computeDropdownPosition()` — avoids the async Floating UI timing issue with `v-if`
-- CuiSelect uses its own inline `positionDropdown()` (same approach as Dropdown)
+- CuiSelect, CuiCombobox and CuiTagInput use the same `computeDropdownPosition()` with `{ matchWidth: true, maxHeight }` — never write a local positioner (#204)
 - Dropdown closes on scroll by default; `pinned` prop keeps it open and repositions
 - Dropdown has animated close: `isClosing` state plays exit animation before removing from DOM
 - Sub-menus inherit parent trigger mode by default, `trigger` prop to override

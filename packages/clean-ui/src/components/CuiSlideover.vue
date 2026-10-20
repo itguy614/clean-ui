@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
 import { useOverlay } from "../composables/useOverlay";
+import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -147,7 +148,7 @@ const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
       v-if="isVisible"
       v-show="!hidden"
       class="cui-slideover-overlay"
-      :style="{ position: 'fixed', inset: '0', zIndex: '9990' }"
+      :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
