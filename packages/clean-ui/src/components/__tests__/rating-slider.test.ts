@@ -69,9 +69,52 @@ describe("CuiRating as a slider", () => {
     expect(w.emitted("update:modelValue")).toBeUndefined();
   });
 
+  it("never raises an unset value with a decrease key when 0 is out of reach", async () => {
+    const w = mount(CuiRating, { props: { modelValue: 0, clearable: false } });
+    await press(w, "ArrowLeft");
+    await press(w, "Home");
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+    expect(slider(w).attributes("aria-valuemin")).toBe("0");
+    await w.setProps({ modelValue: 2 });
+    expect(slider(w).attributes("aria-valuemin")).toBe("1");
+  });
+
+  it("snaps a value off the step grid onto it", async () => {
+    const w = mount(CuiRating, { props: { modelValue: 2.5 } });
+    await press(w, "ArrowRight");
+    await press(w, "ArrowLeft");
+    expect(w.emitted("update:modelValue")).toEqual([[3], [2]]);
+  });
+
+  it("reports a value clamped to the range and free of float noise", async () => {
+    const w = mount(CuiRating, { props: { modelValue: 3.3000000000000003 } });
+    expect(slider(w).attributes("aria-valuetext")).toBe("3.3 of 5 stars");
+    await w.setProps({ modelValue: 7 });
+    expect(slider(w).attributes("aria-valuenow")).toBe("5");
+  });
+
+  it("mirrors the horizontal arrows in a right-to-left page", async () => {
+    const w = mount(CuiRating, { props: { modelValue: 3 }, attachTo: document.body });
+    (slider(w).element as HTMLElement).style.direction = "rtl";
+    await press(w, "ArrowRight");
+    await press(w, "ArrowLeft");
+    expect(w.emitted("update:modelValue")).toEqual([[2], [4]]);
+    w.unmount();
+  });
+
+  it("shows the keyed value even with the pointer resting on the stars", async () => {
+    const w = mount(CuiRating, { props: { modelValue: 2 } });
+    const stars = w.findAll('[aria-hidden="true"]').filter((s) => s.element.tagName === "DIV");
+    await stars[4].trigger("mousemove");
+    await press(w, "ArrowRight");
+    await w.setProps({ modelValue: 3 });
+    // Three filled stars, not the five the hover was previewing.
+    expect(w.findAll("[style*='scale(1.15)']")).toHaveLength(0);
+  });
+
   it("is out of the tab order and inert to keys while disabled", async () => {
     const w = mount(CuiRating, { props: { modelValue: 2, disabled: true } });
-    expect(slider(w).attributes("tabindex")).toBe("-1");
+    expect(slider(w).attributes("tabindex")).toBeUndefined();
     expect(slider(w).attributes("aria-disabled")).toBe("true");
     await press(w, "ArrowRight");
     expect(w.emitted("update:modelValue")).toBeUndefined();

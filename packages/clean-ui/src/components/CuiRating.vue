@@ -120,7 +120,9 @@ const labelId = useCuiId("rating-label");
 const step = computed(() => (props.half ? 0.5 : 1));
 // Clearable means 0 is reachable; otherwise the lowest rating is one step.
 const lowest = computed(() => (props.clearable ? 0 : step.value));
-const valueText = computed(() => messages.value.rating.valueText(props.modelValue, props.max));
+// The value as announced: within the range, and free of float noise from upstream arithmetic.
+const shownValue = computed(() => Math.round(Math.min(props.max, Math.max(0, props.modelValue)) * 100) / 100);
+const valueText = computed(() => messages.value.rating.valueText(shownValue.value, props.max));
 
 const controlId = useCuiId("rating");
 
@@ -134,41 +136,58 @@ const controlAttrs = computed(() =>
       }
     : {
         role: "slider",
-        tabindex: props.disabled ? -1 : 0,
-        "aria-valuemin": 0,
+        // No tabindex at all while disabled, so a click can't focus it either.
+        tabindex: props.disabled ? undefined : 0,
+        // An unset 0 is still reported as 0, even where the keys can't go back to it.
+        "aria-valuemin": shownValue.value >= lowest.value ? lowest.value : 0,
         "aria-valuemax": props.max,
-        "aria-valuenow": props.modelValue,
+        "aria-valuenow": shownValue.value,
         "aria-valuetext": valueText.value,
         "aria-labelledby": props.label ? labelId : undefined,
         "aria-disabled": props.disabled || undefined,
       },
 );
 
+// One step up or down from `v`, from the step grid: a value off it (2.5 without `half`)
+// lands on the grid rather than staying off it.
+const EPS = 1e-9;
+const stepUp = (v: number) => Math.floor(v / step.value + EPS) * step.value + step.value;
+const stepDown = (v: number) => Math.ceil(v / step.value - EPS) * step.value - step.value;
+
 function onKeydown(e: KeyboardEvent) {
   if (!interactive.value || e.altKey || e.ctrlKey || e.metaKey) return;
   const v = props.modelValue;
+  // Horizontal arrows follow the stars, which fill from the right in a right-to-left page.
+  const rtl = !!controlEl.value && getComputedStyle(controlEl.value).direction === "rtl";
   let next: number;
+  let up: boolean;
   switch (e.key) {
     case "ArrowRight":
-    case "ArrowUp":
-      next = v + step.value;
-      break;
     case "ArrowLeft":
+      up = (e.key === "ArrowRight") !== rtl;
+      next = up ? stepUp(v) : stepDown(v);
+      break;
+    case "ArrowUp":
+      [up, next] = [true, stepUp(v)];
+      break;
     case "ArrowDown":
-      next = v - step.value;
+      [up, next] = [false, stepDown(v)];
       break;
     case "Home":
-      next = lowest.value;
+      [up, next] = [false, lowest.value];
       break;
     case "End":
-      next = props.max;
+      [up, next] = [true, props.max];
       break;
     default:
       return;
   }
   e.preventDefault();
+  // The pointer may be resting on the stars: show the value the keys set, not its preview.
+  isHovering.value = false;
   next = Math.min(props.max, Math.max(lowest.value, next));
-  if (next !== v) emit("update:modelValue", next);
+  // A decrease never raises the value (an unset 0 when 0 is out of reach), nor the reverse.
+  if (up ? next > v : next < v) emit("update:modelValue", next);
 }
 
 // Expose imperative handle — the slider is the focusable element
