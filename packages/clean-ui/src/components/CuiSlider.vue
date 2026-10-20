@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, useId, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
@@ -54,7 +55,7 @@ const dragging = ref(false);
 
 // The visible label has to point at the native input to name it; generate an id when
 // the caller supplies none (#172).
-const generatedId = `cui-slider-${useId()}`;
+const generatedId = useCuiId("slider");
 const inputId = computed(() => props.id || generatedId);
 
 function onInput(e: Event) {

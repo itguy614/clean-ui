@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
-import { h } from "vue";
+import { defineComponent, h } from "vue";
 import CuiAccordion from "../CuiAccordion.vue";
 import CuiAccordionItem from "../CuiAccordionItem.vue";
 
@@ -103,5 +103,36 @@ describe("CuiAccordion", () => {
 
     expect(trigger.attributes("aria-expanded")).toBe("false");
     expect(wrapper.emitted("update:modelValue")).toBeFalsy();
+  });
+});
+
+// #272: item ids were built from `value` alone, so two accordions sharing item values
+// rendered duplicate ids and their ARIA references resolved to the wrong accordion.
+describe("CuiAccordion ids across instances", () => {
+  it("gives each item its own ids, and its references resolve within its own accordion", () => {
+    const wrapper = mount(
+      defineComponent(() => () =>
+        ["First", "Second"].map((name) =>
+          h(CuiAccordion, { "data-name": name }, () => [
+            h(CuiAccordionItem, { value: "1", label: `${name} one` }, () => "a"),
+            h(CuiAccordionItem, { value: "2", label: `${name} two` }, () => "b"),
+          ]),
+        ),
+      ),
+      { attachTo: document.body },
+    );
+    const ids = [...document.querySelectorAll("[id]")].map((el) => el.id).filter((id) => id.startsWith("cui-accordion"));
+    expect(ids.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    for (const acc of wrapper.findAll("[data-name]")) {
+      for (const trigger of acc.findAll("[aria-controls]")) {
+        const panel = document.getElementById(trigger.attributes("aria-controls")!);
+        expect(panel, "aria-controls resolves").not.toBeNull();
+        expect(acc.element.contains(panel)).toBe(true);
+        expect(document.getElementById(panel!.getAttribute("aria-labelledby")!)).toBe(trigger.element);
+      }
+    }
+    wrapper.unmount();
   });
 });

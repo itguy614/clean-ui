@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -44,7 +45,7 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
 
 // The dialog assembles its own header, so CuiModal has no `title` to name itself from —
 // without this the confirm dialog had no accessible name at all (#158).
-const titleId = `cui-confirm-dialog-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("confirm-dialog-title");
 
 const messages = useMessages();
 

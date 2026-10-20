@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { provide, toRef, computed } from "vue";
 import CuiToast from "./CuiToast.vue";
+import { POPOVER_Z_INDEX } from "../utils/position";
 import {
   ToastContextKey,
   createToastState,
@@ -36,7 +37,7 @@ const containerStyle = computed(() => {
   const p = props.position;
   const style: Record<string, string> = {
     position: "fixed",
-    zIndex: "9998",
+    zIndex: POPOVER_Z_INDEX, // above an open modal
     display: "flex",
     flexDirection: "column",
     gap: "calc(0.5rem * var(--cui-density-scale, 1))",

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, shallowRef, provide, watch, onMounted, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 
 /**
  * How the menu can be summoned.
@@ -55,7 +57,7 @@ const menuStyle = ref<Record<string, string>>({});
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Unique ID for click-outside detection on teleported menu
-const contextMenuId = `cui-ctx-${Math.random().toString(36).slice(2, 8)}`;
+const contextMenuId = useCuiId("context-menu");
 
 function open() {
   if (props.disabled) return;
@@ -77,11 +79,6 @@ function close() {
 function closeAll() {
   close();
 }
-
-/** Gap kept between the panel and the viewport edge. */
-const VIEWPORT_PADDING = 16;
-/** Tallest the panel gets before it scrolls internally, however much room there is. */
-const MAX_PANEL_HEIGHT = 400;
 
 // Where the panel was last opened. A fresh object per open, so re-opening at the same spot
 // still re-measures.
@@ -108,7 +105,7 @@ function positionAtCursor(x: number, y: number) {
   // entry animation means it plays from the start once the panel is placed.
   menuStyle.value = {
     position: "fixed",
-    zIndex: "9990",
+    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
     opacity: "0",
@@ -116,7 +113,7 @@ function positionAtCursor(x: number, y: number) {
     animation: "none",
   };
 
-  // Measured by the post-flush watcher below, once the panel has rendered.
+  // Measured by the post-flush watcher above, once the panel has rendered.
   anchor.value = { x, y };
 }
 
@@ -135,12 +132,12 @@ function measure({ x, y }: { x: number; y: number }) {
 
   const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
   const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
-  const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
-  const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
+  const fitsBelow = Math.min(roomBelow, PANEL_MAX_HEIGHT);
+  const fitsAbove = Math.min(roomAbove, PANEL_MAX_HEIGHT);
 
   const adjusted: Record<string, string> = {
     position: "fixed",
-    zIndex: "9990",
+    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
   };

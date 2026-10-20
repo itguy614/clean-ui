@@ -154,8 +154,8 @@
 
   /* --- Radius scale ---
      One source for corner radii. Component tokens alias these rather than each other:
-     `--cui-banner-radius` used to default to `--cui-card-radius`, and the shared radiusMap
-     defaults `md` to `--cui-button-radius`, so a component's corners were defined in terms
+     `--cui-banner-radius` used to default to `--cui-card-radius`, and the shared scale
+     (`RADIUS_SCALE`, utils/sizing.ts) defaults `md` to `--cui-button-radius` (#294), so a component's corners were defined in terms
      of another component's. Retheming meant discovering which one happened to be the
      reference (#141). Override the scale to move every component together; override a
      component token to move just that one.

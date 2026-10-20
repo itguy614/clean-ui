@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, watch, nextTick, computed, onMounted, onUnmounted } from "vue";
-import { DropdownContextKey, computeDropdownPosition } from "./dropdown-context";
+import { DropdownContextKey } from "./dropdown-context";
+import { computeDropdownPosition } from "../utils/position";
 
 export interface CuiDropdownMenuProps {
   /** Min width of the menu */

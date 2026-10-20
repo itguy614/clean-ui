@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
+import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -138,7 +140,7 @@ const panelStyle = computed(() => {
 });
 
 // Generate id for aria-labelledby
-const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("slideover-title");
 </script>
 
 <template>
@@ -147,7 +149,7 @@ const titleId = `cui-slideover-title-${Math.random().toString(36).slice(2, 8)}`;
       v-if="isVisible"
       v-show="!hidden"
       class="cui-slideover-overlay"
-      :style="{ position: 'fixed', inset: '0', zIndex: '9990' }"
+      :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
