@@ -30,7 +30,7 @@ const meta: ComponentMeta = {
   ],
 
   methods: [
-    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the file input; the drop zone shows the focus ring" },
+    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the file input. The drop zone draws the focus ring when focus came from the keyboard (:focus-visible)" },
     { name: "blur", signature: "() => void", description: "Blur the file input" },
     { name: "el", signature: "HTMLElement | null", description: "The root element" },
   ],

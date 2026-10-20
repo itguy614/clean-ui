@@ -16,9 +16,9 @@ afterEach(() => {
 
 const input = () => w!.find('input[type="file"]').element as HTMLInputElement;
 
-function addFile(name = "report.pdf") {
-  const file = new File(["x"], name, { type: "application/pdf" });
-  Object.defineProperty(input(), "files", { value: [file], configurable: true });
+function addFile(...names: string[]) {
+  const files = (names.length ? names : ["report.pdf"]).map((n) => new File(["x"], n, { type: "application/pdf" }));
+  Object.defineProperty(input(), "files", { value: files, configurable: true });
   input().dispatchEvent(new Event("change"));
 }
 
@@ -62,6 +62,37 @@ describe("CuiFileUpload keyboard and naming", () => {
     addFile("report.pdf");
     await w.vm.$nextTick();
     expect(w.find(".cui-file-upload__remove").attributes("aria-label")).toBe("Remove report.pdf");
+  });
+
+  it("is named by the label prop alone, with the hint as its description, not its name", () => {
+    w = mount(CuiFileUpload, { props: { label: "Attachments", accept: ".pdf" }, attachTo: document.body });
+    expect(document.getElementById(input().getAttribute("aria-labelledby")!)?.textContent).toBe("Attachments");
+    const hint = document.getElementById(input().getAttribute("aria-describedby")!)!;
+    expect(hint.getAttribute("aria-hidden")).toBe("true"); // out of the drop zone label's name
+  });
+
+  it("hands focus to the next remove button, then to the input, as files are removed", async () => {
+    w = mount(CuiFileUpload, { attachTo: document.body });
+    addFile("a.pdf", "b.pdf");
+    await w.vm.$nextTick();
+    const removes = () => w!.findAll(".cui-file-upload__remove");
+    (removes()[0].element as HTMLElement).focus();
+    await removes()[0].trigger("click");
+    await w.vm.$nextTick();
+    expect(document.activeElement).toBe(removes()[0].element);
+    expect(removes()[0].attributes("aria-label")).toBe("Remove b.pdf");
+    await removes()[0].trigger("click");
+    await w.vm.$nextTick();
+    expect(document.activeElement).toBe(input());
+  });
+
+  it("returns focus to the input after Clear all", async () => {
+    w = mount(CuiFileUpload, { attachTo: document.body });
+    addFile();
+    await w.vm.$nextTick();
+    await w.findAll("button.cui-button")[0].trigger("click");
+    await w.vm.$nextTick();
+    expect(document.activeElement).toBe(input());
   });
 
   it("disables the input and the list's buttons when disabled", async () => {

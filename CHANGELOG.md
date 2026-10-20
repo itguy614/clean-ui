@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CuiFileUpload can be operated from the keyboard (#169). The file input is visually hidden
   but stays in the tab order (it was `display: none`), so Enter or Space opens the file
   dialog, and the drop zone is a `<label>` for it that draws its focus ring. The `label`
-  prop now labels the input, the accept and size hint describes it, each remove button is
+  prop now labels the input (so clicking its text opens the dialog too), the accept and size hint describes it, each remove button is
   named after its file (`fileUpload.removeFile`), `focus()` focuses the input, and
   `disabled` disables the input and the list's buttons. This adds a tab stop, so a
   focus-order snapshot will change.
