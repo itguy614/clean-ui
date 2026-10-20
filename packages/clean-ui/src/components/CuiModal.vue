@@ -151,7 +151,7 @@ const titleId = useCuiId("modal-title");
 .cui-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9990;
+  z-index: var(--cui-z-overlay, 9990); /* OVERLAY_Z_INDEX in utils/position.ts */
   display: flex;
   align-items: flex-start;
   justify-content: center;

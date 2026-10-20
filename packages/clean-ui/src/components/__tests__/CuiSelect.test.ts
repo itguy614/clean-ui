@@ -105,3 +105,24 @@ describe("CuiSelect behavior", () => {
     wrapper.unmount();
   });
 });
+
+// #204: CuiSelect carried its own positioner, the one copy without a clamp, so a trigger
+// with no room on either side emitted a negative max-height.
+describe("CuiSelect panel position", () => {
+  it("never emits a negative max-height", async () => {
+    const innerHeight = window.innerHeight;
+    window.innerHeight = 20;
+    const wrapper = mount(CuiSelect, { props: { options: OPTIONS }, attachTo: document.body });
+    try {
+      const trigger = wrapper.find(".cui-select__trigger");
+      trigger.element.getBoundingClientRect = () =>
+        ({ top: 0, bottom: 20, left: 0, right: 100, width: 100, height: 20, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      await trigger.trigger("click");
+      const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
+      expect(parseFloat(panel.style.maxHeight)).toBe(0);
+    } finally {
+      wrapper.unmount();
+      window.innerHeight = innerHeight;
+    }
+  });
+});

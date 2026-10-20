@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
+import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -176,36 +177,13 @@ function updateDropdownPosition() {
   // trigger; this matches it.
   const anchor = controlRef.value ?? wrapperRef.value;
   if (!anchor) return;
-  const rect = anchor.getBoundingClientRect();
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom;
-  const spaceAbove = rect.top;
-  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-  // Bound by the side actually being opened to. Taking the roomier side
-  // regardless let a panel opened upward be taller than the room above it, and
-  // run off the top of the viewport.
-  const maxH = Math.max(0, Math.min(320, (openAbove ? spaceAbove : spaceBelow) - 16));
-
-  const s: Record<string, string> = {
+  dropdownStyle.value = {
     // The panel is teleported to <body>, so it inherits nothing from the component — it
-    // has to carry the size-derived properties itself (#123).
+    // has to carry the size-derived properties itself (#123). Only the geometry stays
+    // inline; the panel's paint lives in the stylesheet so it can be themed.
     ...cfg.value.style,
-    position: "fixed",
-    zIndex: "9990",
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: `${maxH}px`,
-    // Only the geometry the positioner computes stays inline; the panel's paint lives in
-    // the stylesheet so it can be themed (#123).
+    ...computeDropdownPosition(anchor, "bottom", { matchWidth: true, maxHeight: 320 }).styles,
   };
-
-  if (openAbove) {
-    s.bottom = `${vh - rect.top + 4}px`;
-  } else {
-    s.top = `${rect.bottom + 4}px`;
-  }
-
-  dropdownStyle.value = s;
 }
 
 // Search

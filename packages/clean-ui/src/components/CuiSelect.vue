@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
+import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
@@ -286,22 +287,7 @@ const dropdownStyle = ref<Record<string, string>>({});
 
 function positionDropdown() {
   if (!triggerRef.value) return;
-  const rect = triggerRef.value.getBoundingClientRect();
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom;
-  const dropAbove = spaceBelow < 200 && rect.top > spaceBelow;
-  const maxH = Math.min(dropAbove ? rect.top - 16 : spaceBelow - 16, 300);
-
-  dropdownStyle.value = {
-    position: "fixed",
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: `${maxH}px`,
-    zIndex: "9990",
-    ...(dropAbove
-      ? { bottom: `${vh - rect.top + 4}px` }
-      : { top: `${rect.bottom + 4}px` }),
-  };
+  dropdownStyle.value = computeDropdownPosition(triggerRef.value, "bottom", { matchWidth: true, maxHeight: 300 }).styles;
 }
 
 // Expose

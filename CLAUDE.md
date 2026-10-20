@@ -14,7 +14,7 @@
 - Vue 3.5+ / TypeScript / Tailwind CSS v4 / Vite 6
 - Component prefix: `Cui` (CuiButton, CuiGrid, etc.)
 - Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon the library renders *by name* must be statically imported into `src/icons/builtin.ts`** (new components pass the icon component instead — see "Conventions ahead of migration") — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
-- Positioning: `@floating-ui/vue` for tooltips; manual `computeDropdownPosition` for dropdowns/select
+- Positioning: `@floating-ui/vue` for tooltips and popovers; `computeDropdownPosition` (`utils/position.ts`) for every trigger-anchored panel: dropdowns, select, combobox, tag input
 
 ## Build & Dev
 - This is a **pnpm** workspace (pnpm ≥ 10). Use `pnpm`, not npm/yarn, for all dev tasks.
@@ -130,6 +130,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
 - `composables/useCuiId.ts` — `useCuiId(prefix)` → `cui-<prefix>-<useId()>`, for every id a component generates itself (titles, labels, ARIA references). SSR-stable; never `Math.random()` (#182). Call it in setup; unique per Vue app.
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
+- `utils/position.ts` — `computeDropdownPosition(anchor, side, { matchWidth, maxHeight, offset, viewportPadding })` returns `{ styles, side }` (the side after flipping, for `transform-origin`); the z-index scale (`OVERLAY_Z_INDEX`, `POPOVER_Z_INDEX`, `TOOLTIP_Z_INDEX`, all derived from `--cui-z-overlay` so a consumer re-layers the whole library at once), `PANEL_OFFSET`, `VIEWPORT_PADDING`, `PANEL_MAX_HEIGHT`. Never write a bare `99xx` z-index, inline or in CSS — `utils/__tests__/position.test.ts` fails on it.
 - `composables/useClickOutside.ts` — shared click-outside detection
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
@@ -202,7 +203,7 @@ should not need a later "make it consistent" PR.
 ### Floating Elements (Tooltip, Dropdown, Select)
 - CuiTooltip uses `usePopover` (Floating UI) — reactive positioning works here because tooltip has a show delay
 - CuiDropdown uses synchronous `computeDropdownPosition()` — avoids the async Floating UI timing issue with `v-if`
-- CuiSelect uses its own inline `positionDropdown()` (same approach as Dropdown)
+- CuiSelect, CuiCombobox and CuiTagInput use the same `computeDropdownPosition()` with `{ matchWidth: true, maxHeight }` — never write a local positioner (#204)
 - Dropdown closes on scroll by default; `pinned` prop keeps it open and repositions
 - Dropdown has animated close: `isClosing` state plays exit animation before removing from DOM
 - Sub-menus inherit parent trigger mode by default, `trigger` prop to override
@@ -218,7 +219,7 @@ should not need a later "make it consistent" PR.
 ### Overlay Components (Modal, Dropdown, Backdrop)
 - CuiModal: simple mode (title prop auto-renders header+body) OR sub-component mode (CuiModalHeader/Body/Footer)
 - CuiBackdrop: configurable opacity, blur, color, image, gradient. Uses `position: absolute` (not fixed) inside the modal overlay.
-- Modal z-index: overlay=9990, container=2 (above backdrop at z-index=0)
+- z-index scale (`utils/position.ts`), all from `--cui-z-overlay` (default 9990): `OVERLAY_Z_INDEX` for modal/slideover overlays and anchored panels, `POPOVER_Z_INDEX` (+8) for popovers and toasts, `TOOLTIP_Z_INDEX` (+9). Inside a modal: container=2, above the backdrop at 0.
 
 ## Slots vs Sub-Components
 
