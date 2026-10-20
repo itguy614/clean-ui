@@ -63,6 +63,9 @@ export interface CuiCoreMessages {
     /** Hint shown until `minChars` is reached. */
     typeMore: (remaining: number) => string;
   };
+  tagInput: {
+    searching: string;
+  };
   confirmDialog: {
     title: string;
     confirm: string;
@@ -128,6 +131,9 @@ export const defaultMessages: CuiCoreMessages = {
     searching: "Searching…",
     typeMore: (remaining) =>
       `Type ${remaining} more character${remaining === 1 ? "" : "s"}…`,
+  },
+  tagInput: {
+    searching: "Searching…",
   },
   confirmDialog: {
     title: "Are you sure?",

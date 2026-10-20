@@ -171,6 +171,7 @@ describe("every component root is inside the scope", () => {
     "CuiToastProvider.vue": "renderless (its toast container is classed separately)",
     // <Teleport> is not an element; the element it teleports carries the class.
     "CuiDropdownMenu.vue": "teleports .cui-dropdown-menu",
+    "CuiListboxPanel.vue": "teleports .cui-listbox-panel",
     "CuiModal.vue": "teleports .cui-modal-overlay",
     "CuiSlideover.vue": "teleports .cui-slideover-overlay",
     // Root is <CuiModal>, which renders a Teleport root and so cannot inherit a
