@@ -35,6 +35,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListboxStatus.vue", issue: "#212" },
   { file: "CuiInputStepper.vue", issue: "#123" },
   { file: "CuiBanner.vue", issue: "#119" },
+  { file: "CuiScrollArea.vue", issue: "#143" },
 ];
 
 /** Properties a consumer has a legitimate claim on. Layout and geometry are not here. */

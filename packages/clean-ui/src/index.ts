@@ -15,6 +15,7 @@ import CuiFlexItem from "./components/CuiFlexItem.vue";
 import CuiStack from "./components/CuiStack.vue";
 import CuiContainer from "./components/CuiContainer.vue";
 import CuiSpacer from "./components/CuiSpacer.vue";
+import CuiScrollArea from "./components/CuiScrollArea.vue";
 import CuiRadio from "./components/CuiRadio.vue";
 import CuiRadioGroup from "./components/CuiRadioGroup.vue";
 import CuiCheckbox from "./components/CuiCheckbox.vue";
@@ -104,7 +105,7 @@ import CuiRating from "./components/CuiRating.vue";
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
+export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
 
 // Type exports
 export type {
@@ -135,6 +136,7 @@ export type { CuiFlexItemProps } from "./components/CuiFlexItem.vue";
 export type { CuiStackProps } from "./components/CuiStack.vue";
 export type { CuiContainerProps, ContainerSize } from "./components/CuiContainer.vue";
 export type { CuiSpacerProps } from "./components/CuiSpacer.vue";
+export type { CuiScrollAreaProps } from "./components/CuiScrollArea.vue";
 export type { CuiRadioProps } from "./components/CuiRadio.vue";
 export type { CuiCheckboxProps } from "./components/CuiCheckbox.vue";
 export type { CuiCheckboxGroupProps } from "./components/CuiCheckboxGroup.vue";
@@ -218,6 +220,8 @@ export type { CuiDividerProps, DividerOrientation, DividerLabelPosition, Divider
 export type { CuiCopyButtonProps } from "./components/CuiCopyButton.vue";
 export { useCopyToClipboard } from "./composables/useCopyToClipboard";
 export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle } from "./composables/useScrollShadows";
+export { useScrollArea } from "./composables/useScrollArea";
+export type { UseScrollAreaOptions, ScrollAreaOrientation, ScrollAreaFade, ScrollAreaEdge } from "./composables/useScrollArea";
 export type { CuiResizablePanelsProps } from "./components/CuiResizablePanels.vue";
 export type { CuiConfirmDialogProps, ConfirmDialogVariant } from "./components/CuiConfirmDialog.vue";
 export type { CuiTimelineProps } from "./components/CuiTimeline.vue";
@@ -330,6 +334,7 @@ export function createCleanUI(_options: CleanUIOptions = {}) {
       app.component("CuiStack", CuiStack);
       app.component("CuiContainer", CuiContainer);
       app.component("CuiSpacer", CuiSpacer);
+      app.component("CuiScrollArea", CuiScrollArea);
       app.component("CuiRadio", CuiRadio);
       app.component("CuiRadioGroup", CuiRadioGroup);
       app.component("CuiCheckbox", CuiCheckbox);

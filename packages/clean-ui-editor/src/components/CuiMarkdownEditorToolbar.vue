@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, useTemplateRef } from "vue";
-import { CuiButton, CuiIcon, useScrollShadows, scrollShadowRightStyle } from "@itguy614/clean-ui";
+import { computed, nextTick, ref } from "vue";
+import { CuiButton, CuiIcon, CuiScrollArea } from "@itguy614/clean-ui";
 import type { PluginRegistry } from "../plugins/registry";
 import { useMarkdownEditorMessages } from "../composables/useMarkdownEditorMessages";
 import { resolveCommandLabel } from "../messages";
@@ -41,19 +41,6 @@ function activate(id: string, index: number) {
   props.runCommand(id);
 }
 
-// --- Overflow scrolling — reuses the same composable CuiTable/CuiModalBody
-// use, rather than re-deriving scroll-edge detection a third time. ---
-const barRef = useTemplateRef<HTMLDivElement>("bar");
-const { canScrollLeft, canScrollRight, onScroll, onMount } = useScrollShadows();
-const scrollShadowLeftStyle = {
-  ...scrollShadowRightStyle,
-  right: undefined,
-  left: "0",
-  background: "linear-gradient(to right, var(--cui-surface-base, white), transparent)",
-};
-
-onMounted(() => onMount(barRef.value));
-
 // --- Roving tabindex (one tab stop, arrow-key navigation between buttons —
 // same pattern as CuiTabs' hand-rolled keyboard nav; no shared composable
 // for this exists yet in clean-ui). ---
@@ -78,19 +65,17 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <!-- The fades are siblings of the scroller, not children of it — the arrangement
-       CuiTable uses. An absolutely-positioned child of a scroll container scrolls with
-       the content, so as children they slid out of view the moment the toolbar was
-       scrolled, which is the opposite of what an edge fade is for (#125). -->
+  <!-- The overflow is a CuiScrollArea (#143), which owns the scroller and its edge fades —
+       the arrangement this toolbar once got wrong, its fades scrolling away with the
+       buttons (#125). Not a region: the buttons are the keyboard path, one roving tab stop. -->
   <div
     class="cui-markdown-editor-toolbar"
     role="toolbar"
     :aria-label="messages.toolbarAriaLabel"
     @keydown="onKeydown"
   >
-    <!-- `scroll` does not bubble, so it binds to the scroller itself; `keydown` stays on
-         the toolbar, which is the element the roving tabindex belongs to. -->
-    <div ref="bar" class="cui-markdown-editor-toolbar__scroller" @scroll="onScroll">
+    <!-- `keydown` stays on the toolbar, which is the element the roving tabindex belongs to. -->
+    <CuiScrollArea orientation="horizontal" :region="false" class="cui-markdown-editor-toolbar__scroll">
     <!-- `solid` for the active/pressed state is a deliberate, sign-off exception
          to the library's general "subtle by default, bold by choice" rule
          (tinted `-bg`/`-border` for resting/selected state elsewhere — toggles,
@@ -115,10 +100,7 @@ function onKeydown(event: KeyboardEvent) {
         <CuiIcon :name="entry.spec.icon" size="1em" />
       </template>
     </CuiButton>
-    </div>
-
-    <div v-if="canScrollLeft" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowLeftStyle" />
-    <div v-if="canScrollRight" class="cui-markdown-editor-toolbar__shadow" :style="scrollShadowRightStyle" />
+    </CuiScrollArea>
   </div>
 </template>
 
@@ -132,7 +114,7 @@ function onKeydown(event: KeyboardEvent) {
   border-top-right-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
 }
 
-.cui-markdown-editor-toolbar__scroller {
+.cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller) {
   display: flex;
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
@@ -143,7 +125,7 @@ function onKeydown(event: KeyboardEvent) {
   border-radius: inherit;
 }
 
-.cui-markdown-editor-toolbar__scroller::-webkit-scrollbar {
+.cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {
   display: none;
 }
 

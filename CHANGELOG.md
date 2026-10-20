@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiScrollArea** and **useScrollArea** (#143): a scroll container that fades its content
+  out at an edge with more past it, with optional arrow or scroll-button indicators beside
+  the scroller (`indicator`, `indicatorVisibility`, `#indicator-start`/`#indicator-end`).
+  While its content overflows it is a named, focusable region; when it fits it adds no tab
+  stop. Edges are logical, so right-to-left pages work. `useScrollArea` is the same
+  arrangement for a scroller you render yourself, with a `mask` or `overlay` fade. New
+  message key `scrollArea.region` (a custom catalogue must add it).
+
 ### Changed
+
+- CuiTable, CuiModalBody and the markdown editor toolbar are built on the new scroll area
+  (#143). The toolbar's edge fades are now a mask on the buttons rather than painted
+  gradients, so they match any toolbar background.
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
   corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
@@ -21,8 +35,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in every trigger mode. The slot should hold exactly one element; anything else logs a
   warning.
 
+### Deprecated
+
+- `useScrollShadows` and its `scrollShadow*Style` objects, in favour of `useScrollArea` (#143).
+  Nothing in the library uses them any more; they remain exported until 2.0.
+
 ### Fixed
 
+- CuiModalBody can be scrolled from the keyboard (#143). An overflowing body is now a
+  focusable region, so a body with nothing focusable in it is no longer stuck for keyboard
+  users (WCAG 2.1.1). Its padding moved to an inner `.cui-modal-body__content` element.
+- CuiTable's wrapper is a scroll region only while the table actually overflows (#143): a
+  `maxHeight` table whose rows fit no longer adds a tab stop that scrolls nothing.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
