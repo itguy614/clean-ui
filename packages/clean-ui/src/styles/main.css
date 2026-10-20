@@ -418,27 +418,21 @@
 }
 
 /* --- Prose ---
-   Every rule for an element inside a `.cui-typography` scope lives in this one block (#147),
-   under one predicate: the element carries no `cui-*` class — or carries only one of the
-   typography layer's own classes below. A `cui-*` class otherwise means a component owns the
-   element and styles it, and a scope put around components (the docs site's `<main>`, a
-   `CuiCardBody`) must not repaint it: a card title's `<h3>` took the prose size (#129), a solid
-   link button its own background as its label colour (#114), a breadcrumb's list prose
-   markers, a table's cells the prose padding whatever its `size`. The typography helpers stay
-   in so that `<p class="cui-lead">` keeps paragraph spacing and `<pre><code class="cui-code">`
-   loses the inline-code chip, as before.
+   Every rule for an element inside a `.cui-typography` scope lives in the two blocks below
+   (#147), each under an exclusion: an element carrying a component's `cui-*` class belongs
+   to that component, which styles it, and a scope put around components (the docs site's
+   `<main>`, a `CuiCardBody`) must not repaint it — a card title's `<h3>` took the prose size
+   (#129), a solid link button its background as its label colour (#114), a breadcrumb's list
+   the prose markers, a table's cells the prose padding whatever its `size`.
 
-   Specificity is what it was: each rule is `.cui-typography <el>`, (0,1,1). The predicate is
-   `:where()`, so it adds nothing; each element is `&:is(el)`, which adds the (0,0,1) the old
-   `.cui-typography el` had; and a descendant condition is a `:where(.cui-typography x *)`
-   suffix rather than a combinator, so `pre code` or `ul ul` stays (0,1,1) and wins by coming
-   later. `styles/__tests__/typography-exclusion.test.ts` fails on a `.cui-typography` element
-   rule outside this block. */
-.cui-typography :where(
-  :not([class^="cui-"]):not([class*=" cui-"]),
-  .cui-lead, .cui-small, .cui-text-body, .cui-text-secondary, .cui-text-tertiary, .cui-text-emphasis,
-  .cui-code, .cui-kbd, .cui-pre, .cui-mark, .cui-blockquote, .cui-blockquote-footer
-) {
+   Specificity is what each rule had as `.cui-typography <selector>`: the predicates are
+   `:where()`, adding nothing, and the element is `&:is(el)` — or `&:is(pre code)` for a
+   descendant one — adding exactly the type selectors the old form had.
+   `styles/__tests__/typography-exclusion.test.ts` fails on a `.cui-typography` element rule
+   anywhere else. */
+
+/* Headings and links: any `cui-*` class excludes, a typography helper's too, as since #129. */
+.cui-typography :where(:not([class^="cui-"]):not([class*=" cui-"])) {
   /* Headings */
   &:is(h1, h2, h3, h4, h5, h6) {
     font-weight: var(--cui-heading-font-weight);
@@ -462,17 +456,6 @@
     &:is(h3) { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
   }
 
-  /* Paragraphs */
-  &:is(p) {
-    margin-top: 0;
-    margin-bottom: var(--cui-paragraph-margin-bottom);
-    color: var(--cui-text-body);
-  }
-
-  &:is(small) {
-    font-size: var(--cui-font-size-small);
-  }
-
   /* Links */
   &:is(a) {
     color: var(--cui-text-link);
@@ -484,6 +467,29 @@
   &:is(a):hover {
     color: var(--cui-text-link-hover);
   }
+}
+
+/* The rest of prose. Here the typography layer's own helpers are let through — so
+   `<p class="cui-lead">` keeps paragraph spacing and `<pre><code class="cui-code">` loses the
+   inline-code chip, as they did before #147. Their colours lose to the prose ones at (0,1,1),
+   also as before. `cui-kbd` is not among them: it is CuiKbd's root. The list helpers aren't
+   either, so `cui-list-unstyled` and `cui-list-inline` now actually remove the prose markers. */
+.cui-typography :where(
+  :not([class^="cui-"]):not([class*=" cui-"]),
+  .cui-lead, .cui-small, .cui-display-1, .cui-display-2, .cui-display-3,
+  .cui-text-body, .cui-text-secondary, .cui-text-tertiary, .cui-text-emphasis,
+  .cui-code, .cui-pre, .cui-mark, .cui-blockquote, .cui-blockquote-footer
+) {
+  /* Paragraphs */
+  &:is(p) {
+    margin-top: 0;
+    margin-bottom: var(--cui-paragraph-margin-bottom);
+    color: var(--cui-text-body);
+  }
+
+  &:is(small) {
+    font-size: var(--cui-font-size-small);
+  }
 
   /* Blockquote */
   &:is(blockquote) {
@@ -494,17 +500,17 @@
     color: var(--cui-text-body);
   }
 
-  &:is(p):last-child:where(.cui-typography blockquote *) {
+  &:is(blockquote p):last-child {
     margin-bottom: 0;
   }
 
-  &:is(footer):where(.cui-typography blockquote *) {
+  &:is(blockquote footer) {
     font-size: var(--cui-font-size-small);
     color: var(--cui-text-secondary);
     margin-top: 0.5rem;
   }
 
-  &:is(footer):where(.cui-typography blockquote *)::before {
+  &:is(blockquote footer)::before {
     content: "\2014\00A0"; /* em-dash + non-breaking space */
   }
 
@@ -523,7 +529,7 @@
   }
 
   /* Don't double-style code inside pre */
-  &:is(code):where(.cui-typography pre *) {
+  &:is(pre code) {
     background: none;
     padding: 0;
     border-radius: 0;
@@ -579,7 +585,7 @@
   &:is(ol) { list-style: decimal; }
 
   /* Nested unordered lists use a hollow marker, as in standard prose. */
-  &:is(ul):where(.cui-typography ul *) { list-style: circle; }
+  &:is(ul ul) { list-style: circle; }
 
   &:is(li) {
     margin-bottom: calc(0.25rem * var(--cui-density-gap-scale, 1));
@@ -670,7 +676,7 @@
 
 /* --- Class twins ---
    The prose styles, by class, for use outside a `.cui-typography` scope. (0,1,0), so the
-   element rules above win inside one — the twins agree with them, so that changes nothing. */
+   element rules above win inside one, where the twins agree with them. */
 .cui-small {
   font-size: var(--cui-font-size-small);
 }

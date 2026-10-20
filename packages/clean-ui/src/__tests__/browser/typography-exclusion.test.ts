@@ -36,22 +36,39 @@ describe("prose rules don't reach into components (real browser)", () => {
   it("leaves a table's cell padding to its size", () => {
     const table = () =>
       h(CuiTable, { size: "lg" }, () => h(CuiTableBody, () => h(CuiTableRow, () => h(CuiTableCell, () => "Cell"))));
-    const padding = (host: HTMLElement) => getComputedStyle(host.querySelector("td")!).padding;
-    expect(padding(inScope(true, table))).toBe(padding(inScope(false, table)));
+    const style = (host: HTMLElement) => {
+      const t = getComputedStyle(host.querySelector("table")!);
+      const td = getComputedStyle(host.querySelector("td")!);
+      return { padding: td.padding, border: td.borderBottomWidth, fontSize: t.fontSize, width: t.width, collapse: t.borderCollapse };
+    };
+    expect(style(inScope(true, table))).toEqual(style(inScope(false, table)));
   });
 
-  it("leaves a breadcrumb's list unmarked and unindented", () => {
+  it("leaves a breadcrumb's list and links as the breadcrumb draws them", () => {
     const crumbs = () =>
-      h(CuiBreadcrumb, () => [h(CuiBreadcrumbItem, { to: undefined }, () => "Home"), h(CuiBreadcrumbItem, () => "Page")]);
+      h(CuiBreadcrumb, () => [h(CuiBreadcrumbItem, { href: "#home" }, () => "Home"), h(CuiBreadcrumbItem, () => "Page")]);
     const style = (host: HTMLElement) => {
       const ol = getComputedStyle(host.querySelector("ol")!);
-      return { listStyle: ol.listStyleType, padding: ol.paddingLeft, li: getComputedStyle(host.querySelector("li")!).marginBottom };
+      const a = getComputedStyle(host.querySelector("a")!);
+      return {
+        listStyle: ol.listStyleType,
+        padding: ol.paddingLeft,
+        li: getComputedStyle(host.querySelector("li")!).marginBottom,
+        link: [a.color, a.textDecorationLine],
+      };
     };
     expect(style(inScope(true, crumbs))).toEqual(style(inScope(false, crumbs)));
   });
 
-  it("still styles prose itself", () => {
-    const host = inScope(true, () => h("ul", [h("li", "one")]));
+  it("still styles prose itself, and the typography layer's own helpers", () => {
+    const host = inScope(true, () => [
+      h("ul", [h("li", "one")]),
+      h("p", { class: "cui-lead" }, "Lead"),
+      h("pre", [h("code", { class: "cui-code" }, "x")]),
+    ]);
     expect(getComputedStyle(host.querySelector("ul")!).listStyleType).toBe("disc");
+    // The lead keeps prose paragraph spacing; code in a block loses the inline chip.
+    expect(getComputedStyle(host.querySelector("p.cui-lead")!).marginBottom).not.toBe("0px");
+    expect(getComputedStyle(host.querySelector("pre code")!).backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });
 });
