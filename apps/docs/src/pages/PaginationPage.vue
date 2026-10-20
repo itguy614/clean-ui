@@ -61,7 +61,8 @@ const sizePage = ref(1);
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        The page buttons sit in their own <code>&lt;nav aria-label="Pagination"&gt;</code>,
+        The page buttons sit in their own <code>&lt;nav&gt;</code> landmark, named
+        “Pagination” by default,
         so the control is reachable from a screen reader's landmark list without competing
         with the page's main navigation. Every button is a real
         <code>&lt;button&gt;</code> — tab to it, activate with
@@ -75,7 +76,7 @@ const sizePage = ref(1);
         </li>
         <li>
           Prev and next are icon-only, so each gets an explicit
-          <code>aria-label</code> ("Previous page", "Next page"). Each numbered button also
+          <code>aria-label</code> (by default "Previous page", "Next page"). Each numbered button also
           gets <code>aria-label="Page&nbsp;N"</code>, and the ellipsis between them is hidden
           from screen readers.
         </li>
