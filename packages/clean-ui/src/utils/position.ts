@@ -11,11 +11,14 @@
 export type PanelSide = "bottom" | "top" | "left" | "right";
 
 /**
- * The z-index of anchored panels and modal overlays, above page content. A CSS custom
- * property, so stylesheets (CuiModal) and inline styles share one value and a consumer can
- * re-layer the library: `:root { --cui-z-overlay: 50 }`.
+ * The library's z-index scale, all derived from one CSS custom property so a consumer can
+ * re-layer the whole library at once — `:root { --cui-z-overlay: 50 }` — and stylesheets
+ * (CuiModal, CuiTooltip) and inline styles share it. Anchored panels and modal overlays
+ * sit at the base; popovers and toasts above an open modal; tooltips above everything.
  */
 export const OVERLAY_Z_INDEX = "var(--cui-z-overlay, 9990)";
+export const POPOVER_Z_INDEX = "calc(var(--cui-z-overlay, 9990) + 8)";
+export const TOOLTIP_Z_INDEX = "calc(var(--cui-z-overlay, 9990) + 9)";
 /** The gap between an anchor and its panel. */
 export const PANEL_OFFSET = 4;
 /** How close a panel may come to the viewport edge. */

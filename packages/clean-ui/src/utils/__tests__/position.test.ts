@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,8 @@ function anchorAt(rect: { top: number; left: number; width: number; height: numb
 }
 
 describe("computeDropdownPosition", () => {
+  const { innerWidth, innerHeight } = window;
+  afterAll(() => Object.assign(window, { innerWidth, innerHeight }));
   beforeEach(() => {
     window.innerWidth = 1000;
     window.innerHeight = 800;
@@ -62,9 +64,10 @@ describe("computeDropdownPosition", () => {
   });
 });
 
-// The overlay z-index lives in one token; a bare literal drifts (it was in seven places).
+// The overlay z-index scale derives from one token; a bare literal drifts (9990 alone was in
+// seven places) and doesn't move when a consumer re-layers the library.
 describe("overlay z-index", () => {
-  it("is never a bare 9990 outside utils/position.ts — inline or in a stylesheet", () => {
+  it("is never a bare 99xx outside utils/position.ts — inline or in a stylesheet", () => {
     const src = join(dirname(fileURLToPath(import.meta.url)), "../..");
     const offenders: string[] = [];
     const walk = (dir: string) => {
@@ -72,13 +75,16 @@ describe("overlay z-index", () => {
         const path = join(dir, entry.name);
         if (entry.isDirectory()) {
           if (entry.name !== "__tests__") walk(path);
-        } else if (/\.(vue|ts)$/.test(entry.name) && !path.endsWith(join("utils", "position.ts"))) {
+        } else if (/\.(vue|ts|css)$/.test(entry.name) && !path.endsWith(join("utils", "position.ts"))) {
           // A bare literal, not the token's own fallback inside var(--cui-z-overlay, 9990).
-          if (/z-?index:\s*["']?9990/i.test(readFileSync(path, "utf8"))) offenders.push(path.slice(src.length + 1));
+          if (/z-?index\s*:\s*["'`]?99\d\d/i.test(readFileSync(path, "utf8"))) offenders.push(path.slice(src.length + 1));
         }
       }
     };
     walk(src);
-    expect(offenders).toEqual([]);
+    // The layout debug overlays stack their labels by nesting depth (9999 - depth): a
+    // developer aid, not part of the overlay scale.
+    const exempt = ["components/CuiGrid.vue", "components/CuiFlex.vue"];
+    expect(offenders.filter((f) => !exempt.includes(f))).toEqual([]);
   });
 });

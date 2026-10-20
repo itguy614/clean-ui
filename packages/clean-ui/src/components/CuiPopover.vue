@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted, useSlots, useId } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useLayerStack } from "../composables/useLayerStack";
+import { POPOVER_Z_INDEX } from "../utils/position";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -146,7 +147,7 @@ const headerId = `cui-popover-title-${useId()}`;
 
 const panelStyle = computed(() => {
   const s: Record<string, string> = {
-    zIndex: "9998",
+    zIndex: POPOVER_Z_INDEX,
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
     borderRadius: radiusMap[props.rounded],

@@ -79,7 +79,6 @@ function closeAll() {
   close();
 }
 
-
 function positionAtCursor(x: number, y: number) {
   // First pass: place the panel at the cursor with NO maxHeight, so it lays out
   // at its natural height and can be measured. It used to be clamped to the

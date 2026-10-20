@@ -127,7 +127,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`
 - `utils/colorIconMap.ts` — `COLOR_ICON_MAP` mapping color roles to Phosphor icon names (used by Alert, Toast)
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
-- `utils/position.ts` — `computeDropdownPosition(anchor, side, { matchWidth, maxHeight, offset, viewportPadding })` returns `{ styles, side }` (the side after flipping, for `transform-origin`); `OVERLAY_Z_INDEX` (`var(--cui-z-overlay, 9990)` — a consumer can re-layer the library), `PANEL_OFFSET`, `VIEWPORT_PADDING`, `PANEL_MAX_HEIGHT`. Never write a bare `9990`, inline or in CSS — `utils/__tests__/position.test.ts` fails on it.
+- `utils/position.ts` — `computeDropdownPosition(anchor, side, { matchWidth, maxHeight, offset, viewportPadding })` returns `{ styles, side }` (the side after flipping, for `transform-origin`); the z-index scale (`OVERLAY_Z_INDEX`, `POPOVER_Z_INDEX`, `TOOLTIP_Z_INDEX`, all derived from `--cui-z-overlay` so a consumer re-layers the whole library at once), `PANEL_OFFSET`, `VIEWPORT_PADDING`, `PANEL_MAX_HEIGHT`. Never write a bare `99xx` z-index, inline or in CSS — `utils/__tests__/position.test.ts` fails on it.
 - `composables/useClickOutside.ts` — shared click-outside detection
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
@@ -189,7 +189,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 ### Overlay Components (Modal, Dropdown, Backdrop)
 - CuiModal: simple mode (title prop auto-renders header+body) OR sub-component mode (CuiModalHeader/Body/Footer)
 - CuiBackdrop: configurable opacity, blur, color, image, gradient. Uses `position: absolute` (not fixed) inside the modal overlay.
-- Modal z-index: overlay=9990, container=2 (above backdrop at z-index=0)
+- z-index scale (`utils/position.ts`), all from `--cui-z-overlay` (default 9990): `OVERLAY_Z_INDEX` for modal/slideover overlays and anchored panels, `POPOVER_Z_INDEX` (+8) for popovers and toasts, `TOOLTIP_Z_INDEX` (+9). Inside a modal: container=2, above the backdrop at 0.
 
 ## Slots vs Sub-Components
 

@@ -238,7 +238,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
 
 /* --- Tooltip --- */
 .cui-tooltip {
-  z-index: 9999;
+  z-index: calc(var(--cui-z-overlay, 9990) + 9); /* TOOLTIP_Z_INDEX in utils/position.ts */
   padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
   border-radius: 0.375rem;
   font-size: 0.8125rem;
