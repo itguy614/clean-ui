@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
 import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
@@ -57,14 +59,6 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   hidden: false,
 });
 
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
-
 const emit = defineEmits<{
   "update:visible": [value: boolean];
   close: [];
@@ -93,7 +87,7 @@ const sizeMap: Record<string, string> = {
 const maxWidth = computed(() => sizeMap[props.size] ?? props.size);
 
 // Generate id for aria-labelledby
-const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("modal-title");
 </script>
 
 <template>
@@ -122,7 +116,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           ref="dialogEl"
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
-          :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
+          :style="{ maxWidth, borderRadius: RADIUS_SCALE[rounded] }"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"

@@ -2,18 +2,10 @@
 import { computed, ref, watch, nextTick, onMounted, onUnmounted } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 export interface SelectOption {
   value: string | number;
@@ -341,7 +333,7 @@ const messages = useMessages();
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         class="cui-select__trigger"
-        :style="{ borderRadius: radiusMap[rounded] }"
+        :style="{ borderRadius: RADIUS_SCALE[rounded] }"
         role="combobox"
         :aria-expanded="isOpen"
         aria-haspopup="listbox"

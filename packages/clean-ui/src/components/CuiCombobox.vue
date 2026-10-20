@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
@@ -76,14 +76,6 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
 
 // Link our own error message into aria-describedby (#175).
 const { errorId, describedBy } = useFieldDescribedBy(props);
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
@@ -369,7 +361,7 @@ const messages = useMessages();
       class="cui-combobox__control"
       :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
-        '--_combobox-radius': radiusMap[rounded],
+        '--_combobox-radius': RADIUS_SCALE[rounded],
         '--_combobox-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
         '--_combobox-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
         '--_combobox-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,

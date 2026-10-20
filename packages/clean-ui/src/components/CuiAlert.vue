@@ -6,14 +6,7 @@ import { resolveRoleIcon } from "../utils/colorIconMap";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
@@ -89,7 +82,7 @@ const alertStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const base: Record<string, string> = {
-    borderRadius: radiusMap[props.rounded],
+    borderRadius: RADIUS_SCALE[props.rounded],
     "--_alert-color": `var(--cui-${c})`,
     "--_alert-focus-ring": `var(--cui-${c}-focus-ring)`,
   };

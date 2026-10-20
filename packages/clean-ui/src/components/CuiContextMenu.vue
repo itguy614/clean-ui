@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
@@ -56,7 +57,7 @@ const menuStyle = ref<Record<string, string>>({});
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Unique ID for click-outside detection on teleported menu
-const contextMenuId = `cui-ctx-${Math.random().toString(36).slice(2, 8)}`;
+const contextMenuId = useCuiId("context-menu");
 
 function open() {
   if (props.disabled) return;
