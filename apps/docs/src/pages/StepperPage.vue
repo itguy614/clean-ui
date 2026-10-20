@@ -86,32 +86,27 @@ const verticalStep = ref(1);
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        The stepper is a <code>role="navigation"</code> region labelled "Progress" from the
-        message catalogue, and the step the flow is on carries
-        <code>aria-current="step"</code> — so a screen-reader user can find the indicator
-        and hear which step is live.
+        The stepper is a <code>&lt;nav&gt;</code> labelled "Progress" from the message catalogue,
+        around an ordered list of steps — so a screen reader announces how many steps there are
+        and which one each is. The step the flow is on carries <code>aria-current="step"</code>.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          Status is not carried by colour alone: a completed step swaps its number for a
-          check icon and a failed one for a warning icon. Current and upcoming steps differ
-          only by ring colour and label weight, so keep the labels themselves meaningful.
+          With <code>clickable</code> (the default), a step you can go to is a real
+          <code>&lt;button&gt;</code>: reached with Tab, pressed with Enter or Space. The buttons
+          share one tab stop, on the current step, and the arrow keys along the stepper move
+          between them. With <code>linear</code>, a step past the current one is plain text,
+          not a button. Back/Next buttons are still the clearest controls for a flow; the
+          stepper is the way back.
         </li>
         <li>
-          The step number, label and description are all real text — nothing about a step
-          is conveyed by a background image or a colour swatch that a high-contrast mode
-          would flatten.
+          Status is not carried by colour alone: a completed step swaps its number for a check
+          icon and a failed one for a warning icon, and a screen reader hears “completed” or
+          “error” after the label (<code>stepper.complete</code> / <code>stepper.error</code>).
+          Current and upcoming steps differ visually only by ring colour and label weight, so
+          keep the labels themselves meaningful.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps — read before relying on this as navigation.</strong> With
-        <code>clickable</code> (the default) each step is a <code>&lt;div&gt;</code> with a
-        click handler: no <code>tabindex</code>, no <code>role="button"</code> and no key
-        handler, so steps can only be reached with a pointer. Give the user real controls —
-        Back/Next buttons, as every example here does — and treat the stepper itself as an
-        indicator. The markup is also a flat set of divs rather than an ordered list, and
-        nothing announces "step 2 of 4", so the count and position are visual only.
-      </p>
     </template>
 
     <template #examples>

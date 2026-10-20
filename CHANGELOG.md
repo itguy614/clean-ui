@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiStepper's steps can be operated from the keyboard (#154). The steps are an ordered
+  list inside a `<nav>`, so their count and position are announced; a step you can go to
+  is a `<button>`, and the buttons share one tab stop (`useRovingFocus`) on the current
+  step. Completed and error steps say so to a screen reader (`stepper.complete` /
+  `stepper.error`). With `linear`, an error step ahead of the current one can no longer be
+  jumped to. This adds a tab stop, so a focus-order snapshot will change.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
