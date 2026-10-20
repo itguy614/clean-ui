@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, useSlots, useId } from "vue";
+import { ref, computed, watch, onUnmounted, useSlots } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useLayerStack } from "../composables/useLayerStack";
@@ -134,8 +135,8 @@ const hasHeader = () => !!(props.title || slots.header);
 const hasFooter = () => !!slots.footer;
 // Per instance (a literal id collided across every titled popover on a page,
 // #159), and whenever there is a header — prop or slot — so a custom #header
-// still names the dialog. useId() is stable across SSR and hydration.
-const headerId = `cui-popover-title-${useId()}`;
+// still names the dialog. Stable across SSR and hydration (useCuiId).
+const headerId = useCuiId("popover-title");
 
 const panelStyle = computed(() => {
   const s: Record<string, string> = {

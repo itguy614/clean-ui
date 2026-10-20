@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -86,7 +87,7 @@ const sizeMap: Record<string, string> = {
 const maxWidth = computed(() => sizeMap[props.size] ?? props.size);
 
 // Generate id for aria-labelledby
-const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("modal-title");
 </script>
 
 <template>
