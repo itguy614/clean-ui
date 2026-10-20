@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
@@ -138,6 +138,34 @@ const hasValue = computed(() => {
   if (props.multiple) return Array.isArray(props.modelValue) && props.modelValue.length > 0;
   return props.modelValue != null && props.modelValue !== "";
 });
+
+// What a native form post carries (#174): one hidden input per value with `name`, as a
+// native <select> would post — one for a single value (empty when nothing is chosen),
+// one per value when multiple (none when empty). `autocomplete` has no effect: browsers
+// ignore it on hidden inputs, and there is no native control here to autofill.
+const formValues = computed<Array<string | number>>(() => {
+  const v = props.modelValue;
+  if (props.multiple) return Array.isArray(v) ? v : [];
+  return [v == null || Array.isArray(v) ? "" : v];
+});
+
+// A native <select> fires bubbling input and change events when its value changes, which is
+// what form-level listeners (dirty tracking, autosave) hear; a hidden input whose value Vue
+// patches fires nothing. So the first one dispatches them, after the DOM has the new value.
+const formInputs = ref<HTMLInputElement[]>([]);
+watch(
+  formValues,
+  () => {
+    if (!props.name) return;
+    nextTick(() => {
+      const input = formInputs.value[0] ?? null;
+      const target = input ?? triggerRef.value;
+      target?.dispatchEvent(new Event("input", { bubbles: true }));
+      target?.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  },
+  { deep: true },
+);
 
 // Get the full selected option object (for #selected slot)
 const selectedOption = computed(() => {
@@ -392,6 +420,12 @@ const messages = useMessages();
         </div>
       </template>
     </CuiListboxPanel>
+
+    <!-- Native form participation (#174). Disabled, like a disabled native control, posts
+         nothing. -->
+    <template v-if="name">
+      <input v-for="(v, i) in formValues" :key="i" ref="formInputs" type="hidden" :name="name" :value="v" :disabled="disabled" />
+    </template>
 
     <!-- Error message -->
     <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">

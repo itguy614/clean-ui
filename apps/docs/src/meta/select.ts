@@ -1,14 +1,23 @@
 import type { ComponentMeta, PropRow } from "./types";
-import { colorProp, disabledProp, hiddenProp, inputSizeProp, roundedProp } from "./shared";
+import { colorProp, disabledProp, hiddenProp, inputSizeProp, nativeControlProps, roundedProp } from "./shared";
 
 /**
- * `nativeControlProps` minus `name` and `autocomplete`.
- *
- * CuiSelect renders no native form control at all — its focusable surface is a
- * `div[role="combobox"]` — so `name` and `autocomplete` have nothing to land on, and
- * `id` names the trigger rather than a labelable element.
+ * `nativeControlProps`, adjusted. CuiSelect's focusable surface is a `div[role="combobox"]`,
+ * not a native control: `id` names the trigger rather than a labelable element; `name`
+ * posts through hidden inputs (#174); `autocomplete` has nothing to land on.
  */
 const selectAriaProps: PropRow[] = [
+  {
+    name: "name",
+    type: "string",
+    description:
+      "Form field name. CuiSelect renders hidden inputs with it, so the value posts with a native form and reads from FormData — one input for a single value (empty when nothing is selected), one per value when multiple. Nothing posts while disabled",
+  },
+  {
+    name: "autocomplete",
+    type: "string",
+    description: "Accepted for parity with the other fields, but has no effect: there is no native control to autofill, and browsers ignore autocomplete on hidden inputs",
+  },
   {
     name: "id",
     type: "string",
@@ -21,11 +30,8 @@ const selectAriaProps: PropRow[] = [
     description:
       "id(s) of the element naming the control. The only thing that names a CuiSelect. CuiFormField supplies it automatically",
   },
-  {
-    name: "aria-describedby",
-    type: "string",
-    description: "id(s) of describing text. CuiFormField points this at its help text or error message",
-  },
+  // Shared wording, so it can't drift from the other fields'.
+  nativeControlProps.find((p) => p.name === "aria-describedby")!,
 ];
 
 const meta: ComponentMeta = {
