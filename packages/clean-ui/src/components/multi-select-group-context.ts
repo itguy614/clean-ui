@@ -60,9 +60,10 @@ export function useMultiSelectGroupProvider(
 }
 
 /**
- * The enclosing group's context, or `null` for a standalone checkbox or toggle. It doesn't
- * throw outside a group, unlike most `useXContext`s: standalone is a supported mode.
+ * The enclosing group's context, or `null` for a standalone checkbox or toggle. Optional, so
+ * named apart from the `useXContext` convention, which throws outside its parent: standalone
+ * is a supported mode here.
  */
-export function useMultiSelectGroupContext(key: InjectionKey<MultiSelectGroupContext>): MultiSelectGroupContext | null {
+export function useOptionalMultiSelectGroupContext(key: InjectionKey<MultiSelectGroupContext>): MultiSelectGroupContext | null {
   return inject(key, null);
 }

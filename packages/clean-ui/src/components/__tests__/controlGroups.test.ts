@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
-import { Fragment, h } from "vue";
+import { Fragment, createCommentVNode, createTextVNode, h } from "vue";
 import CuiCheckboxGroup from "../CuiCheckboxGroup.vue";
 import CuiCheckbox from "../CuiCheckbox.vue";
 import CuiToggleGroup from "../CuiToggleGroup.vue";
@@ -50,6 +50,25 @@ describe.each(GROUPS)("Cui%sGroup's own identity", ({ name, Group, Item, role, o
       props: { label: "Options" },
       // What a template `v-for` compiles to: one Fragment holding the options.
       slots: { default: () => [h(Fragment, null, [0, 1, 2].map((i) => h(Item as never, { value: `v${i}`, label: `${i}` })))] },
+    });
+    expect(w.classes()).toContain("cui-control-group--vertical");
+  });
+
+  it("doesn't count a v-if'd-out option, whitespace, or text", () => {
+    const opt = (i: number) => h(Item as never, { value: `v${i}`, label: `${i}` });
+    const w = mount(Group as never, {
+      props: { label: "Options" },
+      slots: { default: () => [opt(0), createTextVNode(" "), opt(1), createCommentVNode("v-if")] },
+    });
+    expect(w.classes()).toContain("cui-control-group--horizontal");
+  });
+
+  it("unwraps nested fragments — a <template v-if> around a v-for", () => {
+    const w = mount(Group as never, {
+      props: { label: "Options" },
+      slots: {
+        default: () => [h(Fragment, null, [h(Fragment, null, [0, 1, 2].map((i) => h(Item as never, { value: `v${i}`, label: `${i}` })))])],
+      },
     });
     expect(w.classes()).toContain("cui-control-group--vertical");
   });

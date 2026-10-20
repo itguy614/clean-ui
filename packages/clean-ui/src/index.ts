@@ -316,7 +316,7 @@ export { useRovingFocus, type UseRovingFocusOptions, type RovingOrientation } fr
 export { useColorScheme } from "./composables/useColorScheme";
 // Public since 1.3.2: the editor is its second consumer (#221).
 export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";
-export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
+export type { MultiSelectGroupContext, MultiSelectGroupProps } from "./components/multi-select-group-context";
 
 export function createCleanUI(_options: CleanUIOptions = {}) {
   return {

@@ -442,7 +442,8 @@
   gap: calc(1.25rem * var(--cui-density-scale, 1));
 }
 
-/* Paint, so zero specificity: a consumer's own rule wins. */
+/* Paint, so zero specificity: a consumer's own unlayered rule wins. (Unlayered like every
+   component's CSS, so a rule in a cascade layer — Tailwind utilities — still loses.) */
 :where(.cui-control-group--error > .cui-control-group__options) {
   border: 1px solid var(--cui-error-border);
   background: var(--cui-error-bg);

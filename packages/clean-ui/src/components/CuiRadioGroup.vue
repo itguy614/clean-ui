@@ -47,8 +47,8 @@ const emit = defineEmits<{
 const generatedName = useCuiId("radio");
 const groupName = computed(() => props.name ?? generatedName);
 
-// A button group is always a row.
-const resolvedDirection = useAutoOrientation(() => (props.variant === "buttons" ? "horizontal" : props.orientation));
+// Unused by the button variant, which is a segmented row whatever the orientation.
+const resolvedDirection = useAutoOrientation(() => props.orientation);
 
 provide(RadioGroupKey, {
   modelValue: toRef(props, "modelValue"),

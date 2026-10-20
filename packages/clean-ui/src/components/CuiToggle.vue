@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { ToggleGroupKey, useMultiSelectGroupContext } from "./multi-select-group-context";
+import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 
@@ -31,7 +31,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const group = useMultiSelectGroupContext(ToggleGroupKey);
+const group = useOptionalMultiSelectGroupContext(ToggleGroupKey);
 
 const isChecked = computed(() => {
   if (group && props.value !== undefined) {
