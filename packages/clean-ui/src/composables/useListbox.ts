@@ -84,12 +84,24 @@ export function useListbox(options: UseListboxOptions) {
 
   const items = (): ListItems => ({ count: options.count(), isDisabled: options.isDisabled, label: options.label });
 
-  // Only a keyboard move scrolls: a hover sets the highlight too, and scrolling then would
-  // drag the list under the pointer.
+  // Only a keyboard move scrolls (and an opening that starts on the selection, which the
+  // component asks for): a hover sets the highlight too, and scrolling then would drag the
+  // list under the pointer.
+  // Within the listbox only: scrollIntoView would scroll every scrollable ancestor too, the
+  // page included, which moves the field under the pointer and repositions the panel.
   function scrollActiveIntoView() {
     const i = activeIndex.value;
     if (i < 0) return;
-    nextTick(() => document.getElementById(optionId(i))?.scrollIntoView?.({ block: "nearest" }));
+    nextTick(() => {
+      const option = document.getElementById(optionId(i));
+      const list = document.getElementById(listboxId);
+      if (!option || !list) return;
+      // The listbox is the panel, fixed-positioned, so it is the options' offsetParent.
+      const top = option.offsetTop;
+      const bottom = top + option.offsetHeight;
+      if (top < list.scrollTop) list.scrollTop = top;
+      else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+    });
   }
 
   /**
@@ -168,5 +180,5 @@ export function useListbox(options: UseListboxOptions) {
     onScopeDispose(() => clearTimeout(announceTimer));
   }
 
-  return { listboxId, labelId, optionId, inputAttrs, panelAttrs, announcement, onKeydown };
+  return { listboxId, labelId, optionId, inputAttrs, panelAttrs, announcement, onKeydown, scrollActiveIntoView };
 }

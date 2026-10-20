@@ -840,8 +840,7 @@
   }
 
   /* 3. Spinners — remove spin but keep opacity as loading cue.
-        `spinner` substring covers CuiSpinner + inline cui-button__spinner /
-        cui-select__spinner. */
+        `spinner` substring covers CuiSpinner + the inline cui-button__spinner. */
   [class*="spinner"] {
     animation: none !important;
     opacity: 0.6;

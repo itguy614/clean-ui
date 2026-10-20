@@ -403,6 +403,7 @@ function optionClass(index: number, option: ComboboxOption) {
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="combobox"
+      :color="color"
       :max-height="320"
       :max-visible="maxVisible"
       :font-size="cfg.style['--_combobox-font-size']"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { computeDropdownPosition } from "../utils/position";
+import type { CuiColor } from "../types/common";
 import { useEventListener } from "../composables/useEventListener";
 
 /**
@@ -32,7 +33,9 @@ const props = defineProps<{
    */
   anchor: HTMLElement | null | undefined;
   /** The component whose public tokens style the panel. */
-  tokenPrefix: "combobox" | "tag-input";
+  tokenPrefix: "combobox" | "tag-input" | "select";
+  /** The component's colour role: the highlighted and selected rows take its tint. */
+  color?: CuiColor;
   /** Upper bound for the panel's height, in px, when `maxVisible` doesn't decide it. */
   maxHeight: number;
   /**
@@ -148,6 +151,7 @@ onScopeDispose(() => {
 
 const tokens = computed(() => {
   const p = props.tokenPrefix;
+  const role = props.color ?? "primary";
   const token = (slot: string, fallback: string) => `var(--cui-${p}-${slot}, ${fallback})`;
   return {
     "--_listbox-panel-bg": token("panel-bg", "var(--cui-surface-base)"),
@@ -159,8 +163,8 @@ const tokens = computed(() => {
     "--_listbox-item-padding": token("item-padding", props.itemPadding),
     "--_listbox-item-color": token("item-color", "var(--cui-text-body)"),
     "--_listbox-item-radius": token("item-radius", "0.25rem"),
-    "--_listbox-item-selected-bg": token("item-selected-bg", "color-mix(in srgb, var(--cui-primary-bg) 50%, transparent)"),
-    "--_listbox-item-focus-bg": token("item-focus-bg", "var(--cui-primary-bg)"),
+    "--_listbox-item-selected-bg": token("item-selected-bg", `color-mix(in srgb, var(--cui-${role}-bg) 50%, transparent)`),
+    "--_listbox-item-focus-bg": token("item-focus-bg", `var(--cui-${role}-bg)`),
     "--_listbox-item-disabled-color": token("item-disabled-color", "var(--cui-text-tertiary)"),
   };
 });

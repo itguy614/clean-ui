@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
+  corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
+  selected row instead of coloured bold text. It is the same shared listbox panel, and takes
+  the same tokens under the `select` prefix (`--cui-select-panel-*`, `--cui-select-item-*`),
+  which are new. Its keyboard navigation now follows the order options are shown in, with
+  groups, and adds Home/End and type-ahead.
+
 ## [1.3.2] - 2026-10-19
 
 ### Added
