@@ -133,6 +133,11 @@ function onHexInput(val: string | number) {
         />
       </Example>
 
+      <!-- Disabled -->
+      <Example title="Disabled" :code="`<CuiColorPicker v-model=&quot;color&quot; preset-palette=&quot;basic&quot; disabled />`">
+        <CuiColorPicker v-model="color2" preset-palette="basic" disabled />
+      </Example>
+
       <!-- Complex: Input + Popover -->
       <Example title="Real-World: Input with Color Popover" :code="`<CuiInput :model-value=&quot;color&quot; placeholder=&quot;#000000&quot;>
   <template #prefix>
