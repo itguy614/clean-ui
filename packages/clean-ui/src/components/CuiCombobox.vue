@@ -12,6 +12,7 @@ import { useMessages } from "../composables/useMessages";
 import CuiSpinner from "./CuiSpinner.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
+import CuiListboxStatus from "./CuiListboxStatus.vue";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -391,6 +392,8 @@ function optionClass(index: number, option: ComboboxOption) {
       :anchor="controlRef"
       token-prefix="combobox"
       :max-height="320"
+      :max-visible="maxVisible"
+      :option-count="filteredOptions.length"
       :font-size="cfg.style['--_combobox-font-size']"
       :item-padding="cfg.style['--_combobox-item-padding']"
       v-bind="listbox.panelAttrs.value"
@@ -398,29 +401,17 @@ function optionClass(index: number, option: ComboboxOption) {
       class="cui-combobox__dropdown"
     >
       <!-- Loading -->
-      <!-- Status rows: presentational, since a listbox holds only options; the live region
-           above announces the results. -->
-      <div v-if="isLoading && filteredOptions.length === 0" role="presentation" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+      <!-- Status rows (presentational: a listbox holds only options; the live region above
+           announces the results) -->
+      <CuiListboxStatus v-if="isLoading && filteredOptions.length === 0">
         <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
-      </div>
-
-      <!-- No results -->
-      <div
-        v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)"
-        role="presentation"
-        :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
-      >
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)">
         {{ noResultsText }}
-      </div>
-
-      <!-- Min chars hint -->
-      <div
-        v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
-        role="presentation"
-        :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
-      >
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars">
         {{ messages.combobox.typeMore(minChars - query.length) }}
-      </div>
+      </CuiListboxStatus>
 
       <!-- Options list -->
       <CuiListboxOption

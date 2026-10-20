@@ -33,8 +33,15 @@ const props = defineProps<{
   anchor: HTMLElement | null | undefined;
   /** The component whose public tokens style the panel. */
   tokenPrefix: "combobox" | "tag-input";
-  /** Upper bound for the panel's height, in px. */
+  /** Upper bound for the panel's height, in px, when `maxVisible` doesn't decide it. */
   maxHeight: number;
+  /**
+   * Show at most this many options before scrolling (CuiCombobox's `maxVisible`, #212).
+   * Measured from the rendered rows, so rows of any height count as one each.
+   */
+  maxVisible?: number;
+  /** How many options the component lists now; `maxVisible` re-measures when it changes. */
+  optionCount?: number;
   /**
    * Size-derived defaults for the rows. The panel is teleported to <body>, so it inherits
    * nothing from the component and has to carry them itself (#123).
@@ -46,9 +53,43 @@ const props = defineProps<{
 const el = ref<HTMLElement | null>(null);
 const position = ref<Record<string, string>>({});
 
-function reposition() {
-  if (props.anchor) position.value = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight: props.maxHeight }).styles;
+// The height that shows exactly `maxVisible` options when there are more: measured from
+// the rendered rows (rows of any height count as one each), and cached — scroll and resize
+// reposition the panel without the rows having changed.
+let rowsHeight: number | undefined;
+
+function measureRows() {
+  rowsHeight = undefined;
+  const panel = el.value;
+  if (!panel || !props.maxVisible) return;
+  const rows = panel.querySelectorAll<HTMLElement>('[role="option"]');
+  if (rows.length <= props.maxVisible) return; // nothing to cap
+  const bottom = rows[props.maxVisible - 1];
+  // offsetTop runs from the panel's padding edge (the panel is fixed, so it is the rows'
+  // offsetParent); add the bottom padding and the borders for a border-box max-height.
+  const borders = panel.offsetHeight - panel.clientHeight;
+  rowsHeight = bottom.offsetTop + bottom.offsetHeight + parseFloat(getComputedStyle(panel).paddingBottom) + borders;
 }
+
+function reposition() {
+  if (!props.anchor) return;
+  // maxVisible, when it binds, decides where scrolling starts — it replaces maxHeight rather
+  // than sitting under it. computeDropdownPosition still clamps either to the room on screen.
+  const maxHeight = rowsHeight ?? props.maxHeight;
+  position.value = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight }).styles;
+}
+
+// Re-measure once the rows for a new count have rendered.
+watch(
+  () => props.optionCount,
+  () => {
+    if (!props.open || !props.maxVisible) return;
+    nextTick(() => {
+      measureRows();
+      reposition();
+    });
+  },
+);
 
 // Placed before it renders, so no frame shows at the wrong spot; and again after, since
 // the field can change height as the panel opens (chips render, the query replaces the
@@ -57,8 +98,12 @@ watch(
   () => props.open,
   (open) => {
     if (!open) return;
+    rowsHeight = undefined;
     reposition();
-    nextTick(reposition);
+    nextTick(() => {
+      measureRows();
+      reposition();
+    });
   },
   { immediate: true },
 );

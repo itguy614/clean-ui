@@ -85,3 +85,33 @@ describe("CuiTagInput", () => {
     wrapper.unmount();
   });
 });
+
+// #212: noSuggestionsText was declared, documented and read by nothing; there was no
+// empty state at all.
+describe("CuiTagInput empty state", () => {
+  it("shows noSuggestionsText when the query matches nothing and nothing can be created", async () => {
+    const w = mount(CuiTagInput, {
+      attachTo: document.body,
+      props: { modelValue: [], suggestions: [{ value: "apple" }], allowCreate: false, noSuggestionsText: "Nothing found" },
+    });
+    const input = w.find("input");
+    input.element.dispatchEvent(new FocusEvent("focus"));
+    await input.setValue("zzz");
+    expect(document.querySelector(".cui-listbox-status")?.textContent).toBe("Nothing found");
+    expect(input.attributes("aria-expanded")).toBe("true");
+    w.unmount();
+  });
+
+  it("offers the create row instead when allowCreate is on", async () => {
+    const w = mount(CuiTagInput, {
+      attachTo: document.body,
+      props: { modelValue: [], suggestions: [{ value: "apple" }], allowCreate: true },
+    });
+    const input = w.find("input");
+    input.element.dispatchEvent(new FocusEvent("focus"));
+    await input.setValue("zzz");
+    expect(document.querySelector(".cui-listbox-status")).toBeNull();
+    expect(document.querySelector(".cui-tag-input__create")).not.toBeNull();
+    w.unmount();
+  });
+});
