@@ -87,7 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: {
     label: string;
-    /** Read after a step's label, since the check and warning icons say it only visually (#154). */
+    /**
+     * Read straight after a step's label, separator included, since the check and warning
+     * icons say it only visually (#154).
+     */
     complete: string;
     error: string;
   };
@@ -162,7 +165,7 @@ export const defaultMessages: CuiCoreMessages = {
     perPage: (count) => `${count} / page`,
   },
   breadcrumb: { label: "Breadcrumb" },
-  stepper: { label: "Progress", complete: "completed", error: "error" },
+  stepper: { label: "Progress", complete: ", completed", error: ", error" },
   skeleton: { label: "Loading" },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },

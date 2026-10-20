@@ -95,8 +95,8 @@ const verticalStep = ref(1);
           With <code>clickable</code> (the default), a step you can go to is a real
           <code>&lt;button&gt;</code>: reached with Tab, pressed with Enter or Space. The buttons
           share one tab stop, on the current step, and the arrow keys along the stepper move
-          between them. With <code>linear</code>, a step past the current one is plain text,
-          not a button. Back/Next buttons are still the clearest controls for a flow; the
+          between them. With <code>linear</code>, a step past the furthest one reached is
+          plain text, not a button; going back leaves the steps already done reachable. Back/Next buttons are still the clearest controls for a flow; the
           stepper is the way back.
         </li>
         <li>

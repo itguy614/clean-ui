@@ -61,6 +61,33 @@ describe("CuiStepper semantics", () => {
     expect(w!.emitted("update:modelValue")).toEqual([[0]]);
   });
 
+  it("keeps the steps already reached navigable after going back, when linear", async () => {
+    mountStepper({ modelValue: 2 });
+    await buttons()[0].trigger("click"); // back to the first
+    expect(buttons()).toHaveLength(3); // Account, Profile and Billing (reached) stay buttons
+    expect(items()[3].find("button").exists()).toBe(false); // Done was never reached
+  });
+
+  it("puts the tab stop back on the current step when focus leaves", async () => {
+    mountStepper({ modelValue: 1 });
+    const [account, profile] = buttons().map((b) => b.element as HTMLElement);
+    profile.focus();
+    profile.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true, cancelable: true }));
+    await w!.vm.$nextTick();
+    expect(document.activeElement).toBe(account);
+    const outside = document.body.appendChild(document.createElement("button"));
+    outside.focus();
+    await w!.vm.$nextTick();
+    expect(buttons().map((b) => b.attributes("tabindex"))).toEqual(["-1", "0"]);
+    outside.remove();
+  });
+
+  it("focus() focuses the current step's button", () => {
+    mountStepper({ modelValue: 1 });
+    (w!.vm as unknown as { focus: () => void }).focus();
+    expect(document.activeElement).toBe(buttons()[1].element);
+  });
+
   it("renders no buttons when not clickable", () => {
     mountStepper({ clickable: false });
     expect(buttons()).toHaveLength(0);

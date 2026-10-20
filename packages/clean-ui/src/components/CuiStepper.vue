@@ -2,6 +2,7 @@
 import { computed, ref, useTemplateRef, watch } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
+import { PhCheck, PhWarning } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
@@ -27,9 +28,12 @@ export interface CuiStepperProps extends HideableProps, SizeableProps {
   modelValue?: number;
   /** Orientation */
   orientation?: StepperOrientation;
-  /** Allow clicking completed steps to go back */
+  /** Make each step that can be gone to a button (click, Enter or Space) */
   clickable?: boolean;
-  /** Linear mode — can only progress forward, no skipping */
+  /**
+   * Linear mode — no skipping ahead: only steps up to the furthest one reached are
+   * navigable, so going back can return forward again. An error step ahead is blocked too.
+   */
   linear?: boolean;
 }
 
@@ -53,13 +57,18 @@ function getStatus(index: number): StepStatus {
   return "upcoming";
 }
 
+// The furthest step reached so far: in linear mode the stepper can go back and then forward
+// again, as far as here, rather than going back locking the steps already done.
+const furthest = ref(props.modelValue);
+watch(() => props.modelValue, (v) => { if (v > furthest.value) furthest.value = v; });
+
 /**
  * Whether step `index` can be navigated to: a button, rather than plain text (#154).
  * Linear blocks every step past the current one — an error step ahead included, which used
  * to slip through because its status is "error", not "upcoming".
  */
 function isClickable(index: number) {
-  return props.clickable && !(props.linear && index > props.modelValue);
+  return props.clickable && !(props.linear && index > furthest.value);
 }
 
 function onStepClick(index: number) {
@@ -169,10 +178,26 @@ const messages = useMessages();
 // navigated to is a <button>; the buttons share one tab stop (useRovingFocus), on the
 // current step when it is one, and the arrows along the stepper move between them.
 const listEl = useTemplateRef<HTMLElement>("listEl");
-// The navigable steps are always a run from the first (none, those up to the current one
-// when linear, or all), so a button's place among the buttons is its step index.
+// The navigable steps are always a run from the first (none, those up to the furthest
+// reached when linear, or all), so a button's place among the buttons is its step index.
 const buttonIndex = ref(props.modelValue);
 watch(() => props.modelValue, (v) => (buttonIndex.value = v));
+
+// Arrowing moves the stop; leaving the stepper puts it back on the current step, so Tab
+// returns there rather than to wherever the arrows stopped.
+function onListFocusout(e: FocusEvent) {
+  if (!listEl.value?.contains(e.relatedTarget as Node | null)) buttonIndex.value = props.modelValue;
+}
+
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+defineExpose({
+  el: rootEl,
+  focus: (opts?: FocusOptions) => listEl.value?.querySelector<HTMLElement>('.cui-stepper__button[tabindex="0"]')?.focus(opts),
+  blur: () => {
+    const a = document.activeElement;
+    if (a instanceof HTMLElement && rootEl.value?.contains(a)) a.blur();
+  },
+});
 const roving = useRovingFocus({
   container: listEl,
   itemSelector: ".cui-stepper__button",
@@ -197,7 +222,7 @@ const items = computed(() =>
 </script>
 
 <template>
-  <nav v-show="!hidden" class="cui-stepper" :aria-label="messages.stepper.label">
+  <nav ref="rootEl" v-show="!hidden" class="cui-stepper" :aria-label="messages.stepper.label">
     <ol
       ref="listEl"
       class="cui-stepper__list"
@@ -209,6 +234,7 @@ const items = computed(() =>
       }"
       @keydown="roving.onKeydown"
       @focusin="roving.onFocusin"
+      @focusout="onListFocusout"
     >
       <!-- Each item is a step and the connector after it -->
       <li
@@ -236,15 +262,15 @@ const items = computed(() =>
             alignItems: orientation === 'horizontal' ? 'center' : 'flex-start',
             gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
             flex: '0 0 auto',
-            textAlign: orientation === 'horizontal' ? 'center' : 'left',
+            textAlign: orientation === 'horizontal' ? 'center' : 'start',
           }"
           :aria-current="status === 'current' ? 'step' : undefined"
           @click="onStepClick(index)"
         >
           <!-- Circle -->
           <span :style="circleStyle(status)" aria-hidden="true">
-            <CuiIcon v-if="status === 'complete'" name="check" :size="cfg.iconSize" />
-            <CuiIcon v-else-if="status === 'error'" name="warning" :size="cfg.iconSize" />
+            <CuiIcon v-if="status === 'complete'" :icon="PhCheck" :size="cfg.iconSize" />
+            <CuiIcon v-else-if="status === 'error'" :icon="PhWarning" :size="cfg.iconSize" />
             <CuiIcon v-else-if="step.icon" :name="step.icon" :size="cfg.iconSize" />
             <span v-else>{{ index + 1 }}</span>
           </span>
@@ -252,7 +278,7 @@ const items = computed(() =>
           <!-- Label + description -->
           <span :style="{ display: 'block' }">
             <span :style="{ display: 'block', ...labelStyle(status) }">
-              {{ step.label }}<span v-if="srStatus" class="cui-sr-only">, {{ srStatus }}</span>
+              {{ step.label }}<span v-if="srStatus" class="cui-sr-only">{{ srStatus }}</span>
             </span>
             <span
               v-if="step.description"

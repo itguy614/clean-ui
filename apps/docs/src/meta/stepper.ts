@@ -26,7 +26,7 @@ const meta: ComponentMeta = {
       name: "linear",
       type: "boolean",
       default: "true",
-      description: "Only the current step and those before it are selectable — no skipping ahead, even to an error step. Set false to allow any step",
+      description: "No skipping ahead: only steps up to the furthest one reached are selectable, so you can go back and forward again. An error step ahead is blocked too. Set false to allow any step",
     },
     hiddenProp,
   ],
