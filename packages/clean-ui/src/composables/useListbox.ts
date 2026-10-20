@@ -84,8 +84,9 @@ export function useListbox(options: UseListboxOptions) {
 
   const items = (): ListItems => ({ count: options.count(), isDisabled: options.isDisabled, label: options.label });
 
-  // Only a keyboard move scrolls: a hover sets the highlight too, and scrolling then would
-  // drag the list under the pointer.
+  // Only a keyboard move scrolls (and an opening that starts on the selection, which the
+  // component asks for): a hover sets the highlight too, and scrolling then would drag the
+  // list under the pointer.
   function scrollActiveIntoView() {
     const i = activeIndex.value;
     if (i < 0) return;
@@ -168,5 +169,5 @@ export function useListbox(options: UseListboxOptions) {
     onScopeDispose(() => clearTimeout(announceTimer));
   }
 
-  return { listboxId, labelId, optionId, inputAttrs, panelAttrs, announcement, onKeydown };
+  return { listboxId, labelId, optionId, inputAttrs, panelAttrs, announcement, onKeydown, scrollActiveIntoView };
 }

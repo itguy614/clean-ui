@@ -101,6 +101,23 @@ const meta: ComponentMeta = {
     { name: "open", signature: "() => void", description: "Open the panel and position it. A no-op while disabled or readonly" },
     { name: "close", signature: "() => void", description: "Close the panel and drop the highlight" },
   ],
+
+  // The dropdown is the shared listbox panel (#216), so it takes the same token set as
+  // CuiCombobox and CuiTagInput, under the select prefix.
+  tokens: [
+    { name: "--cui-select-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
+    { name: "--cui-select-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
+    { name: "--cui-select-panel-radius", default: "0.5rem", description: "Dropdown corner radius" },
+    { name: "--cui-select-panel-shadow", default: "two-layer drop shadow", description: "Dropdown shadow" },
+    { name: "--cui-select-panel-padding", default: "0.25rem", description: "Dropdown inner padding" },
+    { name: "--cui-select-font-size", default: "per size", description: "Option font size" },
+    { name: "--cui-select-item-padding", default: "per size", description: "Option padding" },
+    { name: "--cui-select-item-radius", default: "0.25rem", description: "Option corner radius" },
+    { name: "--cui-select-item-color", default: "var(--cui-text-body)", description: "Option text color" },
+    { name: "--cui-select-item-focus-bg", default: "var(--cui-primary-bg)", description: "Background of the highlighted option" },
+    { name: "--cui-select-item-selected-bg", default: "50% of the focus tint", description: "Background of a selected option" },
+    { name: "--cui-select-item-disabled-color", default: "var(--cui-text-tertiary)", description: "Disabled option text color" },
+  ],
 };
 
 export default meta;

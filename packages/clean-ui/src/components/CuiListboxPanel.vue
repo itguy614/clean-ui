@@ -32,7 +32,7 @@ const props = defineProps<{
    */
   anchor: HTMLElement | null | undefined;
   /** The component whose public tokens style the panel. */
-  tokenPrefix: "combobox" | "tag-input";
+  tokenPrefix: "combobox" | "tag-input" | "select";
   /** Upper bound for the panel's height, in px, when `maxVisible` doesn't decide it. */
   maxHeight: number;
   /**

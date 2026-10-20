@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from "vue";
+import { computed, ref } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
-import { useEventListener } from "../composables/useEventListener";
+import { useListbox } from "../composables/useListbox";
+import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
-import { computeDropdownPosition } from "../utils/position";
+import CuiSpinner from "./CuiSpinner.vue";
+import CuiListboxPanel from "./CuiListboxPanel.vue";
+import CuiListboxOption from "./CuiListboxOption.vue";
+import CuiListboxStatus from "./CuiListboxStatus.vue";
+import { INPUT_SIZE_SCALE, RADIUS_SCALE, scaleDensity } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
@@ -86,32 +90,33 @@ const groupedOptions = computed(() => {
     }
   }
 
-  const result: Array<{ group?: string; options: SelectOption[] }> = [];
-  if (ungrouped.length) result.push({ options: ungrouped });
-  for (const [group, options] of groups) {
-    result.push({ group, options });
-  }
+  // Each option carries its index in the order shown — what the arrow keys walk and the
+  // option ids count (#216) — computed once here rather than looked up per row per render.
+  let index = 0;
+  const section = (options: SelectOption[], group?: string) => ({ group, options: options.map((opt) => ({ opt, index: index++ })) });
+  const result = [];
+  if (ungrouped.length) result.push(section(ungrouped));
+  for (const [group, options] of groups) result.push(section(options, group));
   return result;
 });
 
-// Flat list of non-disabled options for keyboard nav
-const navigableOptions = computed(() =>
-  normalizedOptions.value.filter((o) => !o.disabled),
-);
+// Every option in the order it is shown — ungrouped first, then each group. It used to be
+// the order the options were given, so with interleaved groups the highlight jumped around
+// the list. Disabled options stay in it; navigation skips them.
+const displayOptions = computed(() => groupedOptions.value.flatMap((section) => section.options.map((o) => o.opt)));
 
 // State
 const isOpen = ref(false);
 const highlightedIndex = ref(-1);
 const triggerRef = ref<HTMLElement>();
-const dropdownRef = ref<HTMLElement>();
+const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 
-// Selection helpers
-function isSelected(value: string | number): boolean {
-  if (props.multiple) {
-    return Array.isArray(props.modelValue) && props.modelValue.includes(value);
-  }
-  return props.modelValue === value;
-}
+// Selection helpers. A Set, since every row asks on every render.
+const selectedValues = computed(() => {
+  const v = props.modelValue;
+  return new Set<string | number>(Array.isArray(v) ? v : v != null ? [v] : []);
+});
+const isSelected = (value: string | number) => selectedValues.value.has(value);
 
 function getSelectedLabels(): string[] {
   if (props.multiple && Array.isArray(props.modelValue)) {
@@ -152,15 +157,9 @@ function toggleOpen() {
 function open() {
   if (props.disabled || props.readonly) return;
   isOpen.value = true;
-  highlightedIndex.value = -1;
-  nextTick(() => {
-    positionDropdown();
-    // Highlight current selection
-    if (!props.multiple && props.modelValue != null) {
-      const idx = navigableOptions.value.findIndex((o) => o.value === props.modelValue);
-      if (idx >= 0) highlightedIndex.value = idx;
-    }
-  });
+  // Start the highlight on the current selection, scrolled into view.
+  highlightedIndex.value = props.multiple ? -1 : displayOptions.value.findIndex((o) => o.value === props.modelValue && !o.disabled);
+  listbox.scrollActiveIntoView();
 }
 
 function close() {
@@ -198,75 +197,32 @@ function clear() {
   emit("update:modelValue", props.multiple ? [] : null);
 }
 
-// Keyboard navigation
+// The ARIA combobox pattern, select-only (#216) — see useListbox: Home/End, type-ahead,
+// Space and Enter, the highlight named by aria-activedescendant on the trigger.
+const generatedId = useCuiId("select");
+const groupId = (section: number) => `${listbox.listboxId}-group-${section}`;
+const listbox = useListbox({
+  id: props.id ?? generatedId,
+  mode: "select-only",
+  count: () => displayOptions.value.length,
+  isDisabled: (i) => !!displayOptions.value[i]?.disabled,
+  label: (i) => displayOptions.value[i]?.label ?? "",
+  activeIndex: highlightedIndex,
+  isOpen: () => isOpen.value,
+  open,
+  select: (i) => selectOption(displayOptions.value[i]),
+  close,
+  hasLabel: () => false,
+  labelledby: () => props.ariaLabelledby,
+});
+
 function onKeydown(e: KeyboardEvent) {
   if (props.disabled || props.readonly) return;
-
-  if (!isOpen.value) {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      open();
-    }
-    return;
-  }
-
-  switch (e.key) {
-    case "ArrowDown":
-      e.preventDefault();
-      highlightedIndex.value = Math.min(
-        highlightedIndex.value + 1,
-        navigableOptions.value.length - 1,
-      );
-      scrollToHighlighted();
-      break;
-    case "ArrowUp":
-      e.preventDefault();
-      highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0);
-      scrollToHighlighted();
-      break;
-    case "Enter":
-    case " ":
-      e.preventDefault();
-      if (highlightedIndex.value >= 0 && highlightedIndex.value < navigableOptions.value.length) {
-        selectOption(navigableOptions.value[highlightedIndex.value]);
-      }
-      break;
-    case "Escape":
-      e.preventDefault();
-      close();
-      triggerRef.value?.focus();
-      break;
-    case "Home":
-      e.preventDefault();
-      highlightedIndex.value = 0;
-      scrollToHighlighted();
-      break;
-    case "End":
-      e.preventDefault();
-      highlightedIndex.value = navigableOptions.value.length - 1;
-      scrollToHighlighted();
-      break;
-  }
-}
-
-function scrollToHighlighted() {
-  nextTick(() => {
-    const el = dropdownRef.value?.querySelector("[data-highlighted]");
-    el?.scrollIntoView({ block: "nearest" });
-  });
+  listbox.onKeydown(e);
 }
 
 // Global listeners only while open, so a closed select holds none (#203).
-useClickOutside([triggerRef, dropdownRef], close, { enabled: isOpen });
-useEventListener("window", ["scroll", "resize"], positionDropdown, { enabled: isOpen, capture: true });
-
-// Dropdown positioning
-const dropdownStyle = ref<Record<string, string>>({});
-
-function positionDropdown() {
-  if (!triggerRef.value) return;
-  dropdownStyle.value = computeDropdownPosition(triggerRef.value, "bottom", { matchWidth: true, maxHeight: 300 }).styles;
-}
+useClickOutside(() => [triggerRef.value, panelRef.value?.el], close, { enabled: isOpen });
 
 // Expose
 defineExpose({
@@ -279,7 +235,7 @@ defineExpose({
 
 const dims = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
-  return { minHeight: s.height, px: s.px, fontSize: s.fontSize };
+  return { minHeight: s.height, px: s.px, fontSize: s.fontSize, itemPadding: `${scaleDensity("0.5rem")} ${s.px}` };
 });
 const messages = useMessages();
 </script>
@@ -309,11 +265,9 @@ const messages = useMessages();
         :id="id"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        v-bind="listbox.inputAttrs.value"
         class="cui-select__trigger"
         :style="{ borderRadius: RADIUS_SCALE[rounded] }"
-        role="combobox"
-        :aria-expanded="isOpen"
         aria-haspopup="listbox"
         :aria-disabled="disabled || readonly || undefined"
         :aria-invalid="error || undefined"
@@ -373,70 +327,68 @@ const messages = useMessages();
 
     </div>
 
-    <!-- Dropdown (teleported to body to escape overflow: clip on ancestors) -->
-    <Teleport to="body">
-      <div
-        v-if="isOpen"
-        ref="dropdownRef"
-        class="cui-select__dropdown"
-        role="listbox"
-        :aria-multiselectable="multiple || undefined"
-        :style="[
-          dropdownStyle,
-          {
-            '--_sel-color': `var(--cui-${color})`,
-            '--_sel-font-size': dims.fontSize,
-          },
-        ]"
-      >
-        <!-- Loading -->
-        <div v-if="loading" class="cui-select__loading">
-          <CuiIcon name="spinner-gap" size="1rem" class="cui-select__spinner" />
-          {{ messages.loading }}
-        </div>
+    <!-- Dropdown: the shared listbox panel, teleported to body (#216) -->
+    <CuiListboxPanel
+      ref="panelRef"
+      :open="isOpen"
+      :anchor="triggerRef"
+      token-prefix="select"
+      :max-height="300"
+      :font-size="dims.fontSize"
+      :item-padding="dims.itemPadding"
+      v-bind="listbox.panelAttrs.value"
+      :aria-multiselectable="multiple || undefined"
+      class="cui-select__dropdown"
+    >
+      <CuiListboxStatus v-if="loading">
+        <CuiSpinner size="sm" show-label :label="messages.loading" />
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="normalizedOptions.length === 0">{{ noOptionsText }}</CuiListboxStatus>
 
-        <!-- Empty -->
-        <div v-else-if="normalizedOptions.length === 0" class="cui-select__empty">
-          {{ noOptionsText }}
+      <template v-else>
+        <!-- A named group is role="group", labelled by its header; the ungrouped section is
+             presentational, so its options are the listbox's own. -->
+        <div
+          v-for="(section, si) in groupedOptions"
+          :key="section.group ?? '__ungrouped'"
+          :role="section.group ? 'group' : undefined"
+          :aria-labelledby="section.group ? groupId(si) : undefined"
+        >
+          <div v-if="section.group" :id="groupId(si)" class="cui-select__group-header">
+            {{ section.group }}
+          </div>
+          <!-- The cui-select__option--* classes are for consumer CSS written against them;
+               the paint comes from CuiListboxOption's own state classes. -->
+          <CuiListboxOption
+            v-for="{ opt, index } in section.options"
+            :key="String(opt.value)"
+            :id="listbox.optionId(index)"
+            :active="highlightedIndex === index"
+            :selected="isSelected(opt.value)"
+            :disabled="!!opt.disabled"
+            class="cui-select__option"
+            :class="{
+              'cui-select__option--selected': isSelected(opt.value),
+              'cui-select__option--highlighted': highlightedIndex === index,
+              'cui-select__option--disabled': opt.disabled,
+            }"
+            @select="selectOption(opt)"
+            @hover="highlightedIndex = index"
+          >
+            <!-- Checkbox for multi-select only -->
+            <span v-if="multiple" class="cui-select__check">
+              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :style="{ color: 'var(--_sel-color)' }" />
+            </span>
+            <span class="cui-select__option-label">
+              <slot name="option" :option="opt">
+                <CuiIcon v-if="opt.icon" :name="opt.icon" size="sm" class="cui-select__option-icon" />
+                {{ opt.label }}
+              </slot>
+            </span>
+          </CuiListboxOption>
         </div>
-
-        <!-- Options -->
-        <template v-else>
-          <template v-for="section in groupedOptions" :key="section.group ?? '__ungrouped'">
-            <div v-if="section.group" class="cui-select__group-header">
-              {{ section.group }}
-            </div>
-            <div
-              v-for="opt in section.options"
-              :key="String(opt.value)"
-              class="cui-select__option"
-              :class="{
-                'cui-select__option--selected': isSelected(opt.value),
-                'cui-select__option--highlighted': navigableOptions[highlightedIndex]?.value === opt.value,
-                'cui-select__option--disabled': opt.disabled,
-              }"
-              :data-highlighted="navigableOptions[highlightedIndex]?.value === opt.value ? '' : undefined"
-              role="option"
-              :aria-selected="isSelected(opt.value)"
-              :aria-disabled="opt.disabled || undefined"
-              @click="selectOption(opt)"
-              @mouseenter="highlightedIndex = navigableOptions.findIndex((o) => o.value === opt.value)"
-            >
-              <!-- Checkbox for multi-select only -->
-              <span v-if="multiple" class="cui-select__check">
-                <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" />
-              </span>
-              <span class="cui-select__option-label">
-                <slot name="option" :option="opt">
-                  <CuiIcon v-if="opt.icon" :name="opt.icon" size="sm" class="cui-select__option-icon" />
-                  {{ opt.label }}
-                </slot>
-              </span>
-            </div>
-          </template>
-        </template>
-      </div>
-    </Teleport>
+      </template>
+    </CuiListboxPanel>
 
     <!-- Error message -->
     <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
@@ -599,38 +551,9 @@ const messages = useMessages();
   transform: rotate(180deg);
 }
 
-/* --- Dropdown --- */
-.cui-select__dropdown {
-  z-index: 50;
-  overflow-y: auto;
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
-  border: 1px solid var(--cui-border);
-  background: var(--cui-surface-base);
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-  padding: calc(0.25rem * var(--cui-density-scale, 1));
-}
-
-:where(.dark, .dark *) .cui-select__dropdown {
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
-}
-
-/* --- Loading / Empty --- */
-.cui-select__loading,
-.cui-select__empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: calc(0.5rem * var(--cui-density-scale, 1));
-  padding: calc(0.75rem * var(--cui-density-scale, 1));
-  font-size: 0.875rem;
-  color: var(--cui-text-secondary);
-}
-
-.cui-select__spinner {
-  animation: cui-spin 0.6s linear infinite;
-}
-
-/* cui-spin keyframe defined in main.css */
+/* --- Dropdown ---
+   The dropdown, its options and its status rows are painted by CuiListboxPanel /
+   CuiListboxOption / CuiListboxStatus, from --cui-select-panel-* / --cui-select-item-* (#216). */
 
 /* --- Group header --- */
 .cui-select__group-header {
@@ -640,43 +563,6 @@ const messages = useMessages();
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cui-text-tertiary);
-}
-
-/* --- Option --- */
-.cui-select__option {
-  display: flex;
-  align-items: center;
-  gap: calc(0.5rem * var(--cui-density-scale, 1));
-  padding: calc(0.5rem * var(--cui-density-scale, 1));
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: var(--_sel-font-size);
-  color: var(--cui-text-body);
-  transition: background 0.1s ease;
-}
-
-.cui-select__option:hover,
-.cui-select__option--highlighted {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-select__option:hover,
-:where(.dark, .dark *) .cui-select__option--highlighted {
-  background: var(--color-surface-800);
-}
-
-.cui-select__option--selected {
-  color: var(--_sel-color);
-  font-weight: 500;
-}
-
-.cui-select__option--disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.cui-select__option--disabled:hover {
-  background: transparent;
 }
 
 /* --- Option icon --- */
