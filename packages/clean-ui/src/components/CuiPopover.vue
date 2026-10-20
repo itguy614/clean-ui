@@ -77,12 +77,10 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
 
 const wrapperRef = ref<HTMLElement | null>(null);
 
-useClickOutside(
-  () => [wrapperRef.value, floatingRef.value],
-  () => {
-    if (isVisible.value && props.trigger === "click") doHide();
-  },
-);
+// At once, like Escape: a dismissal doesn't wait out hideDelay.
+useClickOutside(() => [wrapperRef.value, floatingRef.value], hideNow, {
+  enabled: () => isVisible.value && props.trigger === "click",
+});
 
 // Close on Escape from anywhere — the panel is teleported to <body>, so a wrapper-scoped
 // keydown misses it once focus moves into the panel. Through the shared layer stack

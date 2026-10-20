@@ -116,6 +116,7 @@ function onKeydown(e: KeyboardEvent) {
     <div
       v-if="isOpen"
       class="cui-dropdown-sub__menu"
+      :class="{ 'cui-dropdown-sub__menu--closing': parentCtx?.isClosing.value }"
       :style="menuStyle"
       role="menu"
       @mouseenter="onMouseEnter"
@@ -190,6 +191,13 @@ function onKeydown(e: KeyboardEvent) {
   animation: cui-dropdown-sub-in 0.15s ease;
 }
 
+/* Leaves with the menu it belongs to: the whole stack fades out together, rather than
+   the parent fading while an open sub-menu stays put until the parent unmounts it. */
+.cui-dropdown-sub__menu--closing {
+  animation: cui-dropdown-sub-out 0.15s ease forwards;
+  pointer-events: none;
+}
+
 :where(.dark, .dark *) .cui-dropdown-sub__menu {
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
@@ -202,6 +210,17 @@ function onKeydown(e: KeyboardEvent) {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes cui-dropdown-sub-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-4px);
   }
 }
 </style>

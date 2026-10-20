@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick, type Component } from "vue";
 import CuiCombobox from "../CuiCombobox.vue";
 import CuiTagInput from "../CuiTagInput.vue";
@@ -52,12 +52,22 @@ const Dropdown = defineComponent(() => () =>
   ]),
 );
 
-const cases: Array<[string, Component, Record<string, unknown>]> = [
-  ["CuiCombobox", CuiCombobox, { options }],
-  ["CuiTagInput", CuiTagInput, { modelValue: [] }],
-  ["CuiSelect", CuiSelect, { options }],
-  ["CuiDropdown", Dropdown, {}],
-  ["CuiContextMenu", CuiContextMenu, {}],
+type Open = (w: VueWrapper) => Promise<unknown> | unknown;
+const focusInput: Open = (w) => w.find("input").trigger("focus");
+const click = (selector: string): Open => (w) => w.find(selector).trigger("click");
+
+// Opened first: these attach their global listeners only while open (#203), so unmounting
+// open is the case that can leak.
+const openable: Array<[string, Component, Record<string, unknown>, Open]> = [
+  ["CuiCombobox", CuiCombobox, { options }, focusInput],
+  ["CuiTagInput", CuiTagInput, { modelValue: [], suggestions: ["a"] }, focusInput],
+  ["CuiSelect", CuiSelect, { options }, click(".cui-select__trigger")],
+  ["CuiDropdown", Dropdown, {}, click("button")],
+  ["CuiContextMenu", CuiContextMenu, {}, (w) => w.trigger("contextmenu", { clientX: 10, clientY: 10 })],
+];
+
+const cases: Array<[string, Component, Record<string, unknown>, Open?]> = [
+  ...openable.map(([name, c, p, open]) => [`${name} (open)`, c, p, open] as [string, Component, Record<string, unknown>, Open]),
   // Mounted open: the shared layer stack's Escape listener exists only while a layer is
   // open (#254, #278).
   ["CuiTooltip (visible)", CuiTooltip, { text: "Hint", visible: true }],
@@ -78,13 +88,31 @@ describe("floating components remove every window/document listener they add", (
     document.body.innerHTML = "";
   });
 
-  it.each(cases)("%s", async (_name, component, props) => {
+  it.each(cases)("%s", async (_name, component, props, open) => {
     const { added, unremoved } = recordListeners();
     const wrapper = mount(component, { props, attachTo: document.body });
     await nextTick(); // a modal opens in onMounted and joins the layer stack a tick later
+    await open?.(wrapper);
+    await nextTick();
     expect(added().length).toBeGreaterThan(0);
 
     wrapper.unmount();
     expect(unremoved()).toEqual([]);
+  });
+});
+
+// #203: each held a document mousedown listener (and a window scroll listener, most a
+// resize one too) from mount, open or not — twenty closed selects meant sixty.
+describe("closed floating components hold no click-outside or reposition listeners", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
+  });
+
+  it.each(openable)("%s", async (_name, component, props) => {
+    const { added } = recordListeners();
+    mount(component, { props, attachTo: document.body }).unmount();
+    const global = added().map(([type]) => type).filter((t) => ["mousedown", "scroll", "resize"].includes(t));
+    expect(global).toEqual([]);
   });
 });

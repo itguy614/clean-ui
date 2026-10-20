@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { computeDropdownPosition } from "../utils/position";
@@ -240,13 +242,10 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-// Click outside
-function onClickOutside(e: MouseEvent) {
-  const target = e.target as Node;
-  if (wrapperRef.value?.contains(target)) return;
-  if (dropdownRef.value?.contains(target)) return;
-  isOpen.value = false;
-}
+// Global listeners only while open, so a closed field holds none (#203). The wrapper,
+// not just the control: a press on the label or the clear button isn't "outside".
+useClickOutside([wrapperRef, dropdownRef], () => (isOpen.value = false), { enabled: isOpen });
+useEventListener("window", ["scroll", "resize"], updateDropdownPosition, { enabled: isOpen, capture: true });
 
 function onFocus() {
   if (!props.disabled && !atMax.value) {
@@ -255,21 +254,7 @@ function onFocus() {
   }
 }
 
-// Named, not inline, so onUnmounted can remove them — an anonymous listener
-// can't be, and leaked two per mount along with the closure's whole setup scope (#202).
-function onScrollOrResize() {
-  if (isOpen.value) updateDropdownPosition();
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScrollOrResize, true);
-  window.addEventListener("resize", onScrollOrResize);
-});
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScrollOrResize, true);
-  window.removeEventListener("resize", onScrollOrResize);
   if (debounceTimer) clearTimeout(debounceTimer);
 });
 
