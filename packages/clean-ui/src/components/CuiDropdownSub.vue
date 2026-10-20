@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, inject, computed } from "vue";
+import { ref, inject, computed, nextTick } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
+import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownSubProps extends DisableableProps {
@@ -19,6 +20,7 @@ const resolvedTrigger = computed(() => props.trigger ?? parentCtx?.trigger.value
 
 const isOpen = ref(false);
 const triggerRef = ref<HTMLElement>();
+const panelRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -72,6 +74,7 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault();
     e.stopPropagation();
     open();
+    nextTick(() => focusMenuEdge(panelRef.value));
   } else if (e.key === "ArrowLeft" && isOpen.value) {
     e.preventDefault();
     e.stopPropagation();
@@ -83,6 +86,20 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
+// The panel is teleported, so its keys never reach the wrapper's handler above (#160).
+// Escape and Arrow Left close only this sub-menu — preventDefault tells the layer stack
+// it was handled, so the parent menu stays open — and return focus to its row.
+function onPanelKeydown(e: KeyboardEvent) {
+  if (!panelRef.value) return;
+  if (e.key === "Escape" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+    triggerRef.value?.focus();
+  } else {
+    onMenuKeydown(e, panelRef.value, () => parentCtx?.closeAll());
+  }
+}
 </script>
 
 <template>
@@ -115,6 +132,7 @@ function onKeydown(e: KeyboardEvent) {
     <Teleport to="body">
     <div
       v-if="isOpen"
+      ref="panelRef"
       class="cui-dropdown-sub__menu"
       :data-cui-menu-owner="parentCtx?.ownerId"
       :class="{ 'cui-dropdown-sub__menu--closing': parentCtx?.isClosing.value }"
@@ -122,6 +140,7 @@ function onKeydown(e: KeyboardEvent) {
       role="menu"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
+      @keydown="onPanelKeydown"
     >
       <slot name="menu" />
     </div>

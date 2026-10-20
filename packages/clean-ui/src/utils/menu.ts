@@ -29,8 +29,17 @@ export function focusMenuEdge(menu: HTMLElement | null | undefined, edge: MenuEd
 const nav = useListNavigation({ wrap: () => true });
 const NAV_KEYS = new Set(["ArrowDown", "ArrowUp", "Home", "End"]);
 
-/** Arrow Up/Down (wrapping), Home and End between a menu's items. */
-export function onMenuNavigationKeydown(e: KeyboardEvent, menu: HTMLElement) {
+/**
+ * The keys every menu panel shares: Arrow Up/Down (wrapping), Home and End between its
+ * items, and Tab, which closes the whole menu. `close` hands focus back to the trigger, and
+ * the Tab — not prevented — then moves on from there, as from any button. The panels are
+ * teleported to the end of <body>, so a Tab left to itself would leave the page.
+ */
+export function onMenuKeydown(e: KeyboardEvent, menu: HTMLElement, close: () => void) {
+  if (e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+    close();
+    return;
+  }
   if (!NAV_KEYS.has(e.key)) return;
   const items = menuItems(menu);
   const to = nav.indexForKey(e, items.indexOf(document.activeElement as HTMLElement), { count: items.length });
@@ -44,11 +53,11 @@ export function onMenuNavigationKeydown(e: KeyboardEvent, menu: HTMLElement) {
  * the owner attribute each stamps, not by tree: `data-cui-menu-owner` set to the menu
  * context's `ownerId`.
  */
-export const menuPanels = (ownerId: string) =>
-  document.querySelectorAll<HTMLElement>(`[data-cui-menu-owner="${ownerId}"]`);
+export const menuPanels = (ownerId: string | undefined): Iterable<HTMLElement> =>
+  ownerId ? document.querySelectorAll<HTMLElement>(`[data-cui-menu-owner="${ownerId}"]`) : [];
 
 /** Whether `node` is inside one of the menu's panels. */
-export function inMenuPanels(ownerId: string, node: Node | null | undefined) {
+export function inMenuPanels(ownerId: string | undefined, node: Node | null | undefined) {
   if (!node) return false;
   for (const panel of menuPanels(ownerId)) if (panel.contains(node)) return true;
   return false;
@@ -59,7 +68,8 @@ export function inMenuPanels(ownerId: string, node: Node | null | undefined) {
  * choosing an item leave it there, and without this a keyboard user lands on <body>; a
  * click outside has already moved it where the user wanted, and that stays.
  */
-export function restoreMenuFocus(target: Element | null | undefined, ownerId: string) {
+export function restoreMenuFocus(target: Element | null | undefined, ownerId: string | undefined) {
   if (!(target instanceof HTMLElement) || !target.isConnected) return;
   if (inMenuPanels(ownerId, document.activeElement)) target.focus({ preventScroll: true });
 }
+

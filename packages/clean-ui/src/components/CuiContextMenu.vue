@@ -4,7 +4,7 @@ import { useCuiId } from "../composables/useCuiId";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
-import { focusMenuEdge, menuPanels, onMenuNavigationKeydown, restoreMenuFocus } from "../utils/menu";
+import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
@@ -290,7 +290,7 @@ function onKeydown(e: KeyboardEvent) {
 
 // Keyboard navigation within menu
 function onMenuKeydown(e: KeyboardEvent) {
-  if (menuRef.value) onMenuNavigationKeydown(e, menuRef.value);
+  if (menuRef.value) onSharedMenuKeydown(e, menuRef.value, close);
 }
 
 // Escape through the shared layer stack (#160), like CuiDropdown: a sub-menu's own Escape

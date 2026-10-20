@@ -3,7 +3,7 @@ import { inject, ref, watch, onUnmounted } from "vue";
 import { useEventListener } from "../composables/useEventListener";
 import { DropdownContextKey } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
-import { focusMenuEdge, onMenuNavigationKeydown } from "../utils/menu";
+import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 
 export interface CuiDropdownMenuProps {
   /** Min width of the menu */
@@ -57,7 +57,7 @@ onUnmounted(() => {
 });
 
 function onKeydown(e: KeyboardEvent) {
-  if (menuRef.value) onMenuNavigationKeydown(e, menuRef.value);
+  if (menuRef.value && ctx) onMenuKeydown(e, menuRef.value, ctx.close);
 }
 </script>
 
@@ -65,7 +65,7 @@ function onKeydown(e: KeyboardEvent) {
   <Teleport to="body">
     <div
       v-if="ctx?.isOpen.value || ctx?.isClosing.value"
-      :id="ctx && `${ctx.ownerId}-menu`"
+      :id="ctx?.ownerId && `${ctx.ownerId}-menu`"
       ref="menuRef"
       class="cui-dropdown-menu"
       :class="{ 'cui-dropdown-menu--closing': ctx?.isClosing.value }"

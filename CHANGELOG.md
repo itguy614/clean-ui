@@ -28,8 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   click outside still leaves focus where it landed. On open, focus now also lands on a
   check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
   layer stack, so inside a modal it closes only the menu (#160).
-- A `trigger="hover-focus"` dropdown no longer closes when focus moves into its own menu
-  (#160).
+- Tab in an open dropdown or context menu closes it, and focus moves on from the trigger
+  as it would from any button, instead of leaving the page from the end of `<body>`. A sub-menu now handles its own
+  keys: Arrow Right moves focus into it, Arrow Up/Down move within it, and Escape or Arrow
+  Left closes only the sub-menu and returns to its row (#160).
+- A dropdown shown by hover or focus (`trigger="hover"` / `"hover-focus"`) no longer takes
+  focus from where it was, and a `hover-focus` one no longer closes when focus moves into
+  its menu (#160).
 
 ## [1.3.2] - 2026-10-19
 

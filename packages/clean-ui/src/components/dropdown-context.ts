@@ -14,8 +14,10 @@ export interface DropdownContext {
   /**
    * Identifies this menu's panels: each one — the menu and every sub-menu — carries it as
    * `data-cui-menu-owner`, which is how the teleported panels are found (see utils/menu).
+   * Optional only so that a context provided by hand (DropdownContextKey is exported) still
+   * type-checks; without it those lookups find nothing.
    */
-  ownerId: string;
+  ownerId?: string;
   /**
    * CuiDropdown only. Which item CuiDropdownMenu focuses once it has rendered: a fresh
    * object per request, so an explicit one (Arrow Up/Down on the trigger) moves focus in

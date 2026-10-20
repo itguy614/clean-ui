@@ -99,11 +99,12 @@ const theme = ref("system");
           <code>aria-controls</code> naming the menu. The wrapper itself is not focusable, so give
           it exactly one child that is. Enter or Space toggles the menu, and Arrow Down or Arrow
           Up opens it on the first or last item — in every trigger mode, so a hover menu can be
-          reached from the keyboard too.
+          reached from the keyboard too. A menu shown by hover or by focus does not take focus.
         </li>
         <li>
           Escape closes the menu, and inside a modal it closes only the menu. Escape or choosing
           an item puts focus back on the trigger; a click outside leaves focus where it landed.
+          Tab closes the menu too, and moves on from the trigger as it would from any button.
         </li>
         <li>
           <code>trigger="hover"</code> opens from the keyboard only by the arrow keys, which few

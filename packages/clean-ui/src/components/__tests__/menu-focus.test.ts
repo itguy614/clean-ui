@@ -6,6 +6,7 @@ import CuiDropdownTrigger from "../CuiDropdownTrigger.vue";
 import CuiDropdownMenu from "../CuiDropdownMenu.vue";
 import CuiDropdownItem from "../CuiDropdownItem.vue";
 import CuiDropdownCheckItem from "../CuiDropdownCheckItem.vue";
+import CuiDropdownSub from "../CuiDropdownSub.vue";
 import CuiContextMenu from "../CuiContextMenu.vue";
 import CuiButton from "../CuiButton.vue";
 
@@ -23,6 +24,11 @@ afterEach(() => {
   document.body.innerHTML = "";
   vi.useRealTimers();
 });
+
+// Vue skips a handler for an event stamped no later than the handler was attached (so an
+// event can't trigger a handler it caused to mount). A panel mounted in the same
+// millisecond as a synthetic key would miss it; a person is never that quick.
+const settle = () => new Promise((r) => setTimeout(r, 5));
 
 const menu = () => document.querySelector<HTMLElement>(".cui-dropdown-menu");
 const items = () => Array.from(document.querySelectorAll<HTMLElement>('.cui-dropdown-menu [role^="menuitem"]'));
@@ -43,6 +49,11 @@ function mountDropdown(opts: { trigger?: () => VNode | VNode[]; menu?: () => VNo
 }
 
 const button = () => document.getElementById("btn")!;
+const keydown = (el: Element, key: string, init: KeyboardEventInit = {}) => {
+  const e = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init });
+  el.dispatchEvent(e);
+  return e;
+};
 
 describe("CuiDropdownTrigger menu-button semantics", () => {
   it("puts aria-haspopup, aria-expanded and aria-controls on the slotted button, not the wrapper", async () => {
@@ -155,7 +166,12 @@ describe("CuiDropdown focus", () => {
   it("a hover-focus dropdown does not reopen when focus comes back to its trigger", async () => {
     vi.useFakeTimers();
     mountDropdown({ props: { trigger: "hover-focus" } });
-    button().focus(); // focusin opens it
+    button().focus(); // focusin shows it, and leaves focus on the trigger
+    await nextTick();
+    await nextTick();
+    expect(menu()).not.toBeNull();
+    expect(document.activeElement).toBe(button());
+    keydown(button(), "ArrowDown");
     await nextTick();
     await nextTick();
     expect(menu()!.contains(document.activeElement)).toBe(true);
@@ -177,7 +193,6 @@ describe("CuiDropdown focus, re-entry and modifiers", () => {
     vi.useFakeTimers();
     mountDropdown({ props: { trigger: "hover-focus" } });
     button().focus();
-    await nextTick();
     await nextTick();
     items()[1].focus();
     document.querySelector(".cui-dropdown")!.dispatchEvent(new MouseEvent("mouseenter"));
@@ -205,6 +220,93 @@ describe("CuiDropdown focus, re-entry and modifiers", () => {
     await nextTick();
     escape();
     expect(document.activeElement).toBe(button());
+  });
+});
+
+describe("CuiDropdown code-review fixes", () => {
+  it("a hover open leaves focus where it was", async () => {
+    vi.useFakeTimers();
+    mountDropdown({ props: { trigger: "hover" } });
+    const field = document.body.appendChild(document.createElement("input"));
+    field.focus();
+    document.querySelector(".cui-dropdown")!.dispatchEvent(new MouseEvent("mouseenter"));
+    vi.advanceTimersByTime(150);
+    await nextTick();
+    await nextTick();
+    expect(menu()).not.toBeNull();
+    expect(document.activeElement).toBe(field);
+    document.querySelector(".cui-dropdown")!.dispatchEvent(new MouseEvent("mouseleave"));
+    vi.advanceTimersByTime(200);
+    expect(document.activeElement).toBe(field);
+  });
+
+  it("Tab closes the menu from the trigger, and leaves the Tab itself to the browser", async () => {
+    mountDropdown();
+    button().click();
+    await nextTick();
+    await nextTick();
+    await settle();
+    const e = keydown(items().at(-1)!, "Tab");
+    expect(e.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(button());
+    await nextTick();
+    expect(menu()!.classList.contains("cui-dropdown-menu--closing")).toBe(true);
+  });
+
+  it("the trigger reopens a menu that is still animating out", async () => {
+    mountDropdown();
+    button().click();
+    await nextTick();
+    escape();
+    await nextTick();
+    button().click();
+    await nextTick();
+    expect(menu()!.classList.contains("cui-dropdown-menu--closing")).toBe(false);
+    expect(button().getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("swallows the keyup of a Space pressed on a menu item, so Firefox cannot click the trigger", async () => {
+    mountDropdown();
+    button().click();
+    await nextTick();
+    await nextTick();
+    keydown(items()[0], " ");
+    expect(document.activeElement).toBe(button());
+    const up = new KeyboardEvent("keyup", { key: " ", bubbles: true, cancelable: true });
+    button().dispatchEvent(up);
+    expect(up.defaultPrevented).toBe(true);
+    // A Space pressed on the trigger itself keeps its keyup.
+    keydown(button(), " ");
+    const own = new KeyboardEvent("keyup", { key: " ", bubbles: true, cancelable: true });
+    button().dispatchEvent(own);
+    expect(own.defaultPrevented).toBe(false);
+  });
+
+  it("Escape in a sub-menu closes only the sub-menu and returns to its row", async () => {
+    mountDropdown({
+      menu: () => [
+        h(CuiDropdownItem, () => "One"),
+        h(CuiDropdownSub, null, { default: () => "More", menu: () => [h(CuiDropdownItem, () => "Deep")] }),
+      ],
+    });
+    button().click();
+    await nextTick();
+    await nextTick();
+    const row = document.querySelector<HTMLElement>(".cui-dropdown-sub__trigger")!;
+    row.focus();
+    keydown(row, "ArrowRight");
+    await nextTick();
+    await nextTick();
+    const sub = document.querySelector(".cui-dropdown-sub__menu")!;
+    expect(sub.contains(document.activeElement)).toBe(true);
+
+    await settle();
+    const e = keydown(document.activeElement!, "Escape");
+    expect(e.defaultPrevented).toBe(true);
+    await nextTick();
+    expect(document.querySelector(".cui-dropdown-sub__menu")).toBeNull();
+    expect(menu()!.classList.contains("cui-dropdown-menu--closing")).toBe(false);
+    expect(document.activeElement).toBe(row);
   });
 });
 

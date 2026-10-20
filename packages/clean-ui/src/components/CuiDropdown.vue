@@ -5,6 +5,7 @@ import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../utils/menu";
+import { warnOnce } from "../utils/devWarn";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -33,25 +34,32 @@ let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Focus moves in when the menu actually opens, or when asked for an edge explicitly (Arrow
-// Up/Down on the trigger) — not on a hover or focus re-entering an open menu, which would
-// pull a keyboard user back to the first item. `edge` is checked rather than trusted: open
-// is also a slot prop and an exposed method, and `@click="open"` hands it a MouseEvent.
-function open(edge?: MenuEdge) {
+/** Show the menu; with an edge, also move focus into it once it has rendered. */
+function show(focus: MenuEdge | null) {
   if (props.disabled) return;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
   if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
-  const explicit = edge === "first" || edge === "last";
-  const opening = !isOpen.value || isClosing.value;
   isClosing.value = false;
   isOpen.value = true;
-  if (opening || explicit) focusRequest.value = { edge: edge === "last" ? "last" : "first" };
+  if (focus) focusRequest.value = { edge: focus };
 }
+
+// A click or a key opens the menu with focus in it. `edge` is checked rather than trusted:
+// open is also a slot prop and an exposed method, and `@click="open"` hands it a MouseEvent.
+function open(edge?: MenuEdge) {
+  show(edge === "last" ? "last" : "first");
+}
+
+// A hover or a focus-in only shows it (#160): moving focus would take it from wherever the
+// user was — a text field the pointer happened to cross — and a close would then hand it to
+// the trigger. Arrow Down from the trigger moves in.
+const reveal = () => show(null);
 
 /** Where focus goes back to on close: the trigger's own focusable element (#160). */
 function triggerTarget() {
-  const wrap = triggerEl.value;
-  return wrap?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') ?? wrap?.firstElementChild;
+  const target = triggerEl.value?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!target) warnOnce("[clean-ui] CuiDropdownTrigger: nothing in the trigger can take focus, so focus cannot return to it when the menu closes. Use a CuiButton or <button>.");
+  return target;
 }
 
 function close() {
@@ -68,7 +76,8 @@ function close() {
 }
 
 function toggle() {
-  if (isOpen.value) close(); else open();
+  // A closing menu counts as closed: its trigger already says aria-expanded="false".
+  if (isOpen.value && !isClosing.value) close(); else open();
 }
 
 function closeAll() {
@@ -78,7 +87,7 @@ function closeAll() {
 function onMouseEnter() {
   if (props.trigger === "hover" || props.trigger === "hover-focus") {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-    showTimer = setTimeout(open, 100);
+    showTimer = setTimeout(reveal, 100);
   }
 }
 
@@ -92,14 +101,14 @@ function onMouseLeave() {
 function onFocusIn(e: FocusEvent) {
   // Focus coming back from this dropdown's own menu (a close handing it to the trigger,
   // Shift+Tab) is not a fresh focus-in.
-  if (props.trigger === "hover-focus" && !inMenuPanels(dropdownId, e.relatedTarget as Node | null)) open();
+  if (props.trigger === "hover-focus" && !inMenuPanels(dropdownId, e.relatedTarget as Node | null)) reveal();
 }
 
 function onFocusOut(e: FocusEvent) {
   if (props.trigger === "hover-focus") {
     const related = e.relatedTarget as Node | null;
     const el = (e.currentTarget as HTMLElement);
-    // Focus moving into the teleported menu, which open() itself does, is still inside.
+    // Focus moving into the teleported menu (Arrow Down) is still inside.
     if (related && (el.contains(related) || inMenuPanels(dropdownId, related))) return;
     hideTimer = setTimeout(close, 150);
   }

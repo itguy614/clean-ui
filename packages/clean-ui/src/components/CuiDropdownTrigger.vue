@@ -24,7 +24,7 @@ const expanded = computed(() => !!ctx?.isOpen.value && !ctx.isClosing.value);
 const forwarded = computed(() => ({
   "aria-haspopup": "menu",
   "aria-expanded": expanded.value ? "true" : "false",
-  "aria-controls": expanded.value && ctx ? `${ctx.ownerId}-menu` : undefined,
+  "aria-controls": expanded.value && ctx?.ownerId ? `${ctx.ownerId}-menu` : undefined,
 }));
 
 /** The slot's nodes, with fragments flattened and comments (a false `v-if`) dropped. */
@@ -58,7 +58,18 @@ function clicksNatively(target: EventTarget | null, key: string) {
   return key === "Enter" && !!target.closest("a[href]");
 }
 
+// A Space whose keydown happened elsewhere — on a menu item, whose activation handed focus
+// back here — must not have its keyup click this button: Firefox clicks on keyup, and the
+// menu would open again.
+let spaceDownHere = false;
+function onKeyup(e: KeyboardEvent) {
+  if (e.key !== " ") return;
+  if (!spaceDownHere) e.preventDefault();
+  spaceDownHere = false;
+}
+
 function onKeydown(e: KeyboardEvent) {
+  if (e.key === " ") spaceDownHere = true;
   if (!ctx || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     // Any trigger mode: it is the keyboard's way into a hover menu too.
@@ -72,7 +83,7 @@ function onKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div ref="el" class="cui-dropdown-trigger" @click="onClick" @keydown="onKeydown">
+  <div ref="el" class="cui-dropdown-trigger" @click="onClick" @keydown="onKeydown" @keyup="onKeyup">
     <Child />
   </div>
 </template>
