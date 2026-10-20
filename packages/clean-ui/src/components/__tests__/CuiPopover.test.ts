@@ -140,3 +140,20 @@ describe("CuiPopover initial visibility", () => {
     wrapper.unmount();
   });
 });
+
+// Review of #203: an outside press dismissed through doHide, waiting out hideDelay (and
+// leaving a stray timer that could hide the popover after it reopened).
+describe("CuiPopover click-outside", () => {
+  it("dismisses at once, whatever hideDelay", async () => {
+    const w = mount(CuiPopover, {
+      attachTo: document.body,
+      props: { trigger: "click", hideDelay: 300 },
+      slots: { default: "<button>Open</button>", content: "Body" },
+    });
+    await w.find("button").trigger("click");
+    await new Promise((r) => setTimeout(r));
+    document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    expect(w.emitted("update:visible")?.at(-1)).toEqual([false]);
+    w.unmount();
+  });
+});

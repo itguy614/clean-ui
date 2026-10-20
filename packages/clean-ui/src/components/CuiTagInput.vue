@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
+import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -67,14 +70,6 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
 
 // Link our own error message into aria-describedby (#175).
 const { errorId, describedBy } = useFieldDescribedBy(props);
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string[]];
@@ -159,31 +154,13 @@ function updateDropdownPosition() {
   // the field and the panel. See CuiSelect, which measures its trigger.
   const anchor = controlRef.value ?? wrapperRef.value;
   if (!anchor) return;
-  const rect = anchor.getBoundingClientRect();
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom;
-  const spaceAbove = rect.top;
-  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-  // Bound by the side actually being opened to, not the roomier one.
-  const maxH = Math.max(0, Math.min(240, (openAbove ? spaceAbove : spaceBelow) - 16));
-
-  const s: Record<string, string> = {
+  dropdownStyle.value = {
     // The panel is teleported to <body>, so it inherits nothing from the component — it
-    // has to carry the size-derived properties itself (#123).
+    // has to carry the size-derived properties itself (#123). Only the geometry stays
+    // inline; the panel's paint lives in the stylesheet so it can be themed.
     ...cfg.value.style,
-    position: "fixed",
-    zIndex: "9990",
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: `${maxH}px`,
-    // Only the geometry the positioner computes stays inline; the panel's paint lives in
-    // the stylesheet so it can be themed (#123).
+    ...computeDropdownPosition(anchor, "bottom", { matchWidth: true, maxHeight: 240 }).styles,
   };
-
-  if (openAbove) s.bottom = `${vh - rect.top + 4}px`;
-  else s.top = `${rect.bottom + 4}px`;
-
-  dropdownStyle.value = s;
 }
 
 // Input handler
@@ -265,13 +242,10 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-// Click outside
-function onClickOutside(e: MouseEvent) {
-  const target = e.target as Node;
-  if (wrapperRef.value?.contains(target)) return;
-  if (dropdownRef.value?.contains(target)) return;
-  isOpen.value = false;
-}
+// Global listeners only while open, so a closed field holds none (#203). The wrapper,
+// not just the control: a press on the label or the clear button isn't "outside".
+useClickOutside([wrapperRef, dropdownRef], () => (isOpen.value = false), { enabled: isOpen });
+useEventListener("window", ["scroll", "resize"], updateDropdownPosition, { enabled: isOpen, capture: true });
 
 function onFocus() {
   if (!props.disabled && !atMax.value) {
@@ -280,21 +254,7 @@ function onFocus() {
   }
 }
 
-// Named, not inline, so onUnmounted can remove them — an anonymous listener
-// can't be, and leaked two per mount along with the closure's whole setup scope (#202).
-function onScrollOrResize() {
-  if (isOpen.value) updateDropdownPosition();
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScrollOrResize, true);
-  window.addEventListener("resize", onScrollOrResize);
-});
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScrollOrResize, true);
-  window.removeEventListener("resize", onScrollOrResize);
   if (debounceTimer) clearTimeout(debounceTimer);
 });
 
@@ -331,7 +291,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       class="cui-tag-input__control"
       :class="{ 'cui-tag-input__control--disabled': disabled }"
       :style="{
-        '--_tag-input-radius': radiusMap[rounded],
+        '--_tag-input-radius': RADIUS_SCALE[rounded],
         '--_tag-input-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
       }"
       @click="inputRef?.focus()"

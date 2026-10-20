@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
+import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -75,14 +78,6 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
 
 // Link our own error message into aria-describedby (#175).
 const { errorId, describedBy } = useFieldDescribedBy(props);
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
@@ -184,36 +179,13 @@ function updateDropdownPosition() {
   // trigger; this matches it.
   const anchor = controlRef.value ?? wrapperRef.value;
   if (!anchor) return;
-  const rect = anchor.getBoundingClientRect();
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom;
-  const spaceAbove = rect.top;
-  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-  // Bound by the side actually being opened to. Taking the roomier side
-  // regardless let a panel opened upward be taller than the room above it, and
-  // run off the top of the viewport.
-  const maxH = Math.max(0, Math.min(320, (openAbove ? spaceAbove : spaceBelow) - 16));
-
-  const s: Record<string, string> = {
+  dropdownStyle.value = {
     // The panel is teleported to <body>, so it inherits nothing from the component — it
-    // has to carry the size-derived properties itself (#123).
+    // has to carry the size-derived properties itself (#123). Only the geometry stays
+    // inline; the panel's paint lives in the stylesheet so it can be themed.
     ...cfg.value.style,
-    position: "fixed",
-    zIndex: "9990",
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: `${maxH}px`,
-    // Only the geometry the positioner computes stays inline; the panel's paint lives in
-    // the stylesheet so it can be themed (#123).
+    ...computeDropdownPosition(anchor, "bottom", { matchWidth: true, maxHeight: 320 }).styles,
   };
-
-  if (openAbove) {
-    s.bottom = `${vh - rect.top + 4}px`;
-  } else {
-    s.top = `${rect.bottom + 4}px`;
-  }
-
-  dropdownStyle.value = s;
 }
 
 // Search
@@ -312,30 +284,12 @@ function onFocus() {
   openDropdown();
 }
 
-// Click outside — check both wrapper and teleported dropdown
-function onClickOutside(e: MouseEvent) {
-  const target = e.target as Node;
-  if (wrapperRef.value?.contains(target)) return;
-  if (dropdownRef.value?.contains(target)) return;
-  isOpen.value = false;
-}
-
-// Named, not inline, so onUnmounted can remove them — an anonymous listener
-// can't be, and leaked two per mount along with the closure's whole setup scope (#202).
-function onScrollOrResize() {
-  if (isOpen.value) updateDropdownPosition();
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScrollOrResize, true);
-  window.addEventListener("resize", onScrollOrResize);
-});
+// Global listeners only while open, so a closed field holds none (#203). The wrapper,
+// not just the control: a press on the label or the clear button isn't "outside".
+useClickOutside([wrapperRef, dropdownRef], () => (isOpen.value = false), { enabled: isOpen });
+useEventListener("window", ["scroll", "resize"], updateDropdownPosition, { enabled: isOpen, capture: true });
 
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScrollOrResize, true);
-  window.removeEventListener("resize", onScrollOrResize);
   if (debounceTimer) clearTimeout(debounceTimer);
 });
 
@@ -391,7 +345,7 @@ const messages = useMessages();
       class="cui-combobox__control"
       :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
-        '--_combobox-radius': radiusMap[rounded],
+        '--_combobox-radius': RADIUS_SCALE[rounded],
         '--_combobox-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
         '--_combobox-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
         '--_combobox-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,

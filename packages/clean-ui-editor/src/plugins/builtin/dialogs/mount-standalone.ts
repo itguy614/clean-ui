@@ -9,10 +9,16 @@ import { createApp, type Component } from "vue";
  * practice for a real dialog, as opposed to the plain-callback openers used
  * in Phase 03's tests.
  */
+let standaloneCount = 0;
+
 export function mountStandaloneDialog<P extends Record<string, unknown>>(component: Component, props: P): () => void {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const app = createApp(component, props);
+  // clean-ui generates its ids with useId(), which is unique per app only. Without a
+  // distinct prefix, this app's ids ("cui-modal-title-v-0", ...) can duplicate the host
+  // app's on the same document and cross-wire aria-labelledby.
+  app.config.idPrefix = `cui-standalone-${++standaloneCount}`;
   app.mount(container);
   return () => {
     app.unmount();

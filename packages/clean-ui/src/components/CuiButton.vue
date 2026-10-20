@@ -2,7 +2,7 @@
 import { computed, ref, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
-import { BUTTON_SIZE_SCALE } from "../utils/sizing";
+import { BUTTON_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { warnVariantColor } from "../utils/devWarn";
 import type {
   CuiColor,
@@ -97,14 +97,6 @@ function blur() {
 
 defineExpose({ el: elRef, focus, blur });
 
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
-
 /**
  * Every value this component computes is emitted as a PRIVATE `--_button-*` custom
  * property, never as a bare declaration. The stylesheet below reads each one as
@@ -125,7 +117,7 @@ const buttonStyle = computed(() => {
     "--_button-px": props.icon ? "0px" : s.px,
     "--_button-font-size": s.fontSize,
     "--_button-gap": s.gap,
-    "--_button-radius": radiusMap[props.rounded],
+    "--_button-radius": RADIUS_SCALE[props.rounded],
     "--_button-focus-ring": `var(--cui-${c}-focus-ring)`,
     // An icon button is its own opt-out of the target-size floor (#118). Set on the
     // element itself, so it relaxes this button without touching anything around it.
