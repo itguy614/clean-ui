@@ -1,5 +1,6 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
+import { useLayerStack } from "./useLayerStack";
 
 // Global set of active overlays shared across all instances
 const globalActiveOverlays = new Set<symbol>();
@@ -36,6 +37,9 @@ export function useOverlay(options: UseOverlayOptions) {
   const isVisible = ref(false);
   const isAnimating = ref(false);
   const previousFocus = ref<HTMLElement | null>(null);
+  // Open from openOverlay() until closeOverlay() starts the exit, so Escape goes to the
+  // layer beneath while this one animates out.
+  const isOpen = ref(false);
 
   // The scroll lock is reference-counted globally, so this instance must
   // release exactly what it took. close() can run without a preceding open
@@ -62,6 +66,7 @@ export function useOverlay(options: UseOverlayOptions) {
     }
 
     globalActiveOverlays.add(overlayId);
+    isOpen.value = true;
     previousFocus.value = document.activeElement as HTMLElement;
     isVisible.value = true;
 
@@ -82,6 +87,7 @@ export function useOverlay(options: UseOverlayOptions) {
 
   function closeOverlay() {
     isAnimating.value = false;
+    isOpen.value = false;
     globalActiveOverlays.delete(overlayId);
 
     // Wait for exit animation
@@ -106,12 +112,11 @@ export function useOverlay(options: UseOverlayOptions) {
     requestClose();
   }
 
-  function onKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      requestClose();
-    }
+  // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
+  // A persistent overlay still takes the Escape and declines it.
+  useLayerStack({ active: isOpen, onEscape: requestClose, modal: true });
 
+  function onKeydown(e: KeyboardEvent) {
     // Focus trap
     if (e.key === "Tab" && dialogRef.value) {
       const focusable = dialogRef.value.querySelectorAll<HTMLElement>(

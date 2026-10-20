@@ -76,6 +76,7 @@ function onKeydown(e: KeyboardEvent) {
     e.stopPropagation();
     close();
   } else if (e.key === "Escape" && isOpen.value) {
+    e.preventDefault(); // handled: the layer stack leaves the parent menu open (#278)
     e.stopPropagation();
     close();
   }

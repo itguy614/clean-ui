@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, toRef } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
+import { useLayerStack } from "../composables/useLayerStack";
 import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
 export type TooltipTrigger = "hover" | "focus" | "click" | "hover-focus";
@@ -114,30 +115,11 @@ function onClick() {
 }
 
 // Escape dismisses a visible tooltip wherever focus is (WCAG 1.4.13), not only from
-// inside its trigger (#254). The listener lives on the document in the capture phase,
-// so it runs before an enclosing overlay's own Escape handler: the first Escape closes
-// just the tooltip, and stopping the event there keeps the modal or popover around it
-// open. It is attached only while the tooltip is visible, so an idle tooltip never
-// consumes Escape. The tooltip closes at once — a dismissal shouldn't wait out hideDelay.
-// When focus sits on an expanded widget (a select, combobox or dropdown trigger — the
-// usual thing a tooltip is attached to), that widget owns the Escape too: let it through
-// so its own popup closes on the same key instead of the tooltip silently eating it.
-function onDocumentKeydown(e: KeyboardEvent) {
-  if (e.key !== "Escape" || e.isComposing) return;
-  const target = e.target as Element | null;
-  if (!target?.closest?.('[aria-expanded="true"]')) e.stopPropagation();
-  hideNow();
-}
-
-watch(
-  isVisible,
-  (visible) => {
-    if (typeof document === "undefined") return;
-    if (visible) document.addEventListener("keydown", onDocumentKeydown, true);
-    else document.removeEventListener("keydown", onDocumentKeydown, true);
-  },
-  { immediate: true },
-);
+// inside its trigger (#254), and at once — a dismissal shouldn't wait out hideDelay. The
+// shared layer stack (#278) decides whether it is this tooltip's Escape: one opened inside
+// a modal sits above it and closes first; one left showing beneath a modal opened later
+// does not take the modal's Escape.
+useLayerStack({ active: isVisible, onEscape: hideNow });
 
 // Keep tooltip open when hovering over it
 function onTooltipMouseEnter() {
@@ -157,7 +139,6 @@ function onTooltipMouseLeave() {
 
 onUnmounted(() => {
   clearTimers();
-  document.removeEventListener("keydown", onDocumentKeydown, true);
 });
 
 // Tooltip background/text colors
