@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, useId, useSlots } from "vue";
+import { computed, useSlots } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { CuiColorOrCss, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
 
@@ -37,7 +38,7 @@ const hasLabel = () => !!props.label || !!slots.default;
 
 // A separator's contents are presentational, so a label inside one is not announced
 // on its own; aria-labelledby makes it the separator's name instead (#157).
-const labelId = `cui-divider-label-${useId()}`;
+const labelId = useCuiId("divider-label");
 
 const borderStyle = computed(() => {
   const c = props.color ? resolveColor(props.color) : "var(--cui-border)";
