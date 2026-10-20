@@ -303,7 +303,12 @@ function onMenuKeydown(e: KeyboardEvent) {
 }
 
 // Only while open, so a closed context menu holds no document listener (#203).
-useClickOutside([wrapperRef, menuRef], close, { enabled: isOpen });
+// Its open sub-menus are teleported panels of their own (see CuiDropdown).
+useClickOutside(
+  () => [wrapperRef.value, menuRef.value, ...document.querySelectorAll<HTMLElement>(".cui-dropdown-sub__menu")],
+  close,
+  { enabled: isOpen },
+);
 
 function onScroll() {
   // A scroll that starts under a held finger is a scroll, not a press — and

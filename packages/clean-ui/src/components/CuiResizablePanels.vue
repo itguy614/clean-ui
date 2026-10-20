@@ -192,7 +192,9 @@ function onPointerUp() {
 // Document-level, so a drag keeps tracking when the pointer leaves the handle; only while
 // dragging, and removed on unmount mid-drag.
 useEventListener("document", "pointermove", onPointerMove, { enabled: dragging });
-useEventListener("document", "pointerup", onPointerUp, { enabled: dragging });
+// pointercancel too: the browser can take the gesture over (a touch scroll), and then
+// pointerup never comes.
+useEventListener("document", ["pointerup", "pointercancel"], onPointerUp, { enabled: dragging });
 
 function onDoubleClick() {
   firstPercent.value = props.initialSize;

@@ -320,3 +320,33 @@ describe("CuiDropdownDivider + CuiDropdownHeader", () => {
     wrapper.unmount();
   });
 });
+
+// Review of #203: a sub-menu's panel is teleported on its own, and wasn't counted as
+// inside, so a press on it closed the whole dropdown.
+describe("CuiDropdown click-outside", () => {
+  it("a press inside an open sub-menu leaves the dropdown open", async () => {
+    const w = mount(CuiDropdown, {
+      attachTo: document.body,
+      slots: {
+        default: () => [
+          h(CuiDropdownTrigger, () => h("button", "Menu")),
+          h(CuiDropdownMenu, () => [h(CuiDropdownSub, { label: "More" }, () => h(CuiDropdownItem, () => "Nested"))]),
+        ],
+      },
+    });
+    await w.find("button").trigger("click");
+    await new Promise((r) => setTimeout(r));
+    const subTrigger = document.querySelector<HTMLElement>(".cui-dropdown-sub__trigger")!;
+    subTrigger.click();
+    await w.vm.$nextTick();
+    const subPanel = document.querySelector<HTMLElement>(".cui-dropdown-sub__menu");
+    expect(subPanel).not.toBeNull();
+    subPanel!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200)); // past the close animation, had it started
+    expect(menuInBody()).not.toBeNull();
+    document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200)); // the close animation
+    expect(menuInBody()).toBeNull();
+    w.unmount();
+  });
+});

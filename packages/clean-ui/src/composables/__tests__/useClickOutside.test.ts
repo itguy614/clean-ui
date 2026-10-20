@@ -40,8 +40,17 @@ describe("useClickOutside", () => {
     expect(onOutside).not.toHaveBeenCalled();
     enabled.value = true;
     await nextTick();
+    await new Promise((r) => setTimeout(r)); // armed a task later
     press(document.getElementById("outside")!);
     expect(onOutside).toHaveBeenCalledOnce();
+  });
+
+  it("adds nothing when called outside a component scope", () => {
+    const add = vi.spyOn(document, "addEventListener");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    useClickOutside([], () => {});
+    expect(add.mock.calls.filter(([t]) => t === "mousedown")).toEqual([]);
+    expect(warn).toHaveBeenCalled();
   });
 });
 

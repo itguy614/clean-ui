@@ -90,11 +90,15 @@ useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close 
 
 const dropdownId = `cui-dd-${Math.random().toString(36).slice(2, 8)}`;
 
-// Only while open, so a closed dropdown holds no document listener (#203). The wrapper
-// and every teleported menu it owns, sub-menus included.
+// Only while open, so a closed dropdown holds no document listener (#203). Inside means
+// the wrapper, the teleported menu it owns, and any open sub-menu panel: those exist only
+// while a menu is open, and opening another dropdown closes this one.
 const wrapperRef = ref<HTMLElement | null>(null);
 useClickOutside(
-  () => [wrapperRef.value, ...document.querySelectorAll<HTMLElement>(`[data-cui-dropdown-owner="${dropdownId}"]`)],
+  () => [
+    wrapperRef.value,
+    ...document.querySelectorAll<HTMLElement>(`[data-cui-dropdown-owner="${dropdownId}"], .cui-dropdown-sub__menu`),
+  ],
   close,
   { enabled: isOpen },
 );

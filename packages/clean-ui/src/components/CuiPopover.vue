@@ -82,7 +82,8 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
 
 const wrapperRef = ref<HTMLElement | null>(null);
 
-useClickOutside(() => [wrapperRef.value, floatingRef.value], doHide, {
+// At once, like Escape: a dismissal doesn't wait out hideDelay.
+useClickOutside(() => [wrapperRef.value, floatingRef.value], hideNow, {
   enabled: () => isVisible.value && props.trigger === "click",
 });
 

@@ -1,4 +1,4 @@
-import { type MaybeRefOrGetter, type Ref } from "vue";
+import { onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import { useEventListener } from "./useEventListener";
 
 export interface UseClickOutsideOptions {
@@ -18,6 +18,23 @@ export function useClickOutside(
   handler: () => void,
   options: UseClickOutsideOptions = {},
 ) {
+  // Armed a task after `enabled` turns on, not at once: a panel opened from a mousedown
+  // handler would otherwise attach its listener mid-dispatch and receive that same press
+  // as it bubbles to the document — closing the instant it opened.
+  const armed = ref(false);
+  let armTimer: ReturnType<typeof setTimeout> | undefined;
+  if (options.enabled !== undefined) {
+    watch(
+      () => toValue(options.enabled),
+      (on) => {
+        clearTimeout(armTimer);
+        if (on) armTimer = setTimeout(() => (armed.value = true));
+        else armed.value = false;
+      },
+      { immediate: true },
+    );
+    onScopeDispose(() => clearTimeout(armTimer));
+  }
   useEventListener(
     "document",
     "mousedown",
@@ -25,6 +42,6 @@ export function useClickOutside(
       const elements = typeof targets === "function" ? targets() : targets.map((t) => t.value);
       if (!elements.some((el) => el?.contains(e.target as Node))) handler();
     },
-    options,
+    { enabled: options.enabled === undefined ? true : armed },
   );
 }
