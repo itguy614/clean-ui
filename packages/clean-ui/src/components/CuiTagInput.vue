@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
@@ -67,14 +67,6 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
 
 // Link our own error message into aria-describedby (#175).
 const { errorId, describedBy } = useFieldDescribedBy(props);
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string[]];
@@ -331,7 +323,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       class="cui-tag-input__control"
       :class="{ 'cui-tag-input__control--disabled': disabled }"
       :style="{
-        '--_tag-input-radius': radiusMap[rounded],
+        '--_tag-input-radius': RADIUS_SCALE[rounded],
         '--_tag-input-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
       }"
       @click="inputRef?.focus()"

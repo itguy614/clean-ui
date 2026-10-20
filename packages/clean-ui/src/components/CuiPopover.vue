@@ -7,6 +7,7 @@ import { useLayerStack } from "../composables/useLayerStack";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 
@@ -46,14 +47,6 @@ const props = withDefaults(defineProps<CuiPopoverProps>(), {
   rounded: "lg",
   hidden: false,
 });
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -150,7 +143,7 @@ const panelStyle = computed(() => {
     zIndex: "9998",
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
-    borderRadius: radiusMap[props.rounded],
+    borderRadius: RADIUS_SCALE[props.rounded],
     boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
     minWidth: "12rem",
     maxWidth: "24rem",
