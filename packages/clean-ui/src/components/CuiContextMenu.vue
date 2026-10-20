@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, watch, onMounted, onUnmounted } from "vue";
+import { ref, shallowRef, provide, watch, onMounted, onUnmounted } from "vue";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -85,7 +85,7 @@ const MAX_PANEL_HEIGHT = 400;
 
 // Where the panel was last opened. A fresh object per open, so re-opening at the same spot
 // still re-measures.
-const anchor = ref<{ x: number; y: number } | null>(null);
+const anchor = shallowRef<{ x: number; y: number } | null>(null);
 
 // Post-flush: runs after the render that mounts (or re-uses) the panel, whatever order the
 // caller set the open state and the position in. A nextTick here depended on that order,
@@ -100,15 +100,20 @@ function positionAtCursor(x: number, y: number) {
   // a menu opened near the bottom edge squashed into the remaining sliver and
   // scrolled instead of flipping (#95).
   //
-  // Hidden rather than visible for that one frame: unconstrained, the panel can
-  // hang off the bottom of the viewport, and it is the same trick CuiPopover
-  // uses to avoid showing an unpositioned panel (#88).
+  // Hidden for that one frame: unconstrained, the panel can hang off the bottom
+  // of the viewport. Transparent and paused, NOT `visibility: hidden` — focus()
+  // on a visibility-hidden element is a silent no-op, and the first item is
+  // focused in the same pass that reveals the panel, before the reveal renders.
+  // The same guard as CuiPopover's hiddenUntilPositioned (#88, #112); pausing the
+  // entry animation means it plays from the start once the panel is placed.
   menuStyle.value = {
     position: "fixed",
     zIndex: "9990",
     left: `${x}px`,
     top: `${y}px`,
-    visibility: "hidden",
+    opacity: "0",
+    pointerEvents: "none",
+    animation: "none",
   };
 
   // Measured by the post-flush watcher below, once the panel has rendered.
@@ -116,11 +121,7 @@ function positionAtCursor(x: number, y: number) {
 }
 
 function measure({ x, y }: { x: number; y: number }) {
-  // Not rendered after all: show it unadjusted rather than leave it hidden for good.
-  if (!menuRef.value) {
-    menuStyle.value = { ...menuStyle.value, visibility: "" };
-    return;
-  }
+  if (!menuRef.value) return;
 
   // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
   // in with `transform: scale(0.95)` and a rect reports the *transformed* box,

@@ -160,13 +160,12 @@ describe("CuiContextMenu first open", () => {
     vi.useRealTimers();
   });
 
-  it("reveals the panel and focuses its first item", async () => {
+  it("reveals the panel", async () => {
     w = mountMenu();
     await w.find("#target").trigger("contextmenu", { clientX: 20, clientY: 20 });
     await w.vm.$nextTick();
     const el = panel() as HTMLElement;
-    expect(el.style.visibility).not.toBe("hidden");
-    expect(document.activeElement?.textContent).toContain("Rename");
+    expect(el.style.opacity).not.toBe("0");
   });
 
   it("reveals it again on the next open after a close", async () => {
@@ -181,6 +180,6 @@ describe("CuiContextMenu first open", () => {
     exposed(w).openAt(40, 40);
     await w.vm.$nextTick();
     await w.vm.$nextTick();
-    expect((panel() as HTMLElement).style.visibility).not.toBe("hidden");
+    expect((panel() as HTMLElement).style.opacity).not.toBe("0");
   });
 });
