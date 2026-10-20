@@ -1,5 +1,5 @@
 import type { ComponentMeta, PropRow } from "./types";
-import { colorProp, disabledProp, hiddenProp, inputSizeProp, roundedProp } from "./shared";
+import { colorProp, disabledProp, hiddenProp, inputSizeProp, nativeControlProps, roundedProp } from "./shared";
 
 /**
  * `nativeControlProps`, adjusted. CuiSelect's focusable surface is a `div[role="combobox"]`,
@@ -30,11 +30,8 @@ const selectAriaProps: PropRow[] = [
     description:
       "id(s) of the element naming the control. The only thing that names a CuiSelect. CuiFormField supplies it automatically",
   },
-  {
-    name: "aria-describedby",
-    type: "string",
-    description: "id(s) of describing text. CuiFormField points this at its help text or error message",
-  },
+  // Shared wording, so it can't drift from the other fields'.
+  nativeControlProps.find((p) => p.name === "aria-describedby")!,
 ];
 
 const meta: ComponentMeta = {

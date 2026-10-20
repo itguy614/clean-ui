@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
@@ -148,6 +148,24 @@ const formValues = computed<Array<string | number>>(() => {
   if (props.multiple) return Array.isArray(v) ? v : [];
   return [v == null || Array.isArray(v) ? "" : v];
 });
+
+// A native <select> fires bubbling input and change events when its value changes, which is
+// what form-level listeners (dirty tracking, autosave) hear; a hidden input whose value Vue
+// patches fires nothing. So the first one dispatches them, after the DOM has the new value.
+const formInputs = ref<HTMLInputElement[]>([]);
+watch(
+  formValues,
+  () => {
+    if (!props.name) return;
+    nextTick(() => {
+      const input = formInputs.value[0] ?? null;
+      const target = input ?? triggerRef.value;
+      target?.dispatchEvent(new Event("input", { bubbles: true }));
+      target?.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  },
+  { deep: true },
+);
 
 // Get the full selected option object (for #selected slot)
 const selectedOption = computed(() => {
@@ -406,7 +424,7 @@ const messages = useMessages();
     <!-- Native form participation (#174). Disabled, like a disabled native control, posts
          nothing. -->
     <template v-if="name">
-      <input v-for="(v, i) in formValues" :key="i" type="hidden" :name="name" :value="v" :disabled="disabled" />
+      <input v-for="(v, i) in formValues" :key="i" ref="formInputs" type="hidden" :name="name" :value="v" :disabled="disabled" />
     </template>
 
     <!-- Error message -->
