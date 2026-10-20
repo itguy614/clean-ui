@@ -87,6 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  rating: {
+    /** What a screen reader hears for the value — the slider's aria-valuetext (#171). */
+    valueText: (value: number, max: number) => string;
+  };
   formField: {
     /**
      * Appended to a required field's label for screen readers. The visible marker is an
@@ -159,6 +163,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  rating: { valueText: (value, max) => `${value} of ${max} stars` },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },

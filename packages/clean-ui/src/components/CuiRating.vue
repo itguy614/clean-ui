@@ -3,6 +3,8 @@ import { ref, computed, useTemplateRef } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
+import { useCuiId } from "../composables/useCuiId";
+import { useMessages } from "../composables/useMessages";
 
 export interface CuiRatingProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** Current value */
@@ -47,9 +49,9 @@ const emit = defineEmits<{
 const hoverValue = ref(0);
 const isHovering = ref(false);
 
-const displayValue = computed(() =>
-  isHovering.value && !props.readonly && !props.disabled ? hoverValue.value : props.modelValue,
-);
+const interactive = computed(() => !props.readonly && !props.disabled);
+
+const displayValue = computed(() => (isHovering.value && interactive.value ? hoverValue.value : props.modelValue));
 
 const SUPPORTED_SIZES = ["sm", "md", "lg", "xl"] as const;
 
@@ -79,41 +81,24 @@ function getIconWeight(state: "filled" | "half" | "empty"): "fill" | "regular" {
   return "regular";
 }
 
-function onStarClick(index: number) {
-  if (props.readonly || props.disabled) return;
-  if (props.clearable && props.modelValue === index) {
-    emit("update:modelValue", 0);
-  } else {
-    emit("update:modelValue", index);
-  }
+/** The value a pointer at `e` over star `index` means: its left half is half a star less. */
+function valueAt(index: number, e: MouseEvent) {
+  if (!props.half) return index;
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  return e.clientX - rect.left < rect.width / 2 ? index - 0.5 : index;
 }
 
-function onStarHalfClick(index: number, e: MouseEvent) {
-  if (props.readonly || props.disabled) return;
-  if (!props.half) { onStarClick(index); return; }
-
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-  const isLeftHalf = e.clientX - rect.left < rect.width / 2;
-  const val = isLeftHalf ? index - 0.5 : index;
-
-  if (props.clearable && props.modelValue === val) {
-    emit("update:modelValue", 0);
-  } else {
-    emit("update:modelValue", val);
-  }
+function onStarClick(index: number, e: MouseEvent) {
+  if (!interactive.value) return;
+  const val = valueAt(index, e);
+  // Clicking the current value clears it, when clearable.
+  emit("update:modelValue", props.clearable && props.modelValue === val ? 0 : val);
 }
 
 function onStarHover(index: number, e: MouseEvent) {
-  if (props.readonly || props.disabled) return;
+  if (!interactive.value) return;
   isHovering.value = true;
-
-  if (props.half) {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const isLeftHalf = e.clientX - rect.left < rect.width / 2;
-    hoverValue.value = isLeftHalf ? index - 0.5 : index;
-  } else {
-    hoverValue.value = index;
-  }
+  hoverValue.value = valueAt(index, e);
 }
 
 function onLeave() {
@@ -126,15 +111,76 @@ function starColor(state: "filled" | "half" | "empty"): string {
   return `var(--cui-${props.color})`;
 }
 
-// Expose imperative handle — no native input, so focus the root
+// --- Keyboard and ARIA (#171) ------------------------------------------------
+// The stars are one role="slider": a single tab stop whose arrows step the value, the
+// WAI-ARIA slider pattern. A readonly rating is a display, not a control, so it is an image
+// with the same text and no tab stop — a list of reviews shouldn't be a list of tab stops.
+const messages = useMessages();
+const labelId = useCuiId("rating-label");
+const step = computed(() => (props.half ? 0.5 : 1));
+// Clearable means 0 is reachable; otherwise the lowest rating is one step.
+const lowest = computed(() => (props.clearable ? 0 : step.value));
+const valueText = computed(() => messages.value.rating.valueText(props.modelValue, props.max));
+
+const controlId = useCuiId("rating");
+
+const controlAttrs = computed(() =>
+  props.readonly
+    ? {
+        role: "img",
+        "aria-label": valueText.value,
+        // Named by the label, then its own value text: "Quality, 4 of 5 stars".
+        "aria-labelledby": props.label ? `${labelId} ${controlId}` : undefined,
+      }
+    : {
+        role: "slider",
+        tabindex: props.disabled ? -1 : 0,
+        "aria-valuemin": 0,
+        "aria-valuemax": props.max,
+        "aria-valuenow": props.modelValue,
+        "aria-valuetext": valueText.value,
+        "aria-labelledby": props.label ? labelId : undefined,
+        "aria-disabled": props.disabled || undefined,
+      },
+);
+
+function onKeydown(e: KeyboardEvent) {
+  if (!interactive.value || e.altKey || e.ctrlKey || e.metaKey) return;
+  const v = props.modelValue;
+  let next: number;
+  switch (e.key) {
+    case "ArrowRight":
+    case "ArrowUp":
+      next = v + step.value;
+      break;
+    case "ArrowLeft":
+    case "ArrowDown":
+      next = v - step.value;
+      break;
+    case "Home":
+      next = lowest.value;
+      break;
+    case "End":
+      next = props.max;
+      break;
+    default:
+      return;
+  }
+  e.preventDefault();
+  next = Math.min(props.max, Math.max(lowest.value, next));
+  if (next !== v) emit("update:modelValue", next);
+}
+
+// Expose imperative handle — the slider is the focusable element
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
+const controlEl = useTemplateRef<HTMLElement>("controlEl");
 
 function focus(opts?: FocusOptions) {
-  rootEl.value?.focus(opts);
+  controlEl.value?.focus(opts);
 }
 
 function blur() {
-  rootEl.value?.blur();
+  controlEl.value?.blur();
 }
 
 defineExpose({ el: rootEl, focus, blur });
@@ -142,30 +188,42 @@ defineExpose({ el: rootEl, focus, blur });
 
 <template>
   <div class="cui-rating" ref="rootEl" v-show="!hidden">
-    <label
+    <!-- Not a <label>: there is no labelable element to point it at. It names the slider
+         through aria-labelledby, and a click on it focuses the slider as a label would. -->
+    <span
       v-if="label"
+      :id="labelId"
+      class="cui-rating__label"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: cfg.labelFont, fontWeight: '500', color: 'var(--cui-text-secondary)' }"
-    >{{ label }}</label>
+      @click="interactive && focus()"
+    >{{ label }}</span>
 
     <div
+      :id="controlId"
+      ref="controlEl"
+      class="cui-rating__control"
+      v-bind="controlAttrs"
       :style="{
         display: 'inline-flex',
         alignItems: 'center',
         gap: cfg.gap,
         opacity: disabled ? '0.5' : '1',
+        '--_rating-focus-ring': `var(--cui-${color}-focus-ring)`,
       }"
       @mouseleave="onLeave"
+      @keydown="onKeydown"
     >
       <div
         v-for="i in max"
         :key="i"
         :style="{
-          cursor: readonly || disabled ? 'default' : 'pointer',
+          cursor: interactive ? 'pointer' : 'default',
           display: 'inline-flex',
           transition: 'transform 0.1s ease',
           transform: isHovering && hoverValue >= i ? 'scale(1.15)' : 'scale(1)',
         }"
-        @click="onStarHalfClick(i, $event)"
+        aria-hidden="true"
+        @click="onStarClick(i, $event)"
         @mousemove="onStarHover(i, $event)"
       >
         <CuiIcon
@@ -178,6 +236,7 @@ defineExpose({ el: rootEl, focus, blur });
 
       <span
         v-if="showValue"
+        aria-hidden="true"
         :style="{
           fontSize: cfg.valueFont,
           fontWeight: '600',
@@ -191,3 +250,12 @@ defineExpose({ el: rootEl, focus, blur });
     </div>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-rating__control:focus-visible) {
+  outline: 2px solid var(--cui-rating-focus-ring, var(--_rating-focus-ring));
+  outline-offset: 2px;
+  border-radius: var(--cui-radius-sm, 0.25rem);
+}
+</style>
