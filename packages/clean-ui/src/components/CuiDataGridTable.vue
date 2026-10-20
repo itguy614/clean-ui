@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
+import { useCuiId } from "../composables/useCuiId";
 import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -290,9 +291,13 @@ const renderedRows = computed<DataGridRow[]>(() =>
 // One context menu for the whole grid (#208), not one per row: a 500-row grid mounted 500
 // CuiContextMenu instances. It asks which row a gesture landed on; a row without actions,
 // or anywhere else in the table, gets the browser's own menu.
+//
+// A row is found by its place in renderedRows, not by rowKey, which may be missing or
+// repeated, and by this grid's own id, so a row of a grid nested in a cell is not ours.
+const gridId = useCuiId("data-grid");
 function rowWithActions(el: Element): DataGridRow | undefined {
-  const id = el.closest("[data-row-id]")?.getAttribute("data-row-id");
-  const row = id == null ? undefined : renderedRows.value.find((r) => getRowId(r) === id);
+  const [owner, index] = el.closest("[data-cui-grid-row]")?.getAttribute("data-cui-grid-row")?.split(":") ?? [];
+  const row = owner === gridId ? renderedRows.value[Number(index)] : undefined;
   return row && rowActions(row).length > 0 ? row : undefined;
 }
 
@@ -375,7 +380,7 @@ const totalCols = computed(() => {
         <CuiTableRow
           v-for="(row, idx) in renderedRows"
           :key="getRowId(row)"
-          :data-row-id="getRowId(row)"
+          :data-cui-grid-row="`${gridId}:${idx}`"
           :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
           :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"

@@ -71,7 +71,7 @@ const meta: ComponentMeta = {
       description: "Server-side mode only: sort, filters, search, page or page size changed. Answer it with fresh data",
     },
     { name: "row-click", payload: "{ row }", description: "A row was clicked" },
-    { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen — from its actions button, or from the context menu (right-click, Shift+F10 or the Menu key on a row with actions)" },
+    { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen — from its actions button, or from its context menu: a right-click on a row with actions, or Shift+F10 / the Menu key from a control inside it" },
     { name: "bulk-action", payload: "{ action, rows }", description: "A bulk action was run over the selected rows" },
     { name: "selection-change", payload: "string[]", description: "The set of selected row ids changed" },
   ],

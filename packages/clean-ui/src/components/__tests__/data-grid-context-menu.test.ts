@@ -1,10 +1,9 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { nextTick } from "vue";
+import { h, nextTick } from "vue";
 import CuiDataGrid from "../CuiDataGrid.vue";
 import CuiContextMenu from "../CuiContextMenu.vue";
 import CuiDropdownItem from "../CuiDropdownItem.vue";
-import { h } from "vue";
 
 /**
  * #208 — CuiDataGrid wrapped every row in its own CuiContextMenu, so a 500-row grid mounted
@@ -33,15 +32,16 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-function mountGrid(n: number) {
+function mountGrid(n: number, props: Record<string, unknown> = {}) {
   wrapper = mount(CuiDataGrid, {
     attachTo: document.body,
-    props: { columns, data: rows(n), hideToolbar: true, perPageOptions: [n] },
+    props: { columns, data: rows(n), hideToolbar: true, perPageOptions: [n], ...props },
   });
   return wrapper;
 }
 
-const row = (id: number) => document.querySelector<HTMLElement>(`tr[data-row-id="${id}"]`)!;
+/** The n-th rendered row, 1-based (its id, with the default data). */
+const row = (n: number) => document.querySelectorAll<HTMLElement>("tr[data-cui-grid-row]")[n - 1];
 const panel = () => document.querySelector<HTMLElement>(".cui-context-menu__panel");
 
 function rightClick(el: Element) {
@@ -53,7 +53,7 @@ function rightClick(el: Element) {
 describe("CuiDataGrid context menu (#208)", () => {
   it("mounts one CuiContextMenu for a 100-row grid", () => {
     mountGrid(100);
-    expect(document.querySelectorAll("tr[data-row-id]")).toHaveLength(100);
+    expect(document.querySelectorAll("tr[data-cui-grid-row]")).toHaveLength(100);
     expect(wrapper!.findAllComponents(CuiContextMenu)).toHaveLength(1);
   });
 
@@ -84,6 +84,35 @@ describe("CuiDataGrid context menu (#208)", () => {
     mountGrid(10);
     expect(rightClick(row(2)).defaultPrevented).toBe(false);
     expect(rightClick(document.querySelector("thead th")!).defaultPrevented).toBe(false);
+    await nextTick();
+    expect(panel()).toBeNull();
+  });
+
+  it("finds the row by position, so a missing or repeated rowKey can't pick the wrong one", async () => {
+    mountGrid(10, { rowKey: "role" }); // every row's role is "Dev"
+    rightClick(row(5));
+    await nextTick();
+    expect(panel()!.textContent).toContain("Edit 5");
+    panel()!.querySelector<HTMLElement>('[role="menuitem"]')!.click();
+    const [[payload]] = wrapper!.emitted("row-action")! as [[{ row: { id: number } }]];
+    expect(payload.row.id).toBe(5);
+  });
+
+  it("ignores a row that belongs to a grid nested inside one of its cells", async () => {
+    wrapper = mount(CuiDataGrid, {
+      attachTo: document.body,
+      props: { columns, data: rows(3), hideToolbar: true },
+      slots: {
+        "cell-name": ({ row: r }: { row: { id: number } }) =>
+          r.id === 1
+            ? h(CuiDataGrid, { columns, data: rows(3).map((x) => ({ ...x, id: x.id + 100, _actions: [] })), hideToolbar: true })
+            : String(r.id),
+      },
+    });
+    // A row of the inner grid with no actions: the inner menu leaves it, and the outer one
+    // must not take it for its own row of the same position.
+    const inner = document.querySelectorAll<HTMLElement>("tr[data-cui-grid-row]")[1];
+    expect(rightClick(inner).defaultPrevented).toBe(false);
     await nextTick();
     expect(panel()).toBeNull();
   });
