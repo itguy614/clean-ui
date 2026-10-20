@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiColorPicker can be operated from the keyboard (#177). The gradient is a Saturation /
+  Brightness slider pair sharing one tab stop (Left/Right and Up/Down), hue and alpha are
+  sliders, and the swatches are a radiogroup whose arrows move and select, each named by
+  its hex value. Shift takes ten steps. Names and value texts are in the message catalogue
+  (`colorPicker.*`). `disabled` now disables the text field and the format toggle, which
+  stayed editable before, and takes the sliders and swatches out of the tab order.
+  `focus()` without a text field focuses the gradient instead of doing nothing. This adds
+  tab stops, so a focus-order snapshot will change.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
