@@ -95,14 +95,17 @@ const dynamicField = ref({
         </li>
       </ul>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> Every radio has <code>tabindex="0"</code>, so
+        <code>id</code>, <code>aria-describedby</code> and <code>aria-labelledby</code> land on
+        the element carrying <code>role="radio"</code>. With a <code>description</code> (or the
+        <code>#description</code> slot), the control is named by its label alone — unless you
+        pass <code>aria-labelledby</code> — and described by the description, which comes before
+        any <code>aria-describedby</code> you pass; it is not read as part of the name. (The <code>buttons</code> variant renders no description.)
+      </p>
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Known gap.</strong> Every radio has <code>tabindex="0"</code>, so
         <kbd>Tab</kbd> steps through each option in turn rather than entering the group once
         and moving on. In a long group, give the surrounding form fewer tab stops elsewhere,
-        or prefer <code>variant="buttons"</code> where the segment count is small. The
-        <code>id</code>, <code>aria-describedby</code> and <code>aria-labelledby</code> props
-        land on the hidden <code>aria-hidden</code> input, so they do not reach the element
-        carrying <code>role="radio"</code>; describe the choice on the group instead of the
-        individual option.
+        or prefer <code>variant="buttons"</code> where the segment count is small.
       </p>
     </template>
 
