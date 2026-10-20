@@ -6,6 +6,7 @@ import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
 import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
@@ -56,14 +57,6 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   rounded: "md",
   hidden: false,
 });
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -122,7 +115,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           ref="dialogEl"
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
-          :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
+          :style="{ maxWidth, borderRadius: RADIUS_SCALE[rounded] }"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"

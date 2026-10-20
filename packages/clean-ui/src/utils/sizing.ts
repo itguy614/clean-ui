@@ -3,7 +3,7 @@
  * Single source of truth — all components import from here.
  */
 
-import type { CuiSize } from "../types/common";
+import type { CuiRounded, CuiSize } from "../types/common";
 
 /** Canonical ordering of the size scale, smallest → largest. */
 export const SIZE_ORDER: readonly CuiSize[] = ["xs", "sm", "md", "lg", "xl"];
@@ -114,4 +114,18 @@ export const TEXTAREA_SIZE_SCALE: Record<string, { px: string; py: string; fontS
   md: { px: d("1rem"), py: d("0.5rem"), fontSize: "1rem" },
   lg: { px: d("1.25rem"), py: d("0.625rem"), fontSize: "1.0625rem" },
   xl: { px: d("1.5rem"), py: d("0.75rem"), fontSize: "1.125rem" },
+};
+
+/**
+ * The shared `rounded` scale (#201): the `rounded` prop's lookup over the `--cui-radius-*`
+ * tokens. `md` still reads `--cui-button-radius` first — the cross-reference main.css's
+ * radius-scale note describes (#141), so a card's `md` corners follow the button token.
+ * Decoupling it changes behaviour; see #294.
+ */
+export const RADIUS_SCALE: Record<CuiRounded, string> = {
+  none: "0",
+  sm: "var(--cui-radius-sm, 0.25rem)",
+  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  lg: "var(--cui-radius-lg, 0.5rem)",
+  full: "9999px",
 };

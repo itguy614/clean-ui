@@ -2,17 +2,9 @@
 import { computed, ref, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
-import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 export type InputType =
   | "text"
@@ -123,7 +115,7 @@ const messages = useMessages();
         'cui-input--has-suffix-button': $slots['suffix-button'],
       }"
       :style="{
-        borderRadius: radiusMap[rounded],
+        borderRadius: RADIUS_SCALE[rounded],
         '--_input-height': dims.height,
         '--_input-font-size': dims.fontSize,
         '--_input-px': dims.px,

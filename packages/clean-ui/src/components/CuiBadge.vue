@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, RADIUS_SCALE } from "../utils/sizing";
 import { warnVariantColor } from "../utils/devWarn";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
@@ -37,14 +37,6 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
 
 warnVariantColor("CuiBadge", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
 
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
-
 const emit = defineEmits<{
   remove: [];
 }>();
@@ -70,7 +62,7 @@ const badgeStyle = computed(() => {
     base.border = "1px solid transparent";
   }
 
-  base.borderRadius = radiusMap[props.rounded];
+  base.borderRadius = RADIUS_SCALE[props.rounded];
 
   return base;
 });
