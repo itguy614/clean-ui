@@ -21,6 +21,7 @@ import type { TableSize } from "./table-context";
 
 export interface CuiDataGridTableProps {
   rowKey?: string;
+  rowLabel?: (row: DataGridRow) => string;
   bulkActions?: DataGridBulkAction[];
   showSelectAll?: boolean;
   stickyHeader?: boolean;
@@ -118,17 +119,28 @@ function sortIcon(col: { key: string; sortKey?: string }) {
   return dir === "asc" ? "caret-up" : dir === "desc" ? "caret-down" : "caret-up-down";
 }
 
-/** The <th>'s aria-sort: the direction is otherwise only a caret icon (#161). */
+/**
+ * The <th>'s aria-sort: the direction is otherwise only a caret icon (#161). Only on the
+ * sorted column — ARIA asks for it on one header at a time, and "none" on every other
+ * sortable one is read out as noise.
+ */
 function ariaSort(col: { key: string; sortKey?: string }) {
   const dir = sortDirection(col);
-  return dir === "asc" ? "ascending" : dir === "desc" ? "descending" : "none";
+  return dir === "asc" ? "ascending" : dir === "desc" ? "descending" : undefined;
 }
 
-/** What names a row to a screen reader: its first visible column's value. */
-function rowLabel(row: DataGridRow): string {
+/**
+ * What names a row to a screen reader: the consumer's rowLabel, else the first visible
+ * column's value when it is text or a number — an object, a date or a boolean would read as
+ * "[object Object]" or "true" — else the row's position.
+ */
+function labelOf(row: DataGridRow, idx: number): string {
+  if (props.rowLabel) return props.rowLabel(row);
   const first = grid.visibleColumns.value[0];
   const value = first ? row[first.key] : undefined;
-  return value == null || value === "" ? getRowId(row) : String(value);
+  if ((typeof value === "string" && value.trim()) || typeof value === "number") return String(value);
+  const offset = props.virtualize ? vScroll.firstVisibleIndex.value : 0;
+  return messages.value.dataGrid.rowNumber(offset + idx + 1);
 }
 
 
@@ -349,6 +361,7 @@ const totalCols = computed(() => {
             v-if="col.sortable"
             type="button"
             class="cui-data-grid-table__sort"
+            :style="{ justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start' }"
             @click="grid.applySort(col.key)"
           >
             {{ col.label }}
@@ -396,7 +409,7 @@ const totalCols = computed(() => {
           <!-- Bulk selection checkbox -->
           <CuiTableCell v-if="hasBulkActions" align="center" :style="selectBodyCellStyle" @click.stop>
             <CuiCheckbox
-              :aria-label="messages.dataGrid.selectRow(rowLabel(row))"
+              :aria-label="messages.dataGrid.selectRow(labelOf(row, idx))"
               :model-value="isSelected(row)"
               @update:model-value="grid.toggleSelection(getRowId(row))"
             />
@@ -419,7 +432,7 @@ const totalCols = computed(() => {
           <CuiTableCell v-if="hasRowActions" align="center" :style="AUX_CELL_STYLE" @click.stop>
             <CuiDropdown v-if="rowActions(row).length > 0">
               <CuiDropdownTrigger>
-                <CuiButton variant="ghost" size="xs" style="opacity: 0.4;" :aria-label="messages.dataGrid.rowActions(rowLabel(row))">
+                <CuiButton variant="ghost" size="xs" style="opacity: 0.4;" :aria-label="messages.dataGrid.rowActions(labelOf(row, idx))">
                   <CuiIcon name="dots-three" size="1rem" />
                 </CuiButton>
               </CuiDropdownTrigger>
@@ -464,14 +477,17 @@ const totalCols = computed(() => {
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-data-grid-table__sort:focus-visible) {
   outline: 2px solid var(--cui-data-grid-focus-ring, var(--cui-primary-focus-ring));
-  outline-offset: 2px;
+  /* No offset: a scrolling table clips its header row at the top edge. */
+  outline-offset: 0;
   border-radius: var(--cui-radius-sm, 0.25rem);
 }
 
 /* --- Structural --- */
 /* The header's own text, as a button: it inherits the cell's font and alignment. */
+/* The whole cell's width, so the click target is the header, not just its label. */
 .cui-data-grid-table__sort {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   /* preflight.css resets font, color, spacing and the box; not text-transform, and the

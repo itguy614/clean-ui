@@ -186,8 +186,9 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
         </li>
         <li>
           The select-all checkbox is named “Select all rows”, and each row's checkbox and
-          actions button are named after the row — its first column's value: “Select Alice”,
-          “Actions for Alice”. The view toggle's buttons are named “Table view” and “Card
+          actions button are named after the row: “Select Alice”, “Actions for Alice”. By
+          default that's the first column's value when it is text or a number, else the row's
+          position; pass <code>rowLabel</code> to choose. The view toggle's buttons are named “Table view” and “Card
           view”, with the active one pressed. All from the message bundle
           (<code>dataGrid.selectAll</code>, <code>selectRow</code>, <code>rowActions</code>,
           <code>tableView</code>, <code>cardView</code>).

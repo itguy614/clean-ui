@@ -112,10 +112,12 @@ export interface CuiCoreMessages {
     selected: (count: number) => string;
     /** Names for controls that show only an icon or a box (#161). */
     selectAll: string;
-    /** A row's checkbox, given the row's label (its first column's value). */
+    /** A row's checkbox, given the row's label (see CuiDataGrid's rowLabel). */
     selectRow: (rowLabel: string) => string;
     /** A row's actions button, given the row's label. */
     rowActions: (rowLabel: string) => string;
+    /** A row's label when nothing better names it: its position, 1-based. */
+    rowNumber: (position: number) => string;
     tableView: string;
     cardView: string;
   };
@@ -181,6 +183,7 @@ export const defaultMessages: CuiCoreMessages = {
     selectAll: "Select all rows",
     selectRow: (rowLabel) => `Select ${rowLabel}`,
     rowActions: (rowLabel) => `Actions for ${rowLabel}`,
+    rowNumber: (position) => `row ${position}`,
     tableView: "Table view",
     cardView: "Card view",
   },

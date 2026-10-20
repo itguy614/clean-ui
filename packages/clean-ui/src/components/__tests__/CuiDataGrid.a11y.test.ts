@@ -39,7 +39,7 @@ describe("CuiDataGrid sorting and naming", () => {
     const button = nameHeader().find("button.cui-data-grid-table__sort");
     expect(button.exists()).toBe(true);
     expect(button.text()).toBe("Name");
-    expect(nameHeader().attributes("aria-sort")).toBe("none");
+    expect(nameHeader().attributes("aria-sort")).toBeUndefined(); // only the sorted column has it
 
     await button.trigger("click");
     expect(nameHeader().attributes("aria-sort")).toBe("ascending");
@@ -58,6 +58,17 @@ describe("CuiDataGrid sorting and naming", () => {
     mountGrid();
     const boxes = w!.findAll('[role="checkbox"]');
     expect(boxes.map((b) => b.attributes("aria-label"))).toEqual(["Select all rows", "Select Alice", "Select Bob"]);
+  });
+
+  it("names a row by its position when its first column isn't text or a number", () => {
+    mountGrid({ data: data.map((r) => ({ ...r, name: { first: r.name } })) });
+    const boxes = w!.findAll('[role="checkbox"]').slice(1);
+    expect(boxes.map((b) => b.attributes("aria-label"))).toEqual(["Select row 1", "Select row 2"]);
+  });
+
+  it("takes a consumer's rowLabel", () => {
+    mountGrid({ rowLabel: (row: { name: string; role: string }) => `${row.name} (${row.role})` });
+    expect(w!.findAll('[role="checkbox"]')[1].attributes("aria-label")).toBe("Select Alice (Dev)");
   });
 
   it("names each row's actions button after its row", () => {

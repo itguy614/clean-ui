@@ -33,6 +33,12 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   serverSide?: boolean;
   /** Row identifier key */
   rowKey?: string;
+  /**
+   * What names a row to a screen reader, in its checkbox and actions button: "Select …",
+   * "Actions for …". By default the first visible column's value when it is text or a
+   * number, else the row's position.
+   */
+  rowLabel?: (row: DataGridRow) => string;
   /** Bulk action definitions */
   bulkActions?: DataGridBulkAction[];
   /** Show select-all checkbox in header */
@@ -250,6 +256,7 @@ const messages = useMessages();
           <CuiDataGridTable
             v-else
             :row-key="rowKey"
+            :row-label="rowLabel"
             :bulk-actions="bulkActions"
             :show-select-all="showSelectAll"
             :sticky-header="stickyHeader"

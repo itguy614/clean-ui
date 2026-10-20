@@ -22,6 +22,12 @@ const meta: ComponentMeta = {
       description: "Do none of the work locally: every sort, filter, search and page change emits navigate for you to answer with new data",
     },
     { name: "rowKey", type: "string", default: "id", description: "Which field identifies a row — what selection and :key are keyed on" },
+    {
+      name: "rowLabel",
+      type: "(row) => string",
+      description:
+        "What names a row to a screen reader, in its checkbox and actions button (\"Select …\", \"Actions for …\"). By default the first visible column's value when it is text or a number, else the row's position",
+    },
     { name: "bulkActions", type: "DataGridBulkAction[]", default: "—", description: "Actions offered for the selected rows. Passing any of them turns on the selection column" },
     { name: "showSelectAll", type: "boolean", default: "true", description: "Show the select-all checkbox in the header" },
     { name: "stickyHeader", type: "boolean", default: "true", description: "Pin the header row while the body scrolls" },

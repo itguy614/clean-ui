@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CuiDataGrid's column sorting is keyboard-operable and announced (#161): a sortable header's
   text is a `<button>`, and its `<th>` carries `aria-sort`. The select-all and row
   checkboxes, the row-actions buttons and the view toggle are named ("Select Alice",
-  "Actions for Alice", "Table view"), from new `dataGrid.*` message keys — required members
+  "Actions for Alice", "Table view") — a new `rowLabel` prop picks what names a row — from
+  new `dataGrid.*` message keys — required members
   of `CuiCoreMessages`, so a full catalogue typed with it needs them. This adds a tab stop
   per sortable column, so a focus-order snapshot will change.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
