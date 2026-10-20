@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { ref, reactive, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
+import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
@@ -26,8 +27,8 @@ export interface CuiTagInputProps extends NativeControlProps, HideableProps, Col
   modelValue?: string[];
   /** Predefined tag suggestions */
   suggestions?: TagOption[];
-  /** Async search for suggestions */
-  fetchSuggestions?: (query: string) => Promise<TagOption[]>;
+  /** Search for suggestions. `signal` is aborted when a newer search, or unmount, supersedes it. */
+  fetchSuggestions?: (query: string, context: { signal: AbortSignal }) => Promise<TagOption[]>;
   /** Allow creating new tags not in the suggestions list */
   allowCreate?: boolean;
   /** Debounce delay for async search (ms) */
@@ -82,29 +83,43 @@ const emit = defineEmits<{
 const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
-const internalLoading = ref(false);
-/** The query the last completed fetch answered, so an empty result is only claimed for it. */
-const searchedQuery = ref<string | null>(null);
-const asyncSuggestions = ref<TagOption[]>([]);
+// fetchSuggestions: debounced, latest-only, cancelled below minChars and on unmount (#245).
+const asyncSearch = useAsyncSearch<TagOption>({
+  fetch: () => props.fetchSuggestions,
+  query: () => query.value,
+  debounce: () => props.debounce,
+  minChars: () => props.minChars,
+});
+const asyncSuggestions = asyncSearch.results;
+// Every reset of the query (a selection, a close) goes through here, so a search still
+// pending for the old text can't fire afterwards and reopen the list (#245).
+function clearQuery() {
+  query.value = "";
+  asyncSearch.reset();
+}
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const messages = useMessages();
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedSet = computed(() => new Set(props.modelValue));
 const atMax = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags);
 
+// Every suggestion seen, so a tag keeps its label and colour after the search that found
+// it is replaced, cleared or fails — as CuiCombobox's allKnownOptions does.
+// Reactive, so a chip re-renders with the label once the search that names it lands.
+const seenSuggestions = reactive(new Map<string, TagOption>());
+watch(asyncSuggestions, (found) => found.forEach((s) => seenSuggestions.set(s.value, s)));
+const findSuggestion = (value: string) => props.suggestions.find((s) => s.value === value) ?? seenSuggestions.get(value);
+
 // Resolve tag display
 function tagLabel(value: string): string {
-  const opt = [...props.suggestions, ...asyncSuggestions.value].find((s) => s.value === value);
-  return opt?.label ?? value;
+  return findSuggestion(value)?.label ?? value;
 }
 
 function tagColor(value: string): CuiColor {
-  const opt = [...props.suggestions, ...asyncSuggestions.value].find((s) => s.value === value);
-  return opt?.color ?? props.color;
+  return findSuggestion(value)?.color ?? props.color;
 }
 
 // Filtered suggestions
@@ -128,7 +143,9 @@ const canCreate = computed(() => {
   return !allValues.includes(q);
 });
 
-const isLoading = computed(() => internalLoading.value);
+// The debounce counts as loading: the panel says "searching" rather than claim nothing.
+const isLoading = computed(() => asyncSearch.pending.value);
+const showFailed = computed(() => !!asyncSearch.error.value && asyncSearch.answered.value && !!query.value.trim());
 
 // Size config
 // From the shared scale, so a tag input lines up with a CuiInput or CuiSelect of the same
@@ -162,20 +179,7 @@ function onInput(e: Event) {
   focusedIndex.value = -1;
   if (!isOpen.value) isOpen.value = true;
 
-  if (props.fetchSuggestions) {
-    if (query.value.length < props.minChars) { asyncSuggestions.value = []; return; }
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      internalLoading.value = true;
-      try {
-        const q = query.value;
-        asyncSuggestions.value = await props.fetchSuggestions!(q);
-        searchedQuery.value = q;
-      } finally {
-        internalLoading.value = false;
-      }
-    }, props.debounce);
-  }
+  if (props.fetchSuggestions) asyncSearch.search(query.value);
 }
 
 // Add tag
@@ -184,7 +188,7 @@ function addTag(value: string) {
   const trimmed = value.trim();
   if (!trimmed || selectedSet.value.has(trimmed)) return;
   emit("update:modelValue", [...props.modelValue, trimmed]);
-  query.value = "";
+  clearQuery();
   focusedIndex.value = -1;
   nextTick(() => inputRef.value?.focus());
 }
@@ -216,12 +220,15 @@ const nothingFound = computed(
     !isLoading.value &&
     filteredSuggestions.value.length === 0 &&
     !canCreate.value &&
-    (!props.fetchSuggestions || searchedQuery.value === query.value),
+    !showFailed.value &&
+    asyncSearch.answered.value,
 );
 // The list shows when there is something in it, or to say nothing matched; aria-expanded
 // follows it.
 const panelOpen = computed(
-  () => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value),
+  () =>
+    isOpen.value &&
+    (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value || showFailed.value),
 );
 const showEmpty = computed(() => isOpen.value && nothingFound.value);
 const listbox = useListbox({
@@ -237,6 +244,7 @@ const listbox = useListbox({
   // The create row is an option too, so it counts: "No results" would hide a real choice.
   announce: () => {
     if (!panelOpen.value || isLoading.value) return "";
+    if (showFailed.value) return messages.value.listbox.searchFailed;
     if (showEmpty.value) return props.noSuggestionsText;
     return messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0));
   },
@@ -279,12 +287,8 @@ function onFocus() {
   }
 }
 
-onUnmounted(() => {
-  if (debounceTimer) clearTimeout(debounceTimer);
-});
-
 watch(isOpen, (open) => {
-  if (!open) query.value = "";
+  if (!open) clearQuery();
 });
 
 // Expose imperative handle
@@ -378,7 +382,8 @@ defineExpose({ el: wrapperRef, focus, blur });
       </CuiListboxStatus>
 
       <!-- Empty state -->
-      <CuiListboxStatus v-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
+      <CuiListboxStatus v-if="showFailed">{{ messages.listbox.searchFailed }}</CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
 
       <!-- Suggestions -->
       <CuiListboxOption

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
+import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
@@ -40,8 +41,8 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
   multiple?: boolean;
   /** Placeholder */
   placeholder?: string;
-  /** Async search function — receives query, returns options */
-  fetchOptions?: (query: string) => Promise<ComboboxOption[]>;
+  /** Search for options. `signal` is aborted when a newer search, or unmount, supersedes it. */
+  fetchOptions?: (query: string, context: { signal: AbortSignal }) => Promise<ComboboxOption[]>;
   /** Debounce delay for search (ms) */
   debounce?: number;
   /** Minimum characters before searching */
@@ -91,13 +92,24 @@ const emit = defineEmits<{
 const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
-const internalLoading = ref(false);
-const asyncOptions = ref<ComboboxOption[]>([]);
+// fetchOptions: debounced, latest-only, cancelled below minChars and on unmount (#245).
+const asyncSearch = useAsyncSearch<ComboboxOption>({
+  fetch: () => props.fetchOptions,
+  query: () => query.value,
+  debounce: () => props.debounce,
+  minChars: () => props.minChars,
+});
+const asyncOptions = asyncSearch.results;
+// Every reset of the query (a selection, a close) goes through here, so a search still
+// pending for the old text can't fire afterwards and reopen the list (#245).
+function clearQuery() {
+  query.value = "";
+  asyncSearch.reset();
+}
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Selected values as Set
 const selectedSet = computed(() => {
@@ -143,7 +155,25 @@ const filteredOptions = computed(() => {
   );
 });
 
-const isLoading = computed(() => props.loading || internalLoading.value);
+// The debounce counts as loading: the panel says "searching" rather than show an empty box.
+const isLoading = computed(() => props.loading || asyncSearch.pending.value);
+
+// What the panel can show, besides options (#245). "No results" only once a search for
+// what's typed has come back (always, for static options); a failed search says so.
+const showFailed = computed(() => !!asyncSearch.error.value && asyncSearch.answered.value);
+const showNoResults = computed(
+  () => filteredOptions.value.length === 0 && asyncSearch.answered.value && !showFailed.value && !isLoading.value,
+);
+const showTypeMore = computed(
+  () => filteredOptions.value.length === 0 && !!props.fetchOptions && query.value.length < props.minChars,
+);
+// Open only with something to show, as CuiTagInput; aria-expanded follows it. With
+// fetchOptions and nothing typed yet, that is nothing.
+const panelOpen = computed(
+  () =>
+    isOpen.value &&
+    (filteredOptions.value.length > 0 || isLoading.value || showFailed.value || showNoResults.value || showTypeMore.value),
+);
 
 // Size config — from the shared scale, so a combobox lines up with a CuiInput or
 // CuiSelect of the same size. It used to carry a private table with different heights,
@@ -180,21 +210,7 @@ function onInput(e: Event) {
 
   emit("search", query.value);
 
-  if (props.fetchOptions) {
-    if (query.value.length < props.minChars) {
-      asyncOptions.value = [];
-      return;
-    }
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      internalLoading.value = true;
-      try {
-        asyncOptions.value = await props.fetchOptions!(query.value);
-      } finally {
-        internalLoading.value = false;
-      }
-    }, props.debounce);
-  }
+  if (props.fetchOptions) asyncSearch.search(query.value);
 }
 
 // Selection
@@ -209,12 +225,11 @@ function selectOption(option: ComboboxOption) {
       current.add(option.value);
     }
     emit("update:modelValue", [...current]);
-    query.value = "";
+    clearQuery();
     nextTick(() => inputRef.value?.focus());
   } else {
     emit("update:modelValue", option.value);
-    query.value = "";
-    isOpen.value = false;
+    isOpen.value = false; // the close watcher clears the query
     inputRef.value?.blur();
   }
 }
@@ -244,7 +259,7 @@ const listbox = useListbox({
   count: () => filteredOptions.value.length,
   isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
   activeIndex: focusedIndex,
-  isOpen: () => isOpen.value,
+  isOpen: () => panelOpen.value,
   open: openDropdown,
   select: (i) => selectOption(filteredOptions.value[i]),
   close: () => (isOpen.value = false),
@@ -253,10 +268,11 @@ const listbox = useListbox({
   // Silent while searching, and while the min-chars hint shows instead; the panel's own
   // empty text when nothing matches, so a localised noResultsText is what's heard.
   announce: () => {
-    if (!isOpen.value || isLoading.value) return "";
-    if (props.fetchOptions && query.value.length < props.minChars) return "";
+    if (!panelOpen.value || isLoading.value) return "";
+    if (showFailed.value) return messages.value.listbox.searchFailed;
     const n = filteredOptions.value.length;
-    return n === 0 ? props.noResultsText : messages.value.listbox.results(n);
+    if (n > 0) return messages.value.listbox.results(n);
+    return showNoResults.value ? props.noResultsText : "";
   },
 });
 
@@ -279,10 +295,6 @@ function onFocus() {
 // not just the control: a press on the label or the clear button isn't "outside".
 useClickOutside(() => [wrapperRef.value, panelRef.value?.el], () => (isOpen.value = false), { enabled: isOpen });
 
-onUnmounted(() => {
-  if (debounceTimer) clearTimeout(debounceTimer);
-});
-
 // Display text for single select (when closed)
 const displayText = computed(() => {
   if (props.multiple) return "";
@@ -292,7 +304,7 @@ const displayText = computed(() => {
 
 // Reset query when closing
 watch(isOpen, (open) => {
-  if (!open) query.value = "";
+  if (!open) clearQuery();
 });
 
 // Expose imperative handle
@@ -388,7 +400,7 @@ function optionClass(index: number, option: ComboboxOption) {
 
     <CuiListboxPanel
       ref="panelRef"
-      :open="isOpen"
+      :open="panelOpen"
       :anchor="controlRef"
       token-prefix="combobox"
       :max-height="320"
@@ -405,10 +417,13 @@ function optionClass(index: number, option: ComboboxOption) {
       <CuiListboxStatus v-if="isLoading && filteredOptions.length === 0">
         <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)">
+      <CuiListboxStatus v-else-if="showFailed && filteredOptions.length === 0">
+        {{ messages.listbox.searchFailed }}
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showNoResults">
         {{ noResultsText }}
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars">
+      <CuiListboxStatus v-else-if="showTypeMore">
         {{ messages.combobox.typeMore(minChars - query.length) }}
       </CuiListboxStatus>
 

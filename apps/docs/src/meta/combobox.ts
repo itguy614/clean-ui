@@ -10,7 +10,7 @@ const meta: ComponentMeta = {
     { name: "modelValue", type: "string | number | array | null", default: "null", description: "Selected value(s)" },
     { name: "options", type: "ComboboxOption[]", default: "[]", description: "Static options array" },
     { name: "multiple", type: "boolean", default: "false", description: "Allow multiple selection" },
-    { name: "fetchOptions", type: "(query) => Promise<Option[]>", description: "Async search function" },
+    { name: "fetchOptions", type: "(query, { signal }) => Promise<Option[]>", description: "Async search function. Debounced; only the latest search's results are shown. `signal` is aborted when a newer search, or unmount, supersedes it." },
     { name: "debounce", type: "number", default: "300", description: "Debounce delay for search (ms)" },
     { name: "minChars", type: "number", default: "0", description: "Min characters before searching" },
     { name: "maxVisible", type: "number", default: "8", description: "Max visible items before scrolling" },
