@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
-import { useEventListener } from "../composables/useEventListener";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
-import { computeDropdownPosition } from "../utils/position";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
+import CuiListboxPanel from "./CuiListboxPanel.vue";
+import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
 
@@ -81,10 +81,9 @@ const focusedIndex = ref(-1);
 const internalLoading = ref(false);
 const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
-const dropdownRef = ref<HTMLElement | null>(null);
+const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
-const dropdownStyle = ref<Record<string, string>>({});
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedSet = computed(() => new Set(props.modelValue));
@@ -135,6 +134,9 @@ const isLoading = computed(() => internalLoading.value);
  */
 const CHIP_ROW_PY = scaleDensity("0.25rem");
 
+/** The suggestion rows' padding: fixed, not size-derived like the control's. */
+const ITEM_PADDING = `${scaleDensity("0.4375rem")} ${scaleDensity("0.625rem")}`;
+
 const cfg = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return {
@@ -147,27 +149,11 @@ const cfg = computed(() => {
   };
 });
 
-// Dropdown positioning
-function updateDropdownPosition() {
-  // The CONTROL, not the wrapper — the wrapper also holds the label above and
-  // the error message below, so anchoring to it left a label-sized gap between
-  // the field and the panel. See CuiSelect, which measures its trigger.
-  const anchor = controlRef.value ?? wrapperRef.value;
-  if (!anchor) return;
-  dropdownStyle.value = {
-    // The panel is teleported to <body>, so it inherits nothing from the component — it
-    // has to carry the size-derived properties itself (#123). Only the geometry stays
-    // inline; the panel's paint lives in the stylesheet so it can be themed.
-    ...cfg.value.style,
-    ...computeDropdownPosition(anchor, "bottom", { matchWidth: true, maxHeight: 240 }).styles,
-  };
-}
-
 // Input handler
 function onInput(e: Event) {
   query.value = (e.target as HTMLInputElement).value;
   focusedIndex.value = -1;
-  if (!isOpen.value) { isOpen.value = true; updateDropdownPosition(); }
+  if (!isOpen.value) isOpen.value = true;
 
   if (props.fetchSuggestions) {
     if (query.value.length < props.minChars) { asyncSuggestions.value = []; return; }
@@ -214,7 +200,7 @@ function onKeydown(e: KeyboardEvent) {
 
   if (e.key === "ArrowDown") {
     e.preventDefault();
-    if (!isOpen.value) { isOpen.value = true; updateDropdownPosition(); return; }
+    if (!isOpen.value) { isOpen.value = true; return; }
     focusedIndex.value = Math.min(focusedIndex.value + 1, totalItems - 1);
   } else if (e.key === "ArrowUp") {
     e.preventDefault();
@@ -244,13 +230,11 @@ function onKeydown(e: KeyboardEvent) {
 
 // Global listeners only while open, so a closed field holds none (#203). The wrapper,
 // not just the control: a press on the label or the clear button isn't "outside".
-useClickOutside([wrapperRef, dropdownRef], () => (isOpen.value = false), { enabled: isOpen });
-useEventListener("window", ["scroll", "resize"], updateDropdownPosition, { enabled: isOpen, capture: true });
+useClickOutside(() => [wrapperRef.value, panelRef.value?.el], () => (isOpen.value = false), { enabled: isOpen });
 
 function onFocus() {
   if (!props.disabled && !atMax.value) {
     isOpen.value = true;
-    updateDropdownPosition();
   }
 }
 
@@ -260,7 +244,6 @@ onUnmounted(() => {
 
 watch(isOpen, (open) => {
   if (!open) query.value = "";
-  if (open) nextTick(updateDropdownPosition);
 });
 
 // Expose imperative handle
@@ -334,49 +317,54 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Dropdown -->
-    <Teleport to="body">
-      <div
-        v-if="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)"
-        ref="dropdownRef"
-        class="cui-tag-input__dropdown"
-        :style="dropdownStyle"
-      >
-        <!-- Loading -->
-        <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
-          <CuiSpinner size="xs" show-label label="Searching..." />
-        </div>
-
-        <!-- Suggestions -->
-        <div
-          v-for="(suggestion, i) in filteredSuggestions"
-          :key="suggestion.value"
-          :data-index="i"
-          class="cui-tag-input__suggestion"
-          :class="{ 'cui-tag-input__suggestion--focused': focusedIndex === i }"
-          @click.stop="selectSuggestion(suggestion)"
-          @mouseenter="focusedIndex = i"
-        >
-          <slot name="suggestion" :suggestion="suggestion">
-            <span>{{ suggestion.label || suggestion.value }}</span>
-          </slot>
-        </div>
-
-        <!-- Create new -->
-        <div
-          v-if="canCreate"
-          class="cui-tag-input__create"
-          :class="{
-            'cui-tag-input__suggestion--focused': focusedIndex === filteredSuggestions.length,
-            'cui-tag-input__create--divided': filteredSuggestions.length > 0,
-          }"
-          @click.stop="createTag"
-          @mouseenter="focusedIndex = filteredSuggestions.length"
-        >
-          <CuiIcon name="plus" size="0.75rem" />
-          <span>{{ createText }} &ldquo;{{ query.trim() }}&rdquo;</span>
-        </div>
+    <CuiListboxPanel
+      ref="panelRef"
+      :open="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)"
+      :anchor="controlRef"
+      token-prefix="tag-input"
+      :max-height="240"
+      :font-size="cfg.style['--_tag-input-font-size']"
+      :item-padding="ITEM_PADDING"
+      class="cui-tag-input__dropdown"
+    >
+      <!-- Loading -->
+      <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+        <CuiSpinner size="xs" show-label label="Searching..." />
       </div>
-    </Teleport>
+
+      <!-- Suggestions -->
+      <CuiListboxOption
+        v-for="(suggestion, i) in filteredSuggestions"
+        :key="suggestion.value"
+        :index="i"
+        :active="focusedIndex === i"
+        class="cui-tag-input__suggestion"
+        :class="{ 'cui-tag-input__suggestion--focused': focusedIndex === i }"
+        @select="selectSuggestion(suggestion)"
+        @hover="focusedIndex = i"
+      >
+        <slot name="suggestion" :suggestion="suggestion">
+          <span>{{ suggestion.label || suggestion.value }}</span>
+        </slot>
+      </CuiListboxOption>
+
+      <!-- Create new -->
+      <CuiListboxOption
+        v-if="canCreate"
+        :index="filteredSuggestions.length"
+        :active="focusedIndex === filteredSuggestions.length"
+        class="cui-tag-input__create"
+        :class="{
+          'cui-tag-input__suggestion--focused': focusedIndex === filteredSuggestions.length,
+          'cui-tag-input__create--divided': filteredSuggestions.length > 0,
+        }"
+        @select="createTag"
+        @hover="focusedIndex = filteredSuggestions.length"
+      >
+        <CuiIcon name="plus" size="0.75rem" />
+        <span>{{ createText }} &ldquo;{{ query.trim() }}&rdquo;</span>
+      </CuiListboxOption>
+    </CuiListboxPanel>
   </div>
 </template>
 
@@ -394,34 +382,8 @@ defineExpose({ el: wrapperRef, focus, blur });
   font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
 }
 
-:where(.cui-tag-input__dropdown) {
-  background: var(--cui-tag-input-panel-bg, var(--cui-surface-base));
-  border: var(--cui-tag-input-panel-border, 1px solid var(--cui-border));
-  border-radius: var(--cui-tag-input-panel-radius, 0.5rem);
-  box-shadow: var(
-    --cui-tag-input-panel-shadow,
-    0 8px 24px -4px rgba(0, 0, 0, 0.12),
-    0 2px 8px -2px rgba(0, 0, 0, 0.08)
-  );
-  padding: var(--cui-tag-input-panel-padding, calc(0.25rem * var(--cui-density-scale, 1)));
-}
-
-:where(.cui-tag-input__suggestion, .cui-tag-input__create) {
-  padding: var(
-    --cui-tag-input-item-padding,
-    calc(0.4375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))
-  );
-  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
-  border-radius: var(--cui-tag-input-item-radius, 0.25rem);
-}
-
-:where(.cui-tag-input__suggestion) {
-  color: var(--cui-tag-input-item-color, var(--cui-text-body));
-}
-
-:where(.cui-tag-input__suggestion--focused) {
-  background: var(--cui-tag-input-item-focus-bg, var(--cui-primary-bg));
-}
+/* The panel and its option rows are painted by CuiListboxPanel, from this component's
+   --cui-tag-input-panel-* / --cui-tag-input-item-* tokens (#137). */
 
 /* --- Structural --- */
 .cui-tag-input {
@@ -462,19 +424,6 @@ defineExpose({ el: wrapperRef, focus, blur });
   /* A determinate line-height, so the field's intrinsic height cannot push the control
      past the shared scale's height — see the matching note in CuiCombobox (#123). */
   line-height: 1.25;
-}
-
-.cui-tag-input__dropdown {
-  overflow-y: auto;
-}
-
-.cui-tag-input__suggestion,
-.cui-tag-input__create {
-  display: flex;
-  align-items: center;
-  gap: calc(0.5rem * var(--cui-density-scale, 1));
-  cursor: pointer;
-  transition: background 0.1s ease;
 }
 
 .cui-tag-input__create {
