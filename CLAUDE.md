@@ -106,6 +106,8 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   `hover-border`, `active-bg`, `focus-ring`, `focus-border`. Private prefix matches the
   public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
   (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
+  The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)
+  read their consumer's public tokens by `tokenPrefix` and map them onto `--_listbox-*`.
 - **Wrap themeable rules in `:where()`.** Vue's scoped compiler puts the `[data-v-…]`
   attribute *inside* the bracket, where `:where()` zeroes it along with everything else —
   scoping still works, the specificity does not. Without this the rule is (0,2,0) and a

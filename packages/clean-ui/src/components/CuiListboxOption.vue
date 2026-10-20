@@ -44,6 +44,9 @@ function onClick() {
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue). The
    --_listbox-* values come from the panel, mapped from the component's public tokens. --- */
 :where(.cui-listbox-option) {
+  /* Themeable, not structural: a row with its own gap (TagInput's create row) overrides it
+     whatever order the two stylesheets load in. */
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   padding: var(--_listbox-item-padding);
   font-size: var(--_listbox-font-size);
   color: var(--_listbox-item-color);
@@ -66,7 +69,6 @@ function onClick() {
 .cui-listbox-option {
   display: flex;
   align-items: center;
-  gap: calc(0.5rem * var(--cui-density-scale, 1));
   cursor: pointer;
   transition: background 0.1s ease;
 }

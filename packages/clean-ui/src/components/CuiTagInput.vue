@@ -7,6 +7,7 @@ import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
+import { useMessages } from "../composables/useMessages";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
 
@@ -82,6 +83,7 @@ const internalLoading = ref(false);
 const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
+const messages = useMessages();
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -329,7 +331,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     >
       <!-- Loading -->
       <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
-        <CuiSpinner size="xs" show-label label="Searching..." />
+        <CuiSpinner size="xs" show-label :label="messages.tagInput.searching" />
       </div>
 
       <!-- Suggestions -->

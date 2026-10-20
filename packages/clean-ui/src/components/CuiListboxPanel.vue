@@ -14,7 +14,10 @@ import { useEventListener } from "../composables/useEventListener";
  *
  * The public tokens stay per component (`--cui-combobox-panel-bg`,
  * `--cui-tag-input-item-padding`, …): `tokenPrefix` names the set, and the panel maps each
- * onto a private `--_listbox-*` property, with the default written once here. The
+ * onto a private `--_listbox-*` property, with the default written once here. That is the
+ * one exception to "the private prefix matches the public one": a shared internal part
+ * reads its consumer's public tokens, so the mapping, `var(--cui-<prefix>-<slot>, default)`,
+ * is set inline and the stylesheet reads only `--_listbox-*`. The
  * component's own class still goes on the panel (`cui-combobox__dropdown`), so consumer CSS
  * aimed at it still matches.
  */
@@ -72,7 +75,25 @@ useEventListener(
   },
   { enabled: () => props.open, capture: true },
 );
-onScopeDispose(() => cancelAnimationFrame(frame));
+// And when the field itself changes size while open — a chip wrapping onto a second line
+// makes the control taller, and the panel would otherwise cover it.
+let resizeObserver: ResizeObserver | undefined;
+watch(
+  () => (props.open ? props.anchor : null),
+  (anchor) => {
+    resizeObserver?.disconnect();
+    resizeObserver = undefined;
+    if (!anchor || typeof ResizeObserver === "undefined") return;
+    resizeObserver = new ResizeObserver(() => reposition());
+    resizeObserver.observe(anchor);
+  },
+  { immediate: true },
+);
+
+onScopeDispose(() => {
+  cancelAnimationFrame(frame);
+  resizeObserver?.disconnect();
+});
 
 const tokens = computed(() => {
   const p = props.tokenPrefix;
