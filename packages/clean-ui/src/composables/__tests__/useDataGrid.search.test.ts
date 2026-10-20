@@ -63,6 +63,51 @@ describe("CuiDataGrid search index", () => {
     expect(w.findAll("tbody tr")).toHaveLength(2);
   });
 
+  it("follows an array cell changed inside itself", async () => {
+    const data = reactive([{ id: 1, tags: ["a"] }]);
+    w = mount(CuiDataGrid, { props: { columns: [{ key: "tags", label: "Tags" }], data, searchDebounce: 0 }, attachTo: document.body });
+    await w.find(".cui-data-grid-search input").setValue("b");
+    await nextTick();
+    expect(w.findAll("tbody tr")).toHaveLength(0);
+    data[0].tags.push("b");
+    await nextTick();
+    expect(w.findAll("tbody tr")).toHaveLength(1);
+  });
+
+  it("caches a NaN cell like any other", async () => {
+    w = mount(CuiDataGrid, {
+      props: { columns: [{ key: "n", label: "N" }], data: Array.from({ length: 50 }, (_, i) => ({ id: i, n: NaN })), searchDebounce: 0 },
+      attachTo: document.body,
+    });
+    const input = w.find(".cui-data-grid-search input");
+    await input.setValue("x");
+    await nextTick();
+    const original = String.prototype.toLowerCase;
+    let nanLowers = 0;
+    vi.spyOn(String.prototype, "toLowerCase").mockImplementation(function (this: string) {
+      if (this === "NaN") nanLowers++;
+      return original.call(this);
+    });
+    await input.setValue("xy");
+    await nextTick();
+    expect(nanLowers).toBe(0);
+  });
+
+  it("cancels a pending search on clear", async () => {
+    vi.useFakeTimers();
+    w = mount(CuiDataGrid, {
+      props: { columns: [{ key: "name", label: "Name" }], data: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }] },
+      attachTo: document.body,
+    });
+    const input = w.find(".cui-data-grid-search input");
+    await input.setValue("bob");
+    await input.trigger("keydown", { key: "Escape" });
+    vi.advanceTimersByTime(300);
+    await nextTick();
+    expect(w.findAll("tbody tr")).toHaveLength(2);
+    expect((input.element as HTMLInputElement).value).toBe("");
+  });
+
   it("waits searchDebounce ms after the last keystroke, 300 by default", async () => {
     vi.useFakeTimers();
     w = mount(CuiDataGrid, {

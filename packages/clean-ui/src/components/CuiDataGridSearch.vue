@@ -6,7 +6,12 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
 
-const props = withDefaults(defineProps<{ /** ms after the last keystroke; 0 searches at once. */ debounce?: number }>(), {
+export interface CuiDataGridSearchProps {
+  /** ms after the last keystroke; 0 searches at once. */
+  debounce?: number;
+}
+
+const props = withDefaults(defineProps<CuiDataGridSearchProps>(), {
   debounce: DEFAULT_SEARCH_DEBOUNCE,
 });
 
@@ -38,6 +43,8 @@ onScopeDispose(() => {
 });
 
 function onClear() {
+  // A search still waiting would run after the clear and undo it.
+  if (debounceTimer) clearTimeout(debounceTimer);
   localQuery.value = "";
   grid.clearSearch();
 }

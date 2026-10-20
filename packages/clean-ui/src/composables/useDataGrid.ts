@@ -277,9 +277,12 @@ export function useDataGrid(options: UseDataGridOptions) {
   // Each cell's lower-cased text, cached per row (#273): a keystroke in a 5,000 × 10 grid
   // was 50,000 String() + toLowerCase() calls. Keyed by the raw row, so it goes when the
   // row does; each entry keeps the value it was made from, so a row edited in place is
-  // re-lowered on its next read — which also keeps the read reactive, as before.
+  // re-lowered on its next read — which also keeps the read reactive, as before. Only
+  // primitive cells are cached: an array or object cell can change inside itself (a push)
+  // while staying the same value, and String()-ing it each time is what tracks its contents.
   const lowerCache = new WeakMap<object, Map<string, { src: unknown; lower: string }>>();
   const lower = (v: unknown) => ({ src: v, lower: String(v ?? "").toLowerCase() });
+  const cacheable = (v: unknown) => v === null || typeof v !== "object";
 
   function lowerOf(row: DataGridRow, key: string): string {
     const val = row[key];
@@ -290,11 +293,15 @@ export function useDataGrid(options: UseDataGridOptions) {
       // only the cells reached would leave each narrower query to lower more of them (a
       // thousand-odd a keystroke, measured on 5,000 rows) rather than none.
       cells = new Map();
-      for (const k in raw) cells.set(k, lower((raw as DataGridRow)[k]));
+      for (const k of Object.keys(raw)) {
+        const v = (raw as DataGridRow)[k];
+        if (cacheable(v)) cells.set(k, lower(v));
+      }
       lowerCache.set(raw, cells);
     }
+    if (!cacheable(val)) return String(val ?? "").toLowerCase();
     const hit = cells.get(key);
-    if (hit && hit.src === val) return hit.lower;
+    if (hit && Object.is(hit.src, val)) return hit.lower; // Object.is: NaN is a hit too
     const fresh = lower(val);
     cells.set(key, fresh);
     return fresh.lower;
@@ -302,7 +309,8 @@ export function useDataGrid(options: UseDataGridOptions) {
 
   function rowMatches(row: DataGridRow, q: string): boolean {
     if (searchField.value) return lowerOf(row, searchField.value).includes(q);
-    for (const key in row) if (lowerOf(row, key).includes(q)) return true;
+    // Own keys only, as Object.values had it: an inherited property is not a cell.
+    for (const key in row) if (Object.hasOwn(row, key) && lowerOf(row, key).includes(q)) return true;
     return false;
   }
 
