@@ -47,12 +47,12 @@ const meta: ComponentMeta = {
     {
       name: "resize",
       payload: "number",
-      description: "The first panel's new size as a percentage. Fires on every pointer move during a drag, on each key that moves the handle, and once on double-click reset",
+      description: "The first panel's new size as a percentage. Fires on every pointer move during a drag, on each key that moves the handle, and once on double-click reset (clamped to minFirst/minSecond)",
     },
     {
       name: "collapse",
       payload: "boolean",
-      description: "Fires when the first panel crosses collapseThreshold in either direction (by drag, arrow keys or Enter), and with false on double-click reset",
+      description: "Fires when the first panel crosses collapseThreshold in either direction — by drag, arrow keys or Enter, or a double-click reset reopening it",
     },
   ],
 

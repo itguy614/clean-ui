@@ -99,6 +99,55 @@ describe("CuiResizablePanels as a window splitter", () => {
     expect(document.activeElement).toBe(handle().element);
   });
 
+  it("leaves a collapsed panel collapsed on shrink and Home, and opens it on grow", async () => {
+    mountPanels({ collapseThreshold: 50 });
+    await press("Enter");
+    await press("ArrowLeft");
+    await press("Home");
+    expect(w!.emitted("collapse")).toEqual([[true]]);
+    expect(handle().attributes("aria-valuenow")).toBe("0");
+    await press("ArrowRight");
+    expect(w!.emitted("collapse")).toEqual([[true], [false]]);
+    expect(lastResize()).toBe(25); // the smallest open size the minimum allows
+  });
+
+  it("drags a collapsed panel out from its edge, not from the size it had", async () => {
+    mountPanels({ collapseThreshold: 50 });
+    await press("Enter"); // collapsed, the stored 50% still there
+    await handle().trigger("pointerdown", { clientX: 0, clientY: 10 });
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 120, clientY: 10 }));
+    expect(lastResize()).toBe(30);
+    document.dispatchEvent(new MouseEvent("pointerup"));
+    await nextTick();
+  });
+
+  it("restores to at least the threshold, without collapsing again", async () => {
+    // initialSize 30% = 120px of 400, under a 160px threshold.
+    mountPanels({ collapseThreshold: 160, initialSize: 30, minFirst: 0 });
+    await handle().trigger("pointerdown", { clientX: 120, clientY: 10 });
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 40, clientY: 10 }));
+    document.dispatchEvent(new MouseEvent("pointerup"));
+    await nextTick();
+    await press("Enter");
+    expect(w!.emitted("collapse")).toEqual([[true], [false]]);
+    expect(lastResize()).toBe(40);
+  });
+
+  it("takes a collapsed panel's content out of the tab order", async () => {
+    mountPanels({ collapseThreshold: 50 });
+    const first = w!.find(`#${handle().attributes("aria-controls")}`);
+    expect(first.attributes("inert")).toBeUndefined();
+    await press("Enter");
+    expect(first.attributes("inert")).toBeDefined();
+  });
+
+  it("clamps a double-click reset to the minimums, and emits collapse only if it was collapsed", async () => {
+    mountPanels({ initialSize: 90 }); // max 75% with minSecond 100px of 400
+    await handle().trigger("dblclick");
+    expect(lastResize()).toBe(75);
+    expect(w!.emitted("collapse")).toBeUndefined();
+  });
+
   it("ignores Enter when collapsing is off", async () => {
     mountPanels();
     await press("Enter");

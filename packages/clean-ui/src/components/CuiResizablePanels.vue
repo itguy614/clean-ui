@@ -3,6 +3,7 @@ import { ref, computed, useTemplateRef } from "vue";
 import { useEventListener } from "../composables/useEventListener";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
+import { PhDotsNine } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { CuiOrientation, HideableProps } from "../types/common";
 
@@ -183,7 +184,9 @@ function onPointerDown(e: PointerEvent) {
   e.preventDefault();
   dragging.value = true;
   startPos = isHorizontal.value ? e.clientX : e.clientY;
-  startPercent = firstPercent.value;
+  // From the edge when collapsed: the size it had is hidden, and the panel follows the pointer
+  // out from where it is drawn (the stored size outlives a collapse from the keyboard).
+  startPercent = collapsed.value ? 0 : firstPercent.value;
   dragTotal = totalSize();
   dragSign = rtl() ? -1 : 1;
 }
@@ -206,10 +209,13 @@ useEventListener("document", "pointermove", onPointerMove, { enabled: dragging }
 useEventListener("document", ["pointerup", "pointercancel"], onPointerUp, { enabled: dragging });
 
 function onDoubleClick() {
-  firstPercent.value = props.initialSize;
-  collapsed.value = false;
-  emit("resize", props.initialSize);
-  emit("collapse", false);
+  const total = totalSize();
+  setCollapsed(false);
+  if (total) applyPercent(props.initialSize, total);
+  else {
+    firstPercent.value = props.initialSize;
+    emit("resize", props.initialSize);
+  }
 }
 
 // --- Keyboard (#156): the WAI-ARIA window splitter ---------------------------
@@ -237,29 +243,44 @@ const handleAttrs = computed(() => ({
   "aria-label": messages.value.resizablePanels.handle,
 }));
 
+const HANDLED = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "Enter"]);
+
 function onHandleKeydown(e: KeyboardEvent) {
-  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  // Before measuring: Tab and every other key go by without a layout read.
+  if (!HANDLED.has(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
   const total = totalSize();
   if (!total) return;
   const [grow, shrink] = isHorizontal.value
     ? rtl() ? ["ArrowLeft", "ArrowRight"] : ["ArrowRight", "ArrowLeft"]
     : ["ArrowDown", "ArrowUp"];
   const step = e.shiftKey ? BIG_STEP : STEP;
-  const from = collapsed.value ? 0 : firstPercent.value;
+  const threshold = (props.collapseThreshold / total) * 100;
 
-  if (e.key === grow) applyPercent(from + step, total);
-  else if (e.key === shrink) applyPercent(from - step, total);
+  if (collapsed.value) {
+    // Already as small as it goes: shrinking and Home leave it be. Growing opens it at the
+    // smallest open size, and Enter restores it.
+    if (e.key === grow) applyPercent(Math.max(step, threshold), total);
+    else if (e.key === "End") applyPercent(100, total);
+    else if (e.key === "Enter") applyPercent(restoreSize(total), total);
+    else if (e.key !== shrink && e.key !== "Home") return;
+  } else if (e.key === grow) applyPercent(firstPercent.value + step, total);
+  else if (e.key === shrink) applyPercent(firstPercent.value - step, total);
   else if (e.key === "Home") applyPercent(0, total); // clamped to the minimum
   else if (e.key === "End") applyPercent(100, total);
-  else if (e.key === "Enter" && props.collapseThreshold > 0) {
-    if (!collapsed.value) setCollapsed(true);
-    else {
-      const wasOpen = (firstPercent.value / 100) * total >= props.collapseThreshold;
-      setCollapsed(false);
-      applyPercent(wasOpen ? firstPercent.value : props.initialSize, total);
-    }
-  } else return;
+  else if (e.key === "Enter" && props.collapseThreshold > 0) setCollapsed(true);
+  else return;
   e.preventDefault();
+}
+
+/**
+ * The size Enter restores a collapsed panel to: the size it had, or initialSize after a
+ * collapse by dragging (which left the stored size under the threshold) — and never under
+ * the threshold itself, which would only collapse it again.
+ */
+function restoreSize(total: number) {
+  const threshold = (props.collapseThreshold / total) * 100;
+  const had = firstPercent.value >= threshold ? firstPercent.value : props.initialSize;
+  return Math.max(had, threshold);
 }
 
 // The handle is the component's one focusable element.
@@ -274,7 +295,8 @@ defineExpose({
 <template>
   <div class="cui-resizable-panels" ref="containerRef" v-show="!hidden" :style="containerStyle">
     <!-- First panel -->
-    <div :id="firstPanelId" :style="firstPanelStyle">
+    <!-- Collapsed, its content is out of the tab order and the accessibility tree too -->
+    <div :id="firstPanelId" :style="firstPanelStyle" :inert="collapsed || undefined">
       <slot name="first" />
     </div>
 
@@ -292,7 +314,7 @@ defineExpose({
     >
       <div :style="handleLineStyle" />
       <div :style="gripStyle" aria-hidden="true">
-        <CuiIcon name="dots-nine" size="1.25rem" />
+        <CuiIcon :icon="PhDotsNine" size="1.25rem" />
       </div>
     </div>
 
