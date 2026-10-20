@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { mount, enableAutoUnmount } from "@vue/test-utils";
-import { defineComponent, h, nextTick, ref, useTemplateRef, type PropType } from "vue";
+import { defineComponent, h, nextTick, ref, useTemplateRef, type PropType, type Ref } from "vue";
 import { useRovingFocus } from "../useRovingFocus";
 import { describeRovingFocusContract, press } from "./roving-focus-contract";
 
@@ -15,8 +15,9 @@ const Toolbar = defineComponent({
     wrap: Boolean,
     typeahead: Boolean,
     start: { type: Number, default: 0 },
+    active: { type: Object as PropType<Ref<number>>, default: undefined },
   },
-  setup(props) {
+  setup(props, { expose }) {
     const container = useTemplateRef<HTMLElement>("bar");
     const roving = useRovingFocus({
       container,
@@ -24,12 +25,16 @@ const Toolbar = defineComponent({
       orientation: () => props.orientation,
       wrap: () => props.wrap,
       typeahead: () => props.typeahead,
-      activeIndex: ref(props.start),
+      activeIndex: props.active ?? ref(props.start),
     });
+    expose(roving);
     return () =>
       h("div", { ref: "bar", role: "toolbar", onKeydown: roving.onKeydown, onFocusin: roving.onFocusin }, [
         ...props.labels.map((label, i) =>
-          h("button", { class: "item", tabindex: roving.tabIndex(i), disabled: props.disabled.includes(i) }, label),
+          h("button", { class: "item", tabindex: roving.tabIndex(i), disabled: props.disabled.includes(i) }, [
+            label,
+            i === 1 ? h("input", { class: "rename" }) : null,
+          ]),
         ),
         h("input", { class: "search" }),
       ]);
@@ -113,5 +118,59 @@ describe("useRovingFocus", () => {
     items()[0].focus();
     await press("ArrowLeft");
     expect(document.activeElement).toBe(items()[1]);
+  });
+
+  it("leaves keys in a field inside an item to the field", async () => {
+    mount(Toolbar, { attachTo: document.body });
+    const rename = document.querySelector<HTMLInputElement>(".rename")!;
+    rename.focus();
+    expect((await press("Home", rename)).defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(rename);
+  });
+
+  it("leaves modified navigation keys alone, but takes a capital for type-ahead", async () => {
+    mount(Toolbar, { props: { typeahead: true }, attachTo: document.body });
+    items()[0].focus();
+    for (const mod of ["shiftKey", "ctrlKey", "altKey", "metaKey"]) {
+      const e = new KeyboardEvent("keydown", { key: "ArrowRight", [mod]: true, bubbles: true, cancelable: true });
+      items()[0].dispatchEvent(e);
+      expect(e.defaultPrevented).toBe(false);
+    }
+    expect(document.activeElement).toBe(items()[0]);
+    items()[0].dispatchEvent(new KeyboardEvent("keydown", { key: "U", shiftKey: true, bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(items()[2]);
+  });
+
+  it("an outer group leaves a key the inner group already handled", async () => {
+    const Nested = defineComponent(() => {
+      const outerEl = useTemplateRef<HTMLElement>("outer");
+      const outer = useRovingFocus({ container: outerEl, itemSelector: ".outer-item", orientation: "vertical" });
+      return () =>
+        h("div", { ref: "outer", onKeydown: outer.onKeydown, onFocusin: outer.onFocusin }, [
+          h("div", { class: "outer-item", tabindex: outer.tabIndex(0) }, h(Toolbar)),
+          h("div", { class: "outer-item", tabindex: outer.tabIndex(1) }, "Second"),
+        ]);
+    });
+    mount(Nested, { attachTo: document.body });
+    await nextTick();
+    items()[0].focus();
+    await press("End"); // inner toolbar handles it; the outer group must not move too
+    expect(document.activeElement).toBe(items()[3]);
+  });
+
+  it("never rewrites the caller's activeIndex — a disabled selection keeps its value", async () => {
+    const active = ref(0);
+    mount(Toolbar, { props: { active, disabled: [0] }, attachTo: document.body });
+    await nextTick();
+    expect(active.value).toBe(0);
+    expect(items()[1].tabIndex).toBe(0); // the stop falls back to the first enabled item
+    expect(items()[0].tabIndex).toBe(-1);
+  });
+
+  it("focusItem won't focus a disabled item", async () => {
+    const w = mount(Toolbar, { props: { disabled: [2] }, attachTo: document.body });
+    items()[0].focus();
+    (w.vm as unknown as { focusItem: (i: number) => void }).focusItem(2);
+    expect(document.activeElement).toBe(items()[0]);
   });
 });

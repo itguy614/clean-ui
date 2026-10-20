@@ -65,24 +65,27 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
     rtl: () => getComputedStyle(container()!).direction === "rtl",
   });
 
-  /** The item `target` is, or is inside. */
-  const indexOf = (els: HTMLElement[], target: EventTarget | null) =>
-    target instanceof Node ? els.findIndex((el) => el === target || el.contains(target)) : -1;
+  // The stop when `activeIndex` can't hold it: its item is gone or disabled. Kept apart
+  // from `activeIndex`, which may be the consumer's selection and isn't ours to rewrite.
+  const fallback = ref(-1);
 
   function tabIndex(i: number): 0 | -1 {
-    return i === activeIndex.value ? 0 : -1;
+    return i === (fallback.value === -1 ? activeIndex.value : fallback.value) ? 0 : -1;
   }
 
   function focusItem(i: number, els = query()) {
-    if (!els[i]) return;
+    if (!els[i] || els[i].matches(DISABLED)) return;
     activeIndex.value = i;
     els[i].focus();
   }
 
   function onKeydown(e: KeyboardEvent) {
+    // Already handled — by a nested roving group, or a control inside an item.
+    if (e.defaultPrevented) return;
     const els = query();
-    const from = indexOf(els, e.target);
-    // A key inside a nested control that isn't an item (an input in a toolbar) is its own.
+    // Only a key on an item itself: one in a control inside an item (an inline rename
+    // field), or beside the items (a search box in a toolbar), is that control's.
+    const from = els.indexOf(e.target as HTMLElement);
     if (from === -1) return;
     const to = nav.indexForKey(e, from, asItems(els));
     if (to === null) return;
@@ -90,19 +93,20 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
     if (to !== from && to !== -1) focusItem(to, els);
   }
 
+  // Focus landing on an item, or inside one, moves the stop to that item.
   function onFocusin(e: FocusEvent) {
-    const i = indexOf(query(), e.target);
+    const target = e.target as Node;
+    const i = query().findIndex((el) => el === target || el.contains(target));
     if (i !== -1) activeIndex.value = i;
   }
 
-  // Keep exactly one tab stop as items come and go: when no enabled item holds it (the
-  // active index ran past the end, or its item became disabled), move it to the first
-  // enabled one.
+  // Keep exactly one tab stop as items come and go: when the active item is gone or
+  // disabled, the first enabled item holds it instead. Runs after the host renders, so
+  // items rendered by child components that update on their own aren't seen until it does.
   function settle() {
     const els = query();
-    if (els.some((el) => el.tabIndex === 0 && !el.matches(DISABLED))) return;
-    const first = firstIndex(asItems(els));
-    if (first !== -1) activeIndex.value = first;
+    const active = els[activeIndex.value];
+    fallback.value = active && !active.matches(DISABLED) ? -1 : firstIndex(asItems(els));
   }
   onMounted(settle);
   onUpdated(settle);

@@ -1,8 +1,8 @@
 import type { CuiOrientation } from "../types/common";
 
 /**
- * The index maths shared by `useRovingFocus` (#144) and `useListbox` (#205). Internal —
- * not exported from the package.
+ * The index maths for `useRovingFocus` (#144), and for `useListbox` when #205 adds it.
+ * Internal — not exported from the package.
  *
  * DOM-free: the caller passes the current items on every call and gets back the index a
  * key should move to. Disabled items are skipped. Scrolling the result into view is the
@@ -100,6 +100,11 @@ export function useListNavigation(options: ListNavigationOptions = {}) {
    * swallow it rather than let the page scroll.
    */
   function indexForKey(e: KeyboardEvent, from: number, items: ListItems): number | null {
+    // Ctrl/Alt/Meta + anything, or Shift + a navigation key, is someone else's: extend a
+    // selection, open a popup, a browser or OS shortcut. Shift + a letter is a capital.
+    if (e.ctrlKey || e.altKey || e.metaKey) return null;
+    if (e.key.length === 1) return e.key !== " " && typeaheadOn() ? typeahead(items, e.key, from) : null;
+    if (e.shiftKey) return null;
     const o = orientation();
     switch (e.key) {
       case "ArrowDown":
@@ -116,9 +121,6 @@ export function useListNavigation(options: ListNavigationOptions = {}) {
         return firstIndex(items);
       case "End":
         return lastIndex(items);
-    }
-    if (e.key.length === 1 && e.key !== " " && !e.ctrlKey && !e.metaKey && !e.altKey && typeaheadOn()) {
-      return typeahead(items, e.key, from);
     }
     return null;
   }

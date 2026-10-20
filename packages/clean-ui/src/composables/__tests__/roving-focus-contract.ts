@@ -20,6 +20,8 @@ export interface RovingFocusContractOptions {
   /** The component's items, in order. */
   items: () => HTMLElement[];
   orientation: "horizontal" | "vertical";
+  /** Whether the component wraps at the ends. Default `false`. */
+  wrap?: boolean;
 }
 
 /** Dispatch a keydown on the focused element (or `target`); resolves to the event, after a tick. */
@@ -72,13 +74,15 @@ export function describeRovingFocusContract(name: string, opts: RovingFocusContr
       expect(document.activeElement).toBe(opts.items()[0]);
     });
 
-    it("keeps focus inside the group on an arrow at the end", async () => {
+    it(opts.wrap ? "wraps to the start on an arrow at the end" : "stays on the last item on an arrow at the end", async () => {
       wrapper = opts.mount();
       await nextTick();
       opts.items().find((el) => el.tabIndex === 0)!.focus();
       await press("End");
-      await press(forward);
-      expect(opts.items()).toContain(document.activeElement);
+      const e = await press(forward);
+      // Swallowed either way, so the page doesn't scroll under the group.
+      expect(e.defaultPrevented).toBe(true);
+      expect(document.activeElement).toBe(opts.wrap ? opts.items()[0] : opts.items().at(-1));
     });
   });
 }
