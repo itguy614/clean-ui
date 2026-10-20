@@ -3,14 +3,16 @@
  * One option row inside CuiListboxPanel (#137). Internal — not exported, not registered.
  *
  * The rows' markup differs per component (a create row, a check mark, an `#option` slot),
- * so the content is a slot; what every row shares lives here once: the state classes, the
- * index the keyboard handling scrolls to, and select/hover. The listbox ARIA — role,
- * id, aria-selected — goes here too, in #205. A component's own row classes
+ * so the content is a slot; what every row shares lives here once: the state classes,
+ * `role="option"` with its id (what the input's aria-activedescendant names, #205) and
+ * `aria-selected`, and select/hover. A disabled row neither selects nor takes the
+ * highlight on hover. A component's own row classes
  * (`cui-combobox__option--focused`, …) fall through onto the root, so consumer CSS aimed at
  * them still matches.
  */
 const props = defineProps<{
-  index: number;
+  /** From useListbox's `optionId(i)`. */
+  id: string;
   /** The keyboard-highlighted row. */
   active?: boolean;
   selected?: boolean;
@@ -26,15 +28,18 @@ function onClick() {
 
 <template>
   <div
+    :id="id"
+    role="option"
+    :aria-selected="selected ? 'true' : 'false'"
+    :aria-disabled="disabled || undefined"
     class="cui-listbox-option"
     :class="{
       'cui-listbox-option--active': active,
       'cui-listbox-option--selected': selected,
       'cui-listbox-option--disabled': disabled,
     }"
-    :data-index="index"
     @click.stop="onClick"
-    @mouseenter="emit('hover')"
+    @mouseenter="!disabled && emit('hover')"
   >
     <slot />
   </div>

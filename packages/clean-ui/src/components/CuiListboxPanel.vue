@@ -124,7 +124,7 @@ defineExpose({ el });
 
 <template>
   <Teleport to="body">
-    <div v-if="open" ref="el" v-bind="$attrs" class="cui-listbox-panel" :style="style">
+    <div v-if="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
       <slot />
     </div>
   </Teleport>

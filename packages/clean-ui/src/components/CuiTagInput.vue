@@ -4,6 +4,8 @@ import { useClickOutside } from "../composables/useClickOutside";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useListbox } from "../composables/useListbox";
+import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
@@ -197,17 +199,27 @@ function removeTag(value: string) {
 }
 
 // Keyboard
-function onKeydown(e: KeyboardEvent) {
-  const totalItems = filteredSuggestions.value.length + (canCreate.value ? 1 : 0);
+// The ARIA combobox pattern, editable (#205) — see useListbox. The create row is the last
+// option. Its own Enter stays here: it creates as well as selects.
+const generatedId = useCuiId("tag-input");
+// The list shows only when there is something in it, and aria-expanded follows that.
+const panelOpen = computed(() => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value));
+const listbox = useListbox({
+  id: props.id ?? generatedId,
+  mode: "editable",
+  count: () => filteredSuggestions.value.length + (canCreate.value ? 1 : 0),
+  activeIndex: focusedIndex,
+  isOpen: () => panelOpen.value,
+  open: () => (isOpen.value = true),
+  close: () => (isOpen.value = false),
+  hasLabel: () => !!props.label,
+  labelledby: () => props.ariaLabelledby,
+  announce: () => (panelOpen.value && !isLoading.value ? messages.value.listbox.results(filteredSuggestions.value.length) : ""),
+});
 
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    if (!isOpen.value) { isOpen.value = true; return; }
-    focusedIndex.value = Math.min(focusedIndex.value + 1, totalItems - 1);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    focusedIndex.value = Math.max(focusedIndex.value - 1, 0);
-  } else if (e.key === "Enter") {
+function onKeydown(e: KeyboardEvent) {
+  if (listbox.onKeydown(e)) return;
+  if (e.key === "Enter") {
     e.preventDefault();
     if (focusedIndex.value >= 0 && focusedIndex.value < filteredSuggestions.value.length) {
       selectSuggestion(filteredSuggestions.value[focusedIndex.value]);
@@ -221,10 +233,6 @@ function onKeydown(e: KeyboardEvent) {
       e.preventDefault();
       createTag();
     }
-  } else if (e.key === "Escape" && isOpen.value) {
-    // Marked handled, so an enclosing modal or popover stays open (#278)
-    e.preventDefault();
-    isOpen.value = false;
   } else if (e.key === "Backspace" && !query.value && props.modelValue.length > 0) {
     removeTag(props.modelValue[props.modelValue.length - 1]);
   }
@@ -262,11 +270,12 @@ defineExpose({ el: wrapperRef, focus, blur });
 </script>
 
 <template>
-  <!-- Size-derived properties on the ROOT: the dropdown is a sibling of the control, so
-       anything set on the control would never reach the suggestions. -->
+  <!-- The size-derived properties live on the root, for the control and its input. The
+       teleported panel gets the ones its rows need as props (#137). -->
   <div class="cui-tag-input" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
+      :id="listbox.labelId"
       class="cui-tag-input__label"
     >{{ label }}</label>
 
@@ -300,7 +309,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        v-bind="listbox.inputAttrs.value"
         v-if="!atMax"
         ref="inputRef"
         :value="query"
@@ -319,18 +328,21 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Dropdown -->
+    <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
+
     <CuiListboxPanel
       ref="panelRef"
-      :open="isOpen && (filteredSuggestions.length > 0 || canCreate || isLoading)"
+      :open="panelOpen"
       :anchor="controlRef"
       token-prefix="tag-input"
       :max-height="240"
       :font-size="cfg.style['--_tag-input-font-size']"
       :item-padding="ITEM_PADDING"
+      v-bind="listbox.panelAttrs.value"
       class="cui-tag-input__dropdown"
     >
       <!-- Loading -->
-      <div v-if="isLoading && filteredSuggestions.length === 0" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+      <div v-if="isLoading && filteredSuggestions.length === 0" role="presentation" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
         <CuiSpinner size="xs" show-label :label="messages.tagInput.searching" />
       </div>
 
@@ -338,7 +350,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       <CuiListboxOption
         v-for="(suggestion, i) in filteredSuggestions"
         :key="suggestion.value"
-        :index="i"
+        :id="listbox.optionId(i)"
         :active="focusedIndex === i"
         class="cui-tag-input__suggestion"
         :class="{ 'cui-tag-input__suggestion--focused': focusedIndex === i }"
@@ -353,7 +365,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       <!-- Create new -->
       <CuiListboxOption
         v-if="canCreate"
-        :index="filteredSuggestions.length"
+        :id="listbox.optionId(filteredSuggestions.length)"
         :active="focusedIndex === filteredSuggestions.length"
         class="cui-tag-input__create"
         :class="{

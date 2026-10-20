@@ -15,7 +15,7 @@ function mountPanel() {
   mount(CuiListboxPanel, {
     attachTo: document.body,
     props: { open: true, anchor, tokenPrefix: "combobox", maxHeight: 300, fontSize: "14px", itemPadding: "4px" },
-    slots: { default: () => h(CuiListboxOption, { index: 0 }, () => "One") },
+    slots: { default: () => h(CuiListboxOption, { id: "opt-0" }, () => "One") },
   });
   return rect;
 }
@@ -52,14 +52,18 @@ describe("CuiListboxPanel", () => {
 
   it("an option emits select unless disabled, and hover on mouseenter", async () => {
     const onSelect = vi.fn();
-    const w = mount(CuiListboxOption, { props: { index: 2, disabled: true, onSelect } });
+    const w = mount(CuiListboxOption, { props: { id: "opt-2", disabled: true, onSelect } });
     await w.trigger("click");
     expect(onSelect).not.toHaveBeenCalled();
     await w.setProps({ disabled: false });
     await w.trigger("click");
     expect(onSelect).toHaveBeenCalledOnce();
-    expect(w.attributes("data-index")).toBe("2");
+    expect(w.attributes("role")).toBe("option");
+    expect(w.attributes("id")).toBe("opt-2");
     await w.trigger("mouseenter");
     expect(w.emitted("hover")).toHaveLength(1);
+    await w.setProps({ disabled: true });
+    await w.trigger("mouseenter");
+    expect(w.emitted("hover")).toHaveLength(1); // a disabled row doesn't take the highlight
   });
 });
