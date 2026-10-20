@@ -9,6 +9,7 @@ import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
+import CuiListboxStatus from "./CuiListboxStatus.vue";
 import { useMessages } from "../composables/useMessages";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -82,6 +83,8 @@ const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
 const internalLoading = ref(false);
+/** The query the last completed fetch answered, so an empty result is only claimed for it. */
+const searchedQuery = ref<string | null>(null);
 const asyncSuggestions = ref<TagOption[]>([]);
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
@@ -165,7 +168,9 @@ function onInput(e: Event) {
     debounceTimer = setTimeout(async () => {
       internalLoading.value = true;
       try {
-        asyncSuggestions.value = await props.fetchSuggestions!(query.value);
+        const q = query.value;
+        asyncSuggestions.value = await props.fetchSuggestions!(q);
+        searchedQuery.value = q;
       } finally {
         internalLoading.value = false;
       }
@@ -202,8 +207,23 @@ function removeTag(value: string) {
 // The ARIA combobox pattern, editable (#205) — see useListbox. The create row is the last
 // option. Its own Enter stays here: it creates as well as selects.
 const generatedId = useCuiId("tag-input");
-// The list shows only when there is something in it, and aria-expanded follows that.
-const panelOpen = computed(() => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value));
+// The empty state (#212): something typed, nothing to list, and nothing to create. With
+// async suggestions, only once a search for this query has actually come back — not below
+// minChars, nor during the debounce before the search starts.
+const nothingFound = computed(
+  () =>
+    !!query.value.trim() &&
+    !isLoading.value &&
+    filteredSuggestions.value.length === 0 &&
+    !canCreate.value &&
+    (!props.fetchSuggestions || searchedQuery.value === query.value),
+);
+// The list shows when there is something in it, or to say nothing matched; aria-expanded
+// follows it.
+const panelOpen = computed(
+  () => isOpen.value && (filteredSuggestions.value.length > 0 || canCreate.value || isLoading.value || nothingFound.value),
+);
+const showEmpty = computed(() => isOpen.value && nothingFound.value);
 const listbox = useListbox({
   id: props.id ?? generatedId,
   mode: "editable",
@@ -215,7 +235,11 @@ const listbox = useListbox({
   hasLabel: () => !!props.label,
   labelledby: () => props.ariaLabelledby,
   // The create row is an option too, so it counts: "No results" would hide a real choice.
-  announce: () => (panelOpen.value && !isLoading.value ? messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0)) : ""),
+  announce: () => {
+    if (!panelOpen.value || isLoading.value) return "";
+    if (showEmpty.value) return props.noSuggestionsText;
+    return messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0));
+  },
 });
 
 // As in CuiCombobox: a changed list resets the highlight rather than leave it on a
@@ -349,9 +373,12 @@ defineExpose({ el: wrapperRef, focus, blur });
       class="cui-tag-input__dropdown"
     >
       <!-- Loading -->
-      <div v-if="isLoading && filteredSuggestions.length === 0" role="presentation" :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+      <CuiListboxStatus v-if="isLoading && filteredSuggestions.length === 0">
         <CuiSpinner size="xs" show-label :label="messages.tagInput.searching" />
-      </div>
+      </CuiListboxStatus>
+
+      <!-- Empty state -->
+      <CuiListboxStatus v-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
 
       <!-- Suggestions -->
       <CuiListboxOption
