@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { inject, ref, watch, nextTick, computed, onUnmounted } from "vue";
+import { inject, ref, watch, onUnmounted } from "vue";
 import { useEventListener } from "../composables/useEventListener";
 import { DropdownContextKey } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
+import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 
 export interface CuiDropdownMenuProps {
   /** Min width of the menu */
@@ -28,16 +29,15 @@ function updatePosition() {
 watch(
   () => ctx?.isOpen.value,
   (isOpen) => {
-    if (isOpen) {
-      updatePosition();
-      nextTick(() => {
-        const firstItem = menuRef.value?.querySelector<HTMLElement>(
-          '[role="menuitem"]:not([aria-disabled="true"])',
-        );
-        firstItem?.focus();
-      });
-    }
+    if (isOpen) updatePosition();
   },
+);
+
+// Focus moves in on every open, once the menu has rendered.
+watch(
+  () => ctx?.focusRequest?.value,
+  (request) => request && focusMenuEdge(menuRef.value, request.edge),
+  { flush: "post" },
 );
 
 // Reposition on scroll while open (a pinned dropdown stays open; an unpinned one closes)
@@ -57,43 +57,19 @@ onUnmounted(() => {
 });
 
 function onKeydown(e: KeyboardEvent) {
-  if (!menuRef.value) return;
-  const items = Array.from(menuRef.value.querySelectorAll<HTMLElement>(
-    '[role="menuitem"]:not([aria-disabled="true"]), [role="menuitemcheckbox"]:not([aria-disabled="true"]), [role="menuitemradio"]:not([aria-disabled="true"])',
-  ));
-  const currentIdx = items.indexOf(document.activeElement as HTMLElement);
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    const next = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
-    items[next]?.focus();
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    const prev = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
-    items[prev]?.focus();
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    items[0]?.focus();
-  } else if (e.key === "End") {
-    e.preventDefault();
-    items[items.length - 1]?.focus();
-  }
+  if (menuRef.value && ctx) onMenuKeydown(e, menuRef.value, ctx.close);
 }
-
-const ownerId = computed(() => {
-  const wrapper = ctx?.triggerEl.value?.closest("[data-cui-dropdown-id]");
-  return wrapper?.getAttribute("data-cui-dropdown-id") ?? "";
-});
 </script>
 
 <template>
   <Teleport to="body">
     <div
       v-if="ctx?.isOpen.value || ctx?.isClosing.value"
+      :id="ctx?.ownerId && `${ctx.ownerId}-menu`"
       ref="menuRef"
       class="cui-dropdown-menu"
       :class="{ 'cui-dropdown-menu--closing': ctx?.isClosing.value }"
-      :data-cui-dropdown-owner="ownerId"
+      :data-cui-menu-owner="ctx?.ownerId"
       :style="{ ...menuStyle, minWidth }"
       role="menu"
       @keydown="onKeydown"

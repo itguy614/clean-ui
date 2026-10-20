@@ -3,6 +3,8 @@ import { ref, shallowRef, provide, watch, onUnmounted } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
+import { useLayerStack } from "../composables/useLayerStack";
+import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
@@ -57,8 +59,11 @@ const wrapperRef = ref<HTMLElement | null>(null);
 const menuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
+// What had focus when the menu opened — the row it was summoned from, by keyboard — and
+// gets it back on close (#160).
+let returnFocusTo: Element | null = null;
 
-// Unique ID for click-outside detection on teleported menu
+// Stamped on its teleported panels (its own and any sub-menu's) as data-cui-menu-owner
 const contextMenuId = useCuiId("context-menu");
 
 function open() {
@@ -69,7 +74,9 @@ function open() {
 }
 
 function close() {
-  if (!isOpen.value) return;
+  if (!isOpen.value || isClosing.value) return;
+  restoreMenuFocus(returnFocusTo, contextMenuId);
+  returnFocusTo = null;
   isClosing.value = true;
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
@@ -165,12 +172,7 @@ function measure({ x, y }: { x: number; y: number }) {
   }
 
   menuStyle.value = adjusted;
-
-  // Focus first item
-  const firstItem = menuRef.value?.querySelector<HTMLElement>(
-    '[role="menuitem"]:not([aria-disabled="true"])',
-  );
-  firstItem?.focus();
+  focusMenuEdge(menuRef.value);
 }
 
 /**
@@ -188,6 +190,9 @@ function openAt(x: number, y: number) {
     isClosing.value = false;
     if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
   }
+  // Not when re-opening: focus is in the old panel then, and the row is still the one to
+  // go back to.
+  if (!returnFocusTo) returnFocusTo = document.activeElement;
   positionAtCursor(x, y);
   open();
   emit("open", x, y);
@@ -285,41 +290,17 @@ function onKeydown(e: KeyboardEvent) {
 
 // Keyboard navigation within menu
 function onMenuKeydown(e: KeyboardEvent) {
-  if (!menuRef.value) return;
-
-  if (e.key === "Escape") {
-    e.preventDefault();
-    e.stopPropagation();
-    close();
-    return;
-  }
-
-  const items = Array.from(menuRef.value.querySelectorAll<HTMLElement>(
-    '[role="menuitem"]:not([aria-disabled="true"]), [role="menuitemcheckbox"]:not([aria-disabled="true"]), [role="menuitemradio"]:not([aria-disabled="true"])',
-  ));
-  const currentIdx = items.indexOf(document.activeElement as HTMLElement);
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    const next = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
-    items[next]?.focus();
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    const prev = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
-    items[prev]?.focus();
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    items[0]?.focus();
-  } else if (e.key === "End") {
-    e.preventDefault();
-    items[items.length - 1]?.focus();
-  }
+  if (menuRef.value) onSharedMenuKeydown(e, menuRef.value, close);
 }
+
+// Escape through the shared layer stack (#160), like CuiDropdown: a sub-menu's own Escape
+// closes only it, and an enclosing modal stays open.
+useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
 // Only while open, so a closed context menu holds no document listener (#203).
 // Its open sub-menus are teleported panels of their own (see CuiDropdown).
 useClickOutside(
-  () => [wrapperRef.value, menuRef.value, ...document.querySelectorAll<HTMLElement>(".cui-dropdown-sub__menu")],
+  () => [wrapperRef.value, ...menuPanels(contextMenuId)],
   close,
   { enabled: isOpen },
 );
@@ -355,6 +336,7 @@ function closeSiblingSubMenus(except?: () => void) {
 
 // Provide DropdownContext so all dropdown item components work
 provide(DropdownContextKey, {
+  ownerId: contextMenuId,
   isOpen,
   isClosing,
   trigger: ref("click" as DropdownTrigger),
@@ -395,7 +377,7 @@ defineExpose({ open, openAt, close, isOpen });
         ref="menuRef"
         class="cui-context-menu__panel"
         :class="{ 'cui-context-menu__panel--closing': isClosing }"
-        :data-cui-context-menu-id="contextMenuId"
+        :data-cui-menu-owner="contextMenuId"
         :style="{ ...menuStyle, minWidth }"
         role="menu"
         @keydown="onMenuKeydown"
