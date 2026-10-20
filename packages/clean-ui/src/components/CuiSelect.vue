@@ -114,7 +114,8 @@ const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 // Selection helpers. A Set, since every row asks on every render.
 const selectedValues = computed(() => {
   const v = props.modelValue;
-  return new Set<string | number>(Array.isArray(v) ? v : v != null ? [v] : []);
+  if (props.multiple) return new Set<string | number>(Array.isArray(v) ? v : []);
+  return new Set<string | number>(v != null && !Array.isArray(v) ? [v] : []);
 });
 const isSelected = (value: string | number) => selectedValues.value.has(value);
 
@@ -204,7 +205,8 @@ const groupId = (section: number) => `${listbox.listboxId}-group-${section}`;
 const listbox = useListbox({
   id: props.id ?? generatedId,
   mode: "select-only",
-  count: () => displayOptions.value.length,
+  // Nothing to walk while the panel shows only its loading row.
+  count: () => (props.loading ? 0 : displayOptions.value.length),
   isDisabled: (i) => !!displayOptions.value[i]?.disabled,
   label: (i) => displayOptions.value[i]?.label ?? "",
   activeIndex: highlightedIndex,
@@ -333,6 +335,7 @@ const messages = useMessages();
       :open="isOpen"
       :anchor="triggerRef"
       token-prefix="select"
+      :color="color"
       :max-height="300"
       :font-size="dims.fontSize"
       :item-padding="dims.itemPadding"
@@ -354,7 +357,7 @@ const messages = useMessages();
           :role="section.group ? 'group' : undefined"
           :aria-labelledby="section.group ? groupId(si) : undefined"
         >
-          <div v-if="section.group" :id="groupId(si)" class="cui-select__group-header">
+          <div v-if="section.group" :id="groupId(si)" class="cui-select__group-header" :style="{ '--_sel-px': dims.px }">
             {{ section.group }}
           </div>
           <!-- The cui-select__option--* classes are for consumer CSS written against them;
@@ -377,7 +380,7 @@ const messages = useMessages();
           >
             <!-- Checkbox for multi-select only -->
             <span v-if="multiple" class="cui-select__check">
-              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :style="{ color: 'var(--_sel-color)' }" />
+              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :style="{ color: `var(--cui-${color})` }" />
             </span>
             <span class="cui-select__option-label">
               <slot name="option" :option="opt">
@@ -557,7 +560,8 @@ const messages = useMessages();
 
 /* --- Group header --- */
 .cui-select__group-header {
-  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
+  /* Inline padding matches the option rows', which follow the size (#216). */
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--_sel-px) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;

@@ -85,3 +85,27 @@ describe("CuiSelect listbox (#216)", () => {
     expect(activeText(trigger)).toBe("Banana");
   });
 });
+
+// Code review of #216.
+describe("CuiSelect panel review fixes", () => {
+  it("the color prop tints the highlighted and selected rows, and the check mark", async () => {
+    const { trigger } = mountSelect({ color: "success", multiple: true, modelValue: ["apple"] });
+    await press(trigger, "ArrowDown");
+    const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
+    expect(panel.style.getPropertyValue("--_listbox-item-focus-bg")).toBe("var(--cui-select-item-focus-bg, var(--cui-success-bg))");
+    expect(document.querySelector<HTMLElement>(".cui-select__check .cui-icon, .cui-select__check svg, .cui-select__check > *")?.getAttribute("style")).toContain("--cui-success");
+  });
+
+  it("while loading, the keyboard names no option that isn't shown", async () => {
+    const { trigger } = mountSelect({ loading: true });
+    await press(trigger, "ArrowDown");
+    await press(trigger, "ArrowDown");
+    expect(trigger.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+
+  it("single-select with an array modelValue marks nothing selected", async () => {
+    const { trigger } = mountSelect({ modelValue: ["apple", "banana"] });
+    await press(trigger, "ArrowDown");
+    expect(document.querySelectorAll('[role="option"][aria-selected="true"]').length).toBe(0);
+  });
+});
