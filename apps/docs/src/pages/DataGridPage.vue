@@ -179,11 +179,18 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
           translates with the rest of your application rather than being hardcoded English.
         </li>
         <li>
-          Column sorting is pointer-driven: the click handler sits on the header cell rather
-          than on a button inside it, and there is no <code>aria-sort</code>, so the current
-          sort is conveyed by the caret icon alone. If keyboard sorting matters for your
-          grid, put your own control in <code>#toolbar-start</code> and drive the data
-          yourself.
+          A sortable column's header text is a <code>&lt;button&gt;</code> — Tab to it, press
+          Enter or Space to sort — and its <code>&lt;th&gt;</code> carries
+          <code>aria-sort</code> (<code>ascending</code>, <code>descending</code> or
+          <code>none</code>), so the direction isn't left to the caret icon.
+        </li>
+        <li>
+          The select-all checkbox is named “Select all rows”, and each row's checkbox and
+          actions button are named after the row — its first column's value: “Select Alice”,
+          “Actions for Alice”. The view toggle's buttons are named “Table view” and “Card
+          view”, with the active one pressed. All from the message bundle
+          (<code>dataGrid.selectAll</code>, <code>selectRow</code>, <code>rowActions</code>,
+          <code>tableView</code>, <code>cardView</code>).
         </li>
         <li>
           Give the grid a heading immediately above it. Neither the table nor the toolbar

@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
+import { useMessages } from "../composables/useMessages";
 import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -104,20 +105,32 @@ function rowActions(row: DataGridRow): DataGridRowAction[] {
   return (row._actions as DataGridRowAction[] | undefined) ?? [];
 }
 
-function getSortIcon(key: string): string {
-  const col = grid.columns.find((c) => c.key === key);
-  const sortKey = col?.sortKey ?? key;
-  if (grid.sort.value?.key === sortKey) {
-    return grid.sort.value.direction === "asc" ? "caret-up" : "caret-down";
-  }
-  return "caret-up-down";
+const messages = useMessages();
+
+/** Which way `col` is sorted, or null when it isn't the sorted column. */
+function sortDirection(col: { key: string; sortKey?: string }): "asc" | "desc" | null {
+  const sort = grid.sort.value;
+  return sort?.key === (col.sortKey ?? col.key) ? sort.direction : null;
 }
 
-function getSortOpacity(key: string): string {
-  const col = grid.columns.find((c) => c.key === key);
-  const sortKey = col?.sortKey ?? key;
-  return grid.sort.value?.key === sortKey ? "1" : "0.3";
+function sortIcon(col: { key: string; sortKey?: string }) {
+  const dir = sortDirection(col);
+  return dir === "asc" ? "caret-up" : dir === "desc" ? "caret-down" : "caret-up-down";
 }
+
+/** The <th>'s aria-sort: the direction is otherwise only a caret icon (#161). */
+function ariaSort(col: { key: string; sortKey?: string }) {
+  const dir = sortDirection(col);
+  return dir === "asc" ? "ascending" : dir === "desc" ? "descending" : "none";
+}
+
+/** What names a row to a screen reader: its first visible column's value. */
+function rowLabel(row: DataGridRow): string {
+  const first = grid.visibleColumns.value[0];
+  const value = first ? row[first.key] : undefined;
+  return value == null || value === "" ? getRowId(row) : String(value);
+}
+
 
 // The bulk-select and row-actions columns' width. Their cells drop their horizontal
 // padding (AUX_CELL_STYLE) so they render at exactly this width — padding plus the
@@ -241,11 +254,8 @@ function headerPinStyle(left: string | undefined, lastPinned = false): Record<st
   return style;
 }
 
-function headerCellStyle(col: { key: string; sortable?: boolean; sticky?: boolean }) {
-  return {
-    ...(col.sortable ? { cursor: "pointer", userSelect: "none" } : {}),
-    ...headerPinStyle(stickyColumnOffsets.value.get(col.key), col.key === lastStickyKey.value),
-  };
+function headerCellStyle(col: { key: string }) {
+  return headerPinStyle(stickyColumnOffsets.value.get(col.key), col.key === lastStickyKey.value);
 }
 
 // The non-column header cells (bulk-select checkbox, row actions) aren't in
@@ -316,6 +326,7 @@ const totalCols = computed(() => {
         <CuiTableCell v-if="hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :style="selectHeaderCellStyle">
           <CuiCheckbox
             v-if="showSelectAll"
+            :aria-label="messages.dataGrid.selectAll"
             :model-value="selectAllState === true"
             :indeterminate="selectAllState === 'indeterminate'"
             @update:model-value="handleSelectAll"
@@ -330,17 +341,25 @@ const totalCols = computed(() => {
           :width="col.width"
           :nowrap="col.nowrap"
           :style="headerCellStyle(col)"
-          @click="col.sortable ? grid.applySort(col.key) : undefined"
+          :aria-sort="col.sortable ? ariaSort(col) : undefined"
         >
-          <span style="display: inline-flex; align-items: center; gap: calc(0.25rem * var(--cui-density-scale, 1));">
+          <!-- A sortable header's label is a button, so the sort is reachable by keyboard;
+               the <th> says which way it's sorted (aria-sort). -->
+          <button
+            v-if="col.sortable"
+            type="button"
+            class="cui-data-grid-table__sort"
+            @click="grid.applySort(col.key)"
+          >
             {{ col.label }}
             <CuiIcon
-              v-if="col.sortable"
-              :name="getSortIcon(col.key)"
+              :name="sortIcon(col)"
               size="0.875rem"
-              :style="{ opacity: getSortOpacity(col.key) }"
+              aria-hidden="true"
+              :style="{ opacity: sortDirection(col) ? '1' : '0.3' }"
             />
-          </span>
+          </button>
+          <template v-else>{{ col.label }}</template>
         </CuiTableCell>
 
         <!-- Row actions column -->
@@ -377,6 +396,7 @@ const totalCols = computed(() => {
           <!-- Bulk selection checkbox -->
           <CuiTableCell v-if="hasBulkActions" align="center" :style="selectBodyCellStyle" @click.stop>
             <CuiCheckbox
+              :aria-label="messages.dataGrid.selectRow(rowLabel(row))"
               :model-value="isSelected(row)"
               @update:model-value="grid.toggleSelection(getRowId(row))"
             />
@@ -399,7 +419,7 @@ const totalCols = computed(() => {
           <CuiTableCell v-if="hasRowActions" align="center" :style="AUX_CELL_STYLE" @click.stop>
             <CuiDropdown v-if="rowActions(row).length > 0">
               <CuiDropdownTrigger>
-                <CuiButton variant="ghost" size="xs" style="opacity: 0.4;">
+                <CuiButton variant="ghost" size="xs" style="opacity: 0.4;" :aria-label="messages.dataGrid.rowActions(rowLabel(row))">
                   <CuiIcon name="dots-three" size="1rem" />
                 </CuiButton>
               </CuiDropdownTrigger>
@@ -439,3 +459,26 @@ const totalCols = computed(() => {
     </CuiTableBody>
   </CuiTable>
 </template>
+
+<style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-data-grid-table__sort:focus-visible) {
+  outline: 2px solid var(--cui-data-grid-focus-ring, var(--cui-primary-focus-ring));
+  outline-offset: 2px;
+  border-radius: var(--cui-radius-sm, 0.25rem);
+}
+
+/* --- Structural --- */
+/* The header's own text, as a button: it inherits the cell's font and alignment. */
+.cui-data-grid-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+  /* preflight.css resets font, color, spacing and the box; not text-transform, and the
+     header's case mustn't change on becoming sortable */
+  text-transform: inherit;
+  cursor: pointer;
+  user-select: none;
+  text-align: inherit;
+}
+</style>

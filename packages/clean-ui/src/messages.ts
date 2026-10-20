@@ -110,6 +110,14 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /** Names for controls that show only an icon or a box (#161). */
+    selectAll: string;
+    /** A row's checkbox, given the row's label (its first column's value). */
+    selectRow: (rowLabel: string) => string;
+    /** A row's actions button, given the row's label. */
+    rowActions: (rowLabel: string) => string;
+    tableView: string;
+    cardView: string;
   };
 }
 
@@ -170,6 +178,11 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    selectAll: "Select all rows",
+    selectRow: (rowLabel) => `Select ${rowLabel}`,
+    rowActions: (rowLabel) => `Actions for ${rowLabel}`,
+    tableView: "Table view",
+    cardView: "Card view",
   },
 };
 
