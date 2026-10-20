@@ -47,11 +47,16 @@ const CONTROLS: {
   ariaTarget?: string;
   /** Controls with no native form element can't carry name/autocomplete. */
   nativeAttrs?: boolean;
+  /**
+   * The value posts through hidden inputs, not `target` (#303): `target` is a search box, so
+   * `name` on it posted the typed text. `autocomplete` stays on it.
+   */
+  nameOnHiddenInputs?: boolean;
 }[] = [
   { name: "CuiInput", component: CuiInput, target: "input.cui-input__native" },
   { name: "CuiTextarea", component: CuiTextarea, target: "textarea.cui-textarea__native" },
-  { name: "CuiCombobox", component: CuiCombobox, target: "input" },
-  { name: "CuiTagInput", component: CuiTagInput, target: "input" },
+  { name: "CuiCombobox", component: CuiCombobox, target: "input:not([type=hidden])", nameOnHiddenInputs: true },
+  { name: "CuiTagInput", component: CuiTagInput, props: { modelValue: ["x"] }, target: "input:not([type=hidden])", nameOnHiddenInputs: true },
   { name: "CuiInputStepper", component: CuiInputStepper, target: "input" },
   { name: "CuiFileUpload", component: CuiFileUpload, target: "input" },
   { name: "CuiSlider", component: CuiSlider, target: "input" },
@@ -68,7 +73,7 @@ const CONTROLS: {
 ];
 
 describe("native control attributes land on the focusable element", () => {
-  for (const { name, component, props, target, ariaTarget, nativeAttrs = true } of CONTROLS) {
+  for (const { name, component, props, target, ariaTarget, nativeAttrs = true, nameOnHiddenInputs = false } of CONTROLS) {
     const aria = ariaTarget ?? target;
     it(`${name} puts id on ${aria}`, () => {
       const wrapper = mount(component as never, {
@@ -107,14 +112,19 @@ describe("native control attributes land on the focusable element", () => {
     });
 
     if (nativeAttrs) {
-      it(`${name} puts name and autocomplete on ${target}`, () => {
+      it(`${name} puts name and autocomplete where they belong`, () => {
         const wrapper = mount(component as never, {
           props: { ...props, name: "field-name", autocomplete: "off" },
         });
 
         const el = wrapper.find(target);
-        expect(el.attributes("name")).toBe("field-name");
         expect(el.attributes("autocomplete")).toBe("off");
+        if (nameOnHiddenInputs) {
+          expect(el.attributes("name"), `${name}: the search box must not post`).toBeUndefined();
+          expect(wrapper.find('input[type="hidden"]').attributes("name")).toBe("field-name");
+        } else {
+          expect(el.attributes("name")).toBe("field-name");
+        }
       });
     }
   }

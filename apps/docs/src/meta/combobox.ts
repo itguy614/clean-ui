@@ -30,7 +30,12 @@ const meta: ComponentMeta = {
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
     { name: "loading", type: "boolean", default: "false", description: "External loading state" },
     hiddenProp,
-    ...nativeControlProps,
+    // The values post through hidden inputs (#303), not the search input's text.
+    ...nativeControlProps.map((p) =>
+      p.name === "autocomplete"
+        ? { ...p, description: "Autocomplete hint for the search box. It controls the browser's own suggestion list there — use off to keep it from covering the listbox. History-based autofill doesn't apply, since the search box carries no name" }
+        : p.name === "name" ? { ...p, description: "Form field name. Posts the selected value (one entry per value when multiple, empty when nothing is selected) with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
+    ),
   ],
 
   slots: [

@@ -14,6 +14,7 @@ import CuiSpinner from "./CuiSpinner.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
+import CuiFormValues from "./CuiFormValues.vue";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -369,7 +370,6 @@ function optionClass(index: number, option: ComboboxOption) {
       <input
         ref="inputRef"
         :id="id"
-        :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
@@ -395,9 +395,12 @@ function optionClass(index: number, option: ComboboxOption) {
       {{ errorMessage }}
     </div>
 
-    <!-- Dropdown (teleported) -->
+    <!-- The value posts under `name` (#303), not the search text the input holds. -->
+    <CuiFormValues :name="name" :value="modelValue" :multiple="multiple" :disabled="disabled" />
+
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
+    <!-- Dropdown (teleported) -->
     <CuiListboxPanel
       ref="panelRef"
       :open="panelOpen"
