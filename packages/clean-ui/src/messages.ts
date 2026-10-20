@@ -87,6 +87,16 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  transferList: {
+    /** Names for the transfer and reorder buttons, which show only an icon (#170). */
+    moveSelectedTo: (title: string) => string;
+    moveAllTo: (title: string) => string;
+    moveUp: string;
+    moveDown: string;
+    /** The filter field's name, given its panel's title. */
+    filter: (title: string) => string;
+    empty: string;
+  };
   formField: {
     /**
      * Appended to a required field's label for screen readers. The visible marker is an
@@ -159,6 +169,14 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  transferList: {
+    moveSelectedTo: (title) => `Move selected to ${title}`,
+    moveAllTo: (title) => `Move all to ${title}`,
+    moveUp: "Move up",
+    moveDown: "Move down",
+    filter: (title) => `Filter ${title}`,
+    empty: "No items",
+  },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },

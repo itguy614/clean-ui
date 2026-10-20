@@ -1,5 +1,5 @@
-import { onMounted, onUpdated, ref, toValue, type MaybeRefOrGetter, type Ref } from "vue";
-import { firstIndex, useListNavigation, type ListItems, type ListOrientation } from "./useListNavigation";
+import { nextTick, onMounted, onUpdated, ref, toValue, type MaybeRefOrGetter, type Ref } from "vue";
+import { firstIndex, nearestIndex, useListNavigation, type ListItems, type ListOrientation } from "./useListNavigation";
 
 export type RovingOrientation = ListOrientation;
 
@@ -93,6 +93,19 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
     if (to !== from && to !== -1) focusItem(to, els);
   }
 
+  /**
+   * Focus the enabled item nearest `i`, after the next render: for when the focused item has
+   * just been removed (moved to another list, a tab closed), so focus lands on what took its
+   * place rather than on <body>.
+   */
+  function focusNearest(i: number) {
+    nextTick(() => {
+      const els = query();
+      const to = nearestIndex(asItems(els), i);
+      if (to !== -1) focusItem(to, els);
+    });
+  }
+
   // Focus landing on an item, or inside one, moves the stop to that item.
   function onFocusin(e: FocusEvent) {
     const target = e.target as Node;
@@ -111,5 +124,5 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
   onMounted(settle);
   onUpdated(settle);
 
-  return { activeIndex, tabIndex, onKeydown, onFocusin, focusItem };
+  return { activeIndex, tabIndex, onKeydown, onFocusin, focusItem, focusNearest };
 }

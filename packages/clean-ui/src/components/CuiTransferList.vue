@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { useCuiId } from "../composables/useCuiId";
+import { useMessages } from "../composables/useMessages";
+import { useRovingFocus } from "../composables/useRovingFocus";
 
 export interface TransferListItem {
   value: string | number;
@@ -141,28 +144,32 @@ function moveDown() {
   }
 }
 
-function toggleSource(value: string | number) {
-  if (props.disabled) return;
-  const next = new Set(sourceSelected.value);
-  next.has(value) ? next.delete(value) : next.add(value);
-  sourceSelected.value = next;
+type Marks = Ref<Set<string | number>>;
+
+/** Mark or unmark `value` — or, with `on`, set it either way. A new Set, so it re-renders. */
+function toggle(marks: Marks, value: string | number, on = !marks.value.has(value)) {
+  if (marks.value.has(value) === on) return;
+  const next = new Set(marks.value);
+  if (on) next.add(value);
+  else next.delete(value);
+  marks.value = next;
 }
 
-function toggleTarget(value: string | number) {
-  if (props.disabled) return;
-  const next = new Set(targetSelected.value);
-  next.has(value) ? next.delete(value) : next.add(value);
-  targetSelected.value = next;
-}
+const toggleSource = (value: string | number) => !props.disabled && toggle(sourceSelected, value);
+const toggleTarget = (value: string | number) => !props.disabled && toggle(targetSelected, value);
 
-// Double-click to move immediately
+// Double-click (or Enter) to move immediately. The item leaves its list's marks too, or
+// "move selected" would later move it a second time.
+
 function dblClickSource(item: TransferListItem) {
   if (props.disabled || item.disabled) return;
+  toggle(sourceSelected, item.value, false);
   emit("update:modelValue", [...props.modelValue, item.value]);
 }
 
 function dblClickTarget(item: TransferListItem) {
   if (props.disabled) return;
+  toggle(targetSelected, item.value, false);
   emit("update:modelValue", props.modelValue.filter((v) => v !== item.value));
 }
 
@@ -257,6 +264,43 @@ function dropIndicatorStyle(value: string | number, side: "source" | "target"): 
     : { borderBottom: border };
 }
 
+// --- Keyboard and ARIA (#170) ---
+// Each list is a multiselectable role="listbox" of role="option"s with one tab stop
+// (useRovingFocus): the arrows and Home/End move between items, Space marks one for
+// transfer, and Enter moves the focused item across at once, as a double-click does.
+const messages = useMessages();
+const baseId = useCuiId("transfer-list");
+const ids = {
+  sourceTitle: `${baseId}-source-title`,
+  targetTitle: `${baseId}-target-title`,
+  sourceFilter: `${baseId}-source-filter`,
+  targetFilter: `${baseId}-target-filter`,
+};
+
+const OPTION = ".cui-transfer-list__option";
+const sourceListEl = useTemplateRef<HTMLElement>("sourceListEl");
+const targetListEl = useTemplateRef<HTMLElement>("targetListEl");
+const sourceRoving = useRovingFocus({ container: sourceListEl, itemSelector: OPTION });
+const targetRoving = useRovingFocus({ container: targetListEl, itemSelector: OPTION });
+
+function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, side: "source" | "target", index: number) {
+  if (e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
+  if (e.key === " ") {
+    e.preventDefault();
+    toggle(side === "source" ? sourceSelected : targetSelected, item.value);
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    // Focus moves on to what takes the item's place, not to <body>.
+    if (side === "source") {
+      dblClickSource(item);
+      sourceRoving.focusNearest(index);
+    } else {
+      dblClickTarget(item);
+      targetRoving.focusNearest(index);
+    }
+  }
+}
+
 // Size config
 const sizeConfig: Record<string, { fontSize: string; itemPad: string; titleFont: string }> = {
   sm: { fontSize: "0.8125rem", itemPad: "0.3125rem 0.5rem", titleFont: "0.75rem" },
@@ -308,11 +352,12 @@ const panelStyle = computed(() => ({
     <!-- Source panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceTitle }}</span>
+        <span :id="ids.sourceTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceTitle }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredSourceItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <CuiInput v-model="sourceSearch" :placeholder="sourcePlaceholder" size="sm">
+        <span :id="ids.sourceFilter" class="cui-sr-only">{{ messages.transferList.filter(sourceTitle) }}</span>
+        <CuiInput v-model="sourceSearch" :placeholder="sourcePlaceholder" size="sm" :aria-labelledby="ids.sourceFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
@@ -326,51 +371,68 @@ const panelStyle = computed(() => ({
         @dragleave="onDragLeavePanel"
         @drop="onDropPanel($event, 'source')"
       >
+        <!-- The listbox holds only its options; the empty message sits beside it. -->
         <div
-          v-for="item in filteredSourceItems"
-          :key="String(item.value)"
-          :draggable="!item.disabled && !disabled"
-          :style="{ ...itemStyle(sourceSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'source') }"
-          @click="!item.disabled && toggleSource(item.value)"
-          @dblclick="dblClickSource(item)"
-          @dragstart="onDragStart($event, item.value, 'source')"
-          @dragend="onDragEnd"
-          @dragover="onDragOverItem($event, item.value, 'source')"
+          ref="sourceListEl"
+          role="listbox"
+          aria-multiselectable="true"
+          :aria-labelledby="ids.sourceTitle"
+          :aria-disabled="disabled || undefined"
+          @keydown="sourceRoving.onKeydown"
+          @focusin="sourceRoving.onFocusin"
         >
-          <CuiIcon name="dots-six-vertical" size="0.75rem" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
-          <slot name="item" :item="item" :side="'source'">
-            <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
-            <div :style="{ flex: '1', minWidth: '0' }">
-              <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
-              <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
-            </div>
-          </slot>
+          <div
+            v-for="(item, i) in filteredSourceItems"
+            :key="String(item.value)"
+            class="cui-transfer-list__option"
+            role="option"
+            :aria-selected="sourceSelected.has(item.value) ? 'true' : 'false'"
+            :aria-disabled="item.disabled || disabled || undefined"
+            :tabindex="sourceRoving.tabIndex(i)"
+            @keydown="onOptionKeydown($event, item, 'source', i)"
+            :draggable="!item.disabled && !disabled"
+            :style="{ ...itemStyle(sourceSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'source') }"
+            @click="!item.disabled && toggleSource(item.value)"
+            @dblclick="dblClickSource(item)"
+            @dragstart="onDragStart($event, item.value, 'source')"
+            @dragend="onDragEnd"
+            @dragover="onDragOverItem($event, item.value, 'source')"
+          >
+            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
+            <slot name="item" :item="item" :side="'source'">
+              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
+              <div :style="{ flex: '1', minWidth: '0' }">
+                <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
+                <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
+              </div>
+            </slot>
+          </div>
         </div>
         <div v-if="filteredSourceItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
-          No items
+          {{ messages.transferList.empty }}
         </div>
       </div>
     </div>
 
     <!-- Action buttons -->
     <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
-      <CuiButton variant="outline" size="xs" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(targetTitle)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
         <CuiIcon name="caret-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(targetTitle)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
         <CuiIcon name="caret-double-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(sourceTitle)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
         <CuiIcon name="caret-left" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(sourceTitle)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
         <CuiIcon name="caret-double-left" size="0.875rem" />
       </CuiButton>
       <div :style="{ height: '0.5rem' }" />
-      <CuiButton variant="outline" size="xs" :disabled="disabled || targetSelected.size !== 1" @click="moveUp">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveUp" :disabled="disabled || targetSelected.size !== 1" @click="moveUp">
         <CuiIcon name="caret-up" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :disabled="disabled || targetSelected.size !== 1" @click="moveDown">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveDown" :disabled="disabled || targetSelected.size !== 1" @click="moveDown">
         <CuiIcon name="caret-down" size="0.875rem" />
       </CuiButton>
     </div>
@@ -378,11 +440,12 @@ const panelStyle = computed(() => ({
     <!-- Target panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetTitle }}</span>
+        <span :id="ids.targetTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetTitle }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredTargetItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <CuiInput v-model="targetSearch" :placeholder="targetPlaceholder" size="sm">
+        <span :id="ids.targetFilter" class="cui-sr-only">{{ messages.transferList.filter(targetTitle) }}</span>
+        <CuiInput v-model="targetSearch" :placeholder="targetPlaceholder" size="sm" :aria-labelledby="ids.targetFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
@@ -396,30 +459,55 @@ const panelStyle = computed(() => ({
         @dragleave="onDragLeavePanel"
         @drop="onDropPanel($event, 'target')"
       >
+        <!-- The listbox holds only its options; the empty message sits beside it. -->
         <div
-          v-for="item in filteredTargetItems"
-          :key="String(item.value)"
-          draggable="true"
-          :style="{ ...itemStyle(targetSelected.has(item.value)), ...dropIndicatorStyle(item.value, 'target') }"
-          @click="toggleTarget(item.value)"
-          @dblclick="dblClickTarget(item)"
-          @dragstart="onDragStart($event, item.value, 'target')"
-          @dragend="onDragEnd"
-          @dragover="onDragOverItem($event, item.value, 'target')"
+          ref="targetListEl"
+          role="listbox"
+          aria-multiselectable="true"
+          :aria-labelledby="ids.targetTitle"
+          :aria-disabled="disabled || undefined"
+          @keydown="targetRoving.onKeydown"
+          @focusin="targetRoving.onFocusin"
         >
-          <CuiIcon name="dots-six-vertical" size="0.75rem" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
-          <slot name="item" :item="item" :side="'target'">
-            <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
-            <div :style="{ flex: '1', minWidth: '0' }">
-              <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
-              <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
-            </div>
-          </slot>
+          <div
+            v-for="(item, i) in filteredTargetItems"
+            :key="String(item.value)"
+            class="cui-transfer-list__option"
+            role="option"
+            :aria-selected="targetSelected.has(item.value) ? 'true' : 'false'"
+            :aria-disabled="item.disabled || disabled || undefined"
+            :tabindex="targetRoving.tabIndex(i)"
+            @keydown="onOptionKeydown($event, item, 'target', i)"
+            draggable="true"
+            :style="{ ...itemStyle(targetSelected.has(item.value)), ...dropIndicatorStyle(item.value, 'target') }"
+            @click="toggleTarget(item.value)"
+            @dblclick="dblClickTarget(item)"
+            @dragstart="onDragStart($event, item.value, 'target')"
+            @dragend="onDragEnd"
+            @dragover="onDragOverItem($event, item.value, 'target')"
+          >
+            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
+            <slot name="item" :item="item" :side="'target'">
+              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
+              <div :style="{ flex: '1', minWidth: '0' }">
+                <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
+                <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
+              </div>
+            </slot>
+          </div>
         </div>
         <div v-if="filteredTargetItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
-          No items
+          {{ messages.transferList.empty }}
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-transfer-list__option:focus-visible) {
+  outline: 2px solid var(--cui-transfer-list-focus-ring, var(--cui-primary-focus-ring));
+  outline-offset: -2px;
+}
+</style>

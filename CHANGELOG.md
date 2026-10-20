@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `useRovingFocus` returns `focusNearest(i)`: after the focused item is removed, focus the
+  enabled item that took its place (the next, else the one before) instead of losing focus
+  to `<body>` (#170).
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
@@ -23,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiTransferList can be operated from the keyboard (#170). Each list is a multiselectable
+  `role="listbox"` named by its title, with one tab stop (`useRovingFocus`): the arrows and
+  Home/End move, Space marks an item, and Enter moves the focused item across. The six
+  icon-only buttons and the filter fields are named, and "No items" is translatable
+  (`transferList.*` in the message catalogue). This adds tab stops, so a focus-order
+  snapshot will change. A double-clicked (or Enter-moved) item no longer stays marked, which
+  let "move selected" add it to the other list a second time.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
