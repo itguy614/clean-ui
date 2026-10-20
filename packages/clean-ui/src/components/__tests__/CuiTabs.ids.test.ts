@@ -86,8 +86,27 @@ describe("CuiTabs tab ↔ panel ids", () => {
     });
     wrappers.push(w);
     await nextTick();
-    await w.findAll('[role="tab"]')[1].trigger("click"); // a slide computes the direction from the tab's index
+    const panelOf = (i: number) => document.getElementById(w.findAll('[role="tab"]')[i].attributes("aria-controls")!)!;
+    await w.findAll('[role="tab"]')[1].trigger("click"); // forward: slides left
     await nextTick();
     expect(w.find('[role="tab"][aria-selected="true"]').text()).toBe("B");
+    expect(panelOf(1).classList.contains("cui-tab-slide-left")).toBe(true);
+    await w.findAll('[role="tab"]')[0].trigger("click"); // back: slides right
+    await nextTick();
+    expect(panelOf(0).classList.contains("cui-tab-slide-right")).toBe(true);
+  });
+
+  it("renders a value with a lone surrogate, which encodeURIComponent throws on", async () => {
+    const lone = "cut\uD83D";
+    const w = mount(CuiTabs, {
+      props: { modelValue: lone },
+      slots: { default: () => [h(CuiTab, { value: lone, label: "A" }, () => "a")] },
+      attachTo: document.body,
+    });
+    wrappers.push(w);
+    await nextTick();
+    const tab = w.find('[role="tab"]');
+    expect(tab.attributes("id")).toMatch(/^[\w-]+$/);
+    expect(document.getElementById(tab.attributes("aria-controls")!)?.textContent).toBe("a");
   });
 });

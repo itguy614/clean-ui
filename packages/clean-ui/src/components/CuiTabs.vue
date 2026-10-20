@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, provide, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
-  TabsContextKey,
+  useTabsProvider,
   type TabDefinition,
   type TabVariant,
   type TabOrientation,
@@ -89,11 +89,21 @@ function close(value: string) {
 }
 
 // Per tab set; the value is encoded, since an id reference can't hold whitespace (#271).
+// Every character outside [A-Za-z0-9-] becomes _<hex>_ — a code unit, so a lone surrogate
+// encodes too (encodeURIComponent throws on one, mid-render).
 const tabsId = useCuiId("tabs");
-const tabId = (value: string) => `${tabsId}-tab-${encodeURIComponent(value)}`;
-const panelId = (value: string) => `${tabsId}-panel-${encodeURIComponent(value)}`;
+const encodeValue = (value: string) => value.replace(/[^A-Za-z0-9-]/g, (c) => `_${c.charCodeAt(0).toString(16)}_`);
+const tabId = (value: string) => `${tabsId}-tab-${encodeValue(value)}`;
+const panelId = (value: string) => `${tabsId}-panel-${encodeValue(value)}`;
 
-provide(TabsContextKey, {
+// From the registered tab order — the panels read it through the context.
+const slideDirection = computed<"left" | "right">(() => {
+  const prevIdx = tabs.value.findIndex((t) => t.value === previousTab.value);
+  const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
+  return currIdx >= prevIdx ? "left" : "right";
+});
+
+useTabsProvider({
   activeTab,
   variant: toRef(props, "variant"),
   orientation: toRef(props, "orientation"),
@@ -107,6 +117,7 @@ provide(TabsContextKey, {
   close,
   tabId,
   panelId,
+  slideDirection,
 });
 
 // Keyboard navigation
@@ -155,9 +166,13 @@ function onKeydown(e: KeyboardEvent) {
 // The bar scrolls when the tabs don't fit; without this the trailing tabs are
 // clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
 
-/** By this tab set's own id — unique on the page, and already encoded (#271). */
+/**
+ * Within this set's own bar, by its id: a document-wide lookup can't see into a shadow root,
+ * and could find another app's tab with the same id.
+ */
 function tabElement(value: string): HTMLElement | null {
-  return document.getElementById(tabId(value));
+  const id = tabId(value);
+  return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
 }
 
 /** Which edges have content scrolled out of view — drives the edge fade mask. */
@@ -217,11 +232,7 @@ watch(() => tabs.value.length, updateOverflow, { flush: "post" });
 watch(() => props.orientation, updateOverflow, { flush: "post" });
 
 // Slide direction
-const slideDirection = computed(() => {
-  const prevIdx = tabs.value.findIndex((t) => t.value === previousTab.value);
-  const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
-  return currIdx >= prevIdx ? "left" : "right";
-});
+
 const messages = useMessages();
 </script>
 
