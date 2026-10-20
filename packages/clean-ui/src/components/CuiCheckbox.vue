@@ -77,13 +77,7 @@ function onKeydown(e: KeyboardEvent) {
 defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 // Named by the label, described by the description, not both as one name (#183).
-const {
-  labelId: choiceLabelId,
-  descriptionId: choiceDescriptionId,
-  hasDescription,
-  describedBy: choiceDescribedBy,
-  labelledBy: choiceLabelledBy,
-} = useChoiceLabelling(props);
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -100,9 +94,9 @@ const {
     }"
     :id="id"
     role="checkbox"
-    :aria-describedby="choiceDescribedBy"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="choiceLabelledBy"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="indeterminate && !isChecked ? 'mixed' : isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -142,10 +136,10 @@ const {
 
     <!-- Label + description -->
     <span class="cui-checkbox__label-wrap">
-      <span :id="choiceLabelId" class="cui-checkbox__label">
+      <span :id="choice.labelId" class="cui-checkbox__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="hasDescription" :id="choiceDescriptionId" class="cui-checkbox__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-checkbox__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>

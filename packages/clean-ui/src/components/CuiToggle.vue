@@ -90,13 +90,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 const dims = computed(() => trackSizes[clampedSize.value]);
 
 // Named by the label, described by the description, not both as one name (#183).
-const {
-  labelId: choiceLabelId,
-  descriptionId: choiceDescriptionId,
-  hasDescription,
-  describedBy: choiceDescribedBy,
-  labelledBy: choiceLabelledBy,
-} = useChoiceLabelling(props);
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -112,9 +106,9 @@ const {
     }"
     :id="id"
     role="switch"
-    :aria-describedby="choiceDescribedBy"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="choiceLabelledBy"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -165,11 +159,11 @@ const {
     </span>
 
     <!-- Label + description -->
-    <span v-if="label || $slots.default || hasDescription" class="cui-toggle__label-wrap">
-      <span :id="choiceLabelId" class="cui-toggle__label">
+    <span v-if="label || $slots.default || choice.hasDescription()" class="cui-toggle__label-wrap">
+      <span :id="choice.labelId" class="cui-toggle__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="hasDescription" :id="choiceDescriptionId" class="cui-toggle__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-toggle__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>
