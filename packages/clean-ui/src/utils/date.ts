@@ -156,13 +156,13 @@ export function formatToRaw(formatted: string): string {
   return formatted.replace(/[^0-9a-zA-Z]/g, "");
 }
 
-/** Convert ISO string (YYYY-MM-DD) to Date */
 /** A picker's value as a Date: a Date as it is, an ISO string parsed, nothing as null. */
 export function toDateValue(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
   return value instanceof Date ? value : isoToDate(value);
 }
 
+/** Convert ISO string (YYYY-MM-DD) to Date */
 export function isoToDate(iso: string): Date | null {
   if (!iso) return null;
   const parts = iso.split("-");

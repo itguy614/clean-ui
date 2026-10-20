@@ -3,7 +3,7 @@ import { useCalendarKeyboard, calendarCellKey, type CalendarViewMode } from "./u
 import { buildMonthGrid, isDateDisabled, isoToDate, yearPageStart, YEARS_PER_PAGE, type DisabledDateRange } from "../utils/date";
 
 /** The months grid's cell keys — the same twelve every year. */
-const MONTH_KEYS = Array.from({ length: 12 }, (_, i) => calendarCellKey("months", i));
+const MONTH_KEYS: readonly string[] = Object.freeze(Array.from({ length: 12 }, (_, i) => calendarCellKey("months", i)));
 
 export interface UseDatePickerCalendarOptions {
   minDate: () => string | undefined;
@@ -68,10 +68,9 @@ export function useDatePickerCalendar(options: UseDatePickerCalendarOptions) {
   // every arrow press, so a template literal per cell meant 42 string allocations per
   // keystroke for a value that only changes per month.
   const calendarDays = computed(() =>
-    buildMonthGrid(viewYear.value, viewMonth.value, isDisabled).map((cell) => ({
-      ...cell,
-      key: calendarCellKey("days", cell.date),
-    })),
+    buildMonthGrid(viewYear.value, viewMonth.value, isDisabled).map((cell) =>
+      Object.assign(cell, { key: calendarCellKey("days", cell.date) }),
+    ),
   );
 
   const yearRangeStart = computed(() => yearPageStart(viewYear.value));
@@ -80,9 +79,15 @@ export function useDatePickerCalendar(options: UseDatePickerCalendarOptions) {
   // Built with the page, like the day keys, rather than per cell per render.
   const yearKeys = computed(() => yearRange.value.map((year) => calendarCellKey("years", year)));
 
-  // Date's constructor rolls month 12 into January of the next year, and -1 into December.
-  function prevMonth() { showDate(new Date(viewYear.value, viewMonth.value - 1, 1)); }
-  function nextMonth() { showDate(new Date(viewYear.value, viewMonth.value + 1, 1)); }
+  // Integer arithmetic, not a Date: `new Date(49, …)` means 1949.
+  function prevMonth() {
+    if (viewMonth.value === 0) { viewMonth.value = 11; viewYear.value--; }
+    else viewMonth.value--;
+  }
+  function nextMonth() {
+    if (viewMonth.value === 11) { viewMonth.value = 0; viewYear.value++; }
+    else viewMonth.value++;
+  }
 
   /** A year picked: both pickers go on to its months. */
   function selectYear(year: number) {

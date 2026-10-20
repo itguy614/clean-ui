@@ -411,7 +411,7 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="yearRangeStart + ' to ' + (yearRangeEnd)"
+              :aria-label="yearRangeStart + ' to ' + yearRangeEnd"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
