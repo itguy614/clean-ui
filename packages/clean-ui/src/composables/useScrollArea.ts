@@ -33,6 +33,8 @@ import { useMessages } from "./useMessages";
 export type ScrollAreaOrientation = "horizontal" | "vertical" | "both";
 export type ScrollAreaFade = "mask" | "overlay" | "none";
 export type ScrollAreaEdge = "top" | "bottom" | "left" | "right";
+/** A physical edge, or a horizontal one by direction: `inline-end` is the right in LTR, the left in RTL. */
+export type ScrollAreaFadeEdge = ScrollAreaEdge | "inline-start" | "inline-end";
 
 export interface UseScrollAreaOptions {
   /** Which axis scrolls. Default `vertical`. */
@@ -52,16 +54,23 @@ export interface UseScrollAreaOptions {
    * Leave out an edge something else already covers — a sticky header's top edge, where a
    * fade would lie over the header and the padding would leave a gap under it.
    */
-  fadeEdges?: MaybeRefOrGetter<ScrollAreaEdge[] | undefined>;
-  /** Called after each measurement, for a consumer that derives its own state from it. */
+  fadeEdges?: MaybeRefOrGetter<ScrollAreaFadeEdge[] | undefined>;
+  /**
+   * Called after each measurement the content or the scroller's size prompted, for a consumer
+   * that derives its own state from it. Not on a scroll, which changes neither.
+   */
   onUpdate?: () => void;
 }
 
 /** Sub-pixel layout rounding, and a scrollbar's last pixel, aren't overflow. */
 const THRESHOLD = 1;
 
-/** The wrapper's style: the positioning context for overlay fades and indicators. Constant. */
-const WRAPPER_STYLE: CSSProperties = Object.freeze({ position: "relative", borderRadius: "inherit" });
+/**
+ * The wrapper's style: the positioning context for overlay fades and indicators. Constant,
+ * and structural only — the radius both wrapper and scroller should inherit belongs in the
+ * consumer's stylesheet, where it can be overridden.
+ */
+const WRAPPER_STYLE: CSSProperties = Object.freeze({ position: "relative" });
 
 export function useScrollArea(options: UseScrollAreaOptions = {}) {
   const messages = useMessages();
@@ -76,7 +85,8 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
   const horizontal = () => orientation() !== "vertical";
   const vertical = () => orientation() !== "horizontal";
 
-  function update() {
+  /** Measure the edges; `scrolled` when only the scroll position can have changed. */
+  function measure(scrolled: boolean) {
     const el = scroller.value;
     if (!el) return;
     // Read every time, scrolls included: a page can switch direction without resizing anything.
@@ -100,8 +110,11 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
       edges.value = next;
     }
     overflowing.value = (horizontal() && overX) || (vertical() && overY);
-    options.onUpdate?.();
+    if (!scrolled) options.onUpdate?.();
   }
+
+  const update = () => measure(false);
+  const onScroll = () => measure(true);
 
   /** Content hidden before / after the visible part, along the scrolling axis. */
   const startEdge = (): ScrollAreaEdge => (orientation() === "vertical" ? "top" : rtl.value ? "right" : "left");
@@ -111,9 +124,9 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
 
   // --- Following the content ---
   // The scroller, and each of its children: content can grow without the scroller resizing,
-  // and a child that grows reports it here. Adding or removing a child re-observes them (an
-  // observe() queues its own first notification, which does the measuring). Scroll events
-  // re-measure directly.
+  // and a child that grows reports it here. A child added is observed and one removed is
+  // dropped — just those, so a growing list costs nothing per existing row — and observing
+  // queues a first notification, which does the measuring. Scroll events re-measure directly.
   let resizeObserver: ResizeObserver | undefined;
   let mutationObserver: MutationObserver | undefined;
 
@@ -124,6 +137,16 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
       resizeObserver.observe(el);
       for (const child of el.children) resizeObserver.observe(child);
     }
+  }
+
+  function onMutations(records: MutationRecord[]) {
+    if (!resizeObserver) return update();
+    for (const r of records) {
+      for (const n of r.removedNodes) if (n instanceof Element) resizeObserver.unobserve(n);
+      for (const n of r.addedNodes) if (n instanceof Element) resizeObserver.observe(n);
+    }
+    // A text node changes nothing a child's resize would report.
+    update();
   }
 
   function setScroller(el: unknown) {
@@ -137,9 +160,7 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
     }
     observe(next);
     if (typeof MutationObserver !== "undefined") {
-      mutationObserver ??= new MutationObserver(() => {
-        if (scroller.value) observe(scroller.value);
-      });
+      mutationObserver ??= new MutationObserver(onMutations);
       mutationObserver.observe(next, { childList: true });
     }
     update();
@@ -173,9 +194,11 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
 
   // --- Fades ---
   const fadesAt = (edge: ScrollAreaEdge) => {
-    const allowed = toValue(options.fadeEdges);
     const onAxis = edge === "top" || edge === "bottom" ? vertical() : horizontal();
-    return onAxis && (!allowed || allowed.includes(edge));
+    const allowed = toValue(options.fadeEdges);
+    if (!onAxis || !allowed) return onAxis;
+    const logical = edge === "left" ? (rtl.value ? "inline-end" : "inline-start") : edge === "right" ? (rtl.value ? "inline-start" : "inline-end") : edge;
+    return allowed.includes(edge) || allowed.includes(logical);
   };
   /** Whether an edge is faded right now: it fades, and has something past it. */
   const faded = (edge: ScrollAreaEdge) => fadesAt(edge) && edges.value[edge];
@@ -228,7 +251,6 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
     // Physical sides, like the edges: the padding stops a scrolled-into-view item clear of a fade.
     const pad = (edge: ScrollAreaEdge) => (fadesAt(edge) ? full : (inset ?? "0px"));
     const style: CSSProperties = {
-      borderRadius: "inherit",
       ...(horizontal() ? { scrollPaddingLeft: pad("left"), scrollPaddingRight: pad("right") } : {}),
       ...(vertical() ? { scrollPaddingTop: pad("top"), scrollPaddingBottom: pad("bottom") } : {}),
       ...maskStyle.value,
@@ -239,7 +261,7 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
       "aria-labelledby": isRegion ? labelledby : undefined,
       "aria-label": isRegion && !labelledby ? toValue(options.ariaLabel) ?? messages.value.scrollArea.region : undefined,
       style,
-      onScroll: update,
+      onScroll,
     };
   });
 

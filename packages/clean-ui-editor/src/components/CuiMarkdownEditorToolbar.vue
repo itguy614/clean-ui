@@ -119,10 +119,7 @@ function onKeydown(event: KeyboardEvent) {
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   padding: calc(0.375rem * var(--cui-density-scale, 1));
-  overflow-x: auto;
-  overflow-y: hidden;
   scrollbar-width: none;
-  border-radius: inherit;
 }
 
 .cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {

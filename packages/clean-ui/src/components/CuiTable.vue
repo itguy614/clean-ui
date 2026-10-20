@@ -76,7 +76,7 @@ const area = useScrollArea({
   orientation: "both",
   fade: "overlay",
   fadeSize: "36px",
-  fadeEdges: ["right", "bottom"],
+  fadeEdges: ["inline-end", "bottom"],
   ariaLabel: () => messages.value.table.scrollRegionLabel,
   onUpdate: measureOverflow,
 });
@@ -121,6 +121,11 @@ function measureOverflow() {
   }
 }
 
+// Overflow switches the wrapper to `overflow-x: auto`, which changes what the scroll area
+// measures — its scrollWidth is only reliable once the wrapper is a scroll container — and
+// may not resize anything it observes. Re-measure once the new style is on.
+watch(isOverflowingX, () => area.update(), { flush: "post" });
+
 // The scroll area observes the wrapper and the table; these props change the layout too.
 const measure = area.update;
 watch(() => [props.minWidth, props.maxHeight, props.fixedLayout], measure, { flush: "post" });
@@ -157,6 +162,10 @@ defineExpose({ scrollWrapper, measure });
 
 /* The wrapper is a tab stop only while it scrolls (WCAG 2.1.1 — scrollable
    regions must be keyboard-reachable), so give it a visible focus ring. */
+:where(.cui-table-wrapper) {
+  border-radius: inherit;
+}
+
 .cui-table-wrapper:focus-visible {
   outline: 2px solid var(--cui-primary-focus-ring);
   outline-offset: 2px;

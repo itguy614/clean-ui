@@ -145,6 +145,21 @@ describe("CuiScrollArea", () => {
     );
   });
 
+  it("exposes focus and blur on the scroller", async () => {
+    w = mount(CuiScrollArea, { attachTo: document.body });
+    setGeometry(scroller(), { scrollHeight: 400, clientHeight: 100 }); // a region, so focusable
+    await nextTick();
+    (w.vm as unknown as { focus: () => void }).focus();
+    expect(document.activeElement).toBe(scroller());
+    (w.vm as unknown as { blur: () => void }).blur();
+    expect(document.activeElement).not.toBe(scroller());
+  });
+
+  it("keeps the content clear of indicators that never hide", () => {
+    w = mount(CuiScrollArea, { props: { orientation: "horizontal", indicator: "button", indicatorVisibility: "always" } });
+    expect(w.classes()).toContain("cui-scroll-area--reserve");
+  });
+
   it("re-renders on a scroll only when an edge changes", async () => {
     let renders = 0;
     w = mount(CuiScrollArea, { slots: { default: () => (renders++, "x") }, attachTo: document.body });
@@ -192,10 +207,24 @@ describe("useScrollArea", () => {
     expect(area.overlayFades.value.map((f) => f.edge).sort()).toEqual(["bottom", "right"]);
   });
 
+  it("puts the inline-end fade on the left in a right-to-left page", async () => {
+    let area!: ReturnType<typeof useScrollArea>;
+    const Host = defineComponent(() => {
+      area = useScrollArea({ orientation: "horizontal", fade: "overlay", fadeEdges: ["inline-end"] });
+      return () => h("div", [h("div", { ref: area.setScroller, class: "s", ...area.scrollerAttrs.value })]);
+    });
+    w = mount(Host, { attachTo: document.body });
+    const el = w.find(".s").element as HTMLElement;
+    el.style.direction = "rtl";
+    setGeometry(el, { scrollWidth: 900, clientWidth: 300, scrollLeft: 0 });
+    await nextTick();
+    expect(area.overlayFades.value.map((f) => f.edge)).toEqual(["left"]);
+  });
+
   it("fades, and pads, only the edges named in fadeEdges", async () => {
     let area!: ReturnType<typeof useScrollArea>;
     const Host = defineComponent(() => {
-      area = useScrollArea({ orientation: "both", fade: "overlay", fadeEdges: ["right", "bottom"] });
+      area = useScrollArea({ orientation: "both", fade: "overlay", fadeEdges: ["inline-end", "bottom"] });
       return () => h("div", [h("div", { ref: area.setScroller, class: "s", ...area.scrollerAttrs.value })]);
     });
     w = mount(Host, { attachTo: document.body });

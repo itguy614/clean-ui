@@ -69,7 +69,7 @@ const frame =
 const area = useScrollArea({
   orientation: "both",      // "vertical" (default) | "horizontal" | "both"
   fade: "overlay",          // "mask" (default) | "overlay" | "none"
-  fadeEdges: ["right", "bottom"], // not the top: a sticky header covers it
+  fadeEdges: ["inline-end", "bottom"], // not the top: a sticky header covers it
   ariaLabel: "Order lines",
 });
 
@@ -87,7 +87,9 @@ const area = useScrollArea({
               <code>edges</code>, <code>canScrollStart</code> / <code>canScrollEnd</code>,
               <code>overflowing</code>, <code>rtl</code>, <code>update()</code> and
               <code>scrollByPage(edge)</code>; <code>fadeEdges</code> limits the fades and
-              their scroll padding to the edges named, and <code>onUpdate</code> runs after
+              their scroll padding to the edges named (<code>top</code>, <code>left</code>, …,
+              or <code>inline-start</code> / <code>inline-end</code>, which follow the page's
+              direction), and <code>onUpdate</code> runs after
               each measurement.
             </p>
           </CuiCardBody>
@@ -119,7 +121,7 @@ const area = useScrollArea({
       >
         <div :style="frame + 'max-width: 420px;'">
           <CuiScrollArea orientation="horizontal" indicator="arrow" indicator-visibility="always" :fade="false" aria-label="Menu">
-            <div style="display: flex; gap: 1.5rem; padding: 0.625rem 2.25rem; width: max-content" class="text-sm">
+            <div style="display: flex; gap: 1.5rem; padding: 0.625rem 0.5rem; width: max-content" class="text-sm">
               <span v-for="item in MENU" :key="item">{{ item }}</span>
             </div>
           </CuiScrollArea>

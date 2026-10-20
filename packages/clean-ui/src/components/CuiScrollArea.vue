@@ -79,14 +79,21 @@ function iconProps(edge: Edge) {
   return typeof icon === "string" ? { name: icon } : { icon };
 }
 
-defineExpose({ el: area.scroller, update: area.update, scrollByPage: area.scrollByPage });
+function focus(opts?: FocusOptions) {
+  area.scroller.value?.focus(opts);
+}
+function blur() {
+  area.scroller.value?.blur();
+}
+
+defineExpose({ el: area.scroller, focus, blur, update: area.update, scrollByPage: area.scrollByPage });
 </script>
 
 <template>
   <div
     v-show="!hidden"
     class="cui-scroll-area"
-    :class="`cui-scroll-area--${orientation}`"
+:class="[`cui-scroll-area--${orientation}`, { 'cui-scroll-area--reserve': indicator !== 'none' && indicatorVisibility === 'always' }]"
     :style="area.wrapperStyle"
   >
     <div :ref="area.setScroller" class="cui-scroll-area__scroller" v-bind="area.scrollerAttrs.value">
@@ -133,6 +140,10 @@ defineExpose({ el: area.scroller, update: area.update, scrollByPage: area.scroll
   outline-offset: -2px;
 }
 
+:where(.cui-scroll-area, .cui-scroll-area__scroller) {
+  border-radius: inherit;
+}
+
 :where(.cui-scroll-area__indicator) {
   background: var(--cui-scroll-area-indicator-bg, var(--cui-surface-base));
   color: var(--cui-scroll-area-indicator-color, var(--cui-text-secondary));
@@ -172,7 +183,24 @@ defineExpose({ el: area.scroller, update: area.update, scrollByPage: area.scroll
   position: absolute;
   z-index: 6;
   display: flex;
+  /* The strip spans the edge; only the indicator in it takes the pointer, so content under
+     the rest of the strip stays clickable. */
+  pointer-events: none;
   transition: opacity 0.15s ease;
+}
+
+.cui-scroll-area__edge > * {
+  pointer-events: auto;
+}
+
+/* Indicators that never hide sit over the first and last items for good: keep the content
+   clear of them. */
+.cui-scroll-area--reserve.cui-scroll-area--horizontal > .cui-scroll-area__scroller {
+  padding-inline: var(--cui-scroll-area-indicator-size, 2rem);
+}
+
+.cui-scroll-area--reserve.cui-scroll-area--vertical > .cui-scroll-area__scroller {
+  padding-block: var(--cui-scroll-area-indicator-size, 2rem);
 }
 
 .cui-scroll-area--horizontal > .cui-scroll-area__edge {
@@ -203,6 +231,9 @@ defineExpose({ el: area.scroller, update: area.update, scrollByPage: area.scroll
 
 .cui-scroll-area__edge--hidden {
   opacity: 0;
+}
+
+.cui-scroll-area__edge--hidden > * {
   pointer-events: none;
 }
 

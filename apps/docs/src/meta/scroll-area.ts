@@ -26,7 +26,7 @@ const meta: ComponentMeta = {
       name: "indicatorVisibility",
       type: "auto | always",
       default: "auto",
-      description: "`auto` shows an indicator only where there is more; `always` shows both, disabling the one with nothing to reveal",
+      description: "`auto` shows an indicator only where there is more; `always` shows both, disabling the one with nothing to reveal, and pads the content clear of them",
     },
     {
       name: "startIcon",
@@ -63,6 +63,8 @@ const meta: ComponentMeta = {
 
   methods: [
     { name: "el", signature: "HTMLElement | null", description: "The scrolling element" },
+    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the region. Only an overflowing scroll area is focusable" },
+    { name: "blur", signature: "() => void", description: "Blur the region" },
     { name: "update", signature: "() => void", description: "Re-measure. Content changes are followed on their own; call this after a change it can't see" },
     { name: "scrollByPage", signature: '(edge: "start" | "end") => void', description: "Scroll about three-quarters of the visible size toward an edge" },
   ],
