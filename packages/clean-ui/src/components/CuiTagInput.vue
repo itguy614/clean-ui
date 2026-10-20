@@ -11,6 +11,7 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
+import CuiFormValues from "./CuiFormValues.vue";
 import { useMessages } from "../composables/useMessages";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -340,7 +341,6 @@ defineExpose({ el: wrapperRef, focus, blur });
       <!-- Input -->
       <input
         :id="id"
-        :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
@@ -363,6 +363,9 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Dropdown -->
+    <!-- The tags post under `name` (#303), not the half-typed text the search input holds. -->
+    <CuiFormValues :name="name" :values="modelValue" :disabled="disabled" />
+
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
     <CuiListboxPanel

@@ -14,6 +14,7 @@ import CuiSpinner from "./CuiSpinner.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
+import CuiFormValues from "./CuiFormValues.vue";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -295,6 +296,14 @@ function onFocus() {
 // not just the control: a press on the label or the clear button isn't "outside".
 useClickOutside(() => [wrapperRef.value, panelRef.value?.el], () => (isOpen.value = false), { enabled: isOpen });
 
+// What a native form post carries (#303): the values, not the search text, which is what
+// `name` on the input used to post (the label, in single mode).
+const formValues = computed<Array<string | number>>(() => {
+  const v = props.modelValue;
+  if (props.multiple) return Array.isArray(v) ? v : [];
+  return [v == null || Array.isArray(v) ? "" : v];
+});
+
 // Display text for single select (when closed)
 const displayText = computed(() => {
   if (props.multiple) return "";
@@ -369,7 +378,6 @@ function optionClass(index: number, option: ComboboxOption) {
       <input
         ref="inputRef"
         :id="id"
-        :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
@@ -396,6 +404,8 @@ function optionClass(index: number, option: ComboboxOption) {
     </div>
 
     <!-- Dropdown (teleported) -->
+    <CuiFormValues :name="name" :values="formValues" :disabled="disabled" />
+
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
     <CuiListboxPanel

@@ -30,7 +30,10 @@ const meta: ComponentMeta = {
     { name: "noSuggestionsText", type: "string", default: "No suggestions", description: "Text when no suggestions match" },
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
     hiddenProp,
-    ...nativeControlProps,
+    // The values post through hidden inputs (#303), not the search input's text.
+    ...nativeControlProps.map((p) =>
+      p.name === "name" ? { ...p, description: "Form field name. Posts the tags, one entry each with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
+    ),
   ],
 
   slots: [{ name: "suggestion", payload: "{ suggestion }", description: "Renders one row of the suggestions list" }],
