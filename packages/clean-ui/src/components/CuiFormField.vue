@@ -69,10 +69,25 @@ const labelId = `${fieldId}-label`;
 const descriptionId = `${fieldId}-description`;
 
 // The <label for> does nothing when its control isn't labelable (CuiCheckbox, CuiRadio,
-// CuiToggle, CuiSelect, CuiTimePicker — see the aria-labelledby note above): `control` is
-// then null, and the click focuses the control instead (#181).
+// CuiToggle, CuiSelect, CuiTimePicker, the groups — see the aria-labelledby note above):
+// `control` is then null, and the click does what a native label would instead (#181).
+const ACTIVATED = new Set(["checkbox", "switch", "radio"]);
+const elementDisabled = (el: Element) => el.matches(":disabled, [aria-disabled='true']");
+
 function onLabelClick(e: MouseEvent) {
-  if (!(e.currentTarget as HTMLLabelElement).control) document.getElementById(fieldId)?.focus();
+  const label = e.currentTarget as HTMLLabelElement;
+  if (label.control) return; // a native control: the browser's label activation has it
+  // This label's own tree, not the document: ids can repeat across apps on one page, and a
+  // shadow root's elements aren't in the document at all.
+  const root = label.getRootNode() as Document | ShadowRoot;
+  const el = root.getElementById?.(fieldId) ?? null;
+  if (!el || elementDisabled(el)) return;
+  // A group (a radiogroup's div) can't take focus itself: its tab stop, or first control.
+  const target = (el as HTMLElement).tabIndex >= 0 ? el : el.querySelector<HTMLElement>('[tabindex="0"]');
+  if (!(target instanceof HTMLElement) || elementDisabled(target)) return;
+  target.focus();
+  // As a native checkbox's or radio's label does, it toggles or selects too.
+  if (ACTIVATED.has(target.getAttribute("role") ?? "")) target.click();
 }
 
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires
