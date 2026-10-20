@@ -88,8 +88,10 @@ describe("CuiTooltip Escape", () => {
     expect(onModal).toHaveBeenLastCalledWith(false);
   });
 
-  it("lets Escape through to an expanded trigger so its popup closes too", async () => {
-    const onTrigger = vi.fn();
+  // The layer stack listens in the bubble phase and leaves an Escape that something
+  // inside already handled (#278), so an expanded select or combobox under the tooltip
+  // closes its own popup first; the next Escape dismisses the tooltip.
+  it("leaves an Escape the trigger handled, and takes the next", async () => {
     mount(CuiTooltip, {
       attachTo: document.body,
       props: { text: "Hint", visible: true },
@@ -97,40 +99,15 @@ describe("CuiTooltip Escape", () => {
     });
     await nextTick();
     const trigger = document.getElementById("expanded")!;
-    trigger.addEventListener("keydown", onTrigger);
+    const handleOnce = (e: KeyboardEvent) => e.preventDefault();
+    trigger.addEventListener("keydown", handleOnce, { once: true });
+
     escape(trigger);
     await nextTick();
-    expect(onTrigger).toHaveBeenCalledOnce();
+    expect(tooltip()).not.toBeNull();
+
+    escape(trigger);
+    await nextTick();
     expect(tooltip()).toBeNull();
-  });
-
-  it("listens for Escape only while visible", async () => {
-    // One ordered log, so a no-op removal (the immediate watcher runs once while hidden)
-    // doesn't skew the count.
-    const attached = new Set<unknown>();
-    const realAdd = document.addEventListener.bind(document);
-    const realRemove = document.removeEventListener.bind(document);
-    vi.spyOn(document, "addEventListener").mockImplementation((type, l, o) => {
-      if (type === "keydown") attached.add(l);
-      realAdd(type, l, o);
-    });
-    vi.spyOn(document, "removeEventListener").mockImplementation((type, l, o) => {
-      if (type === "keydown") attached.delete(l);
-      realRemove(type, l, o);
-    });
-    const wrapper = mount(CuiTooltip, {
-      attachTo: document.body,
-      props: { text: "Hint", visible: false },
-      slots: { default: "<button>Target</button>" },
-    });
-    const keydown = () => attached.size;
-    expect(keydown()).toBe(0);
-
-    await wrapper.setProps({ visible: true });
-    expect(keydown()).toBe(1);
-    await wrapper.setProps({ visible: false });
-    expect(keydown()).toBe(0);
-
-    // Unmounting while visible is covered by floating-listener-balance.test.ts.
   });
 });

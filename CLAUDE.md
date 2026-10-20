@@ -129,6 +129,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `composables/useCuiId.ts` — `useCuiId(prefix)` → `cui-<prefix>-<useId()>`, for every id a component generates itself (titles, labels, ARIA references). SSR-stable; never `Math.random()` (#182). Call it in setup; unique per Vue app.
 - `composables/useBreakpoint.ts` — singleton reactive breakpoint via matchMedia
 - `composables/useClickOutside.ts` — shared click-outside detection
+- `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
 - `composables/useTheme.ts` — theme switching, localStorage persistence
 - `composables/useToast.ts` — programmatic toast API

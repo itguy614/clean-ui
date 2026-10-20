@@ -286,7 +286,9 @@ function onKeydown(e: KeyboardEvent) {
     if (focusedIndex.value >= 0 && focusedIndex.value < filteredOptions.value.length) {
       selectOption(filteredOptions.value[focusedIndex.value]);
     }
-  } else if (e.key === "Escape") {
+  } else if (e.key === "Escape" && isOpen.value) {
+    // Marked handled, so an enclosing modal or popover stays open (#278)
+    e.preventDefault();
     isOpen.value = false;
   } else if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
     removeTag(selectedOptions.value[selectedOptions.value.length - 1].value);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, provide, toRef, onMounted, onUnmounted } from "vue";
 import { useCuiId } from "../composables/useCuiId";
+import { useLayerStack } from "../composables/useLayerStack";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -81,12 +82,10 @@ function onFocusOut(e: FocusEvent) {
   }
 }
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === "Escape" && isOpen.value) {
-    e.stopPropagation();
-    close();
-  }
-}
+// Escape through the shared layer stack (#278): the menu is teleported to <body>, so a
+// wrapper keydown never saw an Escape pressed on a menu item, and an enclosing modal
+// closed instead. Focus handling on close is #160.
+useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
 // Click outside -- check both the wrapper and any teleported menus
 const dropdownId = useCuiId("dropdown");
@@ -169,7 +168,6 @@ defineExpose({ open, close, toggle, isOpen });
     @mouseleave="onMouseLeave"
     @focusin="onFocusIn"
     @focusout="onFocusOut"
-    @keydown="onKeydown"
   >
     <slot :is-open="isOpen" :toggle="toggle" :open="open" :close="close" />
   </div>
