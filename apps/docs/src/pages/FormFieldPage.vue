@@ -65,7 +65,10 @@ const agree = ref(false);
           <code>div[role="combobox"]</code>, not an <code>&lt;input&gt;</code> — with no
           accessible name at all. <code>aria-labelledby</code> is what actually names it,
           which is why the field emits both and why <code>CuiTimePicker</code>, built the
-          same way, takes the same prop.
+          same way, takes the same prop. A click on the label can't focus such a control natively either, so
+          the field focuses it itself when the label is clicked — <code>CuiSelect</code>,
+          <code>CuiCheckbox</code>, <code>CuiRadio</code>, <code>CuiToggle</code> and the pickers
+          alike.
         </li>
         <li>
           <code>aria-describedby</code> is only emitted when there is help text or an

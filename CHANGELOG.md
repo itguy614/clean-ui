@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clicking a CuiFormField label focuses its control when the control isn't natively
+  labelable — CuiCheckbox, CuiRadio, CuiToggle, CuiSelect and the pickers, where the
+  label's `for` did nothing (#181).
+
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

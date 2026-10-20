@@ -68,6 +68,13 @@ const messages = useMessages();
 const labelId = `${fieldId}-label`;
 const descriptionId = `${fieldId}-description`;
 
+// The <label for> does nothing when its control isn't labelable (CuiCheckbox, CuiRadio,
+// CuiToggle, CuiSelect, CuiTimePicker — see the aria-labelledby note above): `control` is
+// then null, and the click focuses the control instead (#181).
+function onLabelClick(e: MouseEvent) {
+  if (!(e.currentTarget as HTMLLabelElement).control) document.getElementById(fieldId)?.focus();
+}
+
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires
 // v-model + error in one shot. Standalone mode omits the model bindings.
 const slotBindings = computed(() => {
@@ -113,6 +120,7 @@ onBeforeUnmount(() => {
       :id="labelId"
       :for="fieldId"
       class="cui-form-field__label"
+      @click="onLabelClick"
     >
       <span>{{ label }}</span>
       <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
