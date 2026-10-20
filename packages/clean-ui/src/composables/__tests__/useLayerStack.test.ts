@@ -223,4 +223,56 @@ describe("useLayerStack across overlays", () => {
     expect(onPopover).toHaveBeenLastCalledWith(false);
     expect(onModal).toHaveBeenLastCalledWith(false);
   });
+
+  // Found in the docs site: the pointer rests on the button that opened the modal, so its
+  // tooltip's show delay runs out after the modal opened, under the backdrop.
+  it("a tooltip outside a modal that shows after the modal opened goes beneath it", async () => {
+    vi.useFakeTimers();
+    const onModal = vi.fn();
+    const onTip = vi.fn();
+    const tipOpen = ref(false);
+    mount(
+      defineComponent(() => () => [
+        h(CuiTooltip, { text: "Hint", visible: tipOpen.value, "onUpdate:visible": onTip }, () => h("button", "Open")),
+        h(CuiModal, { visible: true, title: "Dialog", "onUpdate:visible": onModal }),
+      ]),
+      { attachTo: document.body },
+    );
+    await settle();
+    tipOpen.value = true;
+    await settle();
+
+    escape();
+    await settle();
+    expect(onModal).toHaveBeenLastCalledWith(false);
+    expect(onTip).not.toHaveBeenCalled();
+  });
+
+  it("a tooltip in a popover in a modal still closes first, though both panels are teleported", async () => {
+    vi.useFakeTimers();
+    const onModal = vi.fn();
+    const onPopover = vi.fn();
+    const onTip = vi.fn();
+    const tipOpen = ref(false);
+    mount(
+      defineComponent(() => () =>
+        h(CuiModal, { visible: true, title: "Dialog", "onUpdate:visible": onModal }, () =>
+          h(CuiPopover, { visible: true, "onUpdate:visible": onPopover }, {
+            default: () => h("button", "Trigger"),
+            content: () => h(CuiTooltip, { text: "Hint", visible: tipOpen.value, "onUpdate:visible": onTip }, () => h("button", "Inner")),
+          }),
+        ),
+      ),
+      { attachTo: document.body },
+    );
+    await settle();
+    tipOpen.value = true;
+    await settle();
+
+    escape();
+    await settle();
+    expect(onTip).toHaveBeenLastCalledWith(false);
+    expect(onPopover).not.toHaveBeenCalled();
+    expect(onModal).not.toHaveBeenCalled();
+  });
 });

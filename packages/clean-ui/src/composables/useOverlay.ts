@@ -114,7 +114,7 @@ export function useOverlay(options: UseOverlayOptions) {
 
   // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
   // A persistent overlay still takes the Escape and declines it.
-  useLayerStack({ active: isOpen, onEscape: requestClose });
+  useLayerStack({ active: isOpen, onEscape: requestClose, modal: true });
 
   function onKeydown(e: KeyboardEvent) {
     // Focus trap
