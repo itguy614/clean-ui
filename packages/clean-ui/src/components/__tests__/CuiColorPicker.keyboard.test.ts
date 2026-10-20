@@ -27,6 +27,53 @@ const press = (el: Element, key: string, init: KeyboardEventInit = {}) =>
   el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
 const lastEmit = () => w!.emitted("update:modelValue")!.at(-1)![0] as string;
 
+/** Mount with v-model wired up, so every emit comes back as a prop, as in an app. */
+function mountBound(modelValue: string, props: Record<string, unknown> = {}) {
+  w = mount(CuiColorPicker, {
+    props: { modelValue, ...props, "onUpdate:modelValue": (v: string) => w!.setProps({ modelValue: v }) },
+    attachTo: document.body,
+  });
+  return w;
+}
+
+describe("CuiColorPicker under v-model", () => {
+  it("steps saturation evenly instead of re-reading its own quantized hex", async () => {
+    mountBound("#0d0505"); // hsv(0, ~60%, 5%): hex rounding is coarse this dark
+    await nextTick();
+    const sat = slider("Saturation").element;
+    const seen: string[] = [];
+    for (let k = 0; k < 6; k++) {
+      press(sat, "ArrowLeft");
+      await nextTick();
+      seen.push(slider("Saturation").attributes("aria-valuenow")!);
+    }
+    const nums = seen.map(Number);
+    expect(nums.slice(1).every((n, k) => n === nums[k] - 1)).toBe(true);
+  });
+
+  it("keeps the hue through black, and End on hue stays at 360", async () => {
+    mountBound("#ff0000", {});
+    await nextTick();
+    press(slider("Hue").element, "PageUp"); // 10°
+    await nextTick();
+    press(slider("Brightness").element, "Home"); // black
+    await nextTick();
+    press(slider("Brightness").element, "End");
+    await nextTick();
+    expect(slider("Hue").attributes("aria-valuenow")).toBe("10");
+    press(slider("Hue").element, "End");
+    await nextTick();
+    expect(slider("Hue").attributes("aria-valuenow")).toBe("360");
+  });
+
+  it("still follows a new value from the parent", async () => {
+    mountBound("#ff0000");
+    await nextTick();
+    await w!.setProps({ modelValue: "#0000ff" });
+    expect(slider("Hue").attributes("aria-valuenow")).toBe("240");
+  });
+});
+
 describe("CuiColorPicker keyboard and ARIA", () => {
   it("exposes the gradient as a saturation/brightness pair with one tab stop, and hue as a slider", async () => {
     mountPicker();
@@ -62,7 +109,7 @@ describe("CuiColorPicker keyboard and ARIA", () => {
   });
 
   it("steps hue in degrees and alpha in percent", async () => {
-    mountPicker({ showAlpha: true });
+    mountPicker({ showAlpha: true, format: "rgb" });
     await nextTick();
     press(slider("Hue").element, "ArrowRight", { shiftKey: true });
     await nextTick();
@@ -70,7 +117,8 @@ describe("CuiColorPicker keyboard and ARIA", () => {
     press(slider("Opacity").element, "ArrowLeft");
     await nextTick();
     expect(slider("Opacity").attributes("aria-valuenow")).toBe("99");
-    expect(lastEmit()).toMatch(/^#|rgba?/);
+    // hsv(10°, 50%, 50%) at 99% opacity. (Hex output drops alpha: #309.)
+    expect(lastEmit()).toBe("rgba(128, 75, 64, 0.99)");
   });
 
   it("makes the swatches a radiogroup named by hex, where the arrows move and select", async () => {
@@ -99,6 +147,32 @@ describe("CuiColorPicker keyboard and ARIA", () => {
     expect(w!.emitted("update:modelValue")).toBeUndefined();
     await radios[2].trigger("click");
     expect(w!.emitted("update:modelValue")).toEqual([["#0000ff"]]);
+  });
+
+  it("reads a palette in any format as selected, and keeps the stop on a repeated colour", async () => {
+    mountPicker({ palette: ["#f00", "rgb(0, 0, 255)", "#0000ff"], modelValue: "#0000ff" });
+    await nextTick();
+    const radios = () => w!.findAll('[role="radio"]');
+    expect(radios().map((r) => r.attributes("aria-checked"))).toEqual(["false", "true", "true"]);
+    (radios()[1].element as HTMLElement).focus();
+    press(radios()[1].element, "ArrowRight"); // onto the repeat: same colour, no emit
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+    expect(radios()[2].attributes("tabindex")).toBe("0");
+    expect(document.activeElement).toBe(radios()[2].element);
+  });
+
+  it("moves between swatches with the vertical arrows too", async () => {
+    mountPicker({ palette: ["#ff0000", "#00ff00", "#0000ff"], modelValue: "#ff0000" });
+    await nextTick();
+    const radios = w!.findAll('[role="radio"]');
+    (radios[0].element as HTMLElement).focus();
+    press(radios[0].element, "ArrowDown");
+    await nextTick();
+    expect(document.activeElement).toBe(radios[1].element);
+    press(radios[1].element, "ArrowUp");
+    await nextTick();
+    expect(document.activeElement).toBe(radios[0].element);
   });
 
   it("PageUp and PageDown take ten steps", async () => {

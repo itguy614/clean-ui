@@ -90,8 +90,17 @@ function applyColor(color: string): boolean {
   return true;
 }
 
-// Sync from modelValue prop
+// Sync from modelValue prop — except for the echo of a value this picker just emitted. That
+// string is quantized (hex has 256 steps a channel), and parsing it back would rewrite the
+// HSV state the user is moving: 1% keyboard steps would skip and rewind, the hue would be
+// lost whenever the colour reached grey or black, and 360° would come back as 0°.
+let lastEmitted: string | null = null;
 function syncFromProp() {
+  // Once: a later change back to the same string, after something else moved the colour,
+  // is the parent's, not an echo.
+  const echo = props.modelValue === lastEmitted;
+  lastEmitted = null;
+  if (echo) return;
   if (applyColor(props.modelValue)) textInput.value = outputValue.value;
 }
 
@@ -116,6 +125,7 @@ onUnmounted(() => {
 
 function emitColor() {
   textInput.value = outputValue.value;
+  lastEmitted = outputValue.value;
   emit("update:modelValue", outputValue.value);
 }
 
@@ -169,17 +179,17 @@ watch(() => props.disabled, (disabled) => { if (disabled) endDrag?.(); });
 // End reach the ends. The surfaces are painted left-to-right whatever the page direction,
 // so the arrows are physical, not mirrored.
 const messages = useMessages();
-const gradientRef = ref<HTMLElement | null>(null);
-const hueRef = ref<HTMLElement | null>(null);
-const alphaRef = ref<HTMLElement | null>(null);
-const satSliderRef = ref<HTMLElement | null>(null);
-const valSliderRef = ref<HTMLElement | null>(null);
-const hueSliderRef = ref<HTMLElement | null>(null);
-const alphaSliderRef = ref<HTMLElement | null>(null);
+const gradientRef = useTemplateRef<HTMLElement>("gradientRef");
+const hueRef = useTemplateRef<HTMLElement>("hueRef");
+const alphaRef = useTemplateRef<HTMLElement>("alphaRef");
+const satSliderRef = useTemplateRef<HTMLElement>("satSliderRef");
+const valSliderRef = useTemplateRef<HTMLElement>("valSliderRef");
+const hueSliderRef = useTemplateRef<HTMLElement>("hueSliderRef");
+const alphaSliderRef = useTemplateRef<HTMLElement>("alphaSliderRef");
 
 // A press also focuses the surface's slider, so the keys carry on from where the pointer
 // left it (the surfaces prevent the press's default, which would otherwise focus nothing).
-function pressFor(slider: Ref<HTMLElement | null>, update: (e: PointerEvent) => void) {
+function pressFor(slider: Readonly<Ref<HTMLElement | null>>, update: (e: PointerEvent) => void) {
   return (e: PointerEvent) => {
     slider.value?.focus({ preventScroll: true });
     startDrag(e, update);
@@ -328,12 +338,21 @@ function onSwatchClick(color: string) {
 
 // A radiogroup with one tab stop. The arrows move and select, as radios do; focus alone (a
 // Tab into the group, a click's focus) selects nothing.
-const swatchesRef = ref<HTMLElement | null>(null);
-// rgbToHex is lowercase already; the palette is the consumer's.
-const paletteLower = computed(() => resolvedPalette.value.map((c) => c.toLowerCase()));
-const selectedSwatch = computed(() => paletteLower.value.indexOf(currentHex.value));
+const swatchesRef = useTemplateRef<HTMLElement>("swatchesRef");
+// Each swatch as the hex currentHex is written in, so "#f00" or "rgb(…)" in a palette
+// still reads as selected.
+const paletteHex = computed(() =>
+  resolvedPalette.value.map((c) => {
+    const p = parseColor(c);
+    return p ? rgbToHex(p.r, p.g, p.b) : c.toLowerCase();
+  }),
+);
+const isSelected = (i: number) => paletteHex.value[i] === currentHex.value;
+const selectedSwatch = computed(() => paletteHex.value.indexOf(currentHex.value));
 const swatchIndex = ref(0);
-watch(selectedSwatch, (i) => { if (i !== -1) swatchIndex.value = i; }, { immediate: true });
+// The tab stop follows the selection — unless it is already on a swatch of that colour (a
+// palette can repeat one), which would move it out from under focus.
+watch(selectedSwatch, (i) => { if (i !== -1 && !isSelected(swatchIndex.value)) swatchIndex.value = i; }, { immediate: true });
 const roving = useRovingFocus({
   container: swatchesRef,
   itemSelector: ".cui-color-picker__swatch",
@@ -345,7 +364,7 @@ const roving = useRovingFocus({
 function onSwatchKeydown(e: KeyboardEvent) {
   roving.onKeydown(e);
   const i = swatchIndex.value;
-  if (e.defaultPrevented && i !== selectedSwatch.value) onSwatchClick(resolvedPalette.value[i]);
+  if (e.defaultPrevented && !isSelected(i)) onSwatchClick(resolvedPalette.value[i]);
 }
 
 // Gradient hue color for background
@@ -600,11 +619,11 @@ defineExpose({ el: rootEl, focus, blur });
         <!-- Named by the hex value: colour alone is not a name (WCAG 1.4.1) -->
         <button
           v-for="(color, i) in resolvedPalette"
-          :key="color"
+          :key="i"
           type="button"
           class="cui-color-picker__swatch"
           role="radio"
-          :aria-checked="i === selectedSwatch ? 'true' : 'false'"
+          :aria-checked="isSelected(i) ? 'true' : 'false'"
           :aria-label="color"
           :disabled="disabled"
           :tabindex="roving.tabIndex(i)"
@@ -614,8 +633,8 @@ defineExpose({ el: rootEl, focus, blur });
             borderRadius: '0.25rem',
             background: color,
             cursor: 'pointer',
-            border: i === selectedSwatch ? '2px solid var(--cui-primary)' : '1px solid var(--cui-border)',
-            boxShadow: i === selectedSwatch ? '0 0 0 1px var(--cui-primary)' : 'none',
+            border: isSelected(i) ? '2px solid var(--cui-primary)' : '1px solid var(--cui-border)',
+            boxShadow: isSelected(i) ? '0 0 0 1px var(--cui-primary)' : 'none',
             transition: 'transform 0.1s ease',
           }"
           @click="onSwatchClick(color)"
@@ -630,12 +649,13 @@ defineExpose({ el: rootEl, focus, blur });
 <style scoped>
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 /* The gradient's ring goes on the visible thumb whichever of its two sliders has focus. */
-/* A thumb sits on any colour at all, so its ring is black beside the thumb's white border:
-   one of the two always contrasts. (The gradient's brightness slider is a borderless twin
-   laid over its thumb, so its ring lands in the same place.) The swatches sit on the
-   surface, and take the theme's. */
+/* A thumb sits on any colour at all, where the theme's translucent ring can vanish, so its
+   default is black beside the thumb's white border: one of the two always contrasts. No
+   offset: the gradient clips at its edges, and an offset ring would be cut off there first.
+   (The gradient's brightness slider is a borderless twin laid over its thumb, so its ring
+   lands in the same place.) The swatches sit on the surface, and take the theme's ring. */
 :where(.cui-color-picker__thumb:focus-visible) {
-  outline: 2px solid var(--cui-color-picker-thumb-focus-ring, #000);
+  outline: 2px solid var(--cui-color-picker-focus-ring, #000);
   outline-offset: 0;
 }
 

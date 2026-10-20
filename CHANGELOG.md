@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stayed editable before, and takes the sliders and swatches out of the tab order.
   `focus()` without a text field focuses the gradient instead of doing nothing. This adds
   tab stops, so a focus-order snapshot will change.
+- CuiColorPicker no longer re-reads its own emitted value under `v-model`. That value is
+  quantized hex, and parsing it back rewound drags and keyboard steps, lost the hue
+  whenever the colour reached grey or black, and turned 360° into 0°. A palette entry in
+  any format (`#f00`, `rgb(…)`) now shows as selected (#177).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
