@@ -214,10 +214,17 @@ const listbox = useListbox({
   close: () => (isOpen.value = false),
   hasLabel: () => !!props.label,
   labelledby: () => props.ariaLabelledby,
-  announce: () => (panelOpen.value && !isLoading.value ? messages.value.listbox.results(filteredSuggestions.value.length) : ""),
+  // The create row is an option too, so it counts: "No results" would hide a real choice.
+  announce: () => (panelOpen.value && !isLoading.value ? messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0)) : ""),
 });
 
+// As in CuiCombobox: a changed list resets the highlight rather than leave it on a
+// different suggestion than the one the user moved to.
+watch(filteredSuggestions, () => (focusedIndex.value = -1));
+
 function onKeydown(e: KeyboardEvent) {
+  // The Enter confirming an IME composition must not create a tag from it.
+  if (e.isComposing || e.keyCode === 229) return;
   if (listbox.onKeydown(e)) return;
   if (e.key === "Enter") {
     e.preventDefault();

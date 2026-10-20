@@ -133,3 +133,43 @@ describe("CuiCombobox empty-result announcement", () => {
     expect(w.find('[role="status"]').text()).toBe("Rien");
   });
 });
+
+// Review of #205.
+describe("listbox highlight follows the list", () => {
+  it("a multiple Combobox doesn't leave the highlight on another option after a selection", async () => {
+    const w = mount(CuiCombobox, {
+      attachTo: document.body,
+      props: { multiple: true, modelValue: [], options: [{ value: "a", label: "Apple" }, { value: "b", label: "Banana" }, { value: "c", label: "Cherry" }] },
+    });
+    const input = w.find("input");
+    input.element.dispatchEvent(new FocusEvent("focus"));
+    await input.setValue("ch");
+    await press(input.element, "ArrowDown");
+    expect(byId(input.attributes("aria-activedescendant")!)?.textContent).toContain("Cherry");
+    await press(input.element, "Enter"); // selects Cherry; the query clears, the list regrows
+    await nextTick();
+    const active = input.element.getAttribute("aria-activedescendant");
+    expect(active === null || !byId(active)?.textContent?.includes("Apple")).toBe(true);
+  });
+
+  it("an IME's confirming Enter neither selects nor creates", async () => {
+    const w = mount(CuiTagInput, { attachTo: document.body, props: { modelValue: [], allowCreate: true } });
+    const input = w.find("input");
+    input.element.dispatchEvent(new FocusEvent("focus"));
+    await input.setValue("にほ");
+    input.element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true, cancelable: true }));
+    await nextTick();
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("TagInput counts the create row in the announcement", async () => {
+    vi.useFakeTimers();
+    const w = mount(CuiTagInput, { attachTo: document.body, props: { modelValue: [], allowCreate: true, suggestions: [{ value: "apple" }] } });
+    const input = w.find("input");
+    input.element.dispatchEvent(new FocusEvent("focus"));
+    await input.setValue("zzz"); // no suggestion matches; "Create zzz" is listed
+    vi.advanceTimersByTime(600);
+    await nextTick();
+    expect(w.find('[role="status"]').text()).toBe("1 result available");
+  });
+});

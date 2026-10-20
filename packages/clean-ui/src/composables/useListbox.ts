@@ -97,6 +97,9 @@ export function useListbox(options: UseListboxOptions) {
    * Call it first from the input's keydown.
    */
   function onKeydown(e: KeyboardEvent): boolean {
+    // Keys confirming or navigating an IME composition are the IME's (keyCode 229 is
+    // Safari's form of the same thing).
+    if (e.isComposing || e.keyCode === 229) return false;
     const open = options.isOpen();
 
     // Alt+ArrowDown opens without moving the highlight. Other modified keys are someone
@@ -131,7 +134,7 @@ export function useListbox(options: UseListboxOptions) {
     // Editable: Home/End and Left/Right move the text cursor. Leave the event, but hand the
     // highlight back to the input.
     if (!selectOnly && (homeEnd || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-      activeIndex.value = -1;
+      if (open && activeIndex.value !== -1) activeIndex.value = -1;
       return false;
     }
     const typeahead = selectOnly && e.key.length === 1 && e.key !== " ";

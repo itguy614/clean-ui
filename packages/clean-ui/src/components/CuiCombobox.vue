@@ -235,6 +235,7 @@ function onKeydown(e: KeyboardEvent) {
 
 // The ARIA combobox pattern, editable (#205) — see useListbox. Ids build on the control's own
 // `id` when it has one; useCuiId runs either way, for SSR-stable ids.
+const messages = useMessages();
 const generatedId = useCuiId("combobox");
 const listbox = useListbox({
   id: props.id ?? generatedId,
@@ -257,6 +258,11 @@ const listbox = useListbox({
     return n === 0 ? props.noResultsText : messages.value.listbox.results(n);
   },
 });
+
+// The highlight is an index into the list as it is now, and so is the option id the input
+// names: when the list changes under it — the query clears after a multiple selection,
+// async results arrive — it would point at a different option. Start over instead.
+watch(filteredOptions, () => (focusedIndex.value = -1));
 
 // Open/close
 function openDropdown() {
@@ -308,7 +314,6 @@ function optionClass(index: number, option: ComboboxOption) {
     "cui-combobox__option--disabled": !!option.disabled,
   };
 }
-const messages = useMessages();
 </script>
 
 <template>
