@@ -293,7 +293,20 @@ const items = computed(() =>
   border-radius: var(--cui-radius-sm, 0.25rem);
 }
 
-/* --- Structural --- (the list and button resets come from preflight.css) */
+/* --- Structural --- */
+/* preflight.css resets the list too, but .cui-typography's list rules have no cui-*
+   exclusion yet (#147) and outrank it on a prose page, numbering and indenting the steps.
+   These scoped rules outrank them in turn. */
+.cui-stepper__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cui-stepper__item {
+  margin: 0;
+}
+
 .cui-stepper__button {
   cursor: pointer;
 }
