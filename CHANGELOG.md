@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- CuiRadioGroup, CuiCheckboxGroup and CuiToggleGroup share one implementation of their
+  layout and auto-orientation, and the two multi-select groups share their context
+  provider (#206). Each root and its `__options` / `__error` elements now also carry
+  `cui-control-group` classes, whose rules live in the library stylesheet. Those rules
+  have lower specificity than the old scoped copies, and the error container's paint is
+  zero-specificity, so a consumer's plain (unlayered) override wins. The group-specific
+  classes are unchanged. `CheckboxGroupContext` and `ToggleGroupContext` are now aliases of
+  `MultiSelectGroupContext`, the identical shape.
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
   corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
   selected row instead of coloured bold text. It is the same shared listbox panel, and takes

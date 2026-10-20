@@ -139,7 +139,7 @@ export type { CuiRadioProps } from "./components/CuiRadio.vue";
 export type { CuiCheckboxProps } from "./components/CuiCheckbox.vue";
 export type { CuiCheckboxGroupProps } from "./components/CuiCheckboxGroup.vue";
 export { CheckboxGroupKey } from "./components/multi-select-group-context";
-export type { CheckboxGroupContext } from "./components/checkbox-context";
+export type { CheckboxGroupContext } from "./components/multi-select-group-context";
 export type { CuiToggleProps } from "./components/CuiToggle.vue";
 export type { CuiInputProps, InputType } from "./components/CuiInput.vue";
 export type { CuiMaskedInputProps, MaskToken } from "./components/CuiMaskedInput.vue";
@@ -268,7 +268,7 @@ export { useDataGridViews, localStorageViewAdapter, type UseDataGridViewsOptions
 export { AccordionContextKey } from "./components/accordion-context";
 export type { CuiToggleGroupProps } from "./components/CuiToggleGroup.vue";
 export { ToggleGroupKey } from "./components/multi-select-group-context";
-export type { ToggleGroupContext } from "./components/toggle-context";
+export type { ToggleGroupContext } from "./components/multi-select-group-context";
 export type { CuiRadioGroupProps } from "./components/CuiRadioGroup.vue";
 export { RadioGroupKey } from "./components/radio-context";
 export type { RadioGroupContext } from "./components/radio-context";

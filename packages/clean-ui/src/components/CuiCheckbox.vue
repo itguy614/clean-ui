@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import { CheckboxGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
+import { computed, ref } from "vue";
+import { CheckboxGroupKey, useMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 
@@ -32,7 +32,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const group = inject<MultiSelectGroupContext | null>(CheckboxGroupKey, null);
+const group = useMultiSelectGroupContext(CheckboxGroupKey);
 
 const isChecked = computed(() => {
   if (group && props.value !== undefined) {
