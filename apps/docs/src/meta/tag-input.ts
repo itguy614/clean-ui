@@ -32,7 +32,9 @@ const meta: ComponentMeta = {
     hiddenProp,
     // The values post through hidden inputs (#303), not the search input's text.
     ...nativeControlProps.map((p) =>
-      p.name === "name" ? { ...p, description: "Form field name. Posts the tags, one entry each with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
+      p.name === "autocomplete"
+        ? { ...p, description: "Autocomplete hint for the search box. It controls the browser's own suggestion list there — use off to keep it from covering the listbox. History-based autofill doesn't apply, since the search box carries no name" }
+        : p.name === "name" ? { ...p, description: "Form field name. Posts the tags, one entry each with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
     ),
   ],
 

@@ -362,12 +362,12 @@ defineExpose({ el: wrapperRef, focus, blur });
       {{ errorMessage }}
     </div>
 
-    <!-- Dropdown -->
     <!-- The tags post under `name` (#303), not the half-typed text the search input holds. -->
-    <CuiFormValues :name="name" :values="modelValue" :disabled="disabled" />
+    <CuiFormValues :name="name" :value="modelValue" multiple :disabled="disabled" />
 
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
+    <!-- Dropdown -->
     <CuiListboxPanel
       ref="panelRef"
       :open="panelOpen"

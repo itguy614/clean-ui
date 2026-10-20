@@ -69,3 +69,30 @@ describe("the form hears value changes", () => {
     expect(vm.changes).toBe(1);
   });
 });
+
+// Code review of #303.
+describe("CuiFormValues events", () => {
+  it("come from a named input, so a listener can tell which field changed", async () => {
+    const targets: Array<string | null> = [];
+    const w = mount(
+      { components: { CuiCombobox }, template: `<form @change="(e) => targets.push(e.target.getAttribute('name'))"><CuiCombobox v-bind="p" /></form>`, data: () => ({ targets, p: { options, name: "fruit", modelValue: "a" } }) },
+      { attachTo: document.body },
+    );
+    (w.vm as unknown as { p: Record<string, unknown> }).p = { options, name: "fruit", modelValue: "b" };
+    await nextTick();
+    await nextTick();
+    expect(targets).toEqual(["fruit"]);
+  });
+
+  it("stay silent for a new array with the same values, and while disabled", async () => {
+    const { vm } = inForm(CuiTagInput, { name: "f", modelValue: ["vue"] });
+    vm.p = { ...vm.p, modelValue: ["vue"] }; // fresh array, same contents
+    await nextTick();
+    await nextTick();
+    expect(vm.changes).toBe(0);
+    vm.p = { ...vm.p, disabled: true, modelValue: ["vue", "ts"] };
+    await nextTick();
+    await nextTick();
+    expect(vm.changes).toBe(0);
+  });
+});

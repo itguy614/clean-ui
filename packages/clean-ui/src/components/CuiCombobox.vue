@@ -296,14 +296,6 @@ function onFocus() {
 // not just the control: a press on the label or the clear button isn't "outside".
 useClickOutside(() => [wrapperRef.value, panelRef.value?.el], () => (isOpen.value = false), { enabled: isOpen });
 
-// What a native form post carries (#303): the values, not the search text, which is what
-// `name` on the input used to post (the label, in single mode).
-const formValues = computed<Array<string | number>>(() => {
-  const v = props.modelValue;
-  if (props.multiple) return Array.isArray(v) ? v : [];
-  return [v == null || Array.isArray(v) ? "" : v];
-});
-
 // Display text for single select (when closed)
 const displayText = computed(() => {
   if (props.multiple) return "";
@@ -403,11 +395,12 @@ function optionClass(index: number, option: ComboboxOption) {
       {{ errorMessage }}
     </div>
 
-    <!-- Dropdown (teleported) -->
-    <CuiFormValues :name="name" :values="formValues" :disabled="disabled" />
+    <!-- The value posts under `name` (#303), not the search text the input holds. -->
+    <CuiFormValues :name="name" :value="modelValue" :multiple="multiple" :disabled="disabled" />
 
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
+    <!-- Dropdown (teleported) -->
     <CuiListboxPanel
       ref="panelRef"
       :open="panelOpen"

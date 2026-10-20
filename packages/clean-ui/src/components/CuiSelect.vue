@@ -140,13 +140,8 @@ const hasValue = computed(() => {
   return props.modelValue != null && props.modelValue !== "";
 });
 
-// What a native form post carries (#174), through CuiFormValues. `autocomplete` has no
-// effect: browsers ignore it on hidden inputs, and there is no native control to autofill.
-const formValues = computed<Array<string | number>>(() => {
-  const v = props.modelValue;
-  if (props.multiple) return Array.isArray(v) ? v : [];
-  return [v == null || Array.isArray(v) ? "" : v];
-});
+// Native form participation (#174) is CuiFormValues. `autocomplete` has no effect on
+// Select: browsers ignore it on hidden inputs, and there is no native control to autofill.
 
 // Get the full selected option object (for #selected slot)
 const selectedOption = computed(() => {
@@ -402,7 +397,7 @@ const messages = useMessages();
       </template>
     </CuiListboxPanel>
 
-    <CuiFormValues :name="name" :values="formValues" :disabled="disabled" />
+    <CuiFormValues :name="name" :value="modelValue" :multiple="multiple" :disabled="disabled" />
 
     <!-- Error message -->
     <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
