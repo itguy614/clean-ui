@@ -1,4 +1,4 @@
-import type { ComputedRef, InjectionKey } from "vue";
+import type { ComputedRef, InjectionKey, Ref } from "vue";
 import type { CuiMessages } from "../messages";
 import type { CuiColor, CuiTitleAs } from "../types/common";
 
@@ -26,4 +26,4 @@ export interface CleanUIConfig {
 }
 
 /** The defaults an app (`createCleanUI`) or a subtree (`CuiConfigProvider`) provides, merged down the tree. */
-export const CuiDefaultsKey: InjectionKey<ComputedRef<Required<CleanUIConfig>>> = Symbol("cui-defaults");
+export const CuiDefaultsKey: InjectionKey<Readonly<Ref<Required<CleanUIConfig>>>> = Symbol("cui-defaults");

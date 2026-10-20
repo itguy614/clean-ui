@@ -1,4 +1,4 @@
-import { computed, type App } from "vue";
+import { readonly, shallowRef, type App } from "vue";
 import type { CleanUIOptions } from "./types";
 import { mergeDefaults } from "./utils/configure";
 import { CuiDefaultsKey } from "./components/config-context";
@@ -326,8 +326,8 @@ export function createCleanUI(options: CleanUIOptions = {}) {
     install(app: App) {
       // This app's defaults (#149): provided, so two apps — or two server-rendered requests —
       // keep their own. configureCleanUI() is the global fallback beneath them.
-      const defaults = mergeDefaults(undefined, options);
-      app.provide(CuiDefaultsKey, computed(() => defaults));
+      // Fixed at install: the options object is read once.
+      app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))));
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
       app.component("CuiGrid", CuiGrid);

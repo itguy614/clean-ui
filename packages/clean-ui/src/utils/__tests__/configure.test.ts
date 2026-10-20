@@ -102,4 +102,14 @@ describe("per subtree: CuiConfigProvider", () => {
     expect(tags).toEqual(["H4", "H4"]); // the inner provider inherits the outer's cardHeader
     expect(w.find(".cui-empty-state__title").element.tagName).toBe("H5");
   });
+
+  it("lets a provider leave a key undefined without erasing the one above", () => {
+    const w = mount(defineComponent({
+      render: () =>
+        h(CuiConfigProvider, { headingLevels: { cardHeader: "h4" } }, () =>
+          h(CuiConfigProvider, { headingLevels: { cardHeader: undefined } }, () => h(CuiCardHeader, { title: "T" })),
+        ),
+    }));
+    expect(w.find(".cui-card-header__title").element.tagName).toBe("H4");
+  });
 });

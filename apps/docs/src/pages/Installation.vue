@@ -41,8 +41,8 @@ app.mount('#app')</code></pre>
 app.use(createCleanUI({
   // Every card here sits under the page's h1, so its title is an h2
   headingLevels: { cardHeader: 'h2' },
-  // This design language has its own error glyph
-  roleIcons: { error: 'siren' },
+  // A different glyph for errors: any registered icon name
+  roleIcons: { error: 'x-circle' },
 }))</code></pre>
       <ul class="mt-3 list-disc space-y-1 pl-5 text-surface-600 dark:text-surface-400">
         <li>

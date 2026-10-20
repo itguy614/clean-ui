@@ -1,4 +1,4 @@
-import { computed, inject, shallowReactive, type ComputedRef } from "vue";
+import { computed, inject, provide, shallowReactive, type Ref } from "vue";
 import { registerRoleIcons } from "./colorIconMap";
 import { CuiDefaultsKey, type CleanUIConfig, type CuiHeadingLevels } from "../components/config-context";
 import type { CuiTitleAs } from "../types/common";
@@ -36,8 +36,14 @@ export function configureCleanUI(config: CleanUIConfig): void {
 }
 
 /** The defaults provided above this component — an app's, merged with any providers' — or null. */
-export function useCleanUIDefaults(): ComputedRef<Required<CleanUIConfig>> | null {
+export function useCleanUIDefaults(): Readonly<Ref<Required<CleanUIConfig>>> | null {
   return inject(CuiDefaultsKey, null);
+}
+
+/** Provide a layer of defaults to a subtree, over whatever is provided above it. */
+export function useCleanUIDefaultsProvider(layer: () => CleanUIConfig): void {
+  const parent = useCleanUIDefaults();
+  provide(CuiDefaultsKey, computed(() => mergeDefaults(parent?.value, layer())));
 }
 
 /**
@@ -51,11 +57,18 @@ export function useHeadingLevel(key: keyof CuiHeadingLevels, titleAs: () => CuiT
   );
 }
 
+/** `{ ...base, ...layer }`, except that a key the layer leaves `undefined` keeps the base's value. */
+function over<T extends object>(base: Partial<T> | undefined, layer: Partial<T> | undefined): Partial<T> {
+  const out: Partial<T> = { ...base };
+  for (const [key, value] of Object.entries(layer ?? {})) if (value !== undefined) out[key as keyof T] = value as T[keyof T];
+  return out;
+}
+
 /** Merge a layer of defaults onto the one beneath it. */
 export function mergeDefaults(base: Required<CleanUIConfig> | undefined, layer: CleanUIConfig): Required<CleanUIConfig> {
   return {
-    headingLevels: { ...base?.headingLevels, ...layer.headingLevels },
-    roleIcons: { ...base?.roleIcons, ...layer.roleIcons },
+    headingLevels: over(base?.headingLevels, layer.headingLevels),
+    roleIcons: over(base?.roleIcons, layer.roleIcons),
   };
 }
 

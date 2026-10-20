@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, inject, provide } from "vue";
-import { CuiConfigKey, CuiDefaultsKey, type CuiHeadingLevels } from "./config-context";
+import { CuiConfigKey, type CuiHeadingLevels } from "./config-context";
 import { defaultMessages, mergeMessages, type CuiMessages, type DeepPartialMessages } from "../messages";
-import { mergeDefaults } from "../utils/configure";
+import { useCleanUIDefaultsProvider } from "../utils/configure";
 import type { CuiColor } from "../types/common";
 
 export interface CuiConfigProviderProps {
@@ -29,11 +29,7 @@ const merged = computed<CuiMessages>(() =>
 provide(CuiConfigKey, merged);
 
 // The app-wide defaults, the same way: this subtree's over the app's (or an outer provider's).
-const parentDefaults = inject(CuiDefaultsKey, null);
-provide(
-  CuiDefaultsKey,
-  computed(() => mergeDefaults(parentDefaults?.value, { headingLevels: props.headingLevels, roleIcons: props.roleIcons })),
-);
+useCleanUIDefaultsProvider(() => ({ headingLevels: props.headingLevels, roleIcons: props.roleIcons }));
 </script>
 
 <template>
