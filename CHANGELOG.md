@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same tokens under the `select` prefix (`--cui-select-panel-*`, `--cui-select-item-*`),
   which are new. Its keyboard navigation now follows the order options are shown in, with
   groups, and adds Home/End and type-ahead.
+- **CuiDropdownTrigger forwards menu-button semantics to its child** (#160). The CuiButton
+  or `<button>` inside it now gets `aria-haspopup="menu"`, `aria-expanded` and
+  `aria-controls`. Arrow Down or Arrow Up on it opens the menu on the first or last item,
+  in every trigger mode. The slot should hold exactly one element; anything else logs a
+  warning.
+
+### Fixed
+
+- CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
+  item closes them: the trigger, or the element the context menu was opened from. A
+  click outside still leaves focus where it landed. On open, focus now also lands on a
+  check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
+  layer stack, so inside a modal it closes only the menu (#160).
+- A `trigger="hover-focus"` dropdown no longer closes when focus moves into its own menu
+  (#160).
 
 ## [1.3.2] - 2026-10-19
 

@@ -116,6 +116,7 @@ function onKeydown(e: KeyboardEvent) {
     <div
       v-if="isOpen"
       class="cui-dropdown-sub__menu"
+      :data-cui-menu-owner="parentCtx?.ownerId"
       :class="{ 'cui-dropdown-sub__menu--closing': parentCtx?.isClosing.value }"
       :style="menuStyle"
       role="menu"

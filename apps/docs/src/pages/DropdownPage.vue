@@ -73,9 +73,9 @@ const theme = ref("system");
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          On open, focus moves to the first enabled item. Arrow Down and Arrow Up move between
-          items and wrap at the ends; Home and End jump to the first and last. Enter and Space
-          activate.
+          On open, focus moves to the first enabled item — an action, a check item or a radio
+          item. Arrow Down and Arrow Up move between items and wrap at the ends; Home and End
+          jump to the first and last. Enter and Space activate.
         </li>
         <li>
           Disabled items get <code>aria-disabled</code> and <code>tabindex="-1"</code>, and are
@@ -93,21 +93,22 @@ const theme = ref("system");
           announced as an unnamed radiogroup.
         </li>
         <li>
-          <code>CuiDropdownTrigger</code> is a plain wrapper: it adds no role,
-          <code>aria-haspopup</code> or <code>aria-expanded</code>, and it does not make its
-          contents focusable. Put a real <code>CuiButton</code> or <code>&lt;button&gt;</code>
-          inside it — with anything else the menu cannot be opened from the keyboard at all.
+          <code>CuiDropdownTrigger</code> makes its child the menu button: the
+          <code>CuiButton</code> or <code>&lt;button&gt;</code> you put inside gets
+          <code>aria-haspopup="menu"</code>, <code>aria-expanded</code> and, while open,
+          <code>aria-controls</code> naming the menu. The wrapper itself is not focusable, so give
+          it exactly one child that is. Enter or Space toggles the menu, and Arrow Down or Arrow
+          Up opens it on the first or last item — in every trigger mode, so a hover menu can be
+          reached from the keyboard too.
         </li>
         <li>
-          Two gaps worth knowing about. Escape does not close the top-level menu: the handler
-          sits on the wrapper, and the panel is teleported to <code>&lt;body&gt;</code>, so once
-          focus is inside the menu the key never reaches it. And closing the menu does not
-          return focus to the trigger. Both are on the list to fix; until then a click outside
-          is the reliable way out.
+          Escape closes the menu, and inside a modal it closes only the menu. Escape or choosing
+          an item puts focus back on the trigger; a click outside leaves focus where it landed.
         </li>
         <li>
-          <code>trigger="hover"</code> makes the menu unreachable for anyone who cannot use a
-          pointer. Keep it for redundant conveniences, not for the only route to an action.
+          <code>trigger="hover"</code> opens from the keyboard only by the arrow keys, which few
+          people will guess. Keep it for redundant conveniences, not for the only route to an
+          action.
         </li>
       </ul>
     </template>

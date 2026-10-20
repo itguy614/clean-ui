@@ -79,16 +79,15 @@ function openFromButton(e: MouseEvent) {
           Give it a real control, or a <code>tabindex="0"</code>.
         </li>
         <li>
-          On open, focus moves to the first enabled item. Arrow Down and Arrow Up move and wrap,
+          On open, focus moves to the first enabled item, whatever kind it is. Arrow Down and Arrow Up move and wrap,
           Home and End jump to the ends, Enter and Space activate, and Escape closes.
         </li>
         <li>
           Disabled items carry <code>aria-disabled</code> and are skipped by the arrow keys.
         </li>
         <li>
-          Closing does not return focus to the element the menu was opened from. Until that is
-          fixed, a keyboard user who presses Escape lands back on the document rather than on the
-          row they were working with.
+          Escape, or choosing an item, puts focus back on the element the menu was opened from.
+          A click outside leaves it where it landed. Inside a modal, Escape closes only the menu.
         </li>
         <li>
           The menu also closes on a scroll and on a click outside, and a long-press that opened
