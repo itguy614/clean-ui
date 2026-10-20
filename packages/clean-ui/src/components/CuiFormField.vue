@@ -86,8 +86,9 @@ function onLabelClick(e: MouseEvent) {
   const target = (el as HTMLElement).tabIndex >= 0 ? el : el.querySelector<HTMLElement>('[tabindex="0"]');
   if (!(target instanceof HTMLElement) || elementDisabled(target)) return;
   target.focus();
-  // As a native checkbox's or radio's label does, it toggles or selects too.
-  if (ACTIVATED.has(target.getAttribute("role") ?? "")) target.click();
+  // As a native checkbox's or radio's label does, it toggles or selects too — the control's
+  // own label only: a group's label moves focus in, it doesn't pick an option.
+  if (target === el && ACTIVATED.has(target.getAttribute("role") ?? "")) target.click();
 }
 
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires

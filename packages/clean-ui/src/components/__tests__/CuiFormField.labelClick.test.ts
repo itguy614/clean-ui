@@ -55,13 +55,14 @@ describe("CuiFormField label click", () => {
     w.unmount();
   });
 
-  it("moves into a group to its tab stop", async () => {
+  it("moves into a group to its tab stop, without picking an option", async () => {
     const w = mountField((f) =>
-      h(CuiRadioGroup, { id: f.id as string, modelValue: "b" }, () => [h(CuiRadio, { value: "a", label: "A" }), h(CuiRadio, { value: "b", label: "B" })]),
+      h(CuiRadioGroup, { id: f.id as string }, () => [h(CuiRadio, { value: "a", label: "A" }), h(CuiRadio, { value: "b", label: "B" })]),
     );
     await w.vm.$nextTick();
     await w.find(".cui-form-field__label").trigger("click");
     expect(document.activeElement?.getAttribute("role")).toBe("radio");
+    expect(w.findComponent(CuiRadioGroup).emitted("update:modelValue")).toBeUndefined();
     w.unmount();
   });
 
