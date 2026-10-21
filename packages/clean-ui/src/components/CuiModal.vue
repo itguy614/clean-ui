@@ -30,7 +30,10 @@ export interface CuiModalProps extends HideableProps, TitleAsProps {
   persistent?: boolean;
   /** Hide the X close button */
   noCloseButton?: boolean;
-  /** Allow opening on top of another modal */
+  /**
+   * @deprecated Has no effect — overlays always stack, and Escape closes only the topmost
+   * (#285). Removed in 2.0.
+   */
   allowNested?: boolean;
   /** Backdrop opacity */
   backdropOpacity?: number;
@@ -51,7 +54,8 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   size: "md",
   persistent: false,
   noCloseButton: false,
-  allowNested: false,
+  // `undefined`, not Vue's boolean `false`, so the deprecation warning fires only when passed.
+  allowNested: undefined,
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
@@ -70,7 +74,9 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
-  allowNested: () => props.allowNested,
+  // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
+  allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
+  name: "CuiModal",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
@@ -177,7 +183,7 @@ const titleId = useCuiId("modal-title");
   width: 100%;
   max-height: calc(100vh - 8rem);
   background: var(--cui-surface-base);
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.2);
+  box-shadow: var(--cui-shadow-lg);
   outline: none;
   overflow: hidden;
 
@@ -190,9 +196,5 @@ const titleId = useCuiId("modal-title");
 .cui-modal--visible {
   opacity: 1;
   transform: scale(1) translateY(0);
-}
-
-:where(.dark, .dark *) .cui-modal {
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
 }
 </style>

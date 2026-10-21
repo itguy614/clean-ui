@@ -35,6 +35,13 @@ export interface CuiContextMenuProps extends HideableProps, DisableableProps {
   longPressDelay?: number;
   /** Movement that cancels a hold, in px — a drag or a scroll, not a press. */
   longPressTolerance?: number;
+  /**
+   * For one menu serving many targets — rows in a list, cells in a grid (#208). Called with
+   * the element a gesture landed on; return what the menu is for (a row, an id), which the
+   * `menu` slot receives as `target`, or `undefined`, `null` or `false` to leave that spot to
+   * the browser's own menu. Without it, the whole wrapped content opens the menu.
+   */
+  resolveTarget?: (el: Element) => unknown;
 }
 
 const props = withDefaults(defineProps<CuiContextMenuProps>(), {
@@ -201,17 +208,50 @@ function openAt(x: number, y: number) {
 const respondsToContextMenu = () => props.trigger === "contextmenu" || props.trigger === "auto";
 const respondsToLongPress = () => props.trigger === "longpress" || props.trigger === "auto";
 
+// What the menu was last opened for: `resolveTarget`'s answer, for the `menu` slot.
+const menuTarget = shallowRef<unknown>(undefined);
+
+// The element the menu was opened on, with resolveTarget: a press on it doesn't count as
+// outside (the mousedown a touch browser sends after a long-press lands right there).
+let openedOn: Element | null = null;
+
+/**
+ * `resolveTarget`'s answer for a gesture on `el`, or null when the spot isn't ours — or when
+ * something inside already handled the event (a nested context menu).
+ */
+interface Hit {
+  value: unknown;
+  el: Element | null;
+}
+
+function resolve(e: Event): Hit | null {
+  if (e.defaultPrevented) return null;
+  if (!props.resolveTarget) return { value: undefined, el: null };
+  const el = e.target instanceof Element ? e.target : null;
+  const value = el ? props.resolveTarget(el) : undefined;
+  return value == null || value === false ? null : { value, el };
+}
+
+function accept(hit: Hit) {
+  menuTarget.value = hit.value;
+  openedOn = hit.el;
+}
+
 function onContextMenu(e: MouseEvent) {
   if (props.disabled || !respondsToContextMenu()) return;
   // Android fires `contextmenu` after its own long-press, so with `auto` the
   // hold would open the menu and the synthesised event would immediately
   // reopen it. Swallow the event, but keep preventDefault so the OS menu
   // doesn't appear on top of ours either.
-  e.preventDefault();
   if (suppressNextContextMenu) {
+    e.preventDefault();
     suppressNextContextMenu = false;
     return;
   }
+  const hit = resolve(e);
+  if (!hit) return; // not a target: the browser's own menu
+  e.preventDefault();
+  accept(hit);
   openAt(e.clientX, e.clientY);
 }
 
@@ -235,6 +275,8 @@ function onPointerDown(e: PointerEvent) {
   // Mouse already has `contextmenu`; holding a mouse button should not also
   // arm this, or a slow right-click would fire twice.
   if (e.pointerType === "mouse") return;
+  const hit = resolve(e);
+  if (!hit) return;
 
   pressOrigin = { x: e.clientX, y: e.clientY };
   pressPending.value = true;
@@ -248,6 +290,7 @@ function onPointerDown(e: PointerEvent) {
     // synthesise a `contextmenu` and a `click` from this same press.
     suppressNextContextMenu = true;
     suppressNextClick = true;
+    accept(hit);
     openAt(x, y);
   }, props.longPressDelay);
 }
@@ -280,8 +323,11 @@ function onKeydown(e: KeyboardEvent) {
   const isMenuKey = e.key === "ContextMenu";
   const isShiftF10 = e.key === "F10" && e.shiftKey;
   if (!isMenuKey && !isShiftF10) return;
+  const hit = resolve(e);
+  if (!hit) return;
 
   e.preventDefault();
+  accept(hit);
   const target = (e.target as HTMLElement | null) ?? wrapperRef.value;
   const rect = target?.getBoundingClientRect();
   if (rect) openAt(rect.left, rect.bottom);
@@ -300,7 +346,10 @@ useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close 
 // Only while open, so a closed context menu holds no document listener (#203).
 // Its open sub-menus are teleported panels of their own (see CuiDropdown).
 useClickOutside(
-  () => [wrapperRef.value, ...menuPanels(contextMenuId)],
+  // With resolveTarget the wrapper is a whole grid or list, and a press on another row or a
+  // header must close the menu like a press anywhere else — on the element it was opened
+  // on, it doesn't.
+  () => [props.resolveTarget ? openedOn : wrapperRef.value, ...menuPanels(contextMenuId)],
   close,
   { enabled: isOpen },
 );
@@ -382,7 +431,7 @@ defineExpose({ open, openAt, close, isOpen });
         role="menu"
         @keydown="onMenuKeydown"
       >
-        <slot name="menu" />
+        <slot name="menu" :target="menuTarget" />
       </div>
     </Teleport>
   </div>
@@ -414,7 +463,7 @@ defineExpose({ open, openAt, close, isOpen });
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
   animation: cui-context-menu-in 0.15s ease forwards;
 }
@@ -422,10 +471,6 @@ defineExpose({ open, openAt, close, isOpen });
 .cui-context-menu__panel--closing {
   animation: cui-context-menu-out 0.15s ease forwards;
   pointer-events: none;
-}
-
-:where(.dark, .dark *) .cui-context-menu__panel {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
 @keyframes cui-context-menu-in {

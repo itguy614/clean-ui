@@ -21,6 +21,11 @@ const es: DeepPartialMessages = {
   pagination: {
     summary: ({ from, to, total }) => `Mostrando ${from}–${to} de ${total} resultados`,
     perPage: (n) => `${n} / página`,
+    label: "Paginación",
+    perPageLabel: "Resultados por página",
+    previous: "Página anterior",
+    next: "Página siguiente",
+    page: (n) => `Página ${n}`,
   },
 };
 
@@ -72,6 +77,8 @@ const selectOptions = [
       <PropTable
         :props="[
           { name: 'messages', type: 'DeepPartialMessages', default: '{}', description: 'Partial overrides for the default message catalog. Unspecified keys fall back to defaults (or a parent provider).' },
+          { name: 'headingLevels', type: 'Partial<CuiHeadingLevels>', default: '{}', description: 'Heading levels for the titled components inside, over the app\'s. See Installation → Configure App-wide Defaults.' },
+          { name: 'roleIcons', type: 'Partial<Record<CuiColor, string>>', default: '{}', description: 'Role icons for CuiAlert, CuiToast and CuiBanner inside, over the app\'s.' },
         ]"
       />
     </div>
@@ -89,6 +96,11 @@ const es = {
   pagination: {
     summary: ({ from, to, total }) => \`Mostrando \${from}–\${to} de \${total} resultados\`,
     perPage: (n) => \`\${n} / página\`,
+    label: &quot;Paginación&quot;,
+    perPageLabel: &quot;Resultados por página&quot;,
+    previous: &quot;Página anterior&quot;,
+    next: &quot;Página siguiente&quot;,
+    page: (n) => \`Página \${n}\`,
   },
 }`">
         <CuiStack spacing="4">
@@ -128,11 +140,7 @@ const es = {
           <code class="cui-code">apply</code>, <code class="cui-code">loading</code>.
         </p>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
-          Namespaces: <code class="cui-code">input</code>, <code class="cui-code">combobox</code>,
-          <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>,
-          <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>,
-          <code class="cui-code">skeleton</code>, <code class="cui-code">tabs</code>,
-          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
+          Namespaces: <code class="cui-code">input</code>, <code class="cui-code">combobox</code>, <code class="cui-code">tagInput</code>, <code class="cui-code">listbox</code>, <code class="cui-code">select</code>, <code class="cui-code">fileUpload</code>, <code class="cui-code">transferList</code>, <code class="cui-code">datePicker</code>, <code class="cui-code">dateRangePicker</code>, <code class="cui-code">copyButton</code>, <code class="cui-code">avatar</code>, <code class="cui-code">spinner</code>, <code class="cui-code">toggle</code>, <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>, <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>, <code class="cui-code">skeleton</code>, <code class="cui-code">formField</code>, <code class="cui-code">tabs</code>, <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
           whatever namespaces a satellite package (see below) has added. See the
           <code class="cui-code">CuiMessages</code> type for the full shape — your editor will
           autocomplete every key.

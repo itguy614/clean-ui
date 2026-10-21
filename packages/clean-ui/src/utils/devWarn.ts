@@ -15,6 +15,11 @@ export function warnOnce(message: string): void {
   console.warn(message);
 }
 
+/** Test seam: forget which warnings have fired, so a test can assert on its own. */
+export function __clearWarned(): void {
+  warned.clear();
+}
+
 /**
  * Sanity-check the two most-confused props. `color` sets the semantic role;
  * `variant` sets the structural style — passing a role name to `variant`

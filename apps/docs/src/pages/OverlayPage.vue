@@ -15,7 +15,6 @@ const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = use
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => persistent.value,
-  allowNested: () => false,
   animationDuration: 150,
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => (lastClosed.value = new Date().toLocaleTimeString()),
@@ -29,7 +28,6 @@ const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = use
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => false,
-  allowNested: () => false,
   animationDuration: 150,
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => {},
@@ -75,7 +73,7 @@ const options = [
   {
     name: "allowNested",
     type: "() => boolean",
-    description: "Meant to control whether this overlay may open on top of another one, but it currently has no effect: nothing blocks or closes the overlay beneath (#285). CuiModal and CuiSlideover forward their own allowNested prop.",
+    description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0.",
   },
   {
     name: "animationDuration",

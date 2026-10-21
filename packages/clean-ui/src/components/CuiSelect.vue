@@ -50,10 +50,8 @@ export interface CuiSelectProps extends NativeControlProps, HideableProps, Color
 const props = withDefaults(defineProps<CuiSelectProps>(), {
   options: () => [],
   multiple: false,
-  placeholder: "Select...",
   clearable: false,
   loading: false,
-  noOptionsText: "No options available",
   color: "primary",
   size: "md",
   error: false,
@@ -244,6 +242,9 @@ const dims = computed(() => {
   return { minHeight: s.height, px: s.px, fontSize: s.fontSize, itemPadding: `${scaleDensity("0.5rem")} ${s.px}` };
 });
 const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const placeholderText = computed(() => props.placeholder ?? messages.value.select.placeholder);
+const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.select.noOptions);
 </script>
 
 <template>
@@ -312,7 +313,7 @@ const messages = useMessages();
           </template>
           <!-- Placeholder -->
           <template v-else>
-            <span class="cui-select__placeholder">{{ placeholder }}</span>
+            <span class="cui-select__placeholder">{{ placeholderText }}</span>
           </template>
         </div>
 
@@ -350,7 +351,7 @@ const messages = useMessages();
       <CuiListboxStatus v-if="loading">
         <CuiSpinner size="sm" show-label :label="messages.loading" />
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="normalizedOptions.length === 0">{{ noOptionsText }}</CuiListboxStatus>
+      <CuiListboxStatus v-else-if="normalizedOptions.length === 0">{{ noOptionsLabel }}</CuiListboxStatus>
 
       <template v-else>
         <!-- A named group is role="group", labelled by its header; the ungrouped section is
@@ -489,14 +490,10 @@ const messages = useMessages();
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
-  background: var(--color-surface-100);
+  background: var(--cui-surface-bg);
   color: var(--cui-text-body);
   font-size: 0.8125em;
   line-height: 1.4;
-}
-
-:where(.dark, .dark *) .cui-select__chip {
-  background: var(--color-surface-800);
 }
 
 .cui-select__chip-remove {
@@ -543,11 +540,7 @@ const messages = useMessages();
 
 .cui-select__clear:hover {
   color: var(--cui-text-body);
-  background: var(--color-surface-200);
-}
-
-:where(.dark, .dark *) .cui-select__clear:hover {
-  background: var(--color-surface-700);
+  background: var(--cui-surface-dark-bg);
 }
 
 .cui-select__chevron {

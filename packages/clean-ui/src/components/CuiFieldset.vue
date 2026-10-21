@@ -171,11 +171,7 @@ const rootStyle = computed(() => {
 }
 
 .cui-fieldset__legend--clickable:hover {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-fieldset__legend--clickable:hover {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 /* --- Chevron --- */

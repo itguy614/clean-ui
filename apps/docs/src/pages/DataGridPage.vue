@@ -17,6 +17,7 @@ import {
   CuiTableRow,
   CuiToggle,
   useDataGrid,
+  CuiSlideover,
   type DataGridColumn,
   type DataGridRow,
   type DataGridBulkAction,
@@ -149,6 +150,12 @@ function sortIndicator(col: { key: string; sortKey?: string }) {
   if (s?.key !== (col.sortKey ?? col.key)) return "";
   return s.direction === "asc" ? " ↑" : " ↓";
 }
+// Clickable rows: a row opens its details in a slideover
+const openRow = ref<DataGridRow | null>(null);
+const slideoverOpen = computed({
+  get: () => openRow.value !== null,
+  set: (v) => { if (!v) openRow.value = null; },
+});
 </script>
 
 <template>
@@ -202,11 +209,19 @@ function sortIndicator(col: { key: string; sortKey?: string }) {
           translates with the rest of your application rather than being hardcoded English.
         </li>
         <li>
-          Column sorting is pointer-driven: the click handler sits on the header cell rather
-          than on a button inside it, and there is no <code>aria-sort</code>, so the current
-          sort is conveyed by the caret icon alone. If keyboard sorting matters for your
-          grid, put your own control in <code>#toolbar-start</code> and drive the data
-          yourself.
+          A sortable column's header text is a <code>&lt;button&gt;</code> — Tab to it, press
+          Enter or Space to sort — and its <code>&lt;th&gt;</code> carries
+          <code>aria-sort</code> (<code>ascending</code>, <code>descending</code> or
+          <code>none</code>), so the direction isn't left to the caret icon.
+        </li>
+        <li>
+          The select-all checkbox is named “Select all rows”, and each row's checkbox and
+          actions button are named after the row: “Select Alice”, “Actions for Alice”. By
+          default that's the first column's value when it is text or a number, else the row's
+          position; pass <code>rowLabel</code> to choose. The view toggle's buttons are named “Table view” and “Card
+          view”, with the active one pressed. All from the message bundle
+          (<code>dataGrid.selectAll</code>, <code>selectRow</code>, <code>rowActions</code>,
+          <code>tableView</code>, <code>cardView</code>).
         </li>
         <li>
           Give the grid a heading immediately above it. Neither the table nor the toolbar
@@ -214,10 +229,14 @@ function sortIndicator(col: { key: string; sortKey?: string }) {
           identical-sounding regions.
         </li>
         <li>
-          <code>row-click</code> makes the whole row clickable but does not make it
-          focusable. Where a row navigates somewhere, put a real link in one of its cells —
-          usually the name column, through a <code>cell-</code> slot — so there is something
-          to tab to.
+          With a <code>row-click</code> listener, rows are interactive: one tab stop, moved with
+          the arrow keys and Home/End, opened with Enter or Space, with a focus ring and a
+          pointer cursor. Keys pressed in a cell's own checkbox, button or link stay theirs, and
+          native table semantics stay (no <code>role="grid"</code>). An overlay opened from a
+          row returns focus to it on close, even if it has scrolled out of a virtualised
+          window. <code>rowClickable</code> overrides the detection: <code>false</code> for a
+          listener that is only analytics, <code>true</code> without one. Without either, rows
+          are plain rows.
         </li>
       </ul>
     </template>
@@ -396,6 +415,51 @@ function sortIndicator(col: { key: string; sortKey?: string }) {
             hide-toolbar
           />
         </div>
+      </Example>
+
+      <!-- Clickable rows -->
+      <Example title="Clickable Rows (keyboard + slideover)" :code="`<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;largeRows&quot;
+  max-height=&quot;320px&quot;
+  virtualize
+  hide-toolbar
+  hide-pagination
+  :per-page-options=&quot;[10000]&quot;
+  @row-click=&quot;({ row }) => (openRow = row)&quot;
+/>
+<CuiSlideover v-model:visible=&quot;slideoverOpen&quot; :title=&quot;openRow?.name&quot;>…</CuiSlideover>`">
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="text-sm" style="color: var(--cui-text-secondary); margin: 0;">
+              <CuiIcon name="info" size="0.875rem" style="vertical-align: -2px;" />
+              With a <code>@row-click</code> listener, rows are one tab stop: <kbd>↑</kbd>/<kbd>↓</kbd>,
+              <kbd>Home</kbd>/<kbd>End</kbd> move between them, <kbd>Enter</kbd> or <kbd>Space</kbd>
+              opens one. <kbd>Esc</kbd> closes the slideover and focus returns to the row — even if
+              it scrolled out of the virtualised window meanwhile.
+            </p>
+          </CuiCardBody>
+        </CuiCard>
+        <div class="mt-3">
+          <CuiDataGrid
+            :columns="simpleColumns"
+            :data="largeData"
+            max-height="320px"
+            size="sm"
+            virtualize
+            hide-toolbar
+            hide-pagination
+            :per-page-options="[10000]"
+            @row-click="({ row }) => (openRow = row)"
+          />
+        </div>
+        <CuiSlideover v-model:visible="slideoverOpen" :title="String(openRow?.name ?? '')">
+          <CuiStack v-if="openRow" spacing="2">
+            <div><strong>Email:</strong> {{ openRow.email }}</div>
+            <div><strong>Role:</strong> {{ openRow.role }}</div>
+            <div><strong>Status:</strong> {{ openRow.status }}</div>
+          </CuiStack>
+        </CuiSlideover>
       </Example>
 
       <!-- Striped + bordered -->

@@ -13,7 +13,7 @@ const meta: ComponentMeta = {
     {
       name: "label",
       type: "string",
-      default: "Loading",
+      default: "Loading (messages.spinner.label)",
       description: "Accessible label. Always announced, whether or not showLabel renders it visibly",
     },
     { name: "showLabel", type: "boolean", default: "false", description: "Render the label as visible text below the spinner" },

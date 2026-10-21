@@ -4,6 +4,9 @@ import { useDataGridState } from "../composables/useDataGrid";
 import CuiBadge from "./CuiBadge.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const grid = useDataGridState();
 
@@ -31,7 +34,7 @@ const activeFilters = computed(() =>
       {{ filter.label }}: {{ filter.displayValue }}
     </CuiBadge>
     <CuiButton v-if="activeFilters.length > 1" variant="ghost" size="xs" @click="grid.clearFilters()">
-      Clear all
+      {{ messages.clearAll }}
     </CuiButton>
   </div>
 </template>

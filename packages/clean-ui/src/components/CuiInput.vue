@@ -302,11 +302,7 @@ const messages = useMessages();
 
 .cui-input__clear:hover {
   color: var(--cui-text-body);
-  background: var(--color-surface-200);
-}
-
-:where(.dark, .dark *) .cui-input__clear:hover {
-  background: var(--color-surface-700);
+  background: var(--cui-surface-dark-bg);
 }
 
 /* --- Password toggle --- */

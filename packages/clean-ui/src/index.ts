@@ -1,5 +1,7 @@
-import type { App } from "vue";
+import { readonly, shallowRef, type App } from "vue";
 import type { CleanUIOptions } from "./types";
+import { mergeDefaults } from "./utils/configure";
+import { CuiDefaultsKey } from "./components/config-context";
 
 // Detect a second, different-version copy of clean-ui in the same page — see
 // duplicate-guard.ts. Runs as early as possible, before anything else loads.
@@ -15,6 +17,7 @@ import CuiFlexItem from "./components/CuiFlexItem.vue";
 import CuiStack from "./components/CuiStack.vue";
 import CuiContainer from "./components/CuiContainer.vue";
 import CuiSpacer from "./components/CuiSpacer.vue";
+import CuiScrollArea from "./components/CuiScrollArea.vue";
 import CuiRadio from "./components/CuiRadio.vue";
 import CuiRadioGroup from "./components/CuiRadioGroup.vue";
 import CuiCheckbox from "./components/CuiCheckbox.vue";
@@ -104,7 +107,7 @@ import CuiRating from "./components/CuiRating.vue";
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
+export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
 
 // Type exports
 export type {
@@ -135,11 +138,12 @@ export type { CuiFlexItemProps } from "./components/CuiFlexItem.vue";
 export type { CuiStackProps } from "./components/CuiStack.vue";
 export type { CuiContainerProps, ContainerSize } from "./components/CuiContainer.vue";
 export type { CuiSpacerProps } from "./components/CuiSpacer.vue";
+export type { CuiScrollAreaProps } from "./components/CuiScrollArea.vue";
 export type { CuiRadioProps } from "./components/CuiRadio.vue";
 export type { CuiCheckboxProps } from "./components/CuiCheckbox.vue";
 export type { CuiCheckboxGroupProps } from "./components/CuiCheckboxGroup.vue";
 export { CheckboxGroupKey } from "./components/multi-select-group-context";
-export type { CheckboxGroupContext } from "./components/checkbox-context";
+export type { CheckboxGroupContext } from "./components/multi-select-group-context";
 export type { CuiToggleProps } from "./components/CuiToggle.vue";
 export type { CuiInputProps, InputType } from "./components/CuiInput.vue";
 export type { CuiMaskedInputProps, MaskToken } from "./components/CuiMaskedInput.vue";
@@ -218,6 +222,8 @@ export type { CuiDividerProps, DividerOrientation, DividerLabelPosition, Divider
 export type { CuiCopyButtonProps } from "./components/CuiCopyButton.vue";
 export { useCopyToClipboard } from "./composables/useCopyToClipboard";
 export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle } from "./composables/useScrollShadows";
+export { useScrollArea } from "./composables/useScrollArea";
+export type { UseScrollAreaOptions, ScrollAreaOrientation, ScrollAreaFade, ScrollAreaEdge, ScrollAreaFadeEdge } from "./composables/useScrollArea";
 export type { CuiResizablePanelsProps } from "./components/CuiResizablePanels.vue";
 export type { CuiConfirmDialogProps, ConfirmDialogVariant } from "./components/CuiConfirmDialog.vue";
 export type { CuiTimelineProps } from "./components/CuiTimeline.vue";
@@ -268,7 +274,7 @@ export { useDataGridViews, localStorageViewAdapter, type UseDataGridViewsOptions
 export { AccordionContextKey } from "./components/accordion-context";
 export type { CuiToggleGroupProps } from "./components/CuiToggleGroup.vue";
 export { ToggleGroupKey } from "./components/multi-select-group-context";
-export type { ToggleGroupContext } from "./components/toggle-context";
+export type { ToggleGroupContext } from "./components/multi-select-group-context";
 export type { CuiRadioGroupProps } from "./components/CuiRadioGroup.vue";
 export { RadioGroupKey } from "./components/radio-context";
 export type { RadioGroupContext } from "./components/radio-context";
@@ -303,6 +309,7 @@ export { BUILTIN_ICONS } from "./icons/builtin";
 // Role → icon for the feedback components. Overridable app-wide, the same way colours
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
+export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";
@@ -316,11 +323,15 @@ export { useRovingFocus, type UseRovingFocusOptions, type RovingOrientation } fr
 export { useColorScheme } from "./composables/useColorScheme";
 // Public since 1.3.2: the editor is its second consumer (#221).
 export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";
-export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
+export type { MultiSelectGroupContext, MultiSelectGroupProps } from "./components/multi-select-group-context";
 
-export function createCleanUI(_options: CleanUIOptions = {}) {
+export function createCleanUI(options: CleanUIOptions = {}) {
   return {
     install(app: App) {
+      // This app's defaults (#149): provided, so two apps — or two server-rendered requests —
+      // keep their own. configureCleanUI() is the global fallback beneath them.
+      // Fixed at install: the options object is read once.
+      app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))));
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
       app.component("CuiGrid", CuiGrid);
@@ -330,6 +341,7 @@ export function createCleanUI(_options: CleanUIOptions = {}) {
       app.component("CuiStack", CuiStack);
       app.component("CuiContainer", CuiContainer);
       app.component("CuiSpacer", CuiSpacer);
+      app.component("CuiScrollArea", CuiScrollArea);
       app.component("CuiRadio", CuiRadio);
       app.component("CuiRadioGroup", CuiRadioGroup);
       app.component("CuiCheckbox", CuiCheckbox);
