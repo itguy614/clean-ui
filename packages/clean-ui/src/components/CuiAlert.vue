@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
+import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
@@ -111,7 +112,8 @@ const alertStyle = computed(() => {
   return base;
 });
 
-const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
+const defaults = useCleanUIDefaults();
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color, defaults?.value.roleIcons));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();

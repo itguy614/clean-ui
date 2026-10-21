@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, provide, toRef, useSlots } from "vue";
+import { computed, provide, toRef } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useAutoOrientation } from "../composables/useAutoOrientation";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
@@ -46,23 +47,8 @@ const emit = defineEmits<{
 const generatedName = useCuiId("radio");
 const groupName = computed(() => props.name ?? generatedName);
 
-const slots = useSlots();
-const childCount = computed(() => {
-  const defaultSlot = slots.default?.();
-  if (!defaultSlot) return 0;
-  return defaultSlot.reduce((count, vnode) => {
-    if (vnode.type === Symbol.for("v-fgm") || (vnode as any).type === Symbol.for("v-fgt")) {
-      return count + ((vnode.children as any[])?.length ?? 0);
-    }
-    return count + 1;
-  }, 0);
-});
-
-const resolvedDirection = computed(() => {
-  if (props.variant === "buttons") return "horizontal";
-  if (props.orientation !== "auto") return props.orientation;
-  return childCount.value <= 2 ? "horizontal" : "vertical";
-});
+// Unused by the button variant, which is a segmented row whatever the orientation.
+const resolvedDirection = useAutoOrientation(() => props.orientation);
 
 provide(RadioGroupKey, {
   modelValue: toRef(props, "modelValue"),
@@ -115,15 +101,15 @@ function onKeydown(e: KeyboardEvent) {
     :aria-required="ariaRequired || undefined"
     :aria-label="ariaLabelledby ? undefined : label"
     :aria-invalid="error || undefined"
-    class="cui-radio-group"
+    class="cui-radio-group cui-control-group"
     :class="[
-      variant !== 'buttons' ? `cui-radio-group--${resolvedDirection}` : '',
-      { 'cui-radio-group--error': error },
+      variant !== 'buttons' ? `cui-radio-group--${resolvedDirection} cui-control-group--${resolvedDirection}` : '',
+      { 'cui-radio-group--error cui-control-group--error': error },
       { 'cui-radio-group--buttons': variant === 'buttons' },
     ]"
     @keydown="onKeydown"
   >
-    <div class="cui-radio-group__options">
+    <div class="cui-radio-group__options cui-control-group__options">
       <!-- Button variant wraps in CuiButtonGroup for proper radius merging -->
       <CuiButtonGroup v-if="variant === 'buttons'">
         <slot />
@@ -132,52 +118,20 @@ function onKeydown(e: KeyboardEvent) {
         <slot />
       </template>
     </div>
-    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error cui-control-group__error">
       {{ errorMessage }}
     </div>
   </div>
 </template>
 
+<!-- Layout and the error container: the shared .cui-control-group rules in main.css (#206).
+     Only the button variant's segmented layout is the radio group's own. -->
 <style scoped>
-.cui-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: calc(0.375rem * var(--cui-density-scale, 1));
-}
-
-.cui-radio-group__options {
-  display: flex;
-  gap: calc(0.75rem * var(--cui-density-scale, 1));
-}
-
-.cui-radio-group--vertical .cui-radio-group__options {
-  flex-direction: column;
-}
-
-.cui-radio-group--horizontal .cui-radio-group__options {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: calc(1.25rem * var(--cui-density-scale, 1));
-}
-
 /* Button variant: segmented control, hug content rather than stretch */
 .cui-radio-group--buttons .cui-radio-group__options {
   gap: 0;
   display: inline-flex;
   flex-wrap: nowrap;
   align-self: flex-start;
-}
-
-/* Error: subtle bordered container around the options */
-.cui-radio-group--error .cui-radio-group__options {
-  border: 1px solid var(--cui-error-border);
-  background: var(--cui-error-bg);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
-  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
-}
-
-.cui-radio-group__error {
-  font-size: 0.8125rem;
-  color: var(--cui-error);
 }
 </style>

@@ -9,7 +9,9 @@ import type { CuiColor } from "../types/common";
  * `warning-circle` (which would leave hue as the only thing separating the two roles).
  * `components/__tests__/feedbackRoleIcon.test.ts` holds that invariant.
  *
- * These are the defaults, not the answer: `registerRoleIcons()` overrides them app-wide.
+ * These are the defaults, not the answer: `createCleanUI({ roleIcons })` or a
+ * `CuiConfigProvider` overrides them for an app or a subtree, and `registerRoleIcons()` (or
+ * `configureCleanUI`) globally.
  */
 export const COLOR_ICON_MAP: Record<CuiColor, string> = {
   primary: "info",
@@ -27,7 +29,9 @@ export const COLOR_ICON_MAP: Record<CuiColor, string> = {
 const overrides = shallowReactive<Partial<Record<CuiColor, string>>>({});
 
 /**
- * Override the icon a color role renders in CuiAlert, CuiToast and CuiBanner.
+ * Override the icon a color role renders in CuiAlert, CuiToast and CuiBanner, **globally**:
+ * the same as `configureCleanUI({ roleIcons })`, of which this stays the documented alias.
+ * For one app, prefer `createCleanUI({ roleIcons })` (#149).
  *
  * Role → icon is a theme concern in the same way role → colour is, and colours are
  * overridable at the root. Without this, a design language with its own error glyph had
@@ -56,7 +60,8 @@ export function __clearRoleIcons(): void {
  *
  *  - explicit override naming a registered icon → that icon
  *  - explicit override that is anything else    → rendered as literal text
- *  - otherwise → the role's icon: `registerRoleIcons()` first, then the library default
+ *  - otherwise → the role's icon: the app's or provider's (`provided`), then the global
+ *    `registerRoleIcons()` / `configureCleanUI()`, then the library default
  *
  * The text branch exists because `CuiToast.icon` has always taken an emoji or a character
  * and a programmatic toast has no slot to fall back on, so one prop had to cover both.
@@ -69,9 +74,11 @@ export function __clearRoleIcons(): void {
 export function resolveRoleIcon(
   icon: string | undefined,
   color: CuiColor,
+  /** The app's or the nearest provider's role icons (#149), above the global ones. */
+  provided?: Partial<Record<CuiColor, string>>,
 ): { name: string | null; text: string | null } {
   if (icon) return hasIcon(icon) ? { name: icon, text: null } : { name: null, text: icon };
 
-  const role = overrides[color] ?? COLOR_ICON_MAP[color] ?? "info";
+  const role = provided?.[color] ?? overrides[color] ?? COLOR_ICON_MAP[color] ?? "info";
   return hasIcon(role) ? { name: role, text: null } : { name: null, text: role };
 }

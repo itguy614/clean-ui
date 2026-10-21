@@ -473,7 +473,7 @@ const formAgree = ref(false);
   <CuiPopover title=&quot;Popover&quot;>…</CuiPopover>
   <CuiTooltip text=&quot;Pick one&quot;><CuiSelect … /></CuiTooltip>
   <CuiButton @click=&quot;inner = true&quot;>Open persistent modal</CuiButton>
-  <CuiModal v-model:visible=&quot;inner&quot; persistent allow-nested>…</CuiModal>
+  <CuiModal v-model:visible=&quot;inner&quot; persistent>…</CuiModal>
 </CuiModal>`">
           <CuiStack spacing="3">
             <p>
@@ -516,7 +516,7 @@ const formAgree = ref(false);
               </CuiFormField>
             </CuiStack>
           </CuiModal>
-          <CuiModal v-model:visible="stackedInner" size="sm" persistent allow-nested>
+          <CuiModal v-model:visible="stackedInner" size="sm" persistent>
             <CuiModalHeader title="Persistent" no-close-button />
             <CuiModalBody>
               <p>Escape does nothing here, and the modal beneath stays open too. Close with the button.</p>

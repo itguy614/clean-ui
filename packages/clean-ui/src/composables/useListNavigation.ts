@@ -46,6 +46,21 @@ function edge(items: ListItems, delta: 1 | -1): number {
 export const firstIndex = (items: ListItems) => edge(items, 1);
 export const lastIndex = (items: ListItems) => edge(items, -1);
 
+/**
+ * The enabled index nearest `i` — `i` itself, then the next, then the one before, widening —
+ * or -1 if every item is disabled. For an item that has just gone: what is now at its place.
+ */
+export function nearestIndex(items: ListItems, i: number): number {
+  const n = items.count;
+  if (n === 0) return -1;
+  const from = Math.min(Math.max(i, 0), n - 1);
+  for (let d = 0; d < n; d++) {
+    if (from + d < n && enabled(items, from + d)) return from + d;
+    if (d > 0 && from - d >= 0 && enabled(items, from - d)) return from - d;
+  }
+  return -1;
+}
+
 export function useListNavigation(options: ListNavigationOptions = {}) {
   const wrap = options.wrap ?? (() => false);
   const orientation = options.orientation ?? (() => "vertical");

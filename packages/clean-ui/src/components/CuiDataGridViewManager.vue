@@ -13,6 +13,9 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
 import CuiBadge from "./CuiBadge.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const props = defineProps<{
   gridId: string;
@@ -80,7 +83,7 @@ function onReset() {
     <CuiDropdownTrigger>
       <CuiButton variant="outline" size="sm">
         <template #prefix><CuiIcon name="bookmark-simple" size="0.875rem" /></template>
-        Views
+        {{ messages.dataGrid.views }}
         <CuiBadge
           v-if="grid.isDirty.value"
           dot
@@ -92,7 +95,7 @@ function onReset() {
       </CuiButton>
     </CuiDropdownTrigger>
     <CuiDropdownMenu min-width="14rem">
-      <CuiDropdownHeader>Saved Views</CuiDropdownHeader>
+      <CuiDropdownHeader>{{ messages.dataGrid.savedViews }}</CuiDropdownHeader>
 
       <template v-if="viewManager.views.value.length > 0">
         <CuiDropdownItem
@@ -121,7 +124,7 @@ function onReset() {
           </div>
         </CuiDropdownItem>
       </template>
-      <CuiDropdownItem v-else disabled>No saved views</CuiDropdownItem>
+      <CuiDropdownItem v-else disabled>{{ messages.dataGrid.noSavedViews }}</CuiDropdownItem>
 
       <CuiDropdownDivider />
 
@@ -131,18 +134,18 @@ function onReset() {
         @select="onSaveCurrent"
       >
         <CuiIcon name="floppy-disk" size="0.875rem" style="color: var(--cui-text-secondary);" />
-        Save current
+        {{ messages.dataGrid.saveCurrent }}
       </CuiDropdownItem>
 
       <CuiDropdownItem :close-on-select="false" @select="showSaveAs = !showSaveAs">
         <CuiIcon name="floppy-disk" size="0.875rem" style="color: var(--cui-text-secondary);" />
-        Save as...
+        {{ messages.dataGrid.saveAs }}
       </CuiDropdownItem>
 
       <div v-if="showSaveAs" style="padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1)); display: flex; gap: calc(0.375rem * var(--cui-density-scale, 1));">
         <CuiInput
           v-model="newViewName"
-          placeholder="View name"
+          :placeholder="messages.dataGrid.viewName"
           size="sm"
           style="flex: 1;"
           @keydown.enter="onSaveAs"
@@ -153,14 +156,14 @@ function onReset() {
           :disabled="!newViewName.trim() || saving"
           @click="onSaveAs"
         >
-          Save
+          {{ messages.dataGrid.save }}
         </CuiButton>
       </div>
 
       <CuiDropdownDivider />
       <CuiDropdownItem @select="onReset">
         <CuiIcon name="arrow-counter-clockwise" size="0.875rem" style="color: var(--cui-text-secondary);" />
-        Reset to defaults
+        {{ messages.dataGrid.resetViews }}
       </CuiDropdownItem>
     </CuiDropdownMenu>
   </CuiDropdown>

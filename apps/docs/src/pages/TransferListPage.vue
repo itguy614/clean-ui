@@ -69,35 +69,30 @@ const selectedSimple = ref<string[]>([]);
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        This component is pointer-only today, and the gaps below are structural rather
-        than cosmetic. Where the choice it expresses has to be reachable by keyboard —
-        permissions, visible columns, anything in a form people must be able to submit —
-        a <code>CuiCheckboxGroup</code> or a multi-select <code>CuiCombobox</code> will
-        serve the same purpose and is operable as it stands.
+        Each list is a <code>role="listbox"</code> with <code>aria-multiselectable</code>, named
+        by its panel title, and each item a <code>role="option"</code> whose
+        <code>aria-selected</code> says whether it is marked for transfer.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The two lists are plain <code>div</code>s: no <code>role="listbox"</code>, no
-          <code>role="option"</code>, no <code>tabindex</code> and no key handler. An item
-          can only be marked with a click, so the arrow buttons — which are disabled until
-          something is marked — can never be enabled from the keyboard.
+          Each list is one tab stop. Arrow Up and Down move between items, Home and End jump
+          to the ends, and disabled items are skipped.
         </li>
         <li>
-          The panel titles are <code>&lt;span&gt;</code>s beside the lists, not labels
-          attached to them, so neither list is named. The counts next to them are not
-          announced when they change.
+          Space marks or unmarks the focused item, which is what enables the arrow buttons.
+          Enter moves the focused item to the other list straight away, as a double-click does,
+          and focus moves on to the nearest item left in its list.
         </li>
         <li>
-          The six arrow buttons are icon-only with no <code>aria-label</code>. They are in
-          the tab order and announce as unnamed buttons.
+          The six arrow buttons are named — “Move selected to Selected”, “Move all to
+          Available”, “Move up”, … — from the panel titles, and the filter fields are named
+          “Filter Available” and “Filter Selected”. The names come from the message catalogue
+          (<code>transferList.*</code>).
         </li>
         <li>
-          Drag-and-drop has no keyboard equivalent. The up/down buttons are the reordering
-          path, and they carry the same naming gap as the rest.
-        </li>
-        <li>
-          The search fields on each panel are <code>CuiInput</code>s and are fully
-          keyboard-operable — filtering works, transferring does not.
+          Drag-and-drop has no keyboard equivalent of its own: mark an item, then use the arrow
+          buttons, or Move up / Move down to reorder the selected list. The counts beside the
+          titles are not announced when they change.
         </li>
       </ul>
     </template>

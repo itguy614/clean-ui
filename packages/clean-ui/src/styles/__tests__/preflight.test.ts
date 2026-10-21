@@ -1,28 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { readTag, splitSelectorList, walk } from "./css-helpers";
 
 const SRC = resolve(__dirname, "../..");
 const STYLES = resolve(__dirname, "..");
-
-/** Split a selector list on top-level commas only — the ones inside `:where(…)` don't separate selectors. */
-function splitSelectorList(selector: string): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let current = "";
-  for (const char of selector) {
-    if (char === "(" || char === "[") depth++;
-    else if (char === ")" || char === "]") depth--;
-    if (char === "," && depth === 0) {
-      parts.push(current.trim());
-      current = "";
-      continue;
-    }
-    current += char;
-  }
-  parts.push(current.trim());
-  return parts.filter(Boolean);
-}
 
 /** Every top-level element of a component's <template>, as raw start tags. */
 function templateRoots(source: string): string[] {
@@ -55,30 +37,6 @@ function templateRoots(source: string): string[] {
     i += tag.length;
   }
   return roots;
-}
-
-/** Read one whole start tag from `source` at `start`, ignoring `>` inside attribute values. */
-function readTag(source: string, start: number): string {
-  let quote: string | null = null;
-  for (let i = start; i < source.length; i++) {
-    const char = source[i];
-    if (quote) {
-      if (char === quote) quote = null;
-    } else if (char === '"' || char === "'") {
-      quote = char;
-    } else if (char === ">") {
-      return source.slice(start, i + 1);
-    }
-  }
-  return source.slice(start);
-}
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) return entry === "__tests__" ? [] : walk(path);
-    return [path];
-  });
 }
 
 /**
