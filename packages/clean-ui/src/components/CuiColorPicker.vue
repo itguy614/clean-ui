@@ -424,6 +424,10 @@ defineExpose({ el: rootEl, focus, blur });
     v-show="!hidden"
     :style="{
       width: cfg.width,
+      // One frame around the gradient and the controls together.
+      border: '1px solid var(--cui-border)',
+      borderRadius: '0.5rem',
+      background: 'var(--cui-surface-base, white)',
       opacity: disabled ? '0.5' : '1',
       pointerEvents: disabled ? 'none' : undefined,
       userSelect: 'none',
@@ -438,7 +442,8 @@ defineExpose({ el: rootEl, focus, blur });
         position: 'relative',
         width: '100%',
         height: cfg.gradientHeight,
-        borderRadius: '0.5rem 0.5rem 0 0',
+        // Inside the frame's 1px border, so its corners follow the frame's.
+        borderRadius: 'calc(0.5rem - 1px) calc(0.5rem - 1px) 0 0',
         cursor: 'crosshair',
         touchAction: 'none',
         overflow: 'hidden',
@@ -471,10 +476,6 @@ defineExpose({ el: rootEl, focus, blur });
     <div
       :style="{
         padding: 'calc(0.75rem * var(--cui-density-scale, 1))',
-        background: 'var(--cui-surface-base, white)',
-        border: '1px solid var(--cui-border)',
-        borderTop: swatchOnly ? undefined : 'none',
-        borderRadius: swatchOnly ? '0.5rem' : '0 0 0.5rem 0.5rem',
         display: 'flex',
         flexDirection: 'column',
         gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
