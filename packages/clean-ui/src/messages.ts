@@ -87,6 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  resizablePanels: {
+    /** The splitter's accessible name (#156). */
+    handle: string;
+  };
   colorPicker: {
     /** Names of the sliders (#177). The gradient is two: saturation across, brightness up. */
     saturation: string;
@@ -172,6 +176,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  resizablePanels: { handle: "Resize panels" },
   colorPicker: {
     saturation: "Saturation",
     brightness: "Brightness",

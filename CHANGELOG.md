@@ -23,14 +23,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiResizablePanels' handle is keyboard-operable and announced (#156): a focusable
+  `role="separator"` (the WAI-ARIA window splitter) named "Resize panels"
+  (`resizablePanels.handle` in the message catalogue), with `aria-valuenow` and
+  `aria-controls`. The arrows along the split move it in 2% steps (10% with Shift), Home and
+  End go to the extremes, and Enter collapses and restores when `collapseThreshold` is set.
+  The arrows and the drag now follow the page direction side by side. This adds a tab
+  stop, so a focus-order snapshot will change. A collapsed first panel is `inert`, so its content
+  leaves the tab order and the accessibility tree. A double-click reset is now clamped to
+  `minFirst`/`minSecond`, and emits `collapse` only when it reopens a collapsed panel.
 - CuiColorPicker can be operated from the keyboard (#177). The gradient is a Saturation /
   Brightness slider pair sharing one tab stop (Left/Right and Up/Down), hue and alpha are
   sliders, and the swatches are a radiogroup whose arrows move and select, each named by
   its hex value. Shift takes ten steps. Names and value texts are in the message catalogue
   (`colorPicker.*`). `disabled` now disables the text field and the format toggle, which
   stayed editable before, and takes the sliders and swatches out of the tab order.
-  `focus()` without a text field focuses the gradient instead of doing nothing. This adds
-  tab stops, so a focus-order snapshot will change.
+  `focus()` without a text field focuses the gradient instead of doing nothing. The swatches
+  wrap into rows, and Up/Down move a row. This adds tab stops, so a focus-order snapshot will
+  change.
+- CuiColorPicker's border frames the gradient as well as the controls below it; it had no
+  top edge (#177).
 - CuiColorPicker no longer re-reads its own emitted value under `v-model`. That value is
   quantized hex, and parsing it back rewound drags and keyboard steps, lost the hue
   whenever the colour reached grey or black, and turned 360° into 0°. A palette entry in
