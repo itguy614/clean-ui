@@ -67,8 +67,8 @@ const meta: ComponentMeta = {
         {
           name: "allowNested",
           type: "boolean",
-          default: "false",
-          description: "Permit opening on top of another overlay. Without it, opening this one dismisses the rest",
+          default: "—",
+          description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0",
         },
         ...backdropProps,
         hiddenProp,

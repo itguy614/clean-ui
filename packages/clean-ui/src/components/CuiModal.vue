@@ -2,6 +2,7 @@
 import { computed, useTemplateRef } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
+import { warnOnce } from "../utils/devWarn";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -30,7 +31,10 @@ export interface CuiModalProps extends HideableProps, TitleAsProps {
   persistent?: boolean;
   /** Hide the X close button */
   noCloseButton?: boolean;
-  /** Allow opening on top of another modal */
+  /**
+   * @deprecated Has no effect — overlays always stack, and Escape closes only the topmost
+   * (#285). Removed in 2.0.
+   */
   allowNested?: boolean;
   /** Backdrop opacity */
   backdropOpacity?: number;
@@ -51,13 +55,18 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   size: "md",
   persistent: false,
   noCloseButton: false,
-  allowNested: false,
+  // `undefined`, not Vue's boolean `false`, so the deprecation warning fires only when passed.
+  allowNested: undefined,
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
   rounded: "md",
   hidden: false,
 });
+
+if (props.allowNested !== undefined) {
+  warnOnce("[clean-ui] CuiModal: `allowNested` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.");
+}
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -70,7 +79,6 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
-  allowNested: () => props.allowNested,
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });

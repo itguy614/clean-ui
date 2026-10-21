@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in every trigger mode. The slot should hold exactly one element; anything else logs a
   warning.
 
+### Deprecated
+
+- `allowNested` on CuiModal and CuiSlideover (and `useOverlay`'s option) (#285). It never had
+  an effect: overlays always stack, and Escape closes only the topmost. It warns when passed
+  and goes in 2.0. `useOverlay`'s private one-at-a-time set, which it cleared, is gone; the
+  shared layer stack is the one record of open overlays.
+
 ### Fixed
 
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
