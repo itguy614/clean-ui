@@ -56,6 +56,13 @@ const meta: ComponentMeta = {
   ],
 
   events: [{ name: "dismiss", payload: "—", description: "Fires when the toast is dismissed" }],
+
+  tokens: [
+    { name: "--cui-toast-bg", default: "per variant: the role's -bg (subtle), surface-base (outline), solid", description: "Background" },
+    { name: "--cui-toast-color", default: "per variant", description: "Text colour" },
+    { name: "--cui-toast-border", default: "1px solid, the role's -border (none when solid)", description: "Border" },
+    { name: "--cui-toast-radius", default: "--cui-button-radius", description: "Corner radius" },
+  ],
 };
 
 export default meta;

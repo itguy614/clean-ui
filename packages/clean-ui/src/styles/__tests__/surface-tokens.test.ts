@@ -23,7 +23,7 @@ function walk(dir: string): string[] {
 /** File → how many raw surface steps it may hold, and why. A count, so a new one in an exempt file still fails. */
 const EXEMPT: Record<string, { count: number; why: string }> = {
   "clean-ui/src/components/CuiCodeBlock.vue": { count: 6, why: "a deliberately always-dark surface, the same in both modes" },
-  "clean-ui/src/components/CuiTooltip.vue": { count: 6, why: "an inverted surface (dark in light mode) that no neutral slot describes" },
+  "clean-ui/src/components/CuiTooltip.vue": { count: 3, why: "an inverted surface (dark in light mode) that no neutral slot describes" },
 };
 
 const PACKAGES = resolve(__dirname, "../../../..");
