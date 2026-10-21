@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import CuiModal from "../CuiModal.vue";
+import CuiSlideover from "../CuiSlideover.vue";
+import { __clearWarned } from "../../utils/devWarn";
 
 // The overlay close path defers update:visible behind a 200ms exit animation,
 // so the whole suite runs on fake timers for determinism.
@@ -140,11 +142,17 @@ describe("CuiModal", () => {
     second.unmount();
   });
 
-  it("warns that allowNested is deprecated, once", () => {
+  it.each([
+    ["CuiModal", CuiModal],
+    ["CuiSlideover", CuiSlideover],
+  ])("%s warns that allowNested is deprecated only when it is passed", (_name, component) => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mount(CuiModal, { props: { visible: false, allowNested: true } }).unmount();
-    mount(CuiModal, { props: { visible: false, allowNested: false } }).unmount();
-    expect(warn.mock.calls.filter((c) => String(c[0]).includes("allowNested"))).toHaveLength(1);
+    const allowNestedWarnings = () => warn.mock.calls.filter((c) => String(c[0]).includes("allowNested")).length;
+    __clearWarned();
+    mount(component as never, { props: { visible: false } }).unmount();
+    expect(allowNestedWarnings()).toBe(0); // absent: silent, not Vue's boolean `false`
+    mount(component as never, { props: { visible: false, allowNested: true } }).unmount();
+    expect(allowNestedWarnings()).toBe(1);
     warn.mockRestore();
   });
 

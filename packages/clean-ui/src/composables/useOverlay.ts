@@ -1,6 +1,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
+import { warnOnce } from "../utils/devWarn";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -15,6 +16,8 @@ export interface UseOverlayOptions {
    * Removed in 2.0.
    */
   allowNested?: () => boolean;
+  /** The component using it, for the deprecation warning — "CuiModal". Defaults to "useOverlay". */
+  name?: string;
   /** Exit animation duration in ms */
   animationDuration?: number;
   /** Called to emit update:open */
@@ -32,6 +35,12 @@ export function useOverlay(options: UseOverlayOptions) {
     onUpdateOpen,
     onClose,
   } = options;
+
+  if (options.allowNested !== undefined) {
+    warnOnce(
+      `[clean-ui] ${options.name ?? "useOverlay"}: \`allowNested\` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.`,
+    );
+  }
 
   const isVisible = ref(false);
   const isAnimating = ref(false);

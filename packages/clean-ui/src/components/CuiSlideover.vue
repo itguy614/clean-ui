@@ -2,7 +2,6 @@
 import { computed, useTemplateRef } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
-import { warnOnce } from "../utils/devWarn";
 import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -57,10 +56,6 @@ const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   hidden: false,
 });
 
-if (props.allowNested !== undefined) {
-  warnOnce("[clean-ui] CuiSlideover: `allowNested` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.");
-}
-
 const emit = defineEmits<{
   "update:visible": [value: boolean];
   close: [];
@@ -72,6 +67,9 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
+  // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
+  allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
+  name: "CuiSlideover",
   animationDuration: 250,
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),

@@ -67,7 +67,6 @@ const meta: ComponentMeta = {
         {
           name: "allowNested",
           type: "boolean",
-          default: "—",
           description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0",
         },
         ...backdropProps,
