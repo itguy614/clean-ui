@@ -9,6 +9,7 @@ import CuiTableRow from "../../components/CuiTableRow.vue";
 import CuiTableCell from "../../components/CuiTableCell.vue";
 import CuiBreadcrumb from "../../components/CuiBreadcrumb.vue";
 import CuiBreadcrumbItem from "../../components/CuiBreadcrumbItem.vue";
+import CuiStepper from "../../components/CuiStepper.vue";
 
 /**
  * #147 — prose rules inside `.cui-typography` repainted components: a table's cells took
@@ -58,6 +59,19 @@ describe("prose rules don't reach into components (real browser)", () => {
       };
     };
     expect(style(inScope(true, crumbs))).toEqual(style(inScope(false, crumbs)));
+  });
+
+  // CuiStepper carried its own list reset until this exclusion landed (#154).
+  it("leaves a stepper's list unnumbered and flush", () => {
+    const stepper = () => h(CuiStepper, { steps: [{ label: "One" }, { label: "Two" }], modelValue: 0 });
+    const style = (host: HTMLElement) => {
+      const ol = getComputedStyle(host.querySelector("ol")!);
+      const li = getComputedStyle(host.querySelector("li")!);
+      return { listStyle: ol.listStyleType, padding: ol.paddingLeft, margin: ol.marginTop, li: li.marginBottom };
+    };
+    const prose = style(inScope(true, stepper));
+    expect(prose).toEqual(style(inScope(false, stepper)));
+    expect(prose).toEqual({ listStyle: "none", padding: "0px", margin: "0px", li: "0px" });
   });
 
   it("still styles prose itself, and the typography layer's own helpers", () => {

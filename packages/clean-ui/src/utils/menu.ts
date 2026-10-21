@@ -1,3 +1,4 @@
+import { restoreKeyOf, returnFocus } from "./focusRestore";
 import { useListNavigation } from "../composables/useListNavigation";
 
 /**
@@ -69,7 +70,11 @@ export function inMenuPanels(ownerId: string | undefined, node: Node | null | un
  * click outside has already moved it where the user wanted, and that stays.
  */
 export function restoreMenuFocus(target: Element | null | undefined, ownerId: string | undefined) {
-  if (!(target instanceof HTMLElement) || !target.isConnected) return;
-  if (inMenuPanels(ownerId, document.activeElement)) target.focus({ preventScroll: true });
+  if (!(target instanceof HTMLElement) || !inMenuPanels(ownerId, document.activeElement)) return;
+  if (target.isConnected) target.focus({ preventScroll: true });
+  // Gone — a virtualised grid row's trigger, scrolled out while the menu was open: ask its
+  // owner for it back by key, as an overlay does (utils/focusRestore). A detached subtree
+  // still knows its ancestors, so the key is still there to read.
+  else returnFocus(null, restoreKeyOf(target));
 }
 

@@ -255,8 +255,8 @@ const triggerEl = useTemplateRef<HTMLElement>("triggerEl");
  * The trigger was a bare `<div>` — no tabindex, no role — so the time picker
  * could not be reached by keyboard at all, and there was nothing for a
  * `<label for>` to resolve to either (#74, and the half of #103 this closes).
- * Modelled on CuiSelect, which already gets this right: Enter, Space or Down
- * opens, Escape closes and hands focus back.
+ * Enter, Space or Down opens. Escape is the panel's CuiPopover's — a layer on the shared
+ * stack, which closes it, and the close watcher hands focus back (#286).
  */
 function onTriggerKeydown(e: KeyboardEvent) {
   if (props.disabled) return;
@@ -264,12 +264,8 @@ function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
     e.preventDefault();
     popoverVisible.value = true;
-    return;
   }
-  if (e.key === "Escape" && popoverVisible.value) {
-    e.preventDefault();
-    popoverVisible.value = false;
-  }
+  // Escape is the popover's: it is a layer on the shared stack, which closes it (#286).
 }
 
 function focus(opts?: FocusOptions) {
@@ -344,7 +340,6 @@ defineExpose({ el: rootEl, focus, blur });
         <div
           ref="panelEl"
           class="cui-time-picker__panel"
-          @keydown.escape.prevent.stop="popoverVisible = false"
           @keydown="onPanelKeydown"
           :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
         >
