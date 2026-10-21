@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 import {
+  CuiAlert,
   CuiStack,
   CuiCard,
   CuiCardBody,
@@ -109,9 +110,14 @@ const styles = [
         <code class="cui-code">useScrollShadows()</code> tracks whether a scroll container has more
         content in each direction. The three exported style objects draw an edge fade for each.
       </p>
+      <CuiAlert color="warning" title="Deprecated">
+        Use <RouterLink to="/components/scroll-area">CuiScrollArea or useScrollArea</RouterLink>
+        instead. They also follow content changes, handle right-to-left scrolling and supply the
+        region semantics (#143). <code class="cui-code">useScrollShadows</code> stays exported for
+        existing code until 2.0.
+      </CuiAlert>
       <p>
-        <code class="cui-code">CuiTable</code>, <code class="cui-code">CuiModalBody</code> and the
-        markdown editor's toolbar all use it to show that there is more to scroll to. Each fade fades
+        Each fade fades
         to <code class="cui-code">var(--cui-surface-base)</code>, so it follows themes and dark mode.
         It ignores pointer events, so it never blocks a click on the content under it.
       </p>
@@ -163,7 +169,7 @@ const styles = [
           <strong>Try:</strong> scroll the strip sideways, or narrow the window until it overflows.
           There are only three exported styles, and none of them is a left fade. Spread
           <code class="cui-code">scrollShadowRightStyle</code> and flip it, as the markdown editor's
-          toolbar does. Notice also that a window resize doesn't re-measure: the right fade appears
+          toolbar did before it moved to CuiScrollArea. Notice also that a window resize doesn't re-measure: the right fade appears
           after your next scroll, not when the window narrows.
         </p>
       </CuiCardBody>
