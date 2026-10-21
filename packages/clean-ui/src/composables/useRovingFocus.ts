@@ -1,5 +1,5 @@
-import { onMounted, onUpdated, ref, toValue, type MaybeRefOrGetter, type Ref } from "vue";
-import { firstIndex, useListNavigation, type ListItems, type ListOrientation } from "./useListNavigation";
+import { nextTick, onMounted, onUpdated, ref, toValue, type MaybeRefOrGetter, type Ref } from "vue";
+import { firstIndex, nearestIndex, useListNavigation, type ListItems, type ListOrientation } from "./useListNavigation";
 
 export type RovingOrientation = ListOrientation;
 
@@ -67,10 +67,11 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
 
   // The stop when `activeIndex` can't hold it: its item is gone or disabled. Kept apart
   // from `activeIndex`, which may be the consumer's selection and isn't ours to rewrite.
-  const fallback = ref(-1);
+  // null: no override, the stop is activeIndex. -1: no item can hold it (all disabled).
+  const fallback = ref<number | null>(null);
 
   function tabIndex(i: number): 0 | -1 {
-    return i === (fallback.value === -1 ? activeIndex.value : fallback.value) ? 0 : -1;
+    return i === (fallback.value ?? activeIndex.value) ? 0 : -1;
   }
 
   function focusItem(i: number, els = query()) {
@@ -93,6 +94,19 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
     if (to !== from && to !== -1) focusItem(to, els);
   }
 
+  /**
+   * Focus the enabled item nearest `i`, after the next render: for when the focused item has
+   * just been removed (moved to another list, a tab closed), so focus lands on what took its
+   * place rather than on <body>.
+   */
+  function focusNearest(i: number) {
+    nextTick(() => {
+      const els = query();
+      const to = nearestIndex(asItems(els), i);
+      if (to !== -1) focusItem(to, els);
+    });
+  }
+
   // Focus landing on an item, or inside one, moves the stop to that item.
   function onFocusin(e: FocusEvent) {
     const target = e.target as Node;
@@ -106,10 +120,10 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
   function settle() {
     const els = query();
     const active = els[activeIndex.value];
-    fallback.value = active && !active.matches(DISABLED) ? -1 : firstIndex(asItems(els));
+    fallback.value = active && !active.matches(DISABLED) ? null : firstIndex(asItems(els));
   }
   onMounted(settle);
   onUpdated(settle);
 
-  return { activeIndex, tabIndex, onKeydown, onFocusin, focusItem };
+  return { activeIndex, tabIndex, onKeydown, onFocusin, focusItem, focusNearest };
 }

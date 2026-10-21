@@ -53,6 +53,19 @@ function onReject(payload: { file: File; reason: string }) {
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
+          The input is visually hidden but stays in the tab order, so Tab reaches it and Enter
+          or Space opens the file dialog. The drop zone is a <code>&lt;label&gt;</code> for it
+          — a click opens the dialog natively, its text names the input, and it draws the
+          focus ring while the input has focus. The <code>label</code> prop is a second
+          <code>&lt;label for&gt;</code> the same input, and the accept and size hint is
+          linked through <code>aria-describedby</code>. <code>focus()</code> focuses the input.
+        </li>
+        <li>
+          Each file's remove button is named after the file — “Remove report.pdf”
+          (<code>fileUpload.removeFile</code> in the message catalogue).
+          <code>disabled</code> disables the input and every button in the list.
+        </li>
+        <li>
           Validation runs in JavaScript as well as through <code>accept</code>, because a
           drop bypasses the file dialog's filter entirely. Every rejection emits
           <code>reject</code> with a human-readable reason.
@@ -68,17 +81,6 @@ function onReject(payload: { file: File; reason: string }) {
           attachment tray a user works through — put your own count somewhere polite.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The drop zone carries no <code>tabindex</code> and no
-        key handler, and the file input behind it is <code>display: none</code>, which
-        takes it out of the tab order too — so today the component cannot be operated from
-        the keyboard. Until that is fixed, pair it with your own <code>CuiButton</code>
-        that opens the same input, and treat the drop zone as the pointer-only convenience
-        it currently is. The per-file remove button is an icon with no
-        <code>aria-label</code>, so it announces as an unnamed button, and the
-        <code>label</code> prop renders plain text with no <code>for</code> attribute —
-        use <code>CuiFormField</code> for a label that actually associates.
-      </p>
     </template>
 
     <template #examples>
