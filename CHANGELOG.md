@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiCheckbox, CuiRadio and CuiToggle no longer read their description as part of their
+  name (#183): with a `description`, the control is named by its label and described by
+  the description. `useFieldDescribedBy` takes an optional `descriptionId`, ordering the
+  ids description, then the caller's, then the error.
+
 - Clicking a CuiFormField label now does what a native label would when its control isn't
   natively labelable — CuiCheckbox, CuiRadio, CuiToggle, CuiSelect, CuiTimePicker and the
   groups, where the label's `for` did nothing (#181). It focuses the control (a group's tab
