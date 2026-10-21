@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiPagination's per-page selector is named "Results per page", and its landmark, previous,
+  next and page-button names come from the message catalogue (`pagination.label`,
+  `perPageLabel`, `previous`, `next`, `page(n)`) instead of hard-coded English. The
+  ellipsis is hidden from screen readers (#155). The new keys are required members of `CuiCoreMessages`: a
+  full catalogue typed with it needs them added (a partial one passed to
+  `CuiConfigProvider` doesn't).
 - CuiStepper's steps can be operated from the keyboard (#154). The steps are an ordered
   list inside a `<nav>`, so their count and position are announced; a step you can go to
   is a `<button>`, and the buttons share one tab stop (`useRovingFocus`) on the current

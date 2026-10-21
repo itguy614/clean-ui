@@ -83,6 +83,18 @@ export interface CuiCoreMessages {
   pagination: {
     summary: (range: PaginationRange) => string;
     perPage: (count: number) => string;
+    /** Name of the <nav> landmark around the page buttons. */
+    label: string;
+    /** Name of the per-page selector. */
+    perPageLabel: string;
+    /** Names of the icon-only previous / next buttons. */
+    previous: string;
+    next: string;
+    /**
+     * Name of a numbered page button. It replaces the visible digit as the button's name, so
+     * it must contain that number as shown, or voice control can't reach it ("click 3").
+     */
+    page: (page: number) => string;
   };
   breadcrumb: { label: string };
   stepper: {
@@ -210,6 +222,11 @@ export const defaultMessages: CuiCoreMessages = {
   pagination: {
     summary: ({ from, to, total }) => `Showing ${from} to ${to} of ${total} results`,
     perPage: (count) => `${count} / page`,
+    label: "Pagination",
+    perPageLabel: "Results per page",
+    previous: "Previous page",
+    next: "Next page",
+    page: (page) => `Page ${page}`,
   },
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress", complete: ", completed", error: ", error" },
