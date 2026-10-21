@@ -179,7 +179,9 @@ function applyPercent(percent: number, total: number) {
 function onPointerDown(e: PointerEvent) {
   if (!containerRef.value) return;
   e.preventDefault();
-  const along = (ev: PointerEvent) => (isHorizontal.value ? ev.clientX : ev.clientY);
+  // The axis, too, is the one the drag began on.
+  const horizontal = isHorizontal.value;
+  const along = (ev: PointerEvent) => (horizontal ? ev.clientX : ev.clientY);
   const startPos = along(e);
   // From the edge when collapsed: the size it had is hidden, and the panel follows the pointer
   // out from where it is drawn (the stored size outlives a collapse from the keyboard).
@@ -189,9 +191,7 @@ function onPointerDown(e: PointerEvent) {
   const total = totalSize();
   const sign = rtl() ? -1 : 1;
   if (!total) return;
-  drag.start(e, {
-    move: (ev) => applyPercent(startPercent + (((along(ev) - startPos) * sign) / total) * 100, total),
-  });
+  drag.start(e, (ev) => applyPercent(startPercent + (((along(ev) - startPos) * sign) / total) * 100, total));
 }
 
 function onDoubleClick() {

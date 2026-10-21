@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
+import { nextTick } from "vue";
 import CuiColorPicker from "../CuiColorPicker.vue";
-import { recordDocumentListeners } from "../../__tests__/pointer";
+import { pointer, recordDocumentListeners } from "../../__tests__/pointer";
 
 /**
  * #246 — each drag surface adds pointermove/pointerup to `document` on pointerdown and
@@ -31,6 +32,34 @@ describe("CuiColorPicker drag listeners", () => {
 
     wrapper.unmount();
     expect(unremoved()).toEqual([]);
+  });
+
+  // Every surface goes through the shared drag, so each ends on a cancel and follows only
+  // its own pointer; what the drag itself does is usePointerDrag's tests.
+  it.each(surfaces)("a pointercancel ends a drag on the %s, and other pointers are ignored", async (surface) => {
+    const wrapper = mountPicker();
+    const unremoved = recordDocumentListeners();
+    await wrapper.get(`.cui-color-picker__${surface}`).trigger("pointerdown", { clientX: 5, clientY: 5, pointerId: 1 });
+    const before = wrapper.emitted("update:modelValue")?.length ?? 0;
+    document.dispatchEvent(pointer("pointermove", 2, { clientX: 50, clientY: 50 }));
+    document.dispatchEvent(pointer("pointercancel", 2));
+    expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
+
+    document.dispatchEvent(pointer("pointercancel", 1));
+    await nextTick();
+    expect(unremoved()).toEqual([]);
+    document.dispatchEvent(pointer("pointermove", 1, { clientX: 50, clientY: 50 }));
+    expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
+    wrapper.unmount();
+  });
+
+  it("a right-click starts no drag and changes nothing", async () => {
+    const wrapper = mountPicker();
+    const unremoved = recordDocumentListeners();
+    await wrapper.get(".cui-color-picker__hue").trigger("pointerdown", { clientX: 5, clientY: 5, button: 2 });
+    expect(wrapper.emitted("update:modelValue")).toBeUndefined();
+    expect(unremoved()).toEqual([]);
+    wrapper.unmount();
   });
 
   it("disabling mid-drag ends the drag", async () => {

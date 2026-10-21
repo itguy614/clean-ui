@@ -12,12 +12,11 @@ function setup() {
   const scope = effectScope();
   const drag = scope.run(() => usePointerDrag())!;
   const move = vi.fn();
-  const end = vi.fn();
   const start = async (id = 1) => {
-    drag.start(pointer("pointerdown", id), { move, end });
+    drag.start(pointer("pointerdown", id), move);
     await nextTick();
   };
-  return { scope, drag, move, end, start };
+  return { scope, drag, move, start };
 }
 
 describe("usePointerDrag", () => {
@@ -41,7 +40,6 @@ describe("usePointerDrag", () => {
     expect(t.move).toHaveBeenCalledTimes(1);
 
     document.dispatchEvent(pointer(type, 1));
-    expect(t.end).toHaveBeenCalledTimes(1);
     expect(t.drag.active.value).toBe(false);
     // Before the listeners come off, a move already reaches no handler.
     document.dispatchEvent(pointer("pointermove", 1, { clientX: 40 }));
@@ -65,14 +63,27 @@ describe("usePointerDrag", () => {
     t.scope.stop();
   });
 
-  it("end() ends the drag, once", async () => {
+  it("end() ends the drag", async () => {
     const unremoved = recordDocumentListeners();
     const t = setup();
     await t.start();
     t.drag.end();
-    t.drag.end();
-    expect(t.end).toHaveBeenCalledTimes(1);
+    expect(t.drag.active.value).toBe(false);
+    document.dispatchEvent(pointer("pointermove", 1));
+    expect(t.move).not.toHaveBeenCalled();
     await nextTick();
+    expect(unremoved()).toEqual([]);
+    t.scope.stop();
+  });
+
+  // A right-click opens the context menu, which can swallow the release; a middle-click
+  // starts autoscroll.
+  it.each([1, 2])("does not start on a press of button %i", async (button) => {
+    const unremoved = recordDocumentListeners();
+    const t = setup();
+    expect(t.drag.start(pointer("pointerdown", 1, { button }), t.move)).toBe(false);
+    await nextTick();
+    expect(t.drag.active.value).toBe(false);
     expect(unremoved()).toEqual([]);
     t.scope.stop();
   });
@@ -81,8 +92,7 @@ describe("usePointerDrag", () => {
     const t = setup();
     await t.start(1);
     const nextMove = vi.fn();
-    t.drag.start(pointer("pointerdown", 2), { move: nextMove });
-    expect(t.end).toHaveBeenCalledTimes(1);
+    t.drag.start(pointer("pointerdown", 2), nextMove);
     document.dispatchEvent(pointer("pointermove", 1));
     document.dispatchEvent(pointer("pointermove", 2));
     expect(t.move).not.toHaveBeenCalled();
@@ -95,7 +105,7 @@ describe("usePointerDrag", () => {
     const t = setup();
     await t.start();
     t.scope.stop();
-    expect(t.end).toHaveBeenCalledTimes(1);
+    expect(t.drag.active.value).toBe(false);
     expect(unremoved()).toEqual([]);
   });
 });

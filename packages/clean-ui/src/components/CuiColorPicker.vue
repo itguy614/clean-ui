@@ -166,9 +166,7 @@ const alphaSliderRef = useTemplateRef<HTMLElement>("alphaSliderRef");
 function pressFor(slider: Readonly<Ref<HTMLElement | null>>, update: (e: PointerEvent) => void) {
   return (e: PointerEvent) => {
     slider.value?.focus({ preventScroll: true });
-    if (props.disabled) return;
-    update(e);
-    drag.start(e, { move: update });
+    if (!props.disabled && drag.start(e, update)) update(e);
   };
 }
 
