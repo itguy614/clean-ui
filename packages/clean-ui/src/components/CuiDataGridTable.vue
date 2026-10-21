@@ -129,7 +129,7 @@ function getSortOpacity(key: string): string {
 const SELECT_COLUMN_WIDTH = "3rem";
 const AUX_CELL_STYLE = { paddingInline: 0 };
 
-const PINNED_BG = "var(--cui-table-head-bg, var(--color-surface-50))";
+const PINNED_BG = "var(--cui-table-head-bg)";
 const PINNED_EDGE_SHADOW = "2px 0 4px -1px rgba(0,0,0,0.08)";
 
 const ROW_ACTIONS_COLUMN_WIDTH = SELECT_COLUMN_WIDTH;

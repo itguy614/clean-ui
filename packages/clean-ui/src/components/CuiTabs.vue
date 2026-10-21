@@ -408,13 +408,9 @@ const messages = useMessages();
 /* Segmented variant — track lives on the outer; the 0.25rem inset is split
    across both so the active pill's drop shadow isn't clipped by the scroller. */
 .cui-tabs--segmented .cui-tabs__bar-outer {
-  background: var(--color-surface-100);
+  background: var(--cui-surface-bg);
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.125rem * var(--cui-density-scale, 1));
-}
-
-:where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar-outer {
-  background: var(--color-surface-800);
 }
 
 .cui-tabs--segmented .cui-tabs__bar {
@@ -496,11 +492,7 @@ const messages = useMessages();
 
 .cui-tabs__tab-close:hover {
   color: var(--cui-text-body);
-  background: var(--color-surface-200);
-}
-
-:where(.dark, .dark *) .cui-tabs__tab-close:hover {
-  background: var(--color-surface-700);
+  background: var(--cui-surface-dark-bg);
 }
 
 .cui-tabs__tab-content {

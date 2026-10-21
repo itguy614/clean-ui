@@ -287,12 +287,11 @@ const perPageSelectOptions = computed(() =>
 }
 
 .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
-  background: var(--color-surface-100);
+  background: var(--cui-surface-bg);
   border-color: var(--color-surface-300);
 }
 
 :where(.dark, .dark *) .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
-  background: var(--color-surface-800);
   border-color: var(--color-surface-600);
 }
 
@@ -314,11 +313,7 @@ const perPageSelectOptions = computed(() =>
 
 .cui-pagination__btn--nav:hover:not(:disabled) {
   color: var(--cui-text-body);
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-pagination__btn--nav:hover:not(:disabled) {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-pagination__btn--disabled {

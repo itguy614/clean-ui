@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Twelve components draw their neutral hover, active and track fills from the semantic slots
+  (`--cui-surface-bg`, `--cui-surface-dark-bg`, `--cui-table-head-bg`) instead of raw surface
+  steps restated for dark mode (#210): Accordion, the four dropdown items, Fieldset,
+  Pagination, Tabs, Select, Input, Table and DataGrid, and the markdown editor's
+  autocomplete highlight. Same colours in both modes; a consumer's
+  slot override now reaches them, and their `.dark` twins are gone.
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
   corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
   selected row instead of coloured bold text. It is the same shared listbox panel, and takes
