@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CuiTooltip, CuiAlert, CuiToast and CuiBackdrop take their paint from tokens, so a plain
+  rule restyles them without `!important` (#211). Their backgrounds, colours and borders
+  were bare inline declarations. New tokens: `--cui-tooltip-bg` (the arrow follows it),
+  `--cui-tooltip-color`, `-px`, `-py`, `-radius` and `-font-size`; `--cui-alert-bg`,
+  `-color`, `-border` and `-radius`; the same four for `--cui-toast-*`; and
+  `--cui-backdrop-bg`. A tooltip teleports to `<body>`, so set its tokens on `:root`.
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
@@ -40,10 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- CuiTooltip's paint and spacing are themeable (#211): `--cui-tooltip-bg` (the arrow follows
-  it), `--cui-tooltip-color`, `--cui-tooltip-px` / `-py`, `--cui-tooltip-radius` and
-  `--cui-tooltip-font-size`, and a plain `.cui-tooltip` rule now wins without `!important`.
-  A coloured tooltip's colours were bare inline declarations.
 - `useFieldDescribedBy` (and its `DescribableProps` type) is now a public export of
   clean-ui. It wires a control's own error message into `aria-describedby` after any
   caller descriptions. clean-ui-editor now requires clean-ui 1.3.2 or later (#221).

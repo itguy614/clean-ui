@@ -277,7 +277,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   --_tooltip-color: var(--color-surface-100);
 }
 
-:where(.dark, .dark *) .cui-tooltip--default {
+:where(.dark) .cui-tooltip--default {
   --_tooltip-bg: var(--color-surface-700);
 }
 

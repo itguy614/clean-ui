@@ -96,10 +96,15 @@ describe("converted components emit themeable properties as tokens (#114)", () =
     it(`${file} writes no bare themeable declaration in its style binding`, () => {
       const script = styleSource(readFileSync(resolve(COMPONENTS, file), "utf-8"));
 
-      const offenders = THEMEABLE.filter((prop) =>
-        // A bare object key — `background: "…"` — as opposed to the quoted custom-property
-        // key the pattern requires, `"--_button-bg": "…"`.
-        new RegExp(`(^|[{,\\s])${prop}\\s*:\\s*[\`"']`, "m").test(script),
+      const offenders = THEMEABLE.filter(
+        (prop) =>
+          // A bare object key — `background: "…"` — as opposed to the quoted custom-property
+          // key the pattern requires, `"--_button-bg": "…"`.
+          new RegExp(`(^|[{,\\s])${prop}\\s*:\\s*[\`"']`, "m").test(script) ||
+          // Or an assignment onto a style object, `base.background = …` (#211: CuiAlert, CuiToast
+          // and CuiBackdrop built their paint that way, and passed). A direct DOM write —
+          // `el.style.height = …`, CuiTextarea's autosize — is behaviour, not a binding.
+          new RegExp(`(?<!\\.style)\\.${prop}\\s*=[^=]`, "m").test(script),
       );
 
       expect(

@@ -105,30 +105,31 @@ onUnmounted(() => {
 const toastStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
+  // Paint as private tokens, read back through the stylesheet's :where() (#211).
   const base: Record<string, string> = {
     "--_toast-focus-ring": `var(--cui-${c}-focus-ring)`,
   };
 
   if (v === "solid") {
-    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
-    base.color = `var(--cui-${c}-text)`;
+    base["--_toast-bg"] = `var(--cui-${c}-solid, var(--cui-${c}))`;
+    base["--_toast-color"] = `var(--cui-${c}-text)`;
     base["--_toast-icon-color"] = `var(--cui-${c}-text)`;
     base["--_toast-dismiss-color"] = `var(--cui-${c}-text)`;
     base["--_toast-progress-bg"] = "rgb(255 255 255 / 0.2)";
     base["--_toast-progress-bar"] = "rgb(255 255 255 / 0.6)";
   } else if (v === "outline") {
-    base.background = "var(--cui-surface-base)";
-    base.color = `var(--cui-${c})`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_toast-bg"] = "var(--cui-surface-base)";
+    base["--_toast-color"] = `var(--cui-${c})`;
+    base["--_toast-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_toast-icon-color"] = `var(--cui-${c})`;
     base["--_toast-dismiss-color"] = "var(--cui-text-secondary)";
     base["--_toast-progress-bg"] = `var(--cui-${c}-bg)`;
     base["--_toast-progress-bar"] = `var(--cui-${c})`;
   } else {
     // subtle (default)
-    base.background = `var(--cui-${c}-bg)`;
-    base.color = "var(--cui-text-body)";
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_toast-bg"] = `var(--cui-${c}-bg)`;
+    base["--_toast-color"] = "var(--cui-text-body)";
+    base["--_toast-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_toast-icon-color"] = `var(--cui-${c})`;
     base["--_toast-dismiss-color"] = "var(--cui-text-secondary)";
     base["--_toast-progress-bg"] = `var(--cui-${c}-border)`;
@@ -200,13 +201,20 @@ const messages = useMessages();
 </template>
 
 <style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-toast) {
+  background: var(--cui-toast-bg, var(--_toast-bg));
+  color: var(--cui-toast-color, var(--_toast-color));
+  border: var(--cui-toast-border, var(--_toast-border, none));
+  border-radius: var(--cui-toast-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+}
+
 .cui-toast {
   position: relative;
   display: flex;
   align-items: flex-start;
   gap: calc(0.75rem * var(--cui-density-scale, 1));
   padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   min-width: 280px;
   max-width: 420px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);

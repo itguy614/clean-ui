@@ -48,8 +48,19 @@ describe("CuiTooltip themeable properties (real browser)", () => {
   it("paints the default tooltip as the inverted surface, and the arrow with it", async () => {
     const tip = await tooltip();
     expect(getComputedStyle(tip).backgroundColor).toBe(probe("var(--color-surface-900)"));
-    const arrow = tip.querySelector(".cui-tooltip__arrow");
-    if (arrow) expect(getComputedStyle(arrow).backgroundColor).toBe(probe("var(--color-surface-900)"));
+    const arrow = tip.querySelector(".cui-tooltip__arrow")!;
+    expect(arrow).not.toBeNull();
+    expect(getComputedStyle(arrow).backgroundColor).toBe(probe("var(--color-surface-900)"));
+  });
+
+  it("uses the dark inverted surface in dark mode", async () => {
+    document.documentElement.classList.add("dark");
+    try {
+      const tip = await tooltip();
+      expect(getComputedStyle(tip).backgroundColor).toBe(probe("var(--color-surface-700)"));
+    } finally {
+      document.documentElement.classList.remove("dark");
+    }
   });
 
   it("paints a coloured tooltip in its role", async () => {
@@ -70,5 +81,7 @@ describe("CuiTooltip themeable properties (real browser)", () => {
     document.documentElement.style.setProperty("--cui-tooltip-bg", "rgb(4, 5, 6)");
     const tip = await tooltip();
     expect(getComputedStyle(tip).backgroundColor).toBe("rgb(4, 5, 6)");
+    // The arrow follows the tooltip's background, override included.
+    expect(getComputedStyle(tip.querySelector(".cui-tooltip__arrow")!).backgroundColor).toBe("rgb(4, 5, 6)");
   });
 });

@@ -82,28 +82,28 @@ const alertStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const base: Record<string, string> = {
-    borderRadius: RADIUS_SCALE[props.rounded],
-    "--_alert-color": `var(--cui-${c})`,
+    // Paint as private tokens, read back through the stylesheet's :where() (#211).
+    "--_alert-radius": RADIUS_SCALE[props.rounded],
     "--_alert-focus-ring": `var(--cui-${c}-focus-ring)`,
   };
 
   if (v === "solid") {
-    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
-    base.color = `var(--cui-${c}-text)`;
-    base.border = "1px solid transparent";
+    base["--_alert-bg"] = `var(--cui-${c}-solid, var(--cui-${c}))`;
+    base["--_alert-color"] = `var(--cui-${c}-text)`;
+    base["--_alert-border"] = "1px solid transparent";
     base["--_alert-icon-color"] = `var(--cui-${c}-text)`;
     base["--_alert-dismiss-color"] = `var(--cui-${c}-text)`;
   } else if (v === "outline") {
-    base.background = "transparent";
-    base.color = `var(--cui-${c})`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_alert-bg"] = "transparent";
+    base["--_alert-color"] = `var(--cui-${c})`;
+    base["--_alert-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_alert-icon-color"] = `var(--cui-${c})`;
     base["--_alert-dismiss-color"] = `var(--cui-${c})`;
   } else {
     // subtle
-    base.background = `var(--cui-${c}-bg)`;
-    base.color = `var(--cui-text-body)`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_alert-bg"] = `var(--cui-${c}-bg)`;
+    base["--_alert-color"] = `var(--cui-text-body)`;
+    base["--_alert-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_alert-icon-color"] = `var(--cui-${c})`;
     base["--_alert-dismiss-color"] = `var(--cui-text-secondary)`;
   }
@@ -163,6 +163,14 @@ const messages = useMessages();
 </template>
 
 <style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-alert) {
+  background: var(--cui-alert-bg, var(--_alert-bg));
+  color: var(--cui-alert-color, var(--_alert-color));
+  border: var(--cui-alert-border, var(--_alert-border));
+  border-radius: var(--cui-alert-radius, var(--_alert-radius));
+}
+
 .cui-alert {
   display: flex;
   align-items: flex-start;
