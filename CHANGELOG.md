@@ -74,6 +74,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A theme class on part of a page now re-themes it (#329). `<div class="cui-theme-forest">`
+  changed only the colour scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,
+  `--cui-text-*`, …) was resolved once on `:root`, so components inside kept the page's theme.
+  The slots are now declared on every theme scope too, in light and dark mode. Only the slots that read the scale are re-declared, so a container's own value for the
+  others (`--cui-error-focus-ring`, …) still reaches inside. A slot override on `:root` (or any
+  ancestor) for one that does read it — `--cui-primary-hover`, say — now stops at a scoped
+  theme, which applies its own; to change it inside one, override it on the themed element.
 - Components inside a `.cui-typography` scope are no longer restyled by its prose rules
   (#147). Every prose element rule (paragraphs, lists, code, `pre`, `kbd`, blockquotes, `hr`,
   tables, `mark`, `small`) now skips elements carrying a component's `cui-*` class, as headings
