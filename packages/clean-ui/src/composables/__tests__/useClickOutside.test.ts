@@ -59,9 +59,7 @@ describe("useClickOutside", () => {
 // this keeps it that way for every window or document listener a component adds.
 describe("global listeners", () => {
   // Reasons, per preflight.test.ts. A stale exemption fails too.
-  const EXEMPT: Record<string, string> = {
-    "CuiColorPicker.vue": "one closure per drag, filtered by pointerId; moves to usePointerDrag in #275",
-  };
+  const EXEMPT: Record<string, string> = {};
 
   it("no component adds its own window or document listener", () => {
     const dir = join(dirname(fileURLToPath(import.meta.url)), "../../components");
