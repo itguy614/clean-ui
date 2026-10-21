@@ -2,8 +2,11 @@
 import { useDataGridState } from "../composables/useDataGrid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
 
 const grid = useDataGridState();
+// Icon-only, so named, with the active view pressed (#161).
+const messages = useMessages();
 </script>
 
 <template>
@@ -11,6 +14,8 @@ const grid = useDataGridState();
     <CuiButton
       variant="ghost"
       size="xs"
+      :aria-label="messages.dataGrid.tableView"
+      :aria-pressed="grid.viewMode.value === 'grid'"
       :style="{ background: grid.viewMode.value === 'grid' ? 'var(--cui-primary-bg)' : undefined }"
       @click="grid.setViewMode('grid')"
     >
@@ -19,6 +24,8 @@ const grid = useDataGridState();
     <CuiButton
       variant="ghost"
       size="xs"
+      :aria-label="messages.dataGrid.cardView"
+      :aria-pressed="grid.viewMode.value === 'card'"
       :style="{ background: grid.viewMode.value === 'card' ? 'var(--cui-primary-bg)' : undefined }"
       @click="grid.setViewMode('card')"
     >

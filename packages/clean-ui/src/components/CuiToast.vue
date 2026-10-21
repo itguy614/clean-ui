@@ -4,6 +4,7 @@ import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps, RoleIcon
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
+import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
 
@@ -139,7 +140,8 @@ const toastStyle = computed(() => {
   return base;
 });
 
-const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
+const defaults = useCleanUIDefaults();
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color, defaults?.value.roleIcons));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();

@@ -28,6 +28,11 @@ const demoRadio = ref("option1");
 const demoCheck = ref(true);
 const demoToggle = ref(true);
 const demoSelect = ref<string | null>(null);
+const scopedThemes = ["forest", "ruby", "violet"] as const;
+const scopedCode = `<div class="cui-theme-forest">
+  <CuiButton variant="solid">Solid</CuiButton>
+  <CuiBadge variant="subtle">Badge</CuiBadge>
+</div>`;
 </script>
 
 <template>
@@ -191,13 +196,36 @@ setTheme('teal')
       </CuiCard>
     </div>
 
+    <!-- Scoped themes -->
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Scoped Themes</h2>
+      <Example title="A theme class on part of the page" :code="scopedCode">
+        <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
+          <div v-for="t in scopedThemes" :key="t" :class="`cui-theme-${t}`">
+            <CuiStack spacing="3">
+              <CuiBadge variant="subtle">{{ t }}</CuiBadge>
+              <CuiFlex gap="2" class="flex-wrap">
+                <CuiButton variant="solid">Solid</CuiButton>
+                <CuiButton variant="outline">Outline</CuiButton>
+              </CuiFlex>
+              <CuiToggle :model-value="true" label="Toggle" />
+              <CuiAlert color="primary" title="Primary alert">Follows the scoped theme.</CuiAlert>
+            </CuiStack>
+          </div>
+        </CuiGrid>
+      </Example>
+    </div>
+
     <!-- Custom Themes -->
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Custom Themes</h2>
       <CuiCard>
         <CuiCardBody>
           <p class="mb-3 text-surface-600 dark:text-surface-400">
-            Create your own theme by defining a CSS class that overrides the color variables:
+            Create your own theme by defining a CSS class that overrides the color variables.
+            Name it <code>cui-theme-*</code>: the library recognises a theme scope by that
+            prefix, and re-resolves its semantic colours there, so a theme class on part of a
+            page re-themes that part.
           </p>
           <pre class="cui-pre"><code>.cui-theme-brand {
   --color-primary-50:  #fef2f2;
