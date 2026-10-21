@@ -73,6 +73,19 @@ describe("scoped preflight (real browser, no host reset)", () => {
     expect(styleOf(scope.querySelector("#button")!).fontFamily).toBe('"Courier New"');
   });
 
+  // #351: preflight's `html` line-height belongs on the outermost `cui-*` element only.
+  // On every one, it reset each classed part to 1.5 under its component's own value — a
+  // badge's text stood 1.5× tall inside a `line-height: 1` badge. (The xs chip row this
+  // broke is in form-control-alignment.test.ts.)
+  it("puts line-height 1.5 on the outermost cui-* element, and lets its parts inherit", () => {
+    const host = render(`
+      <div class="cui-x" id="root" style="font-size: 10px"></div>
+      <div class="cui-y" style="font-size: 10px; line-height: 1"><span class="cui-y__part" id="part">t</span></div>
+    `);
+    expect(styleOf(host.querySelector("#root")!).lineHeight).toBe("15px");
+    expect(styleOf(host.querySelector("#part")!).lineHeight).toBe("10px");
+  });
+
   it("loses to a consumer's @layer utilities", () => {
     // The docs site's own left nav caught this: `<nav class="cui-scrollbar">`
     // with `px-3 py-2` links inside it. Layered or not is the whole question —

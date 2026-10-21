@@ -52,13 +52,13 @@ describe("form controls line up (real browser)", () => {
     [CuiInputStepper, ".cui-input-stepper__control", {}],
   ];
 
-  function control(component: unknown, size: string) {
+  function control(component: unknown, size: string, props: Record<string, unknown> = {}) {
     const [, selector, extra] = BORDERED.find(([c]) => c === component)!;
     const host = document.createElement("div");
     host.style.width = "320px";
     document.body.append(host);
     hosts.push(host);
-    const w = mount(component as never, { props: { size, ...extra }, attachTo: host });
+    const w = mount(component as never, { props: { size, ...extra, ...props }, attachTo: host });
     mounted.push(w);
     return (w.element as HTMLElement).querySelector<HTMLElement>(selector)!;
   }
@@ -108,6 +108,16 @@ describe("form controls line up (real browser)", () => {
         expect(other.indent).toBe(input.indent);
         expect(other.fontSize).toBe(input.fontSize);
       }
+    });
+
+    // #351: one row of chips fits inside the height. At xs it didn't — the chip's text took
+    // the scoped preflight's 1.5 instead of the badge's own line-height of 1, and a tag input
+    // with chips stood 3px taller than the input beside it.
+    it.each([
+      ["combobox", CuiCombobox, { multiple: true, modelValue: ["a"] }],
+      ["tag input", CuiTagInput, { modelValue: ["one", "two"] }],
+    ])("keeps the %s at the input's height with a row of chips", (_label, component, props) => {
+      expect(box(control(component, size, props)).height).toBe(input.height);
     });
   });
 
