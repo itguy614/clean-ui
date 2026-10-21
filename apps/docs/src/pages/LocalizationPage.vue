@@ -21,6 +21,11 @@ const es: DeepPartialMessages = {
   pagination: {
     summary: ({ from, to, total }) => `Mostrando ${from}–${to} de ${total} resultados`,
     perPage: (n) => `${n} / página`,
+    label: "Paginación",
+    perPageLabel: "Resultados por página",
+    previous: "Página anterior",
+    next: "Página siguiente",
+    page: (n) => `Página ${n}`,
   },
 };
 
@@ -89,6 +94,11 @@ const es = {
   pagination: {
     summary: ({ from, to, total }) => \`Mostrando \${from}–\${to} de \${total} resultados\`,
     perPage: (n) => \`\${n} / página\`,
+    label: &quot;Paginación&quot;,
+    perPageLabel: &quot;Resultados por página&quot;,
+    previous: &quot;Página anterior&quot;,
+    next: &quot;Página siguiente&quot;,
+    page: (n) => \`Página \${n}\`,
   },
 }`">
         <CuiStack spacing="4">

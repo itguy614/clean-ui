@@ -32,6 +32,10 @@ function deadProps(file: string): string[] {
     .replace(iface[0], "")
     // Non-greedy, so a generic `defineProps<CuiDataGridProps<T>>()` is stripped too.
     .replace(/withDefaults\(defineProps<[\s\S]*?>\(\),\s*\{[\s\S]*?\n\}\)/, "")
+    // A stylesheet reads a prop only through v-bind(), so keep those and drop the rest: its
+    // comments would pair with a "/*" in a script string (an `image/*` accept pattern) and
+    // swallow everything between.
+    .replace(/<style[\s\S]*?<\/style>/g, (css) => (css.match(/v-bind\([^)]*\)/g) ?? []).join(" "))
     // A prop mentioned only in a comment is still dead.
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/<!--[\s\S]*?-->/g, "")

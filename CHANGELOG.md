@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `useRovingFocus` returns `focusNearest(i)`: after the focused item is removed, focus the
+  enabled item that took its place (the next, else the one before) instead of losing focus
+  to `<body>` (#170).
+- `CuiContextMenu` takes `resolveTarget(el)`, for one menu serving many targets. It is
+  called with the element a right-click, long-press or Shift+F10 landed on. Return what
+  the menu is for, and the `menu` slot receives it as `target`; return nothing and that
+  spot gets the browser's own menu (#208).
+- CuiDataGrid takes `searchDebounce` (ms, default 300 — what it always waited): how long the
+  search box waits after the last keystroke (#273).
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
@@ -28,15 +40,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the description. `useFieldDescribedBy` takes an optional `descriptionId`, ordering the
   ids description, then the caller's, then the error.
 
+- Clicking a CuiFormField label now does what a native label would when its control isn't
+  natively labelable — CuiCheckbox, CuiRadio, CuiToggle, CuiSelect, CuiTimePicker and the
+  groups, where the label's `for` did nothing (#181). It focuses the control (a group's tab
+  stop, without picking an option), toggles a checkbox or switch and selects a radio, and
+  does nothing for a disabled one.
+
+- CuiPagination's per-page selector is named "Results per page", and its landmark, previous,
+  next and page-button names come from the message catalogue (`pagination.label`,
+  `perPageLabel`, `previous`, `next`, `page(n)`) instead of hard-coded English. The
+  ellipsis is hidden from screen readers (#155). The new keys are required members of `CuiCoreMessages`: a
+  full catalogue typed with it needs them added (a partial one passed to
+  `CuiConfigProvider` doesn't).
+- CuiStepper's steps can be operated from the keyboard (#154). The steps are an ordered
+  list inside a `<nav>`, so their count and position are announced; a step you can go to
+  is a `<button>`, and the buttons share one tab stop (`useRovingFocus`) on the current
+  step. Completed and error steps say so to a screen reader (`stepper.complete` /
+  `stepper.error`). With `linear`, only steps up to the furthest one reached are navigable: an
+  error step ahead can no longer be jumped to, and going back no longer locks the steps
+  already done. `focus()` focuses the current step. This adds a tab stop, so a focus-order snapshot will change.
+- CuiFileUpload can be operated from the keyboard (#169). The file input is visually hidden
+  but stays in the tab order (it was `display: none`), so Enter or Space opens the file
+  dialog, and the drop zone is a `<label>` for it that draws its focus ring. The `label`
+  prop now labels the input (so clicking its text opens the dialog too), the accept and size hint describes it, each remove button is
+  named after its file (`fileUpload.removeFile`), `focus()` focuses the input, and
+  `disabled` disables the input and the list's buttons. This adds a tab stop, so a
+  focus-order snapshot will change.
+- CuiTransferList can be operated from the keyboard (#170). Each list is a multiselectable
+  `role="listbox"` named by its title, with one tab stop (`useRovingFocus`): the arrows and
+  Home/End move, Space marks an item, and Enter moves the focused item across. The six
+  icon-only buttons and the filter fields are named, and "No items" is translatable
+  (`transferList.*` in the message catalogue). This adds tab stops, so a focus-order
+  snapshot will change. A double-clicked (or Enter-moved) item no longer stays marked, which
+  let "move selected" add it to the other list a second time. "Move selected" now moves only the marked items
+  the filter shows; marks on filtered-out items stay. A disabled item in the selected list
+  can no longer be marked, double-clicked or dragged.
+- `useRovingFocus` leaves no tab stop when every item is disabled, rather than keeping one
+  on a disabled item (#170).
+- CuiRating can be operated from the keyboard and is announced as a rating (#171). The
+  icons are one `role="slider"` tab stop: the arrow keys step the value (by half a star
+  with `half`), Home and End reach the ends, and `aria-valuetext` reads "3 of 5 stars"
+  (`rating.valueText` in the message catalogue). `label` names it, and `focus()` now
+  focuses it. A `readonly` rating is an image with the same text and no tab stop. This
+  adds a tab stop to every interactive rating, so a focus-order snapshot will change.
+- CuiDataGrid's clickable rows can be used from the keyboard, and plain rows no longer look
+  clickable (#232). With a `@row-click` listener (or `rowClickable`), rows are one tab stop:
+  the arrows and Home/End move between them — scrolling a virtualised grid — and Enter or
+  Space emits `row-click`, with a focus ring and a pointer cursor. Without one, rows get no
+  tab stop and no pointer. An overlay opened from a row returns focus to it on close, even
+  after it scrolled out of the virtualised window (`useOverlay` asks for an unmounted opener
+  back by key, and so does a row's actions menu). `rowClickable` overrides the detection
+  either way. Interactive rows carry an `aria-description` ("Press Enter to open",
+  `dataGrid.rowHint`).
+- CuiDataGrid's column sorting is keyboard-operable and announced (#161): a sortable header's
+  text is a `<button>`, and its `<th>` carries `aria-sort`. The select-all and row
+  checkboxes, the row-actions buttons and the view toggle are named ("Select Alice",
+  "Actions for Alice", "Table view") — a new `rowLabel` prop picks what names a row — from
+  new `dataGrid.*` message keys — required members
+  of `CuiCoreMessages`, so a full catalogue typed with it needs them. This adds a tab stop
+  per sortable column, so a focus-order snapshot will change.
+- CuiDataGrid mounts one context menu for the whole grid instead of one per row: a 500-row
+  grid mounted 500. The menu shows the actions of the row it was opened on, and a row with
+  none still gets the browser's own menu (#208).
+- CuiDataGrid's client-side search and filters no longer lower-case every cell on every
+  keystroke: each row's cells are lowered once and cached, redone only for a value that
+  changed, so a keystroke in a 5,000 × 10 grid went from 50,000 lower-casings to none (#273).
+
+- CuiTabs links each tab to its panel (#271): a tab's `aria-controls` names its panel and the
+  panel's `aria-labelledby` its tab, with ids generated per tab set. Before, the panel named
+  the tab's value, which no element had as an id, and tabs had no `aria-controls`.
+
+- CuiResizablePanels' handle is keyboard-operable and announced (#156): a focusable
+  `role="separator"` (the WAI-ARIA window splitter) named "Resize panels"
+  (`resizablePanels.handle` in the message catalogue), with `aria-valuenow` and
+  `aria-controls`. The arrows along the split move it in 2% steps (10% with Shift), Home and
+  End go to the extremes, and Enter collapses and restores when `collapseThreshold` is set.
+  The arrows and the drag now follow the page direction side by side. This adds a tab
+  stop, so a focus-order snapshot will change. A collapsed first panel is `inert`, so its content
+  leaves the tab order and the accessibility tree. A double-click reset is now clamped to
+  `minFirst`/`minSecond`, and emits `collapse` only when it reopens a collapsed panel.
+- CuiColorPicker can be operated from the keyboard (#177). The gradient is a Saturation /
+  Brightness slider pair sharing one tab stop (Left/Right and Up/Down), hue and alpha are
+  sliders, and the swatches are a radiogroup whose arrows move and select, each named by
+  its hex value. Shift takes ten steps. Names and value texts are in the message catalogue
+  (`colorPicker.*`). `disabled` now disables the text field and the format toggle, which
+  stayed editable before, and takes the sliders and swatches out of the tab order.
+  `focus()` without a text field focuses the gradient instead of doing nothing. The swatches
+  wrap into rows, and Up/Down move a row. This adds tab stops, so a focus-order snapshot will
+  change.
+- CuiColorPicker's border frames the gradient as well as the controls below it; it had no
+  top edge (#177).
+- CuiColorPicker no longer re-reads its own emitted value under `v-model`. That value is
+  quantized hex, and parsing it back rewound drags and keyboard steps, lost the hue
+  whenever the colour reached grey or black, and turned 360° into 0°. A palette entry in
+  any format (`#f00`, `rgb(…)`) now shows as selected (#177).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a
   check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
   layer stack, so inside a modal it closes only the menu (#160).
 - Tab in an open dropdown or context menu closes it, and focus moves on from the trigger
-  as it would from any button, instead of leaving the page from the end of `<body>`. A sub-menu now handles its own
-  keys: Arrow Right moves focus into it, Arrow Up/Down move within it, and Escape or Arrow
-  Left closes only the sub-menu and returns to its row (#160).
+  as it would from any button, instead of leaving the page from the end of `<body>`. A
+  sub-menu now handles its own keys: Arrow Right moves focus into it, Arrow Up/Down move
+  within it, and Escape or Arrow Left closes only the sub-menu and returns to its row
+  (#160).
 - A dropdown shown by hover or focus (`trigger="hover"` / `"hover-focus"`) no longer takes
   focus from where it was, and a `hover-focus` one no longer closes when focus moves into
   its menu (#160).

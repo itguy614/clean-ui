@@ -167,6 +167,17 @@ describe("useRovingFocus", () => {
     expect(items()[0].tabIndex).toBe(-1);
   });
 
+  it("focusNearest focuses what took a removed item's place, skipping disabled ones", async () => {
+    const w = mount(Toolbar, { props: { labels: ["A", "B", "C", "D"] }, attachTo: document.body });
+    items()[1].focus();
+    // B is removed: C takes its place, but is disabled, so D (next) wins over A (before).
+    await w.setProps({ labels: ["A", "C", "D"], disabled: [1] });
+    (w.vm as unknown as { focusNearest: (i: number) => void }).focusNearest(1);
+    await nextTick();
+    expect(document.activeElement?.textContent).toBe("D");
+    w.unmount();
+  });
+
   it("focusItem won't focus a disabled item", async () => {
     const w = mount(Toolbar, { props: { disabled: [2] }, attachTo: document.body });
     items()[0].focus();
