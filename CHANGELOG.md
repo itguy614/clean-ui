@@ -104,13 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A component's own `line-height` reaches its parts again (#351). Since the scoped reset
-  replaced Tailwind's preflight in 1.3, every element with a `cui-*` class was reset to
-  `line-height: 1.5`. The reset now applies only on the outermost one, as preflight did on
-  `<html>`. Badges are back to their designed height, about 5px shorter, as is anything
-  holding one: tabs with counts, table cells, the timeline. Chips in an `xs`
-  CuiTagInput or CuiCombobox now fit, so the field matches a CuiInput beside it. Button
-  heights are unchanged.
+- CuiBadge is back to its designed height, about 5px shorter (#351). Since 1.3 its text
+  took the scoped reset's `line-height: 1.5` instead of the badge's own 1. Anything holding
+  a badge is shorter by the same: tabs with counts, table cells, the timeline. A row of
+  chips in an `xs` or `sm` CuiTagInput or CuiCombobox now fits, so the field matches a
+  CuiInput beside it.
 - CuiResizablePanels follows only the pointer that started a drag, and its handle sets
   `touch-action: none`, so a touch drag resizes the panels instead of panning the page
   (#275). It and CuiColorPicker now share one internal drag helper, and neither starts a

@@ -110,14 +110,25 @@ describe("form controls line up (real browser)", () => {
       }
     });
 
-    // #351: one row of chips fits inside the height. At xs it didn't — the chip's text took
-    // the scoped preflight's 1.5 instead of the badge's own line-height of 1, and a tag input
-    // with chips stood 3px taller than the input beside it.
+    // #351: one row of chips fits inside the height. At xs and sm it didn't — the chip's text
+    // took the scoped base's 1.5 instead of the badge's own line-height of 1, and a field
+    // with chips stood taller than the input beside it. Under a theme too: `useTheme` puts
+    // its class on <html>, which a fix keyed on the outermost `cui-*` element got wrong.
     it.each([
-      ["combobox", CuiCombobox, { multiple: true, modelValue: ["a"] }],
-      ["tag input", CuiTagInput, { modelValue: ["one", "two"] }],
-    ])("keeps the %s at the input's height with a row of chips", (_label, component, props) => {
-      expect(box(control(component, size, props)).height).toBe(input.height);
+      ["combobox", CuiCombobox, { multiple: true, modelValue: ["a"] }, false],
+      ["tag input", CuiTagInput, { modelValue: ["one", "two"] }, false],
+      ["tag input, themed page", CuiTagInput, { modelValue: ["one", "two"] }, true],
+    ])("keeps the %s at the input's height with a row of chips", (_label, component, props, themed) => {
+      const html = document.documentElement.classList;
+      if (themed) html.add("cui-theme-forest");
+      try {
+        const el = control(component, size, props);
+        // Or an empty field, already at the input's height, passes without a chip in it.
+        expect(el.querySelectorAll(".cui-badge").length).toBeGreaterThan(0);
+        expect(box(el).height).toBe(input.height);
+      } finally {
+        html.remove("cui-theme-forest");
+      }
     });
   });
 

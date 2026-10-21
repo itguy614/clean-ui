@@ -48,12 +48,8 @@
   border: 0 solid;
 }
 
-/* --- Scope root: the inheritable half of preflight's `html` rule ---
-   On the outermost `cui-*` element only — one with no `cui-*` ancestor — so everything
-   inside inherits from it, as it did from `<html>`. On every `cui-*` element it reset each
-   classed part to 1.5 under its own component's line-height: a badge's text stood 16.5px
-   tall inside a `line-height: 1` badge, and an xs tag input with chips outgrew its row (#351). */
-:where([class^="cui-"], [class*=" cui-"]):where(:not(:where([class^="cui-"], [class*=" cui-"]) *)) {
+/* --- Scope root: the inheritable half of preflight's `html` rule --- */
+:where([class^="cui-"], [class*=" cui-"]) {
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
 }
