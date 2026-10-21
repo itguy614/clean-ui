@@ -115,7 +115,7 @@ const choice = useChoiceLabelling(props);
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-sr-only"
+      class="cui-checkbox__input cui-sr-only"
       @click.stop.prevent
     />
 

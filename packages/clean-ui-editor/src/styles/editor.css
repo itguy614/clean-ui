@@ -70,6 +70,16 @@
   gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
+/* The message is painted by clean-ui's .cui-field-error (#217); this is its copy for a
+   clean-ui older than 1.4 in the peer range, which doesn't ship the class. Zero
+   specificity, so the shared rule — same values — is what a current clean-ui shows.
+   Remove when the peer floor reaches 1.4. */
+:where(.cui-markdown-editor__error) {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cui-error);
+}
+
 .cui-markdown-editor__spacer {
   flex: 1;
 }

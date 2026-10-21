@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A form control's error message is styled by one shared `.cui-field-error` class (#217):
   0.8125rem at line-height 1.4 everywhere. CuiTagInput and CuiCombobox drew theirs at
   0.75rem, and CuiCombobox's was an inline style no stylesheet could override. Their gap
-  above it matches CuiInput's.
+  above it matches CuiInput's. Each control keeps its own `__error` class beside it.
 - CuiCheckbox, CuiRadio, CuiToggle, CuiCopyButton and CuiSpinner hide their screen-reader-only
   parts with the shared `.cui-sr-only` instead of their own copies, three of which used the
   deprecated `clip` (#217).

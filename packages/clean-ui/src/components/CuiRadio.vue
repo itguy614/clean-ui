@@ -128,7 +128,7 @@ const choice = useChoiceLabelling(props);
       :disabled="isDisabled"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-sr-only"
+      class="cui-radio__input cui-sr-only"
       @click.stop.prevent
     />
     <slot>{{ label }}</slot>
@@ -167,7 +167,7 @@ const choice = useChoiceLabelling(props);
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-sr-only"
+      class="cui-radio__input cui-sr-only"
       @click.stop.prevent
     />
 

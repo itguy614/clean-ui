@@ -58,7 +58,7 @@ const inputId = computed(() => props.id ?? fallbackId);
       :aria-invalid="error || undefined"
       :aria-describedby="describedBy"
     />
-    <div v-if="error && errorMessage" :id="errorId" class="my-email-field__error">
+    <div v-if="error && errorMessage" :id="errorId" class="my-email-field__error cui-field-error">
       {{ errorMessage }}
     </div>
   </div>
