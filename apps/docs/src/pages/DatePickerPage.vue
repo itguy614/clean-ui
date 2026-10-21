@@ -1,6 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { CuiDatePicker, CuiFlex, CuiGrid } from "@itguy614/clean-ui";
+import { computed, ref } from "vue";
+import {
+  CuiCard,
+  CuiCardBody,
+  CuiDatePicker,
+  CuiFlex,
+  CuiGrid,
+  dateToIso,
+  formatDate,
+  isoToDate,
+  parseFormattedDate,
+} from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/date-picker";
@@ -12,6 +22,17 @@ const date4 = ref("");
 const date5 = ref("2025-04-01");
 const date6 = ref("2025-07-31");
 const dateObj = ref<Date | null>(new Date());
+
+// Date utilities demo
+const utilDate = ref("2025-01-15");
+const utilFormatted = computed(() => {
+  const d = isoToDate(utilDate.value);
+  return d ? formatDate(d, "DD/MM/YYYY") : "";
+});
+const utilRoundTrip = computed(() => {
+  const d = parseFormattedDate(utilFormatted.value, "DD/MM/YYYY");
+  return d ? dateToIso(d) : "null";
+});
 </script>
 
 <template>
@@ -92,6 +113,76 @@ const dateObj = ref<Date | null>(new Date());
         <code>aria-labelledby</code> and <code>aria-describedby</code> through its slot
         bindings, or pass those props yourself.
       </p>
+    </template>
+
+    <template #extra>
+      <div>
+        <h2 id="date-utilities" class="mb-4 text-2xl font-semibold">Date utilities</h2>
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="mb-3 text-surface-600 dark:text-surface-400">
+              The picker's own conversions are exported, so a value can be formatted or parsed
+              outside the component — in a table cell, a summary line or a form's submit
+              handler — with exactly the rules the picker uses. All four work on
+              <em>local</em> calendar dates: no time of day and no UTC shift, so
+              <code>2025-01-15</code> stays the 15th in every timezone.
+            </p>
+            <ul class="mb-3 list-disc pl-5 text-surface-600 dark:text-surface-400">
+              <li>
+                <code>formatDate(date: Date, format: string): string</code> — renders a
+                <code>Date</code> with the same tokens as the <code>format</code> prop:
+                <code>YYYY</code>/<code>YY</code>, <code>MMMM</code>/<code>MMM</code>/<code>MM</code>/<code>M</code>,
+                <code>DD</code>/<code>D</code>. Everything else is copied through. Known issue: a
+                month <em>name</em> containing an M or a D (March, May, December) is garbled by the
+                later tokens, so prefer numeric formats until #340 is fixed.
+              </li>
+              <li>
+                <code>parseFormattedDate(value: string, format: string): Date | null</code> —
+                the reverse. It reads each field at the position its token holds in
+                <code>format</code>, so it expects fixed-width input (<code>DD</code>,
+                <code>MM</code>, <code>YYYY</code>, <code>MMM</code>). <code>YY</code> is read
+                as 20xx; the day is read only from <code>DD</code>, so a format without it
+                (including one using a bare <code>D</code>) yields the 1st; and an unreadable
+                year or month returns <code>null</code>.
+              </li>
+              <li>
+                <code>dateToIso(date: Date): string</code> — a <code>Date</code> to the
+                <code>YYYY-MM-DD</code> string the picker emits by default.
+              </li>
+              <li>
+                <code>isoToDate(iso: string): Date | null</code> — a <code>YYYY-MM-DD</code>
+                string to a local <code>Date</code>; <code>null</code> for an empty string or one
+                without three dash-separated parts. An out-of-range month or day rolls over, as
+                <code>new Date()</code> does — validate before relying on it.
+              </li>
+            </ul>
+            <pre class="cui-pre"><code class="cui-code">import { formatDate, parseFormattedDate, dateToIso, isoToDate } from "@itguy614/clean-ui";
+
+const d = isoToDate("2025-01-15");               // Date, 15 Jan 2025 (local)
+formatDate(d!, "DD/MM/YYYY");                    // "15/01/2025"
+formatDate(d!, "DD.MM.YYYY");                    // "15.01.2025"
+
+const parsed = parseFormattedDate("15/01/2025", "DD/MM/YYYY");
+dateToIso(parsed!);                              // "2025-01-15"
+
+parseFormattedDate("", "DD/MM/YYYY");            // null
+isoToDate("not a date");                         // null</code></pre>
+          </CuiCardBody>
+        </CuiCard>
+        <div class="mt-4">
+          <Example title="Round trip" :code="`const d = isoToDate(date);                       // v-model value
+const shown = formatDate(d, &quot;DD/MM/YYYY&quot;);
+const back = dateToIso(parseFormattedDate(shown, &quot;DD/MM/YYYY&quot;));`">
+            <CuiFlex gap="4" class="items-start flex-wrap">
+              <CuiDatePicker v-model="utilDate" label="Pick a date" />
+              <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+                <div>formatDate: <code class="cui-code">{{ utilFormatted }}</code></div>
+                <div>parsed back with dateToIso: <code class="cui-code">{{ utilRoundTrip }}</code></div>
+              </div>
+            </CuiFlex>
+          </Example>
+        </div>
+      </div>
     </template>
 
     <template #examples>

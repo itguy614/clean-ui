@@ -251,7 +251,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 - Theme switcher + dark mode toggle + debug toggle in header
 - `ShowDebugKey` InjectionKey in `apps/docs/src/keys.ts`, provided in App.vue, injected via computed in pages
 - `CuiToastProvider` wraps the app in App.vue
-- Navigation groups: Getting Started → Foundations → Layout → Form Controls → Actions → Feedback → Data Display → Navigation → Overlay
+- Navigation groups: Getting Started → Foundations → Layout → Form Controls → Actions → Feedback → Data Display → Navigation → Overlay → Composables
 - Helper components: `Example.vue` (show/hide code), `PropTable.vue` (props documentation)
 - Each page: import from library, use `CuiStack spacing="8"` as root wrapper
 - No hardcoded Tailwind colors (blue-500, green-500, etc.) — always use the library's color roles (primary, success, error, etc.)
@@ -301,5 +301,6 @@ Compound sub-components for top-level composition, targeted slots inside them fo
     </script>
     ```
 12. Create a docs page, add route, add nav entry in the correct group.
+12b. A public composable or utility ships with its docs in the same PR: a page in the **Composables** nav group (live demo, a Try list, the API, when to use it — `RovingFocusPage.vue` is the model), or a section on the component page it belongs to. `src/__tests__/docs-coverage.test.ts` fails on any public value export — everything but components (`Cui*`), context keys (`*Key`) and the few in its `NOT_HELPERS` — that no docs page or component metadata names outside an import or a comment (#296).
 13. Use `CuiCard` for example containers in docs, not hand-rolled divs.
 14. Build and verify: `pnpm build` must pass with zero TypeScript errors.
