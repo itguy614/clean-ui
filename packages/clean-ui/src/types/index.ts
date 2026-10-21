@@ -1,6 +1,8 @@
 import type { Plugin } from "vue";
+import type { CleanUIConfig } from "../components/config-context";
 
-export interface CleanUIOptions {
+/** `createCleanUI()`'s options: the app-wide defaults `configureCleanUI()` takes (#149). */
+export interface CleanUIOptions extends CleanUIConfig {
   prefix?: string;
 }
 

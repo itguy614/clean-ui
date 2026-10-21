@@ -22,6 +22,18 @@ const meta: ComponentMeta = {
       description: "Do none of the work locally: every sort, filter, search and page change emits navigate for you to answer with new data",
     },
     { name: "rowKey", type: "string", default: "id", description: "Which field identifies a row — what selection and :key are keyed on" },
+    {
+      name: "rowClickable",
+      type: "boolean",
+      description:
+        "Whether rows are interactive — focusable, keyboard-operable (Enter/Space emit row-click) and pointer-styled. Default: whether a row-click listener is bound. false for an analytics-only listener",
+    },
+    {
+      name: "rowLabel",
+      type: "(row) => string",
+      description:
+        "What names a row to a screen reader, in its checkbox and actions button (\"Select …\", \"Actions for …\"). By default the first visible column's value when it is text or a number, else the row's position",
+    },
     { name: "bulkActions", type: "DataGridBulkAction[]", default: "—", description: "Actions offered for the selected rows. Passing any of them turns on the selection column" },
     { name: "showSelectAll", type: "boolean", default: "true", description: "Show the select-all checkbox in the header" },
     { name: "stickyHeader", type: "boolean", default: "true", description: "Pin the header row while the body scrolls" },
@@ -42,6 +54,12 @@ const meta: ComponentMeta = {
     { name: "hideToolbar", type: "boolean", default: "false", description: "Hide the whole toolbar row" },
     { name: "hidePagination", type: "boolean", default: "false", description: "Hide the pagination bar" },
     { name: "hideSearch", type: "boolean", default: "false", description: "Hide the search field" },
+    {
+      name: "searchDebounce",
+      type: "number",
+      default: "300",
+      description: "ms the search box waits after the last keystroke. Searching is indexed, so 0 is fine on large client-side grids; keep a delay for a server-side grid, where each search fetches",
+    },
     { name: "hideColumnManager", type: "boolean", default: "false", description: "Hide the show/hide-columns menu" },
     { name: "hideFilterPanel", type: "boolean", default: "false", description: "Hide the filter-panel toggle" },
     { name: "filterPanelSide", type: "left | right", default: "right", description: "Which side the filter panel slides in from" },
@@ -70,8 +88,8 @@ const meta: ComponentMeta = {
       payload: "DataGridQueryParams",
       description: "Server-side mode only: sort, filters, search, page or page size changed. Answer it with fresh data",
     },
-    { name: "row-click", payload: "{ row }", description: "A row was clicked" },
-    { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen from its context menu" },
+    { name: "row-click", payload: "{ row }", description: "A row was clicked, or Enter/Space was pressed on it. Binding it makes the rows interactive (see rowClickable)" },
+    { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen — from its actions button, or from its context menu: a right-click on a row with actions, or Shift+F10 / the Menu key from a control inside it" },
     { name: "bulk-action", payload: "{ action, rows }", description: "A bulk action was run over the selected rows" },
     { name: "selection-change", payload: "string[]", description: "The set of selected row ids changed" },
   ],

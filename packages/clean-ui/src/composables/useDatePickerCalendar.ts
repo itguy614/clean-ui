@@ -109,7 +109,6 @@ export function useDatePickerCalendar(options: UseDatePickerCalendarOptions) {
     selectYear,
     open: () => { popoverVisible.value = true; },
     isDisabled: options.disabled,
-    close: () => { popoverVisible.value = false; },
   });
 
   /**
