@@ -28,7 +28,7 @@ function exportedValues(): string[] {
       names.push(name.split(/\s+as\s+/).pop()!.trim());
     }
   }
-  for (const m of index.matchAll(/^export\s+(?:function|const)\s+(\w+)/gm)) names.push(m[1]);
+  for (const m of index.matchAll(/^export\s+(?:async\s+)?(?:function\*?|const|let|var|class)\s+(\w+)/gm)) names.push(m[1]);
   return names;
 }
 
@@ -47,8 +47,11 @@ const docs = ["pages", "meta"]
   .filter((f) => /\.(vue|ts)$/.test(f))
   .map((f) =>
     readFileSync(f, "utf-8")
-      .replace(/^\s*import\b[\s\S]*?from\s+["'][^"']+["'];?$/gm, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
+      // One import statement — `import { a, b } from "x"` over any number of lines, or a bare
+      // `import "x"` — and nothing past it.
+      .replace(/^\s*import\s+(?:[^;'"]*?\s+from\s+)?["'][^"'\n]+["'];?/gm, "")
+      // A block comment opens at a line start or after a space — never `image/*`.
+      .replace(/(^|\s)\/\*[\s\S]*?\*\//g, "$1")
       .replace(/(^|\s)\/\/[^\n]*/g, "$1")
       .replace(/<!--[\s\S]*?-->/g, ""),
   )
@@ -59,6 +62,11 @@ const helpers = [...new Set(exportedValues())].filter(
 );
 
 describe("every public helper is documented (#296)", () => {
+  it("can see every export", () => {
+    // A re-export by star hides its names from the scan above: name them instead.
+    expect(index.match(/^export\s+\*/gm) ?? []).toEqual([]);
+  });
+
   it("finds the helpers it guards", () => {
     expect(helpers).toEqual(expect.arrayContaining(["useRovingFocus", "useClickOutside", "formatDate"]));
   });

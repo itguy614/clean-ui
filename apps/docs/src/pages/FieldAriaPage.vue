@@ -33,6 +33,7 @@ const inputId = computed(() => demo.id ?? "field-aria-demo-input");
 
 const code = `<!-- MyEmailField.vue -->
 <script setup lang="ts">
+import { computed, useId } from "vue";
 import { useFieldDescribedBy, type DescribableProps } from "@itguy614/clean-ui";
 
 interface Props extends DescribableProps {
@@ -42,13 +43,16 @@ const props = defineProps<Props>();
 const model = defineModel<string>();
 
 const { errorId, describedBy } = useFieldDescribedBy(props);
+// The composable only derives the error's id; the input needs one for its label either way.
+const fallbackId = useId();
+const inputId = computed(() => props.id ?? fallbackId);
 <\/script>
 
 <template>
   <div class="my-email-field">
-    <label :for="id">{{ label }}</label>
+    <label :for="inputId">{{ label }}</label>
     <input
-      :id="id"
+      :id="inputId"
       v-model="model"
       type="email"
       :aria-invalid="error || undefined"

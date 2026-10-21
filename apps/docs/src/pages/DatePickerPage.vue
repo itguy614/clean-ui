@@ -132,8 +132,9 @@ const utilRoundTrip = computed(() => {
                 <code>formatDate(date: Date, format: string): string</code> — renders a
                 <code>Date</code> with the same tokens as the <code>format</code> prop:
                 <code>YYYY</code>/<code>YY</code>, <code>MMMM</code>/<code>MMM</code>/<code>MM</code>/<code>M</code>,
-                <code>DD</code>/<code>D</code>. Each token is replaced once; everything else
-                is copied through.
+                <code>DD</code>/<code>D</code>. Everything else is copied through. Known issue: a
+                month <em>name</em> containing an M or a D (March, May, December) is garbled by the
+                later tokens, so prefer numeric formats until #340 is fixed.
               </li>
               <li>
                 <code>parseFormattedDate(value: string, format: string): Date | null</code> —
@@ -150,15 +151,16 @@ const utilRoundTrip = computed(() => {
               </li>
               <li>
                 <code>isoToDate(iso: string): Date | null</code> — a <code>YYYY-MM-DD</code>
-                string to a local <code>Date</code>; <code>null</code> for an empty or
-                malformed string.
+                string to a local <code>Date</code>; <code>null</code> for an empty string or one
+                without three dash-separated parts. An out-of-range month or day rolls over, as
+                <code>new Date()</code> does — validate before relying on it.
               </li>
             </ul>
             <pre class="cui-pre"><code class="cui-code">import { formatDate, parseFormattedDate, dateToIso, isoToDate } from "@itguy614/clean-ui";
 
 const d = isoToDate("2025-01-15");               // Date, 15 Jan 2025 (local)
 formatDate(d!, "DD/MM/YYYY");                    // "15/01/2025"
-formatDate(d!, "MMM D, YYYY");                   // "Jan 15, 2025"
+formatDate(d!, "DD.MM.YYYY");                    // "15.01.2025"
 
 const parsed = parseFormattedDate("15/01/2025", "DD/MM/YYYY");
 dateToIso(parsed!);                              // "2025-01-15"

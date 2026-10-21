@@ -92,7 +92,7 @@ const options = [
   {
     name: "onClose",
     type: "() => void",
-    description: "Called when the exit finishes, right after onUpdateOpen(false).",
+    description: "Called when the exit finishes, right after onUpdateOpen(false). Known issue: when you write open back, it currently runs a second time (#339).",
   },
 ];
 
@@ -230,7 +230,7 @@ const panelStyle = {
         <p><strong>Try:</strong></p>
         <ul>
           <li>Open it. Focus moves to the dialog panel itself, which is why the panel has <code class="cui-code">tabindex="-1"</code>.</li>
-          <li>Press Tab repeatedly: input, Cancel, Save, then back to the input. Focus never reaches the page behind. Shift+Tab from the input wraps to Save.</li>
+          <li>Press Tab repeatedly: input, Cancel, Save, then back to the input. Shift+Tab from the input wraps to Save. (Shift+Tab pressed straight after opening, before focus is on a control, can still leave the dialog — #339.)</li>
           <li>Try to scroll the page with the wheel or trackpad. The body is locked, so nothing moves behind the backdrop.</li>
           <li>Press Escape, or click the dimmed backdrop. It fades out, and focus returns to the <em>Open overlay</em> button.</li>
           <li>Turn on <em>Persistent</em> and open it again. Escape and backdrop clicks are now ignored, but Cancel and Save still close it: they call <code class="cui-code">closeOverlay()</code>, which doesn't check <code class="cui-code">persistent</code>.</li>

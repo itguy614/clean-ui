@@ -143,9 +143,10 @@ const headless = useDataGrid({
   defaultPerPage: 5,
 });
 
-function sortIndicator(key: string) {
+// The grid sorts on a column's `sortKey` when it has one, so compare against that.
+function sortIndicator(col: { key: string; sortKey?: string }) {
   const s = headless.sort.value;
-  if (s?.key !== key) return "";
+  if (s?.key !== (col.sortKey ?? col.key)) return "";
   return s.direction === "asc" ? " ↑" : " ↓";
 }
 </script>
@@ -520,7 +521,7 @@ const grid = useDataGrid({ columns, data: ref(rows), defaultPerPage: 5 });
                             size="sm"
                             @click="headless.applySort(col.key)"
                           >
-                            {{ col.label }}{{ sortIndicator(col.key) }}
+                            {{ col.label }}{{ sortIndicator(col) }}
                           </CuiButton>
                           <template v-else>{{ col.label }}</template>
                         </CuiTableCell>
