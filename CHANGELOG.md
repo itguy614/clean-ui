@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `useRovingFocus` returns `focusNearest(i)`: after the focused item is removed, focus the
+  enabled item that took its place (the next, else the one before) instead of losing focus
+  to `<body>` (#170).
 - `CuiContextMenu` takes `resolveTarget(el)`, for one menu serving many targets. It is
   called with the element a right-click, long-press or Shift+F10 landed on. Return what
   the menu is for, and the `menu` slot receives it as `target`; return nothing and that
@@ -32,6 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiTransferList can be operated from the keyboard (#170). Each list is a multiselectable
+  `role="listbox"` named by its title, with one tab stop (`useRovingFocus`): the arrows and
+  Home/End move, Space marks an item, and Enter moves the focused item across. The six
+  icon-only buttons and the filter fields are named, and "No items" is translatable
+  (`transferList.*` in the message catalogue). This adds tab stops, so a focus-order
+  snapshot will change. A double-clicked (or Enter-moved) item no longer stays marked, which
+  let "move selected" add it to the other list a second time. "Move selected" now moves only the marked items
+  the filter shows; marks on filtered-out items stay. A disabled item in the selected list
+  can no longer be marked, double-clicked or dragged.
+- `useRovingFocus` leaves no tab stop when every item is disabled, rather than keeping one
+  on a disabled item (#170).
 - CuiRating can be operated from the keyboard and is announced as a rating (#171). The
   icons are one `role="slider"` tab stop: the arrow keys step the value (by half a star
   with `half`), Home and End reach the ends, and `aria-valuetext` reads "3 of 5 stars"
