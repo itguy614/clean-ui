@@ -87,6 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  rating: {
+    /** What a screen reader hears for the value — the slider's aria-valuetext (#171). */
+    valueText: (value: number, max: number) => string;
+  };
   resizablePanels: {
     /** The splitter's accessible name (#156). */
     handle: string;
@@ -188,6 +192,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  rating: { valueText: (value, max) => `${value} of ${max} stars` },
   resizablePanels: { handle: "Resize panels" },
   colorPicker: {
     saturation: "Saturation",

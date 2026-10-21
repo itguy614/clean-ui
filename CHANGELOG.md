@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiRating can be operated from the keyboard and is announced as a rating (#171). The
+  icons are one `role="slider"` tab stop: the arrow keys step the value (by half a star
+  with `half`), Home and End reach the ends, and `aria-valuetext` reads "3 of 5 stars"
+  (`rating.valueText` in the message catalogue). `label` names it, and `focus()` now
+  focuses it. A `readonly` rating is an image with the same text and no tab stop. This
+  adds a tab stop to every interactive rating, so a focus-order snapshot will change.
 - CuiDataGrid's clickable rows can be used from the keyboard, and plain rows no longer look
   clickable (#232). With a `@row-click` listener (or `rowClickable`), rows are one tab stop:
   the arrows and Home/End move between them — scrolling a virtualised grid — and Enter or
