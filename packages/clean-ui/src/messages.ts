@@ -59,13 +59,72 @@ export interface CuiCoreMessages {
     hidePassword: string;
   };
   combobox: {
+    /** Default `placeholder`. */
+    placeholder: string;
+    /** Default `noResultsText`. */
+    noResults: string;
     searching: string;
     /** Hint shown until `minChars` is reached. */
     typeMore: (remaining: number) => string;
   };
   tagInput: {
+    /** Default `placeholder`. */
+    placeholder: string;
+    /** Default `noSuggestionsText`. */
+    noSuggestions: string;
+    /** Default `createText`, before the typed value: Create "foo". */
+    create: string;
     searching: string;
   };
+  select: {
+    /** Default `placeholder`. */
+    placeholder: string;
+    /** Default `noOptionsText`. */
+    noOptions: string;
+  };
+  fileUpload: {
+    /** Default `dragText`, before the browse link. */
+    drag: string;
+    /** Default `browseText`. */
+    browse: string;
+    /** Default `uploadText`. */
+    upload: string;
+    /** The size limit, given already formatted. */
+    maxSize: (size: string) => string;
+    /** Under the file list: the count and their total size, already formatted. */
+    summary: (count: number, size: string) => string;
+  };
+  transferList: {
+    /** Default `sourceTitle`. */
+    source: string;
+    /** Default `targetTitle`. */
+    target: string;
+    /** Default `sourcePlaceholder` / `targetPlaceholder`. */
+    filterPlaceholder: string;
+    /** An empty list. */
+    empty: string;
+  };
+  datePicker: {
+    today: string;
+    /** The years grid's name: one page of years. */
+    yearRange: (start: number, end: number) => string;
+  };
+  /** The prompt above the calendar while a range is being picked. */
+  dateRangePicker: { selectStart: string; selectEnd: string };
+  copyButton: {
+    /** Default `tooltip`, and the visible label. */
+    copy: string;
+    /** The visible label once copied. */
+    copied: string;
+    /** Default `copiedTooltip`, also announced. */
+    copiedTooltip: string;
+  };
+  /** An avatar image's `alt` when it has neither `alt` nor `name`. */
+  avatar: { label: string };
+  /** CuiSpinner's default `label`. */
+  spinner: { label: string };
+  /** The label inside a checked toggle's track. */
+  toggle: { on: string };
   /** Shared by the listbox-style fields: Combobox, TagInput. */
   listbox: {
     /** Announced as the listed options change, so a screen-reader user hears the filter narrow. */
@@ -81,6 +140,12 @@ export interface CuiCoreMessages {
     typePrompt: (word: string) => string;
   };
   pagination: {
+    /** The navigation landmark's name. */
+    label: string;
+    previous: string;
+    next: string;
+    /** A page button's name. */
+    page: (page: number) => string;
     summary: (range: PaginationRange) => string;
     perPage: (count: number) => string;
   };
@@ -110,6 +175,17 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /** The column manager's trigger and title. */
+    columns: string;
+    /** The view manager. */
+    views: string;
+    savedViews: string;
+    noSavedViews: string;
+    saveCurrent: string;
+    saveAs: string;
+    save: string;
+    viewName: string;
+    resetViews: string;
   };
 }
 
@@ -135,13 +211,41 @@ export const defaultMessages: CuiCoreMessages = {
     hidePassword: "Hide password",
   },
   combobox: {
+    placeholder: "Search...",
+    noResults: "No results found",
     searching: "Searching…",
     typeMore: (remaining) =>
       `Type ${remaining} more character${remaining === 1 ? "" : "s"}…`,
   },
   tagInput: {
+    placeholder: "Add tag...",
+    noSuggestions: "No suggestions",
+    create: "Create",
     searching: "Searching…",
   },
+  select: {
+    placeholder: "Select...",
+    noOptions: "No options available",
+  },
+  fileUpload: {
+    drag: "Drag and drop files here, or",
+    browse: "Browse",
+    upload: "Upload",
+    maxSize: (size) => `Max ${size}`,
+    summary: (count, size) => `${count} file${count === 1 ? "" : "s"} · ${size}`,
+  },
+  transferList: {
+    source: "Available",
+    target: "Selected",
+    filterPlaceholder: "Filter...",
+    empty: "No items",
+  },
+  datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
+  dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date" },
+  copyButton: { copy: "Copy", copied: "Copied", copiedTooltip: "Copied!" },
+  avatar: { label: "Avatar" },
+  spinner: { label: "Loading" },
+  toggle: { on: "ON" },
   listbox: {
     results: (count) => (count === 0 ? "No results" : `${count} result${count === 1 ? "" : "s"} available`),
     searchFailed: "Couldn't load results",
@@ -153,6 +257,10 @@ export const defaultMessages: CuiCoreMessages = {
     typePrompt: (word) => `Please type "${word}" to confirm.`,
   },
   pagination: {
+    label: "Pagination",
+    previous: "Previous page",
+    next: "Next page",
+    page: (page) => `Page ${page}`,
     summary: ({ from, to, total }) => `Showing ${from} to ${to} of ${total} results`,
     perPage: (count) => `${count} / page`,
   },
@@ -170,6 +278,15 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    columns: "Columns",
+    views: "Views",
+    savedViews: "Saved Views",
+    noSavedViews: "No saved views",
+    saveCurrent: "Save current",
+    saveAs: "Save as...",
+    save: "Save",
+    viewName: "View name",
+    resetViews: "Reset to defaults",
   },
 };
 

@@ -4,6 +4,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export interface TransferListItem {
   value: string | number;
@@ -37,16 +38,19 @@ export interface CuiTransferListProps extends HideableProps, DisableableProps {
 
 const props = withDefaults(defineProps<CuiTransferListProps>(), {
   modelValue: () => [],
-  sourceTitle: "Available",
-  targetTitle: "Selected",
   filterable: true,
-  sourcePlaceholder: "Filter...",
-  targetPlaceholder: "Filter...",
   height: "320px",
   size: "md",
   disabled: false,
   hidden: false,
 });
+
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const messages = useMessages();
+const sourceLabel = computed(() => props.sourceTitle ?? messages.value.transferList.source);
+const targetLabel = computed(() => props.targetTitle ?? messages.value.transferList.target);
+const sourceFilterLabel = computed(() => props.sourcePlaceholder ?? messages.value.transferList.filterPlaceholder);
+const targetFilterLabel = computed(() => props.targetPlaceholder ?? messages.value.transferList.filterPlaceholder);
 
 const emit = defineEmits<{
   "update:modelValue": [value: (string | number)[]];
@@ -308,11 +312,11 @@ const panelStyle = computed(() => ({
     <!-- Source panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceTitle }}</span>
+        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceLabel }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredSourceItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <CuiInput v-model="sourceSearch" :placeholder="sourcePlaceholder" size="sm">
+        <CuiInput v-model="sourceSearch" :placeholder="sourceFilterLabel" size="sm">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
@@ -347,7 +351,7 @@ const panelStyle = computed(() => ({
           </slot>
         </div>
         <div v-if="filteredSourceItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
-          No items
+          {{ messages.transferList.empty }}
         </div>
       </div>
     </div>
@@ -378,11 +382,11 @@ const panelStyle = computed(() => ({
     <!-- Target panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetTitle }}</span>
+        <span :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetLabel }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredTargetItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <CuiInput v-model="targetSearch" :placeholder="targetPlaceholder" size="sm">
+        <CuiInput v-model="targetSearch" :placeholder="targetFilterLabel" size="sm">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
@@ -417,7 +421,7 @@ const panelStyle = computed(() => ({
           </slot>
         </div>
         <div v-if="filteredTargetItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
-          No items
+          {{ messages.transferList.empty }}
         </div>
       </div>
     </div>

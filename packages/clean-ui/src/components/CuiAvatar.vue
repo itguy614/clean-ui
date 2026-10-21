@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { scaleDensity } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 export type AvatarShape = "circle" | "rounded";
 export type AvatarStatus = "online" | "offline" | "away" | "busy";
@@ -34,6 +35,8 @@ const props = withDefaults(defineProps<CuiAvatarProps>(), {
   color: "primary",
   hidden: false,
 });
+
+const messages = useMessages();
 
 const imgError = ref(false);
 
@@ -122,7 +125,7 @@ const pingStyle = computed(() => {
     <img
       v-if="showImage"
       :src="src"
-      :alt="alt || name || 'Avatar'"
+      :alt="alt || name || messages.avatar.label"
       class="cui-avatar__img"
       :style="{ borderRadius: shape === 'circle' ? '50%' : '20%' }"
       @error="imgError = true"

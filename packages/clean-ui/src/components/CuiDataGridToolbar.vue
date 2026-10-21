@@ -9,6 +9,9 @@ import CuiDataGridViewManager from "./CuiDataGridViewManager.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const props = defineProps<{
   hideSearch?: boolean;
@@ -43,7 +46,7 @@ const activeFilterCount = computed(() => grid.filters.value.length);
         @click="grid.toggleFilterPanel()"
       >
         <template #prefix><CuiIcon name="funnel" size="0.875rem" /></template>
-        Filters
+        {{ messages.dataGrid.filters }}
         <CuiBadge
           v-if="activeFilterCount > 0"
           color="primary"

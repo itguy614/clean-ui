@@ -63,13 +63,10 @@ const props = withDefaults(defineProps<CuiTagInputProps>(), {
   debounce: 300,
   minChars: 0,
   maxTags: 0,
-  placeholder: "Add tag...",
   size: "md",
   color: "primary",
   disabled: false,
   error: false,
-  noSuggestionsText: "No suggestions",
-  createText: "Create",
   rounded: "md",
   hidden: false,
 });
@@ -101,6 +98,10 @@ function clearQuery() {
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const placeholderText = computed(() => props.placeholder ?? messages.value.tagInput.placeholder);
+const noSuggestionsLabel = computed(() => props.noSuggestionsText ?? messages.value.tagInput.noSuggestions);
+const createLabel = computed(() => props.createText ?? messages.value.tagInput.create);
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
 
@@ -246,7 +247,7 @@ const listbox = useListbox({
   announce: () => {
     if (!panelOpen.value || isLoading.value) return "";
     if (showFailed.value) return messages.value.listbox.searchFailed;
-    if (showEmpty.value) return props.noSuggestionsText;
+    if (showEmpty.value) return noSuggestionsLabel.value;
     return messages.value.listbox.results(filteredSuggestions.value.length + (canCreate.value ? 1 : 0));
   },
 });
@@ -348,7 +349,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         v-if="!atMax"
         ref="inputRef"
         :value="query"
-        :placeholder="modelValue.length > 0 ? '' : placeholder"
+        :placeholder="modelValue.length > 0 ? '' : placeholderText"
         :disabled="disabled"
         class="cui-tag-input__input"
         @input="onInput"
@@ -387,7 +388,7 @@ defineExpose({ el: wrapperRef, focus, blur });
 
       <!-- Empty state -->
       <CuiListboxStatus v-if="showFailed">{{ messages.listbox.searchFailed }}</CuiListboxStatus>
-      <CuiListboxStatus v-else-if="showEmpty">{{ noSuggestionsText }}</CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showEmpty">{{ noSuggestionsLabel }}</CuiListboxStatus>
 
       <!-- Suggestions -->
       <CuiListboxOption
@@ -419,7 +420,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         @hover="focusedIndex = filteredSuggestions.length"
       >
         <CuiIcon name="plus" size="0.75rem" />
-        <span>{{ createText }} &ldquo;{{ query.trim() }}&rdquo;</span>
+        <span>{{ createLabel }} &ldquo;{{ query.trim() }}&rdquo;</span>
       </CuiListboxOption>
     </CuiListboxPanel>
   </div>

@@ -23,6 +23,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A fully localised app no longer shows English in places (#215). The prose defaults of
+  CuiCombobox, CuiSelect, CuiTagInput, CuiFileUpload and CuiTransferList (placeholders,
+  empty-state text, "Browse", "Available"…) now come from the message catalogue when the prop
+  is not set, as do literal strings in CuiDataGrid's toolbar, column and view managers,
+  CuiDatePicker's "Today" and the pickers' year-range names, CuiDateRangePicker's prompt,
+  CuiCopyButton's label and tooltips, CuiSpinner's label, CuiAvatar's fallback `alt`, CuiToggle's
+  "ON", CuiPagination's landmark and button names, and CuiFileUpload's size and count lines.
+  English output is unchanged. (CuiTimePicker's AM/PM stay as they are: the field, its mask and
+  its value use them too.)
+  New `CuiCoreMessages` keys: `combobox.placeholder` / `noResults`, `tagInput.placeholder` /
+  `noSuggestions` / `create`, `select`, `fileUpload`, `transferList`, `datePicker`,
+  `toggle`, `dateRangePicker`, `copyButton`, `avatar`, `spinner`, `datePicker.yearRange`,
+  `pagination.label` / `previous` / `next` / `page`, and nine under `dataGrid`. A catalogue
+  passed to `CuiConfigProvider` merges onto the defaults, so only a hand-built full
+  `CuiCoreMessages` object needs them added.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

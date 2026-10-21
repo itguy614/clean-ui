@@ -42,9 +42,6 @@ const props = withDefaults(defineProps<CuiFileUploadProps>(), {
   autoUpload: true,
   color: "primary",
   disabled: false,
-  dragText: "Drag and drop files here, or",
-  browseText: "Browse",
-  uploadText: "Upload",
   hidden: false,
 });
 
@@ -201,6 +198,10 @@ function blur() {
 
 defineExpose({ el: rootEl, focus, blur });
 const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const dragLabel = computed(() => props.dragText ?? messages.value.fileUpload.drag);
+const browseLabel = computed(() => props.browseText ?? messages.value.fileUpload.browse);
+const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload.upload);
 </script>
 
 <template>
@@ -250,11 +251,11 @@ const messages = useMessages();
         :style="{ color: isDragging ? `var(--cui-${color})` : 'var(--cui-text-tertiary)', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
       />
       <div :style="{ fontSize: '0.875rem', color: 'var(--cui-text-secondary)' }">
-        {{ dragText }}
+        {{ dragLabel }}
         <span
           :style="{ color: `var(--cui-${color})`, fontWeight: '600', cursor: 'pointer' }"
           @click.stop="onBrowse"
-        >{{ browseText }}</span>
+        >{{ browseLabel }}</span>
       </div>
       <div
         v-if="accept || maxFileSize > 0"
@@ -262,7 +263,7 @@ const messages = useMessages();
       >
         <span v-if="accept">{{ accept }}</span>
         <span v-if="accept && maxFileSize > 0"> · </span>
-        <span v-if="maxFileSize > 0">Max {{ formatSize(maxFileSize) }}</span>
+        <span v-if="maxFileSize > 0">{{ messages.fileUpload.maxSize(formatSize(maxFileSize)) }}</span>
       </div>
     </div>
 
@@ -315,13 +316,13 @@ const messages = useMessages();
       <!-- Footer: count + total size + actions -->
       <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
         <span :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)' }">
-          {{ files.length }} file{{ files.length === 1 ? '' : 's' }} · {{ totalSize }}
+          {{ messages.fileUpload.summary(files.length, totalSize) }}
         </span>
         <div :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))' }">
           <CuiButton variant="ghost" size="xs" @click="clearAll">{{ messages.clearAll }}</CuiButton>
           <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" @click="onUploadClick">
             <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>
-            {{ uploadText }}
+            {{ uploadLabel }}
           </CuiButton>
         </div>
       </div>

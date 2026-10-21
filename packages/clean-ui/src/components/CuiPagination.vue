@@ -171,14 +171,14 @@ const perPageSelectOptions = computed(() =>
       </div>
 
       <!-- Page buttons -->
-      <nav class="cui-pagination__nav" aria-label="Pagination">
+      <nav class="cui-pagination__nav" :aria-label="messages.pagination.label">
         <!-- Previous -->
         <button
           type="button"
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isFirst }"
           :disabled="isFirst"
-          aria-label="Previous page"
+          :aria-label="messages.pagination.previous"
           @click="goTo(page - 1)"
         >
           <CuiIcon name="caret-left" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
@@ -200,7 +200,7 @@ const perPageSelectOptions = computed(() =>
               borderColor: `var(--cui-${color}-border)`,
               fontWeight: '600',
             } : {}"
-            :aria-label="`Page ${p}`"
+            :aria-label="messages.pagination.page(p)"
             :aria-current="p === page ? 'page' : undefined"
             @click="goTo(p)"
           >
@@ -214,7 +214,7 @@ const perPageSelectOptions = computed(() =>
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isLast }"
           :disabled="isLast"
-          aria-label="Next page"
+          :aria-label="messages.pagination.next"
           @click="goTo(page + 1)"
         >
           <CuiIcon name="caret-right" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
