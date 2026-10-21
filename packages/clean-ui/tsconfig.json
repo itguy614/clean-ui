@@ -16,6 +16,7 @@
     "**/*.test.ts",
     "**/*.test-d.ts",
     "src/test-setup.ts",
-    "src/__tests__/**"
+    "src/__tests__/**",
+    "src/**/__tests__/**"
   ]
 }

@@ -21,7 +21,6 @@ export function firstDayOfMonth(year: number, month: number): number {
   return new Date(year, month, 1).getDay();
 }
 
-/** Check if two dates are the same calendar day */
 /** How many years one page of a year picker shows. */
 export const YEARS_PER_PAGE = 12;
 
@@ -44,6 +43,30 @@ export const addYears = (date: Date, years: number): Date =>
 export const yearPageStart = (year: number, perPage: number = YEARS_PER_PAGE): number =>
   Math.floor(year / perPage) * perPage;
 
+/** One cell of a month's day grid. */
+export interface MonthGridCell {
+  date: Date;
+  /** False for the days of the months either side that fill the first and last rows. */
+  inMonth: boolean;
+  disabled: boolean;
+}
+
+/**
+ * A month as a calendar shows it: six rows of seven days, Sunday first, padded with the end
+ * of the month before and the start of the month after — always 42 cells, so the grid
+ * doesn't change height from month to month.
+ */
+export function buildMonthGrid(year: number, month: number, isDisabled: (date: Date) => boolean): MonthGridCell[] {
+  const cells: MonthGridCell[] = [];
+  const push = (date: Date, inMonth: boolean) => cells.push({ date, inMonth, disabled: isDisabled(date) });
+  const lead = firstDayOfMonth(year, month);
+  for (let i = lead; i > 0; i--) push(new Date(year, month, 1 - i), false);
+  for (let day = 1; day <= daysInMonth(year, month); day++) push(new Date(year, month, day), true);
+  for (let day = 1; cells.length < 42; day++) push(new Date(year, month + 1, day), false);
+  return cells;
+}
+
+/** Check if two dates are the same calendar day */
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear()
     && a.getMonth() === b.getMonth()
@@ -131,6 +154,12 @@ export function formatToMask(format: string): string {
 /** Extract raw digits from a formatted date string (strips separators) */
 export function formatToRaw(formatted: string): string {
   return formatted.replace(/[^0-9a-zA-Z]/g, "");
+}
+
+/** A picker's value as a Date: a Date as it is, an ISO string parsed, nothing as null. */
+export function toDateValue(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  return value instanceof Date ? value : isoToDate(value);
 }
 
 /** Convert ISO string (YYYY-MM-DD) to Date */

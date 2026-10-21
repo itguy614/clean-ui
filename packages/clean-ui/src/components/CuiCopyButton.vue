@@ -6,6 +6,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiTooltip from "./CuiTooltip.vue";
 import { useCopyToClipboard } from "../composables/useCopyToClipboard";
+import { useMessages } from "../composables/useMessages";
 
 const SUPPORTED_SIZES = ["xs", "sm", "md"] as const;
 
@@ -28,12 +29,15 @@ const props = withDefaults(defineProps<CuiCopyButtonProps>(), {
   size: "sm",
   color: "primary",
   variant: "ghost",
-  tooltip: "Copy",
-  copiedTooltip: "Copied!",
   resetDelay: 2000,
   showLabel: false,
   hidden: false,
 });
+
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const messages = useMessages();
+const tooltipText = computed(() => props.tooltip ?? messages.value.copyButton.copy);
+const copiedText = computed(() => props.copiedTooltip ?? messages.value.copyButton.copiedTooltip);
 
 const { copied, copy } = useCopyToClipboard(props.resetDelay);
 
@@ -51,12 +55,12 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 </script>
 
 <template>
-  <CuiTooltip class="cui-copy-button" v-show="!hidden" :text="copied ? copiedTooltip : tooltip" placement="top" :show-delay="300">
+  <CuiTooltip class="cui-copy-button" v-show="!hidden" :text="copied ? copiedText : tooltipText" placement="top" :show-delay="300">
     <CuiButton
       :size="size"
       :variant="variant"
       :color="copied ? 'success' : color"
-      :aria-label="showLabel ? undefined : tooltip"
+      :aria-label="showLabel ? undefined : tooltipText"
       @click="onClick"
     >
       <template #prefix>
@@ -66,11 +70,11 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
           :style="{ transition: 'transform 0.15s ease', transform: copied ? 'scale(1.1)' : 'scale(1)' }"
         />
       </template>
-      <span v-if="showLabel">{{ copied ? "Copied" : "Copy" }}</span>
+      <span v-if="showLabel">{{ copied ? messages.copyButton.copied : messages.copyButton.copy }}</span>
     </CuiButton>
     <!-- The copied state is otherwise conveyed by colour, an icon swap and a tooltip, none
          of which reach assistive tech — a success a screen reader never hears about (#150). -->
-    <span class="cui-copy-button__status" role="status" aria-live="polite">{{ copied ? copiedTooltip : "" }}</span>
+    <span class="cui-copy-button__status" role="status" aria-live="polite">{{ copied ? copiedText : "" }}</span>
   </CuiTooltip>
 </template>
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { firstIndex, lastIndex, useListNavigation, type ListItems, type ListNavigationOptions } from "../useListNavigation";
+import { firstIndex, lastIndex, nearestIndex, useListNavigation, type ListItems, type ListNavigationOptions } from "../useListNavigation";
 
 const key = (k: string, mods: Partial<KeyboardEventInit> = {}) => new KeyboardEvent("keydown", { key: k, ...mods });
 const list = (count: number, extra: Partial<ListItems> = {}): ListItems => ({ count, ...extra });
@@ -29,6 +29,15 @@ describe("useListNavigation", () => {
     expect(lastIndex(items)).toBe(3);
     expect(n.indexForKey(key("ArrowDown"), 1, items)).toBe(3);
     expect(n.indexForKey(key("ArrowDown"), 3, items)).toBe(3); // nothing enabled beyond: stays
+  });
+
+  it("finds the nearest enabled index: itself, then after, then before", () => {
+    const disabled = new Set([2]);
+    const items = list(5, { isDisabled: (i) => disabled.has(i) });
+    expect(nearestIndex(items, 1)).toBe(1);
+    expect(nearestIndex(items, 2)).toBe(3);
+    expect(nearestIndex(items, 9)).toBe(4); // past the end: the last
+    expect(nearestIndex(list(3, { isDisabled: () => true }), 1)).toBe(-1);
   });
 
   it("returns -1 for an empty or all-disabled list", () => {

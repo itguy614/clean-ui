@@ -105,14 +105,11 @@ const dynamicField = ref({
         </li>
       </ul>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> <code>id</code>, <code>aria-describedby</code> and
-        <code>aria-labelledby</code> land on the hidden input, which is
-        <code>aria-hidden</code> — so they do not reach the element that carries
-        <code>role="checkbox"</code>. Put describing text where it can be read instead: a
-        <code>description</code>, or <code>CuiFormField</code>'s help text next to the group
-        rather than the individual box. The label and the description are both inside the
-        root, so a screen reader reads them as one accessible name; keep descriptions short
-        for that reason.
+        <code>id</code>, <code>aria-describedby</code> and <code>aria-labelledby</code> land on
+        the element carrying <code>role="checkbox"</code>. With a <code>description</code> (or the
+        <code>#description</code> slot), the control is named by its label alone — unless you
+        pass <code>aria-labelledby</code> — and described by the description, which comes before
+        any <code>aria-describedby</code> you pass; it is not read as part of the name.
       </p>
     </template>
 

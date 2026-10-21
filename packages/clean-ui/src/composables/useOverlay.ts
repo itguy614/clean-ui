@@ -1,9 +1,8 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
-
-// Global set of active overlays shared across all instances
-const globalActiveOverlays = new Set<symbol>();
+import { warnOnce } from "../utils/devWarn";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -12,8 +11,14 @@ export interface UseOverlayOptions {
   dialogRef: Ref<HTMLElement | undefined> | ShallowRef<HTMLElement | null> | Readonly<ShallowRef<HTMLElement | null>>;
   /** Whether closing via Escape/backdrop is blocked */
   persistent: () => boolean;
-  /** Allow opening on top of another overlay */
-  allowNested: () => boolean;
+  /**
+   * @deprecated Has no effect: overlays always stack, and the shared layer stack closes only
+   * the topmost on Escape (#285). It never did anything — it only cleared a set nothing read.
+   * Removed in 2.0.
+   */
+  allowNested?: () => boolean;
+  /** The component using it, for the deprecation warning — "CuiModal". Defaults to "useOverlay". */
+  name?: string;
   /** Exit animation duration in ms */
   animationDuration?: number;
   /** Called to emit update:open */
@@ -27,16 +32,23 @@ export function useOverlay(options: UseOverlayOptions) {
     open: getOpen,
     dialogRef,
     persistent: getPersistent,
-    allowNested: getAllowNested,
     animationDuration = 200,
     onUpdateOpen,
     onClose,
   } = options;
 
-  const overlayId = Symbol("overlay");
+  if (options.allowNested !== undefined) {
+    warnOnce(
+      `[clean-ui] ${options.name ?? "useOverlay"}: \`allowNested\` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.`,
+    );
+  }
+
   const isVisible = ref(false);
   const isAnimating = ref(false);
   const previousFocus = ref<HTMLElement | null>(null);
+  // The opener's restore key, if it carries one: what brings it back if it has unmounted by
+  // the time this closes (a virtualised grid row, #232).
+  let previousFocusKey: string | null = null;
   // Open from openOverlay() until closeOverlay() starts the exit, so Escape goes to the
   // layer beneath while this one animates out.
   const isOpen = ref(false);
@@ -60,14 +72,9 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   function openOverlay() {
-    // One-at-a-time check
-    if (!getAllowNested() && globalActiveOverlays.size > 0) {
-      globalActiveOverlays.clear();
-    }
-
-    globalActiveOverlays.add(overlayId);
     isOpen.value = true;
     previousFocus.value = document.activeElement as HTMLElement;
+    previousFocusKey = restoreKeyOf(previousFocus.value);
     isVisible.value = true;
 
     acquireScrollLock();
@@ -88,7 +95,6 @@ export function useOverlay(options: UseOverlayOptions) {
   function closeOverlay() {
     isAnimating.value = false;
     isOpen.value = false;
-    globalActiveOverlays.delete(overlayId);
 
     // Wait for exit animation
     setTimeout(() => {
@@ -98,8 +104,8 @@ export function useOverlay(options: UseOverlayOptions) {
 
       releaseScrollLock();
 
-      // Return focus
-      previousFocus.value?.focus();
+      // Return focus — to the opener, or, if it has unmounted, through its restore key.
+      returnFocus(previousFocus.value, previousFocusKey);
     }, animationDuration);
   }
 
@@ -153,7 +159,6 @@ export function useOverlay(options: UseOverlayOptions) {
   });
 
   onUnmounted(() => {
-    globalActiveOverlays.delete(overlayId);
     releaseScrollLock();
   });
 

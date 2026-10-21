@@ -74,7 +74,8 @@ const backdropStyle = computed(() => {
     layers.push(bgColor);
   }
 
-  style.background = layers.join(", ");
+  // A private token, read back through the stylesheet's :where() (#211).
+  style["--_backdrop-bg"] = layers.join(", ");
 
   return style;
 });
@@ -96,6 +97,11 @@ const backdropStyle = computed(() => {
 </template>
 
 <style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-backdrop) {
+  background: var(--cui-backdrop-bg, var(--_backdrop-bg));
+}
+
 .cui-backdrop {
   position: absolute;
   inset: 0;

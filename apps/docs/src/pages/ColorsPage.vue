@@ -252,6 +252,13 @@ const ELEVATIONS = ["sm", "md", "lg"] as const;
 /* Scope overrides to a container */
 .my-section {
   --cui-primary: oklch(0.50 0.20 320);
+}
+
+/* A theme class re-declares the slots that read its scale, so a slot
+   override on :root stops at a scoped theme. Inside one, override on the
+   themed element (or below it) instead */
+.cui-theme-teal {
+  --cui-primary-hover: oklch(0.38 0.18 200);
 }</code></pre>
         </CuiCardBody>
       </CuiCard>
