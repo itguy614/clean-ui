@@ -34,7 +34,7 @@ describe.each(GROUPS)("Cui%sGroup's own identity", ({ name, Group, Item, role, o
     expect(root.classList).toContain("cui-control-group");
     expect(root.classList).toContain(`cui-${name}-group--error`);
     expect(w.find(`.cui-${name}-group__options.cui-control-group__options`).exists()).toBe(true);
-    expect(w.find(`.cui-${name}-group__error.cui-control-group__error`).text()).toBe("Pick one");
+    expect(w.find(`.cui-${name}-group__error.cui-field-error`).text()).toBe("Pick one");
     for (const other of others) expect(w.html()).not.toContain(`cui-${other}-group`);
     expect(root.getAttribute("role")).toBe(role);
   });

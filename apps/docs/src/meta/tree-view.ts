@@ -42,7 +42,7 @@ const meta: ComponentMeta = {
       description: "Clicking a row selects it. Set false for an expand-only tree: a parent row toggles instead, and aria-selected is dropped",
     },
     { name: "animated", type: "boolean", default: "true", description: "Animate the height of a branch as it opens and closes" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Row height, font size and indent per level. Not the shared CuiSize scale" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Row height, font size and indent per level. Styled at sm, md and lg; xs and xl take the nearest" },
     hiddenProp,
   ],
 

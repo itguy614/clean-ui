@@ -70,11 +70,6 @@
   gap: calc(1rem * var(--cui-density-scale, 1));
 }
 
-.cui-markdown-editor__error {
-  font-size: 0.8125rem;
-  color: var(--cui-error);
-}
-
 .cui-markdown-editor__spacer {
   flex: 1;
 }

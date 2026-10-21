@@ -13,7 +13,7 @@ const meta: ComponentMeta = {
     { name: "minuteStep", type: "number", default: "1", description: "How far one step moves the minute stepper — 15 for quarter-hour slots" },
     { name: "placeholder", type: "string", description: 'Text shown when there is no value. Defaults to "hh:mm AM", or "hh:mm" in 24-hour form' },
     { name: "label", type: "string", description: "Label text above the trigger. It renders as plain text with no association — see Known gaps" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Trigger height, padding and font size, taken from the shared input scale so it lines up with CuiInput and CuiDatePicker" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Trigger height, padding and font size, taken from the shared input scale so it lines up with CuiInput and CuiDatePicker" },
     disabledProp,
     hiddenProp,
     { name: "id", type: "string", description: "id of the trigger. CuiFormField supplies it automatically" },

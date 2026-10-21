@@ -392,7 +392,7 @@ function optionClass(index: number, option: ComboboxOption) {
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :id="errorId" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-combobox__error cui-field-error">
       {{ errorMessage }}
     </div>
 
@@ -546,5 +546,9 @@ function optionClass(index: number, option: ComboboxOption) {
 .cui-combobox__control:focus-within:not(.cui-combobox__control--disabled) {
   border-color: var(--_combobox-focus-border);
   box-shadow: 0 0 0 2px var(--_combobox-focus-ring);
+}
+
+.cui-combobox__error {
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
 }
 </style>

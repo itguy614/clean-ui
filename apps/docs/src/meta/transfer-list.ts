@@ -16,7 +16,7 @@ const meta: ComponentMeta = {
     { name: "sourcePlaceholder", type: "string", default: "Filter... (messages.transferList.filterPlaceholder)", description: "Placeholder for the left search field" },
     { name: "targetPlaceholder", type: "string", default: "Filter... (messages.transferList.filterPlaceholder)", description: "Placeholder for the right search field" },
     { name: "height", type: "string", default: "320px", description: "Max height of each scrolling list, as a CSS length" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Item padding and font size" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Item padding and font size. Styled at sm, md and lg; xs and xl take the nearest" },
     disabledProp,
     hiddenProp,
   ],

@@ -115,7 +115,7 @@ const choice = useChoiceLabelling(props);
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-checkbox__input"
+      class="cui-sr-only"
       @click.stop.prevent
     />
 
@@ -163,16 +163,6 @@ const choice = useChoiceLabelling(props);
 
 .cui-checkbox--readonly {
   cursor: default;
-}
-
-.cui-checkbox__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* --- Indicator box --- */

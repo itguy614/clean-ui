@@ -6,11 +6,11 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps {
+export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -23,8 +23,6 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
   /** Label */
   label?: string;
 }

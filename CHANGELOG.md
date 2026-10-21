@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A form control's error message is styled by one shared `.cui-field-error` class (#217):
+  0.8125rem at line-height 1.4 everywhere. CuiTagInput and CuiCombobox drew theirs at
+  0.75rem, and CuiCombobox's was an inline style no stylesheet could override. Their gap
+  above it matches CuiInput's.
+- CuiCheckbox, CuiRadio, CuiToggle, CuiCopyButton and CuiSpinner hide their screen-reader-only
+  parts with the shared `.cui-sr-only` instead of their own copies, three of which used the
+  deprecated `clip` (#217).
+- CuiDatePicker, CuiDateRangePicker, CuiTimePicker, CuiTransferList and CuiTreeView take the
+  full `CuiSize` scale for `size` (#217), so a wrapper forwarding any size type-checks.
+  Components styled at three sizes give `xs` and `xl` the nearest one.
 - CuiTable, CuiModalBody and the markdown editor toolbar are built on the new scroll area
   (#143). The toolbar's edge fades are now a mask on the buttons rather than painted
   gradients, so they match any toolbar background.

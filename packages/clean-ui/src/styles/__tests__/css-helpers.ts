@@ -38,6 +38,17 @@ export function readTag(source: string, start: number): string {
   return source.slice(start);
 }
 
+/** An SFC's `<script>` blocks, comments stripped, so a commented-out example isn't read as code. */
+export function script(source: string): string {
+  const start = source.indexOf("<script");
+  const end = source.lastIndexOf("</script>");
+  if (start === -1 || end === -1) return "";
+  return source
+    .slice(start, end)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+}
+
 export function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry);

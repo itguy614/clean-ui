@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import { script } from "./css-helpers";
 
 const COMPONENTS = resolve(__dirname, "../../components");
 
@@ -41,16 +42,6 @@ const FORM_CONTROLS = [
 const ALIGNMENT_KEYS = ["height", "minHeight", "padding", "paddingLeft", "paddingInline", "px", "fontSize", "font"];
 
 /** The `<script>` block, minus comments — a key named in prose is not a declaration. */
-function script(source: string): string {
-  const start = source.indexOf("<script");
-  const end = source.lastIndexOf("</script>");
-  if (start === -1 || end === -1) return "";
-  return source
-    .slice(start, end)
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\/\/[^\n]*/g, "");
-}
-
 /**
  * A size table is an object literal keyed by size names whose entries carry alignment
  * metrics — `{ sm: { height: … }, md: { … } }`. Deriving from the shared scale inside a
