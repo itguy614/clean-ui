@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mount, type VueWrapper } from "@vue/test-utils";
+import type { VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
-import CuiResizablePanels from "../CuiResizablePanels.vue";
+import { mountPanels as mountShared } from "./resizable-panels";
 
 /**
  * #156 — the drag handle was a bare div: nothing to focus or announce, and no keys. It is
@@ -14,12 +14,8 @@ afterEach(() => {
   w = undefined;
 });
 
-/** A 400×200 container: minFirst/minSecond 100px are 25% each side by side. */
 function mountPanels(props: Record<string, unknown> = {}) {
-  w = mount(CuiResizablePanels, { props, attachTo: document.body });
-  const container = w.find(".cui-resizable-panels").element as HTMLElement;
-  container.getBoundingClientRect = () =>
-    ({ left: 0, top: 0, width: 400, height: 200, right: 400, bottom: 200, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+  w = mountShared(props);
   return w;
 }
 

@@ -5,6 +5,7 @@ import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
+import { usePointerDrag } from "../composables/usePointerDrag";
 import {
   hsvToRgb, rgbToHsv, rgbToHex, parseColor, formatColor,
   PALETTE_BASIC, PALETTE_MATERIAL, PALETTE_TAILWIND, getThemePalette,
@@ -118,9 +119,6 @@ onMounted(() => {
 });
 onUnmounted(() => {
   observer?.disconnect();
-  // A drag in progress at unmount (e.g. inside a popover closed with Escape) would
-  // otherwise leave its document listeners firing against a dead instance (#246).
-  endDrag?.();
 });
 
 function emitColor() {
@@ -140,36 +138,12 @@ const resolvedPalette = computed(() => {
 });
 
 // --- Drag on the gradient, hue and alpha surfaces ---
-// One drag at a time: pointerdown calls `update` and follows that pointer on the
-// document until its pointerup or pointercancel (a touch the browser takes over ends a
-// pointer without a pointerup). Ending removes all three listeners together, so no
-// surface can forget one. Explicit removal rather than an AbortSignal, which Safari
-// before 15 ignores — within the default build target.
-let endDrag: (() => void) | null = null;
-
-function startDrag(e: PointerEvent, update: (e: PointerEvent) => void) {
-  if (props.disabled) return;
-  endDrag?.();
-  update(e);
-  // Follow only the pointer that started the drag: a second finger or a stray
-  // mouse must neither move the thumb nor end the drag.
-  const own = (ev: PointerEvent) => ev.pointerId === e.pointerId;
-  const onMove = (ev: PointerEvent) => { if (own(ev)) update(ev); };
-  const onEnd = (ev: PointerEvent) => { if (own(ev)) end(); };
-  const end = () => {
-    document.removeEventListener("pointermove", onMove);
-    document.removeEventListener("pointerup", onEnd);
-    document.removeEventListener("pointercancel", onEnd);
-    if (endDrag === end) endDrag = null;
-  };
-  endDrag = end;
-  document.addEventListener("pointermove", onMove);
-  document.addEventListener("pointerup", onEnd);
-  document.addEventListener("pointercancel", onEnd);
-}
+// One drag at a time, following the pointer that pressed until it is released or cancelled,
+// and ended on unmount (#246) — e.g. inside a popover closed with Escape.
+const drag = usePointerDrag();
 
 // Disabling mid-drag ends the drag, so a held pointer cannot keep changing the value.
-watch(() => props.disabled, (disabled) => { if (disabled) endDrag?.(); });
+watch(() => props.disabled, (disabled) => { if (disabled) drag.end(); });
 
 // --- Keyboard (#177) ---
 // Every visual control is a slider. The gradient is two — saturation across, brightness
@@ -192,7 +166,9 @@ const alphaSliderRef = useTemplateRef<HTMLElement>("alphaSliderRef");
 function pressFor(slider: Readonly<Ref<HTMLElement | null>>, update: (e: PointerEvent) => void) {
   return (e: PointerEvent) => {
     slider.value?.focus({ preventScroll: true });
-    startDrag(e, update);
+    if (props.disabled) return;
+    update(e);
+    drag.start(e, { move: update });
   };
 }
 

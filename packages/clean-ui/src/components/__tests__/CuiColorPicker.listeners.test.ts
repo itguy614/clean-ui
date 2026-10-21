@@ -1,28 +1,17 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import CuiColorPicker from "../CuiColorPicker.vue";
+import { recordDocumentListeners } from "../../__tests__/pointer";
 
 /**
  * #246 — each drag surface adds pointermove/pointerup to `document` on pointerdown and
  * removed them only in its own pointerup. Unmounting mid-drag (a picker inside a
  * popover closed with Escape) left both attached to a dead instance; a pointercancel
- * (a touch turning into a scroll) ended the pointer with no pointerup at all.
+ * (a touch turning into a scroll) ended the pointer with no pointerup at all. Which pointer
+ * a drag follows and what ends it are `usePointerDrag`'s tests (#275); these are the picker's
+ * own: every surface uses it, and unmounting or disabling ends the drag.
  */
 const surfaces = ["gradient", "hue", "alpha"] as const;
-
-function recordDocumentListeners() {
-  const add = vi.spyOn(document, "addEventListener");
-  const remove = vi.spyOn(document, "removeEventListener");
-  // A listener is gone if it was removed explicitly, or added with an AbortSignal that
-  // has since aborted. Pointer listeners only: the drags are what this guards, and the
-  // first mount of a run also installs an unrelated one-time mouseover/mouseout pair.
-  const aborted = (options: unknown) => (options as AddEventListenerOptions | undefined)?.signal?.aborted === true;
-  return () =>
-    add.mock.calls
-      .filter(([type]) => String(type).startsWith("pointer"))
-      .filter(([type, listener, options]) => !aborted(options) && !remove.mock.calls.some(([t, l]) => t === type && l === listener))
-      .map(([type]) => type);
-}
 
 function mountPicker() {
   return mount(CuiColorPicker, { props: { modelValue: "#336699", showAlpha: true }, attachTo: document.body });
@@ -44,46 +33,6 @@ describe("CuiColorPicker drag listeners", () => {
     expect(unremoved()).toEqual([]);
   });
 
-  it.each(surfaces)("a pointercancel ends a drag on the %s", async (surface) => {
-    const wrapper = mountPicker();
-    const unremoved = recordDocumentListeners();
-    await wrapper.get(`.cui-color-picker__${surface}`).trigger("pointerdown", { clientX: 5, clientY: 5 });
-
-    document.dispatchEvent(new Event("pointercancel"));
-    expect(unremoved()).toEqual([]);
-
-    // And the drag is over: a later move no longer changes the colour.
-    const before = wrapper.emitted("update:modelValue")?.length ?? 0;
-    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 50, clientY: 50 }));
-    expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
-    wrapper.unmount();
-  });
-
-  it("a pointerup ends a drag", async () => {
-    const wrapper = mountPicker();
-    const unremoved = recordDocumentListeners();
-    await wrapper.get(".cui-color-picker__hue").trigger("pointerdown", { clientX: 5, clientY: 5 });
-    document.dispatchEvent(new Event("pointerup"));
-    expect(unremoved()).toEqual([]);
-    wrapper.unmount();
-  });
-
-  it("ignores pointers other than the one that started the drag", async () => {
-    const wrapper = mountPicker();
-    const unremoved = recordDocumentListeners();
-    await wrapper.get(".cui-color-picker__hue").trigger("pointerdown", { clientX: 5, clientY: 5, pointerId: 1 });
-    const before = wrapper.emitted("update:modelValue")?.length ?? 0;
-
-    document.dispatchEvent(pointer("pointermove", 2, 50));
-    document.dispatchEvent(pointer("pointerup", 2));
-    expect(wrapper.emitted("update:modelValue")?.length ?? 0).toBe(before);
-    expect(unremoved()).toEqual(expect.arrayContaining(["pointermove", "pointerup"]));
-
-    document.dispatchEvent(pointer("pointerup", 1));
-    expect(unremoved()).toEqual([]);
-    wrapper.unmount();
-  });
-
   it("disabling mid-drag ends the drag", async () => {
     const wrapper = mountPicker();
     const unremoved = recordDocumentListeners();
@@ -94,8 +43,3 @@ describe("CuiColorPicker drag listeners", () => {
   });
 });
 
-function pointer(type: string, pointerId: number, clientX = 0) {
-  const ev = new MouseEvent(type, { clientX });
-  Object.defineProperty(ev, "pointerId", { value: pointerId });
-  return ev;
-}

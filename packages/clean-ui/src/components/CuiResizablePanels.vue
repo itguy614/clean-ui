@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from "vue";
-import { useEventListener } from "../composables/useEventListener";
+import { usePointerDrag } from "../composables/usePointerDrag";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { PhDotsNine } from "@phosphor-icons/vue";
@@ -36,7 +36,9 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLElement | null>(null);
 const firstPercent = ref(props.initialSize);
-const dragging = ref(false);
+// Followed on the document, so a drag keeps tracking off the handle; only the pointer that
+// pressed, ended on its release or cancel and on unmount (#275).
+const drag = usePointerDrag();
 const collapsed = ref(false);
 
 const isHorizontal = computed(() => props.orientation === "horizontal");
@@ -70,7 +72,7 @@ const secondPanelStyle = computed(() => ({
 const handleHover = ref(false);
 // The line and grip highlight while the handle is dragged or hovered; keyboard focus shows
 // the focus ring instead.
-const handleActive = computed(() => dragging.value || handleHover.value);
+const handleActive = computed(() => drag.active.value || handleHover.value);
 
 const handleStyle = computed(() => {
   const base: Record<string, string> = {
@@ -80,6 +82,8 @@ const handleStyle = computed(() => {
     justifyContent: "center",
     background: "transparent",
     userSelect: "none",
+    // Or a touch drag pans the page instead of resizing.
+    touchAction: "none",
     zIndex: "1",
     position: "relative",
   };
@@ -142,13 +146,6 @@ const gripStyle = computed(() => {
   };
 });
 
-let startPos = 0;
-let startPercent = 0;
-// Read once per drag: the container's length and direction don't change mid-drag, and
-// reading them on every pointermove would force a style and layout pass each time.
-let dragTotal = 0;
-let dragSign = 1;
-
 /** The container's length along the split, in px. */
 function totalSize() {
   const rect = containerRef.value?.getBoundingClientRect();
@@ -182,31 +179,20 @@ function applyPercent(percent: number, total: number) {
 function onPointerDown(e: PointerEvent) {
   if (!containerRef.value) return;
   e.preventDefault();
-  dragging.value = true;
-  startPos = isHorizontal.value ? e.clientX : e.clientY;
+  const along = (ev: PointerEvent) => (isHorizontal.value ? ev.clientX : ev.clientY);
+  const startPos = along(e);
   // From the edge when collapsed: the size it had is hidden, and the panel follows the pointer
   // out from where it is drawn (the stored size outlives a collapse from the keyboard).
-  startPercent = collapsed.value ? 0 : firstPercent.value;
-  dragTotal = totalSize();
-  dragSign = rtl() ? -1 : 1;
+  const startPercent = collapsed.value ? 0 : firstPercent.value;
+  // Read once per drag: the container's length and direction don't change mid-drag, and
+  // reading them on every pointermove would force a style and layout pass each time.
+  const total = totalSize();
+  const sign = rtl() ? -1 : 1;
+  if (!total) return;
+  drag.start(e, {
+    move: (ev) => applyPercent(startPercent + (((along(ev) - startPos) * sign) / total) * 100, total),
+  });
 }
-
-function onPointerMove(e: PointerEvent) {
-  if (!dragging.value || !dragTotal) return;
-  const delta = ((isHorizontal.value ? e.clientX : e.clientY) - startPos) * dragSign;
-  applyPercent(startPercent + (delta / dragTotal) * 100, dragTotal);
-}
-
-function onPointerUp() {
-  dragging.value = false;
-}
-
-// Document-level, so a drag keeps tracking when the pointer leaves the handle; only while
-// dragging, and removed on unmount mid-drag.
-useEventListener("document", "pointermove", onPointerMove, { enabled: dragging });
-// pointercancel too: the browser can take the gesture over (a touch scroll), and then
-// pointerup never comes.
-useEventListener("document", ["pointerup", "pointercancel"], onPointerUp, { enabled: dragging });
 
 function onDoubleClick() {
   const total = totalSize();
