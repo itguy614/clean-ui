@@ -5,6 +5,7 @@ import CuiSelect from "./CuiSelect.vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -141,6 +142,8 @@ function onPerPageChange(val: string | number | null | Array<string | number>) {
 }
 
 const messages = useMessages();
+// CuiSelect is a div[role=combobox], which a <label for> can't name: aria-labelledby can.
+const perPageLabelId = useCuiId("pagination-per-page");
 
 // Per-page select options
 const perPageSelectOptions = computed(() =>
@@ -162,7 +165,9 @@ const perPageSelectOptions = computed(() =>
     <div class="cui-pagination__controls">
       <!-- Per-page selector -->
       <div v-if="!hidePerPage" class="cui-pagination__per-page">
+        <span :id="perPageLabelId" class="cui-sr-only">{{ messages.pagination.perPageLabel }}</span>
         <CuiSelect
+          :aria-labelledby="perPageLabelId"
           :model-value="itemsPerPage"
           :options="perPageSelectOptions"
           :size="clampedSize === 'sm' ? 'xs' : 'sm'"
@@ -186,7 +191,7 @@ const perPageSelectOptions = computed(() =>
 
         <!-- Page numbers -->
         <template v-for="(p, idx) in pageNumbers" :key="idx">
-          <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis">...</span>
+          <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis" aria-hidden="true">...</span>
           <button
             v-else
             type="button"

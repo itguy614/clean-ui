@@ -14,7 +14,7 @@ const meta: ComponentMeta = {
     { name: "maxFiles", type: "number", default: "0", description: "Ceiling on the list length; 0 means unlimited. Files past the limit are rejected one by one" },
     { name: "autoUpload", type: "boolean", default: "true", description: "true emits upload as soon as files land. false holds them and shows an Upload button, so the user reviews the list first" },
     colorProp("Accent for the drag-over border and fill, the Browse link and the Upload button"),
-    { name: "label", type: "string", description: "Label text above the drop zone. It renders as plain text with no for association — see Known gaps" },
+    { name: "label", type: "string", description: "Label text above the drop zone, a <label for> the file input" },
     { name: "dragText", type: "string", default: "Drag and drop files here, or (messages.fileUpload.drag)", description: "Helper line in the drop zone, before the Browse link" },
     { name: "browseText", type: "string", default: "Browse (messages.fileUpload.browse)", description: "Text of the link that opens the file dialog" },
     { name: "uploadText", type: "string", default: "Upload (messages.fileUpload.upload)", description: "Text of the Upload button, shown only when autoUpload is false" },
@@ -30,8 +30,8 @@ const meta: ComponentMeta = {
   ],
 
   methods: [
-    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the root element. The root carries no tabindex, so this only does something if you give it one" },
-    { name: "blur", signature: "() => void", description: "Blur the root element" },
+    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the file input. The drop zone draws the focus ring when focus came from the keyboard (:focus-visible)" },
+    { name: "blur", signature: "() => void", description: "Blur the file input" },
     { name: "el", signature: "HTMLElement | null", description: "The root element" },
   ],
 };

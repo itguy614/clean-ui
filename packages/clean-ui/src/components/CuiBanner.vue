@@ -4,6 +4,7 @@ import type { HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } fr
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
+import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { useMessages } from "../composables/useMessages";
@@ -53,7 +54,8 @@ function dismiss() {
   emit("dismiss");
 }
 
-const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
+const defaults = useCleanUIDefaults();
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color, defaults?.value.roleIcons));
 
 // The dismiss button is icon-only, so it needs a name — CuiAlert already uses this key.
 const messages = useMessages();
