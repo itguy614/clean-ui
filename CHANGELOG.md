@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clicking a CuiFormField label now does what a native label would when its control isn't
+  natively labelable — CuiCheckbox, CuiRadio, CuiToggle, CuiSelect, CuiTimePicker and the
+  groups, where the label's `for` did nothing (#181). It focuses the control (a group's tab
+  stop, without picking an option), toggles a checkbox or switch and selects a radio, and
+  does nothing for a disabled one.
+
 - CuiPagination's per-page selector is named "Results per page", and its landmark, previous,
   next and page-button names come from the message catalogue (`pagination.label`,
   `perPageLabel`, `previous`, `next`, `page(n)`) instead of hard-coded English. The
