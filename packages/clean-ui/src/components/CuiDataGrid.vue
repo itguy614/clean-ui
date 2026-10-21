@@ -34,6 +34,18 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   /** Row identifier key */
   rowKey?: string;
   /**
+   * Declared as a prop only to tell whether a `@row-click` listener is bound (#232) — emitted
+   * events are stripped from attrs, and `emit("row-click")` still calls it. A grid with one
+   * has interactive rows: focusable, keyboard-operable and pointer-styled.
+   */
+  // An array too: Vue merges a listener bound twice (v-bind="$attrs" plus @row-click) into one.
+  onRowClick?: ((payload: { row: T }) => void) | Array<(payload: { row: T }) => void>;
+  /**
+   * Override whether rows are interactive: false for a row-click listener that is only
+   * analytics, true for interactive rows without one. Default: whether one is bound.
+   */
+  rowClickable?: boolean;
+  /**
    * What names a row to a screen reader, in its checkbox and actions button: "Select …",
    * "Actions for …". By default the first visible column's value when it is text or a
    * number, else the row's position.
@@ -99,6 +111,8 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
 }
 
 const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
+  // undefined, not the boolean cast's false: "not set" means "whether a listener is bound".
+  rowClickable: undefined,
   serverSide: false,
   rowKey: "id",
   showSelectAll: true,
@@ -275,6 +289,7 @@ const messages = useMessages();
             :size="size"
             :virtualize="virtualize"
             :virtual-row-height="virtualRowHeight"
+            :rows-interactive="rowClickable ?? !!onRowClick"
             @row-click="emit('row-click', $event as RowClickPayload)"
             @row-action="emit('row-action', $event as RowActionPayload)"
           >

@@ -127,6 +127,8 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /** Described on a clickable row (aria-description), which has no role to say so (#232). */
+    rowHint: string;
     /** Names for controls that show only an icon or a box (#161). */
     selectAll: string;
     /** A row's checkbox, given the row's label (see CuiDataGrid's rowLabel). */
@@ -207,6 +209,7 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    rowHint: "Press Enter to open",
     selectAll: "Select all rows",
     selectRow: (rowLabel) => `Select ${rowLabel}`,
     rowActions: (rowLabel) => `Actions for ${rowLabel}`,

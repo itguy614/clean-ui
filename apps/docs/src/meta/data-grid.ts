@@ -23,6 +23,12 @@ const meta: ComponentMeta = {
     },
     { name: "rowKey", type: "string", default: "id", description: "Which field identifies a row — what selection and :key are keyed on" },
     {
+      name: "rowClickable",
+      type: "boolean",
+      description:
+        "Whether rows are interactive — focusable, keyboard-operable (Enter/Space emit row-click) and pointer-styled. Default: whether a row-click listener is bound. false for an analytics-only listener",
+    },
+    {
       name: "rowLabel",
       type: "(row) => string",
       description:
@@ -82,7 +88,7 @@ const meta: ComponentMeta = {
       payload: "DataGridQueryParams",
       description: "Server-side mode only: sort, filters, search, page or page size changed. Answer it with fresh data",
     },
-    { name: "row-click", payload: "{ row }", description: "A row was clicked" },
+    { name: "row-click", payload: "{ row }", description: "A row was clicked, or Enter/Space was pressed on it. Binding it makes the rows interactive (see rowClickable)" },
     { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen — from its actions button, or from its context menu: a right-click on a row with actions, or Shift+F10 / the Menu key from a control inside it" },
     { name: "bulk-action", payload: "{ action, rows }", description: "A bulk action was run over the selected rows" },
     { name: "selection-change", payload: "string[]", description: "The set of selected row ids changed" },

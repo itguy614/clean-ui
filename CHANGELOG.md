@@ -32,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiDataGrid's clickable rows can be used from the keyboard, and plain rows no longer look
+  clickable (#232). With a `@row-click` listener (or `rowClickable`), rows are one tab stop:
+  the arrows and Home/End move between them — scrolling a virtualised grid — and Enter or
+  Space emits `row-click`, with a focus ring and a pointer cursor. Without one, rows get no
+  tab stop and no pointer. An overlay opened from a row returns focus to it on close, even
+  after it scrolled out of the virtualised window (`useOverlay` asks for an unmounted opener
+  back by key, and so does a row's actions menu). `rowClickable` overrides the detection
+  either way. Interactive rows carry an `aria-description` ("Press Enter to open",
+  `dataGrid.rowHint`).
 - CuiDataGrid's column sorting is keyboard-operable and announced (#161): a sortable header's
   text is a `<button>`, and its `<th>` carries `aria-sort`. The select-all and row
   checkboxes, the row-actions buttons and the view toggle are named ("Select Alice",
