@@ -97,8 +97,51 @@ export interface CuiCoreMessages {
     page: (page: number) => string;
   };
   breadcrumb: { label: string };
-  stepper: { label: string };
+  stepper: {
+    label: string;
+    /**
+     * Read straight after a step's label, separator included, since the check and warning
+     * icons say it only visually (#154).
+     */
+    complete: string;
+    error: string;
+  };
   skeleton: { label: string };
+  fileUpload: {
+    /** The per-file remove button's name, which shows only an icon (#169). */
+    removeFile: (name: string) => string;
+  };
+  transferList: {
+    /** Names for the transfer and reorder buttons, which show only an icon (#170). */
+    moveSelectedTo: (title: string) => string;
+    moveAllTo: (title: string) => string;
+    moveUp: string;
+    moveDown: string;
+    /** The filter field's name, given its panel's title. */
+    filter: (title: string) => string;
+    empty: string;
+  };
+  rating: {
+    /** What a screen reader hears for the value — the slider's aria-valuetext (#171). */
+    valueText: (value: number, max: number) => string;
+  };
+  resizablePanels: {
+    /** The splitter's accessible name (#156). */
+    handle: string;
+  };
+  colorPicker: {
+    /** Names of the sliders (#177). The gradient is two: saturation across, brightness up. */
+    saturation: string;
+    brightness: string;
+    hue: string;
+    alpha: string;
+    /** The preset swatches' radiogroup. Each swatch is named by its hex value. */
+    swatches: string;
+    /** aria-valuetext for the saturation, brightness and alpha sliders. */
+    percent: (value: number) => string;
+    /** aria-valuetext for the hue slider. */
+    degrees: (value: number) => string;
+  };
   formField: {
     /**
      * Appended to a required field's label for screen readers. The visible marker is an
@@ -122,6 +165,18 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /** Described on a clickable row (aria-description), which has no role to say so (#232). */
+    rowHint: string;
+    /** Names for controls that show only an icon or a box (#161). */
+    selectAll: string;
+    /** A row's checkbox, given the row's label (see CuiDataGrid's rowLabel). */
+    selectRow: (rowLabel: string) => string;
+    /** A row's actions button, given the row's label. */
+    rowActions: (rowLabel: string) => string;
+    /** A row's label when nothing better names it: its position, 1-based. */
+    rowNumber: (position: number) => string;
+    tableView: string;
+    cardView: string;
   };
 }
 
@@ -174,8 +229,28 @@ export const defaultMessages: CuiCoreMessages = {
     page: (page) => `Page ${page}`,
   },
   breadcrumb: { label: "Breadcrumb" },
-  stepper: { label: "Progress" },
+  stepper: { label: "Progress", complete: ", completed", error: ", error" },
   skeleton: { label: "Loading" },
+  fileUpload: { removeFile: (name) => `Remove ${name}` },
+  transferList: {
+    moveSelectedTo: (title) => `Move selected to ${title}`,
+    moveAllTo: (title) => `Move all to ${title}`,
+    moveUp: "Move up",
+    moveDown: "Move down",
+    filter: (title) => `Filter ${title}`,
+    empty: "No items",
+  },
+  rating: { valueText: (value, max) => `${value} of ${max} stars` },
+  resizablePanels: { handle: "Resize panels" },
+  colorPicker: {
+    saturation: "Saturation",
+    brightness: "Brightness",
+    hue: "Hue",
+    alpha: "Opacity",
+    swatches: "Preset colors",
+    percent: (value) => `${value}%`,
+    degrees: (value) => `${value} degrees`,
+  },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },
@@ -187,6 +262,13 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    rowHint: "Press Enter to open",
+    selectAll: "Select all rows",
+    selectRow: (rowLabel) => `Select ${rowLabel}`,
+    rowActions: (rowLabel) => `Actions for ${rowLabel}`,
+    rowNumber: (position) => `row ${position}`,
+    tableView: "Table view",
+    cardView: "Card view",
   },
 };
 
