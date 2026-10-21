@@ -104,6 +104,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiResizablePanels follows only the pointer that started a drag, and its handle sets
+  `touch-action: none`, so a touch drag resizes the panels instead of panning the page
+  (#275). It and CuiColorPicker now share one internal drag helper, and neither starts a
+  drag on a right- or middle-click.
 - CuiModalBody can be scrolled from the keyboard (#143). An overflowing body is now a
   focusable region, so a body with nothing focusable in it is no longer stuck for keyboard
   users (WCAG 2.1.1). Its padding moved to an inner `.cui-modal-body__content` element.
