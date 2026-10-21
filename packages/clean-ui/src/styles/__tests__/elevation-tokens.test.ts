@@ -12,6 +12,7 @@ import { join, relative, resolve, sep } from "node:path";
  * moving one onto a level would change how it looks, which is a design call of its own.
  */
 const EXEMPT: Record<string, { count: number; why: string }> = {
+  "clean-ui-editor/src/styles/editor.css": { count: 2, why: "fallbacks for a clean-ui before 1.4, which has no --cui-shadow-*" },
   "clean-ui/src/styles/main.css": { count: 8, why: "the six token values, and the two table edge fades (inset)" },
   "clean-ui/src/components/CuiCard.vue": { count: 2, why: "the elevated card's faint two-layer shadow" },
   "clean-ui/src/components/CuiListboxPanel.vue": { count: 2, why: "the floating panel's layered shadow, shared with CuiPopover" },

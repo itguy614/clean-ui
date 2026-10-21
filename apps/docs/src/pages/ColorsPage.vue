@@ -23,6 +23,8 @@ const slots = [
   { name: 'subtle', token: '--cui-{role}-subtle', desc: 'Barely-there tint — cards, sections' },
   { name: 'muted', token: '--cui-{role}-muted', desc: 'Desaturated — disabled, inactive' },
 ];
+
+const ELEVATIONS = ["sm", "md", "lg"] as const;
 </script>
 
 <template>
@@ -201,17 +203,21 @@ const slots = [
         <CuiCardBody>
           <p class="mb-4 text-surface-600 dark:text-surface-400">
             Three drop shadows, each stronger in dark mode, where a soft shadow would vanish
-            against a dark surface. Menus, the modal and the markdown editor use them; override
-            one on <code>:root</code> or a container to change every component at that level.
+            against a dark surface. Menus, the modal and the markdown editor use them. Override
+            one on a container, or on <code>:root</code> — and under <code>.dark</code> for dark
+            mode, as with every semantic slot — to change every component at that level.
           </p>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1.5rem; margin-bottom: 1rem">
-            <div
-              v-for="level in ['sm', 'md', 'lg']"
+            <CuiCard
+              v-for="level in ELEVATIONS"
               :key="level"
-              :style="{ boxShadow: `var(--cui-shadow-${level})`, background: 'var(--cui-surface-base)', border: '1px solid var(--cui-border)', borderRadius: 'var(--cui-radius-md, 0.375rem)', padding: '1.25rem', textAlign: 'center' }"
+              variant="outline"
+              :style="{ '--cui-card-shadow': `var(--cui-shadow-${level})` }"
             >
-              <code>--cui-shadow-{{ level }}</code>
-            </div>
+              <CuiCardBody style="text-align: center">
+                <code>--cui-shadow-{{ level }}</code>
+              </CuiCardBody>
+            </CuiCard>
           </div>
           <pre class="cui-pre"><code>--cui-shadow-sm   /* a small control floating over content */
 --cui-shadow-md   /* a menu or anchored panel: dropdowns, context menu */

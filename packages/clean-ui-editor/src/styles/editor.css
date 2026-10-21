@@ -126,7 +126,7 @@
   bottom: 0.75rem;
   background: var(--cui-surface-base);
   border: 1px solid var(--cui-border);
-  box-shadow: var(--cui-shadow-sm);
+  box-shadow: var(--cui-shadow-sm, 0 2px 8px rgb(0 0 0 / 0.15)); /* fallback: a clean-ui before 1.4 */
   z-index: 1;
 }
 
@@ -325,7 +325,7 @@
   border: 1px solid var(--cui-border);
   border-radius: var(--cui-button-radius, 0.375rem);
   background: var(--cui-surface-base);
-  box-shadow: var(--cui-shadow-md);
+  box-shadow: var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1)); /* fallback: a clean-ui before 1.4 */
   overflow: hidden;
 }
 
