@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import type { CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { scaleDensity } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
 
 export type SpinnerVariant = "ring" | "dots" | "bars";
 
@@ -18,10 +19,13 @@ const props = withDefaults(defineProps<CuiSpinnerProps>(), {
   size: "md",
   color: "primary",
   variant: "ring",
-  label: "Loading",
   showLabel: false,
   hidden: false,
 });
+
+const messages = useMessages();
+// The default label comes from the message catalogue (#215).
+const labelText = computed(() => props.label ?? messages.value.spinner.label);
 
 const sizeConfig: Record<CuiSize, { box: string; stroke: string; dotSize: string; barWidth: string; barHeight: string; labelFont: string; gap: string }> = {
   xs: { box: "0.875rem", stroke: "2px", dotSize: "0.25rem", barWidth: "0.1875rem", barHeight: "0.5rem", labelFont: "0.6875rem", gap: scaleDensity("0.25rem") },
@@ -40,7 +44,7 @@ const spinnerColor = computed(() => `var(--cui-${props.color})`);
     class="cui-spinner"
     v-show="!hidden"
     role="status"
-    :aria-label="label"
+    :aria-label="labelText"
     :style="{
       display: 'inline-flex',
       flexDirection: 'column',
@@ -116,12 +120,12 @@ const spinnerColor = computed(() => `var(--cui-${props.color})`);
         fontWeight: '500',
       }"
     >
-      {{ label }}
+      {{ labelText }}
     </span>
 
     <!-- Screen reader text (always present) -->
     <span v-if="!showLabel" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;">
-      {{ label }}
+      {{ labelText }}
     </span>
   </div>
 </template>

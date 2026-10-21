@@ -5,6 +5,9 @@ import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 const grid = useDataGridState();
 
@@ -48,10 +51,10 @@ function onDragEnd() {
 </script>
 
 <template>
-  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="240px" title="Columns">
+  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="240px" :title="messages.dataGrid.columns">
     <CuiButton variant="outline" size="sm">
       <template #prefix><CuiIcon name="columns" size="0.875rem" /></template>
-      Columns
+      {{ messages.dataGrid.columns }}
     </CuiButton>
     <template #content>
       <div style="display: flex; flex-direction: column; gap: calc(0.125rem * var(--cui-density-scale, 1));">

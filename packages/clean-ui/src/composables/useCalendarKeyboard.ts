@@ -15,8 +15,6 @@ export interface UseCalendarKeyboardOptions {
   selectYear: (year: number) => void;
   /** Open the panel. */
   open: () => void;
-  /** Close the panel and hand focus back to the trigger. */
-  close: () => void;
   /** Whether the control is currently disabled. */
   isDisabled?: () => boolean;
 }
@@ -50,7 +48,7 @@ export function calendarCellKey(mode: CalendarViewMode, value: Date | number): s
  * announced via `aria-disabled`; it is *selection* that refuses.
  */
 export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
-  const { viewMode, viewYear, viewMonth, selectDay, selectMonth, selectYear, open, close } = options;
+  const { viewMode, viewYear, viewMonth, selectDay, selectMonth, selectYear, open } = options;
   const yearsPerPage = options.yearsPerPage ?? YEARS_PER_PAGE;
   const isDisabled = options.isDisabled ?? (() => false);
 
@@ -162,11 +160,9 @@ export function useCalendarKeyboard(options: UseCalendarKeyboardOptions) {
         else if (mode === "months") selectMonth(date.getMonth());
         else selectYear(date.getFullYear());
         break;
-      case "Escape":
-        e.preventDefault();
-        e.stopPropagation();
-        close();
-        break;
+      // Escape is not handled here: the panel is a CuiPopover, a layer on the shared stack,
+      // which closes it — and only it, inside a modal (#286). Stopping it here used to hide
+      // the key from the stack altogether.
       default:
     }
   }

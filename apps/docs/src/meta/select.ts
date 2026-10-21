@@ -54,7 +54,7 @@ const meta: ComponentMeta = {
         "The options. A bare string or number becomes { value, label }; an object takes { value, label, icon?, group?, disabled? }",
     },
     { name: "multiple", type: "boolean", default: "false", description: "Allow several selections, shown as removable chips" },
-    { name: "placeholder", type: "string", default: "Select...", description: "Shown while nothing is selected" },
+    { name: "placeholder", type: "string", default: "Select... (messages.select.placeholder)", description: "Shown while nothing is selected" },
     { name: "clearable", type: "boolean", default: "false", description: "Show a clear button once something is selected" },
     {
       name: "loading",
@@ -62,7 +62,7 @@ const meta: ComponentMeta = {
       default: "false",
       description: "Show a spinner in the panel instead of the options — for options you are still fetching",
     },
-    { name: "noOptionsText", type: "string", default: "No options available", description: "Shown when options is empty" },
+    { name: "noOptionsText", type: "string", default: "No options available (messages.select.noOptions)", description: "Shown when options is empty" },
     colorProp("Color role for the focus border, focus ring and the highlighted option"),
     inputSizeProp,
     roundedProp,
