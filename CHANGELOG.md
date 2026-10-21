@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Elevation tokens** (#224): `--cui-shadow-sm`, `--cui-shadow-md` and `--cui-shadow-lg`, each
+  with a stronger dark-mode value. CuiDropdownMenu, CuiDropdownSub, CuiContextMenu, CuiModal
+  and the markdown editor's mode toggle and autocomplete use them in place of a hardcoded
+  shadow restated in a `.dark` rule; their look is unchanged.
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem

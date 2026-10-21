@@ -177,7 +177,7 @@ const titleId = useCuiId("modal-title");
   width: 100%;
   max-height: calc(100vh - 8rem);
   background: var(--cui-surface-base);
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.2);
+  box-shadow: var(--cui-shadow-lg);
   outline: none;
   overflow: hidden;
 
@@ -190,9 +190,5 @@ const titleId = useCuiId("modal-title");
 .cui-modal--visible {
   opacity: 1;
   transform: scale(1) translateY(0);
-}
-
-:where(.dark, .dark *) .cui-modal {
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
 }
 </style>
