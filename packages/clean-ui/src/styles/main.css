@@ -456,47 +456,222 @@
   color: var(--cui-error);
 }
 
-/* --- Headings (h1–h6) --- */
+/* --- Prose ---
+   Every rule for an element inside a `.cui-typography` scope lives in the two blocks below
+   (#147), each under an exclusion: an element carrying a component's `cui-*` class belongs
+   to that component, which styles it, and a scope put around components (the docs site's
+   `<main>`, a `CuiCardBody`) must not repaint it — a card title's `<h3>` took the prose size
+   (#129), a solid link button its background as its label colour (#114), a breadcrumb's list
+   the prose markers, a table's cells the prose padding whatever its `size`.
 
-/* Prose headings only. The `:where()` exclusion skips any element carrying a `cui-*`
-   class — the same idiom and reason as the prose link rule below: a component that
-   renders a heading (CuiCardHeader's title, CuiModalHeader's) styles itself, and the
-   typography layer must not repaint it. Without this, giving CuiCardHeader a real `<h3>`
-   would hand every card title the prose h3 size and a bottom margin (#129).
+   Specificity is what each rule had as `.cui-typography <selector>`: the predicates are
+   `:where()`, adding nothing, and the element is `&:is(el)` — or `&:is(pre code)` for a
+   descendant one — adding exactly the type selectors the old form had.
+   `styles/__tests__/typography-exclusion.test.ts` fails on a `.cui-typography` element rule
+   anywhere else. */
 
-   Nested so the 51-character predicate is written once. The per-level selectors are
-   `&:where(hN)`, not `&:is(hN)`: nesting against a complex parent flattens to
-   `<parent><child>`, so `:is(h1)` would append (0,0,1) and quietly make these rules
-   (0,1,2) — raising the bar for a consumer's own `.cui-typography h3` override.
-   `:where()` contributes 0, so every rule here stays (0,1,1), exactly what it was when
-   each selector spelled the exclusion out. */
-.cui-typography :is(h1, h2, h3, h4, h5, h6):where(:not([class^="cui-"]):not([class*=" cui-"])) {
-  font-weight: var(--cui-heading-font-weight);
-  line-height: var(--cui-heading-line-height);
-  margin-top: 0;
-  margin-bottom: var(--cui-heading-margin-bottom);
-  color: var(--cui-text-emphasis);
+/* Headings and links: any `cui-*` class excludes, a typography helper's too, as since #129. */
+.cui-typography :where(:not([class^="cui-"]):not([class*=" cui-"])) {
+  /* Headings */
+  &:is(h1, h2, h3, h4, h5, h6) {
+    font-weight: var(--cui-heading-font-weight);
+    line-height: var(--cui-heading-line-height);
+    margin-top: 0;
+    margin-bottom: var(--cui-heading-margin-bottom);
+    color: var(--cui-text-emphasis);
+  }
 
-  &:where(h1) { font-size: var(--cui-font-size-h1); }
-  &:where(h2) { font-size: var(--cui-font-size-h2); }
-  &:where(h3) { font-size: var(--cui-font-size-h3); }
-  &:where(h4) { font-size: var(--cui-font-size-h4); }
-  &:where(h5) { font-size: var(--cui-font-size-h5); }
-  &:where(h6) { font-size: var(--cui-font-size-h6); }
+  &:is(h1) { font-size: var(--cui-font-size-h1); }
+  &:is(h2) { font-size: var(--cui-font-size-h2); }
+  &:is(h3) { font-size: var(--cui-font-size-h3); }
+  &:is(h4) { font-size: var(--cui-font-size-h4); }
+  &:is(h5) { font-size: var(--cui-font-size-h5); }
+  &:is(h6) { font-size: var(--cui-font-size-h6); }
 
   /* Responsive heading sizes (breakpoint-based, scales down on mobile) */
   @media (max-width: 767px) {
-    &:where(h1) { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
-    &:where(h2) { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
-    &:where(h3) { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+    &:is(h1) { font-size: calc(var(--cui-font-size-h1) * 0.78); } /* ~28px */
+    &:is(h2) { font-size: calc(var(--cui-font-size-h2) * 0.82); } /* ~23px */
+    &:is(h3) { font-size: calc(var(--cui-font-size-h3) * 0.87); } /* ~21px */
+  }
+
+  /* Links */
+  &:is(a) {
+    color: var(--cui-text-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease;
+  }
+
+  &:is(a):hover {
+    color: var(--cui-text-link-hover);
   }
 }
 
-/* --- Paragraphs --- */
-.cui-typography p {
-  margin-top: 0;
-  margin-bottom: var(--cui-paragraph-margin-bottom);
-  color: var(--cui-text-body);
+/* The rest of prose. Here the typography layer's own helpers are let through — so
+   `<p class="cui-lead">` keeps paragraph spacing and `<pre><code class="cui-code">` loses the
+   inline-code chip, as they did before #147. Their colours lose to the prose ones at (0,1,1),
+   also as before. `cui-kbd` is not among them: it is CuiKbd's root. The list helpers aren't
+   either, so `cui-list-unstyled` and `cui-list-inline` now actually remove the prose markers. */
+.cui-typography :where(
+  :not([class^="cui-"]):not([class*=" cui-"]),
+  .cui-lead, .cui-small, .cui-display-1, .cui-display-2, .cui-display-3,
+  .cui-text-body, .cui-text-secondary, .cui-text-tertiary, .cui-text-emphasis,
+  .cui-code, .cui-pre, .cui-mark, .cui-blockquote, .cui-blockquote-footer
+) {
+  /* Paragraphs */
+  &:is(p) {
+    margin-top: 0;
+    margin-bottom: var(--cui-paragraph-margin-bottom);
+    color: var(--cui-text-body);
+  }
+
+  &:is(small) {
+    font-size: var(--cui-font-size-small);
+  }
+
+  /* Blockquote */
+  &:is(blockquote) {
+    margin: var(--cui-blockquote-margin);
+    padding: var(--cui-blockquote-padding);
+    border-left: 3px solid var(--cui-primary-border);
+    font-size: 1.1rem;
+    color: var(--cui-text-body);
+  }
+
+  &:is(blockquote p):last-child {
+    margin-bottom: 0;
+  }
+
+  &:is(blockquote footer) {
+    font-size: var(--cui-font-size-small);
+    color: var(--cui-text-secondary);
+    margin-top: 0.5rem;
+  }
+
+  &:is(blockquote footer)::before {
+    content: "\2014\00A0"; /* em-dash + non-breaking space */
+  }
+
+  /* Inline code */
+  &:is(code) {
+    font-family: var(--cui-font-mono);
+    font-size: var(--cui-font-size-code);
+    color: var(--cui-text-code);
+    background: var(--color-surface-100);
+    padding: calc(0.125em * var(--cui-density-scale, 1)) calc(0.35em * var(--cui-density-scale, 1));
+    border-radius: 0.25rem;
+  }
+
+  :where(.dark, .dark *) &:is(code) {
+    background: var(--color-surface-800);
+  }
+
+  /* Don't double-style code inside pre */
+  &:is(pre code) {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* Keyboard input */
+  &:is(kbd) {
+    font-family: var(--cui-font-mono);
+    font-size: var(--cui-font-size-code);
+    background: var(--color-surface-800);
+    color: var(--color-surface-100);
+    padding: calc(0.15em * var(--cui-density-scale, 1)) calc(0.4em * var(--cui-density-scale, 1));
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-surface-600);
+    box-shadow: inset 0 -1px 0 var(--color-surface-700);
+  }
+
+  :where(.dark, .dark *) &:is(kbd) {
+    background: var(--color-surface-700);
+    border-color: var(--color-surface-500);
+    box-shadow: inset 0 -1px 0 var(--color-surface-600);
+  }
+
+  /* Preformatted / code blocks */
+  &:is(pre) {
+    font-family: var(--cui-font-mono);
+    font-size: var(--cui-font-size-small);
+    line-height: calc(1.6 * var(--cui-density-gap-scale, 1));
+    background: var(--color-surface-50);
+    color: var(--cui-text-body);
+    padding: calc(1rem * var(--cui-density-scale, 1)) calc(1.25rem * var(--cui-density-scale, 1));
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-surface-200);
+    overflow-x: auto;
+    margin: 0 0 var(--cui-paragraph-margin-bottom);
+  }
+
+  :where(.dark, .dark *) &:is(pre) {
+    background: var(--color-surface-900);
+    border-color: var(--color-surface-700);
+  }
+
+  /* Lists — restore the markers Tailwind's preflight resets to none. */
+  &:is(ul, ol) {
+    margin-top: 0;
+    margin-bottom: var(--cui-paragraph-margin-bottom);
+    padding-left: calc(1.5rem * var(--cui-density-scale, 1));
+  }
+
+  &:is(ul) { list-style: disc; }
+  &:is(ol) { list-style: decimal; }
+
+  /* Nested unordered lists use a hollow marker, as in standard prose. */
+  &:is(ul ul) { list-style: circle; }
+
+  &:is(li) {
+    margin-bottom: calc(0.25rem * var(--cui-density-gap-scale, 1));
+  }
+
+  /* Horizontal rule */
+  &:is(hr) {
+    border: none;
+    border-top: 1px solid var(--color-surface-200);
+    margin: calc(1.5rem * var(--cui-density-gap-scale, 1)) 0;
+  }
+
+  :where(.dark, .dark *) &:is(hr) {
+    border-top-color: var(--color-surface-700);
+  }
+
+  /* Native tables in prose (markdown / raw <table>) */
+  &:is(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 var(--cui-paragraph-margin-bottom);
+    font-size: 0.875rem;
+  }
+
+  &:is(th, td) {
+    padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+    border-bottom: 1px solid var(--cui-border);
+    text-align: left;
+  }
+
+  &:is(th) {
+    font-weight: 600;
+    color: var(--cui-text-secondary);
+    background: var(--cui-table-head-bg, var(--color-surface-50));
+  }
+
+  /* Mark / highlight */
+  &:is(mark) {
+    background: var(--cui-warning-bg);
+    padding: 0.1em 0.2em;
+    border-radius: 0.15rem;
+  }
+
+  :where(.dark, .dark *) &:is(mark) {
+    background: oklch(0.45 0.1 80);
+    color: var(--color-surface-100);
+  }
 }
 
 /* --- Display headings --- */
@@ -532,39 +707,19 @@
   color: var(--cui-text-secondary);
 }
 
-/* --- Small text --- */
-.cui-small,
-.cui-typography small {
-  font-size: var(--cui-font-size-small);
-}
-
 /* --- Text color utilities --- */
 .cui-text-body { color: var(--cui-text-body); }
 .cui-text-secondary { color: var(--cui-text-secondary); }
 .cui-text-tertiary { color: var(--cui-text-tertiary); }
 .cui-text-emphasis { color: var(--cui-text-emphasis); }
 
-/* --- Links ---
-   Prose links only. The `:where()` exclusion skips any element carrying a `cui-*` class —
-   same scoping idiom as preflight.css — because a component that happens to render an
-   <a> (CuiButton with `href`, breadcrumbs, pagination) styles itself and must not be
-   repainted by the typography layer. This became load-bearing in #114: CuiButton's own
-   `color` is now zero-specificity, so before the exclusion this rule won and a solid link
-   button drew its label in the same colour as its background. `:where()` contributes
-   nothing to specificity, so prose links are unchanged. */
-.cui-typography a:where(:not([class^="cui-"]):not([class*=" cui-"])) {
-  color: var(--cui-text-link);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.15s ease;
+/* --- Class twins ---
+   The prose styles, by class, for use outside a `.cui-typography` scope. (0,1,0), so the
+   element rules above win inside one, where the twins agree with them. */
+.cui-small {
+  font-size: var(--cui-font-size-small);
 }
 
-.cui-typography a:where(:not([class^="cui-"]):not([class*=" cui-"])):hover {
-  color: var(--cui-text-link-hover);
-}
-
-/* --- Blockquote --- */
-.cui-typography blockquote,
 .cui-blockquote {
   margin: var(--cui-blockquote-margin);
   padding: var(--cui-blockquote-padding);
@@ -573,25 +728,20 @@
   color: var(--cui-text-body);
 }
 
-.cui-typography blockquote p:last-child,
 .cui-blockquote p:last-child {
   margin-bottom: 0;
 }
 
-.cui-typography blockquote footer,
 .cui-blockquote-footer {
   font-size: var(--cui-font-size-small);
   color: var(--cui-text-secondary);
   margin-top: 0.5rem;
 }
 
-.cui-typography blockquote footer::before,
 .cui-blockquote-footer::before {
   content: "\2014\00A0"; /* em-dash + non-breaking space */
 }
 
-/* --- Inline code --- */
-.cui-typography code,
 .cui-code {
   font-family: var(--cui-font-mono);
   font-size: var(--cui-font-size-code);
@@ -601,13 +751,10 @@
   border-radius: 0.25rem;
 }
 
-:where(.dark, .dark *) .cui-typography code,
 :where(.dark, .dark *) .cui-code {
   background: var(--color-surface-800);
 }
 
-/* Don't double-style code inside pre */
-.cui-typography pre code,
 .cui-pre code {
   background: none;
   padding: 0;
@@ -616,8 +763,6 @@
   color: inherit;
 }
 
-/* --- Keyboard input --- */
-.cui-typography kbd,
 .cui-kbd {
   font-family: var(--cui-font-mono);
   font-size: var(--cui-font-size-code);
@@ -629,15 +774,12 @@
   box-shadow: inset 0 -1px 0 var(--color-surface-700);
 }
 
-:where(.dark, .dark *) .cui-typography kbd,
 :where(.dark, .dark *) .cui-kbd {
   background: var(--color-surface-700);
   border-color: var(--color-surface-500);
   box-shadow: inset 0 -1px 0 var(--color-surface-600);
 }
 
-/* --- Preformatted / code blocks --- */
-.cui-typography pre,
 .cui-pre {
   font-family: var(--cui-font-mono);
   font-size: var(--cui-font-size-small);
@@ -651,36 +793,20 @@
   margin: 0 0 var(--cui-paragraph-margin-bottom);
 }
 
-:where(.dark, .dark *) .cui-typography pre,
 :where(.dark, .dark *) .cui-pre {
   background: var(--color-surface-900);
   border-color: var(--color-surface-700);
 }
 
-/* --- Lists --- */
-/* Restore list markers — Tailwind's preflight resets ul/ol to list-style: none. */
-.cui-typography ul,
-.cui-typography ol {
-  margin-top: 0;
-  margin-bottom: var(--cui-paragraph-margin-bottom);
-  padding-left: calc(1.5rem * var(--cui-density-scale, 1));
+.cui-mark {
+  background: var(--cui-warning-bg);
+  padding: 0.1em 0.2em;
+  border-radius: 0.15rem;
 }
 
-.cui-typography ul {
-  list-style: disc;
-}
-
-.cui-typography ol {
-  list-style: decimal;
-}
-
-/* Nested unordered lists use a hollow marker, as in standard prose. */
-.cui-typography ul ul {
-  list-style: circle;
-}
-
-.cui-typography li {
-  margin-bottom: calc(0.25rem * var(--cui-density-gap-scale, 1));
+:where(.dark, .dark *) .cui-mark {
+  background: oklch(0.45 0.1 80);
+  color: var(--color-surface-100);
 }
 
 /* Unstyled list */
@@ -700,52 +826,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
-}
-
-/* --- Horizontal rule --- */
-.cui-typography hr {
-  border: none;
-  border-top: 1px solid var(--color-surface-200);
-  margin: calc(1.5rem * var(--cui-density-gap-scale, 1)) 0;
-}
-
-/* --- Native tables in prose (markdown / raw <table>) --- */
-.cui-typography table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0 0 var(--cui-paragraph-margin-bottom);
-  font-size: 0.875rem;
-}
-
-.cui-typography th,
-.cui-typography td {
-  padding: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
-  border-bottom: 1px solid var(--cui-border);
-  text-align: left;
-}
-
-.cui-typography th {
-  font-weight: 600;
-  color: var(--cui-text-secondary);
-  background: var(--cui-table-head-bg, var(--color-surface-50));
-}
-
-:where(.dark, .dark *) .cui-typography hr {
-  border-top-color: var(--color-surface-700);
-}
-
-/* --- Mark / highlight --- */
-.cui-typography mark,
-.cui-mark {
-  background: var(--cui-warning-bg);
-  padding: 0.1em 0.2em;
-  border-radius: 0.15rem;
-}
-
-:where(.dark, .dark *) .cui-typography mark,
-:where(.dark, .dark *) .cui-mark {
-  background: oklch(0.45 0.1 80);
-  color: var(--color-surface-100);
 }
 
 /* ============================================================

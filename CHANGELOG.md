@@ -74,6 +74,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Components inside a `.cui-typography` scope are no longer restyled by its prose rules
+  (#147). Every prose element rule (paragraphs, lists, code, `pre`, `kbd`, blockquotes, `hr`,
+  tables, `mark`, `small`) now skips elements carrying a component's `cui-*` class, as headings
+  and links already did. The typography layer's own classes (`cui-lead`, `cui-code`, …) still
+  take prose styling, with the same specificity as before; `cui-list-unstyled` and
+  `cui-list-inline` now actually remove the prose list markers and indent, which used to
+  override them. Under a prose scope, CuiTable and CuiDataGrid cells follow their `size` again
+  instead of a fixed prose padding, and a breadcrumb's list loses the prose markers and
+  indent. Prose itself is unchanged.
 - CuiCheckbox, CuiRadio and CuiToggle no longer read their description as part of their
   name (#183): with a `description`, the control is named by its label and described by
   the description. `useFieldDescribedBy` takes an optional `descriptionId`, ordering the

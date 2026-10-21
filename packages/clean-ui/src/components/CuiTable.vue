@@ -49,7 +49,6 @@ provide(TableContextKey, {
 });
 
 const tableClasses = computed(() => [
-  "cui-table",
   `cui-table--${clampedSize.value}`,
   {
     "cui-table--striped": props.striped,
@@ -149,7 +148,7 @@ defineExpose({ scrollWrapper, measure });
       :aria-label="scrollable ? messages.table.scrollRegionLabel : undefined"
       @scroll="onShadowScroll"
     >
-      <table ref="tableEl" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
+      <table ref="tableEl" class="cui-table" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
