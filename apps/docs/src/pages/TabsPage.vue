@@ -130,13 +130,15 @@ function resetTabs() {
         </li>
       </ul>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The tab and its panel are not wired to each other:
-        panels set <code>aria-labelledby</code> to the tab's <code>value</code>, but no
-        element carries that as an <code>id</code>, and the tabs have no
-        <code>aria-controls</code>. So the relationship a screen reader would use to move
-        from a tab to its panel is missing. A closeable tab's close button is also
-        <code>tabindex="-1"</code>, which makes closing a tab pointer-only — offer a
-        keyboard route to the same action.
+        Each tab and its panel point at each other — the tab's <code>aria-controls</code> names
+        its panel and the panel's <code>aria-labelledby</code> its tab — with ids generated per
+        tab set, so two sets sharing values never collide. Without <code>keepAlive</code>, only
+        the active tab has <code>aria-controls</code>, since the other panels aren't rendered.
+      </p>
+      <p class="text-surface-700 dark:text-surface-300">
+        <strong>Known gap.</strong> A closeable tab's close button is
+        <code>tabindex="-1"</code>, which makes closing a tab pointer-only — offer a keyboard
+        route to the same action.
       </p>
     </template>
 
