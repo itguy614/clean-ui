@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
-import { ToggleGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
+import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 
@@ -32,7 +32,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const group = inject<MultiSelectGroupContext | null>(ToggleGroupKey, null);
+const group = useOptionalMultiSelectGroupContext(ToggleGroupKey);
 
 const isChecked = computed(() => {
   if (group && props.value !== undefined) {

@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- CuiRadioGroup, CuiCheckboxGroup and CuiToggleGroup share one implementation of their
+  layout and auto-orientation, and the two multi-select groups share their context
+  provider (#206). Auto orientation now counts only rendered options: a `v-if`'d-out
+  option, whitespace, or a nested `<template v-for>` no longer skews it. Each root and its `__options` / `__error` elements now also carry
+  `cui-control-group` classes, whose rules live in the library stylesheet. Those rules
+  have lower specificity than the old scoped copies, and the error container's paint is
+  zero-specificity, so a consumer's plain (unlayered) override wins. The group-specific
+  classes are unchanged. `CheckboxGroupContext` and `ToggleGroupContext` are now aliases of
+  `MultiSelectGroupContext`, the identical shape. The deep-import paths
+  `components/checkbox-context.js` and `components/toggle-context.js` are gone: the keys they
+  held were never the ones the components used, so nothing reading them could have worked.
+  Import from the package root.
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
   corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
   selected row instead of coloured bold text. It is the same shared listbox panel, and takes
