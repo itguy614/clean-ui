@@ -85,7 +85,15 @@ export interface CuiCoreMessages {
     perPage: (count: number) => string;
   };
   breadcrumb: { label: string };
-  stepper: { label: string };
+  stepper: {
+    label: string;
+    /**
+     * Read straight after a step's label, separator included, since the check and warning
+     * icons say it only visually (#154).
+     */
+    complete: string;
+    error: string;
+  };
   skeleton: { label: string };
   fileUpload: {
     /** The per-file remove button's name, which shows only an icon (#169). */
@@ -204,7 +212,7 @@ export const defaultMessages: CuiCoreMessages = {
     perPage: (count) => `${count} / page`,
   },
   breadcrumb: { label: "Breadcrumb" },
-  stepper: { label: "Progress" },
+  stepper: { label: "Progress", complete: ", completed", error: ", error" },
   skeleton: { label: "Loading" },
   fileUpload: { removeFile: (name) => `Remove ${name}` },
   transferList: {

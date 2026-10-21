@@ -35,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiStepper's steps can be operated from the keyboard (#154). The steps are an ordered
+  list inside a `<nav>`, so their count and position are announced; a step you can go to
+  is a `<button>`, and the buttons share one tab stop (`useRovingFocus`) on the current
+  step. Completed and error steps say so to a screen reader (`stepper.complete` /
+  `stepper.error`). With `linear`, only steps up to the furthest one reached are navigable: an
+  error step ahead can no longer be jumped to, and going back no longer locks the steps
+  already done. `focus()` focuses the current step. This adds a tab stop, so a focus-order snapshot will change.
 - CuiFileUpload can be operated from the keyboard (#169). The file input is visually hidden
   but stays in the tab order (it was `display: none`), so Enter or Space opens the file
   dialog, and the drop zone is a `<label>` for it that draws its focus ring. The `label`
