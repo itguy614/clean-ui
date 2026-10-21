@@ -87,6 +87,10 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  fileUpload: {
+    /** The per-file remove button's name, which shows only an icon (#169). */
+    removeFile: (name: string) => string;
+  };
   transferList: {
     /** Names for the transfer and reorder buttons, which show only an icon (#170). */
     moveSelectedTo: (title: string) => string;
@@ -202,6 +206,7 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  fileUpload: { removeFile: (name) => `Remove ${name}` },
   transferList: {
     moveSelectedTo: (title) => `Move selected to ${title}`,
     moveAllTo: (title) => `Move all to ${title}`,
