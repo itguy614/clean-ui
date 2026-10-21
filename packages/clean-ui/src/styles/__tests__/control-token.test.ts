@@ -40,6 +40,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListboxStatus.vue", issue: "#212" },
   { file: "CuiInputStepper.vue", issue: "#123" },
   { file: "CuiBanner.vue", issue: "#119" },
+  { file: "CuiScrollArea.vue", issue: "#143" },
   { file: "CuiInput.vue", issue: "#211" },
   { file: "CuiSelect.vue", issue: "#211" },
   { file: "CuiTextarea.vue", issue: "#211" },

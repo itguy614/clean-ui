@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CuiScrollArea** and **useScrollArea** (#143): a scroll container that fades its content
+  out at an edge with more past it, with optional arrow or scroll-button indicators beside
+  the scroller (`indicator`, `indicatorVisibility`, `#indicator-start`/`#indicator-end`).
+  While its content overflows it is a named, focusable region; when it fits it adds no tab
+  stop. Edges are logical, so right-to-left pages work. `useScrollArea` is the same
+  arrangement for a scroller you render yourself, with a `mask` or `overlay` fade. New
+  message key `scrollArea.region` (a custom catalogue must add it).
+
+### Changed
+
+- CuiTable, CuiModalBody and the markdown editor toolbar are built on the new scroll area
+  (#143). The toolbar's edge fades are now a mask on the buttons rather than painted
+  gradients, so they match any toolbar background.
+
 - **Elevation tokens** (#224): `--cui-shadow-sm`, `--cui-shadow-md` and `--cui-shadow-lg`, each
   with a stronger dark-mode value. CuiDropdownMenu, CuiDropdownSub, CuiContextMenu, CuiModal
   and the markdown editor's mode toggle and autocomplete use them in place of a hardcoded
@@ -85,6 +99,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
+- `useScrollShadows` and its `scrollShadow*Style` objects, in favour of `useScrollArea` (#143).
+  Nothing in the library uses them any more; they remain exported until 2.0.
+
+### Fixed
+
+- CuiModalBody can be scrolled from the keyboard (#143). An overflowing body is now a
+  focusable region, so a body with nothing focusable in it is no longer stuck for keyboard
+  users (WCAG 2.1.1). Its padding moved to an inner `.cui-modal-body__content` element.
+- CuiTable's wrapper is a scroll region only while the table actually overflows (#143): a
+  `maxHeight` table whose rows fit no longer adds a tab stop that scrolls nothing.
 - `allowNested` on CuiModal and CuiSlideover (and `useOverlay`'s option) (#285). It never had
   an effect: overlays always stack, and Escape closes only the topmost. It warns when passed
   and goes in 2.0. `useOverlay`'s private one-at-a-time set, which it cleared, is gone; the

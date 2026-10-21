@@ -154,6 +154,8 @@ describe("CuiTable overflow containment", () => {
     const scroller = wrapper.find(".cui-table-wrapper").element as HTMLElement;
     const table = wrapper.find("table.cui-table").element as HTMLElement;
     Object.defineProperty(scroller, "clientWidth", { value: 300, configurable: true });
+    // The scroll arrangement (useScrollArea, #143) measures the scroller itself.
+    Object.defineProperty(scroller, "scrollWidth", { value: overflowing ? 900 : 300, configurable: true });
     Object.defineProperty(table, "offsetWidth", {
       value: overflowing ? 900 : 300,
       configurable: true,
@@ -198,10 +200,18 @@ describe("CuiTable overflow containment", () => {
     expect(scroller.attributes("aria-label")).toBe("Scrollable table");
   });
 
-  it("treats a maxHeight table as a scroll region without measuring", () => {
+  it("makes a maxHeight table a scroll region only once its rows overflow", async () => {
     const wrapper = mountTable({ maxHeight: "200px" });
     const scroller = wrapper.find(".cui-table-wrapper");
-    expect((scroller.element as HTMLElement).style.overflow).toBe("auto");
+    const el = scroller.element as HTMLElement;
+    expect(el.style.overflow).toBe("auto");
+    // Fits: no tab stop that scrolls nothing (#143).
+    expect(scroller.attributes("tabindex")).toBeUndefined();
+
+    Object.defineProperty(el, "clientHeight", { value: 200, configurable: true });
+    Object.defineProperty(el, "scrollHeight", { value: 600, configurable: true });
+    el.dispatchEvent(new Event("scroll"));
+    await wrapper.vm.$nextTick();
     expect(scroller.attributes("tabindex")).toBe("0");
     expect(scroller.attributes("role")).toBe("region");
   });

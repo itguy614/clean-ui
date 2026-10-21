@@ -3,6 +3,10 @@ import { ref } from "vue";
 /**
  * Tracks scroll position and exposes booleans for whether content
  * overflows in each direction. Use with fade overlay elements.
+ *
+ * @deprecated Use `useScrollArea` (or `CuiScrollArea`), which also follows content changes,
+ * handles right-to-left scrolling and supplies the region semantics (#143). Kept for
+ * existing consumers; nothing in the library uses it any more.
  */
 export function useScrollShadows() {
   const canScrollUp = ref(false);

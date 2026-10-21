@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, provide, ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { computed, provide, ref, watch } from "vue";
 import { TableContextKey } from "./table-context";
 import type { SizeableProps, HideableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
-import { useScrollShadows, scrollShadowBottomStyle, scrollShadowRightStyle } from "../composables/useScrollShadows";
+import { useScrollArea } from "../composables/useScrollArea";
 import { useMessages } from "../composables/useMessages";
 import { warnOnce } from "../utils/devWarn";
 
@@ -65,9 +65,21 @@ const tableStyle = computed(() => ({
   minWidth: props.minWidth || undefined,
 }));
 
-const { canScrollRight, canScrollDown, onScroll: onShadowScroll, update } = useScrollShadows();
+const messages = useMessages();
 
-const scrollWrapper = ref<HTMLElement | null>(null);
+// The scroll arrangement, from the shared composable (#143): edges, region semantics, the
+// observers that follow the table's size, and overlay fades — a mask would make a stacking
+// context and break the sticky header. Right and bottom only: a top fade would lie over the
+// sticky header. The table keeps its own overflow rules (wrapperStyle) and maxHeight.
+const area = useScrollArea({
+  orientation: "both",
+  fade: "overlay",
+  fadeSize: "36px",
+  fadeEdges: ["inline-end", "bottom"],
+  ariaLabel: () => messages.value.table.scrollRegionLabel,
+  onUpdate: measureOverflow,
+});
+const scrollWrapper = area.scroller;
 const tableEl = ref<HTMLElement | null>(null);
 
 // --- Overflow containment ---
@@ -77,8 +89,6 @@ const tableEl = ref<HTMLElement | null>(null);
 // content, so the header would never actually stick during page scroll. Staying
 // `visible` while the table fits keeps that case behaving natively.
 const isOverflowingX = ref(false);
-
-const scrollable = computed(() => !!props.maxHeight || isOverflowingX.value);
 
 const wrapperStyle = computed(() => {
   const s: Record<string, string> = { position: "relative" };
@@ -91,7 +101,8 @@ const wrapperStyle = computed(() => {
   return s;
 });
 
-function measure() {
+/** Runs after each of the scroll area's measurements. */
+function measureOverflow() {
   const wrap = scrollWrapper.value;
   const table = tableEl.value;
   if (!wrap || !table) return;
@@ -99,7 +110,6 @@ function measure() {
   // Measured off the table, not the wrapper: an `overflow: visible` wrapper
   // doesn't reliably report overflowing content in its own scrollWidth.
   isOverflowingX.value = Math.max(table.scrollWidth, table.offsetWidth) - wrap.clientWidth > 1;
-  update(wrap);
 
   if (isOverflowingX.value && props.stickyHeader && !props.maxHeight) {
     warnOnce(
@@ -110,26 +120,14 @@ function measure() {
   }
 }
 
-let resizeObserver: ResizeObserver | undefined;
+// Overflow switches the wrapper to `overflow-x: auto`, which changes what the scroll area
+// measures — its scrollWidth is only reliable once the wrapper is a scroll container — and
+// may not resize anything it observes. Re-measure once the new style is on.
+watch(isOverflowingX, () => area.update(), { flush: "post" });
 
-onMounted(() => {
-  requestAnimationFrame(measure);
-  if (typeof ResizeObserver !== "undefined") {
-    resizeObserver = new ResizeObserver(measure);
-    // Both: the wrapper for viewport changes, the table for content changes
-    if (scrollWrapper.value) resizeObserver.observe(scrollWrapper.value);
-    if (tableEl.value) resizeObserver.observe(tableEl.value);
-  }
-});
-
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect();
-  resizeObserver = undefined;
-});
-
+// The scroll area observes the wrapper and the table; these props change the layout too.
+const measure = area.update;
 watch(() => [props.minWidth, props.maxHeight, props.fixedLayout], measure, { flush: "post" });
-
-const messages = useMessages();
 
 defineExpose({ scrollWrapper, measure });
 
@@ -140,21 +138,17 @@ defineExpose({ scrollWrapper, measure });
        table overflows (or maxHeight is set). See `wrapperStyle` above. -->
   <div v-show="!hidden" class="cui-table-container" style="position: relative;">
     <div
-      ref="scrollWrapper"
+      :ref="area.setScroller"
       class="cui-table-wrapper"
+      v-bind="area.scrollerAttrs.value"
       :style="wrapperStyle"
-      :role="scrollable ? 'region' : undefined"
-      :tabindex="scrollable ? 0 : undefined"
-      :aria-label="scrollable ? messages.table.scrollRegionLabel : undefined"
-      @scroll="onShadowScroll"
     >
       <table ref="tableEl" class="cui-table" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
 
-    <div v-if="scrollable && canScrollRight" :style="scrollShadowRightStyle" />
-    <div v-if="scrollable && canScrollDown" :style="scrollShadowBottomStyle" />
+    <div v-for="f in area.overlayFades.value" :key="f.edge" :style="f.style" />
   </div>
 </template>
 
@@ -167,6 +161,10 @@ defineExpose({ scrollWrapper, measure });
 
 /* The wrapper is a tab stop only while it scrolls (WCAG 2.1.1 — scrollable
    regions must be keyboard-reachable), so give it a visible focus ring. */
+:where(.cui-table-wrapper) {
+  border-radius: inherit;
+}
+
 .cui-table-wrapper:focus-visible {
   outline: 2px solid var(--cui-primary-focus-ring);
   outline-offset: 2px;

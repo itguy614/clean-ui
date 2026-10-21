@@ -289,6 +289,11 @@ const router = createRouter({
       component: () => import('../pages/ConfirmDialogPage.vue'),
     },
     {
+      path: '/components/scroll-area',
+      name: 'scroll-area',
+      component: () => import('../pages/ScrollAreaPage.vue'),
+    },
+    {
       path: '/components/resizable-panels',
       name: 'resizable-panels',
       component: () => import('../pages/ResizablePanelsPage.vue'),

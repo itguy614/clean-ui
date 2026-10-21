@@ -30,6 +30,7 @@ const sections = [
   { id: "grid", label: "Grid", path: "/components/grid", group: "Layout" },
   { id: "grid-item", label: "Grid Item", path: "/components/grid-item", group: "Layout" },
   { id: "resizable-panels", label: "Resizable Panels", path: "/components/resizable-panels", group: "Layout" },
+  { id: "scroll-area", label: "Scroll Area", path: "/components/scroll-area", group: "Layout" },
   { id: "spacer", label: "Spacer", path: "/components/spacer", group: "Layout" },
   { id: "stack", label: "Stack", path: "/components/stack", group: "Layout" },
 
