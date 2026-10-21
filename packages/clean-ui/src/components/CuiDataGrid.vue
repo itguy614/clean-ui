@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T extends object = DataGridRow">
 import { toRef, watch, useSlots, type Ref } from "vue";
-import { useDataGrid, provideDataGrid } from "../composables/useDataGrid";
+import { useDataGrid, provideDataGrid, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import type {
   DataGridColumn,
   DataGridRow,
@@ -65,6 +65,12 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   hidePagination?: boolean;
   /** Hide search */
   hideSearch?: boolean;
+  /**
+   * How long the search box waits after the last keystroke before searching, in ms (#273).
+   * Searching is cheap now (an index of lower-cased cells), so 0 — every keystroke — is fine
+   * on large client-side grids too; a server-side grid wants it, since each search fetches.
+   */
+  searchDebounce?: number;
   /** Hide column manager */
   hideColumnManager?: boolean;
   /** Hide filter panel toggle */
@@ -106,6 +112,7 @@ const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
   hideToolbar: false,
   hidePagination: false,
   hideSearch: false,
+  searchDebounce: DEFAULT_SEARCH_DEBOUNCE,
   hideColumnManager: false,
   hideFilterPanel: false,
   filterPanelSide: "right",
@@ -199,6 +206,7 @@ const messages = useMessages();
     <CuiDataGridToolbar
       v-if="!hideToolbar"
       :hide-search="hideSearch"
+      :search-debounce="searchDebounce"
       :hide-column-manager="hideColumnManager"
       :hide-filter-toggle="hideFilterPanel"
       :has-card-slot="hasCardSlot"

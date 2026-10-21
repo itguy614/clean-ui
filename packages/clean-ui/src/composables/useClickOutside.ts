@@ -14,7 +14,7 @@ export interface UseClickOutsideOptions {
  * Supports multiple elements (e.g., trigger + teleported menu).
  */
 export function useClickOutside(
-  targets: Ref<HTMLElement | null | undefined>[] | (() => (HTMLElement | null | undefined)[]),
+  targets: Ref<HTMLElement | null | undefined>[] | (() => (Element | null | undefined)[]),
   handler: () => void,
   options: UseClickOutsideOptions = {},
 ) {
