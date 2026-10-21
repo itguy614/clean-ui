@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CuiDataGrid takes `searchDebounce` (ms, default 300 — what it always waited): how long the
+  search box waits after the last keystroke (#273).
+
 ### Changed
 
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
@@ -22,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   warning.
 
 ### Fixed
+
+- CuiDataGrid's client-side search and filters no longer lower-case every cell on every
+  keystroke: each row's cells are lowered once and cached, redone only for a value that
+  changed, so a keystroke in a 5,000 × 10 grid went from 50,000 lower-casings to none (#273).
 
 - CuiTabs links each tab to its panel (#271): a tab's `aria-controls` names its panel and the
   panel's `aria-labelledby` its tab, with ids generated per tab set. Before, the panel named

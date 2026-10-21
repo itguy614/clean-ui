@@ -42,6 +42,12 @@ const meta: ComponentMeta = {
     { name: "hideToolbar", type: "boolean", default: "false", description: "Hide the whole toolbar row" },
     { name: "hidePagination", type: "boolean", default: "false", description: "Hide the pagination bar" },
     { name: "hideSearch", type: "boolean", default: "false", description: "Hide the search field" },
+    {
+      name: "searchDebounce",
+      type: "number",
+      default: "300",
+      description: "ms the search box waits after the last keystroke. Searching is indexed, so 0 is fine on large client-side grids; keep a delay for a server-side grid, where each search fetches",
+    },
     { name: "hideColumnManager", type: "boolean", default: "false", description: "Hide the show/hide-columns menu" },
     { name: "hideFilterPanel", type: "boolean", default: "false", description: "Hide the filter-panel toggle" },
     { name: "filterPanelSide", type: "left | right", default: "right", description: "Which side the filter panel slides in from" },
