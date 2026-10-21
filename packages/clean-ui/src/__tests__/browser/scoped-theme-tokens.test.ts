@@ -21,6 +21,7 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
   afterAll(() => document.getElementById("cui-tokens")?.remove());
   afterEach(() => {
     document.getElementById("fixture")?.remove();
+    document.getElementById("consumer")?.remove();
     document.documentElement.classList.remove("dark");
   });
 
@@ -49,6 +50,8 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     document.documentElement.classList.add("dark");
     // Dark --cui-surface-bg is surface-800, and primary-text reads the theme too.
     expect(paint("var(--cui-surface-bg)", "cui-theme-forest")).toBe(paint("var(--color-surface-800)", "cui-theme-forest"));
+    // Dark --cui-primary is primary-200: the theme's own step, not the page's.
+    expect(paint("var(--cui-primary)", "cui-theme-forest")).toBe(paint("var(--color-primary-200)", "cui-theme-forest"));
     expect(paint("var(--cui-primary)", "cui-theme-forest")).not.toBe(paint("var(--cui-primary)", ""));
   });
 
@@ -64,11 +67,25 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     const style = document.createElement("style");
     style.id = "consumer";
     style.textContent = ".my-box { --cui-primary: rgb(1, 2, 3); }";
+    // Removed in afterEach, so a failing assertion can't leak it into the next test.
     document.head.append(style);
     expect(paint("var(--cui-primary)", "my-box cui-theme-forest")).toBe("rgb(1, 2, 3)");
     document.documentElement.classList.add("dark");
     expect(paint("var(--cui-primary)", "my-box cui-theme-forest")).toBe("rgb(1, 2, 3)");
-    style.remove();
+  });
+
+  it("doesn't reset a slot that doesn't read the scale", () => {
+    // A container's own value for a constant slot reaches through a theme scope.
+    const style = document.createElement("style");
+    style.id = "consumer";
+    style.textContent = ".panel { --cui-error-focus-ring: rgb(4, 5, 6); }";
+    document.head.append(style);
+    const host = document.createElement("div");
+    host.id = "fixture";
+    host.className = "panel";
+    host.innerHTML = '<div class="cui-theme-forest"><div id="p" style="background: var(--cui-error-focus-ring)"></div></div>';
+    document.body.append(host);
+    expect(getComputedStyle(document.getElementById("p")!).backgroundColor).toBe("rgb(4, 5, 6)");
   });
 
   it("gives a dark element inside a light themed subtree the theme's dark colours", () => {
