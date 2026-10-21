@@ -300,5 +300,6 @@ Compound sub-components for top-level composition, targeted slots inside them fo
     </script>
     ```
 12. Create a docs page, add route, add nav entry in the correct group.
+12b. A public composable or utility ships with its docs in the same PR: a page in the **Composables** nav group (live demo, a Try list, the API, when to use it — `RovingFocusPage.vue` is the model), or a section on the component page it belongs to. `src/__tests__/docs-coverage.test.ts` fails on a public `use*` / `configure*` / `provide*` / `register*` export, or a listed utility, that no docs page names (#296).
 13. Use `CuiCard` for example containers in docs, not hand-rolled divs.
 14. Build and verify: `pnpm build` must pass with zero TypeScript errors.

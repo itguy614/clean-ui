@@ -73,6 +73,26 @@ setTheme('default') // back to indigo
     </div>
 
     <div>
+      <h2 id="theme-presets" class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            The table above is built from <code class="cui-code">THEME_PRESETS</code> — a
+            <code class="cui-code">ThemePreset[]</code> of <code class="cui-code">{ id, label, description }</code>,
+            the same array <code class="cui-code">useTheme()</code> returns as
+            <code class="cui-code">presets</code>. Import it directly to build a theme picker outside
+            a component, e.g. in a settings schema.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import { THEME_PRESETS, type ThemePreset } from "@itguy614/clean-ui";
+
+// [{ id: "mono", label: "Mono", description: "Monochrome" },
+//  { id: "default", label: "Navy", description: "Navy blue (base scale)" }, ...]
+const options = THEME_PRESETS.map((p: ThemePreset) => ({ value: p.id, label: p.label }));</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Live Preview</h2>
       <p class="mb-4 text-surface-600 dark:text-surface-400">
         Click a theme below or use the palette icon in the header. All components on this page update instantly.
@@ -216,6 +236,35 @@ setTheme('teal')
   --color-surface-50: #fafaf9;
   /* ... */
 }</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <!-- SSR -->
+    <div>
+      <h2 id="ssr-theme-init" class="mb-4 text-2xl font-semibold">Server-rendered pages</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            <code class="cui-code">useTheme()</code> persists the choice to localStorage, which the
+            server can't read — so a server-rendered page first paints in the default theme and
+            switches once the app hydrates. <code class="cui-code">ssrThemeInitScript</code> is a
+            small inline script string that reads the stored theme and adds its
+            <code class="cui-code">cui-theme-*</code> class to <code class="cui-code">&lt;html&gt;</code>
+            before the first paint. Put it in the <code class="cui-code">&lt;head&gt;</code>, before
+            any stylesheets. It only covers the theme preset; if your app persists a dark-mode
+            preference, toggle the <code class="cui-code">dark</code> class the same way.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">// nuxt.config.ts
+import { ssrThemeInitScript } from "@itguy614/clean-ui";
+
+export default defineNuxtConfig({
+  app: {
+    head: {
+      script: [{ children: ssrThemeInitScript, type: "text/javascript" }],
+    },
+  },
+});</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>

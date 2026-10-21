@@ -25,7 +25,8 @@ export interface UsePopoverOptions {
 
 /**
  * Shared composable for floating element positioning.
- * Used by CuiTooltip, CuiSelect, CuiDropdownMenu, CuiPopover.
+ * Used by CuiTooltip and CuiPopover. Trigger-anchored panels (dropdowns, select, combobox)
+ * use the synchronous `computeDropdownPosition` instead.
  */
 export function usePopover(options: UsePopoverOptions = {}) {
   const referenceRef = ref<HTMLElement | null>(null);

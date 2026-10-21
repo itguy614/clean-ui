@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiAlert, CuiButton, CuiFlex, CuiStack } from "@itguy614/clean-ui";
+import { CuiAlert, CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import meta from "../meta/alert";
 import Example from "../components/Example.vue";
@@ -45,6 +45,38 @@ const showPulse = ref(true);
         </li>
         <li>The dismiss button is icon-only and carries a localized accessible name.</li>
       </ul>
+    </template>
+
+    <template #extra>
+      <div>
+        <h2 id="resolve-live-region" class="mb-4 text-2xl font-semibold">Live regions in your own components</h2>
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="mb-3 text-surface-600 dark:text-surface-400">
+              The announcement rule above is <code class="cui-code">resolveLiveRegion(color, override?)</code>,
+              shared by <code class="cui-code">CuiAlert</code>, <code class="cui-code">CuiToast</code> and
+              <code class="cui-code">CuiBanner</code>. It maps a colour role to ARIA attributes —
+              <code class="cui-code">error</code> to an assertive <code class="cui-code">role="alert"</code>,
+              anything else to a polite <code class="cui-code">role="status"</code>, both with
+              <code class="cui-code">aria-atomic="true"</code> — and an explicit
+              <code class="cui-code">LiveRegionMode</code> (<code class="cui-code">"assertive"</code>,
+              <code class="cui-code">"polite"</code> or <code class="cui-code">"off"</code>) wins over the
+              colour. A feedback component of your own can use it to announce the same way.
+            </p>
+            <pre class="cui-pre"><code class="cui-code">&lt;script setup lang="ts"&gt;
+import { computed } from "vue";
+import { resolveLiveRegion, type CuiColor, type LiveRegionMode } from "@itguy614/clean-ui";
+
+const props = defineProps&lt;{ color: CuiColor; live?: LiveRegionMode }&gt;();
+const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div class="status-pill" v-bind="liveAttrs"&gt;&lt;slot /&gt;&lt;/div&gt;
+&lt;/template&gt;</code></pre>
+          </CuiCardBody>
+        </CuiCard>
+      </div>
     </template>
 
     <template #examples>

@@ -3,11 +3,20 @@ import { computed, ref } from "vue";
 import {
   CuiDataGrid,
   CuiBadge,
+  CuiButton,
   CuiCard,
   CuiCardBody,
+  CuiFlex,
   CuiIcon,
+  CuiInput,
   CuiStack,
+  CuiTable,
+  CuiTableBody,
+  CuiTableCell,
+  CuiTableHead,
+  CuiTableRow,
   CuiToggle,
+  useDataGrid,
   type DataGridColumn,
   type DataGridRow,
   type DataGridBulkAction,
@@ -126,6 +135,19 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
   status: statuses[i % statuses.length],
   salary: `$${(70 + (i % 80)).toString()},000`,
 }));
+
+// Headless: the grid's state driving markup of our own
+const headless = useDataGrid({
+  columns: simpleColumns,
+  data: ref(data.map(({ _actions, ...rest }) => rest)),
+  defaultPerPage: 5,
+});
+
+function sortIndicator(key: string) {
+  const s = headless.sort.value;
+  if (s?.key !== key) return "";
+  return s.direction === "asc" ? " ↑" : " ↓";
+}
 </script>
 
 <template>
@@ -392,6 +414,265 @@ const largeData: DataGridRow[] = Array.from({ length: 10000 }, (_, i) => ({
         />
       </Example>
 
+    </template>
+
+    <template #extra>
+      <div>
+        <h2 id="headless" class="mb-4 text-2xl font-semibold">Headless</h2>
+        <CuiStack spacing="4">
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                <code>CuiDataGrid</code> is a view over a state object, and that object is
+                available on its own. <code>useDataGrid(options)</code> returns the same
+                <code>DataGridContext</code> the component renders from — column state, sort,
+                filters, search, pagination, selection, view mode and saved-view config — so you
+                can drive markup of your own with the grid's behaviour (client-side search, sort,
+                filter and paging, or server-side query params) without its UI.
+              </p>
+              <ul class="mb-3 list-disc pl-5 text-surface-600 dark:text-surface-400">
+                <li>
+                  <strong>Options:</strong> <code>columns</code> (an array, read once, or a ref or
+                  getter to follow changes), <code>data</code> (a <code>Ref</code> of rows or of a
+                  Laravel-style <code>PaginatedData</code> page), <code>serverSide</code>,
+                  <code>rowKey</code> (default <code>"id"</code>), <code>defaultPerPage</code>
+                  (default 15), <code>initialView</code> (a <code>DataGridViewConfig</code>) and
+                  <code>hydrateFromUrl</code>.
+                </li>
+                <li>
+                  <strong>State</strong> (refs): <code>displayData</code> (the current page,
+                  already searched, filtered and sorted), <code>paginationMeta</code>,
+                  <code>visibleColumns</code>, <code>sort</code>, <code>filters</code>,
+                  <code>searchQuery</code>, <code>page</code>, <code>perPage</code>,
+                  <code>selectedRows</code>, <code>viewMode</code>, <code>isDirty</code>.
+                </li>
+                <li>
+                  <strong>Actions:</strong> <code>applySort(key)</code> (cycles asc → desc →
+                  none), <code>applyFilter(filter)</code>, <code>removeFilter</code>,
+                  <code>clearFilters</code>, <code>search(query, field?)</code>,
+                  <code>setPage</code>, <code>setPerPage</code>, <code>toggleSelection</code>,
+                  <code>selectAll</code>, <code>toggleColumnVisibility</code>,
+                  <code>reorderColumns</code>, <code>getQueryParams()</code>,
+                  <code>getConfig()</code> / <code>loadConfig(config)</code>,
+                  <code>markClean()</code>, <code>resetToDefaults()</code>. Changing sort,
+                  filters, search or page size returns to page 1.
+                </li>
+              </ul>
+              <pre class="cui-pre"><code class="cui-code">import { ref } from "vue";
+import { useDataGrid, type DataGridColumn, type DataGridRow } from "@itguy614/clean-ui";
+
+const columns: DataGridColumn[] = [
+  { key: "name", label: "Name", sortable: true },
+  { key: "role", label: "Role", sortable: true },
+];
+const rows = ref&lt;DataGridRow[]&gt;(await fetchPeople());
+
+const grid = useDataGrid({ columns, data: rows, defaultPerPage: 5 });
+
+grid.search("eng");          // client-side search across every field
+grid.applySort("name");      // asc; again for desc; a third time clears it
+grid.displayData.value;      // the rows to render on this page
+grid.paginationMeta.value;   // { current_page, last_page, per_page, total, from, to }</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+
+          <Example title="Headless: useDataGrid with your own markup" :code="`<script setup lang=&quot;ts&quot;>
+const grid = useDataGrid({ columns, data: ref(rows), defaultPerPage: 5 });
+&lt;/script>
+
+<CuiInput :model-value=&quot;grid.searchQuery.value&quot; @update:model-value=&quot;(v) => grid.search(String(v))&quot; />
+<CuiTable>
+  <CuiTableHead>
+    <CuiTableRow>
+      <CuiTableCell v-for=&quot;col in grid.visibleColumns.value&quot; :key=&quot;col.key&quot;>
+        <CuiButton variant=&quot;ghost&quot; :disabled=&quot;!col.sortable&quot; @click=&quot;grid.applySort(col.key)&quot;>
+          {{ col.label }}
+        </CuiButton>
+      </CuiTableCell>
+    </CuiTableRow>
+  </CuiTableHead>
+  <CuiTableBody>
+    <CuiTableRow v-for=&quot;row in grid.displayData.value&quot; :key=&quot;row.id&quot;>
+      <CuiTableCell v-for=&quot;col in grid.visibleColumns.value&quot; :key=&quot;col.key&quot;>{{ row[col.key] }}</CuiTableCell>
+    </CuiTableRow>
+  </CuiTableBody>
+</CuiTable>
+<CuiButton @click=&quot;grid.setPage(grid.page.value - 1)&quot;>Previous</CuiButton>
+<CuiButton @click=&quot;grid.setPage(grid.page.value + 1)&quot;>Next</CuiButton>`">
+            <CuiStack spacing="3">
+              <div style="max-width: 18rem;">
+                <CuiInput
+                  :model-value="headless.searchQuery.value"
+                  placeholder="Search…"
+                  aria-label="Search people"
+                  @update:model-value="(v) => headless.search(String(v))"
+                />
+              </div>
+              <CuiCard variant="outline">
+                <CuiCardBody no-padding>
+                  <CuiTable size="sm">
+                    <CuiTableHead>
+                      <CuiTableRow>
+                        <CuiTableCell v-for="col in headless.visibleColumns.value" :key="col.key">
+                          <CuiButton
+                            v-if="col.sortable"
+                            variant="ghost"
+                            size="sm"
+                            @click="headless.applySort(col.key)"
+                          >
+                            {{ col.label }}{{ sortIndicator(col.key) }}
+                          </CuiButton>
+                          <template v-else>{{ col.label }}</template>
+                        </CuiTableCell>
+                      </CuiTableRow>
+                    </CuiTableHead>
+                    <CuiTableBody>
+                      <CuiTableRow v-for="row in headless.displayData.value" :key="String(row.id)">
+                        <CuiTableCell v-for="col in headless.visibleColumns.value" :key="col.key">
+                          {{ row[col.key] }}
+                        </CuiTableCell>
+                      </CuiTableRow>
+                    </CuiTableBody>
+                  </CuiTable>
+                </CuiCardBody>
+              </CuiCard>
+              <CuiFlex gap="3" class="items-center">
+                <CuiButton
+                  size="sm"
+                  :disabled="headless.page.value <= 1"
+                  @click="headless.setPage(headless.page.value - 1)"
+                >
+                  Previous
+                </CuiButton>
+                <span class="text-sm" style="color: var(--cui-text-secondary);">
+                  {{ headless.paginationMeta.value.from ?? 0 }}–{{ headless.paginationMeta.value.to ?? 0 }}
+                  of {{ headless.paginationMeta.value.total }}
+                </span>
+                <CuiButton
+                  size="sm"
+                  :disabled="headless.page.value >= headless.paginationMeta.value.last_page"
+                  @click="headless.setPage(headless.page.value + 1)"
+                >
+                  Next
+                </CuiButton>
+              </CuiFlex>
+            </CuiStack>
+          </Example>
+
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <h3 id="sharing-grid-state" class="mb-2 text-lg font-semibold">Sharing state with sub-components</h3>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                <code>provideDataGrid(context)</code> provides a grid to every descendant, and
+                <code>useDataGridState()</code> injects it — throwing if no grid is above it, so
+                a misplaced component fails loudly rather than rendering empty. This is how
+                <code>CuiDataGrid</code>'s own search, filter panel, pagination and bulk bar reach
+                its state. <code>CuiDataGrid</code> calls <code>provideDataGrid</code> itself, so a
+                component you place in its <code>#toolbar-start</code>, <code>#toolbar-end</code> or
+                cell slots can call <code>useDataGridState()</code> too. Call it from a child
+                component's setup; the component that calls <code>provideDataGrid</code> cannot
+                inject its own value.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">// PeopleGrid.vue — owns the state
+const grid = useDataGrid({ columns, data: rows });
+provideDataGrid(grid);
+
+// ActiveFilterCount.vue — anywhere below PeopleGrid, or inside a CuiDataGrid slot
+import { computed } from "vue";
+import { useDataGridState } from "@itguy614/clean-ui";
+
+const grid = useDataGridState();
+const count = computed(() => grid.filters.value.length);</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <h3 id="saved-views" class="mb-2 text-lg font-semibold">Saved views</h3>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                On the component, saved views are two props: <code>grid-id</code> turns on the
+                toolbar's view manager and <code>view-adapter</code> says where views are stored.
+                The manager is built on <code>useDataGridViews({ gridId, adapter? })</code>, which
+                you can use directly with a headless grid. It returns <code>views</code>,
+                <code>activeViewId</code> and <code>loading</code> refs and
+                <code>fetchViews()</code>, <code>saveView(name, config)</code> (overwrites a view of
+                the same name, then makes it active), <code>updateView(id, config)</code>,
+                <code>removeView(id)</code> and <code>selectView(id)</code>. It does not load on its
+                own — call <code>fetchViews()</code> first — and <code>selectView</code> only marks a
+                view active: apply it with <code>grid.loadConfig(view.config)</code>.
+              </p>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                The adapter is a <code>DataGridViewAdapter</code> — async <code>load(gridId)</code>,
+                <code>save(gridId, view)</code> and <code>remove(gridId, viewId)</code> — so views can
+                live behind an API. Without one it defaults to
+                <code>localStorageViewAdapter(prefix = "cui-datagrid")</code>, which stores each
+                grid's views as JSON under <code>`${prefix}-views-${gridId}`</code> and treats a
+                missing or corrupt entry as no views.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import { useDataGrid, useDataGridViews, localStorageViewAdapter, type DataGridViewAdapter } from "@itguy614/clean-ui";
+
+const grid = useDataGrid({ columns, data: rows });
+const views = useDataGridViews({ gridId: "people", adapter: localStorageViewAdapter("acme") });
+
+await views.fetchViews();
+await views.saveView("Engineering only", grid.getConfig());
+grid.markClean();
+
+function apply(id: string) {
+  const view = views.views.value.find((v) => v.id === id);
+  if (view) { views.selectView(id); grid.loadConfig(view.config); }
+}
+
+// Or persist server-side
+const apiAdapter: DataGridViewAdapter = {
+  load: (gridId) => api.get(`/grid-views/${gridId}`),
+  save: (gridId, view) => api.put(`/grid-views/${gridId}/${view.id}`, view),
+  remove: (gridId, viewId) => api.delete(`/grid-views/${gridId}/${viewId}`),
+};
+// &lt;CuiDataGrid grid-id="people" :view-adapter="apiAdapter" ... /&gt;</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <h3 id="inertia" class="mb-2 text-lg font-semibold">Inertia</h3>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                <code>useDataGridInertia({ grid, url, router, extraParams? })</code> connects a grid
+                to a Laravel + Inertia backend. It watches sort, filters, search, page and page
+                size, and on each change calls <code>router.get(url, query, { preserveState: true,
+                preserveScroll: true })</code> with the query built from
+                <code>grid.getQueryParams()</code>: <code>page</code> (omitted on page 1),
+                <code>per_page</code>, <code>sort</code> + <code>direction</code>,
+                <code>search</code> + <code>search_field</code>, and <code>filter[key]</code> per filter
+                (multi-select values comma-joined), plus every <code>extraParams</code> entry. Those
+                are the keys <code>hydrateFromUrl</code> reads back, so a reload or a shared link
+                restores the same state. It returns <code>navigate()</code>, to trigger a visit by
+                hand, and <code>buildQueryData(params)</code>.
+              </p>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                It takes the grid context, so pair it with a headless <code>useDataGrid</code> (with
+                <code>serverSide</code> and <code>hydrateFromUrl</code>), or call it inside a
+                component in a <code>CuiDataGrid</code> slot with
+                <code>useDataGridState()</code>. With the component on its own, the
+                <code>navigate</code> event carries the same <code>DataGridQueryParams</code>.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import { computed } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { useDataGrid, useDataGridInertia } from "@itguy614/clean-ui";
+
+const page = usePage();
+const grid = useDataGrid({
+  columns,
+  data: computed(() => page.props.users),   // a Laravel paginator
+  serverSide: true,
+  hydrateFromUrl: true,
+});
+
+useDataGridInertia({ grid, url: route("users.index"), router, extraParams: { team: "7" } });</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+        </CuiStack>
+      </div>
     </template>
   </DocPage>
 </template>

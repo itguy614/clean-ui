@@ -20,7 +20,6 @@ const sections = [
   { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
   { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
   { id: "utilities", label: "Utilities", path: "/foundations/utilities", group: "Foundations" },
-  { id: "roving-focus", label: "Roving Focus", path: "/foundations/roving-focus", group: "Foundations" },
 
   // Layout (alphabetical)
   { id: "container", label: "Container", path: "/components/container", group: "Layout" },
@@ -96,6 +95,16 @@ const sections = [
   { id: "popover", label: "Popover", path: "/components/popover", group: "Overlay" },
   { id: "slideover", label: "Slideover", path: "/components/slideover", group: "Overlay" },
   { id: "tooltip", label: "Tooltip", path: "/components/tooltip", group: "Overlay" },
+
+  // Composables (#296) — interaction, positioning, responsive, forms
+  { id: "click-outside", label: "Click Outside", path: "/composables/click-outside", group: "Composables" },
+  { id: "roving-focus", label: "Roving Focus", path: "/composables/roving-focus", group: "Composables" },
+  { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
+  { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
+  { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },
+  { id: "breakpoint", label: "Breakpoint & Layout Context", path: "/composables/breakpoint", group: "Composables" },
+  { id: "color-scheme", label: "Color Scheme", path: "/composables/color-scheme", group: "Composables" },
+  { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
 ];
 
 const groupedSections = sections.reduce((acc, section) => {

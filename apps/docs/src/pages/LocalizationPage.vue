@@ -142,6 +142,71 @@ import { defaultMessages } from "@itguy614/clean-ui";  // the English baseline</
       </CuiCardBody>
     </CuiCard>
 
+    <div>
+      <h2 id="use-messages" class="mb-4 text-2xl font-semibold">Reading messages in your own components</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="text-sm" style="color: var(--cui-text-secondary);">
+            <code class="cui-code">useMessages()</code> returns a
+            <code class="cui-code">ComputedRef&lt;CuiMessages&gt;</code> — the nearest
+            <code class="cui-code">CuiConfigProvider</code>'s merged catalog, or the built-in English
+            defaults when there is no provider. A custom component that calls it localizes along with
+            the library's own. In templates the ref auto-unwraps; in script use
+            <code class="cui-code">.value</code>.
+          </p>
+          <pre v-pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">&lt;script setup lang="ts"&gt;
+import { computed } from "vue";
+import { useMessages } from "@itguy614/clean-ui";
+
+const props = defineProps&lt;{ count: number }&gt;();
+const messages = useMessages();
+
+const summary = computed(() => messages.value.dataGrid.selected(props.count));
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;span&gt;{{ summary }}&lt;/span&gt;
+  &lt;button :aria-label="messages.close"&gt;✕&lt;/button&gt;
+&lt;/template&gt;</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
+      <h2 id="default-messages" class="mb-4 text-2xl font-semibold">Building a full catalog for a locale</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="text-sm" style="color: var(--cui-text-secondary);">
+            <code class="cui-code">defaultMessages</code> is the English baseline.
+            <code class="cui-code">mergeMessages(base, override?)</code> merges a
+            <code class="cui-code">DeepPartialMessages</code> onto it one namespace deep (function
+            entries are replaced wholesale) and returns a complete
+            <code class="cui-code">CuiMessages</code> — useful when you need every string resolved
+            outside a provider, e.g. on the server or in a test.
+          </p>
+          <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+            <code class="cui-code">defaultMessages</code> is typed
+            <code class="cui-code">CuiCoreMessages</code>, not <code class="cui-code">CuiMessages</code>:
+            it only holds this package's own keys, so it can't satisfy namespaces a satellite package
+            adds. Pass it through <code class="cui-code">mergeMessages</code> when you need a
+            <code class="cui-code">CuiMessages</code>.
+          </p>
+          <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">import { defaultMessages, mergeMessages, type CuiMessages } from "@itguy614/clean-ui";
+
+const es: CuiMessages = mergeMessages(defaultMessages, {
+  clear: "Limpiar",
+  pagination: {
+    summary: ({ from, to, total }) => `Mostrando ${from}–${to} de ${total} resultados`,
+    perPage: (n) => `${n} / página`,
+  },
+});
+
+es.close;            // "Close" — untranslated keys keep the English default
+es.pagination.perPage(25); // "25 / página"</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
     <CuiCard variant="outline">
       <CuiCardHeader title="Adding a namespace from a satellite package" />
       <CuiCardBody>
