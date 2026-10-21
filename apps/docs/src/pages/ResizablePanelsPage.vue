@@ -49,12 +49,15 @@ const size1 = ref(50);
         out of existence unless <code>collapseThreshold</code> is set.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
-        <strong>Known limitation:</strong> the handle is not currently keyboard-operable —
-        it is not in the tab order and does not respond to arrow keys, and it carries no
-        <code>role="separator"</code> or <code>aria-valuenow</code>, so assistive technology
-        is not told that the boundary can move or where it currently sits. Treat the split
-        as a convenience for pointer users: keep both panels' content reachable at the
-        default sizes, and never put the only route to something behind a resize.
+        The handle is the WAI-ARIA window splitter: a focusable <code>role="separator"</code>
+        named “Resize panels”, whose <code>aria-valuenow</code> is the first panel's share of
+        the space (0 while collapsed) and whose <code>aria-controls</code> points at that
+        panel. With it focused, the arrow keys along the split move it — Left and Right side by
+        side, mirrored in a right-to-left page; Up and Down when stacked — in 2% steps, or 10%
+        with Shift. Home and End go to the smallest and largest sizes the minimums allow, and
+        Enter collapses the first panel and restores it when <code>collapseThreshold</code> is
+        set — to the size it had, where double-click resets to <code>initialSize</code>. The name comes from the message catalogue
+        (<code>resizablePanels.handle</code>).
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         Each panel scrolls on its own overflow, which does keep long content reachable, but

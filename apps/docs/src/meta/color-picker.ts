@@ -27,7 +27,7 @@ const meta: ComponentMeta = {
   ],
 
   methods: [
-    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the text field, or the root when showInput is false" },
+    { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the text field; without one, the gradient's slider pair, or the swatches when swatchOnly" },
     { name: "blur", signature: "() => void", description: "Blur whichever element focus() would have focused" },
     { name: "el", signature: "HTMLElement | null", description: "The root element" },
   ],
