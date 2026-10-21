@@ -87,6 +87,23 @@ export interface CuiCoreMessages {
   breadcrumb: { label: string };
   stepper: { label: string };
   skeleton: { label: string };
+  resizablePanels: {
+    /** The splitter's accessible name (#156). */
+    handle: string;
+  };
+  colorPicker: {
+    /** Names of the sliders (#177). The gradient is two: saturation across, brightness up. */
+    saturation: string;
+    brightness: string;
+    hue: string;
+    alpha: string;
+    /** The preset swatches' radiogroup. Each swatch is named by its hex value. */
+    swatches: string;
+    /** aria-valuetext for the saturation, brightness and alpha sliders. */
+    percent: (value: number) => string;
+    /** aria-valuetext for the hue slider. */
+    degrees: (value: number) => string;
+  };
   formField: {
     /**
      * Appended to a required field's label for screen readers. The visible marker is an
@@ -112,6 +129,16 @@ export interface CuiCoreMessages {
     selected: (count: number) => string;
     /** Described on a clickable row (aria-description), which has no role to say so (#232). */
     rowHint: string;
+    /** Names for controls that show only an icon or a box (#161). */
+    selectAll: string;
+    /** A row's checkbox, given the row's label (see CuiDataGrid's rowLabel). */
+    selectRow: (rowLabel: string) => string;
+    /** A row's actions button, given the row's label. */
+    rowActions: (rowLabel: string) => string;
+    /** A row's label when nothing better names it: its position, 1-based. */
+    rowNumber: (position: number) => string;
+    tableView: string;
+    cardView: string;
   };
 }
 
@@ -161,6 +188,16 @@ export const defaultMessages: CuiCoreMessages = {
   breadcrumb: { label: "Breadcrumb" },
   stepper: { label: "Progress" },
   skeleton: { label: "Loading" },
+  resizablePanels: { handle: "Resize panels" },
+  colorPicker: {
+    saturation: "Saturation",
+    brightness: "Brightness",
+    hue: "Hue",
+    alpha: "Opacity",
+    swatches: "Preset colors",
+    percent: (value) => `${value}%`,
+    degrees: (value) => `${value} degrees`,
+  },
   formField: { required: "(required)" },
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },
@@ -173,6 +210,12 @@ export const defaultMessages: CuiCoreMessages = {
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
     rowHint: "Press Enter to open",
+    selectAll: "Select all rows",
+    selectRow: (rowLabel) => `Select ${rowLabel}`,
+    rowActions: (rowLabel) => `Actions for ${rowLabel}`,
+    rowNumber: (position) => `row ${position}`,
+    tableView: "Table view",
+    cardView: "Card view",
   },
 };
 

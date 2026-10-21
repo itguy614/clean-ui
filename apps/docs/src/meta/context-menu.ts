@@ -17,6 +17,12 @@ const meta: ComponentMeta = {
     },
     { name: "minWidth", type: "string", default: "12rem", description: "Minimum width of the menu panel" },
     {
+      name: "resolveTarget",
+      type: "(el: Element) => unknown",
+      description:
+        "One menu for many targets — the rows of a list or grid. Called with the element a gesture landed on: return what the menu is for (a row, an id), which the menu slot receives as target, or nothing to leave that spot to the browser's own menu. With it, a press elsewhere in the wrapped content closes the menu like a press outside",
+    },
+    {
       name: "longPressDelay",
       type: "number",
       default: "500",
@@ -34,7 +40,12 @@ const meta: ComponentMeta = {
 
   slots: [
     { name: "default", description: "The content the gesture applies to. The wrapper is display: contents, so it adds no box" },
-    { name: "menu", description: "Menu items — CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownDivider, CuiDropdownHeader" },
+    {
+      name: "menu",
+      payload: "{ target: unknown }",
+      description:
+        "Menu items — CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownDivider, CuiDropdownHeader. target is resolveTarget's answer for the spot the menu opened on",
+    },
   ],
 
   events: [
