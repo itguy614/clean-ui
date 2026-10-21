@@ -12,6 +12,7 @@ import CuiBadge from "./CuiBadge.vue";
 
 const props = defineProps<{
   hideSearch?: boolean;
+  searchDebounce?: number;
   hideColumnManager?: boolean;
   hideFilterToggle?: boolean;
   hideViewToggle?: boolean;
@@ -29,7 +30,7 @@ const activeFilterCount = computed(() => grid.filters.value.length);
   <div class="cui-data-grid-toolbar">
     <div class="cui-data-grid-toolbar__start">
       <slot name="toolbar-start" />
-      <CuiDataGridSearch v-if="!hideSearch" />
+      <CuiDataGridSearch v-if="!hideSearch" :debounce="searchDebounce" />
     </div>
     <div class="cui-data-grid-toolbar__end">
       <slot name="toolbar-end" />

@@ -1,4 +1,5 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { warnOnce } from "../utils/devWarn";
@@ -45,6 +46,9 @@ export function useOverlay(options: UseOverlayOptions) {
   const isVisible = ref(false);
   const isAnimating = ref(false);
   const previousFocus = ref<HTMLElement | null>(null);
+  // The opener's restore key, if it carries one: what brings it back if it has unmounted by
+  // the time this closes (a virtualised grid row, #232).
+  let previousFocusKey: string | null = null;
   // Open from openOverlay() until closeOverlay() starts the exit, so Escape goes to the
   // layer beneath while this one animates out.
   const isOpen = ref(false);
@@ -70,6 +74,7 @@ export function useOverlay(options: UseOverlayOptions) {
   function openOverlay() {
     isOpen.value = true;
     previousFocus.value = document.activeElement as HTMLElement;
+    previousFocusKey = restoreKeyOf(previousFocus.value);
     isVisible.value = true;
 
     acquireScrollLock();
@@ -99,8 +104,8 @@ export function useOverlay(options: UseOverlayOptions) {
 
       releaseScrollLock();
 
-      // Return focus
-      previousFocus.value?.focus();
+      // Return focus — to the opener, or, if it has unmounted, through its restore key.
+      returnFocus(previousFocus.value, previousFocusKey);
     }, animationDuration);
   }
 

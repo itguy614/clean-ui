@@ -2,6 +2,7 @@
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useHeadingLevel } from "../utils/configure";
 
 export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
@@ -21,8 +22,10 @@ export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
 const props = withDefaults(defineProps<CuiModalHeaderProps>(), {
   noCloseButton: false,
   hidden: false,
-  titleAs: "h2",
 });
+
+// Its own `titleAs`, else the app's default (#149), else the library's.
+const headingTag = useHeadingLevel("modalHeader", () => props.titleAs);
 
 const emit = defineEmits<{
   close: [];
@@ -48,7 +51,7 @@ const messages = useMessages();
     <div style="flex: 1; min-width: 0;">
       <slot>
         <component
-          :is="titleAs"
+          :is="headingTag"
           v-if="title"
           :id="titleId"
           class="cui-modal-header__title"
