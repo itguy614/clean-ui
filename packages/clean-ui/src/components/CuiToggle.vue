@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
@@ -87,6 +88,9 @@ const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: strin
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 const dims = computed(() => trackSizes[clampedSize.value]);
+
+// Named by the label, described by the description, not both as one name (#183).
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -102,9 +106,9 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     }"
     :id="id"
     role="switch"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="ariaLabelledby"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -155,11 +159,11 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     </span>
 
     <!-- Label + description -->
-    <span v-if="label || $slots.default || description || $slots.description" class="cui-toggle__label-wrap">
-      <span class="cui-toggle__label">
+    <span v-if="label || $slots.default || choice.hasDescription()" class="cui-toggle__label-wrap">
+      <span :id="choice.labelId" class="cui-toggle__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="description || $slots.description" class="cui-toggle__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-toggle__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>

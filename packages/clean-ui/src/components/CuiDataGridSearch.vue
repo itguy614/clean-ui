@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { onScopeDispose, ref, watch } from "vue";
+import { useDataGridState, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
+
+export interface CuiDataGridSearchProps {
+  /** ms after the last keystroke; 0 searches at once. */
+  debounce?: number;
+}
+
+const props = withDefaults(defineProps<CuiDataGridSearchProps>(), {
+  debounce: DEFAULT_SEARCH_DEBOUNCE,
+});
 
 const messages = useMessages();
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -19,12 +28,23 @@ watch(
 function onInput(val: string | number) {
   localQuery.value = String(val);
   if (debounceTimer) clearTimeout(debounceTimer);
+  if (props.debounce <= 0) {
+    grid.search(localQuery.value);
+    return;
+  }
   debounceTimer = setTimeout(() => {
     grid.search(localQuery.value);
-  }, 300);
+  }, props.debounce);
 }
 
+// A pending search mustn't run against a grid that has gone.
+onScopeDispose(() => {
+  if (debounceTimer) clearTimeout(debounceTimer);
+});
+
 function onClear() {
+  // A search still waiting would run after the clear and undo it.
+  if (debounceTimer) clearTimeout(debounceTimer);
   localQuery.value = "";
   grid.clearSearch();
 }

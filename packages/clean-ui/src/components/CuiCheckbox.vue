@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { CheckboxGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
@@ -74,6 +75,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
+
+// Named by the label, described by the description, not both as one name (#183).
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -90,9 +94,9 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     }"
     :id="id"
     role="checkbox"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="ariaLabelledby"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="indeterminate && !isChecked ? 'mixed' : isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -132,10 +136,10 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
     <!-- Label + description -->
     <span class="cui-checkbox__label-wrap">
-      <span class="cui-checkbox__label">
+      <span :id="choice.labelId" class="cui-checkbox__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="description || $slots.description" class="cui-checkbox__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-checkbox__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>
