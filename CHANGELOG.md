@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A theme class on part of a page now re-themes it (#329). `<div class="cui-theme-forest">`
+  changed only the colour scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,
+  `--cui-text-*`, …) was resolved once on `:root`, so components inside kept the page's theme.
+  The slots are now declared on every theme scope too, in light and dark mode. A consumer
+  who overrides a colour slot on an ancestor of a themed subtree now sees the theme's value
+  inside it, as the theme intends.
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
   click outside still leaves focus where it landed. On open, focus now also lands on a

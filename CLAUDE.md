@@ -74,6 +74,7 @@
 - 8 presets: Mono (monochrome), Navy (default/indigo), Forest (green), Amber (orange/warm), Azure (blue), Teal (cool teal), Violet (purple), Ruby (red)
 - Themes are CSS classes (`cui-theme-forest`, etc.) that override `--color-primary-*` and `--color-surface-*`
 - Apply to any ancestor: `<html class="cui-theme-forest">` or scoped `<div class="cui-theme-violet">`
+- **Colour tokens that read the scale are declared on every theme scope, not just `:root`** — `:root, :where([class^="cui-theme-"], [class*=" cui-theme-"])`, and the dark block adds `:where(.dark [class^="cui-theme-"], …)`. The theme selectors are `:where()` so a consumer's own override on a themed element still wins. A custom property's `var()` resolves where it is declared, so a slot declared only on `:root` keeps the page theme's colour inside a scoped theme (#329). A new scale-derived token goes in those blocks; a non-colour token (radius, fonts, density) stays on `:root` alone, or a theme scope would reset a container's own value. `__tests__/browser/scoped-theme-tokens.test.ts` measures it.
 - `useTheme()` composable: `setTheme(id)`, reactive `theme` ref, persists to localStorage
 - Surface lightness curve based on Amber warm gray distribution (0.983 → 0.196) — ALL themes use this curve
 - Light mode surfaces have a very subtle primary tint (chroma 0.005-0.010)

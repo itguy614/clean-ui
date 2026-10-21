@@ -44,7 +44,18 @@
    9 slots per role. Override any --cui-* on :root or a container.
    ============================================================ */
 
-:root {
+/* Declared on every theme scope as well as the root (#329). A custom property's `var()`
+   resolves where it is declared, and descendants inherit the result — so declared on
+   `:root` alone, `--cui-primary: var(--color-primary-500)` stayed the page theme's colour
+   inside a scoped `<div class="cui-theme-forest">`, which changes only the scale. Each
+   theme scope re-declares the slots so they resolve against its own scale. The theme
+   selectors are `:where()`, (0,0,0), so a consumer's own `.my-box { --cui-primary: … }` on
+   a themed element still wins, in either mode. The dark list adds a theme element inside
+   `.dark`, which would otherwise take these light slots over the dark ones it inherits; it
+   wins as the later rule at the same weight, and a theme element that is itself `.dark` is
+   the `.dark` selector. */
+:root,
+:where([class^="cui-theme-"], [class*=" cui-theme-"]) {
   /* --- Primary --- */
   --cui-primary:            var(--color-primary-500);
   --cui-primary-hover:      var(--color-primary-700);
@@ -152,6 +163,20 @@
   --cui-border: var(--color-surface-500);
   --cui-border-strong: var(--color-surface-600);
 
+  /* --- Text color semantics (light mode) --- */
+  --cui-text-body: var(--color-surface-900);
+  --cui-text-secondary: var(--color-surface-700);
+  /* Custom step (~5:1 on white): lighter than secondary for hierarchy, but the
+     surface scale has no step between 600 (fails AA) and 700 that passes. */
+  --cui-text-tertiary: oklch(0.55 0.012 270);
+  --cui-text-emphasis: var(--color-surface-950);
+  --cui-text-link: var(--cui-primary);
+  --cui-text-link-hover: var(--cui-primary-hover);
+  --cui-text-code: var(--color-primary-700);
+}
+
+/* Not a colour, so on the root only: a theme scope must not reset a container's own radii. */
+:root {
   /* --- Radius scale ---
      One source for corner radii. Component tokens alias these rather than each other:
      `--cui-banner-radius` used to default to `--cui-card-radius`, and the shared scale
@@ -182,7 +207,8 @@
    above sit on `:root` and `dark` lands on that same <html>. Both rules and the
    reasoning: see "Color System" in CLAUDE.md (#121). */
 :root.dark,
-.dark {
+.dark,
+:where(.dark [class^="cui-theme-"], .dark [class*=" cui-theme-"]) {
   --cui-surface-base: var(--color-surface-900);
 
   /* Neutral color role — dark mode (intensity = contrast against the dark base) */
@@ -307,6 +333,15 @@
   --cui-info-solid:        var(--color-info-500);
   --cui-info-solid-hover:  var(--color-info-700);
   --cui-info-solid-active: var(--color-info-900);
+
+  /* --- Text color semantics (dark mode) --- */
+  --cui-text-body: var(--color-surface-200);
+  --cui-text-secondary: var(--color-surface-400);
+  --cui-text-tertiary: var(--color-surface-500);
+  --cui-text-emphasis: var(--color-surface-50);
+  --cui-text-link: var(--cui-primary);
+  --cui-text-link-hover: var(--cui-primary-hover);
+  --cui-text-code: var(--color-primary-200);
 }
 
 /* ============================================================
@@ -356,34 +391,11 @@
   --cui-font-size-small: 0.875rem;  /* 14px */
   --cui-font-size-code: 0.875em;
 
-  /* --- Text color semantics (light mode) --- */
-  --cui-text-body: var(--color-surface-900);
-  --cui-text-secondary: var(--color-surface-700);
-  /* Custom step (~5:1 on white): lighter than secondary for hierarchy, but the
-     surface scale has no step between 600 (fails AA) and 700 that passes. */
-  --cui-text-tertiary: oklch(0.55 0.012 270);
-  --cui-text-emphasis: var(--color-surface-950);
-  --cui-text-link: var(--cui-primary);
-  --cui-text-link-hover: var(--cui-primary-hover);
-  --cui-text-code: var(--color-primary-700);
-
   /* --- Spacing for typography --- */
   --cui-heading-margin-bottom: calc(0.5em * var(--cui-density-gap-scale, 1));
   --cui-paragraph-margin-bottom: calc(1rem * var(--cui-density-gap-scale, 1));
   --cui-blockquote-margin: calc(1.5rem * var(--cui-density-gap-scale, 1)) 0;
   --cui-blockquote-padding: 0 0 0 calc(1rem * var(--cui-density-scale, 1));
-}
-
-/* --- Dark mode text color overrides --- */
-:root.dark,
-.dark {
-  --cui-text-body: var(--color-surface-200);
-  --cui-text-secondary: var(--color-surface-400);
-  --cui-text-tertiary: var(--color-surface-500);
-  --cui-text-emphasis: var(--color-surface-50);
-  --cui-text-link: var(--cui-primary);
-  --cui-text-link-hover: var(--cui-primary-hover);
-  --cui-text-code: var(--color-primary-200);
 }
 
 /* ============================================================
