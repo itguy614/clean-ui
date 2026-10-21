@@ -23,6 +23,8 @@ const slots = [
   { name: 'subtle', token: '--cui-{role}-subtle', desc: 'Barely-there tint — cards, sections' },
   { name: 'muted', token: '--cui-{role}-muted', desc: 'Desaturated — disabled, inactive' },
 ];
+
+const ELEVATIONS = ["sm", "md", "lg"] as const;
 </script>
 
 <template>
@@ -190,6 +192,36 @@ const slots = [
 &lt;html class="dark"&gt;
   &lt;!-- All --cui-* tokens adapt automatically --&gt;
 &lt;/html&gt;</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <!-- Elevation -->
+    <div>
+      <h2 id="elevation" class="mb-4 text-2xl font-semibold">Elevation</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-4 text-surface-600 dark:text-surface-400">
+            Three drop shadows, each stronger in dark mode, where a soft shadow would vanish
+            against a dark surface. Menus, the modal and the markdown editor use them. Override
+            one on a container, or on <code>:root</code> — and under <code>.dark</code> for dark
+            mode, as with every semantic slot — to change every component at that level.
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1.5rem; margin-bottom: 1rem">
+            <CuiCard
+              v-for="level in ELEVATIONS"
+              :key="level"
+              variant="outline"
+              :style="{ '--cui-card-shadow': `var(--cui-shadow-${level})` }"
+            >
+              <CuiCardBody style="text-align: center">
+                <code>--cui-shadow-{{ level }}</code>
+              </CuiCardBody>
+            </CuiCard>
+          </div>
+          <pre class="cui-pre"><code>--cui-shadow-sm   /* a small control floating over content */
+--cui-shadow-md   /* a menu or anchored panel: dropdowns, context menu */
+--cui-shadow-lg   /* a dialog: CuiModal */</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>

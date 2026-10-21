@@ -126,12 +126,8 @@
   bottom: 0.75rem;
   background: var(--cui-surface-base);
   border: 1px solid var(--cui-border);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  box-shadow: var(--cui-shadow-sm, 0 2px 8px rgb(0 0 0 / 0.15)); /* fallback: a clean-ui before 1.4 */
   z-index: 1;
-}
-
-:where(.dark, .dark *) .cui-markdown-editor__mode-toggle {
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
 }
 
 /* Same touch-target floor as the formatting toolbar (see the matching
@@ -329,12 +325,8 @@
   border: 1px solid var(--cui-border);
   border-radius: var(--cui-button-radius, 0.375rem);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1)); /* fallback: a clean-ui before 1.4 */
   overflow: hidden;
-}
-
-:where(.dark, .dark *) .cm-tooltip.cm-tooltip-autocomplete {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul {

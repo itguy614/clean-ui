@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Elevation tokens** (#224): `--cui-shadow-sm`, `--cui-shadow-md` and `--cui-shadow-lg`, each
+  with a stronger dark-mode value. CuiDropdownMenu, CuiDropdownSub, CuiContextMenu, CuiModal
+  and the markdown editor's mode toggle and autocomplete use them in place of a hardcoded
+  shadow restated in a `.dark` rule; their look is unchanged.
 - CuiTooltip, CuiAlert, CuiToast and CuiBackdrop take their paint from tokens, so a plain
   rule restyles them without `!important` (#211). Their backgrounds, colours and borders
   were bare inline declarations. New tokens: `--cui-tooltip-bg` (the arrow follows it),

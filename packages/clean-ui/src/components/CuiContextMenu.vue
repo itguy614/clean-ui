@@ -463,7 +463,7 @@ defineExpose({ open, openAt, close, isOpen });
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
   animation: cui-context-menu-in 0.15s ease forwards;
 }
@@ -471,10 +471,6 @@ defineExpose({ open, openAt, close, isOpen });
 .cui-context-menu__panel--closing {
   animation: cui-context-menu-out 0.15s ease forwards;
   pointer-events: none;
-}
-
-:where(.dark, .dark *) .cui-context-menu__panel {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
 @keyframes cui-context-menu-in {

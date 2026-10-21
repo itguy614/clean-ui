@@ -200,7 +200,7 @@ function onPanelKeydown(e: KeyboardEvent) {
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
   animation: cui-dropdown-sub-in 0.15s ease;
 }
@@ -210,10 +210,6 @@ function onPanelKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__menu--closing {
   animation: cui-dropdown-sub-out 0.15s ease forwards;
   pointer-events: none;
-}
-
-:where(.dark, .dark *) .cui-dropdown-sub__menu {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
 @keyframes cui-dropdown-sub-in {
