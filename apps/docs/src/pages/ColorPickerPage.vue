@@ -50,30 +50,39 @@ function onHexInput(val: string | number) {
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        The text field is the component's keyboard path. It is a real
+        Every visual control is keyboard-operable, and the text field is a real
         <code>&lt;input&gt;</code> carrying <code>id</code>, <code>name</code> and the
-        <code>aria-*</code> props, it accepts any format <code>parseColor</code>
-        understands, and it commits on <code>Enter</code> or on blur — an unparseable
-        value is reverted rather than emitted. Keep <code>showInput</code> on: it is what
-        makes the component operable without a pointer, and colour is exactly the kind of
-        value people want to paste rather than hunt for.
+        <code>aria-*</code> props. It accepts any format <code>parseColor</code> understands
+        and commits on <code>Enter</code> or on blur; an unparseable value is reverted rather
+        than emitted.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The gradient area, the hue slider and the alpha slider are pointer-driven. They
-          carry no <code>role="slider"</code> and are not in the tab order, so what they
-          express has to be reachable through the text field.
+          The gradient is a pair of <code>role="slider"</code>s, Saturation and Brightness,
+          sharing one tab stop. Arrow Left and Right move saturation, Arrow Up and Down
+          brightness, and focus follows to the slider whose value changed, so a screen reader
+          announces that axis and its percentage. Home and End go to the ends of the focused
+          axis.
         </li>
         <li>
-          Swatches are decorative <code>div</code>s with a click handler. Where a fixed
-          set of named colours is the real choice — a label colour, a calendar colour —
-          a <code>CuiRadioGroup</code> or <code>CuiSelect</code> of named options is the
-          better control, and it will announce the name rather than a hex string.
+          Hue and Opacity are sliders of their own — degrees and percent. On every slider,
+          Shift takes ten steps. Pressing a surface with the pointer focuses its slider, so the
+          keys carry on from there.
         </li>
         <li>
-          Selection is shown by a ring on the active swatch and nothing else, so the
-          swatch row alone does not distinguish two similar colours for anyone who cannot
-          see them. The text field beside it always reads the current value.
+          The swatches are a <code>role="radiogroup"</code> with one tab stop: the arrow keys
+          move between them and select, as radios do. Each is named by its hex value, since a
+          colour alone is not a name. Where a fixed set of <em>named</em> colours is the real
+          choice — a label colour, a calendar colour — a <code>CuiRadioGroup</code> or
+          <code>CuiSelect</code> of named options announces the name instead.
+        </li>
+        <li>
+          <code>disabled</code> reaches everything: the text field and the format toggle are
+          disabled, and the sliders and swatches leave the tab order.
+        </li>
+        <li>
+          The names and value texts come from the message catalogue
+          (<code>colorPicker.*</code>), so they can be translated.
         </li>
         <li>
           The component has no <code>label</code> prop. Wrap it in a
@@ -81,12 +90,6 @@ function onHexInput(val: string | number) {
           <code>aria-describedby</code> at its own label and help text.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> <code>disabled</code> dims the panel and sets
-        <code>pointer-events: none</code>, but does not reach the text field — it stays
-        focusable and typing into it still emits. If you disable the picker inside a form,
-        disable or hide your own wrapper too rather than relying on the prop alone.
-      </p>
     </template>
 
     <template #examples>
@@ -128,6 +131,11 @@ function onHexInput(val: string | number) {
           v-model="color2"
           :palette="['#1a1a2e', '#16213e', '#0f3460', '#533483', '#e94560', '#f5f5f5', '#2d3436', '#636e72', '#b2bec3', '#dfe6e9']"
         />
+      </Example>
+
+      <!-- Disabled -->
+      <Example title="Disabled" :code="`<CuiColorPicker v-model=&quot;color&quot; preset-palette=&quot;basic&quot; disabled />`">
+        <CuiColorPicker v-model="color2" preset-palette="basic" disabled />
       </Example>
 
       <!-- Complex: Input + Popover -->
