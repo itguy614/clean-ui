@@ -264,12 +264,8 @@ function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
     e.preventDefault();
     popoverVisible.value = true;
-    return;
   }
-  if (e.key === "Escape" && popoverVisible.value) {
-    e.preventDefault();
-    popoverVisible.value = false;
-  }
+  // Escape is the popover's: it is a layer on the shared stack, which closes it (#286).
 }
 
 function focus(opts?: FocusOptions) {

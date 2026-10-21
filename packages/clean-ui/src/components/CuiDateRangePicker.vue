@@ -271,7 +271,6 @@ const {
   selectYear,
   open: () => { popoverVisible.value = true; },
   isDisabled: () => props.disabled,
-  close: () => { popoverVisible.value = false; },
 });
 
 
