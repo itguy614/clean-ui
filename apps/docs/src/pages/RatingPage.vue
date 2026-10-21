@@ -27,37 +27,33 @@ const rating4 = ref(2);
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        <code>CuiRating</code> today is a display component that also happens to respond to
-        clicks. The icons are plain <code>&lt;div&gt;</code>s with pointer handlers: there
-        is no <code>role</code>, no <code>tabindex</code> and no key handling anywhere in
-        the component, so nothing here is reachable or operable by keyboard, and assistive
-        technology is told only that some star glyphs are on screen. <code>focus()</code>
-        targets the root, which carries no <code>tabindex</code>, so it does nothing on its
-        own either.
+        The icons are one <code>role="slider"</code> — a single tab stop, the WAI-ARIA slider
+        pattern — with <code>aria-valuemin</code> 0, <code>aria-valuemax</code> set to
+        <code>max</code>, <code>aria-valuenow</code>, and <code>aria-valuetext</code> reading
+        “3 of 5 stars”, so a screen reader announces a rating rather than a row of glyphs.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The <code>label</code> prop renders a bare <code>&lt;label&gt;</code> with no
-          <code>for</code> and no control to point at, so it names nothing — treat it as a
-          visual caption.
+          Arrow Right and Arrow Up add a star, Arrow Left and Arrow Down take one away — half a
+          star with <code>half</code>. Home goes to 0 (or to one step when
+          <code>clearable</code> is off), End to <code>max</code>.
         </li>
         <li>
-          <code>showValue</code> prints the number next to the icons, which is the only
-          thing on the page that states the rating in text rather than in colour and fill
-          weight. Turn it on wherever the rating carries meaning.
+          <code>label</code> names the slider through <code>aria-labelledby</code>, and a click
+          on it focuses the slider.
+        </li>
+        <li>
+          <code>readonly</code> makes it a display, not a control: a <code>role="img"</code>
+          with the same text and no tab stop, so a list of reviews is not a list of tab stops.
+          <code>disabled</code> keeps the slider but takes it out of the tab order.
+        </li>
+        <li>
+          The value text comes from the message catalogue
+          (<code>rating.valueText(value, max)</code>), so it can be translated.
+          <code>showValue</code> prints the number for sighted users too, rather than leaving
+          it to colour and fill weight.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps, and what to do meanwhile.</strong> For <em>display</em> —
-        showing an average, a score on a card — use <code>readonly</code> with
-        <code>showValue</code>, and put the full sentence in the surrounding text
-        (“4.5 out of 5, 128 reviews”) so the number is not left to the icons. For
-        <em>input</em>, do not ship this as the only way to rate something: back it with a
-        keyboard-operable control — a <code>CuiRadioGroup</code> with
-        <code>variant="buttons"</code>, or a <code>CuiSlider</code> — or provide one as an
-        alternative path. Until the component grows a role and key handling, a rating
-        collected only through these icons cannot be given by keyboard at all.
-      </p>
     </template>
 
     <template #examples>

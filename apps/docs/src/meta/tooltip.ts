@@ -45,6 +45,15 @@ const meta: ComponentMeta = {
   events: [
     { name: "update:visible", payload: "boolean", description: "Visibility changed — what v-model:visible binds to" },
   ],
+
+  tokens: [
+    { name: "--cui-tooltip-bg", default: "surface-900 (light) / surface-700 (dark), or the colour role's", description: "Background, and the arrow's. The tooltip teleports to <body>, so set these on :root, or restyle .cui-tooltip — a container's tokens don't reach it. Setting it overrides coloured tooltips too" },
+    { name: "--cui-tooltip-color", default: "surface-100, or the colour role's -text", description: "Text colour" },
+    { name: "--cui-tooltip-px", default: "0.625rem × density", description: "Horizontal padding" },
+    { name: "--cui-tooltip-py", default: "0.375rem × density", description: "Vertical padding" },
+    { name: "--cui-tooltip-radius", default: "0.375rem", description: "Corner radius" },
+    { name: "--cui-tooltip-font-size", default: "0.8125rem", description: "Text size" },
+  ],
 };
 
 export default meta;

@@ -49,7 +49,6 @@ provide(TableContextKey, {
 });
 
 const tableClasses = computed(() => [
-  "cui-table",
   `cui-table--${clampedSize.value}`,
   {
     "cui-table--striped": props.striped,
@@ -144,7 +143,7 @@ defineExpose({ scrollWrapper, measure });
       v-bind="area.scrollerAttrs.value"
       :style="wrapperStyle"
     >
-      <table ref="tableEl" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
+      <table ref="tableEl" class="cui-table" :class="tableClasses" :style="tableStyle" :aria-rowcount="ariaRowcount">
         <slot />
       </table>
     </div>
@@ -216,13 +215,9 @@ defineExpose({ scrollWrapper, measure });
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--cui-text-secondary);
-  background: var(--cui-table-head-bg, var(--color-surface-50));
+  background: var(--cui-table-head-bg);
   border-bottom: 1px solid var(--cui-border);
   text-align: left;
-}
-
-:where(.dark, .dark *) .cui-table thead th {
-  background: var(--cui-table-head-bg, var(--color-surface-800));
 }
 
 /* A cell can still opt out of header semantics with an explicit `header={false}`
@@ -242,20 +237,12 @@ defineExpose({ scrollWrapper, measure });
 
 /* --- Striped --- */
 .cui-table--striped tbody tr:nth-child(even) {
-  background: var(--color-surface-50);
-}
-
-:where(.dark, .dark *) .cui-table--striped tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--color-surface-800) 50%, transparent);
+  background: var(--cui-table-stripe-bg);
 }
 
 /* --- Hoverable --- */
 .cui-table--hoverable tbody tr:hover {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-table--hoverable tbody tr:hover {
-  background: color-mix(in srgb, var(--color-surface-700) 50%, transparent);
+  background: var(--cui-table-row-hover-bg);
 }
 
 /* --- Bordered --- */
@@ -279,11 +266,7 @@ defineExpose({ scrollWrapper, measure });
   /* Token, not a raw scale step: CuiDataGrid pins its own header cells inline
      with the same token, and this !important would otherwise clobber a
      consumer's --cui-table-head-bg override on every sticky grid. */
-  background: var(--cui-table-head-bg, var(--color-surface-50)) !important;
-}
-
-:where(.dark, .dark *) .cui-table--sticky-header thead th {
-  background: var(--cui-table-head-bg, var(--color-surface-800)) !important;
+  background: var(--cui-table-head-bg) !important;
 }
 
 /* --- Selected row --- */

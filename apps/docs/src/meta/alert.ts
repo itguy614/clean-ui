@@ -32,6 +32,13 @@ const meta: ComponentMeta = {
   ],
 
   events: [{ name: "dismiss", payload: "—", description: "Fires when the alert is dismissed" }],
+
+  tokens: [
+    { name: "--cui-alert-bg", default: "per variant: the role's -bg (subtle), transparent (outline), solid", description: "Background" },
+    { name: "--cui-alert-color", default: "per variant", description: "Text colour" },
+    { name: "--cui-alert-border", default: "1px solid, the role's -border", description: "Border" },
+    { name: "--cui-alert-radius", default: "the rounded prop's radius", description: "Corner radius" },
+  ],
 };
 
 export default meta;

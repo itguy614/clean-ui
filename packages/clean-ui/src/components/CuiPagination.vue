@@ -5,6 +5,7 @@ import CuiSelect from "./CuiSelect.vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -141,6 +142,8 @@ function onPerPageChange(val: string | number | null | Array<string | number>) {
 }
 
 const messages = useMessages();
+// CuiSelect is a div[role=combobox], which a <label for> can't name: aria-labelledby can.
+const perPageLabelId = useCuiId("pagination-per-page");
 
 // Per-page select options
 const perPageSelectOptions = computed(() =>
@@ -162,7 +165,9 @@ const perPageSelectOptions = computed(() =>
     <div class="cui-pagination__controls">
       <!-- Per-page selector -->
       <div v-if="!hidePerPage" class="cui-pagination__per-page">
+        <span :id="perPageLabelId" class="cui-sr-only">{{ messages.pagination.perPageLabel }}</span>
         <CuiSelect
+          :aria-labelledby="perPageLabelId"
           :model-value="itemsPerPage"
           :options="perPageSelectOptions"
           :size="clampedSize === 'sm' ? 'xs' : 'sm'"
@@ -171,14 +176,14 @@ const perPageSelectOptions = computed(() =>
       </div>
 
       <!-- Page buttons -->
-      <nav class="cui-pagination__nav" aria-label="Pagination">
+      <nav class="cui-pagination__nav" :aria-label="messages.pagination.label">
         <!-- Previous -->
         <button
           type="button"
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isFirst }"
           :disabled="isFirst"
-          aria-label="Previous page"
+          :aria-label="messages.pagination.previous"
           @click="goTo(page - 1)"
         >
           <CuiIcon name="caret-left" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
@@ -186,7 +191,7 @@ const perPageSelectOptions = computed(() =>
 
         <!-- Page numbers -->
         <template v-for="(p, idx) in pageNumbers" :key="idx">
-          <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis">...</span>
+          <span v-if="p === 'ellipsis'" class="cui-pagination__ellipsis" aria-hidden="true">...</span>
           <button
             v-else
             type="button"
@@ -200,7 +205,7 @@ const perPageSelectOptions = computed(() =>
               borderColor: `var(--cui-${color}-border)`,
               fontWeight: '600',
             } : {}"
-            :aria-label="`Page ${p}`"
+            :aria-label="messages.pagination.page(p)"
             :aria-current="p === page ? 'page' : undefined"
             @click="goTo(p)"
           >
@@ -214,7 +219,7 @@ const perPageSelectOptions = computed(() =>
           class="cui-pagination__btn cui-pagination__btn--nav"
           :class="{ 'cui-pagination__btn--disabled': isLast }"
           :disabled="isLast"
-          aria-label="Next page"
+          :aria-label="messages.pagination.next"
           @click="goTo(page + 1)"
         >
           <CuiIcon name="caret-right" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
@@ -287,13 +292,8 @@ const perPageSelectOptions = computed(() =>
 }
 
 .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
-  background: var(--color-surface-100);
-  border-color: var(--color-surface-300);
-}
-
-:where(.dark, .dark *) .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
-  background: var(--color-surface-800);
-  border-color: var(--color-surface-600);
+  background: var(--cui-surface-bg);
+  border-color: var(--cui-pagination-hover-border);
 }
 
 .cui-pagination__btn:focus-visible {
@@ -314,11 +314,7 @@ const perPageSelectOptions = computed(() =>
 
 .cui-pagination__btn--nav:hover:not(:disabled) {
   color: var(--cui-text-body);
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-pagination__btn--nav:hover:not(:disabled) {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-pagination__btn--disabled {

@@ -1,4 +1,4 @@
-import type { InjectionKey, Ref, VNodeChild } from "vue";
+import { inject, provide, type InjectionKey, type Ref, type VNodeChild } from "vue";
 import type { CuiColor } from "../types/common";
 
 export type TabVariant = "underline" | "segmented";
@@ -30,6 +30,28 @@ export interface TabsContext {
   unregister: (value: string) => void;
   activate: (value: string) => void;
   close: (value: string) => void;
+  /**
+   * The ids linking a tab and its panel (#271): per tab set, so two sets sharing values
+   * never collide — the tab's aria-controls names the panel, the panel's aria-labelledby
+   * the tab. Optional only so that a context provided by hand (TabsContextKey is exported)
+   * still type-checks; without them the panel carries no reference.
+   */
+  tabId?: (value: string) => string;
+  panelId?: (value: string) => string;
+  /** Which way a slide transition goes, from the registered tab order (optional, as above). */
+  slideDirection?: Ref<"left" | "right">;
 }
 
 export const TabsContextKey: InjectionKey<TabsContext> = Symbol("tabs-context");
+
+/** CuiTabs provides the family's context through this. */
+export function useTabsProvider(context: TabsContext) {
+  provide(TabsContextKey, context);
+}
+
+/** CuiTab reads it through this, and fails clearly outside a CuiTabs. */
+export function useTabsContext(): TabsContext {
+  const context = inject(TabsContextKey);
+  if (!context) throw new Error("[CuiTab] must be used inside a <CuiTabs> component.");
+  return context;
+}

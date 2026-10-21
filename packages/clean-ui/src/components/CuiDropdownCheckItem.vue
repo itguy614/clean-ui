@@ -67,12 +67,7 @@ function onKeydown(e: KeyboardEvent) {
 
 .cui-dropdown-check-item:hover,
 .cui-dropdown-check-item:focus-visible {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-dropdown-check-item:hover,
-:where(.dark, .dark *) .cui-dropdown-check-item:focus-visible {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-dropdown-check-item--disabled {

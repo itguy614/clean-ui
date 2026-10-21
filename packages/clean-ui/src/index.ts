@@ -1,5 +1,7 @@
-import type { App } from "vue";
+import { readonly, shallowRef, type App } from "vue";
 import type { CleanUIOptions } from "./types";
+import { mergeDefaults } from "./utils/configure";
+import { CuiDefaultsKey } from "./components/config-context";
 
 // Detect a second, different-version copy of clean-ui in the same page — see
 // duplicate-guard.ts. Runs as early as possible, before anything else loads.
@@ -141,7 +143,7 @@ export type { CuiRadioProps } from "./components/CuiRadio.vue";
 export type { CuiCheckboxProps } from "./components/CuiCheckbox.vue";
 export type { CuiCheckboxGroupProps } from "./components/CuiCheckboxGroup.vue";
 export { CheckboxGroupKey } from "./components/multi-select-group-context";
-export type { CheckboxGroupContext } from "./components/checkbox-context";
+export type { CheckboxGroupContext } from "./components/multi-select-group-context";
 export type { CuiToggleProps } from "./components/CuiToggle.vue";
 export type { CuiInputProps, InputType } from "./components/CuiInput.vue";
 export type { CuiMaskedInputProps, MaskToken } from "./components/CuiMaskedInput.vue";
@@ -272,7 +274,7 @@ export { useDataGridViews, localStorageViewAdapter, type UseDataGridViewsOptions
 export { AccordionContextKey } from "./components/accordion-context";
 export type { CuiToggleGroupProps } from "./components/CuiToggleGroup.vue";
 export { ToggleGroupKey } from "./components/multi-select-group-context";
-export type { ToggleGroupContext } from "./components/toggle-context";
+export type { ToggleGroupContext } from "./components/multi-select-group-context";
 export type { CuiRadioGroupProps } from "./components/CuiRadioGroup.vue";
 export { RadioGroupKey } from "./components/radio-context";
 export type { RadioGroupContext } from "./components/radio-context";
@@ -307,6 +309,7 @@ export { BUILTIN_ICONS } from "./icons/builtin";
 // Role → icon for the feedback components. Overridable app-wide, the same way colours
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
+export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";
@@ -320,11 +323,15 @@ export { useRovingFocus, type UseRovingFocusOptions, type RovingOrientation } fr
 export { useColorScheme } from "./composables/useColorScheme";
 // Public since 1.3.2: the editor is its second consumer (#221).
 export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";
-export type { MultiSelectGroupContext } from "./components/multi-select-group-context";
+export type { MultiSelectGroupContext, MultiSelectGroupProps } from "./components/multi-select-group-context";
 
-export function createCleanUI(_options: CleanUIOptions = {}) {
+export function createCleanUI(options: CleanUIOptions = {}) {
   return {
     install(app: App) {
+      // This app's defaults (#149): provided, so two apps — or two server-rendered requests —
+      // keep their own. configureCleanUI() is the global fallback beneath them.
+      // Fixed at install: the options object is read once.
+      app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))));
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
       app.component("CuiGrid", CuiGrid);
