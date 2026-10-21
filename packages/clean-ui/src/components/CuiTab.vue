@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { inject, onMounted, onUnmounted, computed, watch, useSlots } from "vue";
-import { TabsContextKey } from "./tabs-context";
+import { onMounted, onUnmounted, computed, watch, useSlots } from "vue";
+import { useTabsContext } from "./tabs-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface CuiTabProps extends HideableProps, DisableableProps {
@@ -18,11 +18,7 @@ const props = withDefaults(defineProps<CuiTabProps>(), {
   hidden: false,
 });
 
-const ctx = inject(TabsContextKey);
-
-if (!ctx) {
-  throw new Error("[CuiTab] must be used inside a <CuiTabs> component.");
-}
+const ctx = useTabsContext();
 
 const isActive = computed(() => ctx.activeTab.value === props.value);
 
@@ -64,19 +60,11 @@ onUnmounted(() => {
 const transitionName = computed(() => {
   if (ctx.transition.value === "none") return undefined;
   if (ctx.transition.value === "slide") {
-    const prevIdx = findTabIndex(ctx.previousTab.value);
-    const currIdx = findTabIndex(props.value);
-    return currIdx >= prevIdx ? "cui-tab-slide-left" : "cui-tab-slide-right";
+    return ctx.slideDirection?.value === "right" ? "cui-tab-slide-right" : "cui-tab-slide-left";
   }
   return "cui-tab-fade";
 });
 
-function findTabIndex(value: string): number {
-  // Approximate index from DOM order
-  const el = document.querySelector(`[data-cui-tab-value="${value}"]`);
-  if (!el?.parentElement) return 0;
-  return Array.from(el.parentElement.children).indexOf(el);
-}
 </script>
 
 <template>
@@ -87,7 +75,8 @@ function findTabIndex(value: string): number {
     class="cui-tab-panel"
     :class="[isActive ? transitionName : '']"
     role="tabpanel"
-    :aria-labelledby="value"
+    :id="ctx.panelId?.(value)"
+    :aria-labelledby="ctx.tabId?.(value)"
   >
     <slot />
   </div>
@@ -99,7 +88,8 @@ function findTabIndex(value: string): number {
     class="cui-tab-panel"
     :class="transitionName"
     role="tabpanel"
-    :aria-labelledby="value"
+    :id="ctx.panelId?.(value)"
+    :aria-labelledby="ctx.tabId?.(value)"
   >
     <slot />
   </div>

@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
     colorProp("Color role for the filled icons. Empty ones always use the tertiary text color", "warning"),
     { name: "icon", type: "string", default: "star", description: "Icon name, drawn at fill weight when set and regular when not" },
     { name: "halfIcon", type: "string", default: "star-half", description: "Icon for the half-filled state. Only read when half is set" },
-    { name: "readonly", type: "boolean", default: "false", description: "Display only — no hover preview, no clicking" },
+    { name: "readonly", type: "boolean", default: "false", description: "Display only — no hover preview, no clicking, no tab stop. Announced as an image with the value text" },
     { name: "showValue", type: "boolean", default: "false", description: "Print the numeric value after the icons" },
     {
       name: "clearable",
@@ -31,7 +31,7 @@ const meta: ComponentMeta = {
     {
       name: "label",
       type: "string",
-      description: "Text above the icons. It renders as a bare label element with no for, so it labels nothing — see Accessibility",
+      description: "Text above the icons. It names the slider (aria-labelledby), and a click on it focuses the slider",
     },
     disabledProp,
     hiddenProp,
@@ -50,9 +50,9 @@ const meta: ComponentMeta = {
     {
       name: "focus",
       signature: "(opts?: FocusOptions) => void",
-      description: "Focus the root. The root carries no tabindex, so this only takes effect if you give it one",
+      description: "Focus the slider. A no-op while readonly, which has no tab stop",
     },
-    { name: "blur", signature: "() => void", description: "Blur the root" },
+    { name: "blur", signature: "() => void", description: "Blur the slider" },
   ],
 };
 
