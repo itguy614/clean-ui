@@ -361,8 +361,29 @@ const roving = useRovingFocus({
   activeIndex: swatchIndex,
 });
 
+/**
+ * The swatches wrap into rows, so Up/Down move a row, the way they look — not one step, as
+ * Left/Right do. The row length is measured from the layout, which follows the picker's width.
+ * At the top or bottom row they stay put. Left/Right, Home/End and type-ahead stay with roving.
+ */
+function swatchesPerRow(): number {
+  const items = swatchesRef.value?.querySelectorAll<HTMLElement>(".cui-color-picker__swatch");
+  if (!items || items.length === 0) return 1;
+  const top = items[0].offsetTop;
+  let n = 0;
+  while (n < items.length && items[n].offsetTop === top) n++;
+  return Math.max(1, n);
+}
+
 function onSwatchKeydown(e: KeyboardEvent) {
-  roving.onKeydown(e);
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+    e.preventDefault();
+    const target = swatchIndex.value + (e.key === "ArrowDown" ? 1 : -1) * swatchesPerRow();
+    if (target < 0 || target >= resolvedPalette.value.length) return;
+    roving.focusItem(target);
+  } else {
+    roving.onKeydown(e);
+  }
   const i = swatchIndex.value;
   if (e.defaultPrevented && !isSelected(i)) onSwatchClick(resolvedPalette.value[i]);
 }

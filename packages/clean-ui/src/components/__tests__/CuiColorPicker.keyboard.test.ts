@@ -162,17 +162,19 @@ describe("CuiColorPicker keyboard and ARIA", () => {
     expect(document.activeElement).toBe(radios()[2].element);
   });
 
-  it("moves between swatches with the vertical arrows too", async () => {
+  it("keeps Up/Down to rows: on a single row they have nowhere to go", async () => {
+    // Up/Down move a row (#177 review); jsdom lays everything on one row. The multi-row case
+    // is measured in a real browser: __tests__/browser/color-picker-swatch-grid.test.ts.
     mountPicker({ palette: ["#ff0000", "#00ff00", "#0000ff"], modelValue: "#ff0000" });
     await nextTick();
     const radios = w!.findAll('[role="radio"]');
     (radios[0].element as HTMLElement).focus();
     press(radios[0].element, "ArrowDown");
     await nextTick();
-    expect(document.activeElement).toBe(radios[1].element);
-    press(radios[1].element, "ArrowUp");
-    await nextTick();
     expect(document.activeElement).toBe(radios[0].element);
+    press(radios[0].element, "ArrowRight");
+    await nextTick();
+    expect(document.activeElement).toBe(radios[1].element);
   });
 
   it("PageUp and PageDown take ten steps", async () => {
