@@ -166,11 +166,7 @@ const triggerId = `${itemId}-trigger`;
 }
 
 .cui-accordion-item__trigger:hover:not([aria-disabled="true"]) {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-accordion-item__trigger:hover:not([aria-disabled="true"]) {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-accordion-item__trigger:focus-visible {

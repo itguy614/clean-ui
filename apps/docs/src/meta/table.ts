@@ -16,6 +16,8 @@ const meta: ComponentMeta = {
       description:
         "Header row background. A token rather than a scale step so it still resolves under a sticky header and inside CuiDataGrid",
     },
+    { name: "--cui-table-stripe-bg", default: "surface-50 (light) / surface-800 at 50% (dark)", description: "Even-row background of a striped table" },
+    { name: "--cui-table-row-hover-bg", default: "surface-100 (light) / surface-700 at 50% (dark)", description: "Row background on hover, in a hoverable table" },
   ],
 
   parts: [

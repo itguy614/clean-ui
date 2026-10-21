@@ -169,13 +169,7 @@ function onPanelKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__trigger:hover,
 .cui-dropdown-sub__trigger:focus-visible,
 .cui-dropdown-sub__trigger--open {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-dropdown-sub__trigger:hover,
-:where(.dark, .dark *) .cui-dropdown-sub__trigger:focus-visible,
-:where(.dark, .dark *) .cui-dropdown-sub__trigger--open {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-dropdown-sub__trigger--disabled {

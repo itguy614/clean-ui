@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Twelve components draw their neutral hover, active and track fills from the semantic slots
+  (`--cui-surface-bg`, `--cui-surface-dark-bg`, `--cui-table-head-bg`) instead of raw surface
+  steps restated for dark mode (#210): Accordion, the four dropdown items, Fieldset,
+  Pagination, Tabs, Select, Input, Table and DataGrid, and the markdown editor's
+  autocomplete highlight. Same colours in both modes; a consumer's
+  slot override now reaches them, and their `.dark` twins are gone. New tokens for the fills
+  that had none: `--cui-table-stripe-bg`, `--cui-table-row-hover-bg` and
+  `--cui-pagination-hover-border`.
 - **More of the UI is translatable** (#215): English a component hardcoded now comes from the
   message catalogue. That covers the prose defaults of CuiCombobox, CuiSelect, CuiTagInput,
   CuiFileUpload, CuiTransferList, CuiCopyButton and CuiSpinner (a prop you set still wins), and
