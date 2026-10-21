@@ -1,17 +1,18 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
-import { h, defineComponent, ref } from "vue";
+import { h, defineComponent, ref, type Ref } from "vue";
 import CuiModal from "../../components/CuiModal.vue";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
+import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
 import { frames } from "./helpers";
 
 /**
  * #286 — a picker's panel is a CuiPopover, a layer on the shared Escape stack (#278), so the
- * stack decides what Escape closes: the panel first, then the modal around it. The calendar
- * used to handle Escape itself and stop it, which hid the key from the stack — it worked only
- * by convention.
+ * stack decides what Escape closes: the panel first, then the modal around it. The pickers
+ * used to handle Escape themselves and stop it, which hid the key from the stack — it worked
+ * only by convention.
  *
  * Real browser: which element ends up focused, and the order the document listener sees.
  */
@@ -22,51 +23,84 @@ describe("a picker inside a modal (real browser)", () => {
     wrapper = undefined;
   });
 
-  const open = ref(true);
-  const InModal = (picker: ReturnType<typeof h>) =>
-    defineComponent({
-      setup: () => () =>
-        h(CuiModal, { visible: open.value, title: "Edit", "onUpdate:visible": (v: boolean) => (open.value = v) }, () => picker),
+  /** Mount `picker` inside an open CuiModal; returns the modal's v-model. */
+  function inModal(picker: () => ReturnType<typeof h>): Ref<boolean> {
+    const open = ref(true);
+    const Host = defineComponent({
+      setup: () => () => h(CuiModal, { visible: open.value, title: "Edit", "onUpdate:visible": (v: boolean) => (open.value = v) }, picker),
     });
+    wrapper = mount(Host, { attachTo: document.body });
+    return open;
+  }
+
+  /** Wait for a condition, frame by frame — an animation's length is not ours to assume. */
+  async function until(check: () => boolean, maxFrames = 120) {
+    for (let i = 0; i < maxFrames && !check(); i++) await frames(1);
+    return check();
+  }
 
   const modalOpen = () => !!document.querySelector(".cui-modal--visible");
 
-  it("closes the date panel on the first Escape, the modal on the second", async () => {
-    open.value = true;
-    wrapper = mount(InModal(h(CuiDatePicker, { id: "d", modelValue: "2026-03-15" })), { attachTo: document.body });
-    await frames(4);
-    const field = document.querySelector<HTMLInputElement>("#d")!;
+  /** Whether an Escape got as far as the document, where the layer stack listens. */
+  function escapeReachesDocument() {
+    let reached = false;
+    const seen = (e: KeyboardEvent) => {
+      if (e.key === "Escape") reached = true;
+    };
+    document.addEventListener("keydown", seen, { capture: false });
+    return () => {
+      document.removeEventListener("keydown", seen);
+      return reached;
+    };
+  }
+
+  /** Open the panel from `field`, then: the first Escape closes it alone, the second the modal. */
+  async function escapesInOrder(open: Ref<boolean>, field: HTMLElement, panelOpen: () => boolean) {
     field.focus();
     await userEvent.keyboard("{ArrowDown}");
-    await frames(4);
-    expect(document.querySelector('[role="grid"]')).not.toBeNull();
-
+    expect(await until(panelOpen)).toBe(true);
+    // Escape goes wherever focus went — the grid. It must reach the stack, not be stopped.
+    const reached = escapeReachesDocument();
     await userEvent.keyboard("{Escape}");
-    await frames(4);
-    expect(document.querySelector('[role="grid"]')).toBeNull();
+    expect(await until(() => !panelOpen())).toBe(true);
+    expect(reached()).toBe(true);
     expect(modalOpen()).toBe(true);
-    expect(document.activeElement).toBe(field);
+    expect(await until(() => document.activeElement === field)).toBe(true);
 
     await userEvent.keyboard("{Escape}");
-    await new Promise((r) => setTimeout(r, 400));
-    expect(open.value).toBe(false);
+    expect(await until(() => !open.value)).toBe(true);
+  }
+
+  it("date picker: the panel first, then the modal", async () => {
+    const open = inModal(() => h(CuiDatePicker, { id: "d", modelValue: "2026-03-15" }));
+    await frames(4);
+    await escapesInOrder(open, document.querySelector<HTMLElement>("#d")!, () => !!document.querySelector('[role="grid"]'));
   });
 
-  it("does the same for the time panel, from its trigger", async () => {
-    open.value = true;
-    wrapper = mount(InModal(h(CuiTimePicker, { id: "t", modelValue: "09:30", format: "24" })), { attachTo: document.body });
+  it("date range picker: the panel first, then the modal", async () => {
+    const open = inModal(() => h(CuiDateRangePicker, { id: "r", modelValue: { start: "2026-03-15", end: null } }));
     await frames(4);
+    await escapesInOrder(open, document.querySelector<HTMLElement>("#r")!, () => !!document.querySelector('[role="grid"]'));
+  });
+
+  it("time picker: Escape from inside its panel closes the panel first, then the modal", async () => {
+    const open = inModal(() => h(CuiTimePicker, { id: "t", modelValue: "09:30", format: "24" }));
+    await frames(4);
+    const panelOpen = () => !!document.querySelector(".cui-time-picker__panel");
     const trigger = document.querySelector<HTMLElement>("#t")!;
     trigger.focus();
     await userEvent.keyboard("{ArrowDown}");
-    await frames(4);
-    const panelOpen = () => !!document.querySelector(".cui-time-picker__panel, .cui-popover__content");
-    expect(panelOpen()).toBe(true);
+    expect(await until(panelOpen)).toBe(true);
+    // Opening moves focus into the panel: this Escape starts there, not on the trigger.
+    expect(await until(() => !!document.activeElement?.closest(".cui-time-picker__panel"))).toBe(true);
+    const reached = escapeReachesDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(await until(() => !panelOpen())).toBe(true);
+    expect(reached()).toBe(true);
+    expect(modalOpen()).toBe(true);
+    expect(await until(() => document.activeElement === trigger)).toBe(true);
 
     await userEvent.keyboard("{Escape}");
-    await frames(4);
-    expect(panelOpen()).toBe(false);
-    expect(modalOpen()).toBe(true);
-    expect(document.activeElement).toBe(trigger);
+    expect(await until(() => !open.value)).toBe(true);
   });
 });
