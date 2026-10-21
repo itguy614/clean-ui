@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiTabs links each tab to its panel (#271): a tab's `aria-controls` names its panel and the
+  panel's `aria-labelledby` its tab, with ids generated per tab set. Before, the panel named
+  the tab's value, which no element had as an id, and tabs had no `aria-controls`.
+
 - CuiResizablePanels' handle is keyboard-operable and announced (#156): a focusable
   `role="separator"` (the WAI-ARIA window splitter) named "Resize panels"
   (`resizablePanels.handle` in the message catalogue), with `aria-valuenow` and
