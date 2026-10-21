@@ -43,9 +43,6 @@ const props = withDefaults(defineProps<CuiFileUploadProps>(), {
   autoUpload: true,
   color: "primary",
   disabled: false,
-  dragText: "Drag and drop files here, or",
-  browseText: "Browse",
-  uploadText: "Upload",
   hidden: false,
 });
 
@@ -87,7 +84,7 @@ function fileIcon(type: string): string {
 
 function validateFile(file: File): string | null {
   if (props.maxFileSize > 0 && file.size > props.maxFileSize) {
-    return `File exceeds maximum size of ${formatSize(props.maxFileSize)}`;
+    return messages.value.fileUpload.tooLarge(formatSize(props.maxFileSize));
   }
   if (props.accept) {
     const accepts = props.accept.split(",").map((a) => a.trim().toLowerCase());
@@ -97,7 +94,7 @@ function validateFile(file: File): string | null {
       if (a.endsWith("/*")) return file.type.startsWith(a.replace("/*", "/"));
       return file.type === a;
     });
-    if (!typeMatch) return `File type not accepted`;
+    if (!typeMatch) return messages.value.fileUpload.typeNotAccepted;
   }
   return null;
 }
@@ -108,7 +105,7 @@ function addFiles(newFiles: FileList | File[]) {
   for (const file of Array.from(newFiles)) {
     // Check max files
     if (props.maxFiles > 0 && files.value.length >= props.maxFiles) {
-      emit("reject", { file, reason: `Maximum ${props.maxFiles} files allowed` });
+      emit("reject", { file, reason: messages.value.fileUpload.tooMany(props.maxFiles) });
       continue;
     }
 
@@ -227,6 +224,10 @@ function blur() {
 }
 
 defineExpose({ el: rootEl, focus, blur });
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const dragLabel = computed(() => props.dragText ?? messages.value.fileUpload.drag);
+const browseLabel = computed(() => props.browseText ?? messages.value.fileUpload.browse);
+const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload.upload);
 </script>
 
 <template>
@@ -290,8 +291,8 @@ defineExpose({ el: rootEl, focus, blur });
       <!-- Spans, not divs: a <label> holds phrasing content only. The hint is out of the name
            (aria-hidden) and is the input's description instead (aria-describedby). -->
       <span :style="{ display: 'block', fontSize: '0.875rem', color: 'var(--cui-text-secondary)' }">
-        {{ dragText }}
-        <span :style="{ color: `var(--cui-${color})`, fontWeight: '600' }">{{ browseText }}</span>
+        {{ dragLabel }}
+        <span :style="{ color: `var(--cui-${color})`, fontWeight: '600' }">{{ browseLabel }}</span>
       </span>
       <span
         v-if="hasHint"
@@ -301,7 +302,7 @@ defineExpose({ el: rootEl, focus, blur });
       >
         <span v-if="accept">{{ accept }}</span>
         <span v-if="accept && maxFileSize > 0"> · </span>
-        <span v-if="maxFileSize > 0">Max {{ formatSize(maxFileSize) }}</span>
+        <span v-if="maxFileSize > 0">{{ messages.fileUpload.maxSize(formatSize(maxFileSize)) }}</span>
       </span>
     </label>
 
@@ -358,13 +359,13 @@ defineExpose({ el: rootEl, focus, blur });
       <!-- Footer: count + total size + actions -->
       <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
         <span :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)' }">
-          {{ files.length }} file{{ files.length === 1 ? '' : 's' }} · {{ totalSize }}
+          {{ messages.fileUpload.summary(files.length, totalSize) }}
         </span>
         <div :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))' }">
           <CuiButton variant="ghost" size="xs" :disabled="disabled" @click="onClearAll">{{ messages.clearAll }}</CuiButton>
           <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" :disabled="disabled" @click="onUploadClick">
             <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>
-            {{ uploadText }}
+            {{ uploadLabel }}
           </CuiButton>
         </div>
       </div>

@@ -13,6 +13,9 @@ import {
   type DisabledDateRange,
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 export type DatePickerMode = "date" | "month";
 export type DatePickerValueType = "iso" | "date";
@@ -343,7 +346,7 @@ defineExpose({ el: rootEl, focus, blur });
             <!-- Today button -->
             <div v-if="highlightToday" :style="{ marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
               <CuiButton variant="ghost" size="xs" @click="selectDay({ date: new Date(), disabled: isDisabled(new Date()) })">
-                Today
+                {{ messages.datePicker.today }}
               </CuiButton>
             </div>
           </template>
@@ -411,7 +414,7 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="yearRangeStart + ' to ' + yearRangeEnd"
+              :aria-label="messages.datePicker.yearRange(yearRangeStart, yearRangeEnd)"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >

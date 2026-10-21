@@ -140,11 +140,7 @@ const es = {
           <code class="cui-code">apply</code>, <code class="cui-code">loading</code>.
         </p>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
-          Namespaces: <code class="cui-code">input</code>, <code class="cui-code">combobox</code>,
-          <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>,
-          <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>,
-          <code class="cui-code">skeleton</code>, <code class="cui-code">tabs</code>,
-          <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
+          Namespaces: <code class="cui-code">input</code>, <code class="cui-code">combobox</code>, <code class="cui-code">tagInput</code>, <code class="cui-code">listbox</code>, <code class="cui-code">select</code>, <code class="cui-code">fileUpload</code>, <code class="cui-code">transferList</code>, <code class="cui-code">datePicker</code>, <code class="cui-code">dateRangePicker</code>, <code class="cui-code">copyButton</code>, <code class="cui-code">avatar</code>, <code class="cui-code">spinner</code>, <code class="cui-code">toggle</code>, <code class="cui-code">confirmDialog</code>, <code class="cui-code">pagination</code>, <code class="cui-code">breadcrumb</code>, <code class="cui-code">stepper</code>, <code class="cui-code">skeleton</code>, <code class="cui-code">formField</code>, <code class="cui-code">tabs</code>, <code class="cui-code">table</code>, <code class="cui-code">dataGrid</code> — plus
           whatever namespaces a satellite package (see below) has added. See the
           <code class="cui-code">CuiMessages</code> type for the full shape — your editor will
           autocomplete every key.

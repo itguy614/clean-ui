@@ -27,6 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **More of the UI is translatable** (#215): English a component hardcoded now comes from the
+  message catalogue. That covers the prose defaults of CuiCombobox, CuiSelect, CuiTagInput,
+  CuiFileUpload, CuiTransferList, CuiCopyButton and CuiSpinner (a prop you set still wins), and
+  literals in CuiDataGrid's toolbar, column and view managers, the date pickers ("Today", the
+  year-range names, the range prompt), CuiCopyButton's label, CuiAvatar's fallback `alt`,
+  CuiToggle's "ON", CuiPagination's landmark and button names, and CuiFileUpload's size, count and
+  `reject` reason lines. English output is unchanged. **New required `CuiCoreMessages` keys**:
+  a catalogue passed to `CuiConfigProvider` merges onto the defaults and needs nothing, but a
+  hand-built full `CuiCoreMessages` object must add `combobox.placeholder` / `noResults`,
+  `tagInput.placeholder` / `noSuggestions` / `create` (a function of the value), `select`,
+  `fileUpload`, `transferList`, `datePicker`, `dateRangePicker`, `copyButton`, `avatar`, `spinner`,
+  `toggle`, `pagination.label` / `previous` / `next` / `page`, and nine under `dataGrid`. Still
+  English: month and weekday names, day-cell labels and file sizes, which need locale
+  formatting (#337), and CuiTimePicker's AM/PM, which its field, mask and value share.
 - CuiRadioGroup, CuiCheckboxGroup and CuiToggleGroup share one implementation of their
   layout and auto-orientation, and the two multi-select groups share their context
   provider (#206). Auto orientation now counts only rendered options: a `v-if`'d-out

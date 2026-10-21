@@ -13,6 +13,7 @@ import {
   type DisabledDateRange,
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -62,6 +63,8 @@ const props = withDefaults(defineProps<CuiDateRangePickerProps>(), {
   disabled: false,
   hidden: false,
 });
+
+const messages = useMessages();
 
 const emit = defineEmits<{
   "update:modelValue": [value: DateRangeValue];
@@ -346,7 +349,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
             marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
             fontWeight: '500',
           }">
-            {{ selecting === 'start' ? 'Select start date' : 'Select end date' }}
+            {{ selecting === 'start' ? messages.dateRangePicker.selectStart : messages.dateRangePicker.selectEnd }}
           </div>
 
           <!-- DAYS VIEW -->
@@ -436,7 +439,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="yearRangeStart + ' to ' + yearRangeEnd"
+              :aria-label="messages.datePicker.yearRange(yearRangeStart, yearRangeEnd)"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >

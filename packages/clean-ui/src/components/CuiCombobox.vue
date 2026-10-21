@@ -67,7 +67,6 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
 const props = withDefaults(defineProps<CuiComboboxProps>(), {
   options: () => [],
   multiple: false,
-  placeholder: "Search...",
   debounce: 300,
   minChars: 0,
   maxVisible: 8,
@@ -76,7 +75,6 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   disabled: false,
   loading: false,
   error: false,
-  noResultsText: "No results found",
   rounded: "md",
   hidden: false,
 });
@@ -253,6 +251,9 @@ function onKeydown(e: KeyboardEvent) {
 // The ARIA combobox pattern, editable (#205) — see useListbox. Ids build on the control's own
 // `id` when it has one; useCuiId runs either way, for SSR-stable ids.
 const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const placeholderText = computed(() => props.placeholder ?? messages.value.combobox.placeholder);
+const noResultsLabel = computed(() => props.noResultsText ?? messages.value.combobox.noResults);
 const generatedId = useCuiId("combobox");
 const listbox = useListbox({
   id: props.id ?? generatedId,
@@ -273,7 +274,7 @@ const listbox = useListbox({
     if (showFailed.value) return messages.value.listbox.searchFailed;
     const n = filteredOptions.value.length;
     if (n > 0) return messages.value.listbox.results(n);
-    return showNoResults.value ? props.noResultsText : "";
+    return showNoResults.value ? noResultsLabel.value : "";
   },
 });
 
@@ -375,7 +376,7 @@ function optionClass(index: number, option: ComboboxOption) {
         :aria-required="ariaRequired || undefined"
         v-bind="listbox.inputAttrs.value"
         :value="isOpen ? query : displayText"
-        :placeholder="selectedOptions.length > 0 ? '' : placeholder"
+        :placeholder="selectedOptions.length > 0 ? '' : placeholderText"
         :disabled="disabled"
         class="cui-combobox__input"
         @input="onInput"
@@ -425,7 +426,7 @@ function optionClass(index: number, option: ComboboxOption) {
         {{ messages.listbox.searchFailed }}
       </CuiListboxStatus>
       <CuiListboxStatus v-else-if="showNoResults">
-        {{ noResultsText }}
+        {{ noResultsLabel }}
       </CuiListboxStatus>
       <CuiListboxStatus v-else-if="showTypeMore">
         {{ messages.combobox.typeMore(minChars - query.length) }}

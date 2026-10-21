@@ -4,6 +4,9 @@ import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 export interface CuiToggleProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** The value this toggle represents (group mode) */
@@ -144,7 +147,7 @@ const choice = useChoiceLabelling(props);
     >
       <!-- ON label inside track (md and lg only) -->
       <span v-if="showLabels && clampedSize !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ fontSize: dims.labelSize }">
-        <span class="cui-toggle__on-label">ON</span>
+        <span class="cui-toggle__on-label">{{ messages.toggle.on }}</span>
       </span>
 
       <!-- Knob -->

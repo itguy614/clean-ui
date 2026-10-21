@@ -50,10 +50,8 @@ export interface CuiSelectProps extends NativeControlProps, HideableProps, Color
 const props = withDefaults(defineProps<CuiSelectProps>(), {
   options: () => [],
   multiple: false,
-  placeholder: "Select...",
   clearable: false,
   loading: false,
-  noOptionsText: "No options available",
   color: "primary",
   size: "md",
   error: false,
@@ -244,6 +242,9 @@ const dims = computed(() => {
   return { minHeight: s.height, px: s.px, fontSize: s.fontSize, itemPadding: `${scaleDensity("0.5rem")} ${s.px}` };
 });
 const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const placeholderText = computed(() => props.placeholder ?? messages.value.select.placeholder);
+const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.select.noOptions);
 </script>
 
 <template>
@@ -312,7 +313,7 @@ const messages = useMessages();
           </template>
           <!-- Placeholder -->
           <template v-else>
-            <span class="cui-select__placeholder">{{ placeholder }}</span>
+            <span class="cui-select__placeholder">{{ placeholderText }}</span>
           </template>
         </div>
 
@@ -350,7 +351,7 @@ const messages = useMessages();
       <CuiListboxStatus v-if="loading">
         <CuiSpinner size="sm" show-label :label="messages.loading" />
       </CuiListboxStatus>
-      <CuiListboxStatus v-else-if="normalizedOptions.length === 0">{{ noOptionsText }}</CuiListboxStatus>
+      <CuiListboxStatus v-else-if="normalizedOptions.length === 0">{{ noOptionsLabel }}</CuiListboxStatus>
 
       <template v-else>
         <!-- A named group is role="group", labelled by its header; the ungrouped section is

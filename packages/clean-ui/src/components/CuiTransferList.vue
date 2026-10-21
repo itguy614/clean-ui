@@ -40,16 +40,19 @@ export interface CuiTransferListProps extends HideableProps, DisableableProps {
 
 const props = withDefaults(defineProps<CuiTransferListProps>(), {
   modelValue: () => [],
-  sourceTitle: "Available",
-  targetTitle: "Selected",
   filterable: true,
-  sourcePlaceholder: "Filter...",
-  targetPlaceholder: "Filter...",
   height: "320px",
   size: "md",
   disabled: false,
   hidden: false,
 });
+
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const messages = useMessages();
+const sourceLabel = computed(() => props.sourceTitle ?? messages.value.transferList.source);
+const targetLabel = computed(() => props.targetTitle ?? messages.value.transferList.target);
+const sourceFilterLabel = computed(() => props.sourcePlaceholder ?? messages.value.transferList.filterPlaceholder);
+const targetFilterLabel = computed(() => props.targetPlaceholder ?? messages.value.transferList.filterPlaceholder);
 
 const emit = defineEmits<{
   "update:modelValue": [value: (string | number)[]];
@@ -269,7 +272,6 @@ function dropIndicatorStyle(value: string | number, side: "source" | "target"): 
 // Each list is a multiselectable role="listbox" of role="option"s with one tab stop
 // (useRovingFocus): the arrows and Home/End move between items, Space marks one for
 // transfer, and Enter moves the focused item across at once, as a double-click does.
-const messages = useMessages();
 const baseId = useCuiId("transfer-list");
 const ids = {
   sourceTitle: `${baseId}-source-title`,
@@ -381,12 +383,12 @@ const panelStyle = computed(() => ({
     <!-- Source panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :id="ids.sourceTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceTitle }}</span>
+        <span :id="ids.sourceTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceLabel }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredSourceItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <span :id="ids.sourceFilter" class="cui-sr-only">{{ messages.transferList.filter(sourceTitle) }}</span>
-        <CuiInput v-model="sourceSearch" :placeholder="sourcePlaceholder" size="sm" :aria-labelledby="ids.sourceFilter" :disabled="disabled">
+        <span :id="ids.sourceFilter" class="cui-sr-only">{{ messages.transferList.filter(sourceLabel) }}</span>
+        <CuiInput v-model="sourceSearch" :placeholder="sourceFilterLabel" size="sm" :aria-labelledby="ids.sourceFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
@@ -446,16 +448,16 @@ const panelStyle = computed(() => ({
 
     <!-- Action buttons -->
     <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(targetTitle)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(targetLabel)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
         <CuiIcon name="caret-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(targetTitle)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(targetLabel)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
         <CuiIcon name="caret-double-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(sourceTitle)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(sourceLabel)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
         <CuiIcon name="caret-left" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(sourceTitle)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
+      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(sourceLabel)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
         <CuiIcon name="caret-double-left" size="0.875rem" />
       </CuiButton>
       <div :style="{ height: '0.5rem' }" />
@@ -470,12 +472,12 @@ const panelStyle = computed(() => ({
     <!-- Target panel -->
     <div :style="panelStyle">
       <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :id="ids.targetTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetTitle }}</span>
+        <span :id="ids.targetTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetLabel }}</span>
         <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredTargetItems.length }}</span>
       </div>
       <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
-        <span :id="ids.targetFilter" class="cui-sr-only">{{ messages.transferList.filter(targetTitle) }}</span>
-        <CuiInput v-model="targetSearch" :placeholder="targetPlaceholder" size="sm" :aria-labelledby="ids.targetFilter" :disabled="disabled">
+        <span :id="ids.targetFilter" class="cui-sr-only">{{ messages.transferList.filter(targetLabel) }}</span>
+        <CuiInput v-model="targetSearch" :placeholder="targetFilterLabel" size="sm" :aria-labelledby="ids.targetFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>

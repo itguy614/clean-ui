@@ -15,11 +15,11 @@ const meta: ComponentMeta = {
     {
       name: "tooltip",
       type: "string",
-      default: "Copy",
+      default: "Copy (messages.copyButton.copy)",
       description:
         "Tooltip before copying. Also names the button for screen readers when showLabel is false",
     },
-    { name: "copiedTooltip", type: "string", default: "Copied!", description: "Tooltip after copying, and the text announced in the live region" },
+    { name: "copiedTooltip", type: "string", default: "Copied! (messages.copyButton.copiedTooltip)", description: "Tooltip after copying, and the text announced in the live region" },
     { name: "resetDelay", type: "number", default: "2000", description: "Time in ms before the copied state resets" },
     {
       name: "showLabel",
