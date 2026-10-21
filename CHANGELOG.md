@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **More of the UI is translatable** (#215): English a component hardcoded now comes from the
+  message catalogue. That covers the prose defaults of CuiCombobox, CuiSelect, CuiTagInput,
+  CuiFileUpload, CuiTransferList, CuiCopyButton and CuiSpinner (a prop you set still wins), and
+  literals in CuiDataGrid's toolbar, column and view managers, the date pickers ("Today", the
+  year-range names, the range prompt), CuiCopyButton's label, CuiAvatar's fallback `alt`,
+  CuiToggle's "ON", CuiPagination's landmark and button names, and CuiFileUpload's size, count and
+  `reject` reason lines. English output is unchanged. **New required `CuiCoreMessages` keys**:
+  a catalogue passed to `CuiConfigProvider` merges onto the defaults and needs nothing, but a
+  hand-built full `CuiCoreMessages` object must add `combobox.placeholder` / `noResults`,
+  `tagInput.placeholder` / `noSuggestions` / `create` (a function of the value), `select`,
+  `fileUpload`, `transferList`, `datePicker`, `dateRangePicker`, `copyButton`, `avatar`, `spinner`,
+  `toggle`, `pagination.label` / `previous` / `next` / `page`, and nine under `dataGrid`. Still
+  English: month and weekday names, day-cell labels and file sizes, which need locale
+  formatting (#337), and CuiTimePicker's AM/PM, which its field, mask and value share.
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
   corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
   selected row instead of coloured bold text. It is the same shared listbox panel, and takes
@@ -22,34 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   warning.
 
 ### Fixed
-
-- A fully localised app no longer shows English in places (#215). The prose defaults of
-  CuiCombobox, CuiSelect, CuiTagInput, CuiFileUpload and CuiTransferList (placeholders,
-  empty-state text, "Browse", "Available"…) now come from the message catalogue when the prop
-  is not set, as do literal strings in CuiDataGrid's toolbar, column and view managers,
-  CuiDatePicker's "Today" and the pickers' year-range names, CuiDateRangePicker's prompt,
-  CuiCopyButton's label and tooltips, CuiSpinner's label, CuiAvatar's fallback `alt`, CuiToggle's
-  "ON", CuiPagination's landmark and button names, and CuiFileUpload's size and count lines.
-  English output is unchanged. (CuiTimePicker's AM/PM stay as they are: the field, its mask and
-  its value use them too.)
-  New `CuiCoreMessages` keys: `combobox.placeholder` / `noResults`, `tagInput.placeholder` /
-  `noSuggestions` / `create`, `select`, `fileUpload`, `transferList`, `datePicker`,
-  `toggle`, `dateRangePicker`, `copyButton`, `avatar`, `spinner`, `datePicker.yearRange`,
-  `pagination.label` / `previous` / `next` / `page`, and nine under `dataGrid`. A catalogue
-  passed to `CuiConfigProvider` merges onto the defaults, so only a hand-built full
-  `CuiCoreMessages` object needs them added.
-- CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
-  item closes them: the trigger, or the element the context menu was opened from. A
-  click outside still leaves focus where it landed. On open, focus now also lands on a
-  check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
-  layer stack, so inside a modal it closes only the menu (#160).
-- Tab in an open dropdown or context menu closes it, and focus moves on from the trigger
-  as it would from any button, instead of leaving the page from the end of `<body>`. A sub-menu now handles its own
-  keys: Arrow Right moves focus into it, Arrow Up/Down move within it, and Escape or Arrow
-  Left closes only the sub-menu and returns to its row (#160).
-- A dropdown shown by hover or focus (`trigger="hover"` / `"hover-focus"`) no longer takes
-  focus from where it was, and a `hover-focus` one no longer closes when focus moves into
-  its menu (#160).
 
 ## [1.3.2] - 2026-10-19
 

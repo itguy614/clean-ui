@@ -83,7 +83,7 @@ function fileIcon(type: string): string {
 
 function validateFile(file: File): string | null {
   if (props.maxFileSize > 0 && file.size > props.maxFileSize) {
-    return `File exceeds maximum size of ${formatSize(props.maxFileSize)}`;
+    return messages.value.fileUpload.tooLarge(formatSize(props.maxFileSize));
   }
   if (props.accept) {
     const accepts = props.accept.split(",").map((a) => a.trim().toLowerCase());
@@ -93,7 +93,7 @@ function validateFile(file: File): string | null {
       if (a.endsWith("/*")) return file.type.startsWith(a.replace("/*", "/"));
       return file.type === a;
     });
-    if (!typeMatch) return `File type not accepted`;
+    if (!typeMatch) return messages.value.fileUpload.typeNotAccepted;
   }
   return null;
 }
@@ -104,7 +104,7 @@ function addFiles(newFiles: FileList | File[]) {
   for (const file of Array.from(newFiles)) {
     // Check max files
     if (props.maxFiles > 0 && files.value.length >= props.maxFiles) {
-      emit("reject", { file, reason: `Maximum ${props.maxFiles} files allowed` });
+      emit("reject", { file, reason: messages.value.fileUpload.tooMany(props.maxFiles) });
       continue;
     }
 

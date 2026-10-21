@@ -72,8 +72,8 @@ export interface CuiCoreMessages {
     placeholder: string;
     /** Default `noSuggestionsText`. */
     noSuggestions: string;
-    /** Default `createText`, before the typed value: Create "foo". */
-    create: string;
+    /** The create option, around the typed value — a function, so word order and quotes are the locale's. */
+    create: (value: string) => string;
     searching: string;
   };
   select: {
@@ -93,6 +93,10 @@ export interface CuiCoreMessages {
     maxSize: (size: string) => string;
     /** Under the file list: the count and their total size, already formatted. */
     summary: (count: number, size: string) => string;
+    /** `reject` reasons, which a consumer renders. */
+    tooLarge: (maxSize: string) => string;
+    typeNotAccepted: string;
+    tooMany: (max: number) => string;
   };
   transferList: {
     /** Default `sourceTitle`. */
@@ -220,7 +224,7 @@ export const defaultMessages: CuiCoreMessages = {
   tagInput: {
     placeholder: "Add tag...",
     noSuggestions: "No suggestions",
-    create: "Create",
+    create: (value) => `Create \u201c${value}\u201d`,
     searching: "Searching…",
   },
   select: {
@@ -233,6 +237,9 @@ export const defaultMessages: CuiCoreMessages = {
     upload: "Upload",
     maxSize: (size) => `Max ${size}`,
     summary: (count, size) => `${count} file${count === 1 ? "" : "s"} · ${size}`,
+    tooLarge: (maxSize) => `File exceeds maximum size of ${maxSize}`,
+    typeNotAccepted: "File type not accepted",
+    tooMany: (max) => `Maximum ${max} files allowed`,
   },
   transferList: {
     source: "Available",

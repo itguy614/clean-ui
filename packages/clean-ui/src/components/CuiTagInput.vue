@@ -101,7 +101,10 @@ const messages = useMessages();
 // The prose props default to the message catalogue, so a localised app localises them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.tagInput.placeholder);
 const noSuggestionsLabel = computed(() => props.noSuggestionsText ?? messages.value.tagInput.noSuggestions);
-const createLabel = computed(() => props.createText ?? messages.value.tagInput.create);
+// `createText`, when given, keeps its old shape: the word, then the quoted value.
+const createLabel = computed(() =>
+  props.createText !== undefined ? `${props.createText} \u201c${query.value.trim()}\u201d` : messages.value.tagInput.create(query.value.trim()),
+);
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
 
@@ -420,7 +423,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         @hover="focusedIndex = filteredSuggestions.length"
       >
         <CuiIcon name="plus" size="0.75rem" />
-        <span>{{ createLabel }} &ldquo;{{ query.trim() }}&rdquo;</span>
+        <span>{{ createLabel }}</span>
       </CuiListboxOption>
     </CuiListboxPanel>
   </div>

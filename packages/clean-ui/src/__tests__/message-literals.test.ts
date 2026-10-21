@@ -12,7 +12,9 @@ import { parse } from "vue/compiler-sfc";
  * listed below with why.
  *
  * Enumerated ARIA attributes take keywords (`aria-live="polite"`) and the id-reference ones
- * take ids, so neither is checked. Strings a script builds are not seen. Prop defaults are the other route English took (`placeholder: "Search..."`);
+ * take ids, so neither is checked. Strings a script builds — an imported constant, a
+ * `toDateString()` — are not seen; a component's own script strings are its reviewer's to
+ * catch. Prop defaults are the other route English took (`placeholder: "Search..."`);
  * those now fall back to the catalogue too.
  */
 const ALLOWED: Record<string, string> = {
@@ -35,13 +37,17 @@ const ENUMERATED = new Set([
 
 /** Attributes whose value a user reads or hears. */
 const isProseAttr = (name: string) =>
-  (name.startsWith("aria-") && !ENUMERATED.has(name)) || ["title", "placeholder", "alt", "label"].includes(name);
+  (name.startsWith("aria-") && !ENUMERATED.has(name)) ||
+  ["title", "placeholder", "alt", "label", "text", "description", "tooltip"].includes(name) ||
+  // The library's own prose props: `empty-text`, `confirm-text`, `noResultsText`, …
+  /(-t|T)ext$/.test(name);
 
 /** The string literals in an expression's source — `copied ? "Copied" : "Copy"`. */
 const stringLiterals = (source: string) =>
-  [...source.matchAll(/(===?|!==?)?\s*(["'`])((?:(?!\2)[^\\]|\\.)*)\2/g)]
-    // A literal something is compared with (`selecting === 'start'`) is a value, not text.
-    .filter((m) => !m[1])
+  [...source.matchAll(/(===?|!==?)?\s*(["'`])((?:(?!\2)[^\\]|\\.)*)\2(?=\s*(===?|!==?))?/g)]
+    // A literal something is compared with, on either side (`selecting === 'start'`), is a
+    // value, not text.
+    .filter((m) => !m[1] && !m[4])
     .map((m) => m[3]);
 
 const PACKAGES = resolve(__dirname, "../../..");
