@@ -4,12 +4,12 @@ import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
-import { useCalendarKeyboard, calendarCellKey } from "../composables/useCalendarKeyboard";
+import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
   MONTH_NAMES, MONTH_NAMES_SHORT, DAY_NAMES_SHORT,
-  daysInMonth, firstDayOfMonth, isSameDay, isToday,
+  daysInMonth, isSameDay, isToday,
   formatDate, parseFormattedDate, formatToMask, formatToRaw,
-  isoToDate, dateToIso, isDateDisabled,
+  toDateValue, dateToIso,
   type DisabledDateRange,
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
@@ -62,29 +62,49 @@ const emit = defineEmits<{
   "update:modelValue": [value: string | Date | null];
 }>();
 
-// Calendar navigation state
-const viewYear = ref(new Date().getFullYear());
-const viewMonth = ref(new Date().getMonth());
-const viewMode = ref<"days" | "months" | "years">(props.mode === "month" ? "months" : "days");
-const popoverVisible = ref(false);
-
-// Selected date
+const maskedInputRef = useTemplateRef<InstanceType<typeof CuiMaskedInput>>("maskedInput");
 const selectedDate = ref<Date | null>(null);
 
-// Parse incoming modelValue
-function parseModelValue(): Date | null {
-  if (!props.modelValue) return null;
-  if (props.modelValue instanceof Date) return props.modelValue;
-  return isoToDate(props.modelValue as string);
-}
+// The calendar, shared with CuiDateRangePicker (#219).
+const {
+  viewYear,
+  viewMonth,
+  viewMode,
+  popoverVisible,
+  showDate,
+  isDisabled,
+  calendarDays,
+  yearRangeStart,
+  yearRangeEnd,
+  yearRange,
+  yearKeys,
+  monthKeys,
+  selectYear,
+  prevMonth,
+  nextMonth,
+  prevYearRange,
+  nextYearRange,
+  gridRef,
+  cellTabIndex,
+  onGridKeydown,
+  onFieldKeydown,
+} = useDatePickerCalendar({
+  minDate: () => props.minDate,
+  maxDate: () => props.maxDate,
+  disabledDate: () => props.disabledDate,
+  disabledDates: () => props.disabledDates,
+  disabled: () => props.disabled,
+  openView: () => (props.mode === "month" ? "months" : "days"),
+  anchor: () => selectedDate.value,
+  selectDay: (date) => selectDay({ date, disabled: isDisabled(date) }),
+  selectMonth,
+  focusTrigger: () => maskedInputRef.value?.focus({ preventScroll: true }),
+});
 
 function syncFromProp() {
-  const d = parseModelValue();
+  const d = toDateValue(props.modelValue);
   selectedDate.value = d;
-  if (d) {
-    viewYear.value = d.getFullYear();
-    viewMonth.value = d.getMonth();
-  }
+  if (d) showDate(d);
 }
 
 watch(() => props.modelValue, syncFromProp);
@@ -110,55 +130,6 @@ function emitValue(date: Date) {
   }
 }
 
-// Min/max as Date objects
-const minDateObj = computed(() => props.minDate ? isoToDate(props.minDate) : null);
-const maxDateObj = computed(() => props.maxDate ? isoToDate(props.maxDate) : null);
-
-function isDisabled(date: Date): boolean {
-  return isDateDisabled(date, {
-    minDate: minDateObj.value,
-    maxDate: maxDateObj.value,
-    disabledDate: props.disabledDate,
-    disabledDates: props.disabledDates,
-  });
-}
-
-// --- Day grid ---
-const calendarDays = computed(() => {
-  // `key` is built once per month here rather than in the template: the grid
-  // re-renders on every arrow press, so a template-literal per cell meant 42
-  // string allocations per keystroke for a value that only changes per month.
-  const days: { date: Date; inMonth: boolean; disabled: boolean; key: string }[] = [];
-  const totalDays = daysInMonth(viewYear.value, viewMonth.value);
-  const startDay = firstDayOfMonth(viewYear.value, viewMonth.value);
-
-  // Previous month fill
-  const prevMonth = viewMonth.value === 0 ? 11 : viewMonth.value - 1;
-  const prevYear = viewMonth.value === 0 ? viewYear.value - 1 : viewYear.value;
-  const prevDays = daysInMonth(prevYear, prevMonth);
-  for (let i = startDay - 1; i >= 0; i--) {
-    const d = new Date(prevYear, prevMonth, prevDays - i);
-    days.push({ date: d, inMonth: false, disabled: isDisabled(d), key: calendarCellKey("days", d) });
-  }
-
-  // Current month
-  for (let i = 1; i <= totalDays; i++) {
-    const d = new Date(viewYear.value, viewMonth.value, i);
-    days.push({ date: d, inMonth: true, disabled: isDisabled(d), key: calendarCellKey("days", d) });
-  }
-
-  // Next month fill (to complete 6 rows)
-  const remaining = 42 - days.length;
-  const nextMonth = viewMonth.value === 11 ? 0 : viewMonth.value + 1;
-  const nextYear = viewMonth.value === 11 ? viewYear.value + 1 : viewYear.value;
-  for (let i = 1; i <= remaining; i++) {
-    const d = new Date(nextYear, nextMonth, i);
-    days.push({ date: d, inMonth: false, disabled: isDisabled(d), key: calendarCellKey("days", d) });
-  }
-
-  return days;
-});
-
 // --- Actions ---
 function selectDay(day: { date: Date; disabled: boolean }) {
   if (day.disabled) return;
@@ -177,53 +148,6 @@ function selectMonth(month: number) {
   }
 }
 
-function selectYear(year: number) {
-  viewYear.value = year;
-  viewMode.value = props.mode === "month" ? "months" : "months";
-}
-
-function prevMonth() {
-  if (viewMonth.value === 0) { viewMonth.value = 11; viewYear.value--; }
-  else viewMonth.value--;
-}
-
-function nextMonth() {
-  if (viewMonth.value === 11) { viewMonth.value = 0; viewYear.value++; }
-  else viewMonth.value++;
-}
-
-// Year grid range
-const yearRangeStart = computed(() => Math.floor(viewYear.value / 12) * 12);
-const yearRange = computed(() => Array.from({ length: 12 }, (_, i) => yearRangeStart.value + i));
-
-function prevYearRange() { viewYear.value -= 12; }
-function nextYearRange() { viewYear.value += 12; }
-
-// --- Keyboard (#74) ---
-// The grids were unfocusable <div>s with a click handler, so a date could only
-// be picked with a pointer. Navigation is shared with CuiDateRangePicker.
-const {
-  gridRef,
-  focusedKey,
-  cellTabIndex,
-  onGridKeydown,
-  onFieldKeydown,
-  resetFocus,
-} = useCalendarKeyboard({
-  viewMode,
-  viewYear,
-  viewMonth,
-  selectDay: (date) => selectDay({ date, disabled: isDisabled(date) }),
-  selectMonth,
-  selectYear,
-  open: () => { popoverVisible.value = true; },
-  isDisabled: () => props.disabled,
-});
-
-
-// Header click handlers
-function onMonthHeaderClick() { viewMode.value = "months"; }
-function onYearHeaderClick() { viewMode.value = "years"; }
 
 // Text input change — receives raw digits from CuiMaskedInput, reconstruct formatted string
 function onInputChange(rawVal: string | number) {
@@ -242,8 +166,7 @@ function onInputChange(rawVal: string | number) {
   const parsed = parseFormattedDate(formatted, props.format);
   if (parsed && !isNaN(parsed.getTime()) && !isDisabled(parsed)) {
     emitValue(parsed);
-    viewYear.value = parsed.getFullYear();
-    viewMonth.value = parsed.getMonth();
+    showDate(parsed);
   }
 }
 
@@ -293,8 +216,6 @@ function onDayHover(e: MouseEvent) {
 
 // Expose imperative handle
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
-const maskedInputRef = useTemplateRef<InstanceType<typeof CuiMaskedInput>>("maskedInput");
-
 function focus(opts?: FocusOptions) {
   if (maskedInputRef.value) maskedInputRef.value.focus({ preventScroll: true });
   else rootEl.value?.focus(opts);
@@ -305,48 +226,6 @@ function blur() {
 }
 
 defineExpose({ el: rootEl, focus, blur });
-
-// Open popover resets view mode
-/**
- * Hand focus back to the field when the panel closes — but only if it is ours
- * to take.
- *
- * Closing is very often caused by clicking somewhere else, including another
- * picker. Restoring unconditionally yanks focus out of whatever was just
- * clicked: with two pickers on a page, opening the second left the focus ring
- * on the first one's field.
- *
- * Two cases are ours. Focus still inside our own panel — the watcher runs
- * before the DOM updates, so that is what Escape and a commit look like. Or
- * focus already on `<body>`, meaning the close orphaned it and nobody else has
- * claimed it. Anything else belongs to whatever the user just clicked.
- */
-function restoreFocusToTrigger() {
-  const active = document.activeElement;
-  const ours = active === document.body || (!!active && !!gridRef.value?.contains(active));
-  if (!ours) return;
-  maskedInputRef.value?.focus({ preventScroll: true });
-}
-
-watch(popoverVisible, (open) => {
-  if (!open) {
-    // Closing has to hand focus back to whatever opened the panel, or it falls
-    // to <body> and a keyboard user loses their place entirely.
-    restoreFocusToTrigger();
-    return;
-  }
-
-  viewMode.value = props.mode === "month" ? "months" : "days";
-  if (selectedDate.value) {
-    viewYear.value = selectedDate.value.getFullYear();
-    viewMonth.value = selectedDate.value.getMonth();
-  }
-  // Last, because it moves focus into the grid and syncs the view to wherever
-  // that lands — doing it before the lines above would have them overwrite it.
-  // Starts on the selected date if there is one, else today, so the arrows
-  // begin somewhere meaningful rather than at the first cell.
-  resetFocus(selectedDate.value ? new Date(selectedDate.value) : new Date());
-});
 </script>
 
 <template>
@@ -406,10 +285,10 @@ watch(popoverVisible, (open) => {
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
               <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="onMonthHeaderClick">
+                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
                   {{ MONTH_NAMES_SHORT[viewMonth] }}
                 </CuiButton>
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="onYearHeaderClick">
+                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
                   {{ viewYear }}
                 </CuiButton>
               </div>
@@ -475,7 +354,7 @@ watch(popoverVisible, (open) => {
               <CuiButton variant="ghost" size="xs" @click="viewYear--">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="onYearHeaderClick">
+              <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
                 {{ viewYear }}
               </CuiButton>
               <CuiButton variant="ghost" size="xs" @click="viewYear++">
@@ -494,8 +373,8 @@ watch(popoverVisible, (open) => {
                 v-for="(name, i) in MONTH_NAMES_SHORT"
                 :key="i"
                 role="gridcell"
-                :data-cui-cell="calendarCellKey('months', i)"
-                :tabindex="cellTabIndex(calendarCellKey('months', i))"
+                :data-cui-cell="monthKeys[i]"
+                :tabindex="cellTabIndex(monthKeys[i])"
                 :aria-label="MONTH_NAMES[i] + ' ' + viewYear"
                 :style="{
                   padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
@@ -522,7 +401,7 @@ watch(popoverVisible, (open) => {
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
               <span :style="{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
-                {{ yearRangeStart }} – {{ yearRangeStart + 11 }}
+                {{ yearRangeStart }} – {{ yearRangeEnd }}
               </span>
               <CuiButton variant="ghost" size="xs" @click="nextYearRange">
                 <CuiIcon name="caret-right" size="0.875rem" />
@@ -532,16 +411,16 @@ watch(popoverVisible, (open) => {
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="yearRangeStart + ' to ' + (yearRangeStart + 11)"
+              :aria-label="yearRangeStart + ' to ' + yearRangeEnd"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
-                v-for="year in yearRange"
+                v-for="(year, yi) in yearRange"
                 :key="year"
                 role="gridcell"
-                :data-cui-cell="calendarCellKey('years', year)"
-                :tabindex="cellTabIndex(calendarCellKey('years', year))"
+                :data-cui-cell="yearKeys[yi]"
+                :tabindex="cellTabIndex(yearKeys[yi])"
                 :aria-label="String(year)"
                 :style="{
                   padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
