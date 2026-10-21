@@ -240,20 +240,12 @@ defineExpose({ scrollWrapper, measure });
 
 /* --- Striped --- */
 .cui-table--striped tbody tr:nth-child(even) {
-  background: var(--color-surface-50);
-}
-
-:where(.dark, .dark *) .cui-table--striped tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--color-surface-800) 50%, transparent);
+  background: var(--cui-table-stripe-bg);
 }
 
 /* --- Hoverable --- */
 .cui-table--hoverable tbody tr:hover {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-table--hoverable tbody tr:hover {
-  background: color-mix(in srgb, var(--color-surface-700) 50%, transparent);
+  background: var(--cui-table-row-hover-bg);
 }
 
 /* --- Bordered --- */

@@ -105,8 +105,13 @@
   --cui-surface-dark-subtle:     color-mix(in srgb, var(--color-surface-200) 60%, transparent);
   --cui-surface-dark-muted:      var(--color-surface-400);
 
-  /* --- Table header background --- */
+  /* --- Table fills (#210): header, even-row stripe, row hover --- */
   --cui-table-head-bg: var(--color-surface-50);
+  --cui-table-stripe-bg: var(--color-surface-50);
+  --cui-table-row-hover-bg: var(--color-surface-100);
+
+  /* --- Pagination page-button hover border (#210) --- */
+  --cui-pagination-hover-border: var(--color-surface-300);
 
   /* --- Border color — uses 500/600 for visible borders on white --- */
   --cui-border: var(--color-surface-500);
@@ -242,6 +247,9 @@
   --cui-surface-dark-muted:      var(--color-surface-500);
 
   --cui-table-head-bg: var(--color-surface-800);
+  --cui-table-stripe-bg: color-mix(in srgb, var(--color-surface-800) 50%, transparent);
+  --cui-table-row-hover-bg: color-mix(in srgb, var(--color-surface-700) 50%, transparent);
+  --cui-pagination-hover-border: var(--color-surface-600);
   --cui-border: var(--color-surface-600);
   --cui-border-strong: var(--color-surface-500);
 

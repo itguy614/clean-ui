@@ -288,11 +288,7 @@ const perPageSelectOptions = computed(() =>
 
 .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
   background: var(--cui-surface-bg);
-  border-color: var(--color-surface-300);
-}
-
-:where(.dark, .dark *) .cui-pagination__btn:hover:not(:disabled):not(.cui-pagination__btn--active) {
-  border-color: var(--color-surface-600);
+  border-color: var(--cui-pagination-hover-border);
 }
 
 .cui-pagination__btn:focus-visible {
