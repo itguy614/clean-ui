@@ -20,6 +20,11 @@ const COMPONENTS = resolve(__dirname, "../../components");
  * components still write paint inline, and this release converts four of them, so an
  * opt-out list would be a backlog wearing a checklist's clothes. Add each component here
  * as its own PR converts it.
+ *
+ * #211 measured the drift: 22 components emitted a private token but only 10 were listed,
+ * so 14 — CuiInput and CuiSelect among them — could quietly regain a bare declaration. All
+ * 22 are listed now (CuiTooltip had to finish its colours first). The check reads the
+ * `<script>` only; template `:style` bindings are still unguarded, which is its own issue.
  */
 const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiButton.vue", issue: "#114" },
@@ -35,6 +40,20 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListboxStatus.vue", issue: "#212" },
   { file: "CuiInputStepper.vue", issue: "#123" },
   { file: "CuiBanner.vue", issue: "#119" },
+  { file: "CuiInput.vue", issue: "#211" },
+  { file: "CuiSelect.vue", issue: "#211" },
+  { file: "CuiTextarea.vue", issue: "#211" },
+  { file: "CuiCheckbox.vue", issue: "#211" },
+  { file: "CuiRadio.vue", issue: "#211" },
+  { file: "CuiToggle.vue", issue: "#211" },
+  { file: "CuiTabs.vue", issue: "#211" },
+  { file: "CuiAlert.vue", issue: "#211" },
+  { file: "CuiToast.vue", issue: "#211" },
+  { file: "CuiTooltip.vue", issue: "#211" },
+  { file: "CuiIcon.vue", issue: "#211" },
+  { file: "CuiProgress.vue", issue: "#211" },
+  { file: "CuiBackdrop.vue", issue: "#211" },
+  { file: "CuiAvatarGroup.vue", issue: "#211" },
 ];
 
 /** Properties a consumer has a legitimate claim on. Layout and geometry are not here. */

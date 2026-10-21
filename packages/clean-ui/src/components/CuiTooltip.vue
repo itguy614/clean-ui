@@ -141,7 +141,6 @@ onUnmounted(() => {
   clearTimers();
 });
 
-// Tooltip background/text colors
 /**
  * How the tooltip is hidden for the frame or two before Floating UI has
  * positioned it (#88).
@@ -167,12 +166,13 @@ const hiddenUntilPositioned = computed(() => {
   return styles;
 });
 
+// A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
+// default tooltip's come from `.cui-tooltip--default`.
 const tooltipStyle = computed(() => {
   if (props.color) {
     return {
-      background: `var(--cui-${props.color})`,
-      color: `var(--cui-${props.color}-text)`,
-      "--_arrow-bg": `var(--cui-${props.color})`,
+      "--_tooltip-bg": `var(--cui-${props.color})`,
+      "--_tooltip-color": `var(--cui-${props.color}-text)`,
     };
   }
   return {};
@@ -236,12 +236,23 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   display: inline-flex;
 }
 
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-tooltip) {
+  background: var(--cui-tooltip-bg, var(--_tooltip-bg));
+  color: var(--cui-tooltip-color, var(--_tooltip-color));
+  padding: var(--cui-tooltip-py, calc(0.375rem * var(--cui-density-scale, 1)))
+    var(--cui-tooltip-px, calc(0.625rem * var(--cui-density-scale, 1)));
+  border-radius: var(--cui-tooltip-radius, 0.375rem);
+  font-size: var(--cui-tooltip-font-size, 0.8125rem);
+}
+
+:where(.cui-tooltip__arrow) {
+  background: var(--cui-tooltip-bg, var(--_tooltip-bg));
+}
+
 /* --- Tooltip --- */
 .cui-tooltip {
   z-index: calc(var(--cui-z-overlay, 9990) + 9); /* TOOLTIP_Z_INDEX in utils/position.ts */
-  padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
-  border-radius: 0.375rem;
-  font-size: 0.8125rem;
   line-height: 1.4;
   max-width: 280px;
   word-wrap: break-word;
@@ -260,24 +271,20 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   }
 }
 
-/* Default (dark) theme */
+/* Default: an inverted surface, dark in light mode (and a lighter dark in dark mode). */
 .cui-tooltip--default {
-  background: var(--color-surface-900);
-  color: var(--color-surface-100);
-  --_arrow-bg: var(--color-surface-900);
+  --_tooltip-bg: var(--color-surface-900);
+  --_tooltip-color: var(--color-surface-100);
 }
 
 :where(.dark, .dark *) .cui-tooltip--default {
-  background: var(--color-surface-700);
-  color: var(--color-surface-100);
-  --_arrow-bg: var(--color-surface-700);
+  --_tooltip-bg: var(--color-surface-700);
 }
 
 /* --- Arrow --- */
 .cui-tooltip__arrow {
   width: 8px;
   height: 8px;
-  background: var(--_arrow-bg);
   transform: rotate(45deg);
   position: absolute;
 }

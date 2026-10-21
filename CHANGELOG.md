@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- CuiTooltip's paint and spacing are themeable (#211): `--cui-tooltip-bg` (the arrow follows
+  it), `--cui-tooltip-color`, `--cui-tooltip-px` / `-py`, `--cui-tooltip-radius` and
+  `--cui-tooltip-font-size`, and a plain `.cui-tooltip` rule now wins without `!important`.
+  A coloured tooltip's colours were bare inline declarations.
 - `useFieldDescribedBy` (and its `DescribableProps` type) is now a public export of
   clean-ui. It wires a control's own error message into `aria-describedby` after any
   caller descriptions. clean-ui-editor now requires clean-ui 1.3.2 or later (#221).
