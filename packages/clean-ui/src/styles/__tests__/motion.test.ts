@@ -227,7 +227,6 @@ describe("motion in both packages", () => {
     check("literalTimer", {
       [`${C}CuiDropdown.vue`]: { count: 3, why: "hover-intent delays before opening and closing, not an animation's length" },
       [`${C}CuiDropdownSub.vue`]: { count: 2, why: "hover-intent delays before opening and closing, not an animation's length" },
-      [`${C}CuiTreeView.vue`]: { count: 1, why: "its type-ahead reset; goes with its own type-ahead in #289" },
     }));
 
   it("transitions no layout property", () => check("layoutTransition", LAYOUT_EXEMPT));
