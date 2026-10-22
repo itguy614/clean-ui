@@ -217,18 +217,27 @@ describe("CuiTabs overflow", () => {
     expect(bar.attributes("data-overflow")).toBe("start");
   });
 
-  it("scrolls the newly active tab into view on a v-model change", async () => {
+  it("scrolls the bar, and only the bar, to the newly active tab on a v-model change", async () => {
     const wrapper = mount(makeHost(), { attachTo: document.body });
     await wrapper.vm.$nextTick();
 
+    const bar = wrapper.find('[role="tablist"]').element as HTMLElement;
     const target = wrapper.findAll('[role="tab"]')[1].element as HTMLElement;
-    const spy = vi.fn();
-    target.scrollIntoView = spy;
+    // Past the bar's end: jsdom lays nothing out.
+    target.getBoundingClientRect = () => ({ left: 500, right: 600, top: 0, bottom: 30, width: 100, height: 30, x: 500, y: 0, toJSON() {} });
+    Object.defineProperty(bar, "clientWidth", { value: 300 });
+    const scrollBy = vi.fn();
+    bar.scrollBy = scrollBy as never;
+    // scrollIntoView would scroll the page too (#243).
+    const scrollIntoView = vi.fn();
+    target.scrollIntoView = scrollIntoView;
 
     (wrapper.vm as unknown as { active: string }).active = "two";
     await wrapper.vm.$nextTick();
 
-    expect(spy).toHaveBeenCalledWith({ inline: "nearest", block: "nearest" });
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy.mock.calls[0][0].left).toBeGreaterThan(0);
+    expect(scrollIntoView).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

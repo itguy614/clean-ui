@@ -7,7 +7,7 @@ import type { CuiOrientation } from "../types/common";
  * DOM-free: the caller passes the current items on every call and gets back the index a
  * key should move to. Disabled items are skipped. Scrolling the result into view is the
  * caller's: roving focus gets it from `el.focus()`, an `aria-activedescendant` listbox
- * calls `scrollIntoView({ block: "nearest" })` itself.
+ * scrolls the option within itself (`scrollIntoViewWithin`, utils/scroll.ts).
  */
 
 export type ListOrientation = CuiOrientation | "both";
