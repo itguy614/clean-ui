@@ -74,39 +74,44 @@ export function afterAnimations(el: Element, done: () => void): void {
   Promise.allSettled(running.map((a) => a.finished)).then(() => done());
 }
 
-const PANEL_MOTION = "cui-panel-motion";
-const PANEL_HIDDEN = "cui-panel--hidden";
+/**
+ * The panel's motion state, `data-cui-panel="shown" | "hidden"`. An attribute, not a
+ * class: Vue rewrites `className` whenever a panel's own `:class` binding changes (a
+ * tooltip flipping sides as it opens), which would strip a class added here and, with it,
+ * the transition mid-flight. An attribute the template doesn't bind is left alone.
+ */
+const PANEL_STATE = "data-cui-panel";
+const isHidden = (el: Element) => el.getAttribute(PANEL_STATE) === "hidden";
 /** Panels whose leave is under way, so an enter can tell a re-open from a fresh show. */
 const leaving = new WeakSet<Element>();
 
 /**
  * The `<Transition>` hooks every floating panel shares (#263): `v-bind` them, with the
  * panel rendered `v-if="present" v-show="open"` (composables/usePresence). The panel's
- * motion is one CSS transition on a state class, `cui-panel--hidden`: entering takes it
- * off, leaving puts it on, and `components-shared.css` animates the change. So a re-open
- * mid-exit just takes the class off again and the transition reverses from wherever the
+ * motion is one CSS transition on a state attribute (PANEL_STATE): entering sets it shown,
+ * leaving sets it hidden, and `components-shared.css` animates the change. So a re-open
+ * mid-exit just sets it shown again and the transition reverses from wherever the
  * panel is. (Vue's CSS mode re-applies `enter-from` there, dipping the panel towards
  * invisible for a frame before it turns back.)
  */
 export const panelTransition = {
   css: false,
   onBeforeEnter(el: Element) {
-    el.classList.add(PANEL_MOTION);
     // Re-opened mid-exit: it is still on screen, mid-transition, and reverses from there.
     // Nothing here may read its style: cancelling the leave sets `display: none` for an
     // instant, and a style read then would stop the transition it is to reverse.
     if (leaving.delete(el)) return;
-    el.classList.add(PANEL_HIDDEN);
+    el.setAttribute(PANEL_STATE, "hidden");
   },
   onEnter(el: Element, done: () => void) {
     // Style the hidden state before it is lifted, or there is nothing to transition from.
-    if (el.classList.contains(PANEL_HIDDEN)) void (el as HTMLElement).offsetWidth;
-    el.classList.remove(PANEL_HIDDEN);
+    if (isHidden(el)) void (el as HTMLElement).offsetWidth;
+    el.setAttribute(PANEL_STATE, "shown");
     afterAnimations(el, done);
   },
   onLeave(el: Element, done: () => void) {
     leaving.add(el);
-    el.classList.add(PANEL_HIDDEN);
+    el.setAttribute(PANEL_STATE, "hidden");
     afterAnimations(el, () => {
       leaving.delete(el);
       done();

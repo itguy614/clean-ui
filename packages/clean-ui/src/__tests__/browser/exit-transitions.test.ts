@@ -11,6 +11,7 @@ import CuiDropdownMenu from "../../components/CuiDropdownMenu.vue";
 import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiSelect from "../../components/CuiSelect.vue";
+import CuiTooltip from "../../components/CuiTooltip.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiAlert from "../../components/CuiAlert.vue";
 import CuiToastProvider from "../../components/CuiToastProvider.vue";
@@ -66,7 +67,7 @@ describe("exit transitions (real browser)", () => {
     await w.find(".cui-button").trigger("click");
     await frame();
     expect(menu(), "still in the DOM while it leaves").not.toBeNull();
-    expect(menu()!.classList.contains("cui-panel--hidden")).toBe(true);
+    expect(menu()!.getAttribute("data-cui-panel")).toBe("hidden");
     await wait(motionDuration("fast") + 100);
     expect(menu(), "unmounted after its exit").toBeNull();
   });
@@ -104,9 +105,25 @@ describe("exit transitions (real browser)", () => {
     await w.find(".cui-button").trigger("click");
     // Its hideDelay (100ms) first, then the exit.
     await wait(100 + 20);
-    expect(panel()?.classList.contains("cui-panel--hidden")).toBe(true);
+    expect(panel()?.getAttribute("data-cui-panel")).toBe("hidden");
     await wait(motionDuration("fast") + 100);
     expect(panel()).toBeNull();
+  });
+
+  // The state was a class once: a panel whose own `:class` changed mid-exit (a colour, a
+  // side flipped) had it stripped by Vue's className rewrite, and vanished at once.
+  it("keeps playing a panel's exit when its own class binding changes mid-way", async () => {
+    const w = track(mount(CuiTooltip, { props: { text: "Tip", visible: true }, slots: { default: () => h("button", "Tip") }, attachTo: host() }));
+    await wait(motionDuration("fast") + 100);
+    const panel = document.querySelector<HTMLElement>(".cui-tooltip")!;
+    await w.setProps({ visible: false });
+    await frame();
+    await w.setProps({ color: "error" });
+    await frame();
+    expect(panel.isConnected, "still leaving").toBe(true);
+    expect(panel.getAnimations().length, "its exit still running").toBeGreaterThan(0);
+    await wait(motionDuration("fast") + 100);
+    expect(panel.isConnected).toBe(false);
   });
 
   it("animates a Select's listbox in, and out", async () => {
@@ -119,7 +136,7 @@ describe("exit transitions (real browser)", () => {
     await wait(motionDuration("base") + 50);
     await w.find(".cui-select__trigger").trigger("click");
     await frame();
-    expect(panel.classList.contains("cui-panel--hidden")).toBe(true);
+    expect(panel.getAttribute("data-cui-panel")).toBe("hidden");
     expect(panel.getAnimations().length, "leaving").toBeGreaterThan(0);
   });
 

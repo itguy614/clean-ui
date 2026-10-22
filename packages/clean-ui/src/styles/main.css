@@ -971,7 +971,7 @@
   /* 2. Hidden states drop their movement, so an exit or entrance is a fade where the
         element stands: floating panels, toasts, a modal's dialog or a slideover's panel
         (data-cui-exit), an alert's slide. */
-  .cui-panel-motion.cui-panel--hidden,
+  [data-cui-panel="hidden"],
   .cui-toast-enter-from,
   .cui-toast-leave-to,
   [data-cui-exit],

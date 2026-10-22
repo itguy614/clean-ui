@@ -63,19 +63,27 @@
 
 /* Floating panels' enter and exit (#263): a panel rendered `v-if="present" v-show="open"`
    (composables/usePresence) inside a `<Transition v-bind="panelTransition">` (utils/motion).
-   One CSS transition on a state class, not keyframes, so a re-open mid-exit reverses from
-   where the panel is. It grows out of its trigger through each panel's own
+   One CSS transition on a state attribute (`data-cui-panel`), not keyframes, so a re-open
+   mid-exit reverses from where the panel is. It grows out of its trigger through each panel's own
    transform-origin (#262). Exits run faster than entries: the hidden state takes the fast
    duration, the shown one `--_panel-enter-duration` (base; a tooltip's is fast). */
-.cui-panel-motion {
+[data-cui-panel] {
   transition:
     opacity var(--_panel-enter-duration, var(--cui-duration-base)) var(--cui-ease-out),
     transform var(--_panel-enter-duration, var(--cui-duration-base)) var(--cui-ease-out);
 }
 
-.cui-panel-motion.cui-panel--hidden {
+[data-cui-panel="hidden"] {
   opacity: 0;
   transform: scale(0.95);
   transition-duration: var(--cui-duration-fast);
   pointer-events: none;
+}
+
+/* Cut short (a tooltip replaced by the next, #264): no exit at all, even one already
+   under way. A change of duration wouldn't touch a running transition; dropping its
+   property cancels it, and the leave ends there. Important, to beat reduced motion's
+   opacity-only rule. */
+[data-cui-panel].cui-panel--cut {
+  transition-property: none !important;
 }
