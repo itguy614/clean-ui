@@ -1,8 +1,9 @@
 import type { CuiOrientation } from "../types/common";
 
 /**
- * The index maths for `useRovingFocus` (#144), and for `useListbox` when #205 adds it.
- * Internal — not exported from the package.
+ * The index maths for keyboard navigation through a list: `useRovingFocus` (#144),
+ * `useListbox` (#205), the menus (`utils/menu.ts`), and CuiAccordion, CuiTabs and
+ * CuiTreeView (#289). Internal — not exported from the package.
  *
  * DOM-free: the caller passes the current items on every call and gets back the index a
  * key should move to. Disabled items are skipped. Scrolling the result into view is the

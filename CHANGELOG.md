@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- CuiAccordion, CuiTabs and CuiTreeView share one keyboard-navigation helper (#289), as the
+  menus already did. CuiTreeView's type-ahead now forgets what was typed after 500ms rather
+  than 600ms, and typing one letter repeatedly cycles through the items starting with it.
+  An arrow, Home or End with Ctrl, Alt, Meta or Shift held is left to the page or browser
+  instead of moving between headers, tabs or nodes. Home or End in an accordion or tab
+  bar with every item disabled no longer throws.
 - **An overflowing CuiTabs bar now shows scroll buttons by default** (#236). Pass
   `scroll-buttons="never"` for the previous look. The bar is built on CuiScrollArea now:
   the tablist sits inside its scroller, and the bar no longer carries `data-overflow`,
@@ -28,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Arrow keys inside an open CuiAccordion panel** stay with the panel's content (#289). An
+  arrow in a textarea or list there moved focus to the first header instead of the caret,
+  and in a nested accordion each arrow moved two headers.
+- **CuiTabs in a right-to-left page** (#289): `ArrowLeft` goes on to the next tab, the way
+  the bar reads. ArrowRight went to the next tab whichever way the bar ran.
 - **CuiScrollArea's scroll buttons** no longer take focus when clicked (#236). Focus landed
   inside the `aria-hidden` edge, and the arrow keys of the toolbar or tablist the user was
   on stopped working.

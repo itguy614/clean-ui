@@ -1,3 +1,10 @@
+<script lang="ts">
+import { useListNavigation } from "../composables/useListNavigation";
+
+const nav = useListNavigation({ wrap: () => true });
+const TRIGGER = "cui-accordion-item__trigger";
+</script>
+
 <script setup lang="ts">
 import { ref, provide, toRef, watch, computed } from "vue";
 import { AccordionContextKey } from "./accordion-context";
@@ -63,33 +70,26 @@ provide(AccordionContextKey, {
   isOpen,
 });
 
-// Keyboard navigation
+// Keyboard navigation between the headers: the shared index maths (#289), wrapping
+// (`nav`, in the module script below: stateless, so every accordion shares one).
+
 function onKeydown(e: KeyboardEvent) {
+  // Only from a header: an arrow key in a panel's own content (a textarea, a list) is its
+  // own, and every keystroke typed there bubbles through here. And a nested accordion's own
+  // headers have handled it already.
+  if (e.defaultPrevented || !(e.target as Element).classList?.contains(TRIGGER)) return;
   const container = e.currentTarget as HTMLElement;
-  const triggers = Array.from(
-    container.querySelectorAll<HTMLElement>(".cui-accordion-item__trigger:not([aria-disabled='true'])"),
-  );
-  const currentIdx = triggers.indexOf(document.activeElement as HTMLElement);
-
-  let nextIdx = -1;
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    nextIdx = currentIdx < triggers.length - 1 ? currentIdx + 1 : 0;
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    nextIdx = currentIdx > 0 ? currentIdx - 1 : triggers.length - 1;
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    nextIdx = 0;
-  } else if (e.key === "End") {
-    e.preventDefault();
-    nextIdx = triggers.length - 1;
-  }
-
-  if (nextIdx >= 0) {
-    triggers[nextIdx].focus();
-  }
+  const triggers = Array.from(container.querySelectorAll<HTMLElement>(`.${TRIGGER}`));
+  const from = triggers.indexOf(e.target as HTMLElement);
+  if (from < 0) return;
+  const to = nav.indexForKey(e, from, {
+    count: triggers.length,
+    isDisabled: (i) => triggers[i].getAttribute("aria-disabled") === "true",
+  });
+  // -1: Home or End with every header disabled.
+  if (to === null || to < 0) return;
+  e.preventDefault();
+  triggers[to].focus();
 }
 </script>
 

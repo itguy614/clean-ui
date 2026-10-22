@@ -5,6 +5,7 @@ import CuiTreeNode from "../CuiTreeNode.vue";
 import CuiIcon from "../CuiIcon.vue";
 import type { TreeNode } from "../CuiTreeView.vue";
 import { scaleControlHeight } from "../../utils/sizing";
+import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
 // Find the CuiTreeNode whose OWN node.id matches, then return its clickable
 // row element. `find` returns the first match in that node's subtree, which is
@@ -563,6 +564,35 @@ describe("CuiTreeView keyboard", () => {
     expect(focusedId(), "'bc' matches nothing — 'c' must not be read on its own").toBe("b");
   });
 
+  it("ArrowRight into an open parent skips a disabled first child, into what it holds", async () => {
+    const nested: TreeNode[] = [
+      {
+        id: "p",
+        label: "Parent",
+        children: [
+          { id: "c1", label: "Disabled", disabled: true, children: [{ id: "g", label: "Grandchild" }] },
+          { id: "c2", label: "Second" },
+        ],
+      },
+      { id: "q", label: "Next" },
+    ];
+    const wrapper = mountTree({ nodes: nested, defaultExpanded: ["p", "c1"] });
+    item("p").focus();
+    await press(wrapper, "ArrowRight");
+    expect(focusedId()).toBe("g");
+  });
+
+  it("ArrowRight into an open parent whose children are all disabled stays put", async () => {
+    const nested: TreeNode[] = [
+      { id: "p", label: "Parent", children: [{ id: "c1", label: "Disabled", disabled: true }] },
+      { id: "q", label: "Next" },
+    ];
+    const wrapper = mountTree({ nodes: nested, defaultExpanded: ["p"] });
+    item("p").focus();
+    await press(wrapper, "ArrowRight");
+    expect(focusedId(), "not out to the next sibling").toBe("p");
+  });
+
   it("skips disabled nodes when moving", async () => {
     const withDisabled: TreeNode[] = [
       { id: "x", label: "Ex" },
@@ -651,4 +681,24 @@ describe("CuiTreeView tree ARIA", () => {
     expect(child.attributes("aria-level")).toBe("2");
     expect(child.attributes("aria-setsize")).toBe("1");
   });
+});
+
+// #289 — Up/Down/Home/End and type-ahead on the shared index maths. No wrap, as before.
+// Its own host: the suite above leaves trees attached to the body.
+const contractHost = () => {
+  document.getElementById("tree-contract")?.remove();
+  const el = document.createElement("div");
+  el.id = "tree-contract";
+  document.body.append(el);
+  return el;
+};
+
+describeRovingFocusContract("CuiTreeView", {
+  mount: () =>
+    mount(CuiTreeView, {
+      props: { nodes: [{ id: "a", label: "Alpha" }, { id: "b", label: "Bravo" }, { id: "c", label: "Charlie" }], animated: false },
+      attachTo: contractHost(),
+    }),
+  items: () => [...document.querySelectorAll<HTMLElement>('#tree-contract [role="treeitem"]')],
+  orientation: "vertical",
 });

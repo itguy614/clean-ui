@@ -136,3 +136,54 @@ describe("CuiAccordion ids across instances", () => {
     wrapper.unmount();
   });
 });
+
+describe("CuiAccordion keyboard (#289)", () => {
+  const key = (el: Element, k: string) => {
+    const e = new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true });
+    el.dispatchEvent(e);
+    return e;
+  };
+
+  it("leaves an arrow key in a panel's own content alone", async () => {
+    const wrapper = mount(CuiAccordion, {
+      props: { modelValue: ["a"] },
+      slots: {
+        default: () => [
+          h(CuiAccordionItem, { value: "a", label: "First" }, () => h("textarea", { class: "notes" })),
+          h(CuiAccordionItem, { value: "b", label: "Second" }, () => "B"),
+        ],
+      },
+      attachTo: document.body,
+    });
+    const notes = wrapper.find(".notes").element as HTMLTextAreaElement;
+    notes.focus();
+    const e = key(notes, "ArrowDown");
+    expect(e.defaultPrevented, "the caret moves, not focus").toBe(false);
+    expect(document.activeElement).toBe(notes);
+    wrapper.unmount();
+  });
+
+  it("moves one header at a time inside a nested accordion", async () => {
+    const wrapper = mount(CuiAccordion, {
+      props: { modelValue: ["outer"] },
+      slots: {
+        default: () => [
+          h(CuiAccordionItem, { value: "outer", label: "Outer" }, () =>
+            h(CuiAccordion, null, () => [
+              h(CuiAccordionItem, { value: "x", label: "Inner X" }, () => "X"),
+              h(CuiAccordionItem, { value: "y", label: "Inner Y" }, () => "Y"),
+              h(CuiAccordionItem, { value: "z", label: "Inner Z" }, () => "Z"),
+            ]),
+          ),
+          h(CuiAccordionItem, { value: "last", label: "Last" }, () => "L"),
+        ],
+      },
+      attachTo: document.body,
+    });
+    const trigger = (label: string) => wrapper.findAll(".cui-accordion-item__trigger").find((t) => t.text().includes(label))!.element as HTMLElement;
+    trigger("Inner X").focus();
+    key(trigger("Inner X"), "ArrowDown");
+    expect(document.activeElement, "the inner accordion moved; the outer didn't move again").toBe(trigger("Inner Y"));
+    wrapper.unmount();
+  });
+});
