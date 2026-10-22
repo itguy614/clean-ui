@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
   useTabsProvider,
@@ -11,6 +11,7 @@ import {
 import type { HideableProps, ColorableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { scrollIntoViewWithin } from "../utils/scroll";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -45,7 +46,6 @@ const tabs = ref<TabDefinition[]>([]);
 const barRef = ref<HTMLElement | null>(null);
 
 // Sync external v-model
-import { watch } from "vue";
 watch(
   () => props.modelValue,
   (val) => {
@@ -199,9 +199,11 @@ function updateOverflow() {
 
 // The one way the bar brings the active tab into view — keyboard nav, v-model
 // changes and mount all land here. The bar's scroll-padding keeps the tab clear
-// of the edge fade rather than flush under it.
+// of the edge fade rather than flush under it. The bar only: scrollIntoView would
+// scroll the page to a tab bar below the fold too (#243).
 function scrollActiveIntoView() {
-  tabElement(activeTab.value)?.scrollIntoView?.({ inline: "nearest", block: "nearest" });
+  const tab = tabElement(activeTab.value);
+  if (tab && barRef.value) scrollIntoViewWithin(barRef.value, tab);
 }
 
 let resizeObserver: ResizeObserver | undefined;

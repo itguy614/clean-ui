@@ -122,7 +122,7 @@ watch(
 );
 
 // Page scroll and resize move the field; at most once a frame. A scroll inside the panel
-// (the list itself, or scrollIntoView from the arrow keys) moves nothing.
+// (the list itself, or the arrow keys scrolling an option into view) moves nothing.
 let frame = 0;
 useEventListener(
   "window",

@@ -410,7 +410,9 @@ function resetTabs() {
           <p class="text-sm text-surface-500">
             When the tabs are wider than their container the bar scrolls horizontally, and the
             clipped edge fades to show there's more. Drag the width to see it engage — the active
-            tab is always scrolled into view, clear of the fade.
+            tab is always scrolled into view, clear of the fade. Only the bar scrolls: scroll the
+            page so these tabs sit near the bottom of the window, press <em>Activate last
+            tab</em>, and the page stays where it is.
           </p>
           <p class="text-sm text-surface-500">
             From the keyboard: click a tab, then use <kbd>←</kbd> <kbd>→</kbd>

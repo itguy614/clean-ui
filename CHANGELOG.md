@@ -85,6 +85,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CuiTabs** no longer scrolls the page to bring the active tab into view (#243). It used
+  `scrollIntoView()`, which scrolls every scrollable ancestor, so a tab bar below the fold
+  pulled the page down to it on load and on every `v-model` change. Now only the bar
+  scrolls, still keeping the tab clear of the edge fade. The same internal helper keeps the
+  arrow-key scrolling of CuiCombobox's and CuiTagInput's listboxes inside the listbox.
 - CuiContextMenu scales in from the cursor again (#269). It hid its transitions for the
   frame it measured in, on every open, so its entry only faded.
 - CuiDataGrid's bulk-action bar turns back if a row is selected again while it leaves

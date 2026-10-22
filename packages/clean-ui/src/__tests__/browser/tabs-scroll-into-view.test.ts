@@ -25,7 +25,7 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
 
   const labels = ["Profile", "Digest emails", "Password", "Sign-in methods", "Devices", "Connected apps"];
 
-  function mountTabs(initial = "Profile") {
+  function mountTabs(initial = "Profile", into?: HTMLElement) {
     const active = ref(initial);
     const wrapper = track(
       mount(
@@ -37,7 +37,7 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
               () => labels.map((label) => h(CuiTab, { value: label, label }, () => label)),
             ),
         }),
-        { attachTo: host({ width: "300px" }) },
+        { attachTo: into ?? host({ width: "300px" }) },
       ),
     );
     const bar = wrapper.element.querySelector<HTMLElement>('[role="tablist"]')!;
@@ -148,5 +148,39 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     await settle(bar);
 
     expectClearOfFade(bar, tab("Devices"));
+  });
+
+  // #243 — scrollIntoView scrolled every scrollable ancestor, the window too, so a tab bar
+  // below the fold dragged the page down to it on mount and on every v-model change.
+  it("scrolls only the bar, never the page, for tabs below the fold", async () => {
+    host({ height: "200vh" });
+    const below = host({ width: "300px" });
+    expect(below.getBoundingClientRect().top).toBeGreaterThan(innerHeight);
+    window.scrollTo(0, 0);
+
+    const { active, bar, tab } = mountTabs("Connected apps", below);
+    await settle(bar);
+    expect(window.scrollY, "not on mount").toBe(0);
+    expect(bar.scrollLeft, "the bar itself still scrolled").toBeGreaterThan(0);
+    expectClearOfFade(bar, tab("Connected apps"));
+
+    active.value = "Profile";
+    await nextTick();
+    await settle(bar);
+    expect(window.scrollY, "nor on a v-model change").toBe(0);
+    expect(bar.scrollLeft).toBe(0);
+  });
+
+  // Inside a modal that is still scaling in, the rects are scaled and the scroll offsets
+  // aren't: measured naively, the bar stopped about 5% short and clipped the tab.
+  it("lands the tab clear of the fade under an ancestor's scale transform", async () => {
+    const scaled = host({ width: "300px", transform: "scale(0.9)", transformOrigin: "0 0" });
+    const { bar, tab } = mountTabs("Connected apps", scaled);
+    await settle(bar);
+    // Compare in the bar's own pixels: undo the scale on both rects.
+    const b = bar.getBoundingClientRect();
+    const t = tab("Connected apps").getBoundingClientRect();
+    expect((t.right - b.left) / 0.9).toBeLessThanOrEqual(bar.clientWidth + 1);
+    expect(bar.scrollLeft).toBe(bar.scrollWidth - bar.clientWidth);
   });
 });
