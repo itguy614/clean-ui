@@ -38,7 +38,7 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
 
 // Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
 // same `size` when placed side by side (#87).
-const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size]);
+const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];

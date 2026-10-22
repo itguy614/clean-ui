@@ -15,8 +15,6 @@ describe("size props", () => {
     "CuiSlideover.vue": "a width preset, or any CSS width",
     "CuiSkeleton.vue": "a raw CSS dimension",
     "CuiSpacer.vue": "a spacing-scale step",
-    "CuiDataGrid.vue": "TableSize, the grid's exported three-step type; widening it is #349",
-    "CuiDataGridTable.vue": "TableSize, the grid's exported three-step type; widening it is #349",
   };
 
   it("every component's size prop is CuiSize", () => {
