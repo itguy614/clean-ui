@@ -125,6 +125,55 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   list — "once converted, stays converted". ~50 of the ~106 components still write paint
   inline; add yours to the list when its PR converts it.
 
+## Motion
+
+Motion must have a purpose: spatial continuity, a state change, feedback, or avoiding a
+jarring appear/disappear. "It looks nice" is not one.
+
+- **Frequency decides whether to animate.** Things used 100+ times a day (keyboard-driven
+  actions, list navigation, menu-item hover) get no motion, or a near-instant colour change.
+  Occasional UI (modals, drawers, toasts, popovers) gets standard motion.
+- **Use the tokens, never literals** (#261). Durations are `--cui-duration-instant/press/fast/base/slow`
+  (0/120/150/200/250ms), easings `--cui-ease-out/in-out/drawer`, all on `:root` in
+  `styles/main.css`. JS waits read the same values through `motionDuration(name, el)`
+  (`utils/motion.ts`), read from the element that animates (a teleported panel, not its
+  in-place wrapper) when the wait starts. Never hand-copy a CSS duration into a `setTimeout`.
+  `MOTION_DURATIONS` holds the defaults and a test keeps it in step with `main.css`.
+- **Easing:** enter/exit and hover feedback → `--cui-ease-out`; on-screen movement (a knob,
+  a chevron turning) → `--cui-ease-in-out`; a sheet sliding in → `--cui-ease-drawer`;
+  colour changes → `ease`; constant loops → `linear`. **Never `ease-in`.** It starts slowly,
+  so the interface feels laggy.
+- **Duration:** UI motion stays under 300ms, and exits are faster than entries (a menu
+  opens over `base`, closes over `fast`). Loops keep their own longer durations.
+- **Entrances never start from `scale(0)`.** Start from about 0.95, with opacity 0.
+- **Floating panels scale from their trigger.** Set `transform-origin` from the placement
+  (`usePopover`'s side, or `computeDropdownPosition`'s returned side). Modals stay centred.
+- **Animate `transform` and `opacity` only.** No `width`/`height`/`max-height`/`top`/`left`/
+  `margin`/`padding` animation; collapsibles use `grid-template-rows: 0fr → 1fr`. Never
+  `transition: all`: name the properties.
+- **Interruptible UI uses transitions, not keyframes.** Anything that can be toggled quickly
+  (menus, toasts, toggles) must reverse cleanly mid-flight.
+- **Gesture-driven motion writes `transform` directly on the moving element,** never as an
+  inline custom property on an ancestor, which recalculates style for every descendant on
+  every frame. This is the one exception to the themeable-properties pattern.
+- **Reduced motion removes movement and keeps fades and colour.** Under
+  `prefers-reduced-motion: reduce`, transforms become opacity-only, and JS waits follow via
+  `motionDuration()`.
+- **Press feedback:** a pressed CuiButton shrinks to `--cui-press-scale` (0.97). It is 1
+  under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
+  buttons), since a shrinking button opens a seam against its neighbour. Set the token on
+  the container.
+- **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`.
+- `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
+  - no `transition: all`
+  - no `ease-in`
+  - no entrance from `scale(0)`
+  - no literal duration
+  - no literal-delay `setTimeout`
+  - every floating panel sets a `transform-origin`
+
+  Each exemption is listed with its reason, and a stale exemption fails.
+
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `RADIUS_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
 - `utils/color.ts` — color conversions + `resolveColor()` / `isColorRole()` for the role-or-CSS hybrid (Icon/Divider/Backdrop).
@@ -188,7 +237,7 @@ should not need a later "make it consistent" PR.
 - Buttons render as `<button>`, `<a>` (href prop), or `<router-link>` (to prop) via dynamic `component :is`
 - Named slots: `#prefix` and `#suffix` for icons/badges
 - `defineExpose({ el, focus, blur })` on all interactive components
-- No drop shadows on buttons — hover feedback via color transitions only
+- No drop shadows on buttons. Hover feedback is a colour transition; a press also shrinks the button to `--cui-press-scale` (see "Motion")
 - CuiButtonGroup merges buttons via `:deep(.cui-button)` selectors for radius stripping
 
 ### Form Controls (Radio, Checkbox, Toggle, Input, Select, etc.)
