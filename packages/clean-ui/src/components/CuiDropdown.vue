@@ -6,7 +6,7 @@ import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../utils/menu";
 import { warnOnce } from "../utils/devWarn";
-import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface CuiDropdownProps extends HideableProps, DisableableProps {
@@ -27,19 +27,15 @@ const props = withDefaults(defineProps<CuiDropdownProps>(), {
 });
 
 const isOpen = ref(false);
-const isClosing = ref(false);
 const triggerEl = ref<HTMLElement | null>(null);
 const focusRequest = shallowRef<{ edge: MenuEdge } | null>(null);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
-let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Show the menu; with an edge, also move focus into it once it has rendered. */
 function show(focus: MenuEdge | null) {
   if (props.disabled) return;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-  if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
-  isClosing.value = false;
   isOpen.value = true;
   if (focus) focusRequest.value = { edge: focus };
 }
@@ -64,20 +60,15 @@ function triggerTarget() {
 
 function close() {
   if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-  if (!isOpen.value || isClosing.value) return;
-  // Before the menu starts animating out: it is still in the DOM, and still holds focus
-  // after Escape or a chosen item.
+  if (!isOpen.value) return;
+  // Before the menu starts animating out: it still holds focus after Escape or a chosen item.
   restoreMenuFocus(triggerTarget(), dropdownId);
-  isClosing.value = true;
-  closeAnimTimer = setTimeout(() => {
-    isOpen.value = false;
-    isClosing.value = false;
-  }, 150);
+  // CuiDropdownMenu's <Transition> plays the exit and unmounts it after (#263).
+  isOpen.value = false;
 }
 
 function toggle() {
-  // A closing menu counts as closed: its trigger already says aria-expanded="false".
-  if (isOpen.value && !isClosing.value) close(); else open();
+  if (isOpen.value) close(); else open();
 }
 
 function closeAll() {
@@ -117,7 +108,7 @@ function onFocusOut(e: FocusEvent) {
 // Escape through the shared layer stack (#278): the menu is teleported to <body>, so a
 // wrapper keydown never saw an Escape pressed on a menu item, and an enclosing modal
 // closed instead.
-useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
+useLayerStack({ active: () => isOpen.value, onEscape: close });
 
 const dropdownId = useCuiId("dropdown");
 
@@ -140,7 +131,6 @@ useEventListener("window", "scroll", close, { enabled: () => isOpen.value && !pr
 onUnmounted(() => {
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
-  if (closeAnimTimer) clearTimeout(closeAnimTimer);
 });
 
 // Track sub-menu close callbacks so siblings can close each other
@@ -159,7 +149,7 @@ function closeSiblingSubMenus(except?: () => void) {
 
 provide(DropdownContextKey, {
   isOpen,
-  isClosing,
+  isClosing: NEVER_CLOSING,
   trigger: toRef(props, "trigger"),
   triggerEl,
   placement: toRef(props, "placement"),

@@ -250,7 +250,8 @@ describe("CuiDropdown code-review fixes", () => {
     expect(e.defaultPrevented).toBe(false);
     expect(document.activeElement).toBe(button());
     await nextTick();
-    expect(menu()!.classList.contains("cui-dropdown-menu--closing")).toBe(true);
+    // Closed: its <Transition> exit is instant under jsdom (test-setup.ts).
+    expect(menu()).toBeNull();
   });
 
   it("the trigger reopens a menu that is still animating out", async () => {
@@ -338,7 +339,7 @@ describe("CuiContextMenu focus", () => {
     expect(e.defaultPrevented).toBe(true);
     expect(document.activeElement).toBe(row());
     await nextTick();
-    expect(panel()!.classList.contains("cui-context-menu__panel--closing")).toBe(true);
+    expect(panel()).toBeNull();
   });
 
   it("focuses a check item when it is the first item", async () => {

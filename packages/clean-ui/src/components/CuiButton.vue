@@ -232,6 +232,17 @@ const buttonStyle = computed(() => {
 
 :where(.cui-button:active:not(.cui-button--disabled)) {
   background: var(--cui-button-active-bg, var(--_button-active-bg));
+  /* Press feedback (#261): a brief shrink, `--cui-press-scale` (0.97; 1 turns it off, as
+     reduced motion does). */
+  transform: scale(var(--cui-press-scale, 0.97));
+}
+
+/* In the rule rather than only on the token, so a consumer's --cui-press-scale can't turn
+   the press back on for someone who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  :where(.cui-button:active) {
+    transform: none;
+  }
 }
 
 :where(.cui-button:focus-visible) {
@@ -255,7 +266,11 @@ const buttonStyle = computed(() => {
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background var(--cui-duration-fast) ease,
+    color var(--cui-duration-fast) ease,
+    border-color var(--cui-duration-fast) ease,
+    transform var(--cui-duration-press) var(--cui-ease-out);
   white-space: nowrap;
   user-select: none;
   text-decoration: none;

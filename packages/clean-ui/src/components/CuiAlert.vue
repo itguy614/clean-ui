@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
@@ -8,6 +8,7 @@ import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
 import { RADIUS_SCALE } from "../utils/sizing";
+import { subtreeTransition } from "../utils/motion";
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
@@ -71,12 +72,20 @@ onUnmounted(() => {
 });
 
 function dismiss() {
+  // Its entrance classes come off, which starts the exit; then it leaves, and its
+  // <Transition> waits for that exit before it unmounts and reports the dismiss (#263).
   mounted.value = false;
-  // Wait for exit animation before hiding
-  setTimeout(() => {
+  nextTick(() => {
     visible.value = false;
-    emit("dismiss");
-  }, 300);
+  });
+}
+
+// Only after a dismiss: `hidden` toggles v-show, which runs the same hooks.
+let dismissed = false;
+function onAfterLeave() {
+  if (visible.value || dismissed) return;
+  dismissed = true;
+  emit("dismiss");
 }
 
 const alertStyle = computed(() => {
@@ -120,6 +129,7 @@ const messages = useMessages();
 </script>
 
 <template>
+  <Transition v-bind="subtreeTransition" @after-leave="onAfterLeave">
   <div
     v-if="visible"
     v-show="!hidden"
@@ -162,6 +172,7 @@ const messages = useMessages();
       <CuiIcon name="x" size="0.875rem" />
     </button>
   </div>
+  </Transition>
 </template>
 
 <style scoped>
@@ -229,7 +240,7 @@ const messages = useMessages();
   padding: 0;
   border-radius: 0.25rem;
   opacity: 0.6;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
 }
 
@@ -241,10 +252,16 @@ const messages = useMessages();
    ENTRANCE ANIMATIONS
    ============================================================ */
 
+/* Each entrance comes in over the slow duration and leaves over the fast one (#269): a
+   transition takes the duration of the state it moves to. */
+[class*="cui-alert--entrance-"].cui-alert--mounted {
+  transition-duration: var(--cui-duration-slow);
+}
+
 /* Fade */
 .cui-alert--entrance-fade {
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-fade.cui-alert--mounted {
@@ -255,7 +272,7 @@ const messages = useMessages();
 .cui-alert--entrance-slide-down {
   opacity: 0;
   transform: translateY(-1rem);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-slide-down.cui-alert--mounted {
@@ -267,7 +284,7 @@ const messages = useMessages();
 .cui-alert--entrance-slide-left {
   opacity: 0;
   transform: translateX(2rem);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-slide-left.cui-alert--mounted {
@@ -289,9 +306,14 @@ const messages = useMessages();
   animation: cui-pulse 2.5s ease-in-out infinite;
 }
 
-.cui-alert--glow.cui-alert--mounted {
-  --_cui-glow-color: var(--_alert-focus-ring);
-  animation: cui-glow 2s ease-in-out infinite;
+.cui-alert--glow.cui-alert--mounted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 12px 2px var(--_alert-focus-ring);
+  pointer-events: none;
+  animation: cui-glow-fade 2s ease-in-out infinite;
 }
 
 .cui-alert--shake.cui-alert--mounted {

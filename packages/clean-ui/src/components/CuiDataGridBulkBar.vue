@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 
 const messages = useMessages();
 
@@ -20,6 +22,14 @@ const grid = useDataGridState();
 
 const selectedCount = computed(() => grid.selectedRows.value.size);
 const isVisible = computed(() => selectedCount.value > 0);
+// A panel's enter and exit (#269): a transition on a state, so selecting a row again while
+// the bar leaves turns the same bar back, rather than dropping it and sliding a new one in.
+const { present, onAfterLeave } = usePresence(() => isVisible.value);
+// The bar stays rendered while it leaves: keep counting what was selected, not "0".
+const shownCount = ref(0);
+watch(selectedCount, (n) => {
+  if (n > 0) shownCount.value = n;
+}, { immediate: true });
 
 function getSelectedRows(): DataGridRow[] {
   return grid.displayData.value.filter((row) =>
@@ -33,11 +43,11 @@ function onAction(action: DataGridBulkAction) {
 </script>
 
 <template>
-  <Transition name="cui-bulk-bar">
-    <div v-if="isVisible" class="cui-data-grid-bulk-bar">
+  <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
+    <div v-if="present" v-show="isVisible" class="cui-data-grid-bulk-bar">
       <div class="cui-data-grid-bulk-bar__inner">
         <span class="cui-data-grid-bulk-bar__count">
-          {{ messages.dataGrid.selected(selectedCount) }}
+          {{ messages.dataGrid.selected(shownCount) }}
         </span>
 
         <div class="cui-data-grid-bulk-bar__actions">
@@ -103,15 +113,10 @@ function onAction(action: DataGridBulkAction) {
   gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
-/* Transition */
-.cui-bulk-bar-enter-active,
-.cui-bulk-bar-leave-active {
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.cui-bulk-bar-enter-from,
-.cui-bulk-bar-leave-to {
+/* Enter and exit: the shared panel motion (components-shared.css), which leaves over the
+   fast duration and drops the movement under reduced motion. It rises from below rather
+   than scaling. */
+.cui-data-grid-bulk-bar[data-cui-panel="hidden"] {
   transform: translateY(100%);
-  opacity: 0;
 }
 </style>

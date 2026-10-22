@@ -62,7 +62,6 @@ function onKeydown(e: KeyboardEvent) {
   color: var(--cui-text-body);
   cursor: pointer;
   outline: none;
-  transition: background 0.1s ease;
 }
 
 .cui-dropdown-check-item:hover,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
+import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -70,15 +71,22 @@ const emit = defineEmits<{
 
 const dialogRef = useTemplateRef<HTMLElement>("dialogEl");
 
-const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
   // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
   allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
   name: "CuiModal",
+  // Its exit is a <Transition> below, which reports back through onAfterLeave (#263).
+  exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
+});
+
+// Closed while `hidden`: v-show is already off, so no leave runs to report the close.
+watch(isVisible, (visible) => {
+  if (!visible && props.hidden) onAfterLeave();
 });
 
 // Size mapping
@@ -98,15 +106,19 @@ const titleId = useCuiId("modal-title");
 
 <template>
   <Teleport to="body">
+    <!-- Its dialog and backdrop animate on their own state classes (data-cui-exit); the
+         leave waits for them, and a re-open mid-exit reverses them (#263). -->
+    <Transition v-bind="subtreeTransition" @after-leave="onAfterLeave">
     <div
-      v-if="isVisible"
-      v-show="!hidden"
+      v-if="mounted"
+      v-show="isVisible && !hidden"
       class="cui-modal-overlay"
       :class="{ 'cui-modal-overlay--visible': isAnimating }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
       <CuiBackdrop
+        data-cui-exit
         :visible="isAnimating"
         :opacity="backdropOpacity"
         :blur="backdropBlur"
@@ -120,6 +132,7 @@ const titleId = useCuiId("modal-title");
       <div class="cui-modal-container">
         <div
           ref="dialogEl"
+          data-cui-exit
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
           :style="{ maxWidth, borderRadius: RADIUS_SCALE[rounded] }"
@@ -149,6 +162,7 @@ const titleId = useCuiId("modal-title");
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -187,14 +201,16 @@ const titleId = useCuiId("modal-title");
   outline: none;
   overflow: hidden;
 
-  /* Entrance animation */
+  /* Entrance and exit. A transition takes the duration of the state it moves to: the
+     hidden one is fast, the shown one base, so it leaves quicker than it came (#269). */
   opacity: 0;
   transform: scale(0.95) translateY(-0.5rem);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-modal--visible {
   opacity: 1;
   transform: scale(1) translateY(0);
+  transition-duration: var(--cui-duration-base);
 }
 </style>

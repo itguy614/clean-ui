@@ -88,7 +88,7 @@ const messages = useMessages();
         flexShrink: '0',
         marginTop: 'calc(-0.125rem * var(--cui-density-scale, 1))',
         marginRight: 'calc(-0.25rem * var(--cui-density-scale, 1))',
-        transition: 'color 0.15s ease, background 0.15s ease',
+        transition: 'color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease',
       }"
       :aria-label="messages.close"
       @click="emit('close')"

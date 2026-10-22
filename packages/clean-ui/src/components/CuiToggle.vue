@@ -209,7 +209,7 @@ const choice = useChoiceLabelling(props);
      when on. The knob is the primary "dot" in both states. */
   background: transparent;
   border: 1px solid var(--cui-border-strong);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background var(--cui-duration-base) ease, border-color var(--cui-duration-base) ease;
   padding: calc(0.125rem - 1px);
   margin-top: 0.125rem;
 }
@@ -236,7 +236,7 @@ const choice = useChoiceLabelling(props);
   border-radius: 50%;
   background: var(--_toggle-color);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform var(--cui-duration-press) var(--cui-ease-in-out), background var(--cui-duration-base) ease;
   z-index: 1;
 }
 
