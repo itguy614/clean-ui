@@ -135,8 +135,8 @@ const rules = {
    * rule that moves (`transform`), or a transform written from a mouseenter handler.
    */
   ungatedHoverMotion: (src: string) => [
-    ...[...withoutBlocks(src, /@media[^{]*\(hover:\s*hover\)[^{]*\{/).matchAll(/([^{}]*:hover[^{]*)\{([^}]*)\}/g)]
-      .filter((m) => /(^|[;\s])transform\s*:/.test(m[2]))
+    ...[...withoutBlocks(src, /@media[^{]*\(hover:\s*hover\)[^{]*\(pointer:\s*fine\)[^{]*\{/).matchAll(/([^{}]*:hover[^{]*)\{([^}]*)\}/g)]
+      .filter((m) => /(^|[;\s])(transform|translate|scale|rotate)\s*:/.test(m[2]))
       .map((m) => m[1].trim()),
     ...[...src.matchAll(/@mouse(?:enter|over)="[^"]*style\.transform/g)].map((m) => m[0]),
   ],
@@ -165,6 +165,8 @@ describe("motion rules catch what they describe", () => {
     ["transitionAll", "@media (prefers-reduced-motion: no-preference) { .x { transition: all var(--cui-duration-fast); } }"],
     ["layoutTransition", ".x { transition: max-height var(--cui-duration-slow) var(--cui-ease-out); }"],
     ["ungatedHoverMotion", ".card:hover { transform: translateY(-2px); }"],
+    ["ungatedHoverMotion", ".card:hover { translate: 0 -2px; }"],
+    ["ungatedHoverMotion", "@media (hover: hover) { .card:hover { scale: 1.05; } }"],
     ["ungatedHoverMotion", '<button @mouseenter="($event.target as HTMLElement).style.transform = \'scale(1.1)\'">'],
     ["layoutTransition", ':style="{ transition: \'width var(--cui-duration-press) ease\' }"'],
     ["layoutTransition", ":style=\"{ transition: dragging ? 'none' : 'left var(--cui-duration-press) ease' }\""],

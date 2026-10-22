@@ -14,6 +14,8 @@ import CuiButton from "../../components/CuiButton.vue";
 import CuiSpinner from "../../components/CuiSpinner.vue";
 import CuiAccordion from "../../components/CuiAccordion.vue";
 import CuiAccordionItem from "../../components/CuiAccordionItem.vue";
+import CuiSkeleton from "../../components/CuiSkeleton.vue";
+import CuiSlideover from "../../components/CuiSlideover.vue";
 
 /**
  * #265 — under `prefers-reduced-motion: reduce` the library clamped every animation and
@@ -123,5 +125,26 @@ describe("reduced motion (real browser)", () => {
     await w.find("button").trigger("click");
     await wait(50);
     expect(document.querySelector<HTMLElement>(".cui-accordion-item__panel")!.style.maxHeight).toBe("none");
+  });
+
+  it("stops a shimmer, which loops on a pseudo-element", () => {
+    const w = mount(CuiSkeleton, { props: { animation: "shimmer" }, attachTo: host() });
+    mounted.push(w);
+    const all = [w.element as HTMLElement, ...(w.element as HTMLElement).querySelectorAll<HTMLElement>("*")];
+    expect(all.some((el) => getComputedStyle(el, "::after").animationName !== "none")).toBe(false);
+  });
+
+  it("fades a slideover's panel where it stands, rather than popping it", async () => {
+    const w = mount(CuiSlideover, { props: { visible: true, title: "Panel" } });
+    mounted.push(w);
+    await wait(motionDuration("slow") + 100);
+    const panel = document.querySelector<HTMLElement>(".cui-slideover__panel")!;
+    expect(Number(getComputedStyle(panel).opacity)).toBe(1);
+    await w.setProps({ visible: false });
+    await wait(60);
+    const style = getComputedStyle(panel);
+    expect(style.transform).toBe("none");
+    expect(Number(style.opacity), "mid-fade").toBeGreaterThan(0);
+    expect(Number(style.opacity)).toBeLessThan(1);
   });
 });

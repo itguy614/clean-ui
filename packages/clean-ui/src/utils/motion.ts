@@ -19,7 +19,7 @@ import { warnOnce } from "./devWarn";
  * setting can change while the page is open. False under server rendering.
  */
 export function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 }
 
 /** A CSS time — `150ms`, `0.2s` — in ms; null for anything else. */

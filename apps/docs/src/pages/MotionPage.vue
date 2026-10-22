@@ -274,11 +274,11 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
         <p class="text-sm" style="color: var(--cui-text-secondary);">
           With the system's <strong>Reduce motion</strong> setting on
           (<code class="cui-code">prefers-reduced-motion: reduce</code>), the library removes
-          movement and keeps fades and colour changes. Those don't cause motion sickness, and
-          they still show what changed.
+          movement and keeps fades. Fades don't cause motion sickness, and they still show
+          what changed.
         </p>
         <ul class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
-          <li>Only opacity and colour transition. A scale, slide or other transform snaps.</li>
+          <li>Only opacity transitions. A scale, slide or other transform snaps, and colours change instantly, which is still not motion.</li>
           <li>Menus, popovers, tooltips, toasts, modals, slideovers and alerts fade in and out where they stand.</li>
           <li>Durations don't change, so <code class="cui-code">motionDuration()</code> and the exits it times still match the CSS.</li>
           <li>Decorative loops stop: pulses, shimmers, pings and an indeterminate progress bar. A spinner stops spinning and dims.</li>

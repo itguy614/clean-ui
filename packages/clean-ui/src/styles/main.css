@@ -940,22 +940,23 @@
 
 /* ============================================================
    REDUCED MOTION (#265)
-   The OS "Reduce Motion" setting removes movement — translate, scale, rotate, sliding —
-   and keeps fades and colour changes, which don't trigger vestibular symptoms and still
-   show what changed. Durations are untouched, so JS waits (motionDuration, afterAnimations)
-   still match the CSS. (Limiting the property list re-pairs a multi-property transition's
-   durations by index: Fieldset's opacity takes its max-height's duration. Invisible, and the
-   exits that JS waits for list opacity first.) Scoped to the library's components and what
-   they contain, which includes content put in their slots. The ancestor utility classes,
-   .cui-typography, themes and density, scrollbars, don't count: around the consumer's own
-   content, it is theirs.
+   The OS "Reduce Motion" setting removes movement — translate, scale, rotate, sliding,
+   growing — and keeps fades, which don't trigger vestibular symptoms and still show what
+   changed. Only opacity transitions; colour changes are instant (still no motion), and no
+   transition the author didn't declare is added. Durations are untouched, so JS waits
+   (motionDuration, afterAnimations) still match the CSS. (Narrowing the property list
+   re-pairs a multi-property transition's durations by index: Fieldset's opacity takes its
+   max-height's. Invisible, and the exits JS waits on list opacity first.) Scoped to the
+   library's components and what they contain, slot content included. The utility classes a
+   consumer puts around their own content — typography, themes, density, scrollbars, lists,
+   table wrappers — don't count.
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  /* 1. Only fades and colour transition. A transform or a layout change snaps. */
-  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, .cui-scrollbar, [class*="cui-theme-"], [class*="cui-density-"])),
-  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, .cui-scrollbar, [class*="cui-theme-"], [class*="cui-density-"])) * {
-    transition-property: opacity, color, background-color, border-color, outline-color, fill, stroke, box-shadow, text-decoration-color !important;
+  /* 1. Only opacity transitions. A transform, a layout change or a colour snaps. */
+  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)),
+  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)) * {
+    transition-property: opacity !important;
     scroll-behavior: auto !important;
   }
 
@@ -970,8 +971,16 @@
     transform: none !important;
   }
 
-  /* 3. One-off movement keyframes: off. (The tab panels' plain fade stays.) */
-  [class*="cui-tab-slide"],
+  /* A slideover's panel only slid: standing still, it fades instead. */
+  .cui-slideover__panel:not(.cui-slideover__panel--visible) {
+    opacity: 0;
+  }
+
+  /* 3. One-off movement keyframes: a sliding tab panel fades in instead; the rest go. */
+  [class*="cui-tab-slide"] {
+    animation-name: cui-fade-in !important;
+  }
+
   .cui-checkbox__icon,
   .cui-radio__dot,
   .cui-markdown-editor__control--shake {
@@ -997,7 +1006,10 @@
   [class*="cui-skeleton__line--shimmer"],
   [class*="cui-skeleton__line--pulse"],
   [class*="cui-skeleton__block--shimmer"],
-  [class*="cui-skeleton__block--pulse"] {
+  [class*="cui-skeleton__block--pulse"],
+  [class*="cui-progress-bar__fill--shimmer"]::after,
+  [class*="cui-skeleton__line--shimmer"]::after,
+  [class*="cui-skeleton__block--shimmer"]::after {
     animation: none !important;
   }
 
@@ -1009,7 +1021,8 @@
     animation: none !important;
   }
 
-  [class*="cui-"][class*="spinner"] {
+  /* Once, on the outermost: a spinner inside a spinner would dim twice. */
+  [class*="cui-"][class*="spinner"]:not([class*="cui-"][class*="spinner"] *) {
     opacity: 0.6;
   }
 }
