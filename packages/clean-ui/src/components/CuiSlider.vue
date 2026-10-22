@@ -115,8 +115,9 @@ defineExpose({ el: inputRef, focus, blur });
     </div>
 
     <!-- Slider container -->
-    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center' }">
-      <!-- Track background -->
+    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center', containerType: 'inline-size' }">
+      <!-- Track, clipping its fill: a full-width pill slid left inside it, so it moves on the
+           compositor (transform, not width, #266) and keeps its rounded end. -->
       <div :style="{
         position: 'absolute',
         left: '0',
@@ -124,18 +125,17 @@ defineExpose({ el: inputRef, focus, blur });
         height: cfg.trackHeight,
         borderRadius: '9999px',
         background: 'var(--cui-border)',
-      }" />
-
-      <!-- Track fill -->
-      <div :style="{
-        position: 'absolute',
-        left: '0',
-        height: cfg.trackHeight,
-        width: `${percent}%`,
-        borderRadius: '9999px',
-        background: fillColor,
-        transition: dragging ? 'none' : 'width var(--cui-duration-press) ease',
-      }" />
+        overflow: 'hidden',
+      }">
+        <div class="cui-slider__fill" :style="{
+          width: '100%',
+          height: '100%',
+          borderRadius: '9999px',
+          background: fillColor,
+          transform: `translateX(${percent - 100}%)`,
+          transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out)',
+        }" />
+      </div>
 
       <!-- Invisible native range input on top for interaction. It precedes the thumb so
            the thumb can draw the focus ring with a sibling selector. -->
@@ -171,11 +171,13 @@ defineExpose({ el: inputRef, focus, blur });
         @touchstart="dragging = true"
         @touchend="dragging = false"
       />
-      <!-- Custom thumb -->
-      <div class="cui-slider__thumb" :style="{
+      <!-- Custom thumb, moved by transform (#266): 1cqw is 1% of the slider row, a size
+           container, so `n * 1cqw` is n% of the track with no layer spanning it, and the
+           thumb overhangs only at the ends, as with `left`. -->
+      <div class="cui-slider__thumb" aria-hidden="true" :style="{
         position: 'absolute',
-        left: `${percent}%`,
-        transform: 'translateX(-50%)',
+        left: '0',
+        transform: `translateX(calc(${percent} * 1cqw - 50%))`,
         width: cfg.thumbSize,
         height: cfg.thumbSize,
         borderRadius: '50%',
@@ -186,7 +188,7 @@ defineExpose({ el: inputRef, focus, blur });
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'left var(--cui-duration-press) ease, box-shadow var(--cui-duration-fast) ease, transform var(--cui-duration-fast) var(--cui-ease-out)',
+        transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out), box-shadow var(--cui-duration-fast) ease',
         pointerEvents: 'none',
         zIndex: 2,
       }">

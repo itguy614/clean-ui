@@ -20,6 +20,8 @@ import {
   CuiDropdownItem,
   CuiBadge,
   CuiAlert,
+  CuiSlider,
+  CuiProgress,
   useToast,
   motionDuration,
   MOTION_DURATIONS,
@@ -116,6 +118,7 @@ function dismissMiddle() {
   if (stack[1]) dismiss(stack[1]);
 }
 const alertKey = ref(0);
+const level = ref(40);
 const alertGone = ref(false);
 
 const exitCode = `<!-- Menus, popovers, tooltips and listboxes play an exit before they unmount,
@@ -265,6 +268,19 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
         <CuiAlert v-if="!alertGone" :key="alertKey" color="success" title="Saved" dismissible @dismiss="alertGone = true">
           Dismiss me: the alert fades out, then reports it.
         </CuiAlert>
+      </CuiStack>
+    </Example>
+
+    <Example title="Only transform and opacity animate">
+      <CuiStack spacing="3">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          A width, height or position that animates has to lay the page out and repaint it on
+          every frame. A slider's thumb and fill, a progress bar and a toast's countdown move
+          by <code class="cui-code">transform</code> instead, so the browser's compositor
+          animates them. Drag the slider, or use the arrow keys: the bar follows it.
+        </p>
+        <CuiSlider v-model="level" label="Level" />
+        <CuiProgress :value="level" />
       </CuiStack>
     </Example>
 

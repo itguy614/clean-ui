@@ -155,9 +155,11 @@ const visibleToasts = computed(() => {
 </template>
 
 <style scoped>
-/* The collapsed stack's own scale, fade and height, as toasts pile up. */
+/* The collapsed stack's own scale and fade as toasts pile up. Its height (max-height)
+   changes with no transition: a layout property, and the scale already carries the
+   movement (#266). */
 .cui-toast-wrapper__peek {
-  transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out), max-height var(--cui-duration-slow) var(--cui-ease-out);
+  transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-toast-wrapper--collapsed {

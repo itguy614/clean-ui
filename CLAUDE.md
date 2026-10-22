@@ -218,7 +218,7 @@ jarring appear/disappear. "It looks nice" is not one.
 - `composables/useTheme.ts` — theme switching, localStorage persistence
 - `composables/useToast.ts` — programmatic toast API
 - `styles/components-shared.css` — classes components carry beside their own, imported by `main.css` and by the browser test setup: `.cui-sr-only` (visually hidden, still announced), `.cui-control-group*` (the radio/checkbox/toggle group layout) and `.cui-field-error` (an error message's paint; the gap above it is the control's own layout). Never hand-write these — `styles/__tests__/shared-classes.test.ts` fails on a copy in either package (#217).
-- Shared keyframes in `main.css`: `cui-spin`, `cui-pulse`, `cui-glow`, `cui-shake`, `cui-bounce`, `cui-fade-in`, `cui-scale-in`. Components reference these — never define local `@keyframes` for shared animations.
+- Shared keyframes in `main.css`: `cui-spin`, `cui-pulse`, `cui-glow`, `cui-glow-fade`, `cui-shake`, `cui-bounce`, `cui-fade-in`, `cui-scale-in`. A glow is `cui-glow-fade` on an `::after` carrying a static shadow, since `cui-glow` animates `box-shadow`, which repaints every frame. Components reference these — never define local `@keyframes` for shared animations.
 
 ## Component Patterns
 

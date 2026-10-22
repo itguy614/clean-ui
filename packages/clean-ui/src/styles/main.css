@@ -870,6 +870,14 @@
   50% { box-shadow: 0 0 12px 2px var(--_cui-glow-color, transparent); }
 }
 
+/* The glow the library itself uses (#266): an element's ::after holds the shadow, still,
+   and only its opacity loops — composited, where animating box-shadow repaints every frame.
+   `cui-glow` stays for anyone who uses it directly. */
+@keyframes cui-glow-fade {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
 @keyframes cui-shake {
   0%, 10%, 100% { transform: translateX(0); }
   2% { transform: translateX(-4px); }
@@ -1011,6 +1019,14 @@
   [class*="cui-skeleton__line--shimmer"]::after,
   [class*="cui-skeleton__block--shimmer"]::after {
     animation: none !important;
+  }
+
+  /* A glow fades a still shadow on its ::after (#266): its loop stops like the others, and
+     the shadow stays, steady at half strength, so the emphasis isn't lost. */
+  [class*="cui-alert--glow"]::after,
+  [class*="cui-toast--glow"]::after {
+    animation: none !important;
+    opacity: 0.5;
   }
 
   /* 5. Spinners: no spin, but a dimmed glyph still says "loading". Their moving parts are

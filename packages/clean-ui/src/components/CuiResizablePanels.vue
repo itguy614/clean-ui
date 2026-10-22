@@ -107,11 +107,12 @@ const handleLineStyle = computed(() => {
       top: "0",
       bottom: "0",
       left: "50%",
-      transform: "translateX(-50%)",
-      width: active ? "3px" : "1px",
+      // Thickens from 1px to 3px by scaling, not by width (#266).
+      width: "1px",
+      transform: `translateX(-50%) scaleX(${active ? 3 : 1})`,
       background: active ? "var(--cui-primary)" : "var(--cui-border)",
       borderRadius: "1px",
-      transition: "width var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease",
+      transition: "transform var(--cui-duration-fast) var(--cui-ease-out), background var(--cui-duration-fast) ease",
     };
   }
   return {
@@ -119,11 +120,11 @@ const handleLineStyle = computed(() => {
     left: "0",
     right: "0",
     top: "50%",
-    transform: "translateY(-50%)",
-    height: active ? "3px" : "1px",
+    height: "1px",
+    transform: `translateY(-50%) scaleY(${active ? 3 : 1})`,
     background: active ? "var(--cui-primary)" : "var(--cui-border)",
     borderRadius: "1px",
-    transition: "height var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease",
+    transition: "transform var(--cui-duration-fast) var(--cui-ease-out), background var(--cui-duration-fast) ease",
   };
 });
 

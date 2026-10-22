@@ -209,11 +209,6 @@ const LAYOUT_EXEMPT: Record<string, Exemption> = {
   [`${C}CuiAccordionItem.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
   [`${C}CuiFieldset.vue`]: { count: 3, why: "max-height and padding collapse; grid-template-rows in #270 (2.0)" },
   [`${C}CuiTreeNode.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
-  [`${C}CuiProgress.vue`]: { count: 1, why: "the bar's width; scaleX in #266" },
-  [`${C}CuiSlider.vue`]: { count: 2, why: "the fill's width and the thumb's left; transforms in #266" },
-  [`${C}CuiToast.vue`]: { count: 1, why: "the progress bar's width; scaleX in #266" },
-  [`${C}CuiToastProvider.vue`]: { count: 1, why: "the stack's max-height; a TransitionGroup move in #263/#266" },
-  [`${C}CuiResizablePanels.vue`]: { count: 2, why: "the panes' width/height; no transition during a drag in #266" },
 };
 
 describe("motion in both packages", () => {
@@ -221,15 +216,10 @@ describe("motion in both packages", () => {
 
   it("never eases in", () => check("easeIn"));
 
-  it("never starts an entrance from scale(0)", () =>
-    check("keyframeFromZero", {
-      [`${C}CuiCheckbox.vue`]: { count: 1, why: "the check-mark pop; starts near 0.9 in #266" },
-      [`${C}CuiRadio.vue`]: { count: 1, why: "the dot pop; starts near 0.9 in #266" },
-    }));
+  it("never starts an entrance from scale(0)", () => check("keyframeFromZero"));
 
   it("reads every duration from a --cui-duration-* token", () =>
     check("literalDuration", {
-      [`${C}CuiToast.vue`]: { count: 1, why: "the progress bar's per-tick width; a single scaleX transition in #266" },
       "clean-ui-editor/src/styles/editor.css": { count: 1, why: "the max-length shake: a one-off 0.5s gesture, faster reads as a glitch" },
     }));
 

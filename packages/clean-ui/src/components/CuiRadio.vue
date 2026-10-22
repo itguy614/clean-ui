@@ -250,16 +250,11 @@ const choice = useChoiceLabelling(props);
   animation: cui-radio-pop var(--cui-duration-fast) var(--cui-ease-out);
 }
 
+/* A brief settle, not a pop from nothing with an overshoot: a radio is a high-frequency
+   control (#266). */
 @keyframes cui-radio-pop {
-  0% {
-    transform: scale(0);
-  }
-  60% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* --- Label --- */
