@@ -52,13 +52,13 @@ describe("form controls line up (real browser)", () => {
     [CuiInputStepper, ".cui-input-stepper__control", {}],
   ];
 
-  function control(component: unknown, size: string) {
+  function control(component: unknown, size: string, props: Record<string, unknown> = {}) {
     const [, selector, extra] = BORDERED.find(([c]) => c === component)!;
     const host = document.createElement("div");
     host.style.width = "320px";
     document.body.append(host);
     hosts.push(host);
-    const w = mount(component as never, { props: { size, ...extra }, attachTo: host });
+    const w = mount(component as never, { props: { size, ...extra, ...props }, attachTo: host });
     mounted.push(w);
     return (w.element as HTMLElement).querySelector<HTMLElement>(selector)!;
   }
@@ -107,6 +107,27 @@ describe("form controls line up (real browser)", () => {
       if (comparesText) {
         expect(other.indent).toBe(input.indent);
         expect(other.fontSize).toBe(input.fontSize);
+      }
+    });
+
+    // #351: one row of chips fits inside the height. At xs and sm it didn't — the chip's text
+    // took the scoped base's 1.5 instead of the badge's own line-height of 1, and a field
+    // with chips stood taller than the input beside it. Under a theme too: `useTheme` puts
+    // its class on <html>, which a fix keyed on the outermost `cui-*` element got wrong.
+    it.each([
+      ["combobox", CuiCombobox, { multiple: true, modelValue: ["a"] }, false],
+      ["tag input", CuiTagInput, { modelValue: ["one", "two"] }, false],
+      ["tag input, themed page", CuiTagInput, { modelValue: ["one", "two"] }, true],
+    ])("keeps the %s at the input's height with a row of chips", (_label, component, props, themed) => {
+      const html = document.documentElement.classList;
+      if (themed) html.add("cui-theme-forest");
+      try {
+        const el = control(component, size, props);
+        // Or an empty field, already at the input's height, passes without a chip in it.
+        expect(el.querySelectorAll(".cui-badge").length).toBeGreaterThan(0);
+        expect(box(el).height).toBe(input.height);
+      } finally {
+        html.remove("cui-theme-forest");
       }
     });
   });
