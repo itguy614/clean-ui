@@ -69,7 +69,7 @@ watch(
   { immediate: true },
 );
 
-const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
+const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, transformOrigin, isPositioned } = usePopover({
   placement: computed(() => props.placement),
   offsetDistance: computed(() => props.offset ?? 10),
   arrow: !props.noArrow,
@@ -149,6 +149,8 @@ const panelStyle = computed(() => {
     pointerEvents: "auto",
     animation: "cui-scale-in var(--cui-duration-base) var(--cui-ease-out)",
     overflow: "hidden",
+    // Read back as transform-origin below, so the panel grows out of its trigger (#262).
+    "--_popover-transform-origin": transformOrigin.value,
   };
   if (props.width) s.width = props.width;
   return s;
@@ -307,3 +309,10 @@ const messages = useMessages();
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Grows out of the trigger, whichever side it opened on after flipping (#262). */
+:where(.cui-popover__panel) {
+  transform-origin: var(--_popover-transform-origin);
+}
+</style>

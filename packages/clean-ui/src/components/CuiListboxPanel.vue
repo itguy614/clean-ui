@@ -78,7 +78,9 @@ function reposition() {
   // maxVisible, when it binds, decides where scrolling starts — it replaces maxHeight rather
   // than sitting under it. computeDropdownPosition still clamps either to the room on screen.
   const maxHeight = rowsHeight ?? props.maxHeight;
-  position.value = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight }).styles;
+  const { styles, transformOrigin } = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight });
+  // Grows out of its field, above or below (#262; it animates in with #263).
+  position.value = { ...styles, "--_listbox-panel-transform-origin": transformOrigin };
 }
 
 // Re-measure when the rows change — added, removed or replaced, including a new list of
@@ -188,6 +190,8 @@ defineExpose({ el });
 <style scoped>
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-listbox-panel) {
+  /* Grows out of its field, above or below (#262). Private only: not a themeable slot. */
+  transform-origin: var(--_listbox-panel-transform-origin);
   background: var(--_listbox-panel-bg);
   border: var(--_listbox-panel-border);
   border-radius: var(--_listbox-panel-radius);

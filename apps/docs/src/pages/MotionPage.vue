@@ -12,6 +12,12 @@ import {
   CuiFlex,
   CuiAccordion,
   CuiAccordionItem,
+  CuiPopover,
+  CuiTooltip,
+  CuiDropdown,
+  CuiDropdownTrigger,
+  CuiDropdownMenu,
+  CuiDropdownItem,
   CuiBadge,
   motionDuration,
   MOTION_DURATIONS,
@@ -78,6 +84,25 @@ const pressCode = `<CuiButton variant="solid">Press me</CuiButton>
 <div style="--cui-press-scale: 1">
   <CuiButton>No press</CuiButton>
 </div>`;
+
+const originCode = `<CuiPopover placement="top" title="top">
+  <CuiButton variant="outline">top</CuiButton>
+  <template #content><p>Grows from the top side's trigger edge.</p></template>
+</CuiPopover>
+
+<CuiDropdown>
+  <CuiDropdownTrigger>
+    <CuiButton>Menu</CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu>
+    <CuiDropdownItem>First</CuiDropdownItem>
+    <CuiDropdownItem>Second</CuiDropdownItem>
+  </CuiDropdownMenu>
+</CuiDropdown>
+
+<CuiTooltip text="From its trigger">
+  <CuiButton variant="ghost">Hover me</CuiButton>
+</CuiTooltip>`;
 
 const jsCode = `import { motionDuration } from "@itguy614/clean-ui";
 
@@ -159,6 +184,34 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           <div style="--cui-press-scale: 1">
             <CuiButton>No press</CuiButton>
           </div>
+        </CuiFlex>
+      </CuiStack>
+    </Example>
+
+    <Example title="Panels grow out of their trigger" :code="originCode">
+      <CuiStack spacing="3">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          Popovers, tooltips, menus and listboxes scale in from the edge that faces their
+          trigger, on whichever side they opened, and after flipping when there isn't room.
+          A context menu grows from the corner at the pointer. Modals stay centred.
+        </p>
+        <CuiFlex gap="3" class="flex-wrap items-center">
+          <CuiPopover v-for="side in (['top', 'right', 'bottom', 'left'] as const)" :key="side" :placement="side" :title="side">
+            <CuiButton variant="outline">{{ side }}</CuiButton>
+            <template #content><p style="padding: 0.75rem; margin: 0;">Grows from the {{ side }} side's trigger edge.</p></template>
+          </CuiPopover>
+          <CuiDropdown>
+            <CuiDropdownTrigger>
+              <CuiButton>Menu</CuiButton>
+            </CuiDropdownTrigger>
+            <CuiDropdownMenu>
+              <CuiDropdownItem>First</CuiDropdownItem>
+              <CuiDropdownItem>Second</CuiDropdownItem>
+            </CuiDropdownMenu>
+          </CuiDropdown>
+          <CuiTooltip text="From its trigger">
+            <CuiButton variant="ghost">Hover me</CuiButton>
+          </CuiTooltip>
         </CuiFlex>
       </CuiStack>
     </Example>

@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Floating panels grow out of their trigger instead of their centre (#262). Popover,
+  Tooltip, DropdownMenu, DropdownSub, ContextMenu and the Select/Combobox/TagInput listbox
+  set `transform-origin` from the side they opened on after flipping: their edge facing
+  the trigger, at the end they are aligned to. A context menu grows from the corner at the
+  pointer. Dropdown menus and sub-menus now scale in from 0.95 rather than slide 4px, which
+  pointed the wrong way when a menu flipped up. `usePopover` returns `transformOrigin`.
 - A motion guard (`styles/__tests__/motion.test.ts`, #267), across both packages, fails on:
   - `transition: all`
   - `ease-in`

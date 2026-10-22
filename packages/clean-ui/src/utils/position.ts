@@ -5,7 +5,8 @@
  * Synchronous, from the anchor's `getBoundingClientRect()`, so a panel that mounts under
  * `v-if` is placed in the same frame (the async Floating UI timing issue). It flips to the
  * roomier side when the preferred one is short, bounds the panel's height by the side it
- * actually opened to, and returns that side so a caller can set `transform-origin`.
+ * actually opened to, and returns that side and the `transform-origin` that grows the panel
+ * out of its anchor (#262).
  */
 
 export type PanelSide = "bottom" | "top" | "left" | "right";
@@ -44,6 +45,33 @@ export interface PanelPosition {
   styles: Record<string, string>;
   /** The side the panel opened to, after flipping. */
   side: PanelSide;
+  /** Where the panel grows from: its edge facing the anchor, at the end it is aligned to (#262). */
+  transformOrigin: string;
+}
+
+/**
+ * The `transform-origin` that makes a panel grow out of its trigger (#262): the panel's edge
+ * nearest the trigger, at the end it is aligned to. `placement` is a side with an optional
+ * alignment, Floating UI's form: `bottom`, `bottom-start`, `left-end`. A panel below its
+ * trigger grows from its top; one aligned to the trigger's start grows from that corner.
+ */
+export type PanelPlacement = PanelSide | `${PanelSide}-${"start" | "end"}`;
+
+const ORIGIN_PERCENT = { left: "0%", top: "0%", center: "50%", right: "100%", bottom: "100%" } as const;
+
+/**
+ * …and, given how far a positioner slid the panel along its side to keep it on screen
+ * (Floating UI's `shift()`), moved back by as much, so it stays over the trigger — clamped
+ * to the panel's edge, never a point outside it.
+ */
+export function transformOriginFor(placement: PanelPlacement, shift?: { x?: number; y?: number }): string {
+  const [side, align] = placement.split("-") as [PanelSide, "start" | "end" | undefined];
+  const vertical = side === "top" || side === "bottom";
+  const edge = { top: "bottom", bottom: "top", left: "right", right: "left" }[side];
+  const keyword = align === "start" ? (vertical ? "left" : "top") : align === "end" ? (vertical ? "right" : "bottom") : "center";
+  const by = (vertical ? shift?.x : shift?.y) ?? 0;
+  const along = by ? `clamp(0%, calc(${ORIGIN_PERCENT[keyword]} - ${by}px), 100%)` : keyword;
+  return vertical ? `${along} ${edge}` : `${edge} ${along}`;
 }
 
 export function computeDropdownPosition(
@@ -73,6 +101,9 @@ export function computeDropdownPosition(
     maxHeight: `${Math.max(0, Math.min(room - viewportPadding, maxHeight))}px`,
   };
 
+  // The edge the panel lines up with, for its transform-origin: a field listbox spans its
+  // anchor, so it grows from the middle of its top.
+  let align: "start" | "end" | undefined;
   if (vertical) {
     if (side === "bottom") styles.top = `${rect.bottom + offset}px`;
     else styles.bottom = `${vh - rect.top + offset}px`;
@@ -82,14 +113,17 @@ export function computeDropdownPosition(
     } else if (rect.left + FLIP_THRESHOLD > vw) {
       // Too close to the right edge for a reasonable menu width: align right edges.
       styles.right = `${vw - rect.right}px`;
+      align = "end";
     } else {
       styles.left = `${rect.left}px`;
+      align = "start";
     }
   } else {
     styles.top = `${rect.top}px`;
+    align = "start";
     if (side === "right") styles.left = `${rect.right + offset}px`;
     else styles.right = `${vw - rect.left + offset}px`;
   }
 
-  return { styles, side };
+  return { styles, side, transformOrigin: transformOriginFor(align ? `${side}-${align}` : side) };
 }

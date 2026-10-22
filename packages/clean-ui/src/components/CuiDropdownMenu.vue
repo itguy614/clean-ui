@@ -20,8 +20,9 @@ const menuStyle = ref<Record<string, string>>({});
 
 function updatePosition() {
   if (ctx?.triggerEl.value) {
-    const { styles } = computeDropdownPosition(ctx.triggerEl.value, ctx.placement.value);
-    menuStyle.value = styles;
+    const { styles, transformOrigin } = computeDropdownPosition(ctx.triggerEl.value, ctx.placement.value);
+    // Grows out of the trigger, whichever side it opened on after flipping (#262).
+    menuStyle.value = { ...styles, "--_dropdown-menu-transform-origin": transformOrigin };
   }
 }
 
@@ -80,6 +81,10 @@ function onKeydown(e: KeyboardEvent) {
 </template>
 
 <style scoped>
+:where(.cui-dropdown-menu) {
+  transform-origin: var(--_dropdown-menu-transform-origin);
+}
+
 .cui-dropdown-menu {
   padding: calc(0.25rem * var(--cui-density-scale, 1));
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
@@ -98,22 +103,22 @@ function onKeydown(e: KeyboardEvent) {
 @keyframes cui-dropdown-in {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 
 @keyframes cui-dropdown-out {
   from {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: scale(0.95);
   }
 }
 </style>
