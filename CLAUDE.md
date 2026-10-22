@@ -167,12 +167,16 @@ jarring appear/disappear. "It looks nice" is not one.
 - `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
   - no `transition: all`
   - no `ease-in`
-  - no entrance from `scale(0)`
+  - no entrance from a zero scale, in keyframes or a `<Transition>` class
   - no literal duration
   - no literal-delay `setTimeout`
-  - every floating panel sets a `transform-origin`
+  - no layout-property transition
+  - every panel on its `FLOATING` list reads `transform-origin` from a private
+    `--_<component>-transform-origin` property
 
-  Each exemption is listed with its reason, and a stale exemption fails.
+  **A new floating panel joins that list.** Exemptions count their findings, each with its
+  reason and the issue that removes it, so a new violation in an exempt file still fails, and
+  so does a stale exemption.
 
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `RADIUS_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.

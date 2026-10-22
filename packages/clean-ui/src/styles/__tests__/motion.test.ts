@@ -13,11 +13,16 @@ import { expectExemptions, splitSelectorList, stripComments, walk, type Exemptio
  */
 const PACKAGES = resolve(__dirname, "../../../..");
 
-/** Comments and `prefers-reduced-motion` blocks out: the reduced rule clamps to literal 1ms on purpose. */
-function motionSource(src: string): string {
-  let out = stripComments(src).replace(/(^|[^:"'`])\/\/[^\n]*/g, "$1");
+/**
+ * Comments and `prefers-reduced-motion: reduce` blocks out: the reduced rule clamps to a
+ * literal 1ms on purpose. (A `no-preference` block is where full motion lives, so it stays.)
+ * Line comments only outside stylesheets, and only after whitespace, so `url(//cdn…)` stays.
+ */
+function motionSource(src: string, css = false): string {
+  let out = stripComments(src);
+  if (!css) out = out.replace(/(^|\s)\/\/[^\n]*/g, "$1");
   for (;;) {
-    const at = out.search(/@media[^{]*prefers-reduced-motion[^{]*\{/);
+    const at = out.search(/@media[^{]*prefers-reduced-motion\s*:\s*reduce[^{]*\{/);
     if (at === -1) return out;
     let depth = 0;
     let i = out.indexOf("{", at);
@@ -32,11 +37,53 @@ function motionSource(src: string): string {
 const sources = ["clean-ui", "clean-ui-editor"]
   .flatMap((pkg) => walk(resolve(PACKAGES, pkg, "src")))
   .filter((f) => /\.(vue|css|ts)$/.test(f))
-  .map((f) => ({ name: relative(PACKAGES, f), motion: motionSource(readFileSync(f, "utf8")) }));
+  .map((f) => ({ name: relative(PACKAGES, f), motion: motionSource(readFileSync(f, "utf8"), f.endsWith(".css")) }));
 
-/** `transition` / `animation` declarations, one per match. */
+/**
+ * `transition` / `animation` declarations, `name: value`, whole: a quoted inline style
+ * string to its closing quote, a stylesheet value to its `;` or `}`, across lines.
+ */
 const declarations = (src: string) =>
-  [...src.matchAll(/\b(transition|animation)(-[a-z-]+)?\s*:\s*([^;\n]+)/g)].map((m) => m[0]);
+  [
+    ...src.matchAll(
+      /\b(transition|animation)(-[a-z-]+)?\s*:\s*(?:[\w.!]+\s*\?\s*(["'`])([^"'`]*)\3\s*:\s*)?(?:(["'`])([^"'`]*)\5|([^;{}"'`]+))/g,
+    ),
+  ].flatMap((m) =>
+    // Both branches of an inline ternary (`dragging ? 'none' : 'width …'`) are declarations.
+    [m[4], m[6] ?? m[7]]
+      .filter((v): v is string => v !== undefined)
+      .map((v) => `${m[1]}${m[2] ?? ""}: ${v.replace(/\s+/g, " ").trim()}`),
+  );
+
+/** A declaration's comma-separated parts, `var()` fallbacks dropped (a token with a fallback is still a token). */
+const parts = (d: string) =>
+  splitSelectorList(d.slice(d.indexOf(":") + 1)).map((p) => {
+    let out = p;
+    while (/var\([^()]*\)/.test(out)) out = out.replace(/var\([^()]*\)/g, "var");
+    return out;
+  });
+
+/** A zero scale: `scale(0)`, `scale(0, 0)`, `scaleX(0)`, `scale(0.0)`. */
+const ZERO_SCALE = /scale[XY]?\(\s*0(?:\.0*)?\s*(?:,\s*0(?:\.0*)?\s*)?\)/;
+const LAYOUT = /^(width|height|max-height|min-height|max-width|min-width|top|left|right|bottom|inset|margin[a-z-]*|padding[a-z-]*)$/;
+
+/** The last top-level argument of each `setTimeout(…)` call. */
+function timerDelays(src: string): string[] {
+  const out: string[] = [];
+  for (const m of src.matchAll(/\bsetTimeout\(/g)) {
+    let depth = 1;
+    let i = m.index! + m[0].length;
+    let lastComma = -1;
+    for (; i < src.length && depth > 0; i++) {
+      const c = src[i];
+      if ("([{".includes(c)) depth++;
+      else if (")]}".includes(c)) depth--;
+      else if (c === "," && depth === 1) lastComma = i;
+    }
+    if (lastComma !== -1) out.push(src.slice(lastComma + 1, i - 1).trim());
+  }
+  return out;
+}
 
 /** Each rule takes motion source (see motionSource) and returns its findings. */
 const rules = {
@@ -44,11 +91,17 @@ const rules = {
   transitionAll: (src: string) => declarations(src).filter((d) => /^transition(-property)?\s*:\s*['"`]?\s*all\b/.test(d)),
   /** `ease-in` starts slowly, so UI feels late. (`ease-in-out` is fine.) */
   easeIn: (src: string) => declarations(src).filter((d) => /\bease-in\b(?!-)/.test(d)),
-  /** An entrance from `scale(0)` appears from nowhere: start near 0.95 with opacity. */
-  keyframeFromZero: (src: string) =>
-    [...src.matchAll(/@keyframes\s+([\w-]+)\s*\{\s*(?:0%|from)\s*\{([^}]*)\}/g)]
-      .filter((m) => /scale\(\s*0\s*\)/.test(m[2]))
+  /**
+   * An entrance from a zero scale appears from nowhere: start near 0.95 with opacity. In a
+   * keyframes' first frame (any selector list holding `0%` or `from`), or in a Vue
+   * `<Transition>` class's `-enter-from` / `-leave-to` state.
+   */
+  keyframeFromZero: (src: string) => [
+    ...[...src.matchAll(/@keyframes\s+([\w-]+)\s*\{\s*([^{]*)\{([^}]*)\}/g)]
+      .filter((m) => /(^|,)\s*(0%|from)\s*(,|$)/.test(m[2].trim()) && ZERO_SCALE.test(m[3]))
       .map((m) => m[1]),
+    ...[...src.matchAll(/([.\w-]*-(?:enter-from|leave-to))[^{]*\{([^}]*)\}/g)].filter((m) => ZERO_SCALE.test(m[2])).map((m) => m[1]),
+  ],
   /**
    * A literal duration instead of a `--cui-duration-*` token. Each comma-separated part is
    * judged on its own, so a loop beside it (`infinite`, which keeps its own duration)
@@ -56,16 +109,27 @@ const rules = {
    */
   literalDuration: (src: string) =>
     declarations(src)
-      .flatMap((d) => splitSelectorList(d.slice(d.indexOf(":") + 1)))
+      .flatMap(parts)
       .filter((part) => !/\binfinite\b/.test(part) && /(?<![\w.-])\d*\.?\d+m?s\b/.test(part)),
   /**
-   * A timer waiting a hand-copied duration instead of `motionDuration()`. Best effort: it
-   * sees a numeric literal as the last argument, not a named constant.
+   * A timer waiting a hand-copied duration instead of `motionDuration()`: a numeric literal
+   * anywhere in its delay argument (a ternary included) with no `motionDuration` call.
+   * Best effort: a named constant isn't seen.
    */
-  literalTimer: (src: string) =>
-    [...src.matchAll(/setTimeout\((?:(?!setTimeout\()[\s\S]){0,300}?\}?\s*,\s*(\d+)\s*\)\s*;/g)].map((m) => m[0]),
-  /** A floating panel with no `transform-origin`, so it scales from its centre, not its trigger. */
-  noTransformOrigin: (src: string) => (/transform-origin|transformOrigin/.test(src) ? [] : ["no transform-origin"]),
+  literalTimer: (src: string) => timerDelays(src).filter((d) => /\b\d+\b/.test(d) && !/\bmotionDuration\(/.test(d)),
+  /**
+   * A floating panel that doesn't take its `transform-origin` from a private property: the
+   * placement-derived origin #262 emits as `--_<component>-transform-origin`. A fixed
+   * `transform-origin: center` elsewhere in the file doesn't count.
+   */
+  noTransformOrigin: (src: string) => (/transform-origin:\s*var\(--_[\w-]+-transform-origin\b/.test(src) ? [] : ["no placement origin"]),
+  /** A transition on a layout property, which lays out and paints every frame: use transform/opacity. */
+  layoutTransition: (src: string) =>
+    declarations(src)
+      .filter((d) => d.startsWith("transition:"))
+      .flatMap(parts)
+      .map((p) => p.split(/\s+/)[0])
+      .filter((prop) => LAYOUT.test(prop)),
 };
 
 describe("motion rules catch what they describe", () => {
@@ -76,7 +140,15 @@ describe("motion rules catch what they describe", () => {
     ["literalDuration", ".x { transition: color 0.15s ease; }"],
     ["literalDuration", ".x { animation: spin 1s linear infinite, fade 150ms ease; }"],
     ["literalTimer", "setTimeout(() => { open.value = false; }, 150);"],
-    ["noTransformOrigin", ".panel { animation: pop var(--cui-duration-base) var(--cui-ease-out); }"],
+    ["literalTimer", 'const f = () => setTimeout(close, entrance === "none" ? 0 : 150)'],
+    ["noTransformOrigin", ".panel { animation: pop var(--cui-duration-base) var(--cui-ease-out); transform-origin: center; }"],
+    ["keyframeFromZero", "@keyframes pop { 0%, 40% { transform: scaleX(0); } }"],
+    ["keyframeFromZero", ".cui-x-enter-from { opacity: 0; transform: scale(0); }"],
+    ["easeIn", ".x {\n  transition:\n    color var(--cui-duration-fast) ease,\n    border-color var(--cui-duration-fast) ease-in;\n}"],
+    ["transitionAll", "@media (prefers-reduced-motion: no-preference) { .x { transition: all var(--cui-duration-fast); } }"],
+    ["layoutTransition", ".x { transition: max-height var(--cui-duration-slow) var(--cui-ease-out); }"],
+    ["layoutTransition", ':style="{ transition: \'width var(--cui-duration-press) ease\' }"'],
+    ["layoutTransition", ":style=\"{ transition: dragging ? 'none' : 'left var(--cui-duration-press) ease' }\""],
   ] as const)("%s flags its violation", (rule, violation) => {
     expect(rules[rule](motionSource(violation))).not.toEqual([]);
   });
@@ -87,7 +159,10 @@ describe("motion rules catch what they describe", () => {
     ["keyframeFromZero", "@keyframes pop { from { opacity: 0; transform: scale(0.95); } }"],
     ["literalDuration", ".x { transition: color var(--cui-duration-fast) ease; } .y { animation: spin 1s linear infinite; }"],
     ["literalTimer", 'setTimeout(close, motionDuration("fast", el));\n// setTimeout(close, 150);'],
+    ["literalTimer", 'setTimeout(() => { items.splice(i, 1); }, motionDuration("fast", el));'],
     ["noTransformOrigin", ".panel { transform-origin: var(--_panel-transform-origin); }"],
+    ["literalDuration", ".x { transition: opacity var(--cui-duration-fast, 150ms) ease; }"],
+    ["layoutTransition", ".x { transition: transform var(--cui-duration-base) var(--cui-ease-out), opacity var(--cui-duration-base) ease; }"],
   ] as const)("%s passes the correct form", (rule, ok) => {
     expect(rules[rule](motionSource(ok))).toEqual([]);
   });
@@ -107,6 +182,17 @@ function check(rule: keyof typeof rules, exempt: Record<string, Exemption> = {},
 }
 
 const C = "clean-ui/src/components/";
+// Layout-property transitions still in the library, each with the issue that removes it.
+const LAYOUT_EXEMPT: Record<string, Exemption> = {
+  [`${C}CuiAccordionItem.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
+  [`${C}CuiFieldset.vue`]: { count: 3, why: "max-height and padding collapse; grid-template-rows in #270 (2.0)" },
+  [`${C}CuiTreeNode.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
+  [`${C}CuiProgress.vue`]: { count: 1, why: "the bar's width; scaleX in #266" },
+  [`${C}CuiSlider.vue`]: { count: 2, why: "the fill's width and the thumb's left; transforms in #266" },
+  [`${C}CuiToast.vue`]: { count: 1, why: "the progress bar's width; scaleX in #266" },
+  [`${C}CuiToastProvider.vue`]: { count: 1, why: "the stack's max-height; a TransitionGroup move in #263/#266" },
+  [`${C}CuiResizablePanels.vue`]: { count: 2, why: "the panes' width/height; no transition during a drag in #266" },
+};
 
 describe("motion in both packages", () => {
   it("never transitions `all`", () => check("transitionAll"));
@@ -132,8 +218,12 @@ describe("motion in both packages", () => {
       [`${C}CuiTreeView.vue`]: { count: 1, why: "its type-ahead reset; goes with its own type-ahead in #289" },
     }));
 
+  it("transitions no layout property", () => check("layoutTransition", LAYOUT_EXEMPT));
+
   it("scales every floating panel from its trigger", () => {
-    const FLOATING = ["CuiPopover", "CuiTooltip", "CuiContextMenu", "CuiDropdownMenu", "CuiDropdownSub", "CuiSelect", "CuiCombobox"].map(
+    // The elements that render an anchored panel. CuiSelect, CuiCombobox and CuiTagInput
+    // render theirs through CuiListboxPanel. A new floating panel joins this list.
+    const FLOATING = ["CuiPopover", "CuiTooltip", "CuiContextMenu", "CuiDropdownMenu", "CuiDropdownSub", "CuiListboxPanel"].map(
       (c) => `${C}${c}.vue`,
     );
     // Every panel scales from its centre until #262 sets the origin from the placement.

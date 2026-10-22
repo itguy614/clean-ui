@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - an entrance from `scale(0)`
   - a literal duration or close-timer delay
 
-  It also tracks the floating panels that still set no `transform-origin`, until #262.
+  It also tracks two things until their issues land: layout-property transitions (#266,
+  #270), and floating panels that don't yet take a placement-derived `transform-origin`
+  (#262).
   Exemptions count their findings, so a new violation in an exempt file still fails.
   CLAUDE.md gains a Motion section that the guard enforces.
 - Enter and exit motion uses the `--cui-ease-out` curve instead of plain `ease`, and
