@@ -174,54 +174,83 @@ describe("CuiTab #label slot", () => {
 });
 
 describe("CuiTabs overflow", () => {
-  /** jsdom reports every element as 0x0; fake a scrollable bar. */
-  function stubMetrics(
-    el: HTMLElement,
-    { client, scroll, pos }: { client: number; scroll: number; pos: number },
-  ) {
-    Object.defineProperty(el, "clientWidth", { value: client, configurable: true });
-    Object.defineProperty(el, "scrollWidth", { value: scroll, configurable: true });
-    Object.defineProperty(el, "scrollLeft", { value: pos, configurable: true, writable: true });
+  /** jsdom reports every element as 0x0; fake the scroller's size and position. */
+  function stubMetrics(el: HTMLElement, { client, scroll, pos }: { client: number; scroll: number; pos: number }) {
+    for (const [key, value] of Object.entries({ clientWidth: client, scrollWidth: scroll, scrollLeft: pos })) {
+      Object.defineProperty(el, key, { value, configurable: true, writable: true });
+    }
+    el.dispatchEvent(new Event("scroll"));
   }
+  const scrollerOf = (wrapper: ReturnType<typeof mount>) => wrapper.get(".cui-scroll-area__scroller").element as HTMLElement;
+  /** The scroll buttons showing, by edge. */
+  const shownButtons = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.findAll(".cui-scroll-area__edge").filter((e) => !e.classes("cui-scroll-area__edge--hidden")).map((e) => (e.classes("cui-scroll-area__edge--start") ? "start" : "end"));
 
-  it("renders the tablist inside a separate scroll viewport", async () => {
+  it("renders the tablist inside the scroll area's scroller, with the chrome outside it", async () => {
     const wrapper = mount(makeHost());
     await wrapper.vm.$nextTick();
     const bar = wrapper.get('[role="tablist"]');
     expect(bar.classes()).toContain("cui-tabs__bar");
-    expect(bar.element.parentElement?.className).toContain("cui-tabs__bar-outer");
+    const scroller = bar.element.parentElement!;
+    expect(scroller.className).toContain("cui-scroll-area__scroller");
+    expect(scroller.closest(".cui-tabs__bar-outer")).not.toBeNull();
+    // The tablist's arrow keys are the keyboard's way along it: no second tab stop.
+    expect(scroller.getAttribute("tabindex")).toBeNull();
+    expect(scroller.getAttribute("role")).toBeNull();
   });
 
-  it("reports no overflow when the tabs fit", async () => {
-    const wrapper = mount(makeHost());
+  it("shows a scroll button only on a side with more tabs (auto)", async () => {
+    const wrapper = mount(makeHost(), { attachTo: document.body });
     await wrapper.vm.$nextTick();
-    expect(wrapper.get('[role="tablist"]').attributes("data-overflow")).toBe("none");
-  });
-
-  it("marks the clipped edges as content scrolls", async () => {
-    const wrapper = mount(makeHost());
+    const el = scrollerOf(wrapper);
+    stubMetrics(el, { client: 200, scroll: 200, pos: 0 });
     await wrapper.vm.$nextTick();
-    const bar = wrapper.get('[role="tablist"]');
-    const el = bar.element as HTMLElement;
+    expect(shownButtons(wrapper), "everything fits").toEqual([]);
 
     stubMetrics(el, { client: 200, scroll: 500, pos: 0 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("end");
-
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["end"]);
     stubMetrics(el, { client: 200, scroll: 500, pos: 150 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("both");
-
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["start", "end"]);
     stubMetrics(el, { client: 200, scroll: 500, pos: 300 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("start");
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["start"]);
+    wrapper.unmount();
+  });
+
+  it("keeps both buttons with always, the spent one disabled; none with never", async () => {
+    const always = mount(makeHost({ tabsProps: 'scroll-buttons="always"' }), { attachTo: document.body });
+    await always.vm.$nextTick();
+    stubMetrics(scrollerOf(always), { client: 200, scroll: 500, pos: 0 });
+    await always.vm.$nextTick();
+    expect(shownButtons(always)).toEqual(["start", "end"]);
+    const buttons = always.findAll(".cui-scroll-area__indicator");
+    expect(buttons.map((b) => b.attributes("disabled") !== undefined)).toEqual([true, false]);
+    // Pointer affordances only.
+    for (const b of buttons) expect(b.attributes("tabindex")).toBe("-1");
+    expect(always.find(".cui-scroll-area__edge").attributes("aria-hidden")).toBe("true");
+    always.unmount();
+
+    const never = mount(makeHost({ tabsProps: 'scroll-buttons="never"' }), { attachTo: document.body });
+    await never.vm.$nextTick();
+    stubMetrics(scrollerOf(never), { client: 200, scroll: 500, pos: 150 });
+    await never.vm.$nextTick();
+    expect(never.findAll(".cui-scroll-area__edge")).toHaveLength(0);
+    never.unmount();
+  });
+
+  it("keeps the scroll buttons out of the tablist", async () => {
+    const wrapper = mount(makeHost({ tabsProps: 'scroll-buttons="always"' }));
+    await wrapper.vm.$nextTick();
+    expect(wrapper.get('[role="tablist"]').findAll(".cui-scroll-area__indicator")).toHaveLength(0);
   });
 
   it("scrolls the bar, and only the bar, to the newly active tab on a v-model change", async () => {
     const wrapper = mount(makeHost(), { attachTo: document.body });
     await wrapper.vm.$nextTick();
 
-    const bar = wrapper.find('[role="tablist"]').element as HTMLElement;
+    const bar = (wrapper.find('[role="tablist"]').element as HTMLElement).parentElement as HTMLElement;
     const target = wrapper.findAll('[role="tab"]')[1].element as HTMLElement;
     // Past the bar's end: jsdom lays nothing out.
     target.getBoundingClientRect = () => ({ left: 500, right: 600, top: 0, bottom: 30, width: 100, height: 30, x: 500, y: 0, toJSON() {} });

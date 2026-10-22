@@ -5,7 +5,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import CuiTabs from "../../components/CuiTabs.vue";
 import CuiTab from "../../components/CuiTab.vue";
 import preflight from "../../styles/preflight.css?inline";
-import { frames, installTokens, mountHosts } from "./helpers";
+import { frames, installTokens, mountHosts, settleScroll } from "./helpers";
 
 /**
  * #235 — arrow-keying to an off-screen tab in an overflowing bar left it partly clipped,
@@ -40,35 +40,34 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
         { attachTo: into ?? host({ width: "300px" }) },
       ),
     );
-    const bar = wrapper.element.querySelector<HTMLElement>('[role="tablist"]')!;
-    const tab = (label: string) => bar.querySelector<HTMLElement>(`[data-cui-tab-value="${label}"]`)!;
+    const list = wrapper.element.querySelector<HTMLElement>('[role="tablist"]')!;
+    // The scroller is CuiScrollArea's (#236), around the tablist.
+    const bar = wrapper.element.querySelector<HTMLElement>(".cui-scroll-area__scroller")!;
+    const tab = (label: string) => list.querySelector<HTMLElement>(`[data-cui-tab-value="${label}"]`)!;
     return { active, bar, tab };
   }
 
-  /** Wait for the bar's smooth scroll to come to rest. */
-  async function settle(bar: HTMLElement) {
-    let last = -1;
-    for (let i = 0; i < 120; i++) {
-      await frames(3);
-      if (bar.scrollLeft === last) return;
-      last = bar.scrollLeft;
-    }
+
+  /** Which edges have more tabs past them: the ones with a fade and a scroll button. */
+  function edges(bar: HTMLElement) {
+    const max = bar.scrollWidth - bar.clientWidth;
+    return { start: bar.scrollLeft > 1, end: bar.scrollLeft < max - 1 };
   }
 
   /**
-   * Fully inside the bar, and clear of whichever edge fades are showing. A fade is only
-   * drawn on an edge with more tabs beyond it, so a tab at the very end of the scroll
-   * range may sit flush there — its focus ring is inset, so nothing is cut off.
+   * Fully inside the bar, and clear of whichever edge fades and scroll buttons are
+   * showing. They are only drawn on an edge with more tabs beyond it, so a tab at the
+   * very end of the scroll range may sit flush there — its focus ring is inset, so
+   * nothing is cut off.
    */
   function expectClearOfFade(bar: HTMLElement, el: HTMLElement) {
     const b = bar.getBoundingClientRect();
     const t = el.getBoundingClientRect();
-    // The bar's scroll padding is the fade width (both read --_tab-fade-size).
-    const fade = parseFloat(getComputedStyle(bar).scrollPaddingInlineStart);
+    // The bar's scroll padding is the fade plus the scroll button.
+    const fade = parseFloat(getComputedStyle(bar).scrollPaddingLeft);
     expect(fade).toBeGreaterThan(0);
-    const edges = bar.dataset.overflow ?? "none";
-    const fadeStart = edges === "start" || edges === "both" ? fade : 0;
-    const fadeEnd = edges === "end" || edges === "both" ? fade : 0;
+    const fadeStart = edges(bar).start ? fade : 0;
+    const fadeEnd = edges(bar).end ? fade : 0;
     expect(t.left).toBeGreaterThanOrEqual(b.left + fadeStart - 1);
     expect(t.right).toBeLessThanOrEqual(b.right - fadeEnd + 1);
   }
@@ -82,7 +81,7 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
 
       tab("Profile").focus();
       await userEvent.keyboard(keys);
-      await settle(bar);
+      await settleScroll(bar);
 
       const last = tab("Connected apps");
       expect(document.activeElement).toBe(last);
@@ -96,11 +95,11 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     await frames(2);
     tab("Profile").focus();
     await userEvent.keyboard("{ArrowRight}{ArrowRight}{ArrowRight}");
-    await settle(bar);
+    await settleScroll(bar);
 
     const target = tab("Sign-in methods");
     expect(document.activeElement).toBe(target);
-    expect(bar.dataset.overflow).toBe("both");
+    expect(edges(bar)).toEqual({ start: true, end: true });
     expectClearOfFade(bar, target);
   });
 
@@ -109,9 +108,9 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     await frames(2);
     tab("Profile").focus();
     await userEvent.keyboard("{End}");
-    await settle(bar);
+    await settleScroll(bar);
     await userEvent.keyboard("{Home}");
-    await settle(bar);
+    await settleScroll(bar);
 
     expect(bar.scrollLeft).toBe(0);
     expect(document.activeElement).toBe(tab("Profile"));
@@ -124,12 +123,12 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     await frames(2);
     tab("Profile").focus();
     await userEvent.keyboard("{End}");
-    await settle(bar);
+    await settleScroll(bar);
     bar.scrollLeft = 0;
-    await settle(bar);
+    await settleScroll(bar);
 
     await userEvent.keyboard("{End}");
-    await settle(bar);
+    await settleScroll(bar);
     expectClearOfFade(bar, tab("Connected apps"));
   });
 
@@ -138,14 +137,14 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     await frames(2);
     active.value = "Connected apps";
     await nextTick();
-    await settle(bar);
+    await settleScroll(bar);
 
     expectClearOfFade(bar, tab("Connected apps"));
   });
 
   it("mounting on a trailing tab leaves it clear of the fade", async () => {
     const { bar, tab } = mountTabs("Devices");
-    await settle(bar);
+    await settleScroll(bar);
 
     expectClearOfFade(bar, tab("Devices"));
   });
@@ -159,14 +158,14 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
     window.scrollTo(0, 0);
 
     const { active, bar, tab } = mountTabs("Connected apps", below);
-    await settle(bar);
+    await settleScroll(bar);
     expect(window.scrollY, "not on mount").toBe(0);
     expect(bar.scrollLeft, "the bar itself still scrolled").toBeGreaterThan(0);
     expectClearOfFade(bar, tab("Connected apps"));
 
     active.value = "Profile";
     await nextTick();
-    await settle(bar);
+    await settleScroll(bar);
     expect(window.scrollY, "nor on a v-model change").toBe(0);
     expect(bar.scrollLeft).toBe(0);
   });
@@ -176,7 +175,7 @@ describe("CuiTabs brings the active tab fully into view (real browser)", () => {
   it("lands the tab clear of the fade under an ancestor's scale transform", async () => {
     const scaled = host({ width: "300px", transform: "scale(0.9)", transformOrigin: "0 0" });
     const { bar, tab } = mountTabs("Connected apps", scaled);
-    await settle(bar);
+    await settleScroll(bar);
     // Compare in the bar's own pixels: undo the scale on both rects.
     const b = bar.getBoundingClientRect();
     const t = tab("Connected apps").getBoundingClientRect();

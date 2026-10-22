@@ -7,13 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiTabs scroll buttons** (#236): an overflowing tab bar shows a button on each side that
+  has more tabs, which scrolls the bar when clicked. A mouse with no horizontal wheel
+  couldn't reach the trailing tabs before, and the faint edge fade was the only sign they
+  existed. The new `scrollButtons` prop takes `auto` (the default), `always` (both buttons,
+  the spent one disabled) or `never`. The buttons are CuiScrollArea's indicators, outside
+  the tablist, not focusable and hidden from assistive tech: the keyboard keeps the arrow
+  keys. Works in vertical bars too. Restyle them with `--cui-tabs-scroll-button-bg`,
+  `-color` and `-size`, which inside a tab bar take the place of CuiScrollArea's
+  `--cui-scroll-area-indicator-*`.
+
+### Changed
+
+- **An overflowing CuiTabs bar now shows scroll buttons by default** (#236). Pass
+  `scroll-buttons="never"` for the previous look. The bar is built on CuiScrollArea now:
+  the tablist sits inside its scroller, and the bar no longer carries `data-overflow`,
+  which was never public.
+
 ### Fixed
 
+- **CuiScrollArea's scroll buttons** no longer take focus when clicked (#236). Focus landed
+  inside the `aria-hidden` edge, and the arrow keys of the toolbar or tablist the user was
+  on stopped working.
 - **CuiTabs** no longer scrolls the page to bring the active tab into view (#243). It used
   `scrollIntoView()`, which scrolls every scrollable ancestor, so a tab bar below the fold
   pulled the page down to it on load and on every `v-model` change. Now only the bar
   scrolls, still keeping the tab clear of the edge fade. The same internal helper keeps the
   arrow-key scrolling of CuiCombobox's and CuiTagInput's listboxes inside the listbox.
+- **CuiTabs' edge fade in a right-to-left page** (#236) faded the wrong edges: it was drawn
+  in physical directions. CuiScrollArea's fade follows the page's direction.
 
 ## [1.4.0] - 2026-10-22
 

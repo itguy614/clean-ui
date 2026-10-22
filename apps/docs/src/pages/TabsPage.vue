@@ -8,6 +8,8 @@ import {
   CuiFormField,
   CuiIcon,
   CuiInput,
+  CuiRadio,
+  CuiRadioGroup,
   CuiSlideover,
   CuiSlider,
   CuiStack,
@@ -43,6 +45,8 @@ const pendingClients = ref(3);
 const overflow = ref("general");
 const overflowWidth = ref(343);
 const overflowVariant = ref<"underline" | "segmented">("underline");
+const overflowButtons = ref<"auto" | "always" | "never">("auto");
+const overflowVertical = ref(false);
 const slideoverOpen = ref(false);
 const slideoverTab = ref("general");
 
@@ -398,7 +402,8 @@ function resetTabs() {
       </Example>
 
       <!-- Overflow -->
-      <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit -->
+      <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit, with a
+     scroll button on each side that has more. scroll-buttons: auto (default) | always | never -->
 <div style=&quot;width: 343px&quot;>
 <CuiTabs v-model=&quot;active&quot;>
   <CuiTab value=&quot;general&quot; label=&quot;General&quot;>…</CuiTab>
@@ -408,9 +413,12 @@ function resetTabs() {
 </div>`">
         <CuiStack spacing="4">
           <p class="text-sm text-surface-500">
-            When the tabs are wider than their container the bar scrolls horizontally, and the
-            clipped edge fades to show there's more. Drag the width to see it engage — the active
-            tab is always scrolled into view, clear of the fade. Only the bar scrolls: scroll the
+            When the tabs are wider than their container the bar scrolls, the clipped edge fades,
+            and a button appears on each side that has more tabs: click it to bring the next
+            ones into view, even with a mouse that has no horizontal wheel. Drag the width to see
+            it engage. The active tab is always scrolled into view, clear of the fade and the
+            button. <code class="cui-code">always</code> keeps both buttons, disabling the spent
+            one; <code class="cui-code">never</code> leaves only the fade. Only the bar scrolls: scroll the
             page so these tabs sit near the bottom of the window, press <em>Activate last
             tab</em>, and the page stays where it is.
           </p>
@@ -435,7 +443,13 @@ function resetTabs() {
             style="border-color: var(--cui-border)"
             :style="{ width: `${overflowWidth}px`, maxWidth: '100%' }"
           >
-            <CuiTabs v-model="overflow" :variant="overflowVariant">
+            <CuiTabs
+              v-model="overflow"
+              :variant="overflowVariant"
+              :scroll-buttons="overflowButtons"
+              :orientation="overflowVertical ? 'vertical' : 'horizontal'"
+              :style="overflowVertical ? { height: '10rem' } : undefined"
+            >
               <CuiTab
                 v-for="tab in overflowTabs"
                 :key="tab.value"
@@ -448,6 +462,12 @@ function resetTabs() {
           </div>
 
           <CuiFlex gap="4" align="center" wrap="wrap">
+            <CuiRadioGroup v-model="overflowButtons" variant="buttons" label="scroll-buttons" size="sm">
+              <CuiRadio value="auto" label="auto" />
+              <CuiRadio value="always" label="always" />
+              <CuiRadio value="never" label="never" />
+            </CuiRadioGroup>
+            <CuiToggle v-model="overflowVertical" label="Vertical (10rem tall)" />
             <CuiToggle
               :model-value="overflowVariant === 'segmented'"
               label="Segmented variant"
