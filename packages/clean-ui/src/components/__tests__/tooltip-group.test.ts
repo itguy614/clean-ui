@@ -152,4 +152,34 @@ describe("tooltip warm window", () => {
     await nextTick();
     expect(shown("Bravo"), "cold: the unmounted one isn't still counted open").toBeUndefined();
   });
+
+  it("leaves a tooltip opened through v-model alone: not replaced, and not warming the group", async () => {
+    const manual = tip("Manual", { visible: true });
+    const b = tip("Bravo");
+    await nextTick();
+    expect(shown("Manual")).toBeDefined();
+    await enter(b);
+    await nextTick();
+    expect(shown("Bravo"), "the group is cold: waits").toBeUndefined();
+    vi.advanceTimersByTime(200);
+    await nextTick();
+    expect(shown("Bravo")).toBeDefined();
+    expect(shown("Manual"), "still open").toBeDefined();
+    expect(manual.emitted("update:visible")).toBeUndefined();
+  });
+
+  it("leaves a tooltip clicked open alone", async () => {
+    const clicked = tip("Clicked", { trigger: "click" });
+    const b = tip("Bravo");
+    await clicked.trigger("click");
+    vi.advanceTimersByTime(200);
+    await nextTick();
+    expect(shown("Clicked")).toBeDefined();
+    await enter(b);
+    await nextTick();
+    expect(shown("Bravo"), "cold: waits").toBeUndefined();
+    vi.advanceTimersByTime(200);
+    await nextTick();
+    expect(lastVisible(clicked)).toBe(true);
+  });
 });

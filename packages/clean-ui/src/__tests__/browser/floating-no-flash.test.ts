@@ -17,7 +17,7 @@ import CuiButton from "../../components/CuiButton.vue";
 //
 // This has to run in a real browser AND with the motion tokens present (main.css):
 // the displacement only exists while the panel's scale-in transition is actually
-// running (`cui-panel-motion`, #263), so a harness without the durations reports a
+// running (`data-cui-panel`, #263), so a harness without the durations reports a
 // perfectly placed panel. That is exactly how it went unnoticed.
 describe("floating panels do not flash at the top-left (real browser)", () => {
   let wrapper: VueWrapper | undefined;

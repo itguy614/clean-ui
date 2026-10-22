@@ -49,14 +49,16 @@ const emit = defineEmits<{
 
 const isVisible = ref(false);
 // Opened while the group was warm (#264): no delay, and no entry animation. Replaced by
-// another opening warm: no exit either.
+// another opening warm: no exit either (`replaced`). `joining`: opened by hover or focus,
+// so a member of the warm group; one opened through `visible` or a click is not.
 const instant = ref(false);
-const instantExit = ref(false);
+const replaced = ref(false);
+let joining = false;
 watch(
   isVisible,
   (now) => {
-    if (now) instantExit.value = false;
-    else instant.value = false;
+    if (now) replaced.value = false;
+    else instant.value = joining = false;
   },
   { flush: "sync" },
 );
@@ -68,7 +70,10 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => props.visible,
   (val) => {
-    if (val !== undefined) isVisible.value = val;
+    if (val === undefined) return;
+    // The consumer's to close: not a member of the warm group.
+    if (val && !isVisible.value) joining = false;
+    isVisible.value = val;
   },
   { immediate: true },
 );
@@ -81,10 +86,12 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
 
 const group = useTooltipGroup({
   active: () => isVisible.value,
+  present: () => present.value,
+  joins: () => joining,
   skipDelay: () => props.skipDelay,
-  closeNow: () => {
-    instantExit.value = true;
-    hideNow();
+  replace: () => {
+    replaced.value = true;
+    if (isVisible.value) hideNow();
   },
 });
 
@@ -97,6 +104,7 @@ function show() {
   // Already showing, or already on its way: a second trigger (focus after hover) mustn't
   // start a second timer that a leave wouldn't clear.
   if (isVisible.value || showTimer) return;
+  joining = props.trigger !== "click";
   instant.value = group.isWarm();
   if (instant.value) {
     group.handOff();
@@ -209,7 +217,6 @@ const tooltipStyle = computed(() => ({
   // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.
   "--_tooltip-transform-origin": transformOrigin.value,
   "--_panel-enter-duration": instant.value ? "var(--cui-duration-instant)" : "var(--cui-duration-fast)",
-  ...(instantExit.value ? { "--_panel-exit-duration": "var(--cui-duration-instant)" } : {}),
   ...(props.color
     ? {
         "--_tooltip-bg": `var(--cui-${props.color})`,
@@ -246,6 +253,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
         class="cui-tooltip"
         :data-instant="instant || undefined"
         :class="[
+          { 'cui-panel--cut': replaced },
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,
         ]"

@@ -57,4 +57,31 @@ describe("tooltip warm window (real browser, real hover)", () => {
     // The one it replaced doesn't wait out its hideDelay and fade beside it: it's gone.
     expect(tooltip("Bold"), "only one showing").toBeUndefined();
   });
+
+  // Crossing slower than the hideDelay: the first has closed and is fading out when the
+  // next opens. That fade is cut short too, not left beside the new one.
+  it("cuts short the exit of one already fading when the next opens", async () => {
+    const host = document.createElement("div");
+    host.id = "warm-host";
+    host.style.cssText = "position: fixed; top: 120px; left: 120px; display: flex; gap: 40px;";
+    document.body.append(host);
+    wrapper = mount(
+      { render: () => ["Bold", "Italic"].map((label) => h(CuiTooltip, { text: label }, () => h("button", label))) },
+      { attachTo: host },
+    );
+    const [bold, italic] = [...host.querySelectorAll<HTMLElement>("button")];
+    // A long exit, so it is plainly still running however long the next hover takes.
+    document.body.style.setProperty("--cui-duration-fast", "1000ms");
+    await userEvent.hover(bold);
+    await wait(1300);
+    await userEvent.unhover(bold);
+    await wait(100 + 40); // its hideDelay, then partway into its exit
+    const leaving = [...document.querySelectorAll<HTMLElement>(".cui-tooltip")].find((el) => el.textContent?.includes("Bold"));
+    expect(leaving?.getAttribute("data-cui-panel"), "mid-exit").toBe("hidden");
+    await userEvent.hover(italic);
+    await wait(40);
+    expect(leaving!.isConnected, "gone, not fading beside the next").toBe(false);
+    expect(tooltip("Italic")?.dataset.instant).toBe("true");
+    document.body.style.removeProperty("--cui-duration-fast");
+  });
 });
