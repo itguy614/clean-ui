@@ -80,7 +80,7 @@ function reposition() {
   const maxHeight = rowsHeight ?? props.maxHeight;
   const { styles, transformOrigin } = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight });
   // Grows out of its field, above or below (#262; it animates in with #263).
-  position.value = { ...styles, "--_listbox-transform-origin": transformOrigin };
+  position.value = { ...styles, "--_listbox-panel-transform-origin": transformOrigin };
 }
 
 // Re-measure when the rows change — added, removed or replaced, including a new list of
@@ -188,12 +188,10 @@ defineExpose({ el });
 </template>
 
 <style scoped>
-:where(.cui-listbox-panel) {
-  transform-origin: var(--_listbox-transform-origin);
-}
-
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-listbox-panel) {
+  /* Grows out of its field, above or below (#262). Private only: not a themeable slot. */
+  transform-origin: var(--_listbox-panel-transform-origin);
   background: var(--_listbox-panel-bg);
   border: var(--_listbox-panel-border);
   border-radius: var(--_listbox-panel-radius);

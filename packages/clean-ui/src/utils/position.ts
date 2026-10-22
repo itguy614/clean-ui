@@ -57,11 +57,20 @@ export interface PanelPosition {
  */
 export type PanelPlacement = PanelSide | `${PanelSide}-${"start" | "end"}`;
 
-export function transformOriginFor(placement: PanelPlacement): string {
+const ORIGIN_PERCENT = { left: "0%", top: "0%", center: "50%", right: "100%", bottom: "100%" } as const;
+
+/**
+ * …and, given how far a positioner slid the panel along its side to keep it on screen
+ * (Floating UI's `shift()`), moved back by as much, so it stays over the trigger — clamped
+ * to the panel's edge, never a point outside it.
+ */
+export function transformOriginFor(placement: PanelPlacement, shift?: { x?: number; y?: number }): string {
   const [side, align] = placement.split("-") as [PanelSide, "start" | "end" | undefined];
   const vertical = side === "top" || side === "bottom";
   const edge = { top: "bottom", bottom: "top", left: "right", right: "left" }[side];
-  const along = align === "start" ? (vertical ? "left" : "top") : align === "end" ? (vertical ? "right" : "bottom") : "center";
+  const keyword = align === "start" ? (vertical ? "left" : "top") : align === "end" ? (vertical ? "right" : "bottom") : "center";
+  const by = (vertical ? shift?.x : shift?.y) ?? 0;
+  const along = by ? `clamp(0%, calc(${ORIGIN_PERCENT[keyword]} - ${by}px), 100%)` : keyword;
   return vertical ? `${along} ${edge}` : `${edge} ${along}`;
 }
 

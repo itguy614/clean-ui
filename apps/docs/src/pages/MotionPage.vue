@@ -85,10 +85,24 @@ const pressCode = `<CuiButton variant="solid">Press me</CuiButton>
   <CuiButton>No press</CuiButton>
 </div>`;
 
-const originCode = `<CuiPopover placement="top" title="Above">…</CuiPopover>
-<CuiPopover placement="right" title="Right">…</CuiPopover>
-<CuiDropdown>…</CuiDropdown>
-<CuiTooltip text="From its trigger">…</CuiTooltip>`;
+const originCode = `<CuiPopover placement="top" title="top">
+  <CuiButton variant="outline">top</CuiButton>
+  <template #content><p>Grows from the top side's trigger edge.</p></template>
+</CuiPopover>
+
+<CuiDropdown>
+  <CuiDropdownTrigger>
+    <CuiButton>Menu</CuiButton>
+  </CuiDropdownTrigger>
+  <CuiDropdownMenu>
+    <CuiDropdownItem>First</CuiDropdownItem>
+    <CuiDropdownItem>Second</CuiDropdownItem>
+  </CuiDropdownMenu>
+</CuiDropdown>
+
+<CuiTooltip text="From its trigger">
+  <CuiButton variant="ghost">Hover me</CuiButton>
+</CuiTooltip>`;
 
 const jsCode = `import { motionDuration } from "@itguy614/clean-ui";
 

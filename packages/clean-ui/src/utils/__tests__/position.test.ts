@@ -75,8 +75,14 @@ describe("transformOriginFor", () => {
     ["right", "left center"],
     ["right-start", "left top"],
     ["left-end", "right bottom"],
-  ])("%s grows from %s", (placement, origin) => {
+  ] as const)("%s grows from %s", (placement, origin) => {
     expect(transformOriginFor(placement)).toBe(origin);
+  });
+
+  it("moves back along its side by a shift, clamped to the panel's edge", () => {
+    expect(transformOriginFor("bottom", { x: 30 })).toBe("clamp(0%, calc(50% - 30px), 100%) top");
+    expect(transformOriginFor("right-start", { y: -12 })).toBe("left clamp(0%, calc(0% - -12px), 100%)");
+    expect(transformOriginFor("bottom", { x: 0, y: 40 })).toBe("center top");
   });
 });
 

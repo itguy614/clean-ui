@@ -149,7 +149,10 @@ jarring appear/disappear. "It looks nice" is not one.
 - **Floating panels scale from their trigger** (#262). Take `transformOrigin` from `usePopover`
   or `computeDropdownPosition` (both use `transformOriginFor` in `utils/position.ts`), emit it as
   `--_<component>-transform-origin` on the animated element, and read it back in a `:where()`
-  rule. Never redo the side-to-origin mapping. Modals stay centred.
+  rule. It is private only, with no public `--cui-*` token, since a consumer has nothing to
+  restyle there: not one of the themeable slots. Never redo the side-to-origin mapping.
+  Measure inside a panel that is still scaling in with `offset*` values, or after its
+  animation ends: a rect is the shrunken one. Modals stay centred.
 - **Animate `transform` and `opacity` only.** No `width`/`height`/`max-height`/`top`/`left`/
   `margin`/`padding` animation; collapsibles use `grid-template-rows: 0fr → 1fr`. Never
   `transition: all`: name the properties.
