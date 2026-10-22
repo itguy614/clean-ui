@@ -24,6 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A motion guard (`styles/__tests__/motion.test.ts`, #267), across both packages, fails on:
+  - `transition: all`
+  - `ease-in`
+  - an entrance from `scale(0)`
+  - a literal duration or close-timer delay
+
+  It also tracks two things until their issues land: layout-property transitions (#266,
+  #270), and floating panels that don't yet take a placement-derived `transform-origin`
+  (#262).
+  Exemptions count their findings, so a new violation in an exempt file still fails.
+  CLAUDE.md gains a Motion section that the guard enforces.
 - Enter and exit motion uses the `--cui-ease-out` curve instead of plain `ease`, and
   movement on screen (a toggle knob, a chevron turning) uses `--cui-ease-in-out` (#261).
   Colour changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
