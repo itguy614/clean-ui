@@ -1,4 +1,4 @@
-import type { InjectionKey, Ref } from "vue";
+import { readonly, ref, type InjectionKey, type Ref } from "vue";
 import type { PanelSide } from "../utils/position";
 import type { MenuEdge } from "../utils/menu";
 
@@ -7,7 +7,11 @@ export type DropdownPlacement = PanelSide;
 
 export interface DropdownContext {
   isOpen: Ref<boolean>;
-  isClosing: Ref<boolean>;
+  /**
+   * @deprecated Always false (#263): a closing menu is closed, and its panel's exit is a
+   * `<Transition>`. Removed in 2.0.
+   */
+  isClosing: Readonly<Ref<boolean>>;
   trigger: Ref<DropdownTrigger>;
   triggerEl: Ref<HTMLElement | null>;
   placement: Ref<DropdownPlacement>;
@@ -36,6 +40,9 @@ export interface DropdownContext {
   /** Reposition the menu (called on scroll when pinned) */
   reposition: () => void;
 }
+
+/** What CuiDropdown and CuiContextMenu provide as the deprecated `isClosing`. */
+export const NEVER_CLOSING: Readonly<Ref<boolean>> = readonly(ref(false));
 
 export const DropdownContextKey: InjectionKey<DropdownContext> = Symbol("dropdown-context");
 

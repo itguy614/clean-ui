@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, useTemplateRef } from "vue";
+import { ref, onMounted, onUnmounted, computed, nextTick } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
@@ -8,7 +8,7 @@ import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
 import { RADIUS_SCALE } from "../utils/sizing";
-import { motionDuration } from "../utils/motion";
+import { subtreeTransition } from "../utils/motion";
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
@@ -49,7 +49,6 @@ const emit = defineEmits<{
 }>();
 
 const visible = ref(true);
-const rootEl = useTemplateRef<HTMLElement>("rootEl");
 const mounted = ref(false);
 
 // Auto-dismiss timer
@@ -73,12 +72,20 @@ onUnmounted(() => {
 });
 
 function dismiss() {
+  // Its entrance classes come off, which starts the exit; then it leaves, and its
+  // <Transition> waits for that exit before it unmounts and reports the dismiss (#263).
   mounted.value = false;
-  // Wait for the exit animation (#261), read where it runs. `entrance="none"` has none.
-  setTimeout(() => {
+  nextTick(() => {
     visible.value = false;
-    emit("dismiss");
-  }, props.entrance === "none" ? 0 : motionDuration("slow", rootEl.value));
+  });
+}
+
+// Only after a dismiss: `hidden` toggles v-show, which runs the same hooks.
+let dismissed = false;
+function onAfterLeave() {
+  if (visible.value || dismissed) return;
+  dismissed = true;
+  emit("dismiss");
 }
 
 const alertStyle = computed(() => {
@@ -122,9 +129,9 @@ const messages = useMessages();
 </script>
 
 <template>
+  <Transition v-bind="subtreeTransition" @after-leave="onAfterLeave">
   <div
     v-if="visible"
-    ref="rootEl"
     v-show="!hidden"
     class="cui-alert"
     :class="[
@@ -165,6 +172,7 @@ const messages = useMessages();
       <CuiIcon name="x" size="0.875rem" />
     </button>
   </div>
+  </Transition>
 </template>
 
 <style scoped>

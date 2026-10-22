@@ -5,10 +5,11 @@ import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
-import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
-import { motionDuration } from "../utils/motion";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 
 /**
  * How the menu can be summoned.
@@ -62,11 +63,10 @@ const emit = defineEmits<{
 }>();
 
 const isOpen = ref(false);
-const isClosing = ref(false);
+const { present, onAfterLeave } = usePresence(() => isOpen.value);
 const wrapperRef = ref<HTMLElement | null>(null);
 const menuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
-let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 // What had focus when the menu opened — the row it was summoned from, by keyboard — and
 // gets it back on close (#160).
 let returnFocusTo: Element | null = null;
@@ -76,21 +76,15 @@ const contextMenuId = useCuiId("context-menu");
 
 function open() {
   if (props.disabled) return;
-  if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
-  isClosing.value = false;
   isOpen.value = true;
 }
 
 function close() {
-  if (!isOpen.value || isClosing.value) return;
+  if (!isOpen.value) return;
   restoreMenuFocus(returnFocusTo, contextMenuId);
   returnFocusTo = null;
-  isClosing.value = true;
-  // As long as the menu's exit animation (#261), read where it runs.
-  closeAnimTimer = setTimeout(() => {
-    isOpen.value = false;
-    isClosing.value = false;
-  }, motionDuration("fast", menuRef.value));
+  // The panel's <Transition> plays the exit and unmounts it after (#263).
+  isOpen.value = false;
   emit("close");
 }
 
@@ -119,8 +113,8 @@ function positionAtCursor(x: number, y: number) {
   // of the viewport. Transparent and paused, NOT `visibility: hidden` — focus()
   // on a visibility-hidden element is a silent no-op, and the first item is
   // focused in the same pass that reveals the panel, before the reveal renders.
-  // The same guard as CuiPopover's hiddenUntilPositioned (#88, #112); pausing the
-  // entry animation means it plays from the start once the panel is placed.
+  // The same guard as CuiPopover's hiddenUntilPositioned (#88, #112). The entry
+  // transition's opacity picks up from 0 once the panel is placed and this lifts.
   menuStyle.value = {
     position: "fixed",
     zIndex: OVERLAY_Z_INDEX,
@@ -128,7 +122,9 @@ function positionAtCursor(x: number, y: number) {
     top: `${y}px`,
     opacity: "0",
     pointerEvents: "none",
-    animation: "none",
+    // Snap to hidden for the measuring frame: re-opened at a new point while open, a
+    // transition here would fade the panel out and back as it moved.
+    transition: "none",
   };
 
   // Measured by the post-flush watcher above, once the panel has rendered.
@@ -195,13 +191,7 @@ function measure({ x, y }: { x: number; y: number }) {
  */
 function openAt(x: number, y: number) {
   if (props.disabled) return;
-  // Re-opening while open: drop straight to closed with no exit animation, so
-  // the panel doesn't animate out from the old spot while appearing at the new.
-  if (isOpen.value) {
-    isOpen.value = false;
-    isClosing.value = false;
-    if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
-  }
+  // Re-opening while open moves the panel to the new point: no exit from the old spot.
   // Not when re-opening: focus is in the old panel then, and the row is still the one to
   // go back to.
   if (!returnFocusTo) returnFocusTo = document.activeElement;
@@ -346,7 +336,7 @@ function onMenuKeydown(e: KeyboardEvent) {
 
 // Escape through the shared layer stack (#160), like CuiDropdown: a sub-menu's own Escape
 // closes only it, and an enclosing modal stays open.
-useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
+useLayerStack({ active: () => isOpen.value, onEscape: close });
 
 // Only while open, so a closed context menu holds no document listener (#203).
 // Its open sub-menus are teleported panels of their own (see CuiDropdown).
@@ -370,7 +360,6 @@ function onScroll() {
 useEventListener("window", "scroll", onScroll, { enabled: () => isOpen.value || pressPending.value, capture: true });
 
 onUnmounted(() => {
-  if (closeAnimTimer) clearTimeout(closeAnimTimer);
   cancelLongPress();
 });
 
@@ -392,7 +381,7 @@ function closeSiblingSubMenus(except?: () => void) {
 provide(DropdownContextKey, {
   ownerId: contextMenuId,
   isOpen,
-  isClosing,
+  isClosing: NEVER_CLOSING,
   trigger: ref("click" as DropdownTrigger),
   triggerEl: wrapperRef,
   placement: ref("bottom" as DropdownPlacement),
@@ -426,11 +415,12 @@ defineExpose({ open, openAt, close, isOpen });
     <slot />
 
     <Teleport to="body">
+      <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
       <div
-        v-if="isOpen || isClosing"
+        v-if="present"
+        v-show="isOpen"
         ref="menuRef"
         class="cui-context-menu__panel"
-        :class="{ 'cui-context-menu__panel--closing': isClosing }"
         :data-cui-menu-owner="contextMenuId"
         :style="{ ...menuStyle, minWidth }"
         role="menu"
@@ -438,6 +428,7 @@ defineExpose({ open, openAt, close, isOpen });
       >
         <slot name="menu" :target="menuTarget" />
       </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -474,33 +465,6 @@ defineExpose({ open, openAt, close, isOpen });
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-context-menu-in var(--cui-duration-base) var(--cui-ease-out) forwards;
 }
 
-.cui-context-menu__panel--closing {
-  animation: cui-context-menu-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
-  pointer-events: none;
-}
-
-@keyframes cui-context-menu-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes cui-context-menu-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
 </style>

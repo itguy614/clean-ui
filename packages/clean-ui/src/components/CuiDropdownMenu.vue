@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { inject, ref, watch, onUnmounted } from "vue";
 import { useEventListener } from "../composables/useEventListener";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import { DropdownContextKey } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
 import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
@@ -15,6 +17,7 @@ const props = withDefaults(defineProps<CuiDropdownMenuProps>(), {
 });
 
 const ctx = inject(DropdownContextKey);
+const { present, onAfterLeave } = usePresence(() => !!ctx?.isOpen.value);
 const menuRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
 
@@ -45,7 +48,7 @@ watch(
 let scrollRAF: number | null = null;
 
 function onScroll() {
-  if (ctx?.isClosing.value) return;
+  if (!ctx?.isOpen.value) return;
   if (scrollRAF) cancelAnimationFrame(scrollRAF);
   scrollRAF = requestAnimationFrame(updatePosition);
 }
@@ -64,12 +67,13 @@ function onKeydown(e: KeyboardEvent) {
 
 <template>
   <Teleport to="body">
+    <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
     <div
-      v-if="ctx?.isOpen.value || ctx?.isClosing.value"
+      v-if="present"
+      v-show="ctx?.isOpen.value"
       :id="ctx?.ownerId && `${ctx.ownerId}-menu`"
       ref="menuRef"
       class="cui-dropdown-menu"
-      :class="{ 'cui-dropdown-menu--closing': ctx?.isClosing.value }"
       :data-cui-menu-owner="ctx?.ownerId"
       :style="{ ...menuStyle, minWidth }"
       role="menu"
@@ -77,6 +81,7 @@ function onKeydown(e: KeyboardEvent) {
     >
       <slot />
     </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -92,33 +97,5 @@ function onKeydown(e: KeyboardEvent) {
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-dropdown-in var(--cui-duration-base) var(--cui-ease-out) forwards;
-}
-
-.cui-dropdown-menu--closing {
-  animation: cui-dropdown-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
-  pointer-events: none;
-}
-
-@keyframes cui-dropdown-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes cui-dropdown-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
 }
 </style>

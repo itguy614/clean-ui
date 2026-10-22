@@ -111,27 +111,34 @@ describe("CuiModal", () => {
     expect(document.body.style.overflow).toBe("");
   });
 
-  it("keeps the lock until the last of two stacked overlays closes", async () => {
-    const first = mount(CuiModal, { props: { visible: true } });
-    const second = mount(CuiModal, { props: { visible: true } });
-    await vi.runOnlyPendingTimersAsync();
-    expect(document.body.style.overflow).toBe("hidden");
+  // "Keeps the lock until the last of two stacked overlays closes" is in the browser suite
+  // (exit-transitions.test.ts). Under jsdom the first of two open modals runs no leave when
+  // it closes; in a real browser it does, so it is asserted there.
 
-    await second.setProps({ visible: false });
+  // A close made while hidden runs no leave (v-show is already off), so it reports itself.
+  it("finishes a close made while hidden: emits, and releases the lock", async () => {
+    const w = mount(CuiModal, { props: { visible: true } });
     await vi.runOnlyPendingTimersAsync();
-    // the first modal is still open — the page must stay locked
-    expect(document.body.style.overflow).toBe("hidden");
-
-    await first.setProps({ visible: false });
+    await w.setProps({ hidden: true });
+    await w.setProps({ visible: false });
     await vi.runOnlyPendingTimersAsync();
+    expect(w.emitted("close")).toHaveLength(1);
     expect(document.body.style.overflow).toBe("");
-
-    first.unmount();
-    second.unmount();
+    w.unmount();
   });
 
-  // #285 — overlays stack: opening one never closes another. `allowNested` never did anything
-  // (it only cleared a set nothing read); it is deprecated and warns.
+  // The entry flips a frame after opening; closed inside that frame, it mustn't flip after.
+  it("doesn't mark a modal closed within a frame of opening as shown", async () => {
+    const w = mount(CuiModal, { props: { visible: true, title: "T" } });
+    await w.setProps({ visible: false });
+    await vi.runOnlyPendingTimersAsync();
+    await w.setProps({ visible: true });
+    expect(document.querySelector(".cui-modal--visible"), "the entry starts from hidden").toBeNull();
+    await vi.runOnlyPendingTimersAsync();
+    expect(document.querySelector(".cui-modal--visible")).not.toBeNull();
+    w.unmount();
+  });
+
   it("leaves the first modal open when a second opens on top", async () => {
     const first = mount(CuiModal, { props: { visible: true, title: "First" }, attachTo: document.body });
     const second = mount(CuiModal, { props: { visible: true, title: "Second" }, attachTo: document.body });

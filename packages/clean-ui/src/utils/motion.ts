@@ -43,3 +43,73 @@ export function motionDuration(name: MotionDuration, el?: Element | null): numbe
   }
   return ms;
 }
+
+/**
+ * A `<Transition :css="false">` leave hook (#263): finishes the leave once the exit has
+ * played — the animations running on `el` itself and on any descendant marked
+ * `data-cui-exit` (a modal's backdrop and dialog), which `<Transition>`'s CSS mode can't see
+ * (it reads only the element). Not the whole subtree: an unrelated animation in the content,
+ * a progress bar or a hover, mustn't hold the close up. Settled, not finished: a re-open
+ * reverses the transitions, cancelling these, and `<Transition>` then ignores this `done`.
+ * A loop (an alert's pulse) never ends, so it isn't waited for. Finishes at once with
+ * nothing running, and in an environment without the Web Animations API (jsdom).
+ */
+export function afterAnimations(el: Element, done: () => void): void {
+  const owners = [el, ...el.querySelectorAll("[data-cui-exit]")];
+  const running = owners
+    .flatMap((owner) => (typeof owner.getAnimations === "function" ? owner.getAnimations() : []))
+    .filter((a) => a.effect?.getTiming().iterations !== Infinity);
+  if (!running.length) {
+    done();
+    return;
+  }
+  Promise.allSettled(running.map((a) => a.finished)).then(() => done());
+}
+
+const PANEL_MOTION = "cui-panel-motion";
+const PANEL_HIDDEN = "cui-panel--hidden";
+/** Panels whose leave is under way, so an enter can tell a re-open from a fresh show. */
+const leaving = new WeakSet<Element>();
+
+/**
+ * The `<Transition>` hooks every floating panel shares (#263): `v-bind` them, with the
+ * panel rendered `v-if="present" v-show="open"` (composables/usePresence). The panel's
+ * motion is one CSS transition on a state class, `cui-panel--hidden`: entering takes it
+ * off, leaving puts it on, and `components-shared.css` animates the change. So a re-open
+ * mid-exit just takes the class off again and the transition reverses from wherever the
+ * panel is. (Vue's CSS mode re-applies `enter-from` there, dipping the panel towards
+ * invisible for a frame before it turns back.)
+ */
+export const panelTransition = {
+  css: false,
+  onBeforeEnter(el: Element) {
+    el.classList.add(PANEL_MOTION);
+    // Re-opened mid-exit: it is still on screen, mid-transition, and reverses from there.
+    // Nothing here may read its style: cancelling the leave sets `display: none` for an
+    // instant, and a style read then would stop the transition it is to reverse.
+    if (leaving.delete(el)) return;
+    el.classList.add(PANEL_HIDDEN);
+  },
+  onEnter(el: Element, done: () => void) {
+    // Style the hidden state before it is lifted, or there is nothing to transition from.
+    if (el.classList.contains(PANEL_HIDDEN)) void (el as HTMLElement).offsetWidth;
+    el.classList.remove(PANEL_HIDDEN);
+    afterAnimations(el, done);
+  },
+  onLeave(el: Element, done: () => void) {
+    leaving.add(el);
+    el.classList.add(PANEL_HIDDEN);
+    afterAnimations(el, () => {
+      leaving.delete(el);
+      done();
+    });
+  },
+};
+
+/**
+ * The `<Transition>` for an element whose exit runs on its own state classes and those of
+ * the descendants it marks `data-cui-exit` (CuiModal, CuiSlideover, CuiAlert): `v-bind` it,
+ * and the leave waits for that exit (afterAnimations).
+ */
+export const subtreeTransition = { css: false, onLeave: afterAnimations };
+
