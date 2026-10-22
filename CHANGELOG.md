@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-22
+
 ### Added
 
 - **CuiScrollArea** and **useScrollArea** (#143): a scroll container that fades its content
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- clean-ui-editor's peer range on `@itguy614/clean-ui` moves to `^1.4.0`: the editor's
+  toolbar is built on CuiScrollArea (#143), and its error message carries the shared
+  `.cui-field-error` (#217), both first shipped in this release.
 - A form control's error message is styled by one shared `.cui-field-error` class (#217):
   0.8125rem at line-height 1.4 everywhere. CuiTagInput and CuiCombobox drew theirs at
   0.75rem, and CuiCombobox's was an inline style no stylesheet could override. Their gap
@@ -59,7 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CuiDataGrid takes `searchDebounce` (ms, default 300 — what it always waited): how long the
   search box waits after the last keystroke (#273).
 
-### Changed
 
 - Twelve components draw their neutral hover, active and track fills from the semantic slots
   (`--cui-surface-bg`, `--cui-surface-dark-bg`, `--cui-table-head-bg`) instead of raw surface
@@ -141,7 +145,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and goes in 2.0. `useOverlay`'s private one-at-a-time set, which it cleared, is gone; the
   shared layer stack is the one record of open overlays.
 
-### Fixed
 
 - A theme class on part of a page now re-themes it (#329). `<div class="cui-theme-forest">`
   changed only the colour scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,

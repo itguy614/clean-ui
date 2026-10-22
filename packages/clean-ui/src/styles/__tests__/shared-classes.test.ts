@@ -15,10 +15,6 @@ const files = ["clean-ui", "clean-ui-editor"]
   .map((f) => ({ name: relative(PACKAGES, f), src: readFileSync(f, "utf8") }));
 const offenders = (pattern: RegExp) => files.filter((f) => pattern.test(f.src)).map((f) => f.name);
 
-// Reasons, per preflight.test.ts. A stale exemption fails too.
-const EXEMPT: Record<string, string> = {
-  "clean-ui-editor/src/styles/editor.css": "its error message's copy for a pre-1.4 clean-ui in the peer range, which lacks .cui-field-error",
-};
 
 /** Error message elements: those bound to the field's error id (useFieldDescribedBy), and CuiFormField's, shown on `showError`. */
 const errorTags = files.flatMap(({ name, src }) =>
@@ -34,9 +30,7 @@ describe("shared component classes", () => {
     // Any selector naming an `__error` part (bare, compound or `:where()`) that sets the
     // text's size or colour (not `border-color`), or an error element styled inline. Its
     // gap — a margin — is the control's own layout, and stays.
-    const rules = offenders(/__error\b[^{}]*\{[^}]*(?<![-\w])(font-size|line-height|color)\s*:/);
-    expect(rules.filter((f) => !(f in EXEMPT))).toEqual([]);
-    expect(Object.keys(EXEMPT).filter((f) => !rules.includes(f))).toEqual([]);
+    expect(offenders(/__error\b[^{}]*\{[^}]*(?<![-\w])(font-size|line-height|color)\s*:/)).toEqual([]);
     expect(errorTags.filter(({ tag }) => /\s:style=/.test(tag)).map(({ name }) => name)).toEqual([]);
   });
 
