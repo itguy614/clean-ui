@@ -11,7 +11,6 @@ import type {
   DataGridViewAdapter,
   PaginatedData,
 } from "../types/data-grid";
-import type { TableSize } from "./table-context";
 import CuiDataGridToolbar from "./CuiDataGridToolbar.vue";
 import CuiDataGridTable from "./CuiDataGridTable.vue";
 import CuiDataGridCardView from "./CuiDataGridCardView.vue";
@@ -21,10 +20,10 @@ import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
-import type { HideableProps } from "../types/common";
+import type { HideableProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps {
+export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps, SizeableProps {
   /** Column definitions */
   columns: DataGridColumn[];
   /** Data source — array for client-side, PaginatedData for server-side. Generic over the row type so cell slots, emits, and data are typed. */
@@ -65,8 +64,6 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   hoverable?: boolean;
   /** Bordered cells */
   bordered?: boolean;
-  /** Table size */
-  size?: TableSize;
   /** Loading state */
   loading?: boolean;
   /** Per-page options for pagination */

@@ -21,7 +21,7 @@ import CuiDropdownMenu from "./CuiDropdownMenu.vue";
 import CuiDropdownItem from "./CuiDropdownItem.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiContextMenu from "./CuiContextMenu.vue";
-import type { TableSize } from "./table-context";
+import type { CuiSize } from "../types/common";
 
 export interface CuiDataGridTableProps {
   rowKey?: string;
@@ -33,7 +33,7 @@ export interface CuiDataGridTableProps {
   striped?: boolean;
   hoverable?: boolean;
   bordered?: boolean;
-  size?: TableSize;
+  size?: CuiSize;
   /**
    * Enable row virtualization for large datasets.
    *

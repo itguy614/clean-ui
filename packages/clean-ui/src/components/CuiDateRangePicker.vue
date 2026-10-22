@@ -14,6 +14,7 @@ import {
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { INPUT_SIZE_SCALE } from "../utils/sizing";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -61,6 +62,21 @@ const props = withDefaults(defineProps<CuiDateRangePickerProps>(), {
   disabled: false,
   hidden: false,
 });
+
+// The trigger's box comes from the shared input scale, so a range picker lines up with a
+// CuiInput, CuiDatePicker or CuiTimePicker of the same `size` (#349). It ignored `size`.
+const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size]);
+/** The start and end fields: bare inputs inside the trigger, sized by it. */
+const fieldStyle = computed(() => ({
+  border: "none",
+  background: "transparent",
+  outline: "none",
+  fontSize: triggerDims.value.fontSize,
+  color: "var(--cui-text-body)",
+  padding: "0",
+  width: `${props.format.length + 1}ch`,
+  cursor: "pointer",
+}));
 
 const messages = useMessages();
 
@@ -281,13 +297,15 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
     >
       <!-- Trigger: two masked inputs with separator -->
       <div
+        class="cui-date-range-picker__trigger"
         :style="{
           display: 'flex',
           alignItems: 'center',
           gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
-          padding: '0 calc(0.5rem * var(--cui-density-scale, 1))',
+          height: triggerDims.height,
+          padding: `0 ${triggerDims.px}`,
           background: 'var(--cui-surface-base, white)',
           opacity: disabled ? '0.5' : '1',
           cursor: disabled ? 'default' : 'pointer',
@@ -306,32 +324,14 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly
-          :style="{
-            border: 'none',
-            background: 'transparent',
-            outline: 'none',
-            fontSize: '0.875rem',
-            color: 'var(--cui-text-body)',
-            padding: 'calc(0.5rem * var(--cui-density-scale, 1)) 0',
-            width: `${props.format.length + 1}ch`,
-            cursor: 'pointer',
-          }"
+          :style="fieldStyle"
         />
         <span :style="{ color: 'var(--cui-text-tertiary)', fontSize: '0.75rem', flexShrink: '0' }">{{ separator }}</span>
         <input
           :value="endDisplay"
           :placeholder="endPlaceholder || props.format.toLowerCase()"
           readonly
-          :style="{
-            border: 'none',
-            background: 'transparent',
-            outline: 'none',
-            fontSize: '0.875rem',
-            color: 'var(--cui-text-body)',
-            padding: 'calc(0.5rem * var(--cui-density-scale, 1)) 0',
-            width: `${props.format.length + 1}ch`,
-            cursor: 'pointer',
-          }"
+          :style="fieldStyle"
         />
       </div>
 

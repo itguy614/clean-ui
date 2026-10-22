@@ -41,7 +41,7 @@ const meta: ComponentMeta = {
     { name: "striped", type: "boolean", default: "false", description: "Alternate the row backgrounds" },
     { name: "hoverable", type: "boolean", default: "true", description: "Tint the row under the pointer" },
     { name: "bordered", type: "boolean", default: "false", description: "Borders between all cells" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Table density. Not the shared CuiSize scale" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Table density. Styled at sm, md and lg; xs and xl take the nearest" },
     { name: "loading", type: "boolean", default: "false", description: "Replace the rows with skeletons" },
     {
       name: "virtualize",

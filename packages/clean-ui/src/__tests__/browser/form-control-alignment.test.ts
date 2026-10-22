@@ -9,6 +9,7 @@ import CuiCombobox from "../../components/CuiCombobox.vue";
 import CuiTagInput from "../../components/CuiTagInput.vue";
 import CuiInputStepper from "../../components/CuiInputStepper.vue";
 import CuiFormField from "../../components/CuiFormField.vue";
+import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
 
 /**
  * #123 — the actual complaint: stack a CuiInput above a CuiCombobox, both `md`, and they
@@ -50,6 +51,7 @@ describe("form controls line up (real browser)", () => {
     [CuiCombobox, ".cui-combobox__control", { options: OPTIONS }],
     [CuiTagInput, ".cui-tag-input__control", {}],
     [CuiInputStepper, ".cui-input-stepper__control", {}],
+    [CuiDateRangePicker, ".cui-date-range-picker__trigger", {}],
   ];
 
   function control(component: unknown, size: string, props: Record<string, unknown> = {}) {
@@ -100,6 +102,9 @@ describe("form controls line up (real browser)", () => {
       ["select", CuiSelect, true],
       // The stepper centres its value between the +/- buttons, so indent does not apply.
       ["stepper", CuiInputStepper, false],
+      // It ignored `size` and drew a fixed, roughly-md box (#349). Its text starts after a
+      // calendar icon, so indent does not apply.
+      ["date range picker", CuiDateRangePicker, false],
     ])("gives the %s the same metrics as an input", (_label, component, comparesText) => {
       const other = box(control(component, size));
 
