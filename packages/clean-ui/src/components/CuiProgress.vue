@@ -103,7 +103,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
           'cui-progress-bar__fill--stripe': animation === 'stripe' && !indeterminate,
           'cui-progress-bar__fill--shimmer': animation === 'shimmer' && !indeterminate,
         }"
-        :style="indeterminate ? {} : { width: `${percent}%` }"
+        :style="indeterminate ? {} : { transform: `translateX(${percent - 100}%)`, '--_progress-percent': `${percent}%` }"
       />
     </div>
     <div v-if="showLabel || $slots.label" class="cui-progress-bar__label">
@@ -189,11 +189,14 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   overflow: hidden;
 }
 
+/* A full-width pill slid left inside the track, which clips it: the value moves it on the
+   compositor (transform, not width, #266), and its end stays rounded. */
 .cui-progress-bar__fill {
+  width: 100%;
   height: 100%;
   background: var(--_progress-color);
   border-radius: 9999px;
-  transition: width var(--cui-duration-slow) ease;
+  transition: transform var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 /* Indeterminate bar animation */
@@ -214,7 +217,9 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   }
 }
 
-/* Stripe animation — diagonal stripes scrolling across the fill */
+/* Stripe animation — diagonal stripes scrolling across the fill. A background-position loop,
+   so it repaints each frame: kept, being a small clipped bar that reduced motion stops
+   (#266, #265). The transform form is a ::before one tile wider, looped by translateX. */
 .cui-progress-bar__fill--stripe {
   background-image: linear-gradient(
     45deg,
@@ -244,7 +249,9 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 .cui-progress-bar__fill--shimmer::after {
   content: "";
   position: absolute;
-  inset: 0;
+  /* Over the visible part only: the fill is a full-width pill slid left (#266), so what
+     shows is its right-hand `--_progress-percent`. */
+  inset: 0 0 0 calc(100% - var(--_progress-percent, 100%));
   background: linear-gradient(
     90deg,
     transparent 0%,

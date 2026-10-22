@@ -43,6 +43,9 @@ const emit = defineEmits<{
   "update:modelValue": [value: number];
 }>();
 
+/** Room around the thumb inside its clipping box: the focus ring (2px outline, 2px offset). */
+const THUMB_ROOM = "4px";
+
 const percent = computed(() =>
   ((props.modelValue - props.min) / (props.max - props.min)) * 100,
 );
@@ -116,7 +119,8 @@ defineExpose({ el: inputRef, focus, blur });
 
     <!-- Slider container -->
     <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center' }">
-      <!-- Track background -->
+      <!-- Track, clipping its fill: a full-width pill slid left inside it, so it moves on the
+           compositor (transform, not width, #266) and keeps its rounded end. -->
       <div :style="{
         position: 'absolute',
         left: '0',
@@ -124,18 +128,17 @@ defineExpose({ el: inputRef, focus, blur });
         height: cfg.trackHeight,
         borderRadius: '9999px',
         background: 'var(--cui-border)',
-      }" />
-
-      <!-- Track fill -->
-      <div :style="{
-        position: 'absolute',
-        left: '0',
-        height: cfg.trackHeight,
-        width: `${percent}%`,
-        borderRadius: '9999px',
-        background: fillColor,
-        transition: dragging ? 'none' : 'width var(--cui-duration-press) ease',
-      }" />
+        overflow: 'hidden',
+      }">
+        <div class="cui-slider__fill" :style="{
+          width: '100%',
+          height: '100%',
+          borderRadius: '9999px',
+          background: fillColor,
+          transform: `translateX(${percent - 100}%)`,
+          transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out)',
+        }" />
+      </div>
 
       <!-- Invisible native range input on top for interaction. It precedes the thumb so
            the thumb can draw the focus ring with a sibling selector. -->
@@ -171,10 +174,38 @@ defineExpose({ el: inputRef, focus, blur });
         @touchstart="dragging = true"
         @touchend="dragging = false"
       />
-      <!-- Custom thumb -->
+      <!-- Custom thumb, on a layer the track's width: translateX(n%) of that layer is n% of
+           the track, so the thumb moves by transform rather than `left` (#266). Translated,
+           the layer reaches past the slider, so a box overhanging the track by half a thumb
+           and its focus ring clips it — or the page would scroll sideways. -->
+      <div
+        class="cui-slider__thumb-clip"
+        aria-hidden="true"
+        :style="{
+          position: 'absolute',
+          inset: `calc(-1 * ${THUMB_ROOM}) calc(-1 * (${cfg.thumbSize} / 2 + ${THUMB_ROOM}))`,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }"
+      >
+      <div
+        class="cui-slider__thumb-track"
+        :style="{
+          position: 'absolute',
+          top: THUMB_ROOM,
+          bottom: THUMB_ROOM,
+          left: `calc(${cfg.thumbSize} / 2 + ${THUMB_ROOM})`,
+          right: `calc(${cfg.thumbSize} / 2 + ${THUMB_ROOM})`,
+          display: 'flex',
+          alignItems: 'center',
+          transform: `translateX(${percent}%)`,
+          transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out)',
+        }"
+      >
       <div class="cui-slider__thumb" :style="{
         position: 'absolute',
-        left: `${percent}%`,
+        left: '0',
         transform: 'translateX(-50%)',
         width: cfg.thumbSize,
         height: cfg.thumbSize,
@@ -186,13 +217,14 @@ defineExpose({ el: inputRef, focus, blur });
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'left var(--cui-duration-press) ease, box-shadow var(--cui-duration-fast) ease, transform var(--cui-duration-fast) var(--cui-ease-out)',
+        transition: dragging ? 'none' : 'box-shadow var(--cui-duration-fast) ease',
         pointerEvents: 'none',
-        zIndex: 2,
       }">
         <slot name="thumb">
           <CuiIcon v-if="thumbIcon" :name="thumbIcon" :size="cfg.thumbIcon" />
         </slot>
+      </div>
+      </div>
       </div>
     </div>
 
@@ -209,7 +241,7 @@ defineExpose({ el: inputRef, focus, blur });
 
 <style scoped>
 /* The native input is transparent, so the ring goes on the thumb it drives (#172). */
-:where(.cui-slider__input:focus-visible ~ .cui-slider__thumb) {
+:where(.cui-slider__input:focus-visible ~ .cui-slider__thumb-clip .cui-slider__thumb) {
   outline: 2px solid var(--cui-slider-focus-ring, var(--_slider-focus-ring));
   outline-offset: 2px;
 }

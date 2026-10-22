@@ -300,9 +300,14 @@ const messages = useMessages();
   animation: cui-pulse 2.5s ease-in-out infinite;
 }
 
-.cui-alert--glow.cui-alert--mounted {
-  --_cui-glow-color: var(--_alert-focus-ring);
-  animation: cui-glow 2s ease-in-out infinite;
+.cui-alert--glow.cui-alert--mounted::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 12px 2px var(--_alert-focus-ring);
+  pointer-events: none;
+  animation: cui-glow-fade 2s ease-in-out infinite;
 }
 
 .cui-alert--shake.cui-alert--mounted {

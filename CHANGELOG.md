@@ -24,6 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Layout properties no longer animate** (#266). These used to animate `width` or `left`, which lays out and repaints the page on every frame. They move by `transform` now, on the compositor, and land exactly where they did:
+  - CuiSlider's thumb and fill
+  - CuiProgress's bar
+  - CuiToast's countdown
+  - CuiResizablePanels' divider line
+
+  Also:
+  - **Height snaps:** the collapsed toast stack's height changes without a transition.
+  - **Checkbox and Radio** settle in from 0.9 with a fade, briefly, instead of popping from nothing with an overshoot.
+  - **Alert's and Toast's `glow`** fades a still shadow instead of animating `box-shadow`.
+  - **CuiToast no longer clips its own overflow;** its progress track clips itself.
+  - **`cui-glow-fade`** is a new shared keyframe.
 - **Reduced motion keeps fades** (#265). Under `prefers-reduced-motion: reduce`:
   - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colours change instantly.
   - **Only the library's own elements:** the old rule matched every element on the page (`*`), the consumer's own included. It now reaches only the library's components and what they contain, not content the consumer wraps in `.cui-typography`, a theme or a density.
