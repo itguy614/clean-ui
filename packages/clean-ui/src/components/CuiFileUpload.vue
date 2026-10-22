@@ -276,7 +276,7 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? '0.5' : '1',
         background: isDragging ? `var(--cui-${color}-bg)` : 'transparent',
-        transition: 'border-color 0.15s ease, background 0.15s ease',
+        transition: 'border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease',
       }"
       @dragenter="onDragEnter"
       @dragover="onDragOver"

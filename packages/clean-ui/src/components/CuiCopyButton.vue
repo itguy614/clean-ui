@@ -67,7 +67,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
         <CuiIcon
           :name="copied ? 'check' : 'copy'"
           :size="iconSize[clampedSize]"
-          :style="{ transition: 'transform 0.15s ease', transform: copied ? 'scale(1.1)' : 'scale(1)' }"
+          :style="{ transition: 'transform var(--cui-duration-fast) var(--cui-ease-out)', transform: copied ? 'scale(1.1)' : 'scale(1)' }"
         />
       </template>
       <span v-if="showLabel">{{ copied ? messages.copyButton.copied : messages.copyButton.copy }}</span>

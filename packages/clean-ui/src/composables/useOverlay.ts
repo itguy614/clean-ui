@@ -2,7 +2,9 @@ import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef
 import { restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
+import { usePresence } from "./usePresence";
 import { warnOnce } from "../utils/devWarn";
+import { motionDuration, type MotionDuration } from "../utils/motion";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -19,8 +21,22 @@ export interface UseOverlayOptions {
   allowNested?: () => boolean;
   /** The component using it, for the deprecation warning — "CuiModal". Defaults to "useOverlay". */
   name?: string;
-  /** Exit animation duration in ms */
-  animationDuration?: number;
+  /**
+   * @deprecated With `exit: "timer"` only, which 2.0 drops: use `exit: "transition"`.
+   * How long the exit animation runs before the overlay is removed: a motion token's name
+   * (#261), read from the dialog element when it closes so a container's override counts,
+   * or a fixed number of ms. Defaults to `"base"`.
+   */
+  animationDuration?: MotionDuration | number;
+  /**
+   * How the overlay knows its exit has finished (#263). `"timer"` (the default, kept for
+   * existing callers; deprecated, and `"transition"` becomes the default in 2.0) waits
+   * `animationDuration`. `"transition"` waits for the returned `onAfterLeave()`, called from
+   * a `<Transition>`'s `after-leave`: the panel is rendered `v-if` mounted and `v-show`
+   * `isVisible`, so a re-open mid-exit reverses rather than restarting, and nothing waits on
+   * a hand-copied duration. CuiModal and CuiSlideover use it.
+   */
+  exit?: "timer" | "transition";
   /** Called to emit update:open */
   onUpdateOpen: (value: boolean) => void;
   /** Called to emit close */
@@ -32,7 +48,8 @@ export function useOverlay(options: UseOverlayOptions) {
     open: getOpen,
     dialogRef,
     persistent: getPersistent,
-    animationDuration = 200,
+    animationDuration = "base",
+    exit = "timer",
     onUpdateOpen,
     onClose,
   } = options;
@@ -71,10 +88,15 @@ export function useOverlay(options: UseOverlayOptions) {
     unlockBodyScroll();
   }
 
+  let enterFrame: number | null = null;
+
   function openOverlay() {
     isOpen.value = true;
-    previousFocus.value = document.activeElement as HTMLElement;
-    previousFocusKey = restoreKeyOf(previousFocus.value);
+    // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
+    if (!dialogRef.value?.contains(document.activeElement)) {
+      previousFocus.value = document.activeElement as HTMLElement;
+      previousFocusKey = restoreKeyOf(previousFocus.value);
+    }
     isVisible.value = true;
 
     acquireScrollLock();
@@ -85,28 +107,59 @@ export function useOverlay(options: UseOverlayOptions) {
     // requestAnimationFrame defers the flip until after a paint, giving the
     // compositor a rendered off-screen frame to transition from.
     nextTick(() => {
-      requestAnimationFrame(() => {
+      // Closed again before this tick: there is no entry to start.
+      if (!isOpen.value) return;
+      enterFrame = requestAnimationFrame(() => {
+        enterFrame = null;
         isAnimating.value = true;
         dialogRef.value?.focus();
       });
     });
   }
 
+  /** The exit has played: report the close, give the page back, return focus. */
+  function finishClose() {
+    onUpdateOpen(false);
+    onClose();
+
+    releaseScrollLock();
+
+    // Return focus — to the opener, or, if it has unmounted, through its restore key.
+    returnFocus(previousFocus.value, previousFocusKey);
+  }
+
   function closeOverlay() {
+    // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
+    if (enterFrame !== null) {
+      cancelAnimationFrame(enterFrame);
+      enterFrame = null;
+    }
     isAnimating.value = false;
     isOpen.value = false;
+
+    if (exit === "transition") {
+      // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
+      isVisible.value = false;
+      return;
+    }
 
     // Wait for exit animation
     setTimeout(() => {
       isVisible.value = false;
-      onUpdateOpen(false);
-      onClose();
+      finishClose();
+    }, typeof animationDuration === "number" ? animationDuration : motionDuration(animationDuration, dialogRef.value));
+  }
 
-      releaseScrollLock();
-
-      // Return focus — to the opener, or, if it has unmounted, through its restore key.
-      returnFocus(previousFocus.value, previousFocusKey);
-    }, animationDuration);
+  /**
+   * For `exit: "transition"`: the `<Transition>`'s `after-leave`. Mounted until then, as
+   * `mounted`. A leave that a re-open cancelled never calls it.
+   */
+  const { present: mounted, onAfterLeave: unmount } = usePresence(() => isVisible.value);
+  function onAfterLeave() {
+    // Once per close: unmounting it runs the leave hooks again, with nothing to wait for.
+    if (isVisible.value || !mounted.value) return;
+    unmount();
+    finishClose();
   }
 
   function requestClose() {
@@ -165,6 +218,8 @@ export function useOverlay(options: UseOverlayOptions) {
   return {
     isVisible,
     isAnimating,
+    mounted,
+    onAfterLeave,
     openOverlay,
     closeOverlay,
     requestClose,

@@ -104,7 +104,14 @@ describe("teleported roots stay inside the scope", () => {
     for (const file of walk(SRC).filter((f) => f.endsWith(".vue"))) {
       const source = readFileSync(file, "utf8");
       for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?=<[a-zA-Z])/g)) {
-        const rootTag = readTag(source, match.index + match[0].length);
+        let at = match.index + match[0].length;
+        let rootTag = readTag(source, at);
+        // A <Transition> around the teleported element (#263) isn't an element: look through it.
+        while (/^<Transition(Group)?\b/.test(rootTag)) {
+          at += rootTag.length;
+          at += /^\s*/.exec(source.slice(at))![0].length;
+          rootTag = readTag(source, at);
+        }
         if (!/class="[^"]*\bcui-/.test(rootTag) && !/:class="[^"]*cui-/.test(rootTag)) {
           offenders.push(`${file.replace(SRC + "/", "")}: ${rootTag.split("\n")[0].trim()}`);
         }
@@ -138,6 +145,7 @@ describe("every component root is inside the scope", () => {
     "CuiConfirmDialog.vue": "root is CuiModal, which cannot inherit a class",
     // <Transition> is not an element either; the bar it wraps carries the class.
     "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
+    "CuiAlert.vue": "wraps .cui-alert in a <Transition>, for its exit (#263)",
   };
 
   it("gives every root element a cui-* class", () => {

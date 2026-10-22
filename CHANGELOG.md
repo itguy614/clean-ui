@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Tooltip warm window** (#264): once a tooltip has been open, the next one opened within `skipDelay` ms of the last closing shows at once, with no entry animation, and the one it replaces goes at once, even mid-fade, instead of fading beside it. The default is 300ms; a tooltip with 0 neither waits less nor warms the others. Only tooltips opened by hover or focus take part: one opened through `v-model:visible` or by a click is never closed by another, and doesn't warm the group. Moving along a toolbar then waits only at the first button. The first tooltip still waits its `showDelay`, so crossing a row by accident shows nothing. It's one window for the whole page.
+- **Motion tokens** (#261): `--cui-duration-instant/-press/-fast/-base/-slow` and
+  `--cui-ease-out/-in-out/-drawer`. Every component transition and animation reads them,
+  so a consumer can make the whole library snappier or calmer from `:root`, or one part of
+  it from a container. Teleported overlays (menus, popovers, tooltips, modals and
+  slideovers) follow `:root` only. `motionDuration(name, el?)` reads a token in JS, and the exit timers
+  in CuiModal, CuiSlideover, CuiDropdown, CuiContextMenu and CuiAlert use it.
+  `useOverlay`'s `animationDuration` also takes a token name. A new Foundations → Motion page
+  documents them.
+- **Press feedback** (#261): a pressed CuiButton shrinks to `--cui-press-scale` (0.97)
+  over `--cui-duration-press`. Set the token to `1` to turn it off. It's off under reduced
+  motion, and wherever buttons are merged: CuiButtonGroup, CuiInput's attached buttons and
+  CuiInputStepper's +/- buttons.
+
+### Changed
+
+- **Motion audit** (#269), after the rest of the 1.5.0 motion work:
+  - Modals, slideovers, backdrops and alerts now close faster than they open, as floating
+    panels and toasts already did. A modal's backdrop took 250ms to fade out on every close.
+  - Menu items, listbox options, tree nodes, date cells and transfer-list rows change
+    colour at once instead of fading. With key repeat a fade left a trail of half-lit rows.
+  - CuiSlider glides only when a click on the track jumps the thumb. A drag follows the
+    pointer and a keyboard step lands at once, as before for a drag and newly for keys.
+- **Layout properties no longer animate** (#266). These used to animate `width` or `left`, which lays out and repaints the page on every frame. They move by `transform` now, on the compositor, and land exactly where they did:
+  - CuiSlider's thumb and fill
+  - CuiProgress's bar
+  - CuiToast's countdown
+  - CuiResizablePanels' divider line
+
+  Also:
+  - **Height snaps:** the collapsed toast stack's height changes without a transition.
+  - **Checkbox and Radio** settle in from 0.9 with a fade, briefly, instead of popping from nothing with an overshoot.
+  - **Alert's and Toast's `glow`** fades a still shadow instead of animating `box-shadow`.
+  - **CuiToast no longer clips its own overflow:** its progress track clips itself, and long unbroken text wraps.
+  - **The toast countdown is one CSS animation** over the whole `autoDismiss`, paused with the timer, instead of 20 re-renders a second.
+  - **In a right-to-left page,** the progress bar and the countdown fill and drain from the inline-start edge, as they did when they were width-based.
+  - **`cui-glow-fade`** is a new shared keyframe.
+- **Reduced motion keeps fades** (#265). Under `prefers-reduced-motion: reduce`:
+  - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colours change instantly.
+  - **Only the library's own elements:** the old rule matched every element on the page (`*`), the consumer's own included. It now reaches only the library's components and what they contain, not content the consumer wraps in `.cui-typography`, a theme or a density.
+  - **Indeterminate progress, spinners' moving parts and the avatar's pulsing status** now stop too.
+  - **Hover-only scales and lifts** (CuiRating, the CuiColorPicker swatches, CuiAvatarGroup) now run only with a fine pointer, so a tap on a touch screen no longer leaves them stuck.
+- **Every overlay animates out** (#263), through `<Transition>` rather than a close timer:
+  - **Animate out, then unmount:** Tooltip, Popover (and the date, time and range pickers), the Select/Combobox/TagInput listbox, and DropdownSub.
+  - **Animate in too:** the Select, Combobox and TagInput listboxes.
+  - **Reopen mid-exit:** menus and panels turn straight back from where they are, instead of restarting.
+  - **Removing a toast** fades it out while the rest slide into place, where before they jumped.
+  - **Report after the exit:** Modal, Slideover and Alert report their close or dismiss once the exit has played.
+  - **No close timers left:** Dropdown, ContextMenu, Modal, Slideover and Alert.
+  - **`useOverlay`** gains `exit: "transition"`, with `mounted` and `onAfterLeave`. The timer stays the default.
+  - **`afterAnimations(el, done)`** is exported.
+  - **Deprecated:** the dropdown context's `isClosing` is now always false.
+- Floating panels grow out of their trigger instead of their centre (#262). Popover,
+  Tooltip, DropdownMenu, DropdownSub, ContextMenu and the Select/Combobox/TagInput listbox
+  set `transform-origin` from the side they opened on after flipping: their edge facing
+  the trigger, at the end they are aligned to. A context menu grows from the corner at the
+  pointer. Dropdown menus and sub-menus now scale in from 0.95 rather than slide 4px, which
+  pointed the wrong way when a menu flipped up. `usePopover` returns `transformOrigin`.
+- A motion guard (`styles/__tests__/motion.test.ts`, #267), across both packages, fails on:
+  - `transition: all`
+  - `ease-in`
+  - an entrance from `scale(0)`
+  - a literal duration or close-timer delay
+
+  It also tracks two things until their issues land: layout-property transitions (#266,
+  #270), and floating panels that don't yet take a placement-derived `transform-origin`
+  (#262).
+  Exemptions count their findings, so a new violation in an exempt file still fails.
+  CLAUDE.md gains a Motion section that the guard enforces.
+- Enter and exit motion uses the `--cui-ease-out` curve instead of plain `ease`, and
+  movement on screen (a toggle knob, a chevron turning) uses `--cui-ease-in-out` (#261).
+  Colour changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
+  CuiAlert's and toasts' 300ms motion is now 250ms, and Progress's 400ms fill is 250ms.
+
 ### Fixed
 
 - **CuiTabs** no longer scrolls the page to bring the active tab into view (#243). It used
@@ -14,6 +90,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pulled the page down to it on load and on every `v-model` change. Now only the bar
   scrolls, still keeping the tab clear of the edge fade. The same internal helper keeps the
   arrow-key scrolling of CuiCombobox's and CuiTagInput's listboxes inside the listbox.
+- CuiContextMenu scales in from the cursor again (#269). It hid its transitions for the
+  frame it measured in, on every open, so its entry only faded.
+- CuiDataGrid's bulk-action bar turns back if a row is selected again while it leaves
+  (#269), instead of vanishing and sliding a new bar in. It leaves faster than it arrives,
+  and under reduced motion it fades where it stands rather than dropping out of view.
+- CuiSlider's press ends when the pointer is released off the slider (#269). Its lifted
+  shadow stayed on, and its motion off, until the next release.
 
 ## [1.4.0] - 2026-10-22
 
