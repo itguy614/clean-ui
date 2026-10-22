@@ -104,6 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CuiBadge is back to its designed height, about 5px shorter (#351). Since 1.3 its text
+  took the scoped reset's `line-height: 1.5` instead of the badge's own 1. Anything holding
+  a badge is shorter by the same: tabs with counts, table cells, the timeline. A row of
+  chips in an `xs` or `sm` CuiTagInput or CuiCombobox now fits, so the field matches a
+  CuiInput beside it.
 - CuiResizablePanels follows only the pointer that started a drag, and its handle sets
   `touch-action: none`, so a touch drag resizes the panels instead of panning the page
   (#275). It and CuiColorPicker now share one internal drag helper, and neither starts a

@@ -184,6 +184,10 @@ const messages = useMessages();
 
 .cui-badge__content {
   display: inline-flex;
+  /* The badge's own line-height of 1. Classed, so the scoped base would reset it to 1.5 —
+     16.5px of line box for 11px text, a badge 5px taller than designed, and xs chips that
+     outgrew their field (#351). */
+  line-height: inherit;
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
