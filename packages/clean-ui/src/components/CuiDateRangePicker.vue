@@ -65,13 +65,20 @@ const props = withDefaults(defineProps<CuiDateRangePickerProps>(), {
 
 // The trigger's box comes from the shared input scale, so a range picker lines up with a
 // CuiInput, CuiDatePicker or CuiTimePicker of the same `size` (#349). It ignored `size`.
-const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size]);
+// Emitted as private properties, so `--cui-date-range-picker-*` on a container wins.
+const sizeVars = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md;
+  return {
+    "--_date-range-picker-height": s.height,
+    "--_date-range-picker-px": s.px,
+    "--_date-range-picker-font-size": s.fontSize,
+  };
+});
 /** The start and end fields: bare inputs inside the trigger, sized by it. */
 const fieldStyle = computed(() => ({
   border: "none",
   background: "transparent",
   outline: "none",
-  fontSize: triggerDims.value.fontSize,
   color: "var(--cui-text-body)",
   padding: "0",
   width: `${props.format.length + 1}ch`,
@@ -304,8 +311,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
           border: '1px solid var(--cui-border-strong, var(--cui-border))',
           borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
-          height: triggerDims.height,
-          padding: `0 ${triggerDims.px}`,
+          ...sizeVars,
           background: 'var(--cui-surface-base, white)',
           opacity: disabled ? '0.5' : '1',
           cursor: disabled ? 'default' : 'pointer',
@@ -324,6 +330,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly
+          class="cui-date-range-picker__field"
           :style="fieldStyle"
         />
         <span :style="{ color: 'var(--cui-text-tertiary)', fontSize: '0.75rem', flexShrink: '0' }">{{ separator }}</span>
@@ -331,6 +338,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :value="endDisplay"
           :placeholder="endPlaceholder || props.format.toLowerCase()"
           readonly
+          class="cui-date-range-picker__field"
           :style="fieldStyle"
         />
       </div>
@@ -458,3 +466,15 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
     </CuiPopover>
   </div>
 </template>
+
+<style scoped>
+/* Size, from the input scale (#349). Themeable, so zero specificity. */
+:where(.cui-date-range-picker__trigger) {
+  height: var(--cui-date-range-picker-height, var(--_date-range-picker-height));
+  padding: 0 var(--cui-date-range-picker-px, var(--_date-range-picker-px));
+}
+
+:where(.cui-date-range-picker__field) {
+  font-size: var(--cui-date-range-picker-font-size, var(--_date-range-picker-font-size));
+}
+</style>

@@ -117,7 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CuiDateRangePicker sizes its trigger from `size` (#349). It accepted the prop but drew a
   fixed 39px box at every size, a pixel short even of a `md` CuiInput. It now takes its
   height, padding and font size from the same input scale as CuiInput, CuiDatePicker and
-  CuiTimePicker, so it lines up with them: its text is 1rem at `md`, up from 0.875rem.
+  CuiTimePicker, so it lines up with them: its text is 1rem at `md`, up from 0.875rem, and
+  the two date fields widen with it. `--cui-date-range-picker-height`, `-px` and
+  `-font-size` override them.
 - CuiDataGrid takes the full `CuiSize` scale for `size` (#349). `xs` and `xl` take the
   nearest table size, as CuiTable already did. The exported `TableSize` type is unchanged.
 - CuiBadge is back to its designed height, about 5px shorter (#351). Since 1.3 its text
