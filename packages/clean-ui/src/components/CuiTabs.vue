@@ -54,6 +54,19 @@ const activeTab = ref(props.modelValue ?? "");
 const previousTab = ref("");
 const tabs = ref<TabDefinition[]>([]);
 const barRef = ref<HTMLElement | null>(null);
+// The last switch came from the keyboard (#269): no panel transition, and the bar scrolls
+// at once. A click or a v-model change animates as before. Changed only by a switch: on the
+// panel already showing, a change would add the animation class and replay it.
+const keyed = ref(false);
+// The tab buttons' own colour and underline, which a pointer back over the bar fades again.
+const keyedButtons = ref(false);
+
+/** A click that switches tabs animates; one on the active or a disabled tab changes nothing. */
+function onTabClick(tab: TabDefinition) {
+  if (tab.disabled || tab.value === activeTab.value) return;
+  keyed.value = keyedButtons.value = false;
+  activate(tab.value);
+}
 const areaRef = ref<InstanceType<typeof CuiScrollArea> | null>(null);
 
 // Sync external v-model
@@ -61,6 +74,8 @@ watch(
   () => props.modelValue,
   (val) => {
     if (val !== undefined && val !== activeTab.value) {
+      // A change from outside, not the echo of our own switch (that equals activeTab).
+      keyed.value = false;
       previousTab.value = activeTab.value;
       activeTab.value = val;
     }
@@ -129,6 +144,7 @@ useTabsProvider({
   tabId,
   panelId,
   slideDirection,
+  keyed,
 });
 
 // Keyboard navigation: the shared index maths (#289), wrapping at the ends as tabs always
@@ -149,6 +165,7 @@ function onKeydown(e: KeyboardEvent) {
   e.preventDefault();
   const target = list[to].value;
   const changed = target !== activeTab.value;
+  keyed.value = keyedButtons.value = true;
   activate(target);
   nextTick(() => {
     // focus() would do its own instant scroll-into-view, interrupting the
@@ -183,14 +200,13 @@ function tabElement(value: string): HTMLElement | null {
 function scrollActiveIntoView() {
   const tab = tabElement(activeTab.value);
   const scroller = areaRef.value?.el;
-  if (tab && scroller) scrollIntoViewWithin(scroller, tab);
+  if (tab && scroller) scrollIntoViewWithin(scroller, tab, keyed.value ? "instant" : undefined);
 }
 
 onMounted(() => nextTick(scrollActiveIntoView));
 
 watch(activeTab, scrollActiveIntoView, { flush: "post" });
 
-// Slide direction
 
 const messages = useMessages();
 </script>
@@ -199,6 +215,7 @@ const messages = useMessages();
   <div
     v-show="!hidden"
     class="cui-tabs"
+    :data-keyed="keyedButtons || undefined"
     :class="[
       `cui-tabs--${variant}`,
       `cui-tabs--${orientation}`,
@@ -220,6 +237,7 @@ const messages = useMessages();
         role="tablist"
         :aria-orientation="orientation"
         @keydown="onKeydown"
+        @pointermove="keyedButtons = false"
       >
         <button
           v-for="tab in tabs"
@@ -242,7 +260,7 @@ const messages = useMessages();
           :aria-selected="activeTab === tab.value"
           :aria-disabled="tab.disabled || undefined"
           :tabindex="activeTab === tab.value ? 0 : -1"
-          @click="activate(tab.value)"
+          @click="onTabClick(tab)"
         >
           <span class="cui-tabs__tab-content">
             <component :is="tab.labelSlot" v-if="tab.labelSlot" />
@@ -393,6 +411,13 @@ const messages = useMessages();
   white-space: nowrap;
   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
   position: relative;
+}
+
+/* Arrowing along the bar moves the selection at once (#269): a colour or underline fading
+   behind each key press leaves a trail of half-selected tabs. A pointer moving over the bar
+   brings the fade back. */
+.cui-tabs[data-keyed] .cui-tabs__tab {
+  transition: none;
 }
 
 .cui-tabs__tab:hover:not(.cui-tabs__tab--disabled) {

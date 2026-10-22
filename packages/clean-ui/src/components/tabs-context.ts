@@ -40,6 +40,11 @@ export interface TabsContext {
   panelId?: (value: string) => string;
   /** Which way a slide transition goes, from the registered tab order (optional, as above). */
   slideDirection?: Ref<"left" | "right">;
+  /**
+   * The last switch came from the keyboard: the panel shows with no transition (#269), as
+   * arrowing along a tab bar is a hundred-times-a-day action. Optional, as above.
+   */
+  keyed?: Ref<boolean>;
 }
 
 export const TabsContextKey: InjectionKey<TabsContext> = Symbol("tabs-context");

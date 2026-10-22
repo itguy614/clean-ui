@@ -5,11 +5,12 @@
  * `Element.scrollIntoView()` brings every scrollable ancestor into line, the window
  * included, so a tab bar or listbox below the fold drags the page down to it (#243). This
  * measures against the scroller alone. Rects are physical, so a right-to-left scroller
- * needs nothing special; `scrollBy` honours the scroller's `scroll-behavior`, smooth or not.
+ * needs nothing special; `scrollBy` honours the scroller's `scroll-behavior`, smooth or not,
+ * unless `behavior` says otherwise.
  *
  * Internal.
  */
-export function scrollIntoViewWithin(scroller: HTMLElement, el: Element): void {
+export function scrollIntoViewWithin(scroller: HTMLElement, el: Element, behavior?: ScrollBehavior): void {
   const box = scroller.getBoundingClientRect();
   const target = el.getBoundingClientRect();
   const style = getComputedStyle(scroller);
@@ -33,7 +34,7 @@ export function scrollIntoViewWithin(scroller: HTMLElement, el: Element): void {
     pad(style.scrollPaddingTop),
     scroller.clientHeight - pad(style.scrollPaddingBottom),
   );
-  if (dx || dy) scroller.scrollBy?.({ left: dx, top: dy });
+  if (dx || dy) scroller.scrollBy?.({ left: dx, top: dy, ...(behavior ? { behavior } : {}) });
 }
 
 /** The least move that puts [start, end] inside [min, max]; its start, if it can't fit. */

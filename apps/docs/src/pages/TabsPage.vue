@@ -356,6 +356,12 @@ function resetTabs() {
 <CuiTabs v-model=&quot;active&quot; transition=&quot;slide&quot;>...</CuiTabs>
 <CuiTabs v-model=&quot;active&quot; transition=&quot;none&quot;>...</CuiTabs>`">
         <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            The transition plays when a tab is clicked or <code class="cui-code">v-model</code>
+            changes. A tab reached with the arrow keys shows at once, and so does its underline:
+            arrowing along a bar is too frequent to animate. A slide comes in from the bar's
+            end, so from the left in a right-to-left page and from below in a vertical bar.
+          </p>
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton size="xs" :variant="transitionTab === 'fade' ? 'solid' : 'outline'" @click="transitionTab = 'fade'">Fade</CuiButton>
             <CuiButton size="xs" :variant="transitionTab === 'slide' ? 'solid' : 'outline'" @click="transitionTab = 'slide'">Slide</CuiButton>
