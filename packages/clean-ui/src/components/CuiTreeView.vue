@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, useTemplateRef } from "vue";
 import CuiTreeNode from "./CuiTreeNode.vue";
-import type { HideableProps } from "../types/common";
-import { scaleDensity, scaleControlHeight } from "../utils/sizing";
+import type { HideableProps, SizeableProps } from "../types/common";
+import { scaleDensity, scaleControlHeight, clampSize } from "../utils/sizing";
 
 export interface TreeNode {
   /** Unique identifier */
@@ -19,7 +19,7 @@ export interface TreeNode {
   [key: string]: unknown;
 }
 
-export interface CuiTreeViewProps extends HideableProps {
+export interface CuiTreeViewProps extends HideableProps, SizeableProps {
   /** Tree data */
   nodes: TreeNode[];
   /** Selected node id(s) — string/number for single, array for multiple */
@@ -44,8 +44,6 @@ export interface CuiTreeViewProps extends HideableProps {
   selectable?: boolean;
   /** Animate expand/collapse */
   animated?: boolean;
-  /** Size */
-  size?: "sm" | "md" | "lg";
 }
 
 const props = withDefaults(defineProps<CuiTreeViewProps>(), {
@@ -311,12 +309,13 @@ watch(visibleItems, () => {
 // scaleControlHeight — the same floor CuiButton/CuiInput use. It's deliberately
 // independent of `iconSize`, which stays the glyph's visual size: at sm the caret
 // still draws at 12px, inside a 24px target.
-const sizeConfig: Record<string, { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string }> = {
   sm: { fontSize: "0.8125rem", iconSize: "0.75rem", hitSize: scaleControlHeight("0.75rem"), indent: scaleDensity("1rem"), padY: scaleDensity("0.1875rem"), padX: scaleDensity("0.375rem") },
   md: { fontSize: "0.875rem", iconSize: "0.875rem", hitSize: scaleControlHeight("0.875rem"), indent: scaleDensity("1.25rem"), padY: scaleDensity("0.25rem"), padX: scaleDensity("0.5rem") },
   lg: { fontSize: "0.9375rem", iconSize: "1rem", hitSize: scaleControlHeight("1rem"), indent: scaleDensity("1.5rem"), padY: scaleDensity("0.375rem"), padX: scaleDensity("0.625rem") },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 /**
  * Imperative expansion, for the cases a bound array is clumsy for: expanding on

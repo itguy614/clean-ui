@@ -12,7 +12,7 @@ import {
   toDateValue, dateToIso, addDays,
   type DisabledDateRange,
 } from "../utils/date";
-import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
 export type DateRangePickerValueType = "iso" | "date";
@@ -22,7 +22,7 @@ export interface DateRangeValue {
   end: string | Date | null;
 }
 
-export interface CuiDateRangePickerProps extends NativeControlProps, HideableProps, DisableableProps {
+export interface CuiDateRangePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
   /** Current range value */
   modelValue?: DateRangeValue;
   /** Display format pattern */
@@ -47,8 +47,6 @@ export interface CuiDateRangePickerProps extends NativeControlProps, HideablePro
   startPlaceholder?: string;
   /** Placeholder for end input */
   endPlaceholder?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
   /** Label */
   label?: string;
 }

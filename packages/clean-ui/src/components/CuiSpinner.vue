@@ -124,7 +124,7 @@ const spinnerColor = computed(() => `var(--cui-${props.color})`);
     </span>
 
     <!-- Screen reader text (always present) -->
-    <span v-if="!showLabel" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;">
+    <span v-if="!showLabel" class="cui-sr-only">
       {{ labelText }}
     </span>
   </div>

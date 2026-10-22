@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
     { name: "disabledDates", type: "(string | { from, to })[]", description: "Blackout list: ISO strings, inclusive { from, to } ranges, or a mix" },
     { name: "placeholder", type: "string", description: "Field placeholder. Defaults to the format, lower-cased" },
     { name: "label", type: "string", description: "Label text above the field. It renders as plain text with no for association — see Known gaps" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Field height and font size, matching CuiInput at the same value" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Field height and font size, matching CuiInput at the same value" },
     disabledProp,
     hiddenProp,
     ...nativeControlProps,

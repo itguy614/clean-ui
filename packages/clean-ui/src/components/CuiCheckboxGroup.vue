@@ -57,7 +57,7 @@ useMultiSelectGroupProvider(
     <div class="cui-checkbox-group__options cui-control-group__options">
       <slot />
     </div>
-    <div v-if="error && errorMessage" :id="errorId" class="cui-checkbox-group__error cui-control-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-checkbox-group__error cui-control-group__error cui-field-error">
       {{ errorMessage }}
     </div>
   </div>

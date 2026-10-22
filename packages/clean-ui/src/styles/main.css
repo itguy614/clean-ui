@@ -28,6 +28,9 @@
 @import "./themes.css";
 /* Color scale (@theme) — single source of truth, shared with the docs app. */
 @import "./theme.css";
+/* Classes components carry beside their own, so they render the same wherever they are used:
+   the browser tests load it with the preflight. */
+@import "./components-shared.css";
 
 /* ============================================================
    COLOR SYSTEM
@@ -436,61 +439,6 @@
 .cui-typography {
   font-size: var(--cui-body-font-size);
   line-height: var(--cui-body-line-height);
-}
-
-/* Visually hidden, still announced. Not `display: none`, which drops the element from the
-   accessibility tree along with whatever it was there to say. Shared rather than copied:
-   this technique was hand-written in six places, in three different spellings, before it
-   lived here — and the `clip` → `clip-path` migration was half-done across them. */
-.cui-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Form-control groups — CuiRadioGroup, CuiCheckboxGroup, CuiToggleGroup (#206). One layout
-   for all three: a column of the options and the error message; the options themselves in
-   a row or a column; and, on error, a subtle bordered container around them. Each group
-   carries these classes beside its own (`cui-radio-group__options`, …), which stay. */
-.cui-control-group {
-  display: flex;
-  flex-direction: column;
-  gap: calc(0.375rem * var(--cui-density-scale, 1));
-}
-
-.cui-control-group__options {
-  display: flex;
-  gap: calc(0.75rem * var(--cui-density-scale, 1));
-}
-
-.cui-control-group--vertical > .cui-control-group__options {
-  flex-direction: column;
-}
-
-.cui-control-group--horizontal > .cui-control-group__options {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: calc(1.25rem * var(--cui-density-scale, 1));
-}
-
-/* Paint, so zero specificity: a consumer's own unlayered rule wins. (Unlayered like every
-   component's CSS, so a rule in a cascade layer — Tailwind utilities — still loses.) */
-:where(.cui-control-group--error > .cui-control-group__options) {
-  border: 1px solid var(--cui-error-border);
-  background: var(--cui-error-bg);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
-  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
-}
-
-.cui-control-group__error {
-  font-size: 0.8125rem;
-  color: var(--cui-error);
 }
 
 /* --- Prose ---

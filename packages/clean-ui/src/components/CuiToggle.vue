@@ -129,7 +129,7 @@ const choice = useChoiceLabelling(props);
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-toggle__input"
+      class="cui-toggle__input cui-sr-only"
       @click.stop.prevent
     />
 
@@ -196,16 +196,6 @@ const choice = useChoiceLabelling(props);
   outline: 2px solid var(--_toggle-focus-ring);
   outline-offset: 2px;
   border-radius: 0.25rem;
-}
-
-.cui-toggle__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* --- Track --- */

@@ -3,7 +3,8 @@ import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
-import type { HideableProps, DisableableProps } from "../types/common";
+import type { HideableProps, DisableableProps, SizeableProps } from "../types/common";
+import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
@@ -17,7 +18,7 @@ export interface TransferListItem {
   [key: string]: unknown;
 }
 
-export interface CuiTransferListProps extends HideableProps, DisableableProps {
+export interface CuiTransferListProps extends HideableProps, DisableableProps, SizeableProps {
   /** All available items */
   items: TransferListItem[];
   /** Selected values (right panel) — order is preserved */
@@ -34,8 +35,6 @@ export interface CuiTransferListProps extends HideableProps, DisableableProps {
   targetPlaceholder?: string;
   /** Height of each panel */
   height?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
 }
 
 const props = withDefaults(defineProps<CuiTransferListProps>(), {
@@ -332,12 +331,13 @@ defineExpose({
 });
 
 // Size config
-const sizeConfig: Record<string, { fontSize: string; itemPad: string; titleFont: string }> = {
+const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; itemPad: string; titleFont: string }> = {
   sm: { fontSize: "0.8125rem", itemPad: "0.3125rem 0.5rem", titleFont: "0.75rem" },
   md: { fontSize: "0.875rem", itemPad: "0.4375rem 0.625rem", titleFont: "0.8125rem" },
   lg: { fontSize: "0.9375rem", itemPad: "0.5rem 0.75rem", titleFont: "0.875rem" },
 };
-const cfg = computed(() => sizeConfig[props.size]);
+const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
 function itemStyle(selected: boolean, disabled?: boolean) {
   return {

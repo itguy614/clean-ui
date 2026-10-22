@@ -21,7 +21,7 @@ const meta: ComponentMeta = {
     { name: "startPlaceholder", type: "string", description: "Placeholder for the start field. Defaults to the format, lower-cased" },
     { name: "endPlaceholder", type: "string", description: "Placeholder for the end field. Defaults to the format, lower-cased" },
     { name: "label", type: "string", description: "Label text above the control. It renders as plain text with no for association — see Known gaps" },
-    { name: "size", type: "sm | md | lg", default: "md", description: "Declared for parity with CuiDatePicker. The trigger does not currently vary with it" },
+    { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Declared for parity with CuiDatePicker. The trigger does not currently vary with it (#349)" },
     disabledProp,
     hiddenProp,
     ...nativeControlProps,

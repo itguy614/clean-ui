@@ -194,7 +194,7 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :id="errorId" class="cui-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-input__error cui-field-error">
       {{ errorMessage }}
     </div>
   </div>
@@ -377,8 +377,6 @@ const messages = useMessages();
 }
 
 .cui-input__error {
-  font-size: 0.8125rem;
   margin-top: calc(0.375rem * var(--cui-density-scale, 1));
-  color: var(--cui-error);
 }
 </style>

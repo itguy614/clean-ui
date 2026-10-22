@@ -159,7 +159,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer: help text or error message -->
-      <div v-if="showError" class="cui-form-field__error" :id="descriptionId">
+      <div v-if="showError" class="cui-form-field__error cui-field-error" :id="descriptionId">
         {{ resolvedMessage }}
       </div>
       <div v-else-if="helpText" class="cui-form-field__help" :id="descriptionId">
@@ -249,12 +249,5 @@ onBeforeUnmount(() => {
   font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--cui-text-secondary);
-}
-
-/* --- Error message --- */
-.cui-form-field__error {
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--cui-error);
 }
 </style>

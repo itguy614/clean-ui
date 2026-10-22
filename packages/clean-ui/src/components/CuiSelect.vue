@@ -401,7 +401,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
     <CuiFormValues :name="name" :value="modelValue" :multiple="multiple" :disabled="disabled" />
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :id="errorId" class="cui-select__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-select__error cui-field-error">
       {{ errorMessage }}
     </div>
   </div>
@@ -593,8 +593,6 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 
 /* --- Error --- */
 .cui-select__error {
-  font-size: 0.8125rem;
   margin-top: calc(0.375rem * var(--cui-density-scale, 1));
-  color: var(--cui-error);
 }
 </style>

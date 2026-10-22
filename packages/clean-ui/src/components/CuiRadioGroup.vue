@@ -118,7 +118,7 @@ function onKeydown(e: KeyboardEvent) {
         <slot />
       </template>
     </div>
-    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error cui-control-group__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-radio-group__error cui-control-group__error cui-field-error">
       {{ errorMessage }}
     </div>
   </div>

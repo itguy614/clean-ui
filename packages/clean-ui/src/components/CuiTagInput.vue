@@ -362,7 +362,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     </div>
 
     <!-- Error -->
-    <div v-if="error && errorMessage" :id="errorId" class="cui-tag-input__error">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-tag-input__error cui-field-error">
       {{ errorMessage }}
     </div>
 
@@ -499,8 +499,6 @@ defineExpose({ el: wrapperRef, focus, blur });
 }
 
 .cui-tag-input__error {
-  font-size: 0.75rem;
-  color: var(--cui-error);
-  margin-top: calc(0.25rem * var(--cui-density-scale, 1));
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
 }
 </style>

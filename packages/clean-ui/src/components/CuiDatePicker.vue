@@ -12,7 +12,7 @@ import {
   toDateValue, dateToIso,
   type DisabledDateRange,
 } from "../utils/date";
-import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();
@@ -21,7 +21,7 @@ export type DatePickerMode = "date" | "month";
 export type DatePickerValueType = "iso" | "date";
 export type DatePickerFillDay = "first" | "last";
 
-export interface CuiDatePickerProps extends NativeControlProps, HideableProps, DisableableProps {
+export interface CuiDatePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
   /** Current value */
   modelValue?: string | Date | null;
   /** Display format pattern (MM/DD/YYYY, DD-MMM-YYYY, etc.) */
@@ -44,8 +44,6 @@ export interface CuiDatePickerProps extends NativeControlProps, HideableProps, D
   disabledDates?: (string | DisabledDateRange)[];
   /** Placeholder (auto-generated from format if omitted) */
   placeholder?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
   /** Label */
   label?: string;
 }

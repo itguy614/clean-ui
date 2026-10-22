@@ -166,7 +166,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
       v-if="(error && errorMessage) || maxLength !== undefined"
       class="cui-textarea__footer"
     >
-      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error cui-field-error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-textarea__spacer" />
@@ -245,11 +245,6 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
   align-items: flex-start;
   margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   gap: calc(1rem * var(--cui-density-scale, 1));
-}
-
-.cui-textarea__error {
-  font-size: 0.8125rem;
-  color: var(--cui-error);
 }
 
 .cui-textarea__spacer {
