@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Motion tokens** (#261): `--cui-duration-instant/-press/-fast/-base/-slow` and
+  `--cui-ease-out/-in-out/-drawer`. Every component transition and animation reads them,
+  so a consumer can make the whole library snappier or calmer from `:root`, or one part of
+  it from a container. Teleported overlays (menus, popovers, tooltips, modals and
+  slideovers) follow `:root` only. `motionDuration(name, el?)` reads a token in JS, and the exit timers
+  in CuiModal, CuiSlideover, CuiDropdown, CuiContextMenu and CuiAlert use it.
+  `useOverlay`'s `animationDuration` also takes a token name. A new Foundations → Motion page
+  documents them.
+- **Press feedback** (#261): a pressed CuiButton shrinks to `--cui-press-scale` (0.97)
+  over `--cui-duration-press`. Set the token to `1` to turn it off. It's off under reduced
+  motion, and wherever buttons are merged: CuiButtonGroup, CuiInput's attached buttons and
+  CuiInputStepper's +/- buttons.
+
+### Changed
+
+- Enter and exit motion uses the `--cui-ease-out` curve instead of plain `ease`, and
+  movement on screen (a toggle knob, a chevron turning) uses `--cui-ease-in-out` (#261).
+  Colour changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
+  CuiAlert's and toasts' 300ms motion is now 250ms, and Progress's 400ms fill is 250ms.
+
 ## [1.4.0] - 2026-10-22
 
 ### Added

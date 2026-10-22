@@ -3,6 +3,7 @@ import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
+import { motionDuration } from "../utils/motion";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface CuiAccordionItemProps extends HideableProps, DisableableProps {
@@ -62,6 +63,13 @@ watch(isOpen, (open) => {
     el.style.maxHeight = "0px";
     el.offsetHeight;
     el.style.maxHeight = `${el.scrollHeight}px`;
+    // A zero duration (the motion token turned off, #261) runs no transition, and by the
+    // spec fires no transitionend: release the height at once, or later content is clipped.
+    // (Chromium happens to release it anyway; nothing promises the others do.)
+    if (motionDuration("slow", el) === 0) {
+      el.style.maxHeight = "none";
+      return;
+    }
     const onEnd = () => {
       el.style.maxHeight = "none";
       el.removeEventListener("transitionend", onEnd);
@@ -161,7 +169,7 @@ const triggerId = `${itemId}-trigger`;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   outline: none;
 }
 
@@ -188,7 +196,7 @@ const triggerId = `${itemId}-trigger`;
 .cui-accordion-item__chevron {
   flex-shrink: 0;
   color: var(--cui-text-tertiary);
-  transition: transform 0.25s ease;
+  transition: transform var(--cui-duration-slow) var(--cui-ease-in-out);
 }
 
 .cui-accordion-item__chevron--open {
@@ -199,7 +207,7 @@ const triggerId = `${itemId}-trigger`;
 .cui-accordion-item__panel {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-accordion-item__panel--no-animation {

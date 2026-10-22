@@ -3,6 +3,7 @@ import { restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { warnOnce } from "../utils/devWarn";
+import { motionDuration, type MotionDuration } from "../utils/motion";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -19,8 +20,12 @@ export interface UseOverlayOptions {
   allowNested?: () => boolean;
   /** The component using it, for the deprecation warning — "CuiModal". Defaults to "useOverlay". */
   name?: string;
-  /** Exit animation duration in ms */
-  animationDuration?: number;
+  /**
+   * How long the exit animation runs before the overlay is removed: a motion token's name
+   * (#261), read from the dialog element when it closes so a container's override counts,
+   * or a fixed number of ms. Defaults to `"base"`.
+   */
+  animationDuration?: MotionDuration | number;
   /** Called to emit update:open */
   onUpdateOpen: (value: boolean) => void;
   /** Called to emit close */
@@ -32,7 +37,7 @@ export function useOverlay(options: UseOverlayOptions) {
     open: getOpen,
     dialogRef,
     persistent: getPersistent,
-    animationDuration = 200,
+    animationDuration = "base",
     onUpdateOpen,
     onClose,
   } = options;
@@ -106,7 +111,7 @@ export function useOverlay(options: UseOverlayOptions) {
 
       // Return focus — to the opener, or, if it has unmounted, through its restore key.
       returnFocus(previousFocus.value, previousFocusKey);
-    }, animationDuration);
+    }, typeof animationDuration === "number" ? animationDuration : motionDuration(animationDuration, dialogRef.value));
   }
 
   function requestClose() {

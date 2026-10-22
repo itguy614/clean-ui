@@ -428,7 +428,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   background: var(--cui-surface-base);
   font-size: var(--_sel-font-size);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   gap: calc(0.5rem * var(--cui-density-scale, 1));
   user-select: none;
 }
@@ -508,7 +508,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   border-radius: 50%;
   width: 0.875rem;
   height: 0.875rem;
-  transition: color 0.15s ease;
+  transition: color var(--cui-duration-fast) ease;
 }
 
 .cui-select__chip-remove:hover {
@@ -535,7 +535,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 50%;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
 .cui-select__clear:hover {
@@ -545,7 +545,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 
 .cui-select__chevron {
   color: var(--cui-text-tertiary);
-  transition: transform 0.2s ease;
+  transition: transform var(--cui-duration-base) var(--cui-ease-in-out);
   flex-shrink: 0;
 }
 

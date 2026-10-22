@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<CuiAvatarGroupProps>(), {
 .cui-avatar-group > .cui-avatar {
   margin-left: var(--_avatar-group-spacing, -0.5rem);
   border: 2px solid var(--cui-surface-base, white);
-  transition: transform 0.15s ease;
+  transition: transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-avatar-group > .cui-avatar:last-child {

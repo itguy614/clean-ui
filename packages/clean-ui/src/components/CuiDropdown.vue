@@ -6,6 +6,7 @@ import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../utils/menu";
 import { warnOnce } from "../utils/devWarn";
+import { motionDuration } from "../utils/motion";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -69,10 +70,12 @@ function close() {
   // after Escape or a chosen item.
   restoreMenuFocus(triggerTarget(), dropdownId);
   isClosing.value = true;
+  // As long as the menu's exit animation (#261), read from the menu: it is teleported, so
+  // it may not inherit what the wrapper does.
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
     isClosing.value = false;
-  }, 150);
+  }, motionDuration("fast", menuPanels(dropdownId)[Symbol.iterator]().next().value ?? wrapperRef.value));
 }
 
 function toggle() {

@@ -193,7 +193,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   height: 100%;
   background: var(--_progress-color);
   border-radius: 9999px;
-  transition: width 0.4s ease;
+  transition: width var(--cui-duration-slow) ease;
 }
 
 /* Indeterminate bar animation */
@@ -289,7 +289,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 
 .cui-progress-circle__fill {
   stroke: var(--_progress-color);
-  transition: stroke-dashoffset 0.4s ease;
+  transition: stroke-dashoffset var(--cui-duration-slow) ease;
 }
 
 /* Indeterminate circle — spinning */

@@ -70,7 +70,7 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
   allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
   name: "CuiSlideover",
-  animationDuration: 250,
+  animationDuration: "slow",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
@@ -111,7 +111,7 @@ const panelStyle = computed(() => {
     boxShadow: "0 16px 48px rgb(0 0 0 / 0.15)",
     outline: "none",
     overflow: "hidden",
-    transition: "transform 0.25s ease",
+    transition: "transform var(--cui-duration-slow) var(--cui-ease-drawer)",
   };
 
   if (isHorizontal.value) {

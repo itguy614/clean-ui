@@ -275,7 +275,7 @@ const messages = useMessages();
   padding: 0;
   border-radius: 0.25rem;
   opacity: 0.6;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
 }
 

@@ -361,6 +361,8 @@ defineExpose({ el: rootEl, focus, blur });
    styles because CuiButton's themeable rules are zero-specificity since #114 — a
    `:deep()` rule from here wins. */
 .cui-input-stepper__control :deep(.cui-button) {
+  /* Flush against the control's border, so a press shrinking it (#261) would open a seam. */
+  --cui-press-scale: 1;
   border: none;
   height: 100%;
   border-radius: 0;

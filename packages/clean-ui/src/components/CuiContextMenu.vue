@@ -8,6 +8,7 @@ import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restor
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
+import { motionDuration } from "../utils/motion";
 
 /**
  * How the menu can be summoned.
@@ -85,10 +86,11 @@ function close() {
   restoreMenuFocus(returnFocusTo, contextMenuId);
   returnFocusTo = null;
   isClosing.value = true;
+  // As long as the menu's exit animation (#261), read where it runs.
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
     isClosing.value = false;
-  }, 150);
+  }, motionDuration("fast", menuRef.value));
   emit("close");
 }
 
@@ -465,11 +467,11 @@ defineExpose({ open, openAt, close, isOpen });
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-context-menu-in 0.15s ease forwards;
+  animation: cui-context-menu-in var(--cui-duration-base) var(--cui-ease-out) forwards;
 }
 
 .cui-context-menu__panel--closing {
-  animation: cui-context-menu-out 0.15s ease forwards;
+  animation: cui-context-menu-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
   pointer-events: none;
 }
 

@@ -147,7 +147,7 @@ const panelStyle = computed(() => {
     minWidth: "12rem",
     maxWidth: "24rem",
     pointerEvents: "auto",
-    animation: "cui-scale-in 0.15s ease",
+    animation: "cui-scale-in var(--cui-duration-base) var(--cui-ease-out)",
     overflow: "hidden",
   };
   if (props.width) s.width = props.width;

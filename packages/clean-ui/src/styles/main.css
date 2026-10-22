@@ -373,6 +373,45 @@
 }
 
 /* ============================================================
+   MOTION (#261)
+   Durations and easings for every component transition and animation. Override on
+   `:root` or a container: a snappier or calmer library is one block of tokens, not
+   `!important` on dozens of rules. (Menus, popovers, tooltips, modals and slideovers are
+   teleported to <body>, so only `:root` reaches them.) Durations must be plain times,
+   `150ms` or `0.2s`: JS can't resolve a `calc()` in a custom property. JS waits read the same values through
+   `motionDuration()` (utils/motion.ts), so a timer and its CSS can't drift apart.
+     press   — a button press, a toggle knob, a menu row's hover
+     fast    — tooltips, small popovers, colour changes, and every exit
+     base    — dropdowns, selects, popovers
+     slow    — modals, slideovers, toasts
+   UI motion stays under 300ms, and exits run faster than entries. Easing:
+     ease-out    — anything entering or leaving
+     ease-in-out — something moving on screen (a knob, a chevron turning)
+     plain `ease` — colour and hover changes; `linear` — constant loops
+   ============================================================ */
+
+:root {
+  --cui-duration-instant: 0ms;
+  --cui-duration-press: 120ms;
+  --cui-duration-fast: 150ms;
+  --cui-duration-base: 200ms;
+  --cui-duration-slow: 250ms;
+
+  --cui-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --cui-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --cui-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* A pressed button shrinks to this (#261). 1 turns it off. */
+  --cui-press-scale: 0.97;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cui-press-scale: 1;
+  }
+}
+
+/* ============================================================
    TYPOGRAPHY — CSS Custom Properties
    Override --cui-font-* on :root or any container to customize.
    ============================================================ */
@@ -485,7 +524,7 @@
     color: var(--cui-text-link);
     text-decoration: underline;
     text-underline-offset: 2px;
-    transition: color 0.15s ease;
+    transition: color var(--cui-duration-fast) ease;
   }
 
   &:is(a):hover {

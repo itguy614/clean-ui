@@ -134,7 +134,7 @@ defineExpose({ el: inputRef, focus, blur });
         width: `${percent}%`,
         borderRadius: '9999px',
         background: fillColor,
-        transition: dragging ? 'none' : 'width 0.1s ease',
+        transition: dragging ? 'none' : 'width var(--cui-duration-press) ease',
       }" />
 
       <!-- Invisible native range input on top for interaction. It precedes the thumb so
@@ -186,7 +186,7 @@ defineExpose({ el: inputRef, focus, blur });
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'left 0.1s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        transition: dragging ? 'none' : 'left var(--cui-duration-press) ease, box-shadow var(--cui-duration-fast) ease, transform var(--cui-duration-fast) var(--cui-ease-out)',
         pointerEvents: 'none',
         zIndex: 2,
       }">

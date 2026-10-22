@@ -175,7 +175,7 @@ const messages = useMessages();
   border-radius: 50%;
   color: currentColor;
   opacity: 0.6;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
 }
 
 .cui-badge__remove:hover {
