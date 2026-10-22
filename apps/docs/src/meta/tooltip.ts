@@ -28,6 +28,13 @@ const meta: ComponentMeta = {
       default: "100",
       description: "Delay before hiding, in ms — the grace period for moving the pointer onto the tooltip",
     },
+    {
+      name: "skipDelay",
+      type: "number",
+      default: "300",
+      description:
+        "After the last tooltip on the page closes, how long the next one opened skips its showDelay and its entry animation, in ms. Moving along a toolbar then waits only at the first button, and each tooltip replaces the last at once. 0 takes this tooltip out: it always waits, and never warms the others",
+    },
     { name: "noArrow", type: "boolean", default: "false", description: "Hide the pointing arrow" },
     {
       ...colorProp("Color role for the panel. Unset renders the neutral dark tooltip", "—"),

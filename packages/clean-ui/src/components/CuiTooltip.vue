@@ -4,6 +4,7 @@ import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useLayerStack } from "../composables/useLayerStack";
 import { usePresence } from "../composables/usePresence";
 import { panelTransition } from "../utils/motion";
+import { useTooltipGroup } from "../composables/useTooltipGroup";
 import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
 export type TooltipTrigger = "hover" | "focus" | "click" | "hover-focus";
@@ -23,6 +24,12 @@ export interface CuiTooltipProps extends HideableProps, ColorableProps, Disablea
   noArrow?: boolean;
   /** Manual visibility control */
   visible?: boolean;
+  /**
+   * After the last tooltip on the page closes, how long the next one opened skips its
+   * `showDelay` and its entry animation, so moving along a toolbar isn't a wait at each
+   * button (#264). 0 takes this tooltip out of it: it always waits, and never warms the others.
+   */
+  skipDelay?: number;
 }
 
 const props = withDefaults(defineProps<CuiTooltipProps>(), {
@@ -30,6 +37,7 @@ const props = withDefaults(defineProps<CuiTooltipProps>(), {
   trigger: "hover-focus",
   showDelay: 200,
   hideDelay: 100,
+  skipDelay: 300,
   noArrow: false,
   disabled: false,
   hidden: false,
@@ -40,6 +48,18 @@ const emit = defineEmits<{
 }>();
 
 const isVisible = ref(false);
+// Opened while the group was warm (#264): no delay, and no entry animation. Replaced by
+// another opening warm: no exit either.
+const instant = ref(false);
+const instantExit = ref(false);
+watch(
+  isVisible,
+  (now) => {
+    if (now) instantExit.value = false;
+    else instant.value = false;
+  },
+  { flush: "sync" },
+);
 const { present, onAfterLeave } = usePresence(() => isVisible.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -59,11 +79,30 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
   arrow: !props.noArrow,
 });
 
+const group = useTooltipGroup({
+  active: () => isVisible.value,
+  skipDelay: () => props.skipDelay,
+  closeNow: () => {
+    instantExit.value = true;
+    hideNow();
+  },
+});
+
 function show() {
   if (props.disabled) return;
   if (hideTimer) {
     clearTimeout(hideTimer);
     hideTimer = null;
+  }
+  // Already showing, or already on its way: a second trigger (focus after hover) mustn't
+  // start a second timer that a leave wouldn't clear.
+  if (isVisible.value || showTimer) return;
+  instant.value = group.isWarm();
+  if (instant.value) {
+    group.handOff();
+    isVisible.value = true;
+    emit("update:visible", true);
+    return;
   }
   showTimer = setTimeout(() => {
     isVisible.value = true;
@@ -169,7 +208,8 @@ const hiddenUntilPositioned = computed(() => {
 const tooltipStyle = computed(() => ({
   // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.
   "--_tooltip-transform-origin": transformOrigin.value,
-  "--_panel-enter-duration": "var(--cui-duration-fast)",
+  "--_panel-enter-duration": instant.value ? "var(--cui-duration-instant)" : "var(--cui-duration-fast)",
+  ...(instantExit.value ? { "--_panel-exit-duration": "var(--cui-duration-instant)" } : {}),
   ...(props.color
     ? {
         "--_tooltip-bg": `var(--cui-${props.color})`,
@@ -204,6 +244,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
         v-show="isVisible"
         ref="floatingRef"
         class="cui-tooltip"
+        :data-instant="instant || undefined"
         :class="[
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,

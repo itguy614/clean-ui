@@ -66,7 +66,8 @@
    One CSS transition on a state class, not keyframes, so a re-open mid-exit reverses from
    where the panel is. It grows out of its trigger through each panel's own
    transform-origin (#262). Exits run faster than entries: the hidden state takes the fast
-   duration, the shown one `--_panel-enter-duration` (base; a tooltip's is fast). */
+   duration (or `--_panel-exit-duration`), the shown one `--_panel-enter-duration` (base; a
+   tooltip's is fast). */
 .cui-panel-motion {
   transition:
     opacity var(--_panel-enter-duration, var(--cui-duration-base)) var(--cui-ease-out),
@@ -76,6 +77,6 @@
 .cui-panel-motion.cui-panel--hidden {
   opacity: 0;
   transform: scale(0.95);
-  transition-duration: var(--cui-duration-fast);
+  transition-duration: var(--_panel-exit-duration, var(--cui-duration-fast));
   pointer-events: none;
 }

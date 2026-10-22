@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Tooltip warm window** (#264): once a tooltip has been open, the next one opened within `skipDelay` ms of the last closing shows at once, with no entry animation, and the one it replaces closes at once instead of fading beside it. The default is 300ms; a tooltip with 0 neither waits less nor warms the others. Moving along a toolbar then waits only at the first button. The first tooltip still waits its `showDelay`, so crossing a row by accident shows nothing. It's one window for the whole page.
 - **Motion tokens** (#261): `--cui-duration-instant/-press/-fast/-base/-slow` and
   `--cui-ease-out/-in-out/-drawer`. Every component transition and animation reads them,
   so a consumer can make the whole library snappier or calmer from `:root`, or one part of
