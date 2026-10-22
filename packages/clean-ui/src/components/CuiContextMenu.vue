@@ -180,6 +180,9 @@ function measure({ x, y }: { x: number; y: number }) {
     adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
   }
 
+  // The cursor is the anchor, so the menu grows out of the point under it (#262), in px
+  // from the panel's corner: exact when a flip or the viewport clamp moved the panel.
+  adjusted["--_context-menu-transform-origin"] = `${x - parseFloat(adjusted.left)}px ${y - parseFloat(adjusted.top)}px`;
   menuStyle.value = adjusted;
   focusMenuEdge(menuRef.value);
 }
@@ -440,6 +443,10 @@ defineExpose({ open, openAt, close, isOpen });
 </template>
 
 <style scoped>
+:where(.cui-context-menu__panel) {
+  transform-origin: var(--_context-menu-transform-origin);
+}
+
 .cui-context-menu {
   display: contents;
 }

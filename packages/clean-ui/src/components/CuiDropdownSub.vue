@@ -36,8 +36,9 @@ function open() {
   // Close sibling sub-menus
   parentCtx?.closeSiblingSubMenus(() => close());
   if (triggerRef.value) {
-    const { styles } = computeDropdownPosition(triggerRef.value, "right");
-    menuStyle.value = styles;
+    const { styles, transformOrigin } = computeDropdownPosition(triggerRef.value, "right");
+    // Grows out of its row, on whichever side it opened (#262).
+    menuStyle.value = { ...styles, "--_dropdown-sub-transform-origin": transformOrigin };
   }
   isOpen.value = true;
 }
@@ -149,6 +150,10 @@ function onPanelKeydown(e: KeyboardEvent) {
 </template>
 
 <style scoped>
+:where(.cui-dropdown-sub__menu) {
+  transform-origin: var(--_dropdown-sub-transform-origin);
+}
+
 .cui-dropdown-sub {
   position: relative;
 }
@@ -215,22 +220,22 @@ function onPanelKeydown(e: KeyboardEvent) {
 @keyframes cui-dropdown-sub-in {
   from {
     opacity: 0;
-    transform: translateX(-4px);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: scale(1);
   }
 }
 
 @keyframes cui-dropdown-sub-out {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: translateX(-4px);
+    transform: scale(0.95);
   }
 }
 </style>

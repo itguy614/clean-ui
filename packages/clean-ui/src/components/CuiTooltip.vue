@@ -50,7 +50,7 @@ watch(
   { immediate: true },
 );
 
-const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
+const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, transformOrigin, isPositioned } = usePopover({
   placement: toRef(props, "placement"),
   offsetDistance: 8,
   arrow: !props.noArrow,
@@ -168,15 +168,16 @@ const hiddenUntilPositioned = computed(() => {
 
 // A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
 // default tooltip's come from `.cui-tooltip--default`.
-const tooltipStyle = computed(() => {
-  if (props.color) {
-    return {
-      "--_tooltip-bg": `var(--cui-${props.color})`,
-      "--_tooltip-color": `var(--cui-${props.color}-text)`,
-    };
-  }
-  return {};
-});
+const tooltipStyle = computed(() => ({
+  // Grows out of its trigger, whichever side it opened on (#262).
+  "--_tooltip-transform-origin": transformOrigin.value,
+  ...(props.color
+    ? {
+        "--_tooltip-bg": `var(--cui-${props.color})`,
+        "--_tooltip-color": `var(--cui-${props.color}-text)`,
+      }
+    : {}),
+}));
 
 const hasContent = computed(() => props.text || true); // #content slot checked in template
 </script>
@@ -248,6 +249,10 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
 
 :where(.cui-tooltip__arrow) {
   background: var(--cui-tooltip-bg, var(--_tooltip-bg));
+}
+
+:where(.cui-tooltip) {
+  transform-origin: var(--_tooltip-transform-origin);
 }
 
 /* --- Tooltip --- */

@@ -226,7 +226,6 @@ describe("motion in both packages", () => {
     const FLOATING = ["CuiPopover", "CuiTooltip", "CuiContextMenu", "CuiDropdownMenu", "CuiDropdownSub", "CuiListboxPanel"].map(
       (c) => `${C}${c}.vue`,
     );
-    // Every panel scales from its centre until #262 sets the origin from the placement.
-    check("noTransformOrigin", Object.fromEntries(FLOATING.map((f) => [f, { count: 1, why: "origin from placement in #262" }])), FLOATING);
+    check("noTransformOrigin", {}, FLOATING);
   });
 });

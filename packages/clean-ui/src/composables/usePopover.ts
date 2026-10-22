@@ -1,4 +1,5 @@
 import { ref, computed, watch, type Ref, type MaybeRefOrGetter, toValue } from "vue";
+import { transformOriginFor } from "../utils/position";
 import {
   useFloating,
   autoUpdate,
@@ -82,7 +83,7 @@ export function usePopover(options: UsePopoverOptions = {}) {
     if (!options.arrow || !middlewareData.value.arrow) return {};
 
     const { x, y } = middlewareData.value.arrow;
-    const side = placement.value.split("-")[0] as "top" | "bottom" | "left" | "right";
+    const side = currentSide.value;
 
     const staticSide: Record<string, string> = {
       top: "bottom",
@@ -101,6 +102,20 @@ export function usePopover(options: UsePopoverOptions = {}) {
 
   // Which side the floating element is on (after flip)
   const currentSide = computed(() => placement.value.split("-")[0] as "top" | "bottom" | "left" | "right");
+  // Where it grows from: the edge facing the trigger, after flipping (#262). shift() slides
+  // a panel along its side to stay on screen, so the along-axis part moves back by as much,
+  // to stay over the trigger.
+  const transformOrigin = computed(() => {
+    const origin = transformOriginFor(placement.value);
+    const shifted = middlewareData.value.shift;
+    if (!shifted) return origin;
+    const [horizontal, vertical] = origin.split(" ");
+    const PERCENT: Record<string, string> = { left: "0%", top: "0%", center: "50%", right: "100%", bottom: "100%" };
+    const along = (keyword: string, by: number) => (by ? `calc(${PERCENT[keyword]} - ${by}px)` : keyword);
+    return currentSide.value === "top" || currentSide.value === "bottom"
+      ? `${along(horizontal, shifted.x ?? 0)} ${vertical}`
+      : `${horizontal} ${along(vertical, shifted.y ?? 0)}`;
+  });
 
   return {
     referenceRef,
@@ -110,6 +125,7 @@ export function usePopover(options: UsePopoverOptions = {}) {
     arrowStyle,
     placement,
     currentSide,
+    transformOrigin,
     isPositioned,
     update,
   };

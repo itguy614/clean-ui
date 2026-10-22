@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { computeDropdownPosition, OVERLAY_Z_INDEX } from "../position";
+import { computeDropdownPosition, transformOriginFor, OVERLAY_Z_INDEX } from "../position";
 
 /** An anchor at the given viewport rect; the viewport is 1000×800. */
 function anchorAt(rect: { top: number; left: number; width: number; height: number }) {
@@ -61,6 +61,43 @@ describe("computeDropdownPosition", () => {
     const flipped = computeDropdownPosition(anchorAt({ top: 100, left: 850, width: 100, height: 30 }), "right");
     expect(flipped.side).toBe("left");
     expect(flipped.styles.right).toBe("154px");
+  });
+});
+
+// #262: a panel grows out of its trigger — its edge facing the anchor, at the aligned end.
+describe("transformOriginFor", () => {
+  it.each([
+    ["bottom", "center top"],
+    ["bottom-start", "left top"],
+    ["bottom-end", "right top"],
+    ["top", "center bottom"],
+    ["top-start", "left bottom"],
+    ["right", "left center"],
+    ["right-start", "left top"],
+    ["left-end", "right bottom"],
+  ])("%s grows from %s", (placement, origin) => {
+    expect(transformOriginFor(placement)).toBe(origin);
+  });
+});
+
+describe("computeDropdownPosition's transform-origin", () => {
+  const { innerWidth, innerHeight } = window;
+  afterAll(() => Object.assign(window, { innerWidth, innerHeight }));
+  beforeEach(() => {
+    window.innerWidth = 1000;
+    window.innerHeight = 800;
+  });
+
+  it("follows the side after flipping, and the edge it aligned to", () => {
+    expect(computeDropdownPosition(anchorAt({ top: 100, left: 50, width: 200, height: 30 })).transformOrigin).toBe("left top");
+    expect(computeDropdownPosition(anchorAt({ top: 700, left: 50, width: 200, height: 30 })).transformOrigin).toBe("left bottom");
+    expect(computeDropdownPosition(anchorAt({ top: 100, left: 900, width: 90, height: 30 })).transformOrigin).toBe("right top");
+    expect(computeDropdownPosition(anchorAt({ top: 100, left: 850, width: 100, height: 30 }), "right").transformOrigin).toBe("right top");
+  });
+
+  it("grows a field listbox from the middle of the edge it spans", () => {
+    const { transformOrigin } = computeDropdownPosition(anchorAt({ top: 700, left: 50, width: 200, height: 30 }), "bottom", { matchWidth: true });
+    expect(transformOrigin).toBe("center bottom");
   });
 });
 

@@ -146,8 +146,10 @@ jarring appear/disappear. "It looks nice" is not one.
 - **Duration:** UI motion stays under 300ms, and exits are faster than entries (a menu
   opens over `base`, closes over `fast`). Loops keep their own longer durations.
 - **Entrances never start from `scale(0)`.** Start from about 0.95, with opacity 0.
-- **Floating panels scale from their trigger.** Set `transform-origin` from the placement
-  (`usePopover`'s side, or `computeDropdownPosition`'s returned side). Modals stay centred.
+- **Floating panels scale from their trigger** (#262). Take `transformOrigin` from `usePopover`
+  or `computeDropdownPosition` (both use `transformOriginFor` in `utils/position.ts`), emit it as
+  `--_<component>-transform-origin` on the animated element, and read it back in a `:where()`
+  rule. Never redo the side-to-origin mapping. Modals stay centred.
 - **Animate `transform` and `opacity` only.** No `width`/`height`/`max-height`/`top`/`left`/
   `margin`/`padding` animation; collapsibles use `grid-template-rows: 0fr → 1fr`. Never
   `transition: all`: name the properties.
