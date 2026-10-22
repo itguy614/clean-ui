@@ -201,14 +201,16 @@ const titleId = useCuiId("modal-title");
   outline: none;
   overflow: hidden;
 
-  /* Entrance animation */
+  /* Entrance and exit. A transition takes the duration of the state it moves to: the
+     hidden one is fast, the shown one base, so it leaves quicker than it came (#269). */
   opacity: 0;
   transform: scale(0.95) translateY(-0.5rem);
-  transition: opacity var(--cui-duration-base) var(--cui-ease-out), transform var(--cui-duration-base) var(--cui-ease-out);
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-modal--visible {
   opacity: 1;
   transform: scale(1) translateY(0);
+  transition-duration: var(--cui-duration-base);
 }
 </style>

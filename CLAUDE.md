@@ -132,7 +132,10 @@ jarring appear/disappear. "It looks nice" is not one.
 
 - **Frequency decides whether to animate.** Things used 100+ times a day (keyboard-driven
   actions, list navigation, menu-item hover) get no motion, or a near-instant colour change.
-  Occasional UI (modals, drawers, toasts, popovers) gets standard motion.
+  A row the keyboard crosses (menu items, listbox options, tree nodes, date cells, transfer
+  list rows) changes colour with no transition at all: with key repeat a fade leaves a trail
+  of half-lit rows (#269). Occasional UI (modals, drawers, toasts, popovers) gets standard
+  motion.
 - **Use the tokens, never literals** (#261). Durations are `--cui-duration-instant/press/fast/base/slow`
   (0/120/150/200/250ms), easings `--cui-ease-out/in-out/drawer`, all on `:root` in
   `styles/main.css`. JS waits read the same values through `motionDuration(name, el)`
@@ -144,7 +147,9 @@ jarring appear/disappear. "It looks nice" is not one.
   colour changes → `ease`; constant loops → `linear`. **Never `ease-in`.** It starts slowly,
   so the interface feels laggy.
 - **Duration:** UI motion stays under 300ms, and exits are faster than entries (a menu
-  opens over `base`, closes over `fast`). Loops keep their own longer durations.
+  opens over `base`, closes over `fast`). A transition takes the duration of the state it
+  moves to, so give the hidden state the short one and the shown state the long one (CuiModal,
+  CuiBackdrop, CuiAlert). Loops keep their own longer durations.
 - **Entrances never start from `scale(0)`.** Start from about 0.95, with opacity 0.
 - **Floating panels scale from their trigger** (#262). Take `transformOrigin` from `usePopover`
   or `computeDropdownPosition` (both use `transformOriginFor` in `utils/position.ts`), emit it as

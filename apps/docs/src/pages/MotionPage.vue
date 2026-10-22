@@ -157,6 +157,13 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           <code class="cui-code">base</code> and closes over <code class="cui-code">fast</code>.
           Looping animations, such as spinners and skeletons, keep their own longer durations.
         </p>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+          What's used many times a day doesn't animate at all. Menu items, listbox options,
+          tree nodes and date cells change colour at once as the keyboard crosses them, since a
+          fade leaves a trail of half-lit rows when an arrow key repeats. Dragging a slider
+          follows the pointer, and stepping it from the keyboard lands at once. Only a click on
+          its track glides the thumb across.
+        </p>
         <div style="margin-top: 0.75rem;"><TokenTable :tokens="DURATIONS" /></div>
       </CuiCardBody>
     </CuiCard>
