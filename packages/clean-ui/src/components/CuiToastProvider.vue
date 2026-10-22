@@ -117,17 +117,21 @@ const visibleToasts = computed(() => {
         :key="toast.id"
         class="cui-toast-wrapper"
         :class="[`cui-toast-wrapper--slide-${slideFrom}`, { 'cui-toast-wrapper--collapsed': toast._collapsed }]"
-        :style="{
-          pointerEvents: 'auto',
-          ...(toast._collapsed ? {
+        :style="{ pointerEvents: 'auto' }"
+        @click="toast._collapsed ? state.dismiss(toast.id) : undefined"
+      >
+        <!-- The collapsed stack's peek, on an inner element: the wrapper's transform and
+             opacity belong to the TransitionGroup, whose move and leave would overwrite or
+             lose to them (#263). -->
+        <div
+          class="cui-toast-wrapper__peek"
+          :style="toast._collapsed ? {
             transform: `scale(${1 - toast._stackIndex * 0.05}) translateY(${toast._stackIndex * -8}px)`,
             opacity: String(Math.max(0.4, 1 - toast._stackIndex * 0.2)),
             maxHeight: '3rem',
             overflow: 'hidden',
-          } : {}),
-        }"
-        @click="toast._collapsed ? state.dismiss(toast.id) : undefined"
-      >
+          } : undefined"
+        >
         <CuiToast
           :toast-id="toast.id"
           :title="toast.title"
@@ -144,6 +148,7 @@ const visibleToasts = computed(() => {
           :active="index === visibleToasts.length - 1"
           @dismiss="state.dismiss(toast.id)"
         />
+        </div>
       </div>
     </TransitionGroup>
   </Teleport>
@@ -151,7 +156,7 @@ const visibleToasts = computed(() => {
 
 <style scoped>
 /* The collapsed stack's own scale, fade and height, as toasts pile up. */
-.cui-toast-wrapper {
+.cui-toast-wrapper__peek {
   transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out), max-height var(--cui-duration-slow) var(--cui-ease-out);
 }
 

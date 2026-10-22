@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
@@ -82,6 +82,11 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
+});
+
+// Closed while `hidden`: v-show is already off, so no leave runs to report the close.
+watch(isVisible, (visible) => {
+  if (!visible && props.hidden) onAfterLeave();
 });
 
 // Size mapping

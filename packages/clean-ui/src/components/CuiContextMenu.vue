@@ -122,6 +122,9 @@ function positionAtCursor(x: number, y: number) {
     top: `${y}px`,
     opacity: "0",
     pointerEvents: "none",
+    // Snap to hidden for the measuring frame: re-opened at a new point while open, a
+    // transition here would fade the panel out and back as it moved.
+    transition: "none",
   };
 
   // Measured by the post-flush watcher above, once the panel has rendered.

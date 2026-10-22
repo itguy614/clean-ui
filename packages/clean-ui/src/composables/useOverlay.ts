@@ -88,6 +88,8 @@ export function useOverlay(options: UseOverlayOptions) {
     unlockBodyScroll();
   }
 
+  let enterFrame: number | null = null;
+
   function openOverlay() {
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
@@ -105,7 +107,10 @@ export function useOverlay(options: UseOverlayOptions) {
     // requestAnimationFrame defers the flip until after a paint, giving the
     // compositor a rendered off-screen frame to transition from.
     nextTick(() => {
-      requestAnimationFrame(() => {
+      // Closed again before this tick: there is no entry to start.
+      if (!isOpen.value) return;
+      enterFrame = requestAnimationFrame(() => {
+        enterFrame = null;
         isAnimating.value = true;
         dialogRef.value?.focus();
       });
@@ -124,6 +129,11 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   function closeOverlay() {
+    // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
+    if (enterFrame !== null) {
+      cancelAnimationFrame(enterFrame);
+      enterFrame = null;
+    }
     isAnimating.value = false;
     isOpen.value = false;
 

@@ -5,7 +5,7 @@ import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
 import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 import { usePresence } from "../composables/usePresence";
-import { panelTransition } from "../utils/motion";
+import { afterAnimations, panelTransition } from "../utils/motion";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownSubProps extends DisableableProps {
@@ -52,8 +52,7 @@ function open() {
   // The row is inside the parent menu, which scales in for its first moments (#262), so a
   // rect read now is the shrunken one: place the sub-menu again once that transition ends.
   const parentMenu = triggerRef.value?.closest<HTMLElement>(".cui-dropdown-menu, .cui-dropdown-sub__menu");
-  const running = parentMenu?.getAnimations?.() ?? [];
-  if (running.length) Promise.all(running.map((a) => a.finished)).then(position, () => {});
+  if (parentMenu) afterAnimations(parentMenu, position);
 }
 
 function close() {

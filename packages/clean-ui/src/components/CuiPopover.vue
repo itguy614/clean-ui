@@ -149,7 +149,6 @@ const panelStyle = computed(() => {
     boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
     minWidth: "12rem",
     maxWidth: "24rem",
-    pointerEvents: "auto",
     overflow: "hidden",
     // Read back as transform-origin below, so the panel grows out of its trigger (#262).
     "--_popover-transform-origin": transformOrigin.value,

@@ -263,7 +263,6 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   line-height: 1.4;
   max-width: 280px;
   word-wrap: break-word;
-  pointer-events: auto;
 }
 
 
