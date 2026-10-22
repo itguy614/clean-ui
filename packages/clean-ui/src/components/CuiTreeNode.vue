@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import { motionDuration } from "../utils/motion";
 import type { TreeNode } from "./CuiTreeView.vue";
 
 const props = defineProps<{
@@ -48,7 +49,7 @@ watch(isExpanded, (expanded) => {
     nextTick(() => {
       if (childrenRef.value) {
         animHeight.value = childrenRef.value.scrollHeight + "px";
-        setTimeout(() => { animHeight.value = undefined; }, 250);
+        setTimeout(() => { animHeight.value = undefined; }, motionDuration("slow", childrenRef.value));
       }
     });
   } else {
@@ -56,7 +57,7 @@ watch(isExpanded, (expanded) => {
       animHeight.value = childrenRef.value.scrollHeight + "px";
       requestAnimationFrame(() => {
         animHeight.value = "0px";
-        setTimeout(() => { showChildren.value = false; animHeight.value = undefined; }, 250);
+        setTimeout(() => { showChildren.value = false; animHeight.value = undefined; }, motionDuration("slow", childrenRef.value));
       });
     }
   }
@@ -161,7 +162,6 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
         color: node.disabled ? 'var(--cui-text-tertiary)' : isSelected ? 'var(--cui-primary)' : 'var(--cui-text-body)',
         fontWeight: isSelected ? '600' : '400',
         opacity: node.disabled ? '0.5' : '1',
-        transition: 'background 0.1s ease',
         position: 'relative',
         zIndex: '1',
       }"
@@ -181,7 +181,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: '0',
-          transition: 'transform 0.15s ease',
+          transition: 'transform var(--cui-duration-slow) var(--cui-ease-in-out)',
           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
         }"
         @click="hasChildren && onChevronClick($event)"
@@ -214,7 +214,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
         position: 'relative',
         overflow: animated ? 'hidden' : undefined,
         maxHeight: animHeight,
-        transition: animated ? 'max-height 0.25s ease' : undefined,
+        transition: animated ? 'max-height var(--cui-duration-slow) var(--cui-ease-out)' : undefined,
       }"
     >
       <CuiTreeNode

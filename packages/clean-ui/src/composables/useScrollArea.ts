@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "../utils/motion";
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, toValue, type CSSProperties, type MaybeRefOrGetter } from "vue";
 import { useMessages } from "./useMessages";
 
@@ -186,7 +187,7 @@ export function useScrollArea(options: UseScrollAreaOptions = {}) {
     const el = scroller.value;
     if (!el) return;
     const sign = edge === "end" ? 1 : -1;
-    const reduced = typeof matchMedia !== "undefined" && !!matchMedia("(prefers-reduced-motion: reduce)")?.matches;
+    const reduced = prefersReducedMotion();
     const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
     if (orientation() === "vertical") el.scrollBy({ top: sign * el.clientHeight * 0.75, behavior });
     else el.scrollBy({ left: sign * (rtl.value ? -1 : 1) * el.clientWidth * 0.75, behavior });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
+import { usePointerDrag } from "../composables/usePointerDrag";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
@@ -51,15 +52,38 @@ const displayValue = computed(() =>
   props.formatValue ? props.formatValue(props.modelValue) : String(props.modelValue),
 );
 
+// Motion only where it helps (#269). A click on the track glides the thumb to the point;
+// a drag follows the pointer with none, and so does a keyboard step, which repeats. The
+// first input of a press is the click's jump; any after it are the drag. The press is
+// followed on the document, so one released off the slider still ends.
+const press = usePointerDrag();
+const pressed = press.active;
 const dragging = ref(false);
+const keyed = ref(false);
+let inputsThisPress = 0;
+const still = computed(() => dragging.value || keyed.value);
+watch(pressed, (now) => {
+  if (!now) dragging.value = false;
+});
 
-// The visible label has to point at the native input to name it; generate an id when
-// the caller supplies none (#172).
+function onPointerDown(e: PointerEvent) {
+  if (props.disabled || !press.start(e, () => {})) return;
+  keyed.value = false;
+  inputsThisPress = 0;
+}
+
+// Keys that move the value; Tab and the rest leave a later v-model change gliding.
+const STEP_KEYS = new Set(["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"]);
+function onKeydown(e: KeyboardEvent) {
+  if (STEP_KEYS.has(e.key)) keyed.value = true;
+}
+
 const generatedId = useCuiId("slider");
 const inputId = computed(() => props.id || generatedId);
 
 function onInput(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value);
+  if (pressed.value && ++inputsThisPress > 1) dragging.value = true;
   emit("update:modelValue", val);
 }
 
@@ -115,8 +139,9 @@ defineExpose({ el: inputRef, focus, blur });
     </div>
 
     <!-- Slider container -->
-    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center' }">
-      <!-- Track background -->
+    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center', containerType: 'inline-size' }">
+      <!-- Track, clipping its fill: a full-width pill slid left inside it, so it moves on the
+           compositor (transform, not width, #266) and keeps its rounded end. -->
       <div :style="{
         position: 'absolute',
         left: '0',
@@ -124,18 +149,17 @@ defineExpose({ el: inputRef, focus, blur });
         height: cfg.trackHeight,
         borderRadius: '9999px',
         background: 'var(--cui-border)',
-      }" />
-
-      <!-- Track fill -->
-      <div :style="{
-        position: 'absolute',
-        left: '0',
-        height: cfg.trackHeight,
-        width: `${percent}%`,
-        borderRadius: '9999px',
-        background: fillColor,
-        transition: dragging ? 'none' : 'width 0.1s ease',
-      }" />
+        overflow: 'hidden',
+      }">
+        <div class="cui-slider__fill" :style="{
+          width: '100%',
+          height: '100%',
+          borderRadius: '9999px',
+          background: fillColor,
+          transform: `translateX(${percent - 100}%)`,
+          transition: still ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out)',
+        }" />
+      </div>
 
       <!-- Invisible native range input on top for interaction. It precedes the thumb so
            the thumb can draw the focus ring with a sibling selector. -->
@@ -166,27 +190,28 @@ defineExpose({ el: inputRef, focus, blur });
           zIndex: 3,
         }"
         @input="onInput"
-        @mousedown="dragging = true"
-        @mouseup="dragging = false"
-        @touchstart="dragging = true"
-        @touchend="dragging = false"
+        @pointerdown="onPointerDown"
+        @keydown="onKeydown"
+        @blur="keyed = false"
       />
-      <!-- Custom thumb -->
-      <div class="cui-slider__thumb" :style="{
+      <!-- Custom thumb, moved by transform (#266): 1cqw is 1% of the slider row, a size
+           container, so `n * 1cqw` is n% of the track with no layer spanning it, and the
+           thumb overhangs only at the ends, as with `left`. -->
+      <div class="cui-slider__thumb" aria-hidden="true" :style="{
         position: 'absolute',
-        left: `${percent}%`,
-        transform: 'translateX(-50%)',
+        left: '0',
+        transform: `translateX(calc(${percent} * 1cqw - 50%))`,
         width: cfg.thumbSize,
         height: cfg.thumbSize,
         borderRadius: '50%',
         background: thumbColor,
         border: '2px solid var(--cui-surface-base, white)',
-        boxShadow: dragging ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 3px rgba(0,0,0,0.15)',
+        boxShadow: pressed ? '0 2px 8px rgba(0,0,0,0.25)' : '0 1px 3px rgba(0,0,0,0.15)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'left 0.1s ease, box-shadow 0.15s ease, transform 0.15s ease',
+        transition: still ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out), box-shadow var(--cui-duration-fast) ease',
         pointerEvents: 'none',
         zIndex: 2,
       }">

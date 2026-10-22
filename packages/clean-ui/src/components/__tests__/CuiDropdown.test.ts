@@ -354,7 +354,7 @@ describe("CuiDropdown click-outside", () => {
 // An open sub-menu stayed fully visible while its parent menu faded out, then vanished
 // when the parent unmounted it — the two closed one after the other.
 describe("CuiDropdown closing with a sub-menu open", () => {
-  it("animates the sub-menu out together with the menu", async () => {
+  it("closes the sub-menu together with the menu", async () => {
     const w = mount(CuiDropdown, {
       attachTo: document.body,
       slots: {
@@ -369,12 +369,14 @@ describe("CuiDropdown closing with a sub-menu open", () => {
     document.querySelector<HTMLElement>(".cui-dropdown-sub__trigger")!.click();
     await w.vm.$nextTick();
     const sub = () => document.querySelector(".cui-dropdown-sub__menu");
-    expect(sub()!.classList.contains("cui-dropdown-sub__menu--closing")).toBe(false);
+    expect(sub()).not.toBeNull();
 
+    // The sub-menu is shown only while its parent is open too, so both leave together (the
+    // animated half is in the browser test, exit-transitions.test.ts).
     document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await w.vm.$nextTick();
-    expect(document.querySelector(".cui-dropdown-menu")!.classList.contains("cui-dropdown-menu--closing")).toBe(true);
-    expect(sub()!.classList.contains("cui-dropdown-sub__menu--closing")).toBe(true);
+    expect(document.querySelector(".cui-dropdown-menu")).toBeNull();
+    expect(sub()).toBeNull();
     w.unmount();
   });
 });

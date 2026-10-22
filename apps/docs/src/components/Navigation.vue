@@ -18,6 +18,7 @@ const sections = [
   { id: "themes", label: "Themes", path: "/foundations/themes", group: "Foundations" },
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations" },
   { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
+  { id: "motion", label: "Motion", path: "/foundations/motion", group: "Foundations" },
   { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
   { id: "utilities", label: "Utilities", path: "/foundations/utilities", group: "Foundations" },
 

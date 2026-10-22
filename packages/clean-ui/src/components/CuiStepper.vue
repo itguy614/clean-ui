@@ -104,7 +104,7 @@ function circleStyle(status: StepStatus) {
     fontSize: cfg.value.font,
     fontWeight: "600",
     flexShrink: "0",
-    transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease",
+    transition: "background var(--cui-duration-base) ease, color var(--cui-duration-base) ease, border-color var(--cui-duration-base) ease",
   };
 
   if (status === "complete") {
@@ -131,7 +131,7 @@ function circleStyle(status: StepStatus) {
 function connectorStyle(index: number) {
   const complete = index < props.modelValue;
   const s: Record<string, string> = {
-    transition: "background 0.3s ease",
+    transition: "background var(--cui-duration-slow) ease",
   };
 
   if (props.orientation === "horizontal") {
@@ -155,7 +155,7 @@ function labelStyle(status: StepStatus) {
     fontSize: cfg.value.labelFont,
     fontWeight: status === "current" ? "600" : "500",
     lineHeight: "1.3",
-    transition: "color 0.2s ease",
+    transition: "color var(--cui-duration-base) ease",
   };
 
   if (status === "current") {

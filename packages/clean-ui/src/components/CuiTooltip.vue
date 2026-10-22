@@ -2,6 +2,9 @@
 import { ref, computed, watch, onUnmounted, toRef } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useLayerStack } from "../composables/useLayerStack";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
+import { useTooltipGroup } from "../composables/useTooltipGroup";
 import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
 export type TooltipTrigger = "hover" | "focus" | "click" | "hover-focus";
@@ -21,6 +24,12 @@ export interface CuiTooltipProps extends HideableProps, ColorableProps, Disablea
   noArrow?: boolean;
   /** Manual visibility control */
   visible?: boolean;
+  /**
+   * After the last tooltip on the page closes, how long the next one opened skips its
+   * `showDelay` and its entry animation, so moving along a toolbar isn't a wait at each
+   * button (#264). 0 takes this tooltip out of it: it always waits, and never warms the others.
+   */
+  skipDelay?: number;
 }
 
 const props = withDefaults(defineProps<CuiTooltipProps>(), {
@@ -28,6 +37,7 @@ const props = withDefaults(defineProps<CuiTooltipProps>(), {
   trigger: "hover-focus",
   showDelay: 200,
   hideDelay: 100,
+  skipDelay: 300,
   noArrow: false,
   disabled: false,
   hidden: false,
@@ -38,6 +48,21 @@ const emit = defineEmits<{
 }>();
 
 const isVisible = ref(false);
+// Opened while the group was warm (#264): no delay, and no entry animation. Replaced by
+// another opening warm: no exit either (`replaced`). `joining`: opened by hover or focus,
+// so a member of the warm group; one opened through `visible` or a click is not.
+const instant = ref(false);
+const replaced = ref(false);
+let joining = false;
+watch(
+  isVisible,
+  (now) => {
+    if (now) replaced.value = false;
+    else instant.value = joining = false;
+  },
+  { flush: "sync" },
+);
+const { present, onAfterLeave } = usePresence(() => isVisible.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -45,15 +70,29 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null;
 watch(
   () => props.visible,
   (val) => {
-    if (val !== undefined) isVisible.value = val;
+    if (val === undefined) return;
+    // The consumer's to close: not a member of the warm group.
+    if (val && !isVisible.value) joining = false;
+    isVisible.value = val;
   },
   { immediate: true },
 );
 
-const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, isPositioned } = usePopover({
+const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, transformOrigin, isPositioned } = usePopover({
   placement: toRef(props, "placement"),
   offsetDistance: 8,
   arrow: !props.noArrow,
+});
+
+const group = useTooltipGroup({
+  active: () => isVisible.value,
+  present: () => present.value,
+  joins: () => joining,
+  skipDelay: () => props.skipDelay,
+  replace: () => {
+    replaced.value = true;
+    if (isVisible.value) hideNow();
+  },
 });
 
 function show() {
@@ -61,6 +100,17 @@ function show() {
   if (hideTimer) {
     clearTimeout(hideTimer);
     hideTimer = null;
+  }
+  // Already showing, or already on its way: a second trigger (focus after hover) mustn't
+  // start a second timer that a leave wouldn't clear.
+  if (isVisible.value || showTimer) return;
+  joining = props.trigger !== "click";
+  instant.value = group.isWarm();
+  if (instant.value) {
+    group.handOff();
+    isVisible.value = true;
+    emit("update:visible", true);
+    return;
   }
   showTimer = setTimeout(() => {
     isVisible.value = true;
@@ -150,33 +200,30 @@ onUnmounted(() => {
  * into the tooltip on open was racing the positioning, and lost intermittently
  * (#112). Two of them grew retry loops to work around it.
  *
- * `animation: none` is load-bearing, not tidiness. A CSS animation overrides
- * inline styles, and the tooltip's scale-in animates `opacity` from 0 to 1 — so
- * `opacity: 0` alone would be overridden the moment it started, and the tooltip
- * would appear at the origin before being positioned, which is exactly the
- * flash #88 fixed. Withholding the animation also means it plays from the final
- * position rather than starting mid-move.
+ * The tooltip's entry is a CSS transition (#263), which an inline `opacity: 0` holds at
+ * zero: the fade picks up from there once it is placed.
  */
 const hiddenUntilPositioned = computed(() => {
   const styles: Record<string, string> = {};
   if (isPositioned.value) return styles;
   styles.opacity = "0";
   styles.pointerEvents = "none";
-  styles.animation = "none";
   return styles;
 });
 
 // A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
 // default tooltip's come from `.cui-tooltip--default`.
-const tooltipStyle = computed(() => {
-  if (props.color) {
-    return {
-      "--_tooltip-bg": `var(--cui-${props.color})`,
-      "--_tooltip-color": `var(--cui-${props.color}-text)`,
-    };
-  }
-  return {};
-});
+const tooltipStyle = computed(() => ({
+  // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.
+  "--_tooltip-transform-origin": transformOrigin.value,
+  "--_panel-enter-duration": instant.value ? "var(--cui-duration-instant)" : "var(--cui-duration-fast)",
+  ...(props.color
+    ? {
+        "--_tooltip-bg": `var(--cui-${props.color})`,
+        "--_tooltip-color": `var(--cui-${props.color}-text)`,
+      }
+    : {}),
+}));
 
 const hasContent = computed(() => props.text || true); // #content slot checked in template
 </script>
@@ -198,11 +245,15 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
 
     <!-- Tooltip -->
     <Teleport to="body">
+      <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
       <div
-        v-if="isVisible"
+        v-if="present"
+        v-show="isVisible"
         ref="floatingRef"
         class="cui-tooltip"
+        :data-instant="instant || undefined"
         :class="[
+          { 'cui-panel--cut': replaced },
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,
         ]"
@@ -223,6 +274,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
           :style="arrowStyle"
         />
       </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -250,26 +302,18 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   background: var(--cui-tooltip-bg, var(--_tooltip-bg));
 }
 
+:where(.cui-tooltip) {
+  transform-origin: var(--_tooltip-transform-origin);
+}
+
 /* --- Tooltip --- */
 .cui-tooltip {
   z-index: calc(var(--cui-z-overlay, 9990) + 9); /* TOOLTIP_Z_INDEX in utils/position.ts */
   line-height: 1.4;
   max-width: 280px;
   word-wrap: break-word;
-  pointer-events: auto;
-  animation: cui-tooltip-in 0.15s ease;
 }
 
-@keyframes cui-tooltip-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
 /* Default: an inverted surface, dark in light mode (and a lighter dark in dark mode). */
 .cui-tooltip--default {
