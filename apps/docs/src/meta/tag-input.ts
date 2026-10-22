@@ -9,28 +9,33 @@ const meta: ComponentMeta = {
   props: [
     { name: "modelValue", type: "string[]", default: "[]", description: "Selected tags (v-model)" },
     { name: "suggestions", type: "TagOption[]", default: "[]", description: "Predefined tag suggestions" },
-    { name: "fetchSuggestions", type: "(query) => Promise<TagOption[]>", description: "Async search function" },
+    { name: "fetchSuggestions", type: "(query, { signal }) => Promise<TagOption[]>", description: "Async search function. Debounced; only the latest search's results are shown. `signal` is aborted when a newer search, or unmount, supersedes it." },
     { name: "allowCreate", type: "boolean", default: "true", description: "Allow creating tags not in suggestions" },
     { name: "maxTags", type: "number", default: "0", description: "Maximum tags allowed (0 = unlimited)" },
     { name: "debounce", type: "number", default: "300", description: "Debounce for async search (ms)" },
     { name: "minChars", type: "number", default: "0", description: "Min chars before searching" },
-    { name: "placeholder", type: "string", default: "Add tag...", description: "Placeholder text" },
+    { name: "placeholder", type: "string", default: "Add tag... (messages.tagInput.placeholder)", description: "Placeholder text" },
     {
       name: "color",
       type: "primary | secondary | success | error | warning | info",
       default: "primary",
       description: "Default tag color",
     },
-    { name: "createText", type: "string", default: "Create", description: "Text for the create option" },
+    { name: "createText", type: "string", default: "Create (messages.tagInput.create)", description: "Text for the create option" },
     { name: "label", type: "string", description: "Label text" },
     inputSizeProp,
     roundedProp,
     { name: "error", type: "boolean", default: "false", description: "Error state" },
     { name: "errorMessage", type: "string", description: "Error message text" },
-    { name: "noSuggestionsText", type: "string", default: "No suggestions", description: "Text when no suggestions match" },
+    { name: "noSuggestionsText", type: "string", default: "No suggestions (messages.tagInput.noSuggestions)", description: "Text when no suggestions match" },
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
     hiddenProp,
-    ...nativeControlProps,
+    // The values post through hidden inputs (#303), not the search input's text.
+    ...nativeControlProps.map((p) =>
+      p.name === "autocomplete"
+        ? { ...p, description: "Autocomplete hint for the search box. It controls the browser's own suggestion list there — use off to keep it from covering the listbox. History-based autofill doesn't apply, since the search box carries no name" }
+        : p.name === "name" ? { ...p, description: "Form field name. Posts the tags, one entry each with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
+    ),
   ],
 
   slots: [{ name: "suggestion", payload: "{ suggestion }", description: "Renders one row of the suggestions list" }],

@@ -3,17 +3,11 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import type { HideableProps, ColorableProps, CuiRounded, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
+import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { warnVariantColor } from "../utils/devWarn";
 import { useMessages } from "../composables/useMessages";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
@@ -89,28 +83,28 @@ const alertStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
   const base: Record<string, string> = {
-    borderRadius: radiusMap[props.rounded],
-    "--_alert-color": `var(--cui-${c})`,
+    // Paint as private tokens, read back through the stylesheet's :where() (#211).
+    "--_alert-radius": RADIUS_SCALE[props.rounded],
     "--_alert-focus-ring": `var(--cui-${c}-focus-ring)`,
   };
 
   if (v === "solid") {
-    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
-    base.color = `var(--cui-${c}-text)`;
-    base.border = "1px solid transparent";
+    base["--_alert-bg"] = `var(--cui-${c}-solid, var(--cui-${c}))`;
+    base["--_alert-color"] = `var(--cui-${c}-text)`;
+    base["--_alert-border"] = "1px solid transparent";
     base["--_alert-icon-color"] = `var(--cui-${c}-text)`;
     base["--_alert-dismiss-color"] = `var(--cui-${c}-text)`;
   } else if (v === "outline") {
-    base.background = "transparent";
-    base.color = `var(--cui-${c})`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_alert-bg"] = "transparent";
+    base["--_alert-color"] = `var(--cui-${c})`;
+    base["--_alert-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_alert-icon-color"] = `var(--cui-${c})`;
     base["--_alert-dismiss-color"] = `var(--cui-${c})`;
   } else {
     // subtle
-    base.background = `var(--cui-${c}-bg)`;
-    base.color = `var(--cui-text-body)`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_alert-bg"] = `var(--cui-${c}-bg)`;
+    base["--_alert-color"] = `var(--cui-text-body)`;
+    base["--_alert-border"] = `1px solid var(--cui-${c}-border)`;
     base["--_alert-icon-color"] = `var(--cui-${c})`;
     base["--_alert-dismiss-color"] = `var(--cui-text-secondary)`;
   }
@@ -118,7 +112,8 @@ const alertStyle = computed(() => {
   return base;
 });
 
-const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color));
+const defaults = useCleanUIDefaults();
+const roleIcon = computed(() => resolveRoleIcon(props.icon, props.color, defaults?.value.roleIcons));
 
 const liveAttrs = computed(() => resolveLiveRegion(props.color, props.live));
 const messages = useMessages();
@@ -170,6 +165,14 @@ const messages = useMessages();
 </template>
 
 <style scoped>
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+:where(.cui-alert) {
+  background: var(--cui-alert-bg, var(--_alert-bg));
+  color: var(--cui-alert-color, var(--_alert-color));
+  border: var(--cui-alert-border, var(--_alert-border));
+  border-radius: var(--cui-alert-radius, var(--_alert-radius));
+}
+
 .cui-alert {
   display: flex;
   align-items: flex-start;

@@ -7,6 +7,274 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-22
+
+### Added
+
+- **CuiScrollArea** and **useScrollArea** (#143): a scroll container that fades its content
+  out at an edge with more past it, with optional arrow or scroll-button indicators beside
+  the scroller (`indicator`, `indicatorVisibility`, `#indicator-start`/`#indicator-end`).
+  While its content overflows it is a named, focusable region; when it fits it adds no tab
+  stop. Edges are logical, so right-to-left pages work. `useScrollArea` is the same
+  arrangement for a scroller you render yourself, with a `mask` or `overlay` fade. New
+  message key `scrollArea.region` (a custom catalogue must add it).
+
+### Changed
+
+- clean-ui-editor's peer range on `@itguy614/clean-ui` moves to `^1.4.0`: the editor's
+  toolbar is built on CuiScrollArea (#143), and its error message carries the shared
+  `.cui-field-error` (#217), both first shipped in this release.
+- A form control's error message is styled by one shared `.cui-field-error` class (#217):
+  0.8125rem at line-height 1.4 everywhere. CuiTagInput and CuiCombobox drew theirs at
+  0.75rem, and CuiCombobox's was an inline style no stylesheet could override. Their gap
+  above it matches CuiInput's. Each control keeps its own `__error` class beside it.
+- CuiCheckbox, CuiRadio, CuiToggle, CuiCopyButton and CuiSpinner hide their screen-reader-only
+  parts with the shared `.cui-sr-only` instead of their own copies, three of which used the
+  deprecated `clip` (#217).
+- CuiDatePicker, CuiDateRangePicker, CuiTimePicker, CuiTransferList and CuiTreeView take the
+  full `CuiSize` scale for `size` (#217), so a wrapper forwarding any size type-checks.
+  Components styled at three sizes give `xs` and `xl` the nearest one.
+- CuiTable, CuiModalBody and the markdown editor toolbar are built on the new scroll area
+  (#143). The toolbar's edge fades are now a mask on the buttons rather than painted
+  gradients, so they match any toolbar background.
+
+- **Elevation tokens** (#224): `--cui-shadow-sm`, `--cui-shadow-md` and `--cui-shadow-lg`, each
+  with a stronger dark-mode value. CuiDropdownMenu, CuiDropdownSub, CuiContextMenu, CuiModal
+  and the markdown editor's mode toggle and autocomplete use them in place of a hardcoded
+  shadow restated in a `.dark` rule; their look is unchanged.
+- CuiTooltip, CuiAlert, CuiToast and CuiBackdrop take their paint from tokens, so a plain
+  rule restyles them without `!important` (#211). Their backgrounds, colours and borders
+  were bare inline declarations. New tokens: `--cui-tooltip-bg` (the arrow follows it),
+  `--cui-tooltip-color`, `-px`, `-py`, `-radius` and `-font-size`; `--cui-alert-bg`,
+  `-color`, `-border` and `-radius`; the same four for `--cui-toast-*`; and
+  `--cui-backdrop-bg`. A tooltip teleports to `<body>`, so set its tokens on `:root`.
+- **App-wide defaults** (#149): `createCleanUI({ headingLevels, roleIcons })`, for one app.
+  `headingLevels` sets the default heading level of CuiCardHeader, CuiModalHeader (and so
+  CuiModal's and CuiSlideover's `title`), CuiConfirmDialog and CuiEmptyState; an explicit
+  `titleAs` still wins. `CuiConfigProvider` takes the same two props for a subtree, and
+  `configureCleanUI()` sets them globally, as the fallback beneath every app.
+  `registerRoleIcons()` stays as its alias for role icons.
+- `useRovingFocus` returns `focusNearest(i)`: after the focused item is removed, focus the
+  enabled item that took its place (the next, else the one before) instead of losing focus
+  to `<body>` (#170).
+- `CuiContextMenu` takes `resolveTarget(el)`, for one menu serving many targets. It is
+  called with the element a right-click, long-press or Shift+F10 landed on. Return what
+  the menu is for, and the `menu` slot receives it as `target`; return nothing and that
+  spot gets the browser's own menu (#208).
+- CuiDataGrid takes `searchDebounce` (ms, default 300 — what it always waited): how long the
+  search box waits after the last keystroke (#273).
+
+
+- Twelve components draw their neutral hover, active and track fills from the semantic slots
+  (`--cui-surface-bg`, `--cui-surface-dark-bg`, `--cui-table-head-bg`) instead of raw surface
+  steps restated for dark mode (#210): Accordion, the four dropdown items, Fieldset,
+  Pagination, Tabs, Select, Input, Table and DataGrid, and the markdown editor's
+  autocomplete highlight. Same colours in both modes; a consumer's
+  slot override now reaches them, and their `.dark` twins are gone. New tokens for the fills
+  that had none: `--cui-table-stripe-bg`, `--cui-table-row-hover-bg` and
+  `--cui-pagination-hover-border`.
+- **More of the UI is translatable** (#215): English a component hardcoded now comes from the
+  message catalogue. That covers the prose defaults of CuiCombobox, CuiSelect, CuiTagInput,
+  CuiFileUpload, CuiTransferList, CuiCopyButton and CuiSpinner (a prop you set still wins), and
+  literals in CuiDataGrid's toolbar, column and view managers, the date pickers ("Today", the
+  year-range names, the range prompt), CuiCopyButton's label, CuiAvatar's fallback `alt`,
+  CuiToggle's "ON", CuiPagination's landmark and button names, and CuiFileUpload's size, count and
+  `reject` reason lines. English output is unchanged. **New required `CuiCoreMessages` keys**:
+  a catalogue passed to `CuiConfigProvider` merges onto the defaults and needs nothing, but a
+  hand-built full `CuiCoreMessages` object must add `combobox.placeholder` / `noResults`,
+  `tagInput.placeholder` / `noSuggestions` / `create` (a function of the value), `select`,
+  `fileUpload`, `transferList`, `datePicker`, `dateRangePicker`, `copyButton`, `avatar`, `spinner`,
+  `toggle`, `pagination.label` / `previous` / `next` / `page`, and nine under `dataGrid`. Still
+  English: month and weekday names, day-cell labels and file sizes, which need locale
+  formatting (#337), and CuiTimePicker's AM/PM, which its field, mask and value share.
+- CuiRadioGroup, CuiCheckboxGroup and CuiToggleGroup share one implementation of their
+  layout and auto-orientation, and the two multi-select groups share their context
+  provider (#206). Auto orientation now counts only rendered options: a `v-if`'d-out
+  option, whitespace, or a nested `<template v-for>` no longer skews it. Each root and its `__options` / `__error` elements now also carry
+  `cui-control-group` classes, whose rules live in the library stylesheet. Those rules
+  have lower specificity than the old scoped copies, and the error container's paint is
+  zero-specificity, so a consumer's plain (unlayered) override wins. The group-specific
+  classes are unchanged. `CheckboxGroupContext` and `ToggleGroupContext` are now aliases of
+  `MultiSelectGroupContext`, the identical shape. The deep-import paths
+  `components/checkbox-context.js` and `components/toggle-context.js` are gone: the keys they
+  held were never the ones the components used, so nothing reading them could have worked.
+  Import from the package root.
+- **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
+  corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
+  selected row instead of coloured bold text. It is the same shared listbox panel, and takes
+  the same tokens under the `select` prefix (`--cui-select-panel-*`, `--cui-select-item-*`),
+  which are new. Its keyboard navigation now follows the order options are shown in, with
+  groups, and adds Home/End and type-ahead.
+- **CuiDropdownTrigger forwards menu-button semantics to its child** (#160). The CuiButton
+  or `<button>` inside it now gets `aria-haspopup="menu"`, `aria-expanded` and
+  `aria-controls`. Arrow Down or Arrow Up on it opens the menu on the first or last item,
+  in every trigger mode. The slot should hold exactly one element; anything else logs a
+  warning.
+
+### Deprecated
+
+- `useScrollShadows` and its `scrollShadow*Style` objects, in favour of `useScrollArea` (#143).
+  Nothing in the library uses them any more; they remain exported until 2.0.
+
+### Fixed
+
+- CuiDateRangePicker sizes its trigger from `size` (#349). It accepted the prop but drew a
+  fixed 39px box at every size, a pixel short even of a `md` CuiInput. It now takes its
+  height, padding and font size from the same input scale as CuiInput, CuiDatePicker and
+  CuiTimePicker, so it lines up with them: its text is 1rem at `md`, up from 0.875rem, and
+  the two date fields widen with it. `--cui-date-range-picker-height`, `-px` and
+  `-font-size` override them.
+- CuiDataGrid takes the full `CuiSize` scale for `size` (#349). `xs` and `xl` take the
+  nearest table size, as CuiTable already did. The exported `TableSize` type is unchanged.
+- CuiBadge is back to its designed height, about 5px shorter (#351). Since 1.3 its text
+  took the scoped reset's `line-height: 1.5` instead of the badge's own 1. Anything holding
+  a badge is shorter by the same: tabs with counts, table cells, the timeline. A row of
+  chips in an `xs` or `sm` CuiTagInput or CuiCombobox now fits, so the field matches a
+  CuiInput beside it.
+- CuiResizablePanels follows only the pointer that started a drag, and its handle sets
+  `touch-action: none`, so a touch drag resizes the panels instead of panning the page
+  (#275). It and CuiColorPicker now share one internal drag helper, and neither starts a
+  drag on a right- or middle-click.
+- CuiModalBody can be scrolled from the keyboard (#143). An overflowing body is now a
+  focusable region, so a body with nothing focusable in it is no longer stuck for keyboard
+  users (WCAG 2.1.1). Its padding moved to an inner `.cui-modal-body__content` element.
+- CuiTable's wrapper is a scroll region only while the table actually overflows (#143): a
+  `maxHeight` table whose rows fit no longer adds a tab stop that scrolls nothing.
+- `allowNested` on CuiModal and CuiSlideover (and `useOverlay`'s option) (#285). It never had
+  an effect: overlays always stack, and Escape closes only the topmost. It warns when passed
+  and goes in 2.0. `useOverlay`'s private one-at-a-time set, which it cleared, is gone; the
+  shared layer stack is the one record of open overlays.
+
+
+- A theme class on part of a page now re-themes it (#329). `<div class="cui-theme-forest">`
+  changed only the colour scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,
+  `--cui-text-*`, …) was resolved once on `:root`, so components inside kept the page's theme.
+  The slots are now declared on every theme scope too, in light and dark mode. Only the slots that read the scale are re-declared, so a container's own value for the
+  others (`--cui-error-focus-ring`, …) still reaches inside. A slot override on `:root` (or any
+  ancestor) for one that does read it — `--cui-primary-hover`, say — now stops at a scoped
+  theme, which applies its own; to change it inside one, override it on the themed element.
+- Components inside a `.cui-typography` scope are no longer restyled by its prose rules
+  (#147). Every prose element rule (paragraphs, lists, code, `pre`, `kbd`, blockquotes, `hr`,
+  tables, `mark`, `small`) now skips elements carrying a component's `cui-*` class, as headings
+  and links already did. The typography layer's own classes (`cui-lead`, `cui-code`, …) still
+  take prose styling, with the same specificity as before; `cui-list-unstyled` and
+  `cui-list-inline` now actually remove the prose list markers and indent, which used to
+  override them. Under a prose scope, CuiTable and CuiDataGrid cells follow their `size` again
+  instead of a fixed prose padding, and a breadcrumb's list loses the prose markers and
+  indent. Prose itself is unchanged.
+- CuiCheckbox, CuiRadio and CuiToggle no longer read their description as part of their
+  name (#183): with a `description`, the control is named by its label and described by
+  the description. `useFieldDescribedBy` takes an optional `descriptionId`, ordering the
+  ids description, then the caller's, then the error.
+
+- Clicking a CuiFormField label now does what a native label would when its control isn't
+  natively labelable — CuiCheckbox, CuiRadio, CuiToggle, CuiSelect, CuiTimePicker and the
+  groups, where the label's `for` did nothing (#181). It focuses the control (a group's tab
+  stop, without picking an option), toggles a checkbox or switch and selects a radio, and
+  does nothing for a disabled one.
+
+- CuiPagination's per-page selector is named "Results per page", and its landmark, previous,
+  next and page-button names come from the message catalogue (`pagination.label`,
+  `perPageLabel`, `previous`, `next`, `page(n)`) instead of hard-coded English. The
+  ellipsis is hidden from screen readers (#155). The new keys are required members of `CuiCoreMessages`: a
+  full catalogue typed with it needs them added (a partial one passed to
+  `CuiConfigProvider` doesn't).
+- CuiStepper's steps can be operated from the keyboard (#154). The steps are an ordered
+  list inside a `<nav>`, so their count and position are announced; a step you can go to
+  is a `<button>`, and the buttons share one tab stop (`useRovingFocus`) on the current
+  step. Completed and error steps say so to a screen reader (`stepper.complete` /
+  `stepper.error`). With `linear`, only steps up to the furthest one reached are navigable: an
+  error step ahead can no longer be jumped to, and going back no longer locks the steps
+  already done. `focus()` focuses the current step. This adds a tab stop, so a focus-order snapshot will change.
+- CuiFileUpload can be operated from the keyboard (#169). The file input is visually hidden
+  but stays in the tab order (it was `display: none`), so Enter or Space opens the file
+  dialog, and the drop zone is a `<label>` for it that draws its focus ring. The `label`
+  prop now labels the input (so clicking its text opens the dialog too), the accept and size hint describes it, each remove button is
+  named after its file (`fileUpload.removeFile`), `focus()` focuses the input, and
+  `disabled` disables the input and the list's buttons. This adds a tab stop, so a
+  focus-order snapshot will change.
+- CuiTransferList can be operated from the keyboard (#170). Each list is a multiselectable
+  `role="listbox"` named by its title, with one tab stop (`useRovingFocus`): the arrows and
+  Home/End move, Space marks an item, and Enter moves the focused item across. The six
+  icon-only buttons and the filter fields are named, and "No items" is translatable
+  (`transferList.*` in the message catalogue). This adds tab stops, so a focus-order
+  snapshot will change. A double-clicked (or Enter-moved) item no longer stays marked, which
+  let "move selected" add it to the other list a second time. "Move selected" now moves only the marked items
+  the filter shows; marks on filtered-out items stay. A disabled item in the selected list
+  can no longer be marked, double-clicked or dragged.
+- `useRovingFocus` leaves no tab stop when every item is disabled, rather than keeping one
+  on a disabled item (#170).
+- CuiRating can be operated from the keyboard and is announced as a rating (#171). The
+  icons are one `role="slider"` tab stop: the arrow keys step the value (by half a star
+  with `half`), Home and End reach the ends, and `aria-valuetext` reads "3 of 5 stars"
+  (`rating.valueText` in the message catalogue). `label` names it, and `focus()` now
+  focuses it. A `readonly` rating is an image with the same text and no tab stop. This
+  adds a tab stop to every interactive rating, so a focus-order snapshot will change.
+- CuiDataGrid's clickable rows can be used from the keyboard, and plain rows no longer look
+  clickable (#232). With a `@row-click` listener (or `rowClickable`), rows are one tab stop:
+  the arrows and Home/End move between them — scrolling a virtualised grid — and Enter or
+  Space emits `row-click`, with a focus ring and a pointer cursor. Without one, rows get no
+  tab stop and no pointer. An overlay opened from a row returns focus to it on close, even
+  after it scrolled out of the virtualised window (`useOverlay` asks for an unmounted opener
+  back by key, and so does a row's actions menu). `rowClickable` overrides the detection
+  either way. Interactive rows carry an `aria-description` ("Press Enter to open",
+  `dataGrid.rowHint`).
+- CuiDataGrid's column sorting is keyboard-operable and announced (#161): a sortable header's
+  text is a `<button>`, and its `<th>` carries `aria-sort`. The select-all and row
+  checkboxes, the row-actions buttons and the view toggle are named ("Select Alice",
+  "Actions for Alice", "Table view") — a new `rowLabel` prop picks what names a row — from
+  new `dataGrid.*` message keys — required members
+  of `CuiCoreMessages`, so a full catalogue typed with it needs them. This adds a tab stop
+  per sortable column, so a focus-order snapshot will change.
+- CuiDataGrid mounts one context menu for the whole grid instead of one per row: a 500-row
+  grid mounted 500. The menu shows the actions of the row it was opened on, and a row with
+  none still gets the browser's own menu (#208).
+- CuiDataGrid's client-side search and filters no longer lower-case every cell on every
+  keystroke: each row's cells are lowered once and cached, redone only for a value that
+  changed, so a keystroke in a 5,000 × 10 grid went from 50,000 lower-casings to none (#273).
+
+- CuiTabs links each tab to its panel (#271): a tab's `aria-controls` names its panel and the
+  panel's `aria-labelledby` its tab, with ids generated per tab set. Before, the panel named
+  the tab's value, which no element had as an id, and tabs had no `aria-controls`.
+
+- CuiResizablePanels' handle is keyboard-operable and announced (#156): a focusable
+  `role="separator"` (the WAI-ARIA window splitter) named "Resize panels"
+  (`resizablePanels.handle` in the message catalogue), with `aria-valuenow` and
+  `aria-controls`. The arrows along the split move it in 2% steps (10% with Shift), Home and
+  End go to the extremes, and Enter collapses and restores when `collapseThreshold` is set.
+  The arrows and the drag now follow the page direction side by side. This adds a tab
+  stop, so a focus-order snapshot will change. A collapsed first panel is `inert`, so its content
+  leaves the tab order and the accessibility tree. A double-click reset is now clamped to
+  `minFirst`/`minSecond`, and emits `collapse` only when it reopens a collapsed panel.
+- CuiColorPicker can be operated from the keyboard (#177). The gradient is a Saturation /
+  Brightness slider pair sharing one tab stop (Left/Right and Up/Down), hue and alpha are
+  sliders, and the swatches are a radiogroup whose arrows move and select, each named by
+  its hex value. Shift takes ten steps. Names and value texts are in the message catalogue
+  (`colorPicker.*`). `disabled` now disables the text field and the format toggle, which
+  stayed editable before, and takes the sliders and swatches out of the tab order.
+  `focus()` without a text field focuses the gradient instead of doing nothing. The swatches
+  wrap into rows, and Up/Down move a row. This adds tab stops, so a focus-order snapshot will
+  change.
+- CuiColorPicker's border frames the gradient as well as the controls below it; it had no
+  top edge (#177).
+- CuiColorPicker no longer re-reads its own emitted value under `v-model`. That value is
+  quantized hex, and parsing it back rewound drags and keyboard steps, lost the hue
+  whenever the colour reached grey or black, and turned 360° into 0°. A palette entry in
+  any format (`#f00`, `rgb(…)`) now shows as selected (#177).
+- CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
+  item closes them: the trigger, or the element the context menu was opened from. A
+  click outside still leaves focus where it landed. On open, focus now also lands on a
+  check or radio item when it comes first. CuiContextMenu's Escape goes through the shared
+  layer stack, so inside a modal it closes only the menu (#160).
+- Tab in an open dropdown or context menu closes it, and focus moves on from the trigger
+  as it would from any button, instead of leaving the page from the end of `<body>`. A
+  sub-menu now handles its own keys: Arrow Right moves focus into it, Arrow Up/Down move
+  within it, and Escape or Arrow Left closes only the sub-menu and returns to its row
+  (#160).
+- A dropdown shown by hover or focus (`trigger="hover"` / `"hover-focus"`) no longer takes
+  focus from where it was, and a `hover-focus` one no longer closes when focus moves into
+  its menu (#160).
+
 ## [1.3.2] - 2026-10-19
 
 ### Added

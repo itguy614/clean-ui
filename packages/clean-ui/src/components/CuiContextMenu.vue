@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { ref, provide, nextTick, onMounted, onUnmounted } from "vue";
+import { ref, shallowRef, provide, watch, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
+import { useLayerStack } from "../composables/useLayerStack";
+import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 
 /**
  * How the menu can be summoned.
@@ -29,6 +35,13 @@ export interface CuiContextMenuProps extends HideableProps, DisableableProps {
   longPressDelay?: number;
   /** Movement that cancels a hold, in px — a drag or a scroll, not a press. */
   longPressTolerance?: number;
+  /**
+   * For one menu serving many targets — rows in a list, cells in a grid (#208). Called with
+   * the element a gesture landed on; return what the menu is for (a row, an id), which the
+   * `menu` slot receives as `target`, or `undefined`, `null` or `false` to leave that spot to
+   * the browser's own menu. Without it, the whole wrapped content opens the menu.
+   */
+  resolveTarget?: (el: Element) => unknown;
 }
 
 const props = withDefaults(defineProps<CuiContextMenuProps>(), {
@@ -53,9 +66,12 @@ const wrapperRef = ref<HTMLElement | null>(null);
 const menuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
+// What had focus when the menu opened — the row it was summoned from, by keyboard — and
+// gets it back on close (#160).
+let returnFocusTo: Element | null = null;
 
-// Unique ID for click-outside detection on teleported menu
-const contextMenuId = `cui-ctx-${Math.random().toString(36).slice(2, 8)}`;
+// Stamped on its teleported panels (its own and any sub-menu's) as data-cui-menu-owner
+const contextMenuId = useCuiId("context-menu");
 
 function open() {
   if (props.disabled) return;
@@ -65,7 +81,9 @@ function open() {
 }
 
 function close() {
-  if (!isOpen.value) return;
+  if (!isOpen.value || isClosing.value) return;
+  restoreMenuFocus(returnFocusTo, contextMenuId);
+  returnFocusTo = null;
   isClosing.value = true;
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
@@ -78,10 +96,14 @@ function closeAll() {
   close();
 }
 
-/** Gap kept between the panel and the viewport edge. */
-const VIEWPORT_PADDING = 16;
-/** Tallest the panel gets before it scrolls internally, however much room there is. */
-const MAX_PANEL_HEIGHT = 400;
+// Where the panel was last opened. A fresh object per open, so re-opening at the same spot
+// still re-measures.
+const anchor = shallowRef<{ x: number; y: number } | null>(null);
+
+// Post-flush: runs after the render that mounts (or re-uses) the panel, whatever order the
+// caller set the open state and the position in. A nextTick here depended on that order,
+// and ran before the mount when the position came first (#291).
+watch(anchor, (at) => at && measure(at), { flush: "post" });
 
 function positionAtCursor(x: number, y: number) {
   // First pass: place the panel at the cursor with NO maxHeight, so it lays out
@@ -91,70 +113,73 @@ function positionAtCursor(x: number, y: number) {
   // a menu opened near the bottom edge squashed into the remaining sliver and
   // scrolled instead of flipping (#95).
   //
-  // Hidden rather than visible for that one frame: unconstrained, the panel can
-  // hang off the bottom of the viewport, and it is the same trick CuiPopover
-  // uses to avoid showing an unpositioned panel (#88).
+  // Hidden for that one frame: unconstrained, the panel can hang off the bottom
+  // of the viewport. Transparent and paused, NOT `visibility: hidden` — focus()
+  // on a visibility-hidden element is a silent no-op, and the first item is
+  // focused in the same pass that reveals the panel, before the reveal renders.
+  // The same guard as CuiPopover's hiddenUntilPositioned (#88, #112); pausing the
+  // entry animation means it plays from the start once the panel is placed.
   menuStyle.value = {
     position: "fixed",
-    zIndex: "9990",
+    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
-    visibility: "hidden",
+    opacity: "0",
+    pointerEvents: "none",
+    animation: "none",
   };
 
-  nextTick(() => {
-    if (!menuRef.value) return;
+  // Measured by the post-flush watcher above, once the panel has rendered.
+  anchor.value = { x, y };
+}
 
-    // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
-    // in with `transform: scale(0.95)` and a rect reports the *transformed* box,
-    // so measuring mid-animation reads about 5% small. Offsets are layout
-    // values and ignore the transform.
-    const height = menuRef.value.offsetHeight;
-    const width = menuRef.value.offsetWidth;
+function measure({ x, y }: { x: number; y: number }) {
+  if (!menuRef.value) return;
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+  // offsetWidth/offsetHeight, not getBoundingClientRect(): the panel animates
+  // in with `transform: scale(0.95)` and a rect reports the *transformed* box,
+  // so measuring mid-animation reads about 5% small. Offsets are layout
+  // values and ignore the transform.
+  const height = menuRef.value.offsetHeight;
+  const width = menuRef.value.offsetWidth;
 
-    const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
-    const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
-    const fitsBelow = Math.min(roomBelow, MAX_PANEL_HEIGHT);
-    const fitsAbove = Math.min(roomAbove, MAX_PANEL_HEIGHT);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
-    const adjusted: Record<string, string> = {
-      position: "fixed",
-      zIndex: "9990",
-      left: `${x}px`,
-      top: `${y}px`,
-    };
+  const roomBelow = Math.max(0, vh - y - VIEWPORT_PADDING);
+  const roomAbove = Math.max(0, y - VIEWPORT_PADDING);
+  const fitsBelow = Math.min(roomBelow, PANEL_MAX_HEIGHT);
+  const fitsAbove = Math.min(roomAbove, PANEL_MAX_HEIGHT);
 
-    if (height <= fitsBelow) {
-      adjusted.maxHeight = `${fitsBelow}px`;
-    } else if (height <= fitsAbove) {
-      // Flip up with the panel's BOTTOM on the cursor, so the first item stays
-      // next to the pointer and it still reads as the same control.
-      adjusted.top = `${Math.max(VIEWPORT_PADDING, y - height)}px`;
-      adjusted.maxHeight = `${fitsAbove}px`;
-    } else {
-      // Fits neither — scroll on the roomier side, still anchored to the cursor.
-      const useAbove = roomAbove > roomBelow;
-      const maxHeight = useAbove ? fitsAbove : fitsBelow;
-      adjusted.top = useAbove ? `${Math.max(VIEWPORT_PADDING, y - maxHeight)}px` : `${y}px`;
-      adjusted.maxHeight = `${maxHeight}px`;
-    }
+  const adjusted: Record<string, string> = {
+    position: "fixed",
+    zIndex: OVERLAY_Z_INDEX,
+    left: `${x}px`,
+    top: `${y}px`,
+  };
 
-    // Flip left if it would overflow the right edge.
-    if (x + width > vw - VIEWPORT_PADDING) {
-      adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
-    }
+  if (height <= fitsBelow) {
+    adjusted.maxHeight = `${fitsBelow}px`;
+  } else if (height <= fitsAbove) {
+    // Flip up with the panel's BOTTOM on the cursor, so the first item stays
+    // next to the pointer and it still reads as the same control.
+    adjusted.top = `${Math.max(VIEWPORT_PADDING, y - height)}px`;
+    adjusted.maxHeight = `${fitsAbove}px`;
+  } else {
+    // Fits neither — scroll on the roomier side, still anchored to the cursor.
+    const useAbove = roomAbove > roomBelow;
+    const maxHeight = useAbove ? fitsAbove : fitsBelow;
+    adjusted.top = useAbove ? `${Math.max(VIEWPORT_PADDING, y - maxHeight)}px` : `${y}px`;
+    adjusted.maxHeight = `${maxHeight}px`;
+  }
 
-    menuStyle.value = adjusted;
+  // Flip left if it would overflow the right edge.
+  if (x + width > vw - VIEWPORT_PADDING) {
+    adjusted.left = `${Math.max(VIEWPORT_PADDING, x - width)}px`;
+  }
 
-    // Focus first item
-    const firstItem = menuRef.value?.querySelector<HTMLElement>(
-      '[role="menuitem"]:not([aria-disabled="true"])',
-    );
-    firstItem?.focus();
-  });
+  menuStyle.value = adjusted;
+  focusMenuEdge(menuRef.value);
 }
 
 /**
@@ -172,6 +197,9 @@ function openAt(x: number, y: number) {
     isClosing.value = false;
     if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
   }
+  // Not when re-opening: focus is in the old panel then, and the row is still the one to
+  // go back to.
+  if (!returnFocusTo) returnFocusTo = document.activeElement;
   positionAtCursor(x, y);
   open();
   emit("open", x, y);
@@ -180,22 +208,58 @@ function openAt(x: number, y: number) {
 const respondsToContextMenu = () => props.trigger === "contextmenu" || props.trigger === "auto";
 const respondsToLongPress = () => props.trigger === "longpress" || props.trigger === "auto";
 
+// What the menu was last opened for: `resolveTarget`'s answer, for the `menu` slot.
+const menuTarget = shallowRef<unknown>(undefined);
+
+// The element the menu was opened on, with resolveTarget: a press on it doesn't count as
+// outside (the mousedown a touch browser sends after a long-press lands right there).
+let openedOn: Element | null = null;
+
+/**
+ * `resolveTarget`'s answer for a gesture on `el`, or null when the spot isn't ours — or when
+ * something inside already handled the event (a nested context menu).
+ */
+interface Hit {
+  value: unknown;
+  el: Element | null;
+}
+
+function resolve(e: Event): Hit | null {
+  if (e.defaultPrevented) return null;
+  if (!props.resolveTarget) return { value: undefined, el: null };
+  const el = e.target instanceof Element ? e.target : null;
+  const value = el ? props.resolveTarget(el) : undefined;
+  return value == null || value === false ? null : { value, el };
+}
+
+function accept(hit: Hit) {
+  menuTarget.value = hit.value;
+  openedOn = hit.el;
+}
+
 function onContextMenu(e: MouseEvent) {
   if (props.disabled || !respondsToContextMenu()) return;
   // Android fires `contextmenu` after its own long-press, so with `auto` the
   // hold would open the menu and the synthesised event would immediately
   // reopen it. Swallow the event, but keep preventDefault so the OS menu
   // doesn't appear on top of ours either.
-  e.preventDefault();
   if (suppressNextContextMenu) {
+    e.preventDefault();
     suppressNextContextMenu = false;
     return;
   }
+  const hit = resolve(e);
+  if (!hit) return; // not a target: the browser's own menu
+  e.preventDefault();
+  accept(hit);
   openAt(e.clientX, e.clientY);
 }
 
 // --- Long press -----------------------------------------------------------
 let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+// Whether a long-press is armed — reactive, so the scroll listener that cancels it is
+// attached only then (and while open), not for the component's whole life (#203).
+const pressPending = ref(false);
 let pressOrigin: { x: number; y: number } | null = null;
 let suppressNextContextMenu = false;
 let suppressNextClick = false;
@@ -203,6 +267,7 @@ let suppressNextClick = false;
 function cancelLongPress() {
   if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
   pressOrigin = null;
+  pressPending.value = false;
 }
 
 function onPointerDown(e: PointerEvent) {
@@ -210,10 +275,14 @@ function onPointerDown(e: PointerEvent) {
   // Mouse already has `contextmenu`; holding a mouse button should not also
   // arm this, or a slow right-click would fire twice.
   if (e.pointerType === "mouse") return;
+  const hit = resolve(e);
+  if (!hit) return;
 
   pressOrigin = { x: e.clientX, y: e.clientY };
+  pressPending.value = true;
   longPressTimer = setTimeout(() => {
     longPressTimer = null;
+    pressPending.value = false;
     if (!pressOrigin) return;
     const { x, y } = pressOrigin;
     pressOrigin = null;
@@ -221,6 +290,7 @@ function onPointerDown(e: PointerEvent) {
     // synthesise a `contextmenu` and a `click` from this same press.
     suppressNextContextMenu = true;
     suppressNextClick = true;
+    accept(hit);
     openAt(x, y);
   }, props.longPressDelay);
 }
@@ -253,8 +323,11 @@ function onKeydown(e: KeyboardEvent) {
   const isMenuKey = e.key === "ContextMenu";
   const isShiftF10 = e.key === "F10" && e.shiftKey;
   if (!isMenuKey && !isShiftF10) return;
+  const hit = resolve(e);
+  if (!hit) return;
 
   e.preventDefault();
+  accept(hit);
   const target = (e.target as HTMLElement | null) ?? wrapperRef.value;
   const rect = target?.getBoundingClientRect();
   if (rect) openAt(rect.left, rect.bottom);
@@ -263,50 +336,24 @@ function onKeydown(e: KeyboardEvent) {
 
 // Keyboard navigation within menu
 function onMenuKeydown(e: KeyboardEvent) {
-  if (!menuRef.value) return;
-
-  if (e.key === "Escape") {
-    e.preventDefault();
-    e.stopPropagation();
-    close();
-    return;
-  }
-
-  const items = Array.from(menuRef.value.querySelectorAll<HTMLElement>(
-    '[role="menuitem"]:not([aria-disabled="true"]), [role="menuitemcheckbox"]:not([aria-disabled="true"]), [role="menuitemradio"]:not([aria-disabled="true"])',
-  ));
-  const currentIdx = items.indexOf(document.activeElement as HTMLElement);
-
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    const next = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
-    items[next]?.focus();
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    const prev = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
-    items[prev]?.focus();
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    items[0]?.focus();
-  } else if (e.key === "End") {
-    e.preventDefault();
-    items[items.length - 1]?.focus();
-  }
+  if (menuRef.value) onSharedMenuKeydown(e, menuRef.value, close);
 }
 
-// Click outside detection
-function onClickOutside(e: MouseEvent) {
-  if (!isOpen.value) return;
-  const target = e.target as Node;
+// Escape through the shared layer stack (#160), like CuiDropdown: a sub-menu's own Escape
+// closes only it, and an enclosing modal stays open.
+useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
-  if (wrapperRef.value?.contains(target)) return;
-  const teleportedMenu = document.querySelector(`[data-cui-context-menu-id="${contextMenuId}"]`);
-  if (teleportedMenu?.contains(target)) return;
+// Only while open, so a closed context menu holds no document listener (#203).
+// Its open sub-menus are teleported panels of their own (see CuiDropdown).
+useClickOutside(
+  // With resolveTarget the wrapper is a whole grid or list, and a press on another row or a
+  // header must close the menu like a press anywhere else — on the element it was opened
+  // on, it doesn't.
+  () => [props.resolveTarget ? openedOn : wrapperRef.value, ...menuPanels(contextMenuId)],
+  close,
+  { enabled: isOpen },
+);
 
-  close();
-}
-
-// Close on scroll
 function onScroll() {
   // A scroll that starts under a held finger is a scroll, not a press — and
   // pointermove alone doesn't always fire once the browser takes the gesture.
@@ -314,14 +361,10 @@ function onScroll() {
   if (isOpen.value) close();
 }
 
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScroll, true);
-});
+// While open, and while a long-press is armed: a scroll cancels that too.
+useEventListener("window", "scroll", onScroll, { enabled: () => isOpen.value || pressPending.value, capture: true });
 
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScroll, true);
   if (closeAnimTimer) clearTimeout(closeAnimTimer);
   cancelLongPress();
 });
@@ -342,6 +385,7 @@ function closeSiblingSubMenus(except?: () => void) {
 
 // Provide DropdownContext so all dropdown item components work
 provide(DropdownContextKey, {
+  ownerId: contextMenuId,
   isOpen,
   isClosing,
   trigger: ref("click" as DropdownTrigger),
@@ -382,12 +426,12 @@ defineExpose({ open, openAt, close, isOpen });
         ref="menuRef"
         class="cui-context-menu__panel"
         :class="{ 'cui-context-menu__panel--closing': isClosing }"
-        :data-cui-context-menu-id="contextMenuId"
+        :data-cui-menu-owner="contextMenuId"
         :style="{ ...menuStyle, minWidth }"
         role="menu"
         @keydown="onMenuKeydown"
       >
-        <slot name="menu" />
+        <slot name="menu" :target="menuTarget" />
       </div>
     </Teleport>
   </div>
@@ -419,7 +463,7 @@ defineExpose({ open, openAt, close, isOpen });
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
   animation: cui-context-menu-in 0.15s ease forwards;
 }
@@ -427,10 +471,6 @@ defineExpose({ open, openAt, close, isOpen });
 .cui-context-menu__panel--closing {
   animation: cui-context-menu-out 0.15s ease forwards;
   pointer-events: none;
-}
-
-:where(.dark, .dark *) .cui-context-menu__panel {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
 }
 
 @keyframes cui-context-menu-in {

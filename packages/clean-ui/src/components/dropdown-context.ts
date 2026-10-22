@@ -1,7 +1,9 @@
 import type { InjectionKey, Ref } from "vue";
+import type { PanelSide } from "../utils/position";
+import type { MenuEdge } from "../utils/menu";
 
 export type DropdownTrigger = "click" | "hover" | "hover-focus";
-export type DropdownPlacement = "bottom" | "top" | "left" | "right";
+export type DropdownPlacement = PanelSide;
 
 export interface DropdownContext {
   isOpen: Ref<boolean>;
@@ -9,7 +11,21 @@ export interface DropdownContext {
   trigger: Ref<DropdownTrigger>;
   triggerEl: Ref<HTMLElement | null>;
   placement: Ref<DropdownPlacement>;
-  open: () => void;
+  /**
+   * Identifies this menu's panels: each one — the menu and every sub-menu — carries it as
+   * `data-cui-menu-owner`, which is how the teleported panels are found (see utils/menu).
+   * Optional only so that a context provided by hand (DropdownContextKey is exported) still
+   * type-checks; without it those lookups find nothing.
+   */
+  ownerId?: string;
+  /**
+   * CuiDropdown only. Which item CuiDropdownMenu focuses once it has rendered: a fresh
+   * object per request, so an explicit one (Arrow Up/Down on the trigger) moves focus in
+   * even while the menu is already open.
+   */
+  focusRequest?: Ref<{ edge: MenuEdge } | null>;
+  /** Open, then focus the first item — or the last, for Arrow Up on the trigger. */
+  open: (edge?: MenuEdge) => void;
   close: () => void;
   toggle: () => void;
   closeAll: () => void;
@@ -29,76 +45,3 @@ export interface DropdownRadioContext {
 }
 
 export const DropdownRadioKey: InjectionKey<DropdownRadioContext> = Symbol("dropdown-radio");
-
-/**
- * Compute dropdown position synchronously from a reference element.
- * Returns CSS styles for the floating panel.
- */
-export function computeDropdownPosition(
-  triggerEl: HTMLElement,
-  preferredPlacement: DropdownPlacement = "bottom",
-): { styles: Record<string, string>; actualPlacement: DropdownPlacement } {
-  const rect = triggerEl.getBoundingClientRect();
-  const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 0;
-  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 0;
-
-  let placement = preferredPlacement;
-
-  // Auto-flip vertical
-  if (placement === "bottom" && viewportHeight - rect.bottom < 200 && rect.top > viewportHeight - rect.bottom) {
-    placement = "top";
-  } else if (placement === "top" && rect.top < 200 && viewportHeight - rect.bottom > rect.top) {
-    placement = "bottom";
-  }
-
-  // Auto-flip horizontal
-  if (placement === "right" && viewportWidth - rect.right < 200 && rect.left > viewportWidth - rect.right) {
-    placement = "left";
-  } else if (placement === "left" && rect.left < 200 && viewportWidth - rect.right > rect.left) {
-    placement = "right";
-  }
-
-  const gap = 4;
-  const styles: Record<string, string> = {
-    position: "fixed",
-    zIndex: "9990",
-  };
-
-  // For vertical placements, align to right edge of trigger if it would overflow the viewport
-  const alignRight = placement === "bottom" || placement === "top"
-    ? rect.left + 200 > viewportWidth  // 200px = reasonable min menu width
-    : false;
-
-  switch (placement) {
-    case "bottom":
-      styles.top = `${rect.bottom + gap}px`;
-      if (alignRight) {
-        styles.right = `${viewportWidth - rect.right}px`;
-      } else {
-        styles.left = `${rect.left}px`;
-      }
-      styles.maxHeight = `${Math.min(viewportHeight - rect.bottom - gap - 16, 400)}px`;
-      break;
-    case "top":
-      styles.bottom = `${viewportHeight - rect.top + gap}px`;
-      if (alignRight) {
-        styles.right = `${viewportWidth - rect.right}px`;
-      } else {
-        styles.left = `${rect.left}px`;
-      }
-      styles.maxHeight = `${Math.min(rect.top - gap - 16, 400)}px`;
-      break;
-    case "right":
-      styles.top = `${rect.top}px`;
-      styles.left = `${rect.right + gap}px`;
-      styles.maxHeight = `${Math.min(viewportHeight - rect.top - 16, 400)}px`;
-      break;
-    case "left":
-      styles.top = `${rect.top}px`;
-      styles.right = `${viewportWidth - rect.left + gap}px`;
-      styles.maxHeight = `${Math.min(viewportHeight - rect.top - 16, 400)}px`;
-      break;
-  }
-
-  return { styles, actualPlacement: placement };
-}

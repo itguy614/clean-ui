@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T extends object = DataGridRow">
 import { toRef, watch, useSlots, type Ref } from "vue";
-import { useDataGrid, provideDataGrid } from "../composables/useDataGrid";
+import { useDataGrid, provideDataGrid, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import type {
   DataGridColumn,
   DataGridRow,
@@ -11,7 +11,6 @@ import type {
   DataGridViewAdapter,
   PaginatedData,
 } from "../types/data-grid";
-import type { TableSize } from "./table-context";
 import CuiDataGridToolbar from "./CuiDataGridToolbar.vue";
 import CuiDataGridTable from "./CuiDataGridTable.vue";
 import CuiDataGridCardView from "./CuiDataGridCardView.vue";
@@ -21,10 +20,10 @@ import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
-import type { HideableProps } from "../types/common";
+import type { HideableProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps {
+export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps, SizeableProps {
   /** Column definitions */
   columns: DataGridColumn[];
   /** Data source — array for client-side, PaginatedData for server-side. Generic over the row type so cell slots, emits, and data are typed. */
@@ -33,6 +32,24 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   serverSide?: boolean;
   /** Row identifier key */
   rowKey?: string;
+  /**
+   * Declared as a prop only to tell whether a `@row-click` listener is bound (#232) — emitted
+   * events are stripped from attrs, and `emit("row-click")` still calls it. A grid with one
+   * has interactive rows: focusable, keyboard-operable and pointer-styled.
+   */
+  // An array too: Vue merges a listener bound twice (v-bind="$attrs" plus @row-click) into one.
+  onRowClick?: ((payload: { row: T }) => void) | Array<(payload: { row: T }) => void>;
+  /**
+   * Override whether rows are interactive: false for a row-click listener that is only
+   * analytics, true for interactive rows without one. Default: whether one is bound.
+   */
+  rowClickable?: boolean;
+  /**
+   * What names a row to a screen reader, in its checkbox and actions button: "Select …",
+   * "Actions for …". By default the first visible column's value when it is text or a
+   * number, else the row's position.
+   */
+  rowLabel?: (row: DataGridRow) => string;
   /** Bulk action definitions */
   bulkActions?: DataGridBulkAction[];
   /** Show select-all checkbox in header */
@@ -47,8 +64,6 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   hoverable?: boolean;
   /** Bordered cells */
   bordered?: boolean;
-  /** Table size */
-  size?: TableSize;
   /** Loading state */
   loading?: boolean;
   /** Per-page options for pagination */
@@ -59,6 +74,12 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
   hidePagination?: boolean;
   /** Hide search */
   hideSearch?: boolean;
+  /**
+   * How long the search box waits after the last keystroke before searching, in ms (#273).
+   * Searching is cheap now (an index of lower-cased cells), so 0 — every keystroke — is fine
+   * on large client-side grids too; a server-side grid wants it, since each search fetches.
+   */
+  searchDebounce?: number;
   /** Hide column manager */
   hideColumnManager?: boolean;
   /** Hide filter panel toggle */
@@ -87,6 +108,8 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
 }
 
 const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
+  // undefined, not the boolean cast's false: "not set" means "whether a listener is bound".
+  rowClickable: undefined,
   serverSide: false,
   rowKey: "id",
   showSelectAll: true,
@@ -100,6 +123,7 @@ const props = withDefaults(defineProps<CuiDataGridProps<T>>(), {
   hideToolbar: false,
   hidePagination: false,
   hideSearch: false,
+  searchDebounce: DEFAULT_SEARCH_DEBOUNCE,
   hideColumnManager: false,
   hideFilterPanel: false,
   filterPanelSide: "right",
@@ -193,6 +217,7 @@ const messages = useMessages();
     <CuiDataGridToolbar
       v-if="!hideToolbar"
       :hide-search="hideSearch"
+      :search-debounce="searchDebounce"
       :hide-column-manager="hideColumnManager"
       :hide-filter-toggle="hideFilterPanel"
       :has-card-slot="hasCardSlot"
@@ -250,6 +275,7 @@ const messages = useMessages();
           <CuiDataGridTable
             v-else
             :row-key="rowKey"
+            :row-label="rowLabel"
             :bulk-actions="bulkActions"
             :show-select-all="showSelectAll"
             :sticky-header="stickyHeader"
@@ -260,6 +286,7 @@ const messages = useMessages();
             :size="size"
             :virtualize="virtualize"
             :virtual-row-height="virtualRowHeight"
+            :rows-interactive="rowClickable ?? !!onRowClick"
             @row-click="emit('row-click', $event as RowClickPayload)"
             @row-action="emit('row-action', $event as RowActionPayload)"
           >

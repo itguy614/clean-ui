@@ -126,8 +126,8 @@ describe("CuiPopover initial visibility", () => {
   });
 
   it("closes on Escape when it started open", async () => {
-    // The Escape listener is attached by a watcher on the open state, which also has to
-    // run for the initial value.
+    // The popover joins the Escape layer stack from a watcher on the open state, which
+    // also has to run for the initial value.
     const wrapper = mount(CuiPopover, {
       attachTo: document.body,
       props: { visible: true, hideDelay: 0 },
@@ -138,5 +138,22 @@ describe("CuiPopover initial visibility", () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.emitted("update:visible")?.at(-1)).toEqual([false]);
     wrapper.unmount();
+  });
+});
+
+// Review of #203: an outside press dismissed through doHide, waiting out hideDelay (and
+// leaving a stray timer that could hide the popover after it reopened).
+describe("CuiPopover click-outside", () => {
+  it("dismisses at once, whatever hideDelay", async () => {
+    const w = mount(CuiPopover, {
+      attachTo: document.body,
+      props: { trigger: "click", hideDelay: 300 },
+      slots: { default: "<button>Open</button>", content: "Body" },
+    });
+    await w.find("button").trigger("click");
+    await new Promise((r) => setTimeout(r));
+    document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    expect(w.emitted("update:visible")?.at(-1)).toEqual([false]);
+    w.unmount();
   });
 });

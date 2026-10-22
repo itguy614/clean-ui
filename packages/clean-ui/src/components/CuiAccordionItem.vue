@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
 import type { HideableProps, DisableableProps } from "../types/common";
@@ -86,8 +87,11 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-const panelId = `cui-accordion-panel-${props.value}`;
-const triggerId = `cui-accordion-trigger-${props.value}`;
+// Per instance, not keyed on `value`: two accordions sharing item values (e.g. "1", "2")
+// rendered duplicate ids and cross-wired aria-controls / aria-labelledby (#272).
+const itemId = useCuiId("accordion");
+const panelId = `${itemId}-panel`;
+const triggerId = `${itemId}-trigger`;
 </script>
 
 <template>
@@ -162,11 +166,7 @@ const triggerId = `cui-accordion-trigger-${props.value}`;
 }
 
 .cui-accordion-item__trigger:hover:not([aria-disabled="true"]) {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-accordion-item__trigger:hover:not([aria-disabled="true"]) {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-accordion-item__trigger:focus-visible {

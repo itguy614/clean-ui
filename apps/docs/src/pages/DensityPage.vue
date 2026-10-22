@@ -125,5 +125,26 @@ setDensity("compact");</code></pre>
         yourself on any element for a custom density.
       </p>
     </div>
+
+    <div>
+      <h2 id="density-presets" class="mb-4 text-2xl font-semibold">DENSITY_PRESETS</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="text-sm" style="color: var(--cui-text-secondary);">
+            The same <code class="cui-code">DensityPreset[]</code> that
+            <code class="cui-code">useDensity()</code> returns as <code class="cui-code">presets</code>,
+            exported on its own so a switcher or settings schema can list the options without calling
+            the composable. Each entry is <code class="cui-code">{ id, label, description }</code>, with
+            <code class="cui-code">id</code> a <code class="cui-code">DensityId</code>.
+          </p>
+          <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">import { DENSITY_PRESETS, type DensityPreset } from "@itguy614/clean-ui";
+
+// [{ id: "compact", label: "Compact", ... },
+//  { id: "default", label: "Default", ... },
+//  { id: "comfortable", label: "Comfortable", ... }]
+const options = DENSITY_PRESETS.map((p: DensityPreset) => ({ value: p.id, label: p.label }));</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
   </CuiStack>
 </template>

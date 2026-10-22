@@ -63,12 +63,7 @@ function onKeydown(e: KeyboardEvent) {
 
 .cui-dropdown-radio-item:hover,
 .cui-dropdown-radio-item:focus-visible {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-dropdown-radio-item:hover,
-:where(.dark, .dark *) .cui-dropdown-radio-item:focus-visible {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-dropdown-radio-item--disabled {

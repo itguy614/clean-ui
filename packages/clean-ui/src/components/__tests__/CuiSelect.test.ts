@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
+import { nextTick } from "vue";
 import CuiSelect from "../CuiSelect.vue";
 
 const OPTIONS = [
@@ -103,5 +104,86 @@ describe("CuiSelect behavior", () => {
     expect(wrapper.get(".cui-select__label").text()).toBe("Cherry");
 
     wrapper.unmount();
+  });
+});
+
+// #204: CuiSelect carried its own positioner, the one copy without a clamp, so a trigger
+// with no room on either side emitted a negative max-height.
+describe("CuiSelect panel position", () => {
+  it("never emits a negative max-height", async () => {
+    const innerHeight = window.innerHeight;
+    window.innerHeight = 20;
+    const wrapper = mount(CuiSelect, { props: { options: OPTIONS }, attachTo: document.body });
+    try {
+      const trigger = wrapper.find(".cui-select__trigger");
+      trigger.element.getBoundingClientRect = () =>
+        ({ top: 0, bottom: 20, left: 0, right: 100, width: 100, height: 20, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      await trigger.trigger("click");
+      const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
+      expect(parseFloat(panel.style.maxHeight)).toBe(0);
+    } finally {
+      wrapper.unmount();
+      window.innerHeight = innerHeight;
+    }
+  });
+});
+
+// #174: CuiSelect dropped `name`, so it never joined a native form post.
+describe("CuiSelect native form participation", () => {
+  const formData = (w: { element: Element }) => new FormData(w.element.closest("form")!);
+  const inForm = (props: Record<string, unknown>) =>
+    mount({ components: { CuiSelect }, template: `<form><CuiSelect v-bind="p" /></form>`, data: () => ({ p: { options: OPTIONS, ...props } }) }, { attachTo: document.body });
+
+  it("posts a single value under its name", () => {
+    const w = inForm({ name: "fruit", modelValue: "b" });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual(["b"]);
+    w.unmount();
+  });
+
+  it("posts an empty value when nothing is selected", () => {
+    const w = inForm({ name: "fruit", modelValue: null });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual([""]);
+    w.unmount();
+  });
+
+  it("posts one entry per value when multiple, and none when empty", () => {
+    const w = inForm({ name: "fruit", multiple: true, modelValue: ["a", "c"] });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual(["a", "c"]);
+    w.unmount();
+    const empty = inForm({ name: "fruit", multiple: true, modelValue: [] });
+    expect(formData(empty.find("form")).getAll("fruit")).toEqual([]);
+    empty.unmount();
+  });
+
+  it("posts nothing while disabled, and renders no inputs without a name", () => {
+    const w = inForm({ name: "fruit", modelValue: "a", disabled: true });
+    expect(formData(w.find("form")).getAll("fruit")).toEqual([]);
+    w.unmount();
+    const unnamed = inForm({ modelValue: "a" });
+    expect(unnamed.findAll('input[type="hidden"]')).toHaveLength(0);
+    unnamed.unmount();
+  });
+
+  it("follows later changes, and tells the form with input and change events", async () => {
+    const w = mount(
+      { components: { CuiSelect }, template: `<form @change="changes++"><CuiSelect v-bind="p" /></form>`, data: () => ({ changes: 0, p: { options: OPTIONS, name: "fruit", modelValue: "a", disabled: false } }) },
+      { attachTo: document.body },
+    );
+    const form = () => new FormData(w.find("form").element);
+    const vm = w.vm as unknown as { p: Record<string, unknown>; changes: number };
+    vm.p = { ...vm.p, modelValue: "c" };
+    await nextTick();
+    await nextTick();
+    expect(form().getAll("fruit")).toEqual(["c"]);
+    expect(vm.changes).toBe(1);
+    vm.p = { ...vm.p, multiple: true, modelValue: [] };
+    await nextTick();
+    await nextTick();
+    expect(form().getAll("fruit")).toEqual([]);
+    expect(vm.changes).toBe(2); // still heard, from the trigger, with no hidden input left
+    vm.p = { ...vm.p, multiple: false, modelValue: "b", disabled: true };
+    await nextTick();
+    expect(form().getAll("fruit")).toEqual([]);
+    w.unmount();
   });
 });

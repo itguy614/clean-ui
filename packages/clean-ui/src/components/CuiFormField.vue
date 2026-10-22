@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { FormContextKey } from "./form-context";
 
@@ -54,8 +55,11 @@ const showError = computed(() => resolvedError.value && resolvedMessage.value);
 
 const isDisabled = computed(() => props.disabled || (form?.disabled.value ?? false));
 
-// Auto-generate a stable id once (not a computed — Math.random() must not re-run on re-render)
-const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)}`;
+// Generated once in setup, so it is stable across re-renders and matches the server render.
+// Called unconditionally: skipping useId() when `for` is set would shift the id of every
+// later component in the app, so a server/client difference in `for` would mismatch them all.
+const generatedId = useCuiId("field");
+const fieldId = props.for ?? generatedId;
 // Ids for the label and the help/error text, so the control can point at them.
 // `for`/`id` alone is not enough: it only forms an association with *labelable*
 // elements, which leaves a control like CuiSelect — whose focusable surface is a
@@ -63,6 +67,29 @@ const fieldId = props.for ?? `cui-field-${Math.random().toString(36).slice(2, 8)
 const messages = useMessages();
 const labelId = `${fieldId}-label`;
 const descriptionId = `${fieldId}-description`;
+
+// The <label for> does nothing when its control isn't labelable (CuiCheckbox, CuiRadio,
+// CuiToggle, CuiSelect, CuiTimePicker, the groups — see the aria-labelledby note above):
+// `control` is then null, and the click does what a native label would instead (#181).
+const ACTIVATED = new Set(["checkbox", "switch", "radio"]);
+const elementDisabled = (el: Element) => el.matches(":disabled, [aria-disabled='true']");
+
+function onLabelClick(e: MouseEvent) {
+  const label = e.currentTarget as HTMLLabelElement;
+  if (label.control) return; // a native control: the browser's label activation has it
+  // This label's own tree, not the document: ids can repeat across apps on one page, and a
+  // shadow root's elements aren't in the document at all.
+  const root = label.getRootNode() as Document | ShadowRoot;
+  const el = root.getElementById?.(fieldId) ?? null;
+  if (!el || elementDisabled(el)) return;
+  // A group (a radiogroup's div) can't take focus itself: its tab stop, or first control.
+  const target = (el as HTMLElement).tabIndex >= 0 ? el : el.querySelector<HTMLElement>('[tabindex="0"]');
+  if (!(target instanceof HTMLElement) || elementDisabled(target)) return;
+  target.focus();
+  // As a native checkbox's or radio's label does, it toggles or selects too — the control's
+  // own label only: a group's label moves focus in, it doesn't pick an option.
+  if (target === el && ACTIVATED.has(target.getAttribute("role") ?? "")) target.click();
+}
 
 // Bindings handed to the default slot. `v-bind="f"` on a field component wires
 // v-model + error in one shot. Standalone mode omits the model bindings.
@@ -109,6 +136,7 @@ onBeforeUnmount(() => {
       :id="labelId"
       :for="fieldId"
       class="cui-form-field__label"
+      @click="onLabelClick"
     >
       <span>{{ label }}</span>
       <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
@@ -131,7 +159,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Footer: help text or error message -->
-      <div v-if="showError" class="cui-form-field__error" :id="descriptionId">
+      <div v-if="showError" class="cui-form-field__error cui-field-error" :id="descriptionId">
         {{ resolvedMessage }}
       </div>
       <div v-else-if="helpText" class="cui-form-field__help" :id="descriptionId">
@@ -221,12 +249,5 @@ onBeforeUnmount(() => {
   font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--cui-text-secondary);
-}
-
-/* --- Error message --- */
-.cui-form-field__error {
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--cui-error);
 }
 </style>

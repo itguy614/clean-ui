@@ -54,6 +54,10 @@ const meta: ComponentMeta = {
       description: "The per-page selector changed. update:currentPage fires alongside it with 1",
     },
   ],
+
+  tokens: [
+    { name: "--cui-pagination-hover-border", default: "surface-300 (light) / surface-600 (dark)", description: "Border of a page button on hover" },
+  ],
 };
 
 export default meta;

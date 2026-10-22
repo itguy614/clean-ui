@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { useOverlay } from "../composables/useOverlay";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
 import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
@@ -28,7 +30,10 @@ export interface CuiModalProps extends HideableProps, TitleAsProps {
   persistent?: boolean;
   /** Hide the X close button */
   noCloseButton?: boolean;
-  /** Allow opening on top of another modal */
+  /**
+   * @deprecated Has no effect — overlays always stack, and Escape closes only the topmost
+   * (#285). Removed in 2.0.
+   */
   allowNested?: boolean;
   /** Backdrop opacity */
   backdropOpacity?: number;
@@ -49,21 +54,14 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   size: "md",
   persistent: false,
   noCloseButton: false,
-  allowNested: false,
+  // `undefined`, not Vue's boolean `false`, so the deprecation warning fires only when passed.
+  allowNested: undefined,
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
   rounded: "md",
   hidden: false,
 });
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
@@ -76,7 +74,9 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
-  allowNested: () => props.allowNested,
+  // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
+  allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
+  name: "CuiModal",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
@@ -93,7 +93,7 @@ const sizeMap: Record<string, string> = {
 const maxWidth = computed(() => sizeMap[props.size] ?? props.size);
 
 // Generate id for aria-labelledby
-const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("modal-title");
 </script>
 
 <template>
@@ -122,7 +122,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
           ref="dialogEl"
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
-          :style="{ maxWidth, borderRadius: radiusMap[rounded] }"
+          :style="{ maxWidth, borderRadius: RADIUS_SCALE[rounded] }"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"
@@ -157,7 +157,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
 .cui-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9990;
+  z-index: var(--cui-z-overlay, 9990); /* OVERLAY_Z_INDEX in utils/position.ts */
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -183,7 +183,7 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
   width: 100%;
   max-height: calc(100vh - 8rem);
   background: var(--cui-surface-base);
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.2);
+  box-shadow: var(--cui-shadow-lg);
   outline: none;
   overflow: hidden;
 
@@ -196,9 +196,5 @@ const titleId = `cui-modal-title-${Math.random().toString(36).slice(2, 8)}`;
 .cui-modal--visible {
   opacity: 1;
   transform: scale(1) translateY(0);
-}
-
-:where(.dark, .dark *) .cui-modal {
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
 }
 </style>

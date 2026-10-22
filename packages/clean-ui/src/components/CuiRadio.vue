@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
+import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
 import type { CuiColor, HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
@@ -78,6 +79,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
+
+// Named by the label, described by the description, not both as one name (#183).
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -124,7 +128,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       :disabled="isDisabled"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-radio__input"
+      class="cui-radio__input cui-sr-only"
       @click.stop.prevent
     />
     <slot>{{ label }}</slot>
@@ -144,8 +148,8 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     }"
     :id="id"
     role="radio"
-    :aria-describedby="ariaDescribedby"
-    :aria-labelledby="ariaLabelledby"
+    :aria-describedby="choice.describedBy()"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -163,7 +167,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-radio__input"
+      class="cui-radio__input cui-sr-only"
       @click.stop.prevent
     />
 
@@ -181,10 +185,10 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
     <!-- Label + description -->
     <span class="cui-radio__label-wrap">
-      <span class="cui-radio__label">
+      <span :id="choice.labelId" class="cui-radio__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="description || $slots.description" class="cui-radio__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-radio__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>
@@ -209,16 +213,6 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 .cui-radio--readonly {
   cursor: default;
-}
-
-.cui-radio__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* --- Indicator circle --- */

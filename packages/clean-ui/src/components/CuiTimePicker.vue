@@ -6,11 +6,11 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
-import type { HideableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps {
+export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -23,8 +23,6 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
-  /** Size */
-  size?: "sm" | "md" | "lg";
   /** Label */
   label?: string;
 }
@@ -40,7 +38,7 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
 
 // Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
 // same `size` when placed side by side (#87).
-const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size]);
+const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -255,8 +253,8 @@ const triggerEl = useTemplateRef<HTMLElement>("triggerEl");
  * The trigger was a bare `<div>` — no tabindex, no role — so the time picker
  * could not be reached by keyboard at all, and there was nothing for a
  * `<label for>` to resolve to either (#74, and the half of #103 this closes).
- * Modelled on CuiSelect, which already gets this right: Enter, Space or Down
- * opens, Escape closes and hands focus back.
+ * Enter, Space or Down opens. Escape is the panel's CuiPopover's — a layer on the shared
+ * stack, which closes it, and the close watcher hands focus back (#286).
  */
 function onTriggerKeydown(e: KeyboardEvent) {
   if (props.disabled) return;
@@ -264,12 +262,8 @@ function onTriggerKeydown(e: KeyboardEvent) {
   if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
     e.preventDefault();
     popoverVisible.value = true;
-    return;
   }
-  if (e.key === "Escape" && popoverVisible.value) {
-    e.preventDefault();
-    popoverVisible.value = false;
-  }
+  // Escape is the popover's: it is a layer on the shared stack, which closes it (#286).
 }
 
 function focus(opts?: FocusOptions) {
@@ -344,7 +338,6 @@ defineExpose({ el: rootEl, focus, blur });
         <div
           ref="panelEl"
           class="cui-time-picker__panel"
-          @keydown.escape.prevent.stop="popoverVisible = false"
           @keydown="onPanelKeydown"
           :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
         >

@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, useSlots, useId } from "vue";
+import { ref, computed, watch, onUnmounted, useSlots } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
+import { useLayerStack } from "../composables/useLayerStack";
+import { POPOVER_Z_INDEX } from "../utils/position";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { RADIUS_SCALE } from "../utils/sizing";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 
@@ -45,14 +49,6 @@ const props = withDefaults(defineProps<CuiPopoverProps>(), {
   hidden: false,
 });
 
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
-
 const emit = defineEmits<{
   "update:visible": [value: boolean];
 }>();
@@ -81,21 +77,15 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
 
 const wrapperRef = ref<HTMLElement | null>(null);
 
-useClickOutside(
-  () => [wrapperRef.value, floatingRef.value],
-  () => {
-    if (isVisible.value && props.trigger === "click") doHide();
-  },
-);
+// At once, like Escape: a dismissal doesn't wait out hideDelay.
+useClickOutside(() => [wrapperRef.value, floatingRef.value], hideNow, {
+  enabled: () => isVisible.value && props.trigger === "click",
+});
 
-// Close on Escape from anywhere — the panel is teleported to <body>, so a
-// wrapper-scoped keydown misses it once focus moves into the panel.
-// Immediate too, so a popover that starts open (#248) gets the listener as well.
-watch(isVisible, (v) => {
-  if (typeof document === "undefined") return;
-  if (v) document.addEventListener("keydown", onKeydown);
-  else document.removeEventListener("keydown", onKeydown);
-}, { immediate: true });
+// Close on Escape from anywhere — the panel is teleported to <body>, so a wrapper-scoped
+// keydown misses it once focus moves into the panel. Through the shared layer stack
+// (#278), so only the topmost of a popover and the overlays around it closes.
+useLayerStack({ active: isVisible, onEscape: hideNow });
 
 function doShow() {
   if (props.disabled) return;
@@ -116,20 +106,26 @@ function doHide() {
   }
 }
 
+// A dismissal doesn't wait out hideDelay: the popover would stay top of the layer stack
+// meanwhile and swallow the next Escape, meant for the layer beneath.
+function hideNow() {
+  if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+  isVisible.value = false; emit("update:visible", false);
+}
+
 function toggle() { isVisible.value ? doHide() : doShow(); }
 function onMouseEnter() { if (props.trigger === "hover" || props.trigger === "hover-focus") doShow(); }
 function onMouseLeave() { if (props.trigger === "hover" || props.trigger === "hover-focus") doHide(); }
 function onFocusIn() { if (props.trigger === "focus" || props.trigger === "hover-focus") doShow(); }
 function onFocusOut() { if (props.trigger === "focus" || props.trigger === "hover-focus") doHide(); }
 function onClick() { if (props.trigger === "click") toggle(); }
-function onKeydown(e: KeyboardEvent) { if (e.key === "Escape" && isVisible.value) doHide(); }
 function onPopoverMouseEnter() { if (props.trigger === "hover" || props.trigger === "hover-focus") { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } } }
 function onPopoverMouseLeave() { if (props.trigger === "hover" || props.trigger === "hover-focus") doHide(); }
 
 onUnmounted(() => {
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
-  if (typeof document !== "undefined") document.removeEventListener("keydown", onKeydown);
 });
 
 // Plain functions, not computeds: `slots` is not reactive, so a computed would cache the
@@ -138,15 +134,15 @@ const hasHeader = () => !!(props.title || slots.header);
 const hasFooter = () => !!slots.footer;
 // Per instance (a literal id collided across every titled popover on a page,
 // #159), and whenever there is a header — prop or slot — so a custom #header
-// still names the dialog. useId() is stable across SSR and hydration.
-const headerId = `cui-popover-title-${useId()}`;
+// still names the dialog. Stable across SSR and hydration (useCuiId).
+const headerId = useCuiId("popover-title");
 
 const panelStyle = computed(() => {
   const s: Record<string, string> = {
-    zIndex: "9998",
+    zIndex: POPOVER_Z_INDEX,
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
-    borderRadius: radiusMap[props.rounded],
+    borderRadius: RADIUS_SCALE[props.rounded],
     boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
     minWidth: "12rem",
     maxWidth: "24rem",

@@ -3,6 +3,10 @@ import { ref } from "vue";
 import {
   CuiButton,
   CuiCheckbox,
+  CuiDropdown,
+  CuiDropdownItem,
+  CuiDropdownMenu,
+  CuiDropdownTrigger,
   CuiFlex,
   CuiFormField,
   CuiInput,
@@ -10,9 +14,11 @@ import {
   CuiModalHeader,
   CuiModalBody,
   CuiModalFooter,
+  CuiPopover,
   CuiSelect,
   CuiStack,
   CuiTextarea,
+  CuiTooltip,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
@@ -35,6 +41,9 @@ const imageBackdrop = ref(false);
 const imageBlur = ref(false);
 const formModal = ref(false);
 const confirmModal = ref(false);
+const stackedModal = ref(false);
+const stackedInner = ref(false);
+const stackedChoice = ref("");
 const rounded = ref({ none: false, lg: false, full: false });
 
 // SVG backdrop images as data URIs (built in script to avoid template encoding issues)
@@ -451,6 +460,69 @@ const formAgree = ref(false);
             <CuiModalFooter>
               <CuiButton variant="ghost" color="secondary" @click="formModal = false">Cancel</CuiButton>
               <CuiButton variant="solid" color="success" @click="formModal = false">Create User</CuiButton>
+            </CuiModalFooter>
+          </CuiModal>
+        </Example>
+
+        <!-- Stacked overlays -->
+        <Example title="Stacked Overlays (Escape order)" :code="`<CuiTooltip text=&quot;Opens a modal&quot;>
+  <CuiButton @click=&quot;show = true&quot;>Open</CuiButton>
+</CuiTooltip>
+<CuiModal v-model:visible=&quot;show&quot; title=&quot;Stacked overlays&quot;>
+  <CuiDropdown>…</CuiDropdown>
+  <CuiPopover title=&quot;Popover&quot;>…</CuiPopover>
+  <CuiTooltip text=&quot;Pick one&quot;><CuiSelect … /></CuiTooltip>
+  <CuiButton @click=&quot;inner = true&quot;>Open persistent modal</CuiButton>
+  <CuiModal v-model:visible=&quot;inner&quot; persistent>…</CuiModal>
+</CuiModal>`">
+          <CuiStack spacing="3">
+            <p>
+              Each Escape closes only the most recently opened layer. Hover the button until its
+              tooltip shows, then click it: the first Escape closes the modal, not the tooltip
+              left showing beneath it. Inside, open any of the controls and press Escape: the
+              control closes and the modal stays open. A persistent modal takes the Escape and
+              stays open, and the modal beneath it stays open too.
+            </p>
+            <div>
+              <CuiTooltip text="Opens a modal">
+                <CuiButton variant="solid" size="sm" @click="stackedModal = true">Open Stacked Example</CuiButton>
+              </CuiTooltip>
+            </div>
+          </CuiStack>
+          <CuiModal v-model:visible="stackedModal" title="Stacked overlays">
+            <CuiStack spacing="4">
+              <CuiFlex gap="2" wrap="wrap">
+                <CuiDropdown>
+                  <CuiDropdownTrigger>
+                    <CuiButton size="sm">Dropdown</CuiButton>
+                  </CuiDropdownTrigger>
+                  <CuiDropdownMenu>
+                    <CuiDropdownItem>Edit</CuiDropdownItem>
+                    <CuiDropdownItem>Duplicate</CuiDropdownItem>
+                  </CuiDropdownMenu>
+                </CuiDropdown>
+                <CuiPopover title="Popover">
+                  <CuiButton size="sm">Popover</CuiButton>
+                  <template #content>
+                    <p>Escape closes this, then the modal.</p>
+                  </template>
+                </CuiPopover>
+                <CuiButton size="sm" @click="stackedInner = true">Open persistent modal</CuiButton>
+              </CuiFlex>
+              <CuiFormField label="Select with a tooltip">
+                <CuiTooltip text="The first Escape closes the list, the next this tooltip">
+                  <CuiSelect v-model="stackedChoice" :options="['One', 'Two', 'Three']" placeholder="Choose…" />
+                </CuiTooltip>
+              </CuiFormField>
+            </CuiStack>
+          </CuiModal>
+          <CuiModal v-model:visible="stackedInner" size="sm" persistent>
+            <CuiModalHeader title="Persistent" no-close-button />
+            <CuiModalBody>
+              <p>Escape does nothing here, and the modal beneath stays open too. Close with the button.</p>
+            </CuiModalBody>
+            <CuiModalFooter>
+              <CuiButton size="sm" @click="stackedInner = false">Close</CuiButton>
             </CuiModalFooter>
           </CuiModal>
         </Example>

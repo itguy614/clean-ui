@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useCuiId } from "../composables/useCuiId";
 import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -8,6 +9,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { useHeadingLevel } from "../utils/configure";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info";
 
@@ -39,12 +41,14 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   variant: "danger",
   loading: false,
   hidden: false,
-  titleAs: "h2",
 });
+
+// Its own `titleAs`, else the app's default (#149), else the library's.
+const headingTag = useHeadingLevel("confirmDialog", () => props.titleAs);
 
 // The dialog assembles its own header, so CuiModal has no `title` to name itself from —
 // without this the confirm dialog had no accessible name at all (#158).
-const titleId = `cui-confirm-dialog-title-${Math.random().toString(36).slice(2, 8)}`;
+const titleId = useCuiId("confirm-dialog-title");
 
 const messages = useMessages();
 
@@ -132,7 +136,7 @@ function onCancel() {
       <div style="flex: 1; min-width: 0;">
         <!-- Title -->
         <component
-          :is="titleAs"
+          :is="headingTag"
           :id="titleId"
           class="cui-confirm-dialog__title"
           :style="{

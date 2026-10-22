@@ -681,7 +681,7 @@ defineExpose({
       </div>
     </div>
     <div v-if="(error && errorMessage) || maxLength !== undefined" class="cui-markdown-editor__footer">
-      <div v-if="error && errorMessage" :id="errorId" class="cui-markdown-editor__error" data-testid="cui-markdown-editor-error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-markdown-editor__error cui-field-error" data-testid="cui-markdown-editor-error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-markdown-editor__spacer" />

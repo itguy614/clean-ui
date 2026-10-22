@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HideableProps, TitleAsProps } from "../types/common";
+import { useHeadingLevel } from "../utils/configure";
 
 export interface CuiCardHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
@@ -8,17 +9,19 @@ export interface CuiCardHeaderProps extends HideableProps, TitleAsProps {
   subtitle?: string;
 }
 
-withDefaults(defineProps<CuiCardHeaderProps>(), {
+const props = withDefaults(defineProps<CuiCardHeaderProps>(), {
   hidden: false,
-  titleAs: "h3",
 });
+
+// Its own `titleAs`, else the app's default (#149), else the library's.
+const headingTag = useHeadingLevel("cardHeader", () => props.titleAs);
 </script>
 
 <template>
   <div class="cui-card-header" v-show="!hidden">
     <div class="cui-card-header__content">
       <slot>
-        <component :is="titleAs" v-if="title" class="cui-card-header__title">{{ title }}</component>
+        <component :is="headingTag" v-if="title" class="cui-card-header__title">{{ title }}</component>
         <div v-if="subtitle" class="cui-card-header__subtitle">{{ subtitle }}</div>
       </slot>
     </div>

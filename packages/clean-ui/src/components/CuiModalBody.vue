@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle } from "../composables/useScrollShadows";
+import CuiScrollArea from "./CuiScrollArea.vue";
 import type { HideableProps } from "../types/common";
 
 export interface CuiModalBodyProps extends HideableProps {
@@ -11,49 +11,31 @@ withDefaults(defineProps<CuiModalBodyProps>(), {
   noPadding: false,
   hidden: false,
 });
-
-const { canScrollUp, canScrollDown, onScroll, onMount } = useScrollShadows();
 </script>
 
 <template>
   <!--
-    Nested flex approach:
-    - Outer wrapper: flex item in the modal column, also a flex column itself.
-      flex-basis: auto sizes to content, then shrinks when modal hits max-height.
-    - Inner scroll: flex item that fills the wrapper, scrolls overflow.
-    - Shadows: absolute on the wrapper, above the scroll content.
+    A CuiScrollArea (#143): the scroller, the edge fades, and — once the body overflows — a
+    named, focusable region, so a body with nothing focusable in it can still be scrolled by
+    keyboard (WCAG 2.1.1). It was a bare overflow div before, unreachable by Tab.
+    Flex item in the modal column: sizes to its content, then shrinks when the modal hits
+    its max-height.
   -->
-  <div
+  <CuiScrollArea
     class="cui-modal-body"
-    v-show="!hidden"
-    :style="{
-      position: 'relative',
-      display: 'flex',
-      flexDirection: 'column',
-      flex: '1 1 auto',
-      minHeight: '0',
-      overflow: 'hidden',
-    }"
+    :hidden="hidden"
+    :style="{ flex: '1 1 auto', minHeight: '0' }"
   >
-    <!-- Scroll container -->
     <div
-      :ref="onMount"
+      class="cui-modal-body__content"
       :style="{
-        flex: '1 1 auto',
-        minHeight: '0',
-        overflowY: 'auto',
         padding: noPadding ? '0' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1))',
         fontSize: '0.875rem',
         lineHeight: '1.6',
         color: 'var(--cui-text-secondary)',
       }"
-      @scroll="onScroll"
     >
       <slot />
     </div>
-
-    <!-- Scroll shadows: absolute positioned on wrapper, above scroll content -->
-    <div v-if="canScrollUp" :style="scrollShadowTopStyle" />
-    <div v-if="canScrollDown" :style="scrollShadowBottomStyle" />
-  </div>
+  </CuiScrollArea>
 </template>

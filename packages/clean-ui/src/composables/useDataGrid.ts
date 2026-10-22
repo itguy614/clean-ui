@@ -1,4 +1,4 @@
-import { ref, computed, inject, provide, shallowReactive, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { ref, computed, inject, provide, shallowReactive, toRaw, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import type {
   DataGridColumn,
   DataGridColumnState,
@@ -22,6 +22,9 @@ export interface UseDataGridOptions {
   initialView?: DataGridViewConfig;
   hydrateFromUrl?: boolean;
 }
+
+/** How long CuiDataGrid's search box waits after the last keystroke, by default (ms). */
+export const DEFAULT_SEARCH_DEBOUNCE = 300;
 
 export function useDataGrid(options: UseDataGridOptions) {
   const {
@@ -271,6 +274,46 @@ export function useDataGrid(options: UseDataGridOptions) {
     return !Array.isArray(d) && "current_page" in d;
   });
 
+  // Each cell's lower-cased text, cached per row (#273): a keystroke in a 5,000 × 10 grid
+  // was 50,000 String() + toLowerCase() calls. Keyed by the raw row, so it goes when the
+  // row does; each entry keeps the value it was made from, so a row edited in place is
+  // re-lowered on its next read — which also keeps the read reactive, as before. Only
+  // primitive cells are cached: an array or object cell can change inside itself (a push)
+  // while staying the same value, and String()-ing it each time is what tracks its contents.
+  const lowerCache = new WeakMap<object, Map<string, { src: unknown; lower: string }>>();
+  const lower = (v: unknown) => ({ src: v, lower: String(v ?? "").toLowerCase() });
+  const cacheable = (v: unknown) => v === null || typeof v !== "object";
+
+  function lowerOf(row: DataGridRow, key: string): string {
+    const val = row[key];
+    const raw = toRaw(row);
+    let cells = lowerCache.get(raw);
+    if (!cells) {
+      // The whole row at once: a search stops at a row's first matching cell, and filling
+      // only the cells reached would leave each narrower query to lower more of them (a
+      // thousand-odd a keystroke, measured on 5,000 rows) rather than none.
+      cells = new Map();
+      for (const k of Object.keys(raw)) {
+        const v = (raw as DataGridRow)[k];
+        if (cacheable(v)) cells.set(k, lower(v));
+      }
+      lowerCache.set(raw, cells);
+    }
+    if (!cacheable(val)) return String(val ?? "").toLowerCase();
+    const hit = cells.get(key);
+    if (hit && Object.is(hit.src, val)) return hit.lower; // Object.is: NaN is a hit too
+    const fresh = lower(val);
+    cells.set(key, fresh);
+    return fresh.lower;
+  }
+
+  function rowMatches(row: DataGridRow, q: string): boolean {
+    if (searchField.value) return lowerOf(row, searchField.value).includes(q);
+    // Own keys only, as Object.values had it: an inherited property is not a cell.
+    for (const key in row) if (Object.hasOwn(row, key) && lowerOf(row, key).includes(q)) return true;
+    return false;
+  }
+
   const filteredData = computed<DataGridRow[]>(() => {
     if (isServerSide.value) return rawData.value;
 
@@ -279,14 +322,7 @@ export function useDataGrid(options: UseDataGridOptions) {
     // Search
     if (searchQuery.value) {
       const q = searchQuery.value.toLowerCase();
-      result = result.filter((row) => {
-        if (searchField.value) {
-          return String(row[searchField.value] ?? "").toLowerCase().includes(q);
-        }
-        return Object.values(row).some((val) =>
-          String(val ?? "").toLowerCase().includes(q),
-        );
-      });
+      result = result.filter((row) => rowMatches(row, q));
     }
 
     // Filters
@@ -294,18 +330,24 @@ export function useDataGrid(options: UseDataGridOptions) {
       const col = columns.find((c) => (c.filterKey ?? c.key) === filter.key);
       const dataKey = col?.key ?? filter.key;
 
+      // The filter's own value, lowered once rather than once per row.
+      const want = filter.type === "text" || filter.type === "select" ? String(filter.value).toLowerCase() : "";
+      const wantAny =
+        filter.type === "multi-select"
+          ? (Array.isArray(filter.value) ? filter.value : [filter.value]).map((v) => String(v).toLowerCase())
+          : [];
+
       result = result.filter((row) => {
-        const cellVal = String(row[dataKey] ?? "").toLowerCase();
+        const cellVal = lowerOf(row, dataKey);
 
         if (filter.type === "text") {
-          return cellVal.includes(String(filter.value).toLowerCase());
+          return cellVal.includes(want);
         }
         if (filter.type === "select") {
-          return cellVal === String(filter.value).toLowerCase();
+          return cellVal === want;
         }
         if (filter.type === "multi-select") {
-          const vals = Array.isArray(filter.value) ? filter.value : [filter.value];
-          return vals.some((v) => cellVal === v.toLowerCase());
+          return wantAny.includes(cellVal);
         }
         if (filter.type === "date-range" && Array.isArray(filter.value) && filter.value.length === 2) {
           return cellVal >= filter.value[0] && cellVal <= filter.value[1];

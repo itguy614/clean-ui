@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ref, provide, toRef, onMounted, onUnmounted } from "vue";
+import { ref, shallowRef, provide, toRef, onUnmounted } from "vue";
+import { useCuiId } from "../composables/useCuiId";
+import { useClickOutside } from "../composables/useClickOutside";
+import { useEventListener } from "../composables/useEventListener";
+import { useLayerStack } from "../composables/useLayerStack";
+import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../utils/menu";
+import { warnOnce } from "../utils/devWarn";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -23,21 +29,45 @@ const props = withDefaults(defineProps<CuiDropdownProps>(), {
 const isOpen = ref(false);
 const isClosing = ref(false);
 const triggerEl = ref<HTMLElement | null>(null);
+const focusRequest = shallowRef<{ edge: MenuEdge } | null>(null);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 let closeAnimTimer: ReturnType<typeof setTimeout> | null = null;
 
-function open() {
+/** Show the menu; with an edge, also move focus into it once it has rendered. */
+function show(focus: MenuEdge | null) {
   if (props.disabled) return;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
   if (closeAnimTimer) { clearTimeout(closeAnimTimer); closeAnimTimer = null; }
   isClosing.value = false;
   isOpen.value = true;
+  if (focus) focusRequest.value = { edge: focus };
+}
+
+// A click or a key opens the menu with focus in it. `edge` is checked rather than trusted:
+// open is also a slot prop and an exposed method, and `@click="open"` hands it a MouseEvent.
+function open(edge?: MenuEdge) {
+  show(edge === "last" ? "last" : "first");
+}
+
+// A hover or a focus-in only shows it (#160): moving focus would take it from wherever the
+// user was — a text field the pointer happened to cross — and a close would then hand it to
+// the trigger. Arrow Down from the trigger moves in.
+const reveal = () => show(null);
+
+/** Where focus goes back to on close: the trigger's own focusable element (#160). */
+function triggerTarget() {
+  const target = triggerEl.value?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (!target) warnOnce("[clean-ui] CuiDropdownTrigger: nothing in the trigger can take focus, so focus cannot return to it when the menu closes. Use a CuiButton or <button>.");
+  return target;
 }
 
 function close() {
   if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-  if (!isOpen.value) return;
+  if (!isOpen.value || isClosing.value) return;
+  // Before the menu starts animating out: it is still in the DOM, and still holds focus
+  // after Escape or a chosen item.
+  restoreMenuFocus(triggerTarget(), dropdownId);
   isClosing.value = true;
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
@@ -46,7 +76,8 @@ function close() {
 }
 
 function toggle() {
-  if (isOpen.value) close(); else open();
+  // A closing menu counts as closed: its trigger already says aria-expanded="false".
+  if (isOpen.value && !isClosing.value) close(); else open();
 }
 
 function closeAll() {
@@ -56,7 +87,7 @@ function closeAll() {
 function onMouseEnter() {
   if (props.trigger === "hover" || props.trigger === "hover-focus") {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-    showTimer = setTimeout(open, 100);
+    showTimer = setTimeout(reveal, 100);
   }
 }
 
@@ -67,61 +98,46 @@ function onMouseLeave() {
   }
 }
 
-function onFocusIn() {
-  if (props.trigger === "hover-focus") open();
+function onFocusIn(e: FocusEvent) {
+  // Focus coming back from this dropdown's own menu (a close handing it to the trigger,
+  // Shift+Tab) is not a fresh focus-in.
+  if (props.trigger === "hover-focus" && !inMenuPanels(dropdownId, e.relatedTarget as Node | null)) reveal();
 }
 
 function onFocusOut(e: FocusEvent) {
   if (props.trigger === "hover-focus") {
     const related = e.relatedTarget as Node | null;
     const el = (e.currentTarget as HTMLElement);
-    if (related && el.contains(related)) return;
+    // Focus moving into the teleported menu (Arrow Down) is still inside.
+    if (related && (el.contains(related) || inMenuPanels(dropdownId, related))) return;
     hideTimer = setTimeout(close, 150);
   }
 }
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === "Escape" && isOpen.value) {
-    e.stopPropagation();
-    close();
-  }
-}
+// Escape through the shared layer stack (#278): the menu is teleported to <body>, so a
+// wrapper keydown never saw an Escape pressed on a menu item, and an enclosing modal
+// closed instead.
+useLayerStack({ active: () => isOpen.value && !isClosing.value, onEscape: close });
 
-// Click outside -- check both the wrapper and any teleported menus
-const dropdownId = `cui-dd-${Math.random().toString(36).slice(2, 8)}`;
+const dropdownId = useCuiId("dropdown");
 
-function onClickOutside(e: MouseEvent) {
-  const wrapper = document.querySelector(`[data-cui-dropdown-id="${dropdownId}"]`);
-  const menus = document.querySelectorAll(`[data-cui-dropdown-owner="${dropdownId}"]`);
-  const target = e.target as Node;
-
-  if (wrapper?.contains(target)) return;
-  for (const menu of menus) {
-    if (menu.contains(target)) return;
-  }
-  close();
-}
+// Only while open, so a closed dropdown holds no document listener (#203). Inside means
+// the wrapper and the teleported panels it owns: the menu and any open sub-menu.
+const wrapperRef = ref<HTMLElement | null>(null);
+useClickOutside(
+  () => [wrapperRef.value, ...menuPanels(dropdownId)],
+  close,
+  { enabled: isOpen },
+);
 
 function reposition() {
   // Menu handles its own repositioning via scroll listener
 }
 
-function onScroll() {
-  if (!isOpen.value) return;
-  if (!props.pinned) {
-    close();
-  }
-  // When pinned, the menu repositions itself via its own scroll listener
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScroll, true);
-});
+// A scroll closes an unpinned dropdown; a pinned one's menu repositions itself instead.
+useEventListener("window", "scroll", close, { enabled: () => isOpen.value && !props.pinned, capture: true });
 
 onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScroll, true);
   if (showTimer) clearTimeout(showTimer);
   if (hideTimer) clearTimeout(hideTimer);
   if (closeAnimTimer) clearTimeout(closeAnimTimer);
@@ -147,6 +163,8 @@ provide(DropdownContextKey, {
   trigger: toRef(props, "trigger"),
   triggerEl,
   placement: toRef(props, "placement"),
+  ownerId: dropdownId,
+  focusRequest,
   open,
   close,
   toggle,
@@ -161,14 +179,13 @@ defineExpose({ open, close, toggle, isOpen });
 
 <template>
   <div
+    ref="wrapperRef"
     v-show="!hidden"
     class="cui-dropdown"
-    :data-cui-dropdown-id="dropdownId"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
     @focusin="onFocusIn"
     @focusout="onFocusOut"
-    @keydown="onKeydown"
   >
     <slot :is-open="isOpen" :toggle="toggle" :open="open" :close="close" />
   </div>

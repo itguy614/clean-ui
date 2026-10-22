@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import { ToggleGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
+import { computed, ref } from "vue";
+import { useChoiceLabelling } from "../composables/useChoiceLabelling";
+import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
+import { useMessages } from "../composables/useMessages";
+
+const messages = useMessages();
 
 export interface CuiToggleProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** The value this toggle represents (group mode) */
@@ -31,7 +35,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const group = inject<MultiSelectGroupContext | null>(ToggleGroupKey, null);
+const group = useOptionalMultiSelectGroupContext(ToggleGroupKey);
 
 const isChecked = computed(() => {
   if (group && props.value !== undefined) {
@@ -87,6 +91,9 @@ const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: strin
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
 const dims = computed(() => trackSizes[clampedSize.value]);
+
+// Named by the label, described by the description, not both as one name (#183).
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -102,9 +109,9 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     }"
     :id="id"
     role="switch"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="ariaLabelledby"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -122,7 +129,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-toggle__input"
+      class="cui-toggle__input cui-sr-only"
       @click.stop.prevent
     />
 
@@ -140,7 +147,7 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     >
       <!-- ON label inside track (md and lg only) -->
       <span v-if="showLabels && clampedSize !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ fontSize: dims.labelSize }">
-        <span class="cui-toggle__on-label">ON</span>
+        <span class="cui-toggle__on-label">{{ messages.toggle.on }}</span>
       </span>
 
       <!-- Knob -->
@@ -155,11 +162,11 @@ const dims = computed(() => trackSizes[clampedSize.value]);
     </span>
 
     <!-- Label + description -->
-    <span v-if="label || $slots.default || description || $slots.description" class="cui-toggle__label-wrap">
-      <span class="cui-toggle__label">
+    <span v-if="label || $slots.default || choice.hasDescription()" class="cui-toggle__label-wrap">
+      <span :id="choice.labelId" class="cui-toggle__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="description || $slots.description" class="cui-toggle__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-toggle__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>
@@ -189,16 +196,6 @@ const dims = computed(() => trackSizes[clampedSize.value]);
   outline: 2px solid var(--_toggle-focus-ring);
   outline-offset: 2px;
   border-radius: 0.25rem;
-}
-
-.cui-toggle__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* --- Track --- */

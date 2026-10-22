@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, inject, computed } from "vue";
+import { ref, inject, computed, nextTick } from "vue";
 import CuiIcon from "./CuiIcon.vue";
-import { DropdownContextKey, computeDropdownPosition, type DropdownTrigger } from "./dropdown-context";
+import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
+import { computeDropdownPosition } from "../utils/position";
+import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownSubProps extends DisableableProps {
@@ -18,6 +20,7 @@ const resolvedTrigger = computed(() => props.trigger ?? parentCtx?.trigger.value
 
 const isOpen = ref(false);
 const triggerRef = ref<HTMLElement>();
+const panelRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -71,16 +74,32 @@ function onKeydown(e: KeyboardEvent) {
     e.preventDefault();
     e.stopPropagation();
     open();
+    nextTick(() => focusMenuEdge(panelRef.value));
   } else if (e.key === "ArrowLeft" && isOpen.value) {
     e.preventDefault();
     e.stopPropagation();
     close();
   } else if (e.key === "Escape" && isOpen.value) {
+    e.preventDefault(); // handled: the layer stack leaves the parent menu open (#278)
     e.stopPropagation();
     close();
   }
 }
 
+// The panel is teleported, so its keys never reach the wrapper's handler above (#160).
+// Escape and Arrow Left close only this sub-menu — preventDefault tells the layer stack
+// it was handled, so the parent menu stays open — and return focus to its row.
+function onPanelKeydown(e: KeyboardEvent) {
+  if (!panelRef.value) return;
+  if (e.key === "Escape" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+    triggerRef.value?.focus();
+  } else {
+    onMenuKeydown(e, panelRef.value, () => parentCtx?.closeAll());
+  }
+}
 </script>
 
 <template>
@@ -113,11 +132,15 @@ function onKeydown(e: KeyboardEvent) {
     <Teleport to="body">
     <div
       v-if="isOpen"
+      ref="panelRef"
       class="cui-dropdown-sub__menu"
+      :data-cui-menu-owner="parentCtx?.ownerId"
+      :class="{ 'cui-dropdown-sub__menu--closing': parentCtx?.isClosing.value }"
       :style="menuStyle"
       role="menu"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
+      @keydown="onPanelKeydown"
     >
       <slot name="menu" />
     </div>
@@ -146,13 +169,7 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__trigger:hover,
 .cui-dropdown-sub__trigger:focus-visible,
 .cui-dropdown-sub__trigger--open {
-  background: var(--color-surface-100);
-}
-
-:where(.dark, .dark *) .cui-dropdown-sub__trigger:hover,
-:where(.dark, .dark *) .cui-dropdown-sub__trigger:focus-visible,
-:where(.dark, .dark *) .cui-dropdown-sub__trigger--open {
-  background: var(--color-surface-800);
+  background: var(--cui-surface-bg);
 }
 
 .cui-dropdown-sub__trigger--disabled {
@@ -183,13 +200,16 @@ function onKeydown(e: KeyboardEvent) {
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
   animation: cui-dropdown-sub-in 0.15s ease;
 }
 
-:where(.dark, .dark *) .cui-dropdown-sub__menu {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.3);
+/* Leaves with the menu it belongs to: the whole stack fades out together, rather than
+   the parent fading while an open sub-menu stays put until the parent unmounts it. */
+.cui-dropdown-sub__menu--closing {
+  animation: cui-dropdown-sub-out 0.15s ease forwards;
+  pointer-events: none;
 }
 
 @keyframes cui-dropdown-sub-in {
@@ -200,6 +220,17 @@ function onKeydown(e: KeyboardEvent) {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes cui-dropdown-sub-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-4px);
   }
 }
 </style>

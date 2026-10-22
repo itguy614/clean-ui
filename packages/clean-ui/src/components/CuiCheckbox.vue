@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
-import { CheckboxGroupKey, type MultiSelectGroupContext } from "./multi-select-group-context";
+import { computed, ref } from "vue";
+import { useChoiceLabelling } from "../composables/useChoiceLabelling";
+import { CheckboxGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 
@@ -32,7 +33,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
 
-const group = inject<MultiSelectGroupContext | null>(CheckboxGroupKey, null);
+const group = useOptionalMultiSelectGroupContext(CheckboxGroupKey);
 
 const isChecked = computed(() => {
   if (group && props.value !== undefined) {
@@ -74,6 +75,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
+
+// Named by the label, described by the description, not both as one name (#183).
+const choice = useChoiceLabelling(props);
 </script>
 
 <template>
@@ -90,9 +94,9 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
     }"
     :id="id"
     role="checkbox"
-    :aria-describedby="ariaDescribedby"
+    :aria-describedby="choice.describedBy()"
     :aria-required="ariaRequired || undefined"
-    :aria-labelledby="ariaLabelledby"
+    :aria-labelledby="choice.labelledBy()"
     :aria-checked="indeterminate && !isChecked ? 'mixed' : isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
     :tabindex="isDisabled ? -1 : 0"
@@ -111,7 +115,7 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
       :readonly="isReadonly"
       tabindex="-1"
       aria-hidden="true"
-      class="cui-checkbox__input"
+      class="cui-checkbox__input cui-sr-only"
       @click.stop.prevent
     />
 
@@ -132,10 +136,10 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
     <!-- Label + description -->
     <span class="cui-checkbox__label-wrap">
-      <span class="cui-checkbox__label">
+      <span :id="choice.labelId" class="cui-checkbox__label">
         <slot>{{ label }}</slot>
       </span>
-      <span v-if="description || $slots.description" class="cui-checkbox__description">
+      <span v-if="choice.hasDescription()" :id="choice.descriptionId" class="cui-checkbox__description">
         <slot name="description">{{ description }}</slot>
       </span>
     </span>
@@ -159,16 +163,6 @@ defineExpose({ el: elRef, focus: () => elRef.value?.focus() });
 
 .cui-checkbox--readonly {
   cursor: default;
-}
-
-.cui-checkbox__input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* --- Indicator box --- */

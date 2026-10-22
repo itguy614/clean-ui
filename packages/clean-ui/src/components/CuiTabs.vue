@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, provide, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import {
-  TabsContextKey,
+  useTabsProvider,
   type TabDefinition,
   type TabVariant,
   type TabOrientation,
@@ -10,6 +10,7 @@ import {
 } from "./tabs-context";
 import type { HideableProps, ColorableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -87,7 +88,22 @@ function close(value: string) {
   emit("close", value);
 }
 
-provide(TabsContextKey, {
+// Per tab set; the value is encoded, since an id reference can't hold whitespace (#271).
+// Every character outside [A-Za-z0-9-] becomes _<hex>_ — a code unit, so a lone surrogate
+// encodes too (encodeURIComponent throws on one, mid-render).
+const tabsId = useCuiId("tabs");
+const encodeValue = (value: string) => value.replace(/[^A-Za-z0-9-]/g, (c) => `_${c.charCodeAt(0).toString(16)}_`);
+const tabId = (value: string) => `${tabsId}-tab-${encodeValue(value)}`;
+const panelId = (value: string) => `${tabsId}-panel-${encodeValue(value)}`;
+
+// From the registered tab order — the panels read it through the context.
+const slideDirection = computed<"left" | "right">(() => {
+  const prevIdx = tabs.value.findIndex((t) => t.value === previousTab.value);
+  const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
+  return currIdx >= prevIdx ? "left" : "right";
+});
+
+useTabsProvider({
   activeTab,
   variant: toRef(props, "variant"),
   orientation: toRef(props, "orientation"),
@@ -99,6 +115,9 @@ provide(TabsContextKey, {
   unregister,
   activate,
   close,
+  tabId,
+  panelId,
+  slideDirection,
 });
 
 // Keyboard navigation
@@ -147,12 +166,13 @@ function onKeydown(e: KeyboardEvent) {
 // The bar scrolls when the tabs don't fit; without this the trailing tabs are
 // clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
 
-/** Scoped lookup — a global querySelector would hit another CuiTabs on the page. */
+/**
+ * Within this set's own bar, by its id: a document-wide lookup can't see into a shadow root,
+ * and could find another app's tab with the same id.
+ */
 function tabElement(value: string): HTMLElement | null {
-  // Escape for the quoted attribute selector — a `"` or `\` in a tab value would
-  // otherwise make querySelector throw.
-  const escaped = value.replace(/["\\]/g, "\\$&");
-  return barRef.value?.querySelector<HTMLElement>(`[data-cui-tab-value="${escaped}"]`) ?? null;
+  const id = tabId(value);
+  return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
 }
 
 /** Which edges have content scrolled out of view — drives the edge fade mask. */
@@ -212,11 +232,7 @@ watch(() => tabs.value.length, updateOverflow, { flush: "post" });
 watch(() => props.orientation, updateOverflow, { flush: "post" });
 
 // Slide direction
-const slideDirection = computed(() => {
-  const prevIdx = tabs.value.findIndex((t) => t.value === previousTab.value);
-  const currIdx = tabs.value.findIndex((t) => t.value === activeTab.value);
-  return currIdx >= prevIdx ? "left" : "right";
-});
+
 const messages = useMessages();
 </script>
 
@@ -256,6 +272,8 @@ const messages = useMessages();
             '--_tab-bg': `var(--cui-${color}-bg)`,
           }"
           role="tab"
+          :id="tabId(tab.value)"
+          :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
           :aria-selected="activeTab === tab.value"
           :aria-disabled="tab.disabled || undefined"
           :tabindex="activeTab === tab.value ? 0 : -1"
@@ -408,13 +426,9 @@ const messages = useMessages();
 /* Segmented variant — track lives on the outer; the 0.25rem inset is split
    across both so the active pill's drop shadow isn't clipped by the scroller. */
 .cui-tabs--segmented .cui-tabs__bar-outer {
-  background: var(--color-surface-100);
+  background: var(--cui-surface-bg);
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.125rem * var(--cui-density-scale, 1));
-}
-
-:where(.dark, .dark *) .cui-tabs--segmented .cui-tabs__bar-outer {
-  background: var(--color-surface-800);
 }
 
 .cui-tabs--segmented .cui-tabs__bar {
@@ -496,11 +510,7 @@ const messages = useMessages();
 
 .cui-tabs__tab-close:hover {
   color: var(--cui-text-body);
-  background: var(--color-surface-200);
-}
-
-:where(.dark, .dark *) .cui-tabs__tab-close:hover {
-  background: var(--color-surface-700);
+  background: var(--cui-surface-dark-bg);
 }
 
 .cui-tabs__tab-content {

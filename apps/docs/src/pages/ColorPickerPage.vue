@@ -1,6 +1,26 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { CuiButton, CuiColorPicker, CuiFlex, CuiIcon, CuiInput, CuiPopover } from "@itguy614/clean-ui";
+import { computed, ref } from "vue";
+import {
+  CuiButton,
+  CuiCard,
+  CuiCardBody,
+  CuiColorPicker,
+  CuiFlex,
+  CuiIcon,
+  CuiInput,
+  CuiPopover,
+  CuiStack,
+  CuiTable,
+  CuiTableBody,
+  CuiTableCell,
+  CuiTableHead,
+  CuiTableRow,
+  formatColor,
+  parseColor,
+  PALETTE_BASIC,
+  PALETTE_MATERIAL,
+  PALETTE_TAILWIND,
+} from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/color-picker";
@@ -11,6 +31,36 @@ const color3 = ref("#ef4444");
 const color4 = ref("rgba(99, 102, 241, 0.75)");
 const color5 = ref("#8b5cf6");
 const color6 = ref("#f97316");
+
+// Color utilities demo
+const utilInput = ref("hsla(160, 84%, 39%, 0.8)");
+const utilParsed = computed(() => parseColor(utilInput.value));
+const utilFormats = computed(() => {
+  const c = utilParsed.value;
+  if (!c) return null;
+  return {
+    hex: formatColor(c.r, c.g, c.b, c.a, "hex"),
+    rgb: formatColor(c.r, c.g, c.b, c.a, "rgb"),
+    hsl: formatColor(c.r, c.g, c.b, c.a, "hsl"),
+  };
+});
+
+const conversions = [
+  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha byte is ignored. Anything else — named colours, space-separated syntax — is null." },
+  { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". Hex drops alpha; rgb and hsl switch to rgba()/hsla() when a < 1, alpha to two decimals." },
+  { fn: "rgbToHex(r, g, b)", returns: "string", notes: "Lowercase #rrggbb; channels are rounded." },
+  { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 6 or 8 digits, leading # optional; an 8-digit alpha is discarded. Any other length is null." },
+  { fn: "rgbToHsl(r, g, b)", returns: "HSL", notes: "h 0–360, s and l 0–100 (percent), all rounded to integers." },
+  { fn: "hslToRgb(h, s, l)", returns: "RGB", notes: "s and l are percentages (0–100), not fractions." },
+  { fn: "rgbToHsv(r, g, b)", returns: "HSV", notes: "h 0–360, s and v 0–1, unrounded — the picker's gradient coordinates." },
+  { fn: "hsvToRgb(h, s, v)", returns: "RGB", notes: "h wraps around 360; s and v are clamped to 0–1." },
+];
+
+const palettes = [
+  { name: "PALETTE_BASIC", preset: "basic", colors: PALETTE_BASIC },
+  { name: "PALETTE_MATERIAL", preset: "material", colors: PALETTE_MATERIAL },
+  { name: "PALETTE_TAILWIND", preset: "tailwind", colors: PALETTE_TAILWIND },
+];
 
 // Complex example state
 const inputColor = ref("#6366f1");
@@ -50,30 +100,39 @@ function onHexInput(val: string | number) {
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        The text field is the component's keyboard path. It is a real
+        Every visual control is keyboard-operable, and the text field is a real
         <code>&lt;input&gt;</code> carrying <code>id</code>, <code>name</code> and the
-        <code>aria-*</code> props, it accepts any format <code>parseColor</code>
-        understands, and it commits on <code>Enter</code> or on blur — an unparseable
-        value is reverted rather than emitted. Keep <code>showInput</code> on: it is what
-        makes the component operable without a pointer, and colour is exactly the kind of
-        value people want to paste rather than hunt for.
+        <code>aria-*</code> props. It accepts any format <code>parseColor</code> understands
+        and commits on <code>Enter</code> or on blur; an unparseable value is reverted rather
+        than emitted.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The gradient area, the hue slider and the alpha slider are pointer-driven. They
-          carry no <code>role="slider"</code> and are not in the tab order, so what they
-          express has to be reachable through the text field.
+          The gradient is a pair of <code>role="slider"</code>s, Saturation and Brightness,
+          sharing one tab stop. Arrow Left and Right move saturation, Arrow Up and Down
+          brightness, and focus follows to the slider whose value changed, so a screen reader
+          announces that axis and its percentage. Home and End go to the ends of the focused
+          axis.
         </li>
         <li>
-          Swatches are decorative <code>div</code>s with a click handler. Where a fixed
-          set of named colours is the real choice — a label colour, a calendar colour —
-          a <code>CuiRadioGroup</code> or <code>CuiSelect</code> of named options is the
-          better control, and it will announce the name rather than a hex string.
+          Hue and Opacity are sliders of their own — degrees and percent. On every slider,
+          Shift takes ten steps. Pressing a surface with the pointer focuses its slider, so the
+          keys carry on from there.
         </li>
         <li>
-          Selection is shown by a ring on the active swatch and nothing else, so the
-          swatch row alone does not distinguish two similar colours for anyone who cannot
-          see them. The text field beside it always reads the current value.
+          The swatches are a <code>role="radiogroup"</code> with one tab stop: the arrow keys
+          move between them and select, as radios do. Each is named by its hex value, since a
+          colour alone is not a name. Where a fixed set of <em>named</em> colours is the real
+          choice — a label colour, a calendar colour — a <code>CuiRadioGroup</code> or
+          <code>CuiSelect</code> of named options announces the name instead.
+        </li>
+        <li>
+          <code>disabled</code> reaches everything: the text field and the format toggle are
+          disabled, and the sliders and swatches leave the tab order.
+        </li>
+        <li>
+          The names and value texts come from the message catalogue
+          (<code>colorPicker.*</code>), so they can be translated.
         </li>
         <li>
           The component has no <code>label</code> prop. Wrap it in a
@@ -81,12 +140,116 @@ function onHexInput(val: string | number) {
           <code>aria-describedby</code> at its own label and help text.
         </li>
       </ul>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> <code>disabled</code> dims the panel and sets
-        <code>pointer-events: none</code>, but does not reach the text field — it stays
-        focusable and typing into it still emits. If you disable the picker inside a form,
-        disable or hide your own wrapper too rather than relying on the prop alone.
-      </p>
+    </template>
+
+    <template #extra>
+      <div>
+        <h2 id="color-utilities" class="mb-4 text-2xl font-semibold">Color utilities</h2>
+        <CuiStack spacing="4">
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                The picker's colour maths is exported for use on its own — to normalise a value
+                before storing it, to show it in another format, or to build a palette. Every
+                channel is 0–255; <code class="cui-code">RGB</code>, <code class="cui-code">RGBA</code>, <code class="cui-code">HSL</code>,
+                <code class="cui-code">HSV</code> and <code class="cui-code">ColorFormat</code> are exported as types.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import { parseColor, formatColor, rgbToHex, hexToRgb, rgbToHsl, hslToRgb, hsvToRgb, rgbToHsv } from "@itguy614/clean-ui";
+
+const c = parseColor("rgba(59, 130, 246, 0.5)");  // { r: 59, g: 130, b: 246, a: 0.5 }
+formatColor(c!.r, c!.g, c!.b, c!.a, "hsl");       // "hsla(217, 91%, 60%, 0.50)"
+
+rgbToHex(59, 130, 246);                            // "#3b82f6"
+hexToRgb("#3b82f6");                               // { r: 59, g: 130, b: 246 }
+rgbToHsl(59, 130, 246);                            // { h: 217, s: 91, l: 60 }
+hslToRgb(217, 91, 60);                             // { r: 60, g: 131, b: 246 }
+rgbToHsv(255, 0, 0);                               // { h: 0, s: 1, v: 1 }
+hsvToRgb(120, 1, 0.5);                             // { r: 0, g: 128, b: 0 }</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+
+          <CuiCard variant="outline">
+            <CuiCardBody no-padding>
+              <CuiTable size="sm">
+                <CuiTableHead>
+                  <CuiTableRow>
+                    <CuiTableCell>Function</CuiTableCell>
+                    <CuiTableCell>Returns</CuiTableCell>
+                    <CuiTableCell>Notes</CuiTableCell>
+                  </CuiTableRow>
+                </CuiTableHead>
+                <CuiTableBody>
+                  <CuiTableRow v-for="row in conversions" :key="row.fn">
+                    <CuiTableCell><code class="cui-code">{{ row.fn }}</code></CuiTableCell>
+                    <CuiTableCell><code class="cui-code">{{ row.returns }}</code></CuiTableCell>
+                    <CuiTableCell>{{ row.notes }}</CuiTableCell>
+                  </CuiTableRow>
+                </CuiTableBody>
+              </CuiTable>
+            </CuiCardBody>
+          </CuiCard>
+
+          <Example title="Parse and reformat" :code="`const c = parseColor(input);
+formatColor(c.r, c.g, c.b, c.a, &quot;hex&quot;);
+formatColor(c.r, c.g, c.b, c.a, &quot;rgb&quot;);
+formatColor(c.r, c.g, c.b, c.a, &quot;hsl&quot;);`">
+            <CuiFlex gap="4" class="items-start flex-wrap">
+              <div style="width: 18rem;">
+                <CuiInput v-model="utilInput" label="Any colour string" />
+              </div>
+              <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
+                <template v-if="utilFormats">
+                  <div>hex: <code class="cui-code">{{ utilFormats.hex }}</code></div>
+                  <div>rgb: <code class="cui-code">{{ utilFormats.rgb }}</code></div>
+                  <div>hsl: <code class="cui-code">{{ utilFormats.hsl }}</code></div>
+                </template>
+                <div v-else>parseColor returned <code class="cui-code">null</code></div>
+              </div>
+            </CuiFlex>
+          </Example>
+
+          <CuiCard variant="outline">
+            <CuiCardBody>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                <strong>Palettes.</strong> The arrays behind <code>preset-palette</code> are
+                exported as plain hex-string arrays, so you can extend one and pass it to
+                <code>palette</code>, or reuse it elsewhere.
+              </p>
+              <CuiStack spacing="3" class="mb-3">
+                <div v-for="p in palettes" :key="p.name">
+                  <div class="mb-1 text-sm">
+                    <code class="cui-code">{{ p.name }}</code>
+                    <span style="color: var(--cui-text-secondary);"> — preset-palette="{{ p.preset }}", {{ p.colors.length }} colours</span>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                    <div
+                      v-for="c in p.colors"
+                      :key="c"
+                      :title="c"
+                      :style="{ width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', background: c, border: '1px solid var(--cui-border)' }"
+                    />
+                  </div>
+                </div>
+              </CuiStack>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                <code>getThemePalette(): string[]</code> is what <code>preset-palette="theme"</code>
+                uses. It reads the live <code>--cui-{role}</code>, <code>-bg</code>,
+                <code>-border</code>, <code>-hover</code> and <code>-active</code> tokens of the six
+                colour roles, plus six steps of the surface scale, resolves each to hex through a
+                hidden element, and returns them de-duplicated. Because it reads computed style,
+                the result reflects the theme and mode in force when you call it — call it again
+                after a theme switch — and it returns <code>[]</code> during server rendering.
+              </p>
+              <pre class="cui-pre"><code class="cui-code">import { PALETTE_BASIC, PALETTE_MATERIAL, PALETTE_TAILWIND, getThemePalette } from "@itguy614/clean-ui";
+
+const brand = [...PALETTE_TAILWIND, "#0f3460", "#e94560"];
+// &lt;CuiColorPicker v-model="color" :palette="brand" /&gt;
+
+const themed = getThemePalette();  // e.g. ["#eef2ff", "#a5b4fc", "#4f46e5", ...]</code></pre>
+            </CuiCardBody>
+          </CuiCard>
+        </CuiStack>
+      </div>
     </template>
 
     <template #examples>
@@ -128,6 +291,11 @@ function onHexInput(val: string | number) {
           v-model="color2"
           :palette="['#1a1a2e', '#16213e', '#0f3460', '#533483', '#e94560', '#f5f5f5', '#2d3436', '#636e72', '#b2bec3', '#dfe6e9']"
         />
+      </Example>
+
+      <!-- Disabled -->
+      <Example title="Disabled" :code="`<CuiColorPicker v-model=&quot;color&quot; preset-palette=&quot;basic&quot; disabled />`">
+        <CuiColorPicker v-model="color2" preset-palette="basic" disabled />
       </Example>
 
       <!-- Complex: Input + Popover -->

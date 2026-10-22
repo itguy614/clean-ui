@@ -98,6 +98,48 @@ const router = createRouter({
       name: 'utilities',
       component: () => import('../pages/UtilitiesPage.vue'),
     },
+    // Moved into the Composables group (#296); old links keep working.
+    { path: '/foundations/roving-focus', redirect: '/composables/roving-focus' },
+    {
+      path: '/composables/click-outside',
+      name: 'click-outside',
+      component: () => import('../pages/ClickOutsidePage.vue'),
+    },
+    {
+      path: '/composables/roving-focus',
+      name: 'roving-focus',
+      component: () => import('../pages/RovingFocusPage.vue'),
+    },
+    {
+      path: '/composables/overlay',
+      name: 'overlay',
+      component: () => import('../pages/OverlayPage.vue'),
+    },
+    {
+      path: '/composables/floating-panels',
+      name: 'floating-panels',
+      component: () => import('../pages/FloatingPanelsPage.vue'),
+    },
+    {
+      path: '/composables/scroll-shadows',
+      name: 'scroll-shadows',
+      component: () => import('../pages/ScrollShadowsPage.vue'),
+    },
+    {
+      path: '/composables/breakpoint',
+      name: 'breakpoint',
+      component: () => import('../pages/BreakpointPage.vue'),
+    },
+    {
+      path: '/composables/color-scheme',
+      name: 'color-scheme',
+      component: () => import('../pages/ColorSchemePage.vue'),
+    },
+    {
+      path: '/composables/field-aria',
+      name: 'field-aria',
+      component: () => import('../pages/FieldAriaPage.vue'),
+    },
     {
       path: '/components/dropdown',
       name: 'dropdown',
@@ -282,6 +324,11 @@ const router = createRouter({
       path: '/components/confirm-dialog',
       name: 'confirm-dialog',
       component: () => import('../pages/ConfirmDialogPage.vue'),
+    },
+    {
+      path: '/components/scroll-area',
+      name: 'scroll-area',
+      component: () => import('../pages/ScrollAreaPage.vue'),
     },
     {
       path: '/components/resizable-panels',

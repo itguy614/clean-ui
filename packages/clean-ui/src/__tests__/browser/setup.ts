@@ -1,9 +1,11 @@
 import preflight from "../../styles/preflight.css?inline";
+import shared from "../../styles/components-shared.css?inline";
 
 /**
  * Shared setup for the real-browser project.
  *
- * Every browser suite needs the library's scoped base, and several need the
+ * Every browser suite needs the library's scoped base and the shared component classes
+ * (`.cui-sr-only` hides form controls' native inputs), and several need the
  * focus-ring token: the rule is `outline: 2px solid var(--cui-primary-focus-ring)`,
  * and an undefined custom property makes the whole declaration invalid at
  * computed-value time — `outline-style` falls back to `none` and a ring
@@ -16,6 +18,7 @@ const style = document.createElement("style");
 style.textContent = `
   @layer theme, base, components, utilities;
   @layer base { ${preflight} }
+  ${shared}
   :root { --cui-primary-focus-ring: rgba(59, 70, 200, 0.4); }
 `;
 document.head.append(style);

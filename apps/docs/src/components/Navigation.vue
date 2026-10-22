@@ -29,6 +29,7 @@ const sections = [
   { id: "grid", label: "Grid", path: "/components/grid", group: "Layout" },
   { id: "grid-item", label: "Grid Item", path: "/components/grid-item", group: "Layout" },
   { id: "resizable-panels", label: "Resizable Panels", path: "/components/resizable-panels", group: "Layout" },
+  { id: "scroll-area", label: "Scroll Area", path: "/components/scroll-area", group: "Layout" },
   { id: "spacer", label: "Spacer", path: "/components/spacer", group: "Layout" },
   { id: "stack", label: "Stack", path: "/components/stack", group: "Layout" },
 
@@ -95,6 +96,16 @@ const sections = [
   { id: "popover", label: "Popover", path: "/components/popover", group: "Overlay" },
   { id: "slideover", label: "Slideover", path: "/components/slideover", group: "Overlay" },
   { id: "tooltip", label: "Tooltip", path: "/components/tooltip", group: "Overlay" },
+
+  // Composables (#296) — interaction, positioning, responsive, forms
+  { id: "click-outside", label: "Click Outside", path: "/composables/click-outside", group: "Composables" },
+  { id: "roving-focus", label: "Roving Focus", path: "/composables/roving-focus", group: "Composables" },
+  { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
+  { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
+  { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },
+  { id: "breakpoint", label: "Breakpoint & Layout Context", path: "/composables/breakpoint", group: "Composables" },
+  { id: "color-scheme", label: "Color Scheme", path: "/composables/color-scheme", group: "Composables" },
+  { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
 ];
 
 const groupedSections = sections.reduce((acc, section) => {

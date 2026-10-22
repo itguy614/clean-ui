@@ -10,12 +10,12 @@ const meta: ComponentMeta = {
     { name: "modelValue", type: "string | number | array | null", default: "null", description: "Selected value(s)" },
     { name: "options", type: "ComboboxOption[]", default: "[]", description: "Static options array" },
     { name: "multiple", type: "boolean", default: "false", description: "Allow multiple selection" },
-    { name: "fetchOptions", type: "(query) => Promise<Option[]>", description: "Async search function" },
+    { name: "fetchOptions", type: "(query, { signal }) => Promise<Option[]>", description: "Async search function. Debounced; only the latest search's results are shown. `signal` is aborted when a newer search, or unmount, supersedes it." },
     { name: "debounce", type: "number", default: "300", description: "Debounce delay for search (ms)" },
     { name: "minChars", type: "number", default: "0", description: "Min characters before searching" },
     { name: "maxVisible", type: "number", default: "8", description: "Max visible items before scrolling" },
-    { name: "placeholder", type: "string", default: "Search...", description: "Placeholder text" },
-    { name: "noResultsText", type: "string", default: "No results found", description: "Text when no options match" },
+    { name: "placeholder", type: "string", default: "Search... (messages.combobox.placeholder)", description: "Placeholder text" },
+    { name: "noResultsText", type: "string", default: "No results found (messages.combobox.noResults)", description: "Text when no options match" },
     inputSizeProp,
     roundedProp,
     { name: "label", type: "string", description: "Label text" },
@@ -30,7 +30,12 @@ const meta: ComponentMeta = {
     { name: "disabled", type: "boolean", default: "false", description: "Disabled state" },
     { name: "loading", type: "boolean", default: "false", description: "External loading state" },
     hiddenProp,
-    ...nativeControlProps,
+    // The values post through hidden inputs (#303), not the search input's text.
+    ...nativeControlProps.map((p) =>
+      p.name === "autocomplete"
+        ? { ...p, description: "Autocomplete hint for the search box. It controls the browser's own suggestion list there — use off to keep it from covering the listbox. History-based autofill doesn't apply, since the search box carries no name" }
+        : p.name === "name" ? { ...p, description: "Form field name. Posts the selected value (one entry per value when multiple, empty when nothing is selected) with a native form and FormData — never the typed search text. Nothing posts while disabled" } : p,
+    ),
   ],
 
   slots: [

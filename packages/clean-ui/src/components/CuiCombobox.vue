@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
+import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { INPUT_SIZE_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useListbox } from "../composables/useListbox";
+import { useCuiId } from "../composables/useCuiId";
+import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
 import CuiSpinner from "./CuiSpinner.vue";
+import CuiListboxPanel from "./CuiListboxPanel.vue";
+import CuiListboxOption from "./CuiListboxOption.vue";
+import CuiListboxStatus from "./CuiListboxStatus.vue";
+import CuiFormValues from "./CuiFormValues.vue";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -34,8 +42,8 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
   multiple?: boolean;
   /** Placeholder */
   placeholder?: string;
-  /** Async search function — receives query, returns options */
-  fetchOptions?: (query: string) => Promise<ComboboxOption[]>;
+  /** Search for options. `signal` is aborted when a newer search, or unmount, supersedes it. */
+  fetchOptions?: (query: string, context: { signal: AbortSignal }) => Promise<ComboboxOption[]>;
   /** Debounce delay for search (ms) */
   debounce?: number;
   /** Minimum characters before searching */
@@ -59,7 +67,6 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
 const props = withDefaults(defineProps<CuiComboboxProps>(), {
   options: () => [],
   multiple: false,
-  placeholder: "Search...",
   debounce: 300,
   minChars: 0,
   maxVisible: 8,
@@ -68,21 +75,12 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   disabled: false,
   loading: false,
   error: false,
-  noResultsText: "No results found",
   rounded: "md",
   hidden: false,
 });
 
 // Link our own error message into aria-describedby (#175).
 const { errorId, describedBy } = useFieldDescribedBy(props);
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
@@ -93,14 +91,24 @@ const emit = defineEmits<{
 const query = ref("");
 const isOpen = ref(false);
 const focusedIndex = ref(-1);
-const internalLoading = ref(false);
-const asyncOptions = ref<ComboboxOption[]>([]);
+// fetchOptions: debounced, latest-only, cancelled below minChars and on unmount (#245).
+const asyncSearch = useAsyncSearch<ComboboxOption>({
+  fetch: () => props.fetchOptions,
+  query: () => query.value,
+  debounce: () => props.debounce,
+  minChars: () => props.minChars,
+});
+const asyncOptions = asyncSearch.results;
+// Every reset of the query (a selection, a close) goes through here, so a search still
+// pending for the old text can't fire afterwards and reopen the list (#245).
+function clearQuery() {
+  query.value = "";
+  asyncSearch.reset();
+}
 const inputRef = ref<HTMLInputElement | null>(null);
-const dropdownRef = ref<HTMLElement | null>(null);
+const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const wrapperRef = ref<HTMLElement | null>(null);
 const controlRef = ref<HTMLElement | null>(null);
-const dropdownStyle = ref<Record<string, string>>({});
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Selected values as Set
 const selectedSet = computed(() => {
@@ -146,7 +154,25 @@ const filteredOptions = computed(() => {
   );
 });
 
-const isLoading = computed(() => props.loading || internalLoading.value);
+// The debounce counts as loading: the panel says "searching" rather than show an empty box.
+const isLoading = computed(() => props.loading || asyncSearch.pending.value);
+
+// What the panel can show, besides options (#245). "No results" only once a search for
+// what's typed has come back (always, for static options); a failed search says so.
+const showFailed = computed(() => !!asyncSearch.error.value && asyncSearch.answered.value);
+const showNoResults = computed(
+  () => filteredOptions.value.length === 0 && asyncSearch.answered.value && !showFailed.value && !isLoading.value,
+);
+const showTypeMore = computed(
+  () => filteredOptions.value.length === 0 && !!props.fetchOptions && query.value.length < props.minChars,
+);
+// Open only with something to show, as CuiTagInput; aria-expanded follows it. With
+// fetchOptions and nothing typed yet, that is nothing.
+const panelOpen = computed(
+  () =>
+    isOpen.value &&
+    (filteredOptions.value.length > 0 || isLoading.value || showFailed.value || showNoResults.value || showTypeMore.value),
+);
 
 // Size config — from the shared scale, so a combobox lines up with a CuiInput or
 // CuiSelect of the same size. It used to carry a private table with different heights,
@@ -175,47 +201,6 @@ const cfg = computed(() => {
   };
 });
 
-// Dropdown positioning
-function updateDropdownPosition() {
-  // The CONTROL, not the wrapper. The wrapper also holds the label above the
-  // control and the error message below it, so anchoring to it opened the panel
-  // 4px above the *label* — a gap the height of the label, which read as the
-  // dropdown detaching from the field. CuiSelect has always measured its
-  // trigger; this matches it.
-  const anchor = controlRef.value ?? wrapperRef.value;
-  if (!anchor) return;
-  const rect = anchor.getBoundingClientRect();
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom;
-  const spaceAbove = rect.top;
-  const openAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
-  // Bound by the side actually being opened to. Taking the roomier side
-  // regardless let a panel opened upward be taller than the room above it, and
-  // run off the top of the viewport.
-  const maxH = Math.max(0, Math.min(320, (openAbove ? spaceAbove : spaceBelow) - 16));
-
-  const s: Record<string, string> = {
-    // The panel is teleported to <body>, so it inherits nothing from the component — it
-    // has to carry the size-derived properties itself (#123).
-    ...cfg.value.style,
-    position: "fixed",
-    zIndex: "9990",
-    left: `${rect.left}px`,
-    width: `${rect.width}px`,
-    maxHeight: `${maxH}px`,
-    // Only the geometry the positioner computes stays inline; the panel's paint lives in
-    // the stylesheet so it can be themed (#123).
-  };
-
-  if (openAbove) {
-    s.bottom = `${vh - rect.top + 4}px`;
-  } else {
-    s.top = `${rect.bottom + 4}px`;
-  }
-
-  dropdownStyle.value = s;
-}
-
 // Search
 function onInput(e: Event) {
   query.value = (e.target as HTMLInputElement).value;
@@ -224,21 +209,7 @@ function onInput(e: Event) {
 
   emit("search", query.value);
 
-  if (props.fetchOptions) {
-    if (query.value.length < props.minChars) {
-      asyncOptions.value = [];
-      return;
-    }
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
-      internalLoading.value = true;
-      try {
-        asyncOptions.value = await props.fetchOptions!(query.value);
-      } finally {
-        internalLoading.value = false;
-      }
-    }, props.debounce);
-  }
+  if (props.fetchOptions) asyncSearch.search(query.value);
 }
 
 // Selection
@@ -253,12 +224,11 @@ function selectOption(option: ComboboxOption) {
       current.add(option.value);
     }
     emit("update:modelValue", [...current]);
-    query.value = "";
+    clearQuery();
     nextTick(() => inputRef.value?.focus());
   } else {
     emit("update:modelValue", option.value);
-    query.value = "";
-    isOpen.value = false;
+    isOpen.value = false; // the close watcher clears the query
     inputRef.value?.blur();
   }
 }
@@ -272,70 +242,60 @@ function removeTag(value: string | number) {
 
 // Keyboard
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    if (!isOpen.value) { openDropdown(); return; }
-    focusedIndex.value = Math.min(focusedIndex.value + 1, filteredOptions.value.length - 1);
-    scrollToFocused();
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    focusedIndex.value = Math.max(focusedIndex.value - 1, 0);
-    scrollToFocused();
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (focusedIndex.value >= 0 && focusedIndex.value < filteredOptions.value.length) {
-      selectOption(filteredOptions.value[focusedIndex.value]);
-    }
-  } else if (e.key === "Escape") {
-    isOpen.value = false;
-  } else if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
+  if (listbox.onKeydown(e)) return;
+  if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
     removeTag(selectedOptions.value[selectedOptions.value.length - 1].value);
   }
 }
 
-function scrollToFocused() {
-  nextTick(() => {
-    dropdownRef.value?.querySelector(`[data-index="${focusedIndex.value}"]`)?.scrollIntoView({ block: "nearest" });
-  });
-}
+// The ARIA combobox pattern, editable (#205) — see useListbox. Ids build on the control's own
+// `id` when it has one; useCuiId runs either way, for SSR-stable ids.
+const messages = useMessages();
+// The prose props default to the message catalogue, so a localised app localises them (#215).
+const placeholderText = computed(() => props.placeholder ?? messages.value.combobox.placeholder);
+const noResultsLabel = computed(() => props.noResultsText ?? messages.value.combobox.noResults);
+const generatedId = useCuiId("combobox");
+const listbox = useListbox({
+  id: props.id ?? generatedId,
+  mode: "editable",
+  count: () => filteredOptions.value.length,
+  isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
+  activeIndex: focusedIndex,
+  isOpen: () => panelOpen.value,
+  open: openDropdown,
+  select: (i) => selectOption(filteredOptions.value[i]),
+  close: () => (isOpen.value = false),
+  hasLabel: () => !!props.label,
+  labelledby: () => props.ariaLabelledby,
+  // Silent while searching, and while the min-chars hint shows instead; the panel's own
+  // empty text when nothing matches, so a localised noResultsText is what's heard.
+  announce: () => {
+    if (!panelOpen.value || isLoading.value) return "";
+    if (showFailed.value) return messages.value.listbox.searchFailed;
+    const n = filteredOptions.value.length;
+    if (n > 0) return messages.value.listbox.results(n);
+    return showNoResults.value ? noResultsLabel.value : "";
+  },
+});
+
+// The highlight is an index into the list as it is now, and so is the option id the input
+// names: when the list changes under it — the query clears after a multiple selection,
+// async results arrive — it would point at a different option. Start over instead.
+watch(filteredOptions, () => (focusedIndex.value = -1));
 
 // Open/close
 function openDropdown() {
   if (props.disabled) return;
   isOpen.value = true;
-  updateDropdownPosition();
 }
 
 function onFocus() {
   openDropdown();
 }
 
-// Click outside — check both wrapper and teleported dropdown
-function onClickOutside(e: MouseEvent) {
-  const target = e.target as Node;
-  if (wrapperRef.value?.contains(target)) return;
-  if (dropdownRef.value?.contains(target)) return;
-  isOpen.value = false;
-}
-
-// Named, not inline, so onUnmounted can remove them — an anonymous listener
-// can't be, and leaked two per mount along with the closure's whole setup scope (#202).
-function onScrollOrResize() {
-  if (isOpen.value) updateDropdownPosition();
-}
-
-onMounted(() => {
-  document.addEventListener("mousedown", onClickOutside);
-  window.addEventListener("scroll", onScrollOrResize, true);
-  window.addEventListener("resize", onScrollOrResize);
-});
-
-onUnmounted(() => {
-  document.removeEventListener("mousedown", onClickOutside);
-  window.removeEventListener("scroll", onScrollOrResize, true);
-  window.removeEventListener("resize", onScrollOrResize);
-  if (debounceTimer) clearTimeout(debounceTimer);
-});
+// Global listeners only while open, so a closed field holds none (#203). The wrapper,
+// not just the control: a press on the label or the clear button isn't "outside".
+useClickOutside(() => [wrapperRef.value, panelRef.value?.el], () => (isOpen.value = false), { enabled: isOpen });
 
 // Display text for single select (when closed)
 const displayText = computed(() => {
@@ -346,8 +306,7 @@ const displayText = computed(() => {
 
 // Reset query when closing
 watch(isOpen, (open) => {
-  if (!open) query.value = "";
-  if (open) nextTick(updateDropdownPosition);
+  if (!open) clearQuery();
 });
 
 // Expose imperative handle
@@ -370,16 +329,15 @@ function optionClass(index: number, option: ComboboxOption) {
     "cui-combobox__option--disabled": !!option.disabled,
   };
 }
-const messages = useMessages();
 </script>
 
 <template>
-  <!-- The size-derived properties live on the ROOT, not the control: the dropdown is a
-       sibling of the control, not a descendant, so properties set on the control would
-       never reach the options. -->
+  <!-- The size-derived properties live on the root, for the control and its input. The
+       teleported panel gets the ones its rows need as props (#137). -->
   <div class="cui-combobox" v-show="!hidden" ref="wrapperRef" :style="cfg.style">
     <label
       v-if="label"
+      :id="listbox.labelId"
       :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
     >{{ label }}</label>
 
@@ -389,7 +347,7 @@ const messages = useMessages();
       class="cui-combobox__control"
       :class="{ 'cui-combobox__control--disabled': disabled }"
       :style="{
-        '--_combobox-radius': radiusMap[rounded],
+        '--_combobox-radius': RADIUS_SCALE[rounded],
         '--_combobox-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
         '--_combobox-focus-ring': error ? 'var(--cui-error-focus-ring)' : `var(--cui-${color}-focus-ring)`,
         '--_combobox-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
@@ -413,13 +371,12 @@ const messages = useMessages();
       <input
         ref="inputRef"
         :id="id"
-        :name="name"
         :autocomplete="autocomplete"
         :aria-describedby="describedBy"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        v-bind="listbox.inputAttrs.value"
         :value="isOpen ? query : displayText"
-        :placeholder="selectedOptions.length > 0 ? '' : placeholder"
+        :placeholder="selectedOptions.length > 0 ? '' : placeholderText"
         :disabled="disabled"
         class="cui-combobox__input"
         @input="onInput"
@@ -435,78 +392,92 @@ const messages = useMessages();
     </div>
 
     <!-- Error message -->
-    <div v-if="error && errorMessage" :id="errorId" :style="{ fontSize: '0.75rem', color: 'var(--cui-error)', marginTop: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+    <div v-if="error && errorMessage" :id="errorId" class="cui-combobox__error cui-field-error">
       {{ errorMessage }}
     </div>
 
+    <!-- The value posts under `name` (#303), not the search text the input holds. -->
+    <CuiFormValues :name="name" :value="modelValue" :multiple="multiple" :disabled="disabled" />
+
+    <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
+
     <!-- Dropdown (teleported) -->
-    <Teleport to="body">
-      <div v-if="isOpen" ref="dropdownRef" class="cui-combobox__dropdown" :style="dropdownStyle">
-        <!-- Loading -->
-        <div v-if="isLoading && filteredOptions.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
-          <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
-        </div>
+    <CuiListboxPanel
+      ref="panelRef"
+      :open="panelOpen"
+      :anchor="controlRef"
+      token-prefix="combobox"
+      :color="color"
+      :max-height="320"
+      :max-visible="maxVisible"
+      :font-size="cfg.style['--_combobox-font-size']"
+      :item-padding="cfg.style['--_combobox-item-padding']"
+      v-bind="listbox.panelAttrs.value"
+      :aria-multiselectable="multiple || undefined"
+      class="cui-combobox__dropdown"
+    >
+      <!-- Loading -->
+      <!-- Status rows (presentational: a listbox holds only options; the live region above
+           announces the results) -->
+      <CuiListboxStatus v-if="isLoading && filteredOptions.length === 0">
+        <CuiSpinner size="sm" show-label :label="messages.combobox.searching" />
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showFailed && filteredOptions.length === 0">
+        {{ messages.listbox.searchFailed }}
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showNoResults">
+        {{ noResultsLabel }}
+      </CuiListboxStatus>
+      <CuiListboxStatus v-else-if="showTypeMore">
+        {{ messages.combobox.typeMore(minChars - query.length) }}
+      </CuiListboxStatus>
 
-        <!-- No results -->
-        <div
-          v-else-if="filteredOptions.length === 0 && (query.length >= minChars || !fetchOptions)"
-          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
-        >
-          {{ noResultsText }}
-        </div>
+      <!-- Options list -->
+      <CuiListboxOption
+        v-for="(option, i) in filteredOptions"
+        :key="String(option.value)"
+        :id="listbox.optionId(i)"
+        :active="focusedIndex === i"
+        :selected="selectedSet.has(option.value)"
+        :disabled="!!option.disabled"
+        :class="optionClass(i, option)"
+        @select="selectOption(option)"
+        @hover="focusedIndex = i"
+      >
+        <slot name="option" :option="option" :selected="selectedSet.has(option.value)">
+          <img
+            v-if="option.image"
+            :src="option.image as string"
+            :style="{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', objectFit: 'cover', flexShrink: '0' }"
+          />
+          <CuiIcon
+            v-else-if="option.icon"
+            :name="option.icon"
+            size="1rem"
+            :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }"
+          />
 
-        <!-- Min chars hint -->
-        <div
-          v-else-if="filteredOptions.length === 0 && fetchOptions && query.length < minChars"
-          :style="{ padding: 'calc(0.75rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }"
-        >
-          {{ messages.combobox.typeMore(minChars - query.length) }}
-        </div>
-
-        <!-- Options list -->
-        <div
-          v-for="(option, i) in filteredOptions"
-          :key="String(option.value)"
-          :data-index="i"
-          :class="optionClass(i, option)"
-          @click.stop="selectOption(option)"
-          @mouseenter="focusedIndex = i"
-        >
-          <slot name="option" :option="option" :selected="selectedSet.has(option.value)">
-            <img
-              v-if="option.image"
-              :src="option.image as string"
-              :style="{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', objectFit: 'cover', flexShrink: '0' }"
-            />
-            <CuiIcon
-              v-else-if="option.icon"
-              :name="option.icon"
-              size="1rem"
-              :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }"
-            />
-
-            <div :style="{ flex: '1', minWidth: '0' }">
-              <div :style="{ lineHeight: '1.3', fontWeight: selectedSet.has(option.value) ? '600' : '400' }">
-                {{ option.label }}
-              </div>
-              <div
-                v-if="option.description"
-                :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: 'calc(0.0625rem * var(--cui-density-scale, 1))' }"
-              >
-                {{ option.description }}
-              </div>
+          <div :style="{ flex: '1', minWidth: '0' }">
+            <div :style="{ lineHeight: '1.3', fontWeight: selectedSet.has(option.value) ? '600' : '400' }">
+              {{ option.label }}
             </div>
+            <div
+              v-if="option.description"
+              :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: 'calc(0.0625rem * var(--cui-density-scale, 1))' }"
+            >
+              {{ option.description }}
+            </div>
+          </div>
 
-            <CuiIcon
-              v-if="selectedSet.has(option.value)"
-              name="check"
-              size="0.875rem"
-              :style="{ color: `var(--cui-${color})`, flexShrink: '0' }"
-            />
-          </slot>
-        </div>
-      </div>
-    </Teleport>
+          <CuiIcon
+            v-if="selectedSet.has(option.value)"
+            name="check"
+            size="0.875rem"
+            :style="{ color: `var(--cui-${color})`, flexShrink: '0' }"
+          />
+        </slot>
+      </CuiListboxOption>
+    </CuiListboxPanel>
   </div>
 </template>
 
@@ -533,36 +504,8 @@ const messages = useMessages();
   font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
 }
 
-:where(.cui-combobox__dropdown) {
-  background: var(--cui-combobox-panel-bg, var(--cui-surface-base));
-  border: var(--cui-combobox-panel-border, 1px solid var(--cui-border));
-  border-radius: var(--cui-combobox-panel-radius, 0.5rem);
-  box-shadow: var(
-    --cui-combobox-panel-shadow,
-    0 8px 24px -4px rgba(0, 0, 0, 0.12),
-    0 2px 8px -2px rgba(0, 0, 0, 0.08)
-  );
-  padding: var(--cui-combobox-panel-padding, calc(0.25rem * var(--cui-density-scale, 1)));
-}
-
-:where(.cui-combobox__option) {
-  padding: var(--cui-combobox-item-padding, var(--_combobox-item-padding));
-  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
-  color: var(--cui-combobox-item-color, var(--cui-text-body));
-  border-radius: var(--cui-combobox-item-radius, 0.25rem);
-}
-
-:where(.cui-combobox__option--selected) {
-  background: var(--cui-combobox-item-selected-bg, color-mix(in srgb, var(--cui-primary-bg) 50%, transparent));
-}
-
-:where(.cui-combobox__option--focused) {
-  background: var(--cui-combobox-item-focus-bg, var(--cui-primary-bg));
-}
-
-:where(.cui-combobox__option--disabled) {
-  color: var(--cui-combobox-item-disabled-color, var(--cui-text-tertiary));
-}
+/* The panel and its option rows are painted by CuiListboxPanel, from this component's
+   --cui-combobox-panel-* / --cui-combobox-item-* tokens (#137). */
 
 /* --- Structural --- */
 .cui-combobox__control {
@@ -583,10 +526,6 @@ const messages = useMessages();
   position: relative;
 }
 
-.cui-combobox__dropdown {
-  overflow-y: auto;
-}
-
 .cui-combobox__input {
   flex: 1;
   min-width: 4rem;
@@ -604,21 +543,12 @@ const messages = useMessages();
   line-height: 1.25;
 }
 
-.cui-combobox__option {
-  display: flex;
-  align-items: center;
-  gap: calc(0.5rem * var(--cui-density-scale, 1));
-  cursor: pointer;
-  transition: background 0.1s ease;
-}
-
-.cui-combobox__option--disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
 .cui-combobox__control:focus-within:not(.cui-combobox__control--disabled) {
   border-color: var(--_combobox-focus-border);
   box-shadow: 0 0 0 2px var(--_combobox-focus-ring);
+}
+
+.cui-combobox__error {
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
 }
 </style>

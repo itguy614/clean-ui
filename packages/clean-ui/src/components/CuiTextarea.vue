@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
-import { TEXTAREA_SIZE_SCALE } from "../utils/sizing";
+import { TEXTAREA_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
-
-const radiusMap: Record<CuiRounded, string> = {
-  none: "0",
-  sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
-  lg: "var(--cui-radius-lg, 0.5rem)",
-  full: "9999px",
-};
 
 export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
@@ -56,7 +48,6 @@ const emit = defineEmits<{
 }>();
 
 const textareaRef = useTemplateRef<HTMLTextAreaElement>("textareaEl");
-
 
 const charCount = computed(() => props.modelValue.length);
 const isOverLimit = computed(() => props.maxLength !== undefined && charCount.value > props.maxLength);
@@ -141,7 +132,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         'cui-textarea--disabled': disabled,
       }"
       :style="{
-        borderRadius: radiusMap[rounded],
+        borderRadius: RADIUS_SCALE[rounded],
         '--_ta-px': dims.px,
         '--_ta-py': dims.py,
         '--_ta-font-size': dims.fontSize,
@@ -175,7 +166,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
       v-if="(error && errorMessage) || maxLength !== undefined"
       class="cui-textarea__footer"
     >
-      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error">
+      <div v-if="error && errorMessage" :id="errorId" class="cui-textarea__error cui-field-error">
         {{ errorMessage }}
       </div>
       <div v-else class="cui-textarea__spacer" />
@@ -254,11 +245,6 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
   align-items: flex-start;
   margin-top: calc(0.375rem * var(--cui-density-scale, 1));
   gap: calc(1rem * var(--cui-density-scale, 1));
-}
-
-.cui-textarea__error {
-  font-size: 0.8125rem;
-  color: var(--cui-error);
 }
 
 .cui-textarea__spacer {

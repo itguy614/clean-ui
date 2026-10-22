@@ -101,11 +101,11 @@ const dynamicField = ref({
         </li>
       </ul>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> <code>id</code>, <code>aria-describedby</code> and
-        <code>aria-labelledby</code> land on the hidden <code>aria-hidden</code> input, so
-        they do not reach the element carrying <code>role="switch"</code>. Use the
-        <code>description</code> prop for per-switch help text, and put anything a screen
-        reader must associate on the surrounding <code>CuiFormField</code>.
+        <code>id</code>, <code>aria-describedby</code> and <code>aria-labelledby</code> land on
+        the element carrying <code>role="switch"</code>. With a <code>description</code> (or the
+        <code>#description</code> slot), the control is named by its label alone — unless you
+        pass <code>aria-labelledby</code> — and described by the description, which comes before
+        any <code>aria-describedby</code> you pass; it is not read as part of the name.
       </p>
     </template>
 

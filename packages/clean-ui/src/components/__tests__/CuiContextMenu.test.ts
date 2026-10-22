@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h } from "vue";
 import CuiContextMenu from "../CuiContextMenu.vue";
@@ -149,5 +149,37 @@ describe("CuiContextMenu triggers", () => {
     exposed(wrapper).close();
 
     expect(wrapper.emitted("close")).toHaveLength(1);
+  });
+});
+
+// #291: an open from closed must reveal the panel — the measure once ran before the mount.
+describe("CuiContextMenu first open", () => {
+  let w: VueWrapper | undefined;
+  afterEach(() => {
+    w?.unmount();
+    vi.useRealTimers();
+  });
+
+  it("reveals the panel", async () => {
+    w = mountMenu();
+    await w.find("#target").trigger("contextmenu", { clientX: 20, clientY: 20 });
+    await w.vm.$nextTick();
+    const el = panel() as HTMLElement;
+    expect(el.style.opacity).not.toBe("0");
+  });
+
+  it("reveals it again on the next open after a close", async () => {
+    vi.useFakeTimers();
+    w = mountMenu();
+    exposed(w).openAt(20, 20);
+    await w.vm.$nextTick();
+    exposed(w).close();
+    vi.advanceTimersByTime(150); // past the close timer, so the next open is from closed
+    await w.vm.$nextTick();
+    expect(panel()).toBeNull();
+    exposed(w).openAt(40, 40);
+    await w.vm.$nextTick();
+    await w.vm.$nextTick();
+    expect((panel() as HTMLElement).style.opacity).not.toBe("0");
   });
 });

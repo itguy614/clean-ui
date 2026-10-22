@@ -49,7 +49,13 @@ const meta: ComponentMeta = {
     },
     {
       name: "CuiDropdownTrigger",
-      slots: [{ name: "default", description: "The element that opens the menu — normally a CuiButton" }],
+      slots: [
+        {
+          name: "default",
+          description:
+            "The one element that opens the menu — normally a CuiButton. It receives aria-haspopup, aria-expanded and aria-controls, and keyboard focus is its own",
+        },
+      ],
     },
     {
       name: "CuiDropdownMenu",

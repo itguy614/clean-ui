@@ -28,6 +28,11 @@ const demoRadio = ref("option1");
 const demoCheck = ref(true);
 const demoToggle = ref(true);
 const demoSelect = ref<string | null>(null);
+const scopedThemes = ["forest", "ruby", "violet"] as const;
+const scopedCode = `<div class="cui-theme-forest">
+  <CuiButton variant="solid">Solid</CuiButton>
+  <CuiBadge variant="subtle">Badge</CuiBadge>
+</div>`;
 </script>
 
 <template>
@@ -70,6 +75,26 @@ setTheme('default') // back to indigo
           description: p.description,
         }))"
       />
+    </div>
+
+    <div>
+      <h2 id="theme-presets" class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            The table above is built from <code class="cui-code">THEME_PRESETS</code> — a
+            <code class="cui-code">ThemePreset[]</code> of <code class="cui-code">{ id, label, description }</code>,
+            the same array <code class="cui-code">useTheme()</code> returns as
+            <code class="cui-code">presets</code>. Import it directly to build a theme picker outside
+            a component, e.g. in a settings schema.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import { THEME_PRESETS, type ThemePreset } from "@itguy614/clean-ui";
+
+// [{ id: "mono", label: "Mono", description: "Monochrome" },
+//  { id: "default", label: "Navy", description: "Navy blue (base scale)" }, ...]
+const options = THEME_PRESETS.map((p: ThemePreset) => ({ value: p.id, label: p.label }));</code></pre>
+        </CuiCardBody>
+      </CuiCard>
     </div>
 
     <div>
@@ -191,13 +216,36 @@ setTheme('teal')
       </CuiCard>
     </div>
 
+    <!-- Scoped themes -->
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Scoped Themes</h2>
+      <Example title="A theme class on part of the page" :code="scopedCode">
+        <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">
+          <div v-for="t in scopedThemes" :key="t" :class="`cui-theme-${t}`">
+            <CuiStack spacing="3">
+              <CuiBadge variant="subtle">{{ t }}</CuiBadge>
+              <CuiFlex gap="2" class="flex-wrap">
+                <CuiButton variant="solid">Solid</CuiButton>
+                <CuiButton variant="outline">Outline</CuiButton>
+              </CuiFlex>
+              <CuiToggle :model-value="true" label="Toggle" />
+              <CuiAlert color="primary" title="Primary alert">Follows the scoped theme.</CuiAlert>
+            </CuiStack>
+          </div>
+        </CuiGrid>
+      </Example>
+    </div>
+
     <!-- Custom Themes -->
     <div>
       <h2 class="mb-4 text-2xl font-semibold">Custom Themes</h2>
       <CuiCard>
         <CuiCardBody>
           <p class="mb-3 text-surface-600 dark:text-surface-400">
-            Create your own theme by defining a CSS class that overrides the color variables:
+            Create your own theme by defining a CSS class that overrides the color variables.
+            Name it <code>cui-theme-*</code>: the library recognises a theme scope by that
+            prefix, and re-resolves its semantic colours there, so a theme class on part of a
+            page re-themes that part.
           </p>
           <pre class="cui-pre"><code>.cui-theme-brand {
   --color-primary-50:  #fef2f2;
@@ -216,6 +264,35 @@ setTheme('teal')
   --color-surface-50: #fafaf9;
   /* ... */
 }</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <!-- SSR -->
+    <div>
+      <h2 id="ssr-theme-init" class="mb-4 text-2xl font-semibold">Server-rendered pages</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            <code class="cui-code">useTheme()</code> persists the choice to localStorage, which the
+            server can't read — so a server-rendered page first paints in the default theme and
+            switches once the app hydrates. <code class="cui-code">ssrThemeInitScript</code> is a
+            small inline script string that reads the stored theme and adds its
+            <code class="cui-code">cui-theme-*</code> class to <code class="cui-code">&lt;html&gt;</code>
+            before the first paint. Put it in the <code class="cui-code">&lt;head&gt;</code>, before
+            any stylesheets. It only covers the theme preset; if your app persists a dark-mode
+            preference, toggle the <code class="cui-code">dark</code> class the same way.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">// nuxt.config.ts
+import { ssrThemeInitScript } from "@itguy614/clean-ui";
+
+export default defineNuxtConfig({
+  app: {
+    head: {
+      script: [{ children: ssrThemeInitScript, type: "text/javascript" }],
+    },
+  },
+});</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>

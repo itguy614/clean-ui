@@ -9,6 +9,7 @@ import CuiCombobox from "../../components/CuiCombobox.vue";
 import CuiTagInput from "../../components/CuiTagInput.vue";
 import CuiInputStepper from "../../components/CuiInputStepper.vue";
 import CuiFormField from "../../components/CuiFormField.vue";
+import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
 
 /**
  * #123 — the actual complaint: stack a CuiInput above a CuiCombobox, both `md`, and they
@@ -50,15 +51,16 @@ describe("form controls line up (real browser)", () => {
     [CuiCombobox, ".cui-combobox__control", { options: OPTIONS }],
     [CuiTagInput, ".cui-tag-input__control", {}],
     [CuiInputStepper, ".cui-input-stepper__control", {}],
+    [CuiDateRangePicker, ".cui-date-range-picker__trigger", {}],
   ];
 
-  function control(component: unknown, size: string) {
+  function control(component: unknown, size: string, props: Record<string, unknown> = {}) {
     const [, selector, extra] = BORDERED.find(([c]) => c === component)!;
     const host = document.createElement("div");
     host.style.width = "320px";
     document.body.append(host);
     hosts.push(host);
-    const w = mount(component as never, { props: { size, ...extra }, attachTo: host });
+    const w = mount(component as never, { props: { size, ...extra, ...props }, attachTo: host });
     mounted.push(w);
     return (w.element as HTMLElement).querySelector<HTMLElement>(selector)!;
   }
@@ -93,20 +95,42 @@ describe("form controls line up (real browser)", () => {
     it.each([
       // The combobox and tag input grow with their tag rows, so height is a floor here —
       // equal when empty, which is how they are mounted.
-      ["combobox", CuiCombobox, true],
-      ["tag input", CuiTagInput, true],
+      ["combobox", CuiCombobox, true, true],
+      ["tag input", CuiTagInput, true, true],
       // CuiInput used to put the height on its inner element, so the borders sat outside
       // it and every input was 2px taller than the select beside it (#123).
-      ["select", CuiSelect, true],
+      ["select", CuiSelect, true, true],
       // The stepper centres its value between the +/- buttons, so indent does not apply.
-      ["stepper", CuiInputStepper, false],
-    ])("gives the %s the same metrics as an input", (_label, component, comparesText) => {
+      ["stepper", CuiInputStepper, false, false],
+      // It ignored `size` and drew a fixed, roughly-md box (#349). Its text starts after a
+      // calendar icon, so indent does not apply; its text size does.
+      ["date range picker", CuiDateRangePicker, false, true],
+    ])("gives the %s the same metrics as an input", (_label, component, comparesIndent, comparesFont) => {
       const other = box(control(component, size));
 
       expect(other.height).toBe(input.height);
-      if (comparesText) {
-        expect(other.indent).toBe(input.indent);
-        expect(other.fontSize).toBe(input.fontSize);
+      if (comparesIndent) expect(other.indent).toBe(input.indent);
+      if (comparesFont) expect(other.fontSize).toBe(input.fontSize);
+    });
+
+    // #351: one row of chips fits inside the height. At xs and sm it didn't — the chip's text
+    // took the scoped base's 1.5 instead of the badge's own line-height of 1, and a field
+    // with chips stood taller than the input beside it. Under a theme too: `useTheme` puts
+    // its class on <html>, which a fix keyed on the outermost `cui-*` element got wrong.
+    it.each([
+      ["combobox", CuiCombobox, { multiple: true, modelValue: ["a"] }, false],
+      ["tag input", CuiTagInput, { modelValue: ["one", "two"] }, false],
+      ["tag input, themed page", CuiTagInput, { modelValue: ["one", "two"] }, true],
+    ])("keeps the %s at the input's height with a row of chips", (_label, component, props, themed) => {
+      const html = document.documentElement.classList;
+      if (themed) html.add("cui-theme-forest");
+      try {
+        const el = control(component, size, props);
+        // Or an empty field, already at the input's height, passes without a chip in it.
+        expect(el.querySelectorAll(".cui-badge").length).toBeGreaterThan(0);
+        expect(box(el).height).toBe(input.height);
+      } finally {
+        html.remove("cui-theme-forest");
       }
     });
   });
@@ -160,6 +184,19 @@ describe("form controls line up (real browser)", () => {
 
     expect(xs.height).toBeLessThan(sm.height);
     expect(xl.height).toBeGreaterThan(lg.height);
+  });
+
+  it("lets a container's --cui-date-range-picker-height restyle the range picker", () => {
+    // Its size is emitted as private properties, not bare inline declarations (#349).
+    const host = document.createElement("div");
+    host.setAttribute("style", "--cui-date-range-picker-height: 50px");
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount(CuiDateRangePicker, { props: { size: "sm" }, attachTo: host });
+    mounted.push(w);
+    const el = (w.element as HTMLElement).querySelector<HTMLElement>(".cui-date-range-picker__trigger")!;
+
+    expect(Math.round(el.getBoundingClientRect().height)).toBe(50);
   });
 
   it("floors the height at the shared minimum target size", () => {

@@ -114,6 +114,71 @@ registerIcons({ rocket: PhRocket, "github-logo": PhGithubLogo });
     </div>
 
     <div>
+      <h2 id="has-icon" class="mb-4 text-2xl font-semibold">Checking what resolves</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
+            <code class="cui-code">BUILTIN_ICONS</code> is the library's own name → component map
+            (the icons its components draw). <code class="cui-code">hasIcon(name)</code> reports
+            whether a name resolves statically — built-in or passed to
+            <code class="cui-code">registerIcons()</code> — without the
+            <code class="cui-code">icons/lazy</code> fallback. Use it to guard icon names that come
+            from data.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import { BUILTIN_ICONS, hasIcon } from "@itguy614/clean-ui";
+
+Object.keys(BUILTIN_ICONS); // ["caret-down", "check", "info", ...]
+
+hasIcon("check");  // true  — built in
+hasIcon("rocket"); // false — until registerIcons({ rocket: PhRocket })
+
+const name = hasIcon(row.icon) ? row.icon : "question";</code></pre>
+          <p class="mt-3 mb-2 text-sm" style="color: var(--cui-text-secondary)">
+            <code class="cui-code">registeredIconNames()</code> lists every name that resolves
+            statically, built-in and registered, sorted: an icon picker's options, say. And
+            <code class="cui-code">setIconFallbackResolver(resolver)</code> installs what runs for a
+            name that doesn't — an async <code class="cui-code">(name) =&gt; Promise&lt;Component | undefined&gt;</code>.
+            <code class="cui-code">@itguy614/clean-ui/icons/lazy</code> is one, over every Phosphor
+            icon; pass <code class="cui-code">null</code> to remove it.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">registeredIconNames(); // ["caret-down", "check", ..., "rocket"]
+
+// Resolve unknown names from your own icon set instead of Phosphor's
+setIconFallbackResolver(async (name) => (await import("./my-icons"))[name]);</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
+      <h2 id="role-icons" class="mb-4 text-2xl font-semibold">Feedback role icons</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
+            <code class="cui-code">CuiAlert</code>, <code class="cui-code">CuiToast</code> and
+            <code class="cui-code">CuiBanner</code> pick a default icon from their color role.
+            <code class="cui-code">COLOR_ICON_MAP</code> holds the library defaults
+            (<code class="cui-code">success</code> → <code class="cui-code">check-circle</code>,
+            <code class="cui-code">error</code> → <code class="cui-code">warning-octagon</code>,
+            <code class="cui-code">warning</code> → <code class="cui-code">warning-circle</code>,
+            everything else → <code class="cui-code">info</code>).
+            <code class="cui-code">registerRoleIcons()</code> overrides them app-wide, instead of
+            passing <code class="cui-code">icon</code> to every instance. It is reactive, and a
+            per-instance <code class="cui-code">icon</code> prop still wins. The name must resolve
+            (built in, or registered with <code class="cui-code">registerIcons()</code>) — otherwise
+            it renders as literal text.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import { registerIcons, registerRoleIcons, COLOR_ICON_MAP } from "@itguy614/clean-ui";
+import { PhSiren, PhSealCheck } from "@phosphor-icons/vue";
+
+COLOR_ICON_MAP.error; // "warning-octagon" — the library default
+
+registerIcons({ siren: PhSiren, "seal-check": PhSealCheck });
+registerRoleIcons({ error: "siren", success: "seal-check" });</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
 
