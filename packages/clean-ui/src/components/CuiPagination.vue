@@ -280,7 +280,7 @@ const perPageSelectOptions = computed(() =>
   border: 1px solid var(--cui-border);
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background var(--cui-duration-fast) ease, color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
   user-select: none;
 }
 

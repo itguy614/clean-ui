@@ -102,7 +102,7 @@ const transitionName = computed(() => {
 
 /* --- Fade --- */
 .cui-tab-fade {
-  animation: cui-tab-fade-in 0.2s ease;
+  animation: cui-tab-fade-in var(--cui-duration-base) var(--cui-ease-out);
 }
 
 @keyframes cui-tab-fade-in {
@@ -112,7 +112,7 @@ const transitionName = computed(() => {
 
 /* --- Slide left (forward) --- */
 .cui-tab-slide-left {
-  animation: cui-tab-slide-left-in 0.25s ease;
+  animation: cui-tab-slide-left-in var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 @keyframes cui-tab-slide-left-in {
@@ -128,7 +128,7 @@ const transitionName = computed(() => {
 
 /* --- Slide right (backward) --- */
 .cui-tab-slide-right {
-  animation: cui-tab-slide-right-in 0.25s ease;
+  animation: cui-tab-slide-right-in var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 @keyframes cui-tab-slide-right-in {

@@ -182,7 +182,6 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
     borderRadius: "0.375rem",
     fontSize: "0.8125rem",
     cursor: day.disabled ? "default" : "pointer",
-    transition: "background 0.1s ease, color 0.1s ease",
   };
 
   const selected = selectedDate.value && isSameDay(day.date, selectedDate.value);
@@ -386,7 +385,6 @@ defineExpose({ el: rootEl, focus, blur });
                   fontWeight: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? '600' : '400',
                   background: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? 'var(--cui-primary)' : 'transparent',
                   color: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? 'var(--cui-primary-text, white)' : viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)',
-                  transition: 'background 0.1s ease',
                 }"
                 @click="selectMonth(i)"
               >
@@ -432,7 +430,6 @@ defineExpose({ el: rootEl, focus, blur });
                   fontWeight: viewYear === year ? '600' : '400',
                   background: selectedDate && selectedDate.getFullYear() === year ? 'var(--cui-primary)' : 'transparent',
                   color: selectedDate && selectedDate.getFullYear() === year ? 'var(--cui-primary-text, white)' : viewYear === year ? 'var(--cui-primary)' : 'var(--cui-text-body)',
-                  transition: 'background 0.1s ease',
                 }"
                 @click="selectYear(year)"
               >

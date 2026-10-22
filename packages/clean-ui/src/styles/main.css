@@ -373,6 +373,45 @@
 }
 
 /* ============================================================
+   MOTION (#261)
+   Durations and easings for every component transition and animation. Override on
+   `:root` or a container: a snappier or calmer library is one block of tokens, not
+   `!important` on dozens of rules. (Menus, popovers, tooltips, modals and slideovers are
+   teleported to <body>, so only `:root` reaches them.) Durations must be plain times,
+   `150ms` or `0.2s`: JS can't resolve a `calc()` in a custom property. JS waits read the same values through
+   `motionDuration()` (utils/motion.ts), so a timer and its CSS can't drift apart.
+     press   — a button press, a toggle knob, a menu row's hover
+     fast    — tooltips, small popovers, colour changes, and every exit
+     base    — dropdowns, selects, popovers
+     slow    — modals, slideovers, toasts
+   UI motion stays under 300ms, and exits run faster than entries. Easing:
+     ease-out    — anything entering or leaving
+     ease-in-out — something moving on screen (a knob, a chevron turning)
+     plain `ease` — colour and hover changes; `linear` — constant loops
+   ============================================================ */
+
+:root {
+  --cui-duration-instant: 0ms;
+  --cui-duration-press: 120ms;
+  --cui-duration-fast: 150ms;
+  --cui-duration-base: 200ms;
+  --cui-duration-slow: 250ms;
+
+  --cui-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --cui-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --cui-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* A pressed button shrinks to this (#261). 1 turns it off. */
+  --cui-press-scale: 0.97;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --cui-press-scale: 1;
+  }
+}
+
+/* ============================================================
    TYPOGRAPHY — CSS Custom Properties
    Override --cui-font-* on :root or any container to customize.
    ============================================================ */
@@ -485,7 +524,7 @@
     color: var(--cui-text-link);
     text-decoration: underline;
     text-underline-offset: 2px;
-    transition: color 0.15s ease;
+    transition: color var(--cui-duration-fast) ease;
   }
 
   &:is(a):hover {
@@ -831,6 +870,14 @@
   50% { box-shadow: 0 0 12px 2px var(--_cui-glow-color, transparent); }
 }
 
+/* The glow the library itself uses (#266): an element's ::after holds the shadow, still,
+   and only its opacity loops — composited, where animating box-shadow repaints every frame.
+   `cui-glow` stays for anyone who uses it directly. */
+@keyframes cui-glow-fade {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
 @keyframes cui-shake {
   0%, 10%, 100% { transform: translateX(0); }
   2% { transform: translateX(-4px); }
@@ -900,31 +947,55 @@
 }
 
 /* ============================================================
-   REDUCED MOTION
-   Respects the OS "Reduce Motion" accessibility setting.
-   All decorative keyframe animations are disabled.
-   Transitions are collapsed to 1ms so that JS transitionend
-   events still fire and overlays never get stuck.
+   REDUCED MOTION (#265)
+   The OS "Reduce Motion" setting removes movement — translate, scale, rotate, sliding,
+   growing — and keeps fades, which don't trigger vestibular symptoms and still show what
+   changed. Only opacity transitions; colour changes are instant (still no motion), and no
+   transition the author didn't declare is added. Durations are untouched, so JS waits
+   (motionDuration, afterAnimations) still match the CSS. (Narrowing the property list
+   re-pairs a multi-property transition's durations by index: Fieldset's opacity takes its
+   max-height's. Invisible, and the exits JS waits on list opacity first.) Scoped to the
+   library's components and what they contain, slot content included. The utility classes a
+   consumer puts around their own content — typography, themes, density, scrollbars, lists,
+   table wrappers — don't count.
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-
-  /* 1. Global — collapse all durations library-wide. This is the functional
-        guarantee: with iteration-count 1 + 1ms duration, every animation/
-        transition is effectively neutralized. Sections 2–5 are explicit
-        defense-in-depth for clarity (and to drop the opacity/loading cues). */
-  *,
-  *::before,
-  *::after {
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    animation-delay: 0ms !important;
-    transition-duration: 1ms !important;
-    transition-delay: 0ms !important;
+  /* 1. Only opacity transitions. A transform, a layout change or a colour snaps. */
+  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)),
+  :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)) * {
+    transition-property: opacity !important;
     scroll-behavior: auto !important;
   }
 
-  /* 2. Kill decorative infinite/looping animations entirely */
+  /* 2. Hidden states drop their movement, so an exit or entrance is a fade where the
+        element stands: floating panels, toasts, a modal's dialog or a slideover's panel
+        (data-cui-exit), an alert's slide. */
+  [data-cui-panel="hidden"],
+  .cui-toast-enter-from,
+  .cui-toast-leave-to,
+  [data-cui-exit],
+  [class*="cui-alert--entrance-slide"] {
+    transform: none !important;
+  }
+
+  /* A slideover's panel only slid: standing still, it fades instead. */
+  .cui-slideover__panel:not(.cui-slideover__panel--visible) {
+    opacity: 0;
+  }
+
+  /* 3. One-off movement keyframes: a sliding tab panel fades in instead; the rest go. */
+  [class*="cui-tab-slide"] {
+    animation-name: cui-fade-in !important;
+  }
+
+  .cui-checkbox__icon,
+  .cui-radio__dot,
+  .cui-markdown-editor__control--shake {
+    animation: none !important;
+  }
+
+  /* 4. Decorative loops: off */
   [class*="cui-badge--pulse"],
   [class*="cui-badge--bounce"],
   [class*="cui-badge__ping"],
@@ -934,42 +1005,41 @@
   [class*="cui-toast--pulse"],
   [class*="cui-toast--glow"],
   [class*="cui-toast--shake"],
+  [class*="cui-avatar__ping"],
+  [class*="cui-avatar__status"],
+  [class*="cui-progress-bar__fill--indeterminate"],
+  [class*="cui-progress-circle__svg--indeterminate"],
   [class*="cui-progress-bar__fill--stripe"],
   [class*="cui-progress-bar__fill--shimmer"],
   [class*="cui-skeleton__line--shimmer"],
   [class*="cui-skeleton__line--pulse"],
   [class*="cui-skeleton__block--shimmer"],
-  [class*="cui-skeleton__block--pulse"] {
+  [class*="cui-skeleton__block--pulse"],
+  [class*="cui-progress-bar__fill--shimmer"]::after,
+  [class*="cui-skeleton__line--shimmer"]::after,
+  [class*="cui-skeleton__block--shimmer"]::after {
     animation: none !important;
   }
 
-  /* 3. Spinners — remove spin but keep opacity as loading cue.
-        `spinner` substring covers CuiSpinner + the inline cui-button__spinner. */
-  [class*="spinner"] {
+  /* A glow fades a still shadow on its ::after (#266): its loop stops like the others, and
+     the shadow stays, steady at half strength, so the emphasis isn't lost. */
+  [class*="cui-alert--glow"]::after,
+  [class*="cui-toast--glow"]::after {
     animation: none !important;
+    opacity: 0.5;
+  }
+
+  /* 5. Spinners: no spin, but a dimmed glyph still says "loading". Their moving parts are
+        unclassed children with inline animations, so everything inside goes still too.
+        Covers CuiSpinner, cui-button__spinner and cui-confirm-dialog__spinner. */
+  [class*="cui-"][class*="spinner"],
+  [class*="cui-"][class*="spinner"] * {
+    animation: none !important;
+  }
+
+  /* Once, on the outermost: a spinner inside a spinner would dim twice. */
+  [class*="cui-"][class*="spinner"]:not([class*="cui-"][class*="spinner"] *) {
     opacity: 0.6;
-  }
-
-  /* 4. Overlays — instant open/close, no stuck states */
-  [class*="cui-modal"],
-  [class*="cui-slideover"] {
-    transition: opacity 1ms ease !important;
-    transform: none !important;
-  }
-
-  [class*="cui-toast-wrapper"],
-  [class*="cui-dropdown"],
-  [class*="cui-tooltip"],
-  [class*="cui-popover"],
-  [class*="cui-context-menu"] {
-    animation: none !important;
-    transition: opacity 1ms ease !important;
-  }
-
-  /* 5. Tab panel transitions */
-  [class*="cui-tab-fade"],
-  [class*="cui-tab-slide"] {
-    animation: none !important;
   }
 }
 

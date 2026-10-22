@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
+import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
 import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
@@ -63,16 +64,22 @@ const emit = defineEmits<{
 
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
-const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
   // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
   allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
   name: "CuiSlideover",
-  animationDuration: 250,
+  // Its exit is a <Transition> below, which reports back through onAfterLeave (#263).
+  exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
+});
+
+// Closed while `hidden`: v-show is already off, so no leave runs to report the close.
+watch(isVisible, (visible) => {
+  if (!visible && props.hidden) onAfterLeave();
 });
 
 // Horizontal or vertical slide
@@ -111,7 +118,9 @@ const panelStyle = computed(() => {
     boxShadow: "0 16px 48px rgb(0 0 0 / 0.15)",
     outline: "none",
     overflow: "hidden",
-    transition: "transform 0.25s ease",
+    // Slides out faster than it came in, with its backdrop (#269): the style flips with the
+    // visible class, so each transition takes the duration of the state it moves to.
+    transition: `transform var(--cui-duration-${isAnimating.value ? "slow" : "fast"}) var(--cui-ease-drawer)`,
   };
 
   if (isHorizontal.value) {
@@ -151,15 +160,19 @@ const titleId = useCuiId("slideover-title");
 
 <template>
   <Teleport to="body">
+    <!-- Its dialog and backdrop animate on their own state classes (data-cui-exit); the
+         leave waits for them, and a re-open mid-exit reverses them (#263). -->
+    <Transition v-bind="subtreeTransition" @after-leave="onAfterLeave">
     <div
-      v-if="isVisible"
-      v-show="!hidden"
+      v-if="mounted"
+      v-show="isVisible && !hidden"
       class="cui-slideover-overlay"
       :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
       <CuiBackdrop
+        data-cui-exit
         :visible="isAnimating"
         :opacity="backdropOpacity"
         :blur="backdropBlur"
@@ -172,6 +185,9 @@ const titleId = useCuiId("slideover-title");
       <!-- Panel -->
       <div
         ref="panelEl"
+        data-cui-exit
+        class="cui-slideover__panel"
+        :class="{ 'cui-slideover__panel--visible': isAnimating }"
         :style="panelStyle"
         role="dialog"
         aria-modal="true"
@@ -198,6 +214,7 @@ const titleId = useCuiId("slideover-title");
         </template>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 

@@ -391,7 +391,7 @@ const messages = useMessages();
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   position: relative;
 }
 
@@ -446,7 +446,7 @@ const messages = useMessages();
   padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
 .cui-tabs__tab-close:hover {

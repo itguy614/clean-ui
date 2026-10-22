@@ -118,3 +118,66 @@ describe("CuiSlider id fallback", () => {
     expect(wrapper.get("label").attributes("for")).toBe(id);
   });
 });
+
+// #269 — motion where it helps: a click on the track glides; a drag and a keyboard step don't.
+describe("CuiSlider motion", () => {
+  const thumb = (w: ReturnType<typeof mount>) => w.get(".cui-slider__thumb").element as HTMLElement;
+  const input = (w: ReturnType<typeof mount>) => w.get("input[type=range]");
+
+  it("glides on a click's jump, but follows a drag with no transition", async () => {
+    const w = mount(CuiSlider, { props: { modelValue: 10 }, attachTo: document.body });
+    await input(w).trigger("pointerdown");
+    (input(w).element as HTMLInputElement).value = "60";
+    await input(w).trigger("input");
+    expect(thumb(w).style.transition, "the click's jump").not.toBe("none");
+    (input(w).element as HTMLInputElement).value = "65";
+    await input(w).trigger("input");
+    expect(thumb(w).style.transition, "now a drag").toBe("none");
+    w.unmount();
+  });
+
+  it("ends a press released off the slider, on the document", async () => {
+    const w = mount(CuiSlider, { props: { modelValue: 10 }, attachTo: document.body });
+    await input(w).trigger("pointerdown");
+    (input(w).element as HTMLInputElement).value = "20";
+    await input(w).trigger("input");
+    (input(w).element as HTMLInputElement).value = "30";
+    await input(w).trigger("input");
+    document.dispatchEvent(new Event("pointerup"));
+    await w.vm.$nextTick();
+    expect(thumb(w).style.transition).not.toBe("none");
+    expect(thumb(w).style.boxShadow).not.toContain("8px");
+    w.unmount();
+  });
+
+  it("steps from the keyboard with no transition, and animates a v-model change", async () => {
+    const w = mount(CuiSlider, { props: { modelValue: 10 }, attachTo: document.body });
+    await input(w).trigger("keydown", { key: "ArrowRight" });
+    expect(thumb(w).style.transition).toBe("none");
+    await input(w).trigger("pointerdown");
+    document.dispatchEvent(new Event("pointerup"));
+    await w.setProps({ modelValue: 50 });
+    expect(thumb(w).style.transition).not.toBe("none");
+    w.unmount();
+  });
+
+  it("leaves a later v-model change gliding after Tab, or once the slider is left", async () => {
+    const w = mount(CuiSlider, { props: { modelValue: 10 }, attachTo: document.body });
+    await input(w).trigger("keydown", { key: "Tab" });
+    await w.setProps({ modelValue: 30 });
+    expect(thumb(w).style.transition, "Tab moves nothing").not.toBe("none");
+    await input(w).trigger("keydown", { key: "ArrowRight" });
+    expect(thumb(w).style.transition).toBe("none");
+    await input(w).trigger("blur");
+    await w.setProps({ modelValue: 50 });
+    expect(thumb(w).style.transition, "left, then reset from outside").not.toBe("none");
+    w.unmount();
+  });
+
+  it("doesn't start a press on a right-click", async () => {
+    const w = mount(CuiSlider, { props: { modelValue: 10 }, attachTo: document.body });
+    await input(w).trigger("pointerdown", { button: 2 });
+    expect(thumb(w).style.boxShadow).not.toContain("8px");
+    w.unmount();
+  });
+});

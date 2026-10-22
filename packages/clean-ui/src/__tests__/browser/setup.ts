@@ -22,3 +22,8 @@ style.textContent = `
   :root { --cui-primary-focus-ring: rgba(59, 70, 200, 0.4); }
 `;
 document.head.append(style);
+
+// Real <Transition> in the browser too (#263): test-utils stubs it by default, and then
+// nothing animates and no overlay ever unmounts after its exit.
+import { config } from "@vue/test-utils";
+config.global.stubs = { ...config.global.stubs, transition: false, "transition-group": false };

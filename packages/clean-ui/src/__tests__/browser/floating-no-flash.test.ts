@@ -15,10 +15,10 @@ import CuiButton from "../../components/CuiButton.vue";
 // `usePopover` now passes `transform: false`, so Floating UI writes `left`/`top`
 // and the animation owns `transform` uncontested.
 //
-// This has to run in a real browser AND with the shared keyframes present: the
-// displacement only exists while the animation is actually running, so a
-// harness without `@keyframes cui-scale-in` reports a perfectly placed panel.
-// That is exactly how it went unnoticed.
+// This has to run in a real browser AND with the motion tokens present (main.css):
+// the displacement only exists while the panel's scale-in transition is actually
+// running (`data-cui-panel`, #263), so a harness without the durations reports a
+// perfectly placed panel. That is exactly how it went unnoticed.
 describe("floating panels do not flash at the top-left (real browser)", () => {
   let wrapper: VueWrapper | undefined;
 

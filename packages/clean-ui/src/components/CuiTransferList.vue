@@ -351,7 +351,6 @@ function itemStyle(selected: boolean, disabled?: boolean) {
     background: selected ? "var(--cui-primary-bg)" : "transparent",
     color: disabled ? "var(--cui-text-tertiary)" : "var(--cui-text-body)",
     opacity: disabled ? "0.5" : "1",
-    transition: "background 0.1s ease",
     userSelect: "none" as const,
   };
 }

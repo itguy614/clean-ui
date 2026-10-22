@@ -6,6 +6,10 @@ import Example from "../components/Example.vue";
 import meta from "../meta/tooltip";
 
 const manualVisible = ref(false);
+const toolbar = ["Bold", "Italic", "Underline", "Strikethrough", "Link", "Code"];
+const toolbarCode = `<CuiTooltip v-for="label in toolbar" :key="label" :text="label">
+  <CuiButton variant="ghost" :aria-label="label">{{ label[0] }}</CuiButton>
+</CuiTooltip>`;
 </script>
 
 <template>
@@ -63,6 +67,22 @@ const manualVisible = ref(false);
     </template>
 
     <template #examples>
+      <Example title="A toolbar: one wait, then instant" :code="toolbarCode">
+        <CuiStack spacing="3">
+          <p class="text-sm" style="color: var(--cui-text-secondary);">
+            The first tooltip waits its <code class="cui-code">showDelay</code>, so crossing
+            the row by accident shows nothing. Once one is open, the next, opened within
+            <code class="cui-code">skipDelay</code> (300ms) of the last closing, appears at
+            once and without its entry animation. Run the pointer along the row.
+          </p>
+          <CuiFlex gap="1">
+            <CuiTooltip v-for="label in toolbar" :key="label" :text="label">
+              <CuiButton variant="ghost" :aria-label="label">{{ label[0] }}</CuiButton>
+            </CuiTooltip>
+          </CuiFlex>
+        </CuiStack>
+      </Example>
+
         <!-- Placements -->
         <Example title="Placements" :code="`<CuiTooltip text=&quot;Top&quot; placement=&quot;top&quot;>...</CuiTooltip>`">
           <CuiFlex gap="4" class="flex-wrap items-center justify-center">
