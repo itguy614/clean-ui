@@ -235,11 +235,11 @@ defineExpose({ el: rootEl, focus, blur });
       <div
         v-for="i in max"
         :key="i"
+        class="cui-rating__star"
+        :class="{ 'cui-rating__star--lifted': isHovering && hoverValue >= i }"
         :style="{
           cursor: interactive ? 'pointer' : 'default',
           display: 'inline-flex',
-          transition: 'transform var(--cui-duration-press) var(--cui-ease-out)',
-          transform: isHovering && hoverValue >= i ? 'scale(1.15)' : 'scale(1)',
         }"
         aria-hidden="true"
         @click="onStarClick(i, $event)"
@@ -271,6 +271,17 @@ defineExpose({ el: rootEl, focus, blur });
 </template>
 
 <style scoped>
+.cui-rating__star {
+  transition: transform var(--cui-duration-press) var(--cui-ease-out);
+}
+
+/* Hover-only motion, for a fine pointer: a tap on a touch screen would set it and leave it (#265). */
+@media (hover: hover) and (pointer: fine) {
+  .cui-rating__star--lifted {
+    transform: scale(1.15);
+  }
+}
+
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-rating__control:focus-visible) {
   outline: 2px solid var(--cui-rating-focus-ring, var(--_rating-focus-ring));

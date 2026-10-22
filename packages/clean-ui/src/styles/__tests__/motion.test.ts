@@ -21,8 +21,14 @@ const PACKAGES = resolve(__dirname, "../../../..");
 function motionSource(src: string, css = false): string {
   let out = stripComments(src);
   if (!css) out = out.replace(/(^|\s)\/\/[^\n]*/g, "$1");
+  return withoutBlocks(out, /@media[^{]*prefers-reduced-motion\s*:\s*reduce[^{]*\{/);
+}
+
+/** `src` with every block whose opening matches `opening` cut out, nested braces and all. */
+function withoutBlocks(src: string, opening: RegExp): string {
+  let out = src;
   for (;;) {
-    const at = out.search(/@media[^{]*prefers-reduced-motion\s*:\s*reduce[^{]*\{/);
+    const at = out.search(opening);
     if (at === -1) return out;
     let depth = 0;
     let i = out.indexOf("{", at);
@@ -123,6 +129,17 @@ const rules = {
    * `transform-origin: center` elsewhere in the file doesn't count.
    */
   noTransformOrigin: (src: string) => (/transform-origin:\s*var\(--_[\w-]+-transform-origin\b/.test(src) ? [] : ["no placement origin"]),
+  /**
+   * Hover-only motion outside `@media (hover: hover) and (pointer: fine)`: on a touch
+   * screen a tap sets the hover state, and some browsers leave it set (#265). A `:hover`
+   * rule that moves (`transform`), or a transform written from a mouseenter handler.
+   */
+  ungatedHoverMotion: (src: string) => [
+    ...[...withoutBlocks(src, /@media[^{]*\(hover:\s*hover\)[^{]*\(pointer:\s*fine\)[^{]*\{/).matchAll(/([^{}]*:hover[^{]*)\{([^}]*)\}/g)]
+      .filter((m) => /(^|[;\s])(transform|translate|scale|rotate)\s*:/.test(m[2]))
+      .map((m) => m[1].trim()),
+    ...[...src.matchAll(/@mouse(?:enter|over)="[^"]*style\.transform/g)].map((m) => m[0]),
+  ],
   /** A transition on a layout property, which lays out and paints every frame: use transform/opacity. */
   layoutTransition: (src: string) =>
     declarations(src)
@@ -147,6 +164,10 @@ describe("motion rules catch what they describe", () => {
     ["easeIn", ".x {\n  transition:\n    color var(--cui-duration-fast) ease,\n    border-color var(--cui-duration-fast) ease-in;\n}"],
     ["transitionAll", "@media (prefers-reduced-motion: no-preference) { .x { transition: all var(--cui-duration-fast); } }"],
     ["layoutTransition", ".x { transition: max-height var(--cui-duration-slow) var(--cui-ease-out); }"],
+    ["ungatedHoverMotion", ".card:hover { transform: translateY(-2px); }"],
+    ["ungatedHoverMotion", ".card:hover { translate: 0 -2px; }"],
+    ["ungatedHoverMotion", "@media (hover: hover) { .card:hover { scale: 1.05; } }"],
+    ["ungatedHoverMotion", '<button @mouseenter="($event.target as HTMLElement).style.transform = \'scale(1.1)\'">'],
     ["layoutTransition", ':style="{ transition: \'width var(--cui-duration-press) ease\' }"'],
     ["layoutTransition", ":style=\"{ transition: dragging ? 'none' : 'left var(--cui-duration-press) ease' }\""],
   ] as const)("%s flags its violation", (rule, violation) => {
@@ -163,6 +184,7 @@ describe("motion rules catch what they describe", () => {
     ["noTransformOrigin", ".panel { transform-origin: var(--_panel-transform-origin); }"],
     ["literalDuration", ".x { transition: opacity var(--cui-duration-fast, 150ms) ease; }"],
     ["layoutTransition", ".x { transition: transform var(--cui-duration-base) var(--cui-ease-out), opacity var(--cui-duration-base) ease; }"],
+    ["ungatedHoverMotion", "@media (hover: hover) and (pointer: fine) { .card:hover { transform: translateY(-2px); } } .x:hover { background: red; }"],
   ] as const)("%s passes the correct form", (rule, ok) => {
     expect(rules[rule](motionSource(ok))).toEqual([]);
   });
@@ -219,6 +241,8 @@ describe("motion in both packages", () => {
     }));
 
   it("transitions no layout property", () => check("layoutTransition", LAYOUT_EXEMPT));
+
+  it("gates hover-only motion to a fine pointer", () => check("ungatedHoverMotion"));
 
   it("scales every floating panel from its trigger", () => {
     // The elements that render an anchored panel. CuiSelect, CuiCombobox and CuiTagInput

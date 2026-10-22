@@ -184,6 +184,8 @@ const titleId = useCuiId("slideover-title");
       <div
         ref="panelEl"
         data-cui-exit
+        class="cui-slideover__panel"
+        :class="{ 'cui-slideover__panel--visible': isAnimating }"
         :style="panelStyle"
         role="dialog"
         aria-modal="true"

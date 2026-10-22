@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Reduced motion keeps fades** (#265). Under `prefers-reduced-motion: reduce`:
+  - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colours change instantly.
+  - **Only the library's own elements:** the old rule matched every element on the page (`*`), the consumer's own included. It now reaches only the library's components and what they contain, not content the consumer wraps in `.cui-typography`, a theme or a density.
+  - **Indeterminate progress, spinners' moving parts and the avatar's pulsing status** now stop too.
+  - **Hover-only scales and lifts** (CuiRating, the CuiColorPicker swatches, CuiAvatarGroup) now run only with a fine pointer, so a tap on a touch screen no longer leaves them stuck.
 - **Every overlay animates out** (#263), through `<Transition>` rather than a close timer:
   - **Animate out, then unmount:** Tooltip, Popover (and the date, time and range pickers), the Select/Combobox/TagInput listbox, and DropdownSub.
   - **Animate in too:** the Select, Combobox and TagInput listboxes.

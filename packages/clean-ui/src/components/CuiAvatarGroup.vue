@@ -37,8 +37,11 @@ const props = withDefaults(defineProps<CuiAvatarGroupProps>(), {
   margin-left: 0;
 }
 
-.cui-avatar-group > .cui-avatar:hover {
-  transform: translateY(-2px);
-  z-index: 1;
+/* Hover-only motion, for a fine pointer: a tap on a touch screen would set it and leave it (#265). */
+@media (hover: hover) and (pointer: fine) {
+  .cui-avatar-group > .cui-avatar:hover {
+    transform: translateY(-2px);
+    z-index: 1;
+  }
 }
 </style>

@@ -631,11 +631,8 @@ defineExpose({ el: rootEl, focus, blur });
             cursor: 'pointer',
             border: isSelected(i) ? '2px solid var(--cui-primary)' : '1px solid var(--cui-border)',
             boxShadow: isSelected(i) ? '0 0 0 1px var(--cui-primary)' : 'none',
-            transition: 'transform var(--cui-duration-press) var(--cui-ease-out)',
           }"
           @click="onSwatchClick(color)"
-          @mouseenter="($event.target as HTMLElement).style.transform = 'scale(1.15)'"
-          @mouseleave="($event.target as HTMLElement).style.transform = 'scale(1)'"
         ></button>
       </div>
     </div>
@@ -643,6 +640,17 @@ defineExpose({ el: rootEl, focus, blur });
 </template>
 
 <style scoped>
+.cui-color-picker__swatch {
+  transition: transform var(--cui-duration-press) var(--cui-ease-out);
+}
+
+/* Hover-only motion, for a fine pointer: a tap on a touch screen would set it and leave it (#265). */
+@media (hover: hover) and (pointer: fine) {
+  .cui-color-picker__swatch:not(:disabled):hover {
+    transform: scale(1.15);
+  }
+}
+
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 /* The gradient's ring goes on the visible thumb whichever of its two sliders has focus. */
 /* A thumb sits on any colour at all, where the theme's translucent ring can vanish, so its

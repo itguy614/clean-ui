@@ -168,14 +168,20 @@ jarring appear/disappear. "It looks nice" is not one.
 - **Gesture-driven motion writes `transform` directly on the moving element,** never as an
   inline custom property on an ancestor, which recalculates style for every descendant on
   every frame. This is the one exception to the themeable-properties pattern.
-- **Reduced motion removes movement and keeps fades and colour.** Under
-  `prefers-reduced-motion: reduce`, transforms become opacity-only, and JS waits follow via
-  `motionDuration()`.
+- **Reduced motion removes movement and keeps fades and colour** (#265). Under `prefers-reduced-motion: reduce`, `main.css`:
+  - limits `transition-property` on `cui-*` elements and their contents to `opacity`, so a transform, a layout change or a colour snaps, and no transition the author didn't declare is added
+  - drops the movement from hidden states (`cui-panel--hidden`, the toasts' enter and leave states, `[data-cui-exit]`, Alert's slide)
+  - stops one-off movement keyframes and decorative loops
+
+  Durations don't change, so JS waits still match. It reaches components and what they contain, slot content included. It never reaches the consumer's own page, or what they wrap in a utility class (`.cui-typography`, themes, density, `.cui-scrollbar`, which the rule excludes), so never write a `*` rule there.
+  - A new hidden state that moves joins section 2.
+  - A new loop needs a class to be listed by: an unclassed inline animation is missed.
+  - Code that waits on a `transitionend` must first check that a transition actually started (`el.getAnimations().length`), since a snapped property fires none (as CuiAccordionItem does).
 - **Press feedback:** a pressed CuiButton shrinks to `--cui-press-scale` (0.97). It is 1
   under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
   buttons), since a shrinking button opens a seam against its neighbour. Set the token on
   the container.
-- **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`.
+- **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`, in CSS. Don't write a transform from a mouseenter handler, which no media query can gate.
 - `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
   - no `transition: all`
   - no `ease-in`
@@ -183,6 +189,7 @@ jarring appear/disappear. "It looks nice" is not one.
   - no literal duration
   - no literal-delay `setTimeout`
   - no layout-property transition
+  - no hover motion outside that media query
   - every panel on its `FLOATING` list reads `transform-origin` from a private
     `--_<component>-transform-origin` property
 

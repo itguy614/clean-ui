@@ -269,6 +269,36 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
     </Example>
 
     <CuiCard variant="outline">
+      <CuiCardHeader title="Reduced motion" />
+      <CuiCardBody>
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          With the system's <strong>Reduce motion</strong> setting on
+          (<code class="cui-code">prefers-reduced-motion: reduce</code>), the library removes
+          movement and keeps fades. Fades don't cause motion sickness, and they still show
+          what changed.
+        </p>
+        <ul class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+          <li>Only opacity transitions. A scale, slide or other transform snaps, and colours change instantly, which is still not motion.</li>
+          <li>Menus, popovers, tooltips, toasts, modals, slideovers and alerts fade in and out where they stand.</li>
+          <li>Durations don't change, so <code class="cui-code">motionDuration()</code> and the exits it times still match the CSS.</li>
+          <li>Decorative loops stop: pulses, shimmers, pings and an indeterminate progress bar. A spinner stops spinning and dims.</li>
+          <li>Buttons don't shrink when pressed.</li>
+          <li>Only the library's components and what's inside them are affected, including content in their slots. Utility classes you put around your own content, such as <code class="cui-code">.cui-typography</code>, a theme or a density, don't count.</li>
+        </ul>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+          Hover-only motion, such as a rating star or a colour swatch growing, runs only with a
+          fine pointer (<code class="cui-code">@media (hover: hover) and (pointer: fine)</code>).
+          On a touch screen, a tap would set the hover state and some browsers would leave it set.
+        </p>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
+          To try it, turn on Reduce motion in your OS. In Chrome you can also open DevTools,
+          then Rendering, and emulate <code class="cui-code">prefers-reduced-motion</code>.
+          Then open the menu above.
+        </p>
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
       <CuiCardHeader title="Reading a duration in JavaScript" />
       <CuiCardBody>
         <p class="text-sm" style="color: var(--cui-text-secondary);">

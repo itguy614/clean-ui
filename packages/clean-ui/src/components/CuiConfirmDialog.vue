@@ -229,6 +229,7 @@ function onCancel() {
         >
           <template v-if="loading" #prefix>
             <span
+              class="cui-confirm-dialog__spinner"
               :style="{
                 display: 'inline-block',
                 width: '0.875rem',
