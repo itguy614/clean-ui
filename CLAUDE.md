@@ -159,7 +159,7 @@ jarring appear/disappear. "It looks nice" is not one.
 - **Interruptible UI uses transitions, not keyframes.** Anything that can be toggled quickly
   (menus, toasts, toggles) must reverse cleanly mid-flight.
 - **Overlays enter and leave through `<Transition>`, never a close timer** (#263).
-  - **A floating panel** is rendered `v-if="present" v-show="open"` inside `<Transition v-bind="panelTransition" @after-leave="onAfterLeave">`, with `present`/`onAfterLeave` from `usePresence(() => open)` (internal) and `panelTransition` from `utils/motion.ts`. Its motion is one CSS transition on the `cui-panel--hidden` state class (`components-shared.css`), so a re-open mid-exit reverses the same element.
+  - **A floating panel** is rendered `v-if="present" v-show="open"` inside `<Transition v-bind="panelTransition" @after-leave="onAfterLeave">`, with `present`/`onAfterLeave` from `usePresence(() => open)` (internal) and `panelTransition` from `utils/motion.ts`. Its motion is one CSS transition on the `data-cui-panel="shown|hidden"` state attribute (`components-shared.css`), so a re-open mid-exit reverses the same element. An attribute, not a class: Vue rewrites `className` whenever the panel's own `:class` changes, which would strip a hook-added class mid-exit (#264). A tooltip replaced by the next one takes `.cui-panel--cut`, which cancels its transition outright.
     - Not `v-if` alone: toggled mid-leave, it drops the panel and fades a new one in from zero.
     - Not Vue's CSS mode (`name=`): it re-applies `enter-from` and dips first.
   - **An element whose motion runs on its own state classes and its children's** (Modal, Slideover, Alert) uses `<Transition v-bind="subtreeTransition">`. Its leave waits on `afterAnimations`: the animations on the element itself and on descendants marked `data-cui-exit` (a backdrop, a dialog), ignoring loops. It doesn't wait on the whole subtree, so content's own animations can't hold a close up. `useOverlay`'s `exit: "transition"` hands back `mounted` and `onAfterLeave` for it. The timer mode is deprecated, and becomes the non-default in 2.0.
@@ -170,7 +170,7 @@ jarring appear/disappear. "It looks nice" is not one.
   every frame. This is the one exception to the themeable-properties pattern.
 - **Reduced motion removes movement and keeps fades and colour** (#265). Under `prefers-reduced-motion: reduce`, `main.css`:
   - limits `transition-property` on `cui-*` elements and their contents to `opacity`, so a transform, a layout change or a colour snaps, and no transition the author didn't declare is added
-  - drops the movement from hidden states (`cui-panel--hidden`, the toasts' enter and leave states, `[data-cui-exit]`, Alert's slide)
+  - drops the movement from hidden states (`[data-cui-panel="hidden"]`, the toasts' enter and leave states, `[data-cui-exit]`, Alert's slide)
   - stops one-off movement keyframes and decorative loops
 
   Durations don't change, so JS waits still match. It reaches components and what they contain, slot content included. It never reaches the consumer's own page, or what they wrap in a utility class (`.cui-typography`, themes, density, `.cui-scrollbar`, which the rule excludes), so never write a `*` rule there.
