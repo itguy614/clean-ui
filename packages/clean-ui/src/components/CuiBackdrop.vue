@@ -107,7 +107,7 @@ const backdropStyle = computed(() => {
   inset: 0;
   z-index: 0;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-backdrop--visible {

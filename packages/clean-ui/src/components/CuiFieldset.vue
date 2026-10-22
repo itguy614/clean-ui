@@ -126,7 +126,7 @@ const rootStyle = computed(() => {
   padding: calc(1.25rem * var(--cui-density-scale, 1));
   margin: 0;
   min-width: 0;
-  transition: padding 0.25s ease, background 0.15s ease, border-color 0.15s ease;
+  transition: padding var(--cui-duration-slow) ease, background var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
 }
 
 /* Plain has no chrome — let content sit flush */
@@ -167,7 +167,7 @@ const rootStyle = computed(() => {
   border-radius: 0.25rem;
   padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) 0;
-  transition: background 0.15s ease;
+  transition: background var(--cui-duration-fast) ease;
 }
 
 .cui-fieldset__legend--clickable:hover {
@@ -178,7 +178,7 @@ const rootStyle = computed(() => {
 .cui-fieldset__chevron {
   flex-shrink: 0;
   color: var(--cui-text-secondary);
-  transition: transform 0.2s ease;
+  transition: transform var(--cui-duration-slow) var(--cui-ease-in-out);
 }
 
 .cui-fieldset__chevron--collapsed {
@@ -216,7 +216,7 @@ const rootStyle = computed(() => {
   padding: 4px;
   margin: -4px;
   overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+  transition: max-height var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-base) var(--cui-ease-out), padding var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-fieldset__content--hidden {

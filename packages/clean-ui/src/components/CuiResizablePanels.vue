@@ -111,7 +111,7 @@ const handleLineStyle = computed(() => {
       width: active ? "3px" : "1px",
       background: active ? "var(--cui-primary)" : "var(--cui-border)",
       borderRadius: "1px",
-      transition: "width 0.15s ease, background 0.15s ease",
+      transition: "width var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease",
     };
   }
   return {
@@ -123,7 +123,7 @@ const handleLineStyle = computed(() => {
     height: active ? "3px" : "1px",
     background: active ? "var(--cui-primary)" : "var(--cui-border)",
     borderRadius: "1px",
-    transition: "height 0.15s ease, background 0.15s ease",
+    transition: "height var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease",
   };
 });
 
@@ -139,7 +139,7 @@ const gripStyle = computed(() => {
     transform: "translate(-50%, -50%)",
     zIndex: "2",
     opacity: active ? "0.8" : "0.35",
-    transition: "opacity 0.15s ease",
+    transition: "opacity var(--cui-duration-fast) ease",
     background: "var(--cui-surface-base, white)",
     borderRadius: "3px",
     padding: "2px",

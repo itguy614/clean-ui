@@ -257,7 +257,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   max-width: 280px;
   word-wrap: break-word;
   pointer-events: auto;
-  animation: cui-tooltip-in 0.15s ease;
+  animation: cui-tooltip-in var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 @keyframes cui-tooltip-in {

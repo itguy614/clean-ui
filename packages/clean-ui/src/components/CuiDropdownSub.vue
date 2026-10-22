@@ -163,7 +163,7 @@ function onPanelKeydown(e: KeyboardEvent) {
   color: var(--cui-text-body);
   cursor: pointer;
   outline: none;
-  transition: background 0.1s ease;
+  transition: background var(--cui-duration-press) ease;
 }
 
 .cui-dropdown-sub__trigger:hover,
@@ -202,13 +202,13 @@ function onPanelKeydown(e: KeyboardEvent) {
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-dropdown-sub-in 0.15s ease;
+  animation: cui-dropdown-sub-in var(--cui-duration-base) var(--cui-ease-out);
 }
 
 /* Leaves with the menu it belongs to: the whole stack fades out together, rather than
    the parent fading while an open sub-menu stays put until the parent unmounts it. */
 .cui-dropdown-sub__menu--closing {
-  animation: cui-dropdown-sub-out 0.15s ease forwards;
+  animation: cui-dropdown-sub-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
   pointer-events: none;
 }
 

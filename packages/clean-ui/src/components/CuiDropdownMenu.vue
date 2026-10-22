@@ -87,11 +87,11 @@ function onKeydown(e: KeyboardEvent) {
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-dropdown-in 0.15s ease forwards;
+  animation: cui-dropdown-in var(--cui-duration-base) var(--cui-ease-out) forwards;
 }
 
 .cui-dropdown-menu--closing {
-  animation: cui-dropdown-out 0.15s ease forwards;
+  animation: cui-dropdown-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
   pointer-events: none;
 }
 

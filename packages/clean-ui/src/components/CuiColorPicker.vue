@@ -631,7 +631,7 @@ defineExpose({ el: rootEl, focus, blur });
             cursor: 'pointer',
             border: isSelected(i) ? '2px solid var(--cui-primary)' : '1px solid var(--cui-border)',
             boxShadow: isSelected(i) ? '0 0 0 1px var(--cui-primary)' : 'none',
-            transition: 'transform 0.1s ease',
+            transition: 'transform var(--cui-duration-press) var(--cui-ease-out)',
           }"
           @click="onSwatchClick(color)"
           @mouseenter="($event.target as HTMLElement).style.transform = 'scale(1.15)'"

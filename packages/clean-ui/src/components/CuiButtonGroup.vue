@@ -32,6 +32,12 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 </template>
 
 <style scoped>
+/* Merged buttons share their borders, so one shrinking on press (#261) would open seams
+   against its neighbours. A token, not a rule, so a group can still opt back in. */
+:where(.cui-button-group) {
+  --cui-press-scale: 1;
+}
+
 .cui-button-group {
   display: inline-flex;
 }

@@ -232,6 +232,9 @@ const buttonStyle = computed(() => {
 
 :where(.cui-button:active:not(.cui-button--disabled)) {
   background: var(--cui-button-active-bg, var(--_button-active-bg));
+  /* Press feedback (#261): a brief shrink, `--cui-press-scale` (0.97; 1 turns it off, as
+     reduced motion does). */
+  transform: scale(var(--cui-press-scale, 0.97));
 }
 
 :where(.cui-button:focus-visible) {
@@ -255,7 +258,11 @@ const buttonStyle = computed(() => {
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background var(--cui-duration-fast) ease,
+    color var(--cui-duration-fast) ease,
+    border-color var(--cui-duration-fast) ease,
+    transform var(--cui-duration-press) var(--cui-ease-out);
   white-space: nowrap;
   user-select: none;
   text-decoration: none;

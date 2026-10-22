@@ -161,7 +161,7 @@ const triggerId = `${itemId}-trigger`;
   border: none;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   outline: none;
 }
 
@@ -188,7 +188,7 @@ const triggerId = `${itemId}-trigger`;
 .cui-accordion-item__chevron {
   flex-shrink: 0;
   color: var(--cui-text-tertiary);
-  transition: transform 0.25s ease;
+  transition: transform var(--cui-duration-slow) var(--cui-ease-in-out);
 }
 
 .cui-accordion-item__chevron--open {
@@ -199,7 +199,7 @@ const triggerId = `${itemId}-trigger`;
 .cui-accordion-item__panel {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-accordion-item__panel--no-animation {

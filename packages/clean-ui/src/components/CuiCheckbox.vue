@@ -178,7 +178,7 @@ const choice = useChoiceLabelling(props);
   border-radius: 0.25rem;
   border: 1px solid var(--_check-border);
   background: var(--_check-bg);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   margin-top: 0.125rem;
 }
 
@@ -194,7 +194,7 @@ const choice = useChoiceLabelling(props);
 
 /* --- Icon --- */
 .cui-checkbox__icon {
-  animation: cui-check-pop 0.15s ease;
+  animation: cui-check-pop var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 @keyframes cui-check-pop {

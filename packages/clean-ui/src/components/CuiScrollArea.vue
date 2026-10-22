@@ -186,7 +186,7 @@ defineExpose({ el: area.scroller, focus, blur, update: area.update, scrollByPage
   /* The strip spans the edge; only the indicator in it takes the pointer, so content under
      the rest of the strip stays clickable. */
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
 }
 
 .cui-scroll-area__edge > * {

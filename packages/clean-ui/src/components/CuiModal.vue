@@ -77,6 +77,8 @@ const { isVisible, isAnimating, closeOverlay, onBackdropClick, onKeydown } = use
   // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
   allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
   name: "CuiModal",
+  // The backdrop fades over `slow`; removing the overlay at `base` cut that fade short.
+  animationDuration: "slow",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
 });
@@ -190,7 +192,7 @@ const titleId = useCuiId("modal-title");
   /* Entrance animation */
   opacity: 0;
   transform: scale(0.95) translateY(-0.5rem);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity var(--cui-duration-base) var(--cui-ease-out), transform var(--cui-duration-base) var(--cui-ease-out);
 }
 
 .cui-modal--visible {

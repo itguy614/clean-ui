@@ -106,7 +106,7 @@ function onAction(action: DataGridBulkAction) {
 /* Transition */
 .cui-bulk-bar-enter-active,
 .cui-bulk-bar-leave-active {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform var(--cui-duration-base) var(--cui-ease-out), opacity var(--cui-duration-base) var(--cui-ease-out);
 }
 
 .cui-bulk-bar-enter-from,

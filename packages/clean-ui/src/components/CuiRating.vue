@@ -238,7 +238,7 @@ defineExpose({ el: rootEl, focus, blur });
         :style="{
           cursor: interactive ? 'pointer' : 'default',
           display: 'inline-flex',
-          transition: 'transform 0.1s ease',
+          transition: 'transform var(--cui-duration-press) var(--cui-ease-out)',
           transform: isHovering && hoverValue >= i ? 'scale(1.15)' : 'scale(1)',
         }"
         aria-hidden="true"
@@ -249,7 +249,7 @@ defineExpose({ el: rootEl, focus, blur });
           :name="getIconName(getStarState(i))"
           :weight="getIconWeight(getStarState(i))"
           :size="cfg.iconSize"
-          :style="{ color: starColor(getStarState(i)), transition: 'color 0.1s ease' }"
+          :style="{ color: starColor(getStarState(i)), transition: 'color var(--cui-duration-press) ease' }"
         />
       </div>
 

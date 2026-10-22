@@ -140,8 +140,8 @@ const visibleToasts = computed(() => {
 
 <style scoped>
 .cui-toast-wrapper {
-  animation: cui-toast-enter 0.3s ease;
-  transition: transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
+  animation: cui-toast-enter var(--cui-duration-slow) var(--cui-ease-out);
+  transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out), max-height var(--cui-duration-slow) var(--cui-ease-out);
 }
 
 .cui-toast-wrapper--collapsed {
