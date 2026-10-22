@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { computeDropdownPosition } from "../utils/position";
 import type { CuiColor } from "../types/common";
@@ -50,6 +52,7 @@ const props = defineProps<{
   fontSize: string;
   itemPadding: string;
 }>();
+const { present, onAfterLeave } = usePresence(() => props.open);
 
 const el = ref<HTMLElement | null>(null);
 const position = ref<Record<string, string>>({});
@@ -181,9 +184,12 @@ defineExpose({ el });
 
 <template>
   <Teleport to="body">
-    <div v-if="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
-      <slot />
-    </div>
+    <!-- Enters and leaves like the other anchored panels (#263), out of its field (#262). -->
+    <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
+      <div v-if="present" v-show="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
+        <slot />
+      </div>
+    </Transition>
   </Teleport>
 </template>
 

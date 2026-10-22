@@ -224,7 +224,7 @@ export { useCopyToClipboard } from "./composables/useCopyToClipboard";
 export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle } from "./composables/useScrollShadows";
 export { useScrollArea } from "./composables/useScrollArea";
 export type { UseScrollAreaOptions, ScrollAreaOrientation, ScrollAreaFade, ScrollAreaEdge, ScrollAreaFadeEdge } from "./composables/useScrollArea";
-export { motionDuration, MOTION_DURATIONS } from "./utils/motion";
+export { motionDuration, MOTION_DURATIONS, afterAnimations } from "./utils/motion";
 export type { MotionDuration } from "./utils/motion";
 export type { CuiResizablePanelsProps } from "./components/CuiResizablePanels.vue";
 export type { CuiConfirmDialogProps, ConfirmDialogVariant } from "./components/CuiConfirmDialog.vue";

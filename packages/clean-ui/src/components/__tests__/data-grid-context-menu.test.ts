@@ -165,6 +165,6 @@ describe("CuiContextMenu resolveTarget", () => {
     await new Promise((r) => setTimeout(r, 5)); // click-outside arms a task after opening
     document.querySelector('[data-id="b"]')!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     await nextTick();
-    expect(panel()!.classList.contains("cui-context-menu__panel--closing")).toBe(true);
+    expect(panel()).toBeNull();
   });
 });

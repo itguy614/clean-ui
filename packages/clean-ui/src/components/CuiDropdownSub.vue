@@ -4,6 +4,8 @@ import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
 import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownSubProps extends DisableableProps {
@@ -19,6 +21,9 @@ const parentCtx = inject(DropdownContextKey);
 const resolvedTrigger = computed(() => props.trigger ?? parentCtx?.trigger.value ?? "click");
 
 const isOpen = ref(false);
+// Shown while the parent menu is open too, so the whole stack leaves together (#263).
+const shown = () => isOpen.value && !!parentCtx?.isOpen.value;
+const { present, onAfterLeave } = usePresence(shown);
 const triggerRef = ref<HTMLElement>();
 const panelRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
@@ -45,7 +50,7 @@ function open() {
   position();
   isOpen.value = true;
   // The row is inside the parent menu, which scales in for its first moments (#262), so a
-  // rect read now is the shrunken one: place the sub-menu again once that animation ends.
+  // rect read now is the shrunken one: place the sub-menu again once that transition ends.
   const parentMenu = triggerRef.value?.closest<HTMLElement>(".cui-dropdown-menu, .cui-dropdown-sub__menu");
   const running = parentMenu?.getAnimations?.() ?? [];
   if (running.length) Promise.all(running.map((a) => a.finished)).then(position, () => {});
@@ -139,12 +144,13 @@ function onPanelKeydown(e: KeyboardEvent) {
 
     <!-- Sub-menu panel -->
     <Teleport to="body">
+    <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
     <div
-      v-if="isOpen"
+      v-if="present"
+      v-show="shown()"
       ref="panelRef"
       class="cui-dropdown-sub__menu"
       :data-cui-menu-owner="parentCtx?.ownerId"
-      :class="{ 'cui-dropdown-sub__menu--closing': parentCtx?.isClosing.value }"
       :style="menuStyle"
       role="menu"
       @mouseenter="onMouseEnter"
@@ -153,6 +159,7 @@ function onPanelKeydown(e: KeyboardEvent) {
     >
       <slot name="menu" />
     </div>
+    </Transition>
     </Teleport>
   </div>
 </template>
@@ -215,35 +222,6 @@ function onPanelKeydown(e: KeyboardEvent) {
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);
   overflow-y: auto;
-  animation: cui-dropdown-sub-in var(--cui-duration-base) var(--cui-ease-out);
 }
 
-/* Leaves with the menu it belongs to: the whole stack fades out together, rather than
-   the parent fading while an open sub-menu stays put until the parent unmounts it. */
-.cui-dropdown-sub__menu--closing {
-  animation: cui-dropdown-sub-out var(--cui-duration-fast) var(--cui-ease-out) forwards;
-  pointer-events: none;
-}
-
-@keyframes cui-dropdown-sub-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes cui-dropdown-sub-out {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
 </style>

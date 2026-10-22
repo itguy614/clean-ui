@@ -8,6 +8,8 @@ import { POPOVER_Z_INDEX } from "../utils/position";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import { RADIUS_SCALE } from "../utils/sizing";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
@@ -56,6 +58,7 @@ const emit = defineEmits<{
 const slots = useSlots();
 
 const isVisible = ref(false);
+const { present, onAfterLeave } = usePresence(() => isVisible.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -147,7 +150,6 @@ const panelStyle = computed(() => {
     minWidth: "12rem",
     maxWidth: "24rem",
     pointerEvents: "auto",
-    animation: "cui-scale-in var(--cui-duration-base) var(--cui-ease-out)",
     overflow: "hidden",
     // Read back as transform-origin below, so the panel grows out of its trigger (#262).
     "--_popover-transform-origin": transformOrigin.value,
@@ -165,19 +167,14 @@ const panelStyle = computed(() => {
  * into the panel on open was racing the positioning, and lost intermittently
  * (#112). Two of them grew retry loops to work around it.
  *
- * `animation: none` is load-bearing, not tidiness. A CSS animation overrides
- * inline styles, and the panel's scale-in animates `opacity` from 0 to 1 — so
- * `opacity: 0` alone would be overridden the moment it started, and the panel
- * would appear at the origin before being positioned, which is exactly the
- * flash #88 fixed. Withholding the animation also means it plays from the final
- * position rather than starting mid-move.
+ * The panel's entry is a CSS transition (#263), which an inline `opacity: 0` holds at
+ * zero: the fade picks up from there once the panel is placed.
  */
 const hiddenUntilPositioned = computed(() => {
   const styles: Record<string, string> = {};
   if (isPositioned.value) return styles;
   styles.opacity = "0";
   styles.pointerEvents = "none";
-  styles.animation = "none";
   return styles;
 });
 
@@ -218,8 +215,10 @@ const messages = useMessages();
     </div>
 
     <Teleport to="body">
+      <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
       <div
-        v-if="isVisible"
+        v-if="present"
+        v-show="isVisible"
         ref="floatingRef"
         class="cui-popover__panel"
         :style="{ ...floatingStyles, ...panelStyle, ...hiddenUntilPositioned }"
@@ -306,6 +305,7 @@ const messages = useMessages();
           }"
         />
       </div>
+      </Transition>
     </Teleport>
   </div>
 </template>

@@ -2,6 +2,8 @@
 import { ref, computed, watch, onUnmounted, toRef } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useLayerStack } from "../composables/useLayerStack";
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
 
 export type TooltipTrigger = "hover" | "focus" | "click" | "hover-focus";
@@ -38,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const isVisible = ref(false);
+const { present, onAfterLeave } = usePresence(() => isVisible.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -150,27 +153,23 @@ onUnmounted(() => {
  * into the tooltip on open was racing the positioning, and lost intermittently
  * (#112). Two of them grew retry loops to work around it.
  *
- * `animation: none` is load-bearing, not tidiness. A CSS animation overrides
- * inline styles, and the tooltip's scale-in animates `opacity` from 0 to 1 — so
- * `opacity: 0` alone would be overridden the moment it started, and the tooltip
- * would appear at the origin before being positioned, which is exactly the
- * flash #88 fixed. Withholding the animation also means it plays from the final
- * position rather than starting mid-move.
+ * The tooltip's entry is a CSS transition (#263), which an inline `opacity: 0` holds at
+ * zero: the fade picks up from there once it is placed.
  */
 const hiddenUntilPositioned = computed(() => {
   const styles: Record<string, string> = {};
   if (isPositioned.value) return styles;
   styles.opacity = "0";
   styles.pointerEvents = "none";
-  styles.animation = "none";
   return styles;
 });
 
 // A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
 // default tooltip's come from `.cui-tooltip--default`.
 const tooltipStyle = computed(() => ({
-  // Grows out of its trigger, whichever side it opened on (#262).
+  // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.
   "--_tooltip-transform-origin": transformOrigin.value,
+  "--_panel-enter-duration": "var(--cui-duration-fast)",
   ...(props.color
     ? {
         "--_tooltip-bg": `var(--cui-${props.color})`,
@@ -199,8 +198,10 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
 
     <!-- Tooltip -->
     <Teleport to="body">
+      <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
       <div
-        v-if="isVisible"
+        v-if="present"
+        v-show="isVisible"
         ref="floatingRef"
         class="cui-tooltip"
         :class="[
@@ -224,6 +225,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
           :style="arrowStyle"
         />
       </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -262,19 +264,8 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
   max-width: 280px;
   word-wrap: break-word;
   pointer-events: auto;
-  animation: cui-tooltip-in var(--cui-duration-fast) var(--cui-ease-out);
 }
 
-@keyframes cui-tooltip-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
 /* Default: an inverted surface, dark in light mode (and a lighter dark in dark mode). */
 .cui-tooltip--default {

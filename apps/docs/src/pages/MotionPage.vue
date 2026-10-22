@@ -19,6 +19,8 @@ import {
   CuiDropdownMenu,
   CuiDropdownItem,
   CuiBadge,
+  CuiAlert,
+  useToast,
   motionDuration,
   MOTION_DURATIONS,
   type MotionDuration,
@@ -103,6 +105,29 @@ const originCode = `<CuiPopover placement="top" title="top">
 <CuiTooltip text="From its trigger">
   <CuiButton variant="ghost">Hover me</CuiButton>
 </CuiTooltip>`;
+
+// Exits (#263): toasts to remove from the middle of the stack, an alert to dismiss.
+const { toast, dismiss } = useToast();
+let stack: string[] = [];
+function threeToasts() {
+  stack = ["First", "Second", "Third"].map((title) => toast({ title, description: "Stays until dismissed", autoDismiss: 0 }));
+}
+function dismissMiddle() {
+  if (stack[1]) dismiss(stack[1]);
+}
+const alertKey = ref(0);
+const alertGone = ref(false);
+
+const exitCode = `<!-- Menus, popovers, tooltips and listboxes play an exit before they unmount,
+     and reverse if reopened mid-exit -->
+<CuiDropdown>…</CuiDropdown>
+
+<!-- Removing a toast moves the rest into place -->
+const { toast, dismiss } = useToast();
+dismiss(id);
+
+<!-- An alert emits dismiss once its exit has played -->
+<CuiAlert dismissible title="Saved" @dismiss="…" />`;
 
 const jsCode = `import { motionDuration } from "@itguy614/clean-ui";
 
@@ -213,6 +238,33 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
             <CuiButton variant="ghost">Hover me</CuiButton>
           </CuiTooltip>
         </CuiFlex>
+      </CuiStack>
+    </Example>
+
+    <Example title="Exits" :code="exitCode">
+      <CuiStack spacing="4">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          Every overlay animates out, faster than it came in, then leaves the DOM. Click the
+          menu's trigger twice quickly: it turns straight back from where it was. Modals,
+          slideovers and alerts finish their exit before they report closing.
+        </p>
+        <CuiFlex gap="3" class="flex-wrap items-center">
+          <CuiDropdown>
+            <CuiDropdownTrigger>
+              <CuiButton>Menu</CuiButton>
+            </CuiDropdownTrigger>
+            <CuiDropdownMenu>
+              <CuiDropdownItem>First</CuiDropdownItem>
+              <CuiDropdownItem>Second</CuiDropdownItem>
+            </CuiDropdownMenu>
+          </CuiDropdown>
+          <CuiButton variant="outline" @click="threeToasts">Show three toasts</CuiButton>
+          <CuiButton variant="outline" @click="dismissMiddle">Dismiss the middle one</CuiButton>
+          <CuiButton v-if="alertGone" variant="ghost" @click="alertGone = false; alertKey++">Bring the alert back</CuiButton>
+        </CuiFlex>
+        <CuiAlert v-if="!alertGone" :key="alertKey" color="success" title="Saved" dismissible @dismiss="alertGone = true">
+          Dismiss me: the alert fades out, then reports it.
+        </CuiAlert>
       </CuiStack>
     </Example>
 

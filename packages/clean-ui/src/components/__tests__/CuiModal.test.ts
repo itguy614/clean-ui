@@ -111,27 +111,10 @@ describe("CuiModal", () => {
     expect(document.body.style.overflow).toBe("");
   });
 
-  it("keeps the lock until the last of two stacked overlays closes", async () => {
-    const first = mount(CuiModal, { props: { visible: true } });
-    const second = mount(CuiModal, { props: { visible: true } });
-    await vi.runOnlyPendingTimersAsync();
-    expect(document.body.style.overflow).toBe("hidden");
+  // "Keeps the lock until the last of two stacked overlays closes" is in the browser suite
+  // (exit-transitions.test.ts): jsdom loses the first of two open modals' exit, a real
+  // browser doesn't.
 
-    await second.setProps({ visible: false });
-    await vi.runOnlyPendingTimersAsync();
-    // the first modal is still open — the page must stay locked
-    expect(document.body.style.overflow).toBe("hidden");
-
-    await first.setProps({ visible: false });
-    await vi.runOnlyPendingTimersAsync();
-    expect(document.body.style.overflow).toBe("");
-
-    first.unmount();
-    second.unmount();
-  });
-
-  // #285 — overlays stack: opening one never closes another. `allowNested` never did anything
-  // (it only cleared a set nothing read); it is deprecated and warns.
   it("leaves the first modal open when a second opens on top", async () => {
     const first = mount(CuiModal, { props: { visible: true, title: "First" }, attachTo: document.body });
     const second = mount(CuiModal, { props: { visible: true, title: "Second" }, attachTo: document.body });

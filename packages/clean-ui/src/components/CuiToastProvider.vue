@@ -69,6 +69,18 @@ const containerStyle = computed(() => {
   return style;
 });
 
+/**
+ * A leaving toast is taken out of the flow (position: absolute, in its leave class) so the
+ * rest can move into its place. In a flex container an absolute item would jump to the
+ * start edge, so pin it where it is first: its offset in the container, and its width.
+ */
+function pinLeaving(el: Element) {
+  const node = el as HTMLElement;
+  node.style.top = `${node.offsetTop}px`;
+  node.style.left = `${node.offsetLeft}px`;
+  node.style.width = `${node.offsetWidth}px`;
+}
+
 // Slide direction based on position
 const slideFrom = computed(() => {
   const p = props.position;
@@ -97,15 +109,14 @@ const visibleToasts = computed(() => {
 
   <!-- Toast container -->
   <Teleport to="body">
-    <div :style="containerStyle" class="cui-toast-container">
+    <!-- Arrivals slide in from the screen edge, leavers fade out, and the rest move into
+         place (#263): a TransitionGroup, so a removed toast no longer jumps the stack. -->
+    <TransitionGroup tag="div" name="cui-toast" :style="containerStyle" class="cui-toast-container" @before-leave="pinLeaving">
       <div
         v-for="(toast, index) in visibleToasts"
         :key="toast.id"
         class="cui-toast-wrapper"
-        :class="[
-          `cui-toast-wrapper--slide-${slideFrom}`,
-          { 'cui-toast-wrapper--collapsed': toast._collapsed },
-        ]"
+        :class="[`cui-toast-wrapper--slide-${slideFrom}`, { 'cui-toast-wrapper--collapsed': toast._collapsed }]"
         :style="{
           pointerEvents: 'auto',
           ...(toast._collapsed ? {
@@ -134,13 +145,13 @@ const visibleToasts = computed(() => {
           @dismiss="state.dismiss(toast.id)"
         />
       </div>
-    </div>
+    </TransitionGroup>
   </Teleport>
 </template>
 
 <style scoped>
+/* The collapsed stack's own scale, fade and height, as toasts pile up. */
 .cui-toast-wrapper {
-  animation: cui-toast-enter var(--cui-duration-slow) var(--cui-ease-out);
   transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out), max-height var(--cui-duration-slow) var(--cui-ease-out);
 }
 
@@ -148,75 +159,29 @@ const visibleToasts = computed(() => {
   cursor: pointer;
 }
 
-/* Slide animations based on position */
-@keyframes cui-toast-enter {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* --- Enter, leave and move (#263) ---
+   Arrive over `slow` from the screen edge they belong to; leave faster, fading where they
+   are (pinned there by pinLeaving, out of the flow) while the rest slide into place. CSS
+   mode is fine for a list: a keyed toast never re-enters, so nothing has to reverse. */
+.cui-toast-enter-active,
+.cui-toast-move {
+  transition: transform var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-slow) var(--cui-ease-out);
 }
 
-.cui-toast-wrapper--slide-top {
-  animation-name: cui-toast-slide-top;
+.cui-toast-leave-active {
+  position: absolute;
+  transition: transform var(--cui-duration-fast) var(--cui-ease-out), opacity var(--cui-duration-fast) var(--cui-ease-out);
+  pointer-events: none;
 }
 
-@keyframes cui-toast-slide-top {
-  from {
-    opacity: 0;
-    transform: translateY(-1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.cui-toast-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
-.cui-toast-wrapper--slide-left {
-  animation-name: cui-toast-slide-left;
-}
-
-@keyframes cui-toast-slide-left {
-  from {
-    opacity: 0;
-    transform: translateX(-2rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.cui-toast-wrapper--slide-right {
-  animation-name: cui-toast-slide-right;
-}
-
-@keyframes cui-toast-slide-right {
-  from {
-    opacity: 0;
-    transform: translateX(2rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.cui-toast-wrapper--slide-bottom {
-  animation-name: cui-toast-slide-bottom;
-}
-
-@keyframes cui-toast-slide-bottom {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+.cui-toast-enter-from { opacity: 0; }
+.cui-toast-enter-from.cui-toast-wrapper--slide-top { transform: translateY(-1rem); }
+.cui-toast-enter-from.cui-toast-wrapper--slide-bottom { transform: translateY(1rem); }
+.cui-toast-enter-from.cui-toast-wrapper--slide-left { transform: translateX(-2rem); }
+.cui-toast-enter-from.cui-toast-wrapper--slide-right { transform: translateX(2rem); }
 </style>

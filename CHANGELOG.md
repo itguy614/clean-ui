@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Every overlay animates out** (#263), through `<Transition>` rather than a close timer:
+  - **Animate out, then unmount:** Tooltip, Popover (and the date, time and range pickers), the Select/Combobox/TagInput listbox, and DropdownSub.
+  - **Animate in too:** the Select, Combobox and TagInput listboxes.
+  - **Reopen mid-exit:** menus and panels turn straight back from where they are, instead of restarting.
+  - **Removing a toast** fades it out while the rest slide into place, where before they jumped.
+  - **Report after the exit:** Modal, Slideover and Alert report their close or dismiss once the exit has played.
+  - **No close timers left:** Dropdown, ContextMenu, Modal, Slideover and Alert.
+  - **`useOverlay`** gains `exit: "transition"`, with `mounted` and `onAfterLeave`. The timer stays the default.
+  - **`afterAnimations(el, done)`** is exported.
+  - **Deprecated:** the dropdown context's `isClosing` is now always false.
 - Floating panels grow out of their trigger instead of their centre (#262). Popover,
   Tooltip, DropdownMenu, DropdownSub, ContextMenu and the Select/Combobox/TagInput listbox
   set `transform-origin` from the side they opened on after flipping: their edge facing
