@@ -140,9 +140,9 @@ const pingStyle = computed(() => {
     <CuiIcon v-else :name="icon || 'user'" :size="cfg.icon" />
 
     <!-- Status ping ring (expanding ring behind the dot) -->
-    <span v-if="pingStyle" :style="pingStyle" />
+    <span v-if="pingStyle" class="cui-avatar__ping" :style="pingStyle" />
     <!-- Status dot -->
-    <span v-if="status" :style="statusStyle" />
+    <span v-if="status" class="cui-avatar__status" :style="statusStyle" />
   </div>
 </template>
 

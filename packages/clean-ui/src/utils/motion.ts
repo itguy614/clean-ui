@@ -14,6 +14,14 @@ export type MotionDuration = keyof typeof MOTION_DURATIONS;
 
 import { warnOnce } from "./devWarn";
 
+/**
+ * Whether the user asked for reduced motion (#265). Read when it matters, not cached: the
+ * setting can change while the page is open. False under server rendering.
+ */
+export function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 /** A CSS time — `150ms`, `0.2s` — in ms; null for anything else. */
 function parseTime(value: string): number | null {
   const m = /^(-?\d*\.?\d+)(ms|s)$/.exec(value.trim());

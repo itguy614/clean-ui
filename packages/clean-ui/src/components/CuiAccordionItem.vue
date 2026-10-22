@@ -3,7 +3,7 @@ import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
-import { motionDuration } from "../utils/motion";
+import { motionDuration, prefersReducedMotion } from "../utils/motion";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface CuiAccordionItemProps extends HideableProps, DisableableProps {
@@ -63,10 +63,10 @@ watch(isOpen, (open) => {
     el.style.maxHeight = "0px";
     el.offsetHeight;
     el.style.maxHeight = `${el.scrollHeight}px`;
-    // A zero duration (the motion token turned off, #261) runs no transition, and by the
-    // spec fires no transitionend: release the height at once, or later content is clipped.
-    // (Chromium happens to release it anyway; nothing promises the others do.)
-    if (motionDuration("slow", el) === 0) {
+    // No transition runs with a zero duration (the motion token turned off, #261), or under
+    // reduced motion, where only opacity and colour transition (#265), so no transitionend
+    // comes: release the height at once, or content that grows later is clipped.
+    if (motionDuration("slow", el) === 0 || prefersReducedMotion()) {
       el.style.maxHeight = "none";
       return;
     }
