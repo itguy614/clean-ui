@@ -162,7 +162,6 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
         color: node.disabled ? 'var(--cui-text-tertiary)' : isSelected ? 'var(--cui-primary)' : 'var(--cui-text-body)',
         fontWeight: isSelected ? '600' : '400',
         opacity: node.disabled ? '0.5' : '1',
-        transition: 'background var(--cui-duration-press) ease',
         position: 'relative',
         zIndex: '1',
       }"

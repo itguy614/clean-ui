@@ -118,7 +118,9 @@ const panelStyle = computed(() => {
     boxShadow: "0 16px 48px rgb(0 0 0 / 0.15)",
     outline: "none",
     overflow: "hidden",
-    transition: "transform var(--cui-duration-slow) var(--cui-ease-drawer)",
+    // Slides out faster than it came in, with its backdrop (#269): the style flips with the
+    // visible class, so each transition takes the duration of the state it moves to.
+    transition: `transform var(--cui-duration-${isAnimating.value ? "slow" : "fast"}) var(--cui-ease-drawer)`,
   };
 
   if (isHorizontal.value) {

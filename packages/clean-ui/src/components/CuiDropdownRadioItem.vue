@@ -58,7 +58,6 @@ function onKeydown(e: KeyboardEvent) {
   color: var(--cui-text-body);
   cursor: pointer;
   outline: none;
-  transition: background var(--cui-duration-press) ease;
 }
 
 .cui-dropdown-radio-item:hover,

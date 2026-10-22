@@ -8,6 +8,7 @@ import CuiDropdownMenu from "../../components/CuiDropdownMenu.vue";
 import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiDropdownSub from "../../components/CuiDropdownSub.vue";
+import CuiContextMenu from "../../components/CuiContextMenu.vue";
 import main from "../../styles/main.css?inline";
 import { installTokens } from "./helpers";
 import { motionDuration } from "../../utils/motion";
@@ -139,5 +140,49 @@ describe("floating panels grow out of their trigger (real browser)", () => {
     const sub = document.querySelector<HTMLElement>(".cui-dropdown-sub__menu")!.getBoundingClientRect();
     expect(Math.abs(sub.left - (row.right + PANEL_OFFSET))).toBeLessThan(1);
     expect(Math.abs(sub.top - row.top)).toBeLessThan(1);
+  });
+
+  // #269 — the context menu set `transition: none` for its measuring frame on every open,
+  // so its entry snapped the scale and only faded.
+  it("scales a context menu in from the cursor, not just fades it", async () => {
+    const el = host("top");
+    wrapper = mount(CuiContextMenu, {
+      slots: { default: () => h("div", { style: "width: 200px; height: 80px" }, "Area"), menu: () => h(CuiDropdownItem, null, () => "One") },
+      attachTo: el,
+    });
+    (wrapper.vm as unknown as { openAt: (x: number, y: number) => void }).openAt(200, 40);
+    await nextTick();
+    await nextTick();
+    const panel = document.querySelector<HTMLElement>(".cui-context-menu__panel")!;
+    const scales: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      await new Promise((r) => requestAnimationFrame(r));
+      const m = getComputedStyle(panel).transform;
+      scales.push(m === "none" ? 1 : new DOMMatrix(m).a);
+    }
+    expect(Math.min(...scales), "it grew in").toBeLessThan(0.995);
+    await new Promise((r) => setTimeout(r, motionDuration("base") + 80));
+    expect(getComputedStyle(panel).transform === "none" || new DOMMatrix(getComputedStyle(panel).transform).a === 1).toBe(true);
+  });
+
+  // A right-click elsewhere closes the menu and re-opens it mid-exit: it fades in at the
+  // new point, rather than jumping there at full opacity.
+  it("fades a context menu re-opened mid-exit in at its new point", async () => {
+    const el = host("top");
+    wrapper = mount(CuiContextMenu, {
+      slots: { default: () => h("div", { style: "width: 300px; height: 80px" }, "Area"), menu: () => h(CuiDropdownItem, null, () => "One") },
+      attachTo: el,
+    });
+    const vm = wrapper.vm as unknown as { openAt: (x: number, y: number) => void; close: () => void };
+    vm.openAt(180, 40);
+    await new Promise((r) => setTimeout(r, motionDuration("base") + 80));
+    vm.close();
+    await new Promise((r) => requestAnimationFrame(r));
+    vm.openAt(320, 60);
+    await nextTick();
+    await nextTick();
+    await new Promise((r) => requestAnimationFrame(r));
+    const panel = document.querySelector<HTMLElement>(".cui-context-menu__panel")!;
+    expect(Number(getComputedStyle(panel).opacity)).toBeLessThan(0.9);
   });
 });

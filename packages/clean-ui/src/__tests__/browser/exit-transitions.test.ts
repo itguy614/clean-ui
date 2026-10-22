@@ -12,6 +12,7 @@ import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiSelect from "../../components/CuiSelect.vue";
 import CuiTooltip from "../../components/CuiTooltip.vue";
+import CuiDataGrid from "../../components/CuiDataGrid.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiAlert from "../../components/CuiAlert.vue";
 import CuiToastProvider from "../../components/CuiToastProvider.vue";
@@ -210,5 +211,40 @@ describe("exit transitions (real browser)", () => {
     await wait(motionDuration("slow") + 100);
     expect(wrappers()).toHaveLength(2);
     expect(third.getBoundingClientRect().top).toBeLessThan(before);
+  });
+
+  // #269 — the bulk bar was a <Transition name> on a v-if: clearing the selection and
+  // selecting again mid-exit dropped the bar and slid a new one in from nothing.
+  it("turns the data grid's bulk bar back mid-exit, the same element", async () => {
+    const w = track(
+      mount(CuiDataGrid, {
+        props: {
+          columns: [{ key: "name", label: "Name" }],
+          data: [{ id: "1", name: "One" }, { id: "2", name: "Two" }],
+          bulkActions: [{ key: "delete", label: "Delete" }],
+          hideToolbar: true,
+        },
+        attachTo: host(),
+      }),
+    );
+    // The CuiCheckbox itself: its native input sits inside a label and swallows a direct click.
+    const boxes = () => [...(w.element as HTMLElement).querySelectorAll<HTMLElement>("tbody .cui-checkbox")];
+    boxes()[0].click();
+    await wait(motionDuration("base") + 80);
+    const bar = document.querySelector<HTMLElement>(".cui-data-grid-bulk-bar")!;
+    expect(Number(getComputedStyle(bar).opacity)).toBe(1);
+    boxes()[0].click();
+    await wait(motionDuration("fast") / 2);
+    const midExit = Number(getComputedStyle(bar).opacity);
+    expect(midExit).toBeLessThan(1);
+    expect(bar.textContent, "still counting what was selected as it leaves").toMatch(/\b1\b/);
+    boxes()[0].click();
+    const samples: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      await frame();
+      samples.push(Number(getComputedStyle(bar).opacity));
+    }
+    expect(document.querySelector(".cui-data-grid-bulk-bar"), "the same element").toBe(bar);
+    expect(Math.min(...samples)).toBeGreaterThanOrEqual(midExit - 0.05);
   });
 });

@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Motion audit** (#269), after the rest of the 1.5.0 motion work:
+  - Modals, slideovers, backdrops and alerts now close faster than they open, as floating
+    panels and toasts already did. A modal's backdrop took 250ms to fade out on every close.
+  - Menu items, listbox options, tree nodes, date cells and transfer-list rows change
+    colour at once instead of fading. With key repeat a fade left a trail of half-lit rows.
+  - CuiSlider glides only when a click on the track jumps the thumb. A drag follows the
+    pointer and a keyboard step lands at once, as before for a drag and newly for keys.
 - **Layout properties no longer animate** (#266). These used to animate `width` or `left`, which lays out and repaints the page on every frame. They move by `transform` now, on the compositor, and land exactly where they did:
   - CuiSlider's thumb and fill
   - CuiProgress's bar
@@ -75,6 +82,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   movement on screen (a toggle knob, a chevron turning) uses `--cui-ease-in-out` (#261).
   Colour changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
   CuiAlert's and toasts' 300ms motion is now 250ms, and Progress's 400ms fill is 250ms.
+
+### Fixed
+
+- CuiContextMenu scales in from the cursor again (#269). It hid its transitions for the
+  frame it measured in, on every open, so its entry only faded.
+- CuiDataGrid's bulk-action bar turns back if a row is selected again while it leaves
+  (#269), instead of vanishing and sliding a new bar in. It leaves faster than it arrives,
+  and under reduced motion it fades where it stands rather than dropping out of view.
+- CuiSlider's press ends when the pointer is released off the slider (#269). Its lifted
+  shadow stayed on, and its motion off, until the next release.
 
 ## [1.4.0] - 2026-10-22
 

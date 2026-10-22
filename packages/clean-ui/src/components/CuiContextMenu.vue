@@ -122,9 +122,12 @@ function positionAtCursor(x: number, y: number) {
     top: `${y}px`,
     opacity: "0",
     pointerEvents: "none",
-    // Snap to hidden for the measuring frame: re-opened at a new point while open, a
-    // transition here would fade the panel out and back as it moved.
-    transition: "none",
+    // Re-opened at a new point while still on screen (open, or leaving after the
+    // right-click elsewhere closed it): snap to hidden for the measuring frame, or the
+    // panel would fade out and back, or jump there at full opacity, as it moved. Not on a
+    // fresh open, where it would also stop the entry's scale (#269): the panel's own
+    // hidden state already starts it from there.
+    ...(present.value ? { transition: "none" } : {}),
   };
 
   // Measured by the post-flush watcher above, once the panel has rendered.

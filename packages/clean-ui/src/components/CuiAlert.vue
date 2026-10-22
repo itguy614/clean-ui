@@ -252,10 +252,16 @@ const messages = useMessages();
    ENTRANCE ANIMATIONS
    ============================================================ */
 
+/* Each entrance comes in over the slow duration and leaves over the fast one (#269): a
+   transition takes the duration of the state it moves to. */
+[class*="cui-alert--entrance-"].cui-alert--mounted {
+  transition-duration: var(--cui-duration-slow);
+}
+
 /* Fade */
 .cui-alert--entrance-fade {
   opacity: 0;
-  transition: opacity var(--cui-duration-slow) var(--cui-ease-out);
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-fade.cui-alert--mounted {
@@ -266,7 +272,7 @@ const messages = useMessages();
 .cui-alert--entrance-slide-down {
   opacity: 0;
   transform: translateY(-1rem);
-  transition: opacity var(--cui-duration-slow) var(--cui-ease-out), transform var(--cui-duration-slow) var(--cui-ease-out);
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-slide-down.cui-alert--mounted {
@@ -278,7 +284,7 @@ const messages = useMessages();
 .cui-alert--entrance-slide-left {
   opacity: 0;
   transform: translateX(2rem);
-  transition: opacity var(--cui-duration-slow) var(--cui-ease-out), transform var(--cui-duration-slow) var(--cui-ease-out);
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-out), transform var(--cui-duration-fast) var(--cui-ease-out);
 }
 
 .cui-alert--entrance-slide-left.cui-alert--mounted {
