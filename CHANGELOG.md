@@ -34,7 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Height snaps:** the collapsed toast stack's height changes without a transition.
   - **Checkbox and Radio** settle in from 0.9 with a fade, briefly, instead of popping from nothing with an overshoot.
   - **Alert's and Toast's `glow`** fades a still shadow instead of animating `box-shadow`.
-  - **CuiToast no longer clips its own overflow;** its progress track clips itself.
+  - **CuiToast no longer clips its own overflow:** its progress track clips itself, and long unbroken text wraps.
+  - **The toast countdown is one CSS animation** over the whole `autoDismiss`, paused with the timer, instead of 20 re-renders a second.
+  - **In a right-to-left page,** the progress bar and the countdown fill and drain from the inline-start edge, as they did when they were width-based.
   - **`cui-glow-fade`** is a new shared keyframe.
 - **Reduced motion keeps fades** (#265). Under `prefers-reduced-motion: reduce`:
   - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colours change instantly.

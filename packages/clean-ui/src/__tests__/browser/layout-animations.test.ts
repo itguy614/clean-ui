@@ -74,13 +74,17 @@ describe("value displays move by transform (real browser)", () => {
     expect(fill.right).toBeCloseTo(track.left + track.width * 0.6, 0);
   });
 
-  it("runs a toast's countdown by transform", async () => {
+  it("runs a toast's countdown as one transform animation, paused on hover", async () => {
     const w = mount(CuiToast, { props: { toastId: "t", title: "Saved", autoDismiss: 4000, showProgress: true, active: true }, attachTo: host() });
     mounted.push(w);
     await wait(200);
     const bar = (w.element as HTMLElement).querySelector<HTMLElement>(".cui-toast__progress-bar")!;
-    expect(bar.style.transform).toMatch(/^translateX\(-\d/);
-    expect(getComputedStyle(bar).transitionProperty).toBe("transform");
+    const [countdown] = bar.getAnimations() as CSSAnimation[];
+    // Scoped, so Vue suffixes the name.
+    expect(countdown.animationName).toMatch(/^cui-toast-countdown(?!-rtl)/);
+    expect(countdown.effect?.getTiming().duration).toBe(4000);
+    await w.trigger("mouseenter");
+    expect(countdown.playState).toBe("paused");
   });
 
   it("glows by fading a still shadow, not by animating box-shadow", () => {
@@ -93,10 +97,12 @@ describe("value displays move by transform (real browser)", () => {
     expect(getComputedStyle(toast).overflow).toBe("visible");
   });
 
-  it("doesn't make its container scroll sideways at the far end", async () => {
+  // In a scroll container with no padding, at a middle value: nothing reaches past the
+  // track but the thumb at the very ends, as with `left`.
+  it("doesn't make a padding-less container scroll sideways", async () => {
     const box = host();
-    box.style.overflow = "auto";
-    const w = mount(CuiSlider, { props: { modelValue: 100, min: 0, max: 100 }, attachTo: box });
+    box.style.cssText = "width: 300px; padding: 0; overflow: auto;";
+    const w = mount(CuiSlider, { props: { modelValue: 20, min: 0, max: 100 }, attachTo: box });
     mounted.push(w);
     await settled();
     expect(box.scrollWidth).toBe(box.clientWidth);
@@ -110,5 +116,18 @@ describe("value displays move by transform (real browser)", () => {
     const after = getComputedStyle(fill, "::after");
     const fillWidth = fill.getBoundingClientRect().width;
     expect(parseFloat(after.left)).toBeCloseTo(fillWidth * 0.7, 0);
+  });
+
+  it("fills a progress bar from the inline-start edge in a right-to-left page", async () => {
+    const box = host();
+    box.dir = "rtl";
+    const w = mount(CuiProgress, { props: { value: 30 }, attachTo: box });
+    mounted.push(w);
+    await settled();
+    const root = w.element as HTMLElement;
+    const track = root.querySelector<HTMLElement>(".cui-progress-bar__track")!.getBoundingClientRect();
+    const fill = root.querySelector<HTMLElement>(".cui-progress-bar__fill")!.getBoundingClientRect();
+    // The visible 30% is at the right: the fill's left edge sits 70% along.
+    expect(fill.left).toBeCloseTo(track.left + track.width * 0.7, 0);
   });
 });

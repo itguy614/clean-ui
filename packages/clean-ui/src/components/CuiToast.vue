@@ -51,10 +51,17 @@ const elapsed = ref(0);
 let intervalId: ReturnType<typeof setInterval> | null = null;
 const TICK = 50; // ms
 
-const progressPercent = computed(() => {
-  if (!props.autoDismiss || props.autoDismiss === 0) return 0;
-  return Math.min((elapsed.value / props.autoDismiss) * 100, 100);
-});
+// The countdown bar is one CSS animation over autoDismiss (#266), paused with the timer:
+// no re-render per tick. It mounts whenever the toast becomes the active one, so it starts
+// as far in as the timer already is — read then, not on every tick.
+const countdownFrom = ref(0);
+watch(
+  () => props.active,
+  (isActive) => {
+    if (isActive) countdownFrom.value = elapsed.value;
+  },
+  { immediate: true },
+);
 
 function startTimer() {
   if (intervalId) return;
@@ -196,7 +203,11 @@ const messages = useMessages();
     >
       <div
         class="cui-toast__progress-bar"
-        :style="{ transform: `translateX(-${progressPercent}%)` }"
+        :style="{
+          animationDuration: `${autoDismiss}ms`,
+          animationDelay: `-${countdownFrom}ms`,
+          animationPlayState: isPaused ? 'paused' : 'running',
+        }"
       />
     </div>
   </div>
@@ -300,14 +311,31 @@ const messages = useMessages();
   border-bottom-right-radius: inherit;
 }
 
-/* Slides left as the time runs down: a transform each tick, not a width (#266). Linear,
-   and a little longer than a tick, so the steps blend into one steady movement. */
+/* Drains towards the inline-start edge as the time runs down: one linear transform
+   animation over the whole autoDismiss, not a width updated per tick (#266). Its duration,
+   offset and pause come from the timer, inline. */
 .cui-toast__progress-bar {
   width: 100%;
   height: 100%;
   background: var(--_toast-progress-bar, rgb(255 255 255 / 0.6));
-  transition: transform var(--cui-duration-press) linear;
   border-radius: 0 3px 0 0;
+  animation-name: cui-toast-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+:where([dir="rtl"]) .cui-toast__progress-bar {
+  animation-name: cui-toast-countdown-rtl;
+}
+
+@keyframes cui-toast-countdown {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes cui-toast-countdown-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
 }
 
 /* Pulse, glow, shake — use shared keyframes from main.css */

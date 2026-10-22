@@ -103,7 +103,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
           'cui-progress-bar__fill--stripe': animation === 'stripe' && !indeterminate,
           'cui-progress-bar__fill--shimmer': animation === 'shimmer' && !indeterminate,
         }"
-        :style="indeterminate ? {} : { transform: `translateX(${percent - 100}%)`, '--_progress-percent': `${percent}%` }"
+        :style="indeterminate ? {} : { '--_progress-percent': `${percent}%` }"
       />
     </div>
     <div v-if="showLabel || $slots.label" class="cui-progress-bar__label">
@@ -196,7 +196,13 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   height: 100%;
   background: var(--_progress-color);
   border-radius: 9999px;
+  transform: translateX(calc(var(--_progress-percent, 0%) - 100%));
   transition: transform var(--cui-duration-slow) var(--cui-ease-out);
+}
+
+/* From the inline-start edge, as the width-based fill was: the right, right to left. */
+:where([dir="rtl"]) .cui-progress-bar__fill {
+  transform: translateX(calc(100% - var(--_progress-percent, 0%)));
 }
 
 /* Indeterminate bar animation */
@@ -219,7 +225,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 
 /* Stripe animation — diagonal stripes scrolling across the fill. A background-position loop,
    so it repaints each frame: kept, being a small clipped bar that reduced motion stops
-   (#266, #265). The transform form is a ::before one tile wider, looped by translateX. */
+   (#266, #265). A compositor version would move a ::before one tile wider by translateX. */
 .cui-progress-bar__fill--stripe {
   background-image: linear-gradient(
     45deg,
@@ -249,9 +255,11 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 .cui-progress-bar__fill--shimmer::after {
   content: "";
   position: absolute;
-  /* Over the visible part only: the fill is a full-width pill slid left (#266), so what
-     shows is its right-hand `--_progress-percent`. */
-  inset: 0 0 0 calc(100% - var(--_progress-percent, 100%));
+  /* Over the visible part only: the fill is a full-width pill slid towards the start
+     (#266), so what shows is its end-side `--_progress-percent`. */
+  inset-block: 0;
+  inset-inline-start: calc(100% - var(--_progress-percent, 100%));
+  inset-inline-end: 0;
   background: linear-gradient(
     90deg,
     transparent 0%,

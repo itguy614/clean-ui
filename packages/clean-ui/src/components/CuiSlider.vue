@@ -43,9 +43,6 @@ const emit = defineEmits<{
   "update:modelValue": [value: number];
 }>();
 
-/** Room around the thumb inside its clipping box: the focus ring (2px outline, 2px offset). */
-const THUMB_ROOM = "4px";
-
 const percent = computed(() =>
   ((props.modelValue - props.min) / (props.max - props.min)) * 100,
 );
@@ -118,7 +115,7 @@ defineExpose({ el: inputRef, focus, blur });
     </div>
 
     <!-- Slider container -->
-    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center' }">
+    <div :style="{ position: 'relative', height: cfg.thumbSize, display: 'flex', alignItems: 'center', containerType: 'inline-size' }">
       <!-- Track, clipping its fill: a full-width pill slid left inside it, so it moves on the
            compositor (transform, not width, #266) and keeps its rounded end. -->
       <div :style="{
@@ -174,39 +171,13 @@ defineExpose({ el: inputRef, focus, blur });
         @touchstart="dragging = true"
         @touchend="dragging = false"
       />
-      <!-- Custom thumb, on a layer the track's width: translateX(n%) of that layer is n% of
-           the track, so the thumb moves by transform rather than `left` (#266). Translated,
-           the layer reaches past the slider, so a box overhanging the track by half a thumb
-           and its focus ring clips it — or the page would scroll sideways. -->
-      <div
-        class="cui-slider__thumb-clip"
-        aria-hidden="true"
-        :style="{
-          position: 'absolute',
-          inset: `calc(-1 * ${THUMB_ROOM}) calc(-1 * (${cfg.thumbSize} / 2 + ${THUMB_ROOM}))`,
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }"
-      >
-      <div
-        class="cui-slider__thumb-track"
-        :style="{
-          position: 'absolute',
-          top: THUMB_ROOM,
-          bottom: THUMB_ROOM,
-          left: `calc(${cfg.thumbSize} / 2 + ${THUMB_ROOM})`,
-          right: `calc(${cfg.thumbSize} / 2 + ${THUMB_ROOM})`,
-          display: 'flex',
-          alignItems: 'center',
-          transform: `translateX(${percent}%)`,
-          transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out)',
-        }"
-      >
-      <div class="cui-slider__thumb" :style="{
+      <!-- Custom thumb, moved by transform (#266): 1cqw is 1% of the slider row, a size
+           container, so `n * 1cqw` is n% of the track with no layer spanning it, and the
+           thumb overhangs only at the ends, as with `left`. -->
+      <div class="cui-slider__thumb" aria-hidden="true" :style="{
         position: 'absolute',
         left: '0',
-        transform: 'translateX(-50%)',
+        transform: `translateX(calc(${percent} * 1cqw - 50%))`,
         width: cfg.thumbSize,
         height: cfg.thumbSize,
         borderRadius: '50%',
@@ -217,14 +188,13 @@ defineExpose({ el: inputRef, focus, blur });
         alignItems: 'center',
         justifyContent: 'center',
         color: 'var(--cui-surface-base, white)',
-        transition: dragging ? 'none' : 'box-shadow var(--cui-duration-fast) ease',
+        transition: dragging ? 'none' : 'transform var(--cui-duration-press) var(--cui-ease-out), box-shadow var(--cui-duration-fast) ease',
         pointerEvents: 'none',
+        zIndex: 2,
       }">
         <slot name="thumb">
           <CuiIcon v-if="thumbIcon" :name="thumbIcon" :size="cfg.thumbIcon" />
         </slot>
-      </div>
-      </div>
       </div>
     </div>
 
@@ -241,7 +211,7 @@ defineExpose({ el: inputRef, focus, blur });
 
 <style scoped>
 /* The native input is transparent, so the ring goes on the thumb it drives (#172). */
-:where(.cui-slider__input:focus-visible ~ .cui-slider__thumb-clip .cui-slider__thumb) {
+:where(.cui-slider__input:focus-visible ~ .cui-slider__thumb) {
   outline: 2px solid var(--cui-slider-focus-ring, var(--_slider-focus-ring));
   outline-offset: 2px;
 }

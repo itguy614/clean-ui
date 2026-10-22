@@ -1021,12 +1021,12 @@
     animation: none !important;
   }
 
-  /* A glow fades a still shadow on its ::after (#266): stopped, it would sit at full
-     strength, so it goes. */
+  /* A glow fades a still shadow on its ::after (#266): its loop stops like the others, and
+     the shadow stays, steady at half strength, so the emphasis isn't lost. */
   [class*="cui-alert--glow"]::after,
   [class*="cui-toast--glow"]::after {
     animation: none !important;
-    opacity: 0;
+    opacity: 0.5;
   }
 
   /* 5. Spinners: no spin, but a dimmed glyph still says "loading". Their moving parts are
