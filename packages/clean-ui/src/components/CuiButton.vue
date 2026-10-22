@@ -237,6 +237,14 @@ const buttonStyle = computed(() => {
   transform: scale(var(--cui-press-scale, 0.97));
 }
 
+/* In the rule rather than only on the token, so a consumer's --cui-press-scale can't turn
+   the press back on for someone who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  :where(.cui-button:active) {
+    transform: none;
+  }
+}
+
 :where(.cui-button:focus-visible) {
   outline: 2px solid var(--cui-button-focus-ring, var(--_button-focus-ring));
   outline-offset: 2px;

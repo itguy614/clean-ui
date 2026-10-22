@@ -74,11 +74,11 @@ onUnmounted(() => {
 
 function dismiss() {
   mounted.value = false;
-  // Wait for the exit animation (#261), read where it runs.
+  // Wait for the exit animation (#261), read where it runs. `entrance="none"` has none.
   setTimeout(() => {
     visible.value = false;
     emit("dismiss");
-  }, motionDuration("slow", rootEl.value));
+  }, props.entrance === "none" ? 0 : motionDuration("slow", rootEl.value));
 }
 
 const alertStyle = computed(() => {

@@ -12,6 +12,8 @@ export const MOTION_DURATIONS = {
 
 export type MotionDuration = keyof typeof MOTION_DURATIONS;
 
+import { warnOnce } from "./devWarn";
+
 /** A CSS time — `150ms`, `0.2s` — in ms; null for anything else. */
 function parseTime(value: string): number | null {
   const m = /^(-?\d*\.?\d+)(ms|s)$/.exec(value.trim());
@@ -30,5 +32,14 @@ function parseTime(value: string): number | null {
 export function motionDuration(name: MotionDuration, el?: Element | null): number {
   const fallback = MOTION_DURATIONS[name];
   if (typeof window === "undefined") return fallback;
-  return parseTime(getComputedStyle(el ?? document.documentElement).getPropertyValue(`--cui-duration-${name}`)) ?? fallback;
+  const raw = getComputedStyle(el ?? document.documentElement).getPropertyValue(`--cui-duration-${name}`).trim();
+  if (!raw) return fallback;
+  const ms = parseTime(raw);
+  if (ms === null) {
+    // A custom property's computed value keeps `calc()` and `var()` unresolved, so JS can't
+    // read one; the CSS still animates over it, and the wait would no longer match.
+    warnOnce(`[clean-ui] --cui-duration-${name} is "${raw}": set it to a plain time (150ms, 0.2s) so JavaScript waits can match it. Using ${fallback}ms.`);
+    return fallback;
+  }
+  return ms;
 }

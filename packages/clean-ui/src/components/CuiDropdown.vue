@@ -75,7 +75,7 @@ function close() {
   closeAnimTimer = setTimeout(() => {
     isOpen.value = false;
     isClosing.value = false;
-  }, motionDuration("fast", [...menuPanels(dropdownId)][0] ?? wrapperRef.value));
+  }, motionDuration("fast", menuPanels(dropdownId)[Symbol.iterator]().next().value ?? wrapperRef.value));
 }
 
 function toggle() {

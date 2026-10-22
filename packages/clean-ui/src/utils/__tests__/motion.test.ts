@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { motionDuration, MOTION_DURATIONS, type MotionDuration } from "../motion";
@@ -32,8 +32,11 @@ describe("motion tokens", () => {
     el.remove();
   });
 
-  it("ignores a value that isn't a time", () => {
+  it("warns about a value that isn't a plain time, and falls back", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     document.documentElement.style.setProperty("--cui-duration-slow", "calc(2 * 100ms)");
     expect(motionDuration("slow")).toBe(MOTION_DURATIONS.slow);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("--cui-duration-slow"));
+    warn.mockRestore();
   });
 });

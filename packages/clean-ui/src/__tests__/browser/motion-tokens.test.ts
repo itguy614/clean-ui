@@ -5,6 +5,7 @@ import { installTokens, mountHosts } from "./helpers";
 import CuiToggle from "../../components/CuiToggle.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiButtonGroup from "../../components/CuiButtonGroup.vue";
+import CuiInputStepper from "../../components/CuiInputStepper.vue";
 import { h } from "vue";
 import { motionDuration } from "../../utils/motion";
 
@@ -44,5 +45,12 @@ describe("motion tokens (real browser)", () => {
     expect(getComputedStyle(alone).transitionProperty).toContain("transform");
     expect(getComputedStyle(alone).getPropertyValue("--cui-press-scale").trim()).toBe("0.97");
     expect(getComputedStyle(grouped).getPropertyValue("--cui-press-scale").trim()).toBe("1");
+  });
+
+  it("turns the press off on CuiInputStepper's flush buttons too", () => {
+    const host = dom.host();
+    dom.track(mount(CuiInputStepper, { props: { modelValue: 1 }, attachTo: host }));
+    const button = host.querySelector<HTMLElement>(".cui-button")!;
+    expect(getComputedStyle(button).getPropertyValue("--cui-press-scale").trim()).toBe("1");
   });
 });

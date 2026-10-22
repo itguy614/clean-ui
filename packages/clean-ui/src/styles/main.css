@@ -376,7 +376,9 @@
    MOTION (#261)
    Durations and easings for every component transition and animation. Override on
    `:root` or a container: a snappier or calmer library is one block of tokens, not
-   `!important` on dozens of rules. JS waits read the same values through
+   `!important` on dozens of rules. (Menus, popovers, tooltips, modals and slideovers are
+   teleported to <body>, so only `:root` reaches them.) Durations must be plain times,
+   `150ms` or `0.2s`: JS can't resolve a `calc()` in a custom property. JS waits read the same values through
    `motionDuration()` (utils/motion.ts), so a timer and its CSS can't drift apart.
      press   — a button press, a toggle knob, a menu row's hover
      fast    — tooltips, small popovers, colour changes, and every exit

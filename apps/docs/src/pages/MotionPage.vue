@@ -170,7 +170,11 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           <code class="cui-code">motionDuration(name, el?)</code> returns a duration token's
           value in milliseconds, as it resolves on <code class="cui-code">el</code> (the document
           root by default). Use it for any wait that has to match a CSS animation, so the two
-          can't drift apart. It falls back to the default under server rendering.
+          can't drift apart. It falls back to the default under server rendering. Set the
+          tokens to plain times, such as <code class="cui-code">150ms</code> or
+          <code class="cui-code">0.2s</code>: a <code class="cui-code">calc()</code> stays
+          unresolved in a custom property, so JavaScript can't read it, and you'll get a
+          console warning.
           <code class="cui-code">MOTION_DURATIONS</code> holds the defaults.
         </p>
         <pre class="cui-pre" style="margin-top: 0.75rem;"><code class="cui-code">{{ jsCode }}</code></pre>
