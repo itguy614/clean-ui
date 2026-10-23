@@ -379,3 +379,84 @@ describe("CuiTabs keyboard with every tab disabled", () => {
     wrapper.unmount();
   });
 });
+
+// #269 — a tab switch from the keyboard is a hundred-times-a-day action: no panel
+// transition, and the bar scrolls at once. A click still animates.
+describe("CuiTabs motion by input", () => {
+  const host = () =>
+    mount(
+      defineComponent({
+        components: { CuiTabs, CuiTab },
+        setup: () => ({ active: ref("one") }),
+        template: `<CuiTabs v-model="active" transition="fade" :keep-alive="false">
+          <CuiTab value="one" label="One">1</CuiTab><CuiTab value="two" label="Two">2</CuiTab><CuiTab value="three" label="Three">3</CuiTab>
+        </CuiTabs>`,
+      }),
+      { attachTo: document.body },
+    );
+  const panel = () => document.querySelector<HTMLElement>('[role="tabpanel"]')!;
+
+  it("shows a panel reached by the keyboard with no transition", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    expect(panel().textContent).toBe("2");
+    expect(panel().classList.contains("cui-tab-fade")).toBe(false);
+    expect(w.get(".cui-tabs").attributes("data-keyed"), "the tab buttons change at once too").toBe("true");
+
+    await tabs[2].trigger("click");
+    await w.vm.$nextTick();
+    expect(panel().textContent).toBe("3");
+    expect(panel().classList.contains("cui-tab-fade"), "a click animates").toBe(true);
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBeUndefined();
+    w.unmount();
+  });
+
+  it("doesn't replay the panel's transition on Enter, or a click on the active tab", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    const shown = panel();
+    // Enter on a tab button is a click on it, the active one.
+    await tabs[1].trigger("click");
+    await w.vm.$nextTick();
+    expect(panel()).toBe(shown);
+    expect(shown.classList.contains("cui-tab-fade")).toBe(false);
+    w.unmount();
+  });
+
+  it("fades the tab buttons again once a pointer moves over the bar", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBe("true");
+    await w.get('[role="tablist"]').trigger("pointermove");
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBeUndefined();
+    expect(panel().classList.contains("cui-tab-fade"), "and the panel isn't replayed").toBe(false);
+    w.unmount();
+  });
+
+  it("scrolls the bar at once for a keyboard switch", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const scroller = w.get(".cui-scroll-area__scroller").element as HTMLElement;
+    const scrollBy = vi.fn();
+    scroller.scrollBy = scrollBy as never;
+    Object.defineProperty(scroller, "clientWidth", { value: 100 });
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[1].element as HTMLElement).getBoundingClientRect = () => ({ left: 300, right: 400, top: 0, bottom: 30, width: 100, height: 30, x: 300, y: 0, toJSON() {} });
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    expect(scrollBy).toHaveBeenCalled();
+    expect(scrollBy.mock.calls[0][0].behavior).toBe("instant");
+    w.unmount();
+  });
+});

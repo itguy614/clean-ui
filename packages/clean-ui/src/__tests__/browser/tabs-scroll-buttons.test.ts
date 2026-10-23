@@ -131,4 +131,19 @@ describe("CuiTabs scroll buttons (real browser)", () => {
     await userEvent.keyboard("{ArrowRight}");
     expect(document.activeElement).toBe(tab("Profile"));
   });
+
+  // #269 — a slide went the left-to-right, horizontal way whatever the bar's direction.
+  it.each([
+    ["a right-to-left page", { direction: "rtl" }, {}, "cui-tab-slide-right-in"],
+    ["a vertical bar", {}, { orientation: "vertical" }, "cui-tab-slide-down-in"],
+  ] as const)("slides the next panel in from the bar's end in %s", async (_, style, props, keyframes) => {
+    const { root } = mountTabs({ transition: "slide", ...props }, { width: "1200px", ...style });
+    // :dir() follows the dir attribute, as a right-to-left page sets it.
+    if ("direction" in style) root.parentElement!.dir = "rtl";
+    await frames(2);
+    root.querySelector<HTMLElement>('[data-cui-tab-value="Password"]')!.click();
+    await frames(1);
+    const shown = [...root.querySelectorAll<HTMLElement>('[role="tabpanel"]')].find((p) => p.style.display !== "none")!;
+    expect(getComputedStyle(shown).animationName).toMatch(new RegExp(`^${keyframes}`));
+  });
 });

@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **CuiTabs motion follows the input** (#269). A tab reached with the arrow keys shows its
+  panel with no transition, the tab buttons change at once, and the bar scrolls to it
+  instantly. A click or a `v-model` change animates as before. A `slide` transition comes in
+  from the bar's end: from the left in a right-to-left page, from below in a vertical bar.
 - CuiAccordion, CuiTabs and CuiTreeView share one keyboard-navigation helper (#289), as the
   menus already did. CuiTreeView's type-ahead now forgets what was typed after 500ms rather
   than 600ms, and typing one letter repeatedly cycles through the items starting with it.

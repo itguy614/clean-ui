@@ -58,7 +58,8 @@ onUnmounted(() => {
 
 // Transition class
 const transitionName = computed(() => {
-  if (ctx.transition.value === "none") return undefined;
+  // None for a switch from the keyboard (#269): arrowing along the bar is too frequent.
+  if (ctx.transition.value === "none" || ctx.keyed?.value) return undefined;
   if (ctx.transition.value === "slide") {
     return ctx.slideDirection?.value === "right" ? "cui-tab-slide-right" : "cui-tab-slide-left";
   }
@@ -123,6 +124,46 @@ const transitionName = computed(() => {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* Forward is toward the bar's end: from the left in a right-to-left page, from below in a
+   vertical bar (#269). Only the keyframes change; each keeps its rule's duration. */
+.cui-tab-slide-left:dir(rtl) {
+  animation-name: cui-tab-slide-right-in;
+}
+
+.cui-tab-slide-right:dir(rtl) {
+  animation-name: cui-tab-slide-left-in;
+}
+
+.cui-tabs--vertical .cui-tab-slide-left {
+  animation-name: cui-tab-slide-down-in;
+}
+
+.cui-tabs--vertical .cui-tab-slide-right {
+  animation-name: cui-tab-slide-up-in;
+}
+
+@keyframes cui-tab-slide-down-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cui-tab-slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
