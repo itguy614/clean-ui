@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **CuiCombobox and CuiTagInput keep the highlight on its option** when the list changes
+  under it (#346): an option added above it (a "Favorites" section), the query clearing
+  after a multiple selection, async results arriving. The highlight used to be cleared on
+  any change, and before 1.4 it stayed on the same index, which was then a different
+  option, so Enter picked the wrong one. It now follows the option by value, and clears
+  only when that option has gone or is disabled.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added

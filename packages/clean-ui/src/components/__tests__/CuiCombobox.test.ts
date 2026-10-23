@@ -192,3 +192,45 @@ describe("CuiCombobox", () => {
     });
   });
 });
+
+// #346 — the highlight was an index: inserting an option above it (a "Favorites" section)
+// moved it onto a different option, and Enter selected that one.
+describe("CuiCombobox highlight when the list changes", () => {
+  const highlighted = () => {
+    const id = document.querySelector("input")!.getAttribute("aria-activedescendant");
+    return id ? document.getElementById(id)?.textContent?.trim() : undefined;
+  };
+
+  async function openOnBanana() {
+    const w = mount(CuiCombobox, { props: { options: OPTIONS }, attachTo: document.body });
+    const input = w.find("input");
+    await input.trigger("focus");
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(highlighted()).toBe("Banana");
+    return w;
+  }
+
+  it("stays on the same option when one is added above it", async () => {
+    const w = await openOnBanana();
+    await w.setProps({ options: [{ value: "fav-cherry", label: "★ Cherry" }, ...OPTIONS] });
+    await nextTick();
+    expect(highlighted()).toBe("Banana");
+    await w.find("input").trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")?.at(-1)).toEqual(["banana"]);
+  });
+
+  it("clears when the highlighted option leaves the list", async () => {
+    const w = await openOnBanana();
+    await w.setProps({ options: OPTIONS.filter((o) => o.value !== "banana") });
+    await nextTick();
+    expect(highlighted()).toBeUndefined();
+  });
+
+  it("clears when the option it was on is now disabled", async () => {
+    const w = await openOnBanana();
+    await w.setProps({ options: OPTIONS.map((o) => (o.value === "banana" ? { ...o, disabled: true } : o)) });
+    await nextTick();
+    expect(highlighted()).toBeUndefined();
+  });
+});

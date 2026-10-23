@@ -179,3 +179,18 @@ export function useListbox(options: UseListboxOptions) {
 
   return { listboxId, labelId, optionId, inputAttrs, panelAttrs, announcement, onKeydown, scrollActiveIntoView };
 }
+
+/**
+ * Where the highlight belongs after the option list changes (#346): on the option it was on,
+ * found again by value, or nowhere (-1) if that option has gone or is now disabled. The
+ * highlight is an index, and so is the option id the input names, so the same index after
+ * a change (a section added above, async results) would be a different option.
+ */
+export function followHighlight<T extends { value: unknown; disabled?: boolean }>(
+  next: readonly T[],
+  prev: readonly T[] | undefined,
+  index: number,
+): number {
+  const was = prev?.[index];
+  return was ? next.findIndex((o) => o.value === was.value && !o.disabled) : -1;
+}
