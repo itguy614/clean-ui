@@ -13,6 +13,7 @@ import type { HideableProps, ColorableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
 import { scrollIntoViewWithin } from "../utils/scroll";
+import { useListNavigation } from "../composables/useListNavigation";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -130,46 +131,34 @@ useTabsProvider({
   slideDirection,
 });
 
-// Keyboard navigation
+// Keyboard navigation: the shared index maths (#289), wrapping at the ends as tabs always
+// have. In a right-to-left page ArrowLeft goes on to the next tab, the way the bar reads.
+const nav = useListNavigation({
+  wrap: () => true,
+  orientation: () => props.orientation,
+  rtl: () => !!barRef.value && getComputedStyle(barRef.value).direction === "rtl",
+});
+
 function onKeydown(e: KeyboardEvent) {
-  const enabledTabs = tabs.value.filter((t) => !t.disabled);
-  const currentIdx = enabledTabs.findIndex((t) => t.value === activeTab.value);
-  if (currentIdx < 0) return;
-
-  const isHorizontal = props.orientation === "horizontal";
-  const nextKey = isHorizontal ? "ArrowRight" : "ArrowDown";
-  const prevKey = isHorizontal ? "ArrowLeft" : "ArrowUp";
-
-  let nextIdx = -1;
-
-  if (e.key === nextKey) {
-    e.preventDefault();
-    nextIdx = currentIdx < enabledTabs.length - 1 ? currentIdx + 1 : 0;
-  } else if (e.key === prevKey) {
-    e.preventDefault();
-    nextIdx = currentIdx > 0 ? currentIdx - 1 : enabledTabs.length - 1;
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    nextIdx = 0;
-  } else if (e.key === "End") {
-    e.preventDefault();
-    nextIdx = enabledTabs.length - 1;
-  }
-
-  if (nextIdx >= 0) {
-    const target = enabledTabs[nextIdx].value;
-    const changed = target !== activeTab.value;
-    activate(target);
-    nextTick(() => {
-      // focus() would do its own instant scroll-into-view, interrupting the
-      // activeTab watcher's smooth one mid-animation and stopping with the tab
-      // half clipped (#235). So focus without scrolling, and leave the scroll
-      // to the watcher — which only fires on a change, so an already-active
-      // tab (Home on the first, End on the last) scrolls here instead.
-      tabElement(target)?.focus({ preventScroll: true });
-      if (!changed) scrollActiveIntoView();
-    });
-  }
+  const list = tabs.value;
+  const from = list.findIndex((t) => t.value === activeTab.value);
+  if (from < 0) return;
+  const to = nav.indexForKey(e, from, { count: list.length, isDisabled: (i) => !!list[i].disabled });
+  // -1: Home or End with every tab disabled.
+  if (to === null || to < 0) return;
+  e.preventDefault();
+  const target = list[to].value;
+  const changed = target !== activeTab.value;
+  activate(target);
+  nextTick(() => {
+    // focus() would do its own instant scroll-into-view, interrupting the
+    // activeTab watcher's smooth one mid-animation and stopping with the tab
+    // half clipped (#235). So focus without scrolling, and leave the scroll
+    // to the watcher — which only fires on a change, so an already-active
+    // tab (Home on the first, End on the last) scrolls here instead.
+    tabElement(target)?.focus({ preventScroll: true });
+    if (!changed) scrollActiveIntoView();
+  });
 }
 
 // --- Overflow scrolling ---

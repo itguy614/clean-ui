@@ -118,4 +118,17 @@ describe("CuiTabs scroll buttons (real browser)", () => {
     await userEvent.keyboard("{ArrowRight}");
     expect(root.querySelector('[aria-selected="true"]')?.textContent).toContain("Digest emails");
   });
+
+  // #289 — the shared index maths reads the bar's direction: ArrowLeft goes on to the
+  // next tab in a right-to-left page, the way the bar reads.
+  it("moves to the next tab with ArrowLeft in a right-to-left page", async () => {
+    const { root } = mountTabs({}, { width: "1200px", direction: "rtl" });
+    await frames(2);
+    const tab = (label: string) => root.querySelector<HTMLElement>(`[data-cui-tab-value="${label}"]`)!;
+    tab("Profile").focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(document.activeElement).toBe(tab("Digest emails"));
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(tab("Profile"));
+  });
 });

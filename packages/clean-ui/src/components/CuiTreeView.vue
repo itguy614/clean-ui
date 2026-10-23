@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, useTemplateRef } from "vue";
 import CuiTreeNode from "./CuiTreeNode.vue";
 import type { HideableProps, SizeableProps } from "../types/common";
 import { scaleDensity, scaleControlHeight, clampSize } from "../utils/sizing";
+import { useListNavigation } from "../composables/useListNavigation";
 
 export interface TreeNode {
   /** Unique identifier */
@@ -196,39 +197,40 @@ function focusItem(id: string | number | null) {
   nextTick(() => elementFor(id)?.focus());
 }
 
-/** Move the roving focus by an offset through the visible, non-disabled items. */
-function moveFocus(offset: number) {
-  const items = focusableItems.value;
-  if (items.length === 0) return;
-  const current = items.findIndex((item) => item.node.id === activeId.value);
-  const next = Math.min(items.length - 1, Math.max(0, (current === -1 ? 0 : current) + offset));
-  focusItem(items[next].node.id);
-}
-
 function currentItem(): VisibleItem | undefined {
   return visibleItems.value.find((item) => item.node.id === activeId.value);
 }
 
-/** Type-ahead: jump to the next item whose label starts with what was typed. */
-let typeAhead = "";
-let typeAheadTimer: ReturnType<typeof setTimeout> | null = null;
+// Up/Down/Home/End and type-ahead through the visible, non-disabled items: the shared
+// index maths (#289). No wrap; Left and Right are the tree's own (expand, collapse, step
+// in and out), handled below.
+const nav = useListNavigation({ typeahead: () => true });
 
-function onTypeAhead(char: string) {
-  if (typeAheadTimer) clearTimeout(typeAheadTimer);
-  typeAhead += char.toLowerCase();
-  typeAheadTimer = setTimeout(() => { typeAhead = ""; }, 600);
-
+/**
+ * Into an open parent: the first focusable item inside it, the one after it in order. A
+ * disabled first child is skipped, and an expanded one's own children count. Nothing when
+ * every one is disabled: the next item would be outside it.
+ */
+function focusFirstChild(id: string | number) {
   const items = focusableItems.value;
-  const start = items.findIndex((item) => item.node.id === activeId.value);
-  // Search from the item after the current one, wrapping, so repeatedly typing
-  // the same letter cycles through the matches rather than sticking on one.
-  for (let i = 1; i <= items.length; i++) {
-    const item = items[(start + i) % items.length];
-    if (item.node.label.toLowerCase().startsWith(typeAhead)) {
-      focusItem(item.node.id);
-      return;
-    }
-  }
+  const next = items[items.findIndex((item) => item.node.id === id) + 1];
+  if (next && isInside(next, id)) focusItem(next.node.id);
+}
+
+function isInside(item: VisibleItem, ancestor: string | number): boolean {
+  const parentOf = new Map(visibleItems.value.map((v) => [v.node.id, v.parentId]));
+  for (let p = item.parentId; p != null; p = parentOf.get(p) ?? null) if (p === ancestor) return true;
+  return false;
+}
+
+/** The roving focus's move for `e`, if it is one. */
+function navigate(e: KeyboardEvent): boolean {
+  const items = focusableItems.value;
+  const from = items.findIndex((item) => item.node.id === activeId.value);
+  const to = nav.indexForKey(e, from, { count: items.length, label: (i) => items[i].node.label });
+  if (to === null || to < 0) return false;
+  focusItem(items[to].node.id);
+  return true;
 }
 
 function onTreeKeydown(e: KeyboardEvent) {
@@ -238,34 +240,18 @@ function onTreeKeydown(e: KeyboardEvent) {
   const isExpanded = expandedSet.value.has(node.id);
 
   switch (e.key) {
-    case "ArrowDown":
-      e.preventDefault();
-      moveFocus(1);
-      break;
-    case "ArrowUp":
-      e.preventDefault();
-      moveFocus(-1);
-      break;
     case "ArrowRight":
       e.preventDefault();
       // Collapsed parent opens; already-open parent steps into its first child;
       // a leaf does nothing.
       if (hasChildren && !isExpanded) setNodeExpanded(node.id, true);
-      else if (hasChildren && isExpanded) moveFocus(1);
+      else if (hasChildren && isExpanded) focusFirstChild(node.id);
       break;
     case "ArrowLeft":
       e.preventDefault();
       // Open parent closes; anything else steps out to its parent.
       if (hasChildren && isExpanded) setNodeExpanded(node.id, false);
       else if (parentId != null) focusItem(parentId);
-      break;
-    case "Home":
-      e.preventDefault();
-      if (focusableItems.value.length) focusItem(focusableItems.value[0].node.id);
-      break;
-    case "End":
-      e.preventDefault();
-      if (focusableItems.value.length) focusItem(focusableItems.value[focusableItems.value.length - 1].node.id);
       break;
     case "Enter":
     case " ":
@@ -284,10 +270,10 @@ function onTreeKeydown(e: KeyboardEvent) {
       break;
     }
     default:
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        onTypeAhead(e.key);
-      }
+      if (navigate(e)) e.preventDefault();
+      // A letter matching nothing is still the tree's: it mustn't scroll or reach the page.
+      // (The modifier rule is useListNavigation's: those keys are someone else's.)
+      else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) e.preventDefault();
   }
 }
 

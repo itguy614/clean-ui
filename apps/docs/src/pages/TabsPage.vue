@@ -111,7 +111,8 @@ function resetTabs() {
         <li>
           <strong>Arrow keys move between tabs</strong>, wrapping at both ends —
           <code>ArrowRight</code>/<code>ArrowLeft</code> when horizontal,
-          <code>ArrowDown</code>/<code>ArrowUp</code> when vertical.
+          <code>ArrowDown</code>/<code>ArrowUp</code> when vertical. In a right-to-left page
+          <code>ArrowLeft</code> goes on to the next tab, the way the bar reads.
           <code>Home</code> goes to the first tab, <code>End</code> to the last. Disabled
           tabs are skipped.
         </li>

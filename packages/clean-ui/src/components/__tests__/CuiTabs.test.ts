@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { defineComponent, ref } from "vue";
 import CuiTabs from "../CuiTabs.vue";
 import CuiTab from "../CuiTab.vue";
+import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
 function isShown(el: Element): boolean {
   return (el as HTMLElement).style.display !== "none";
@@ -332,6 +333,49 @@ describe("CuiTabs inside a form", () => {
     await wrapper.findAll('[role="tab"]')[1].trigger("click");
     await wrapper.get(".cui-tabs__tab-close").trigger("click");
     expect(onSubmit).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+});
+
+// #289 — the shared index maths: one tab stop, arrows wrapping at the ends.
+const threeTabs = () =>
+  defineComponent({
+    components: { CuiTabs, CuiTab },
+    setup: () => ({ active: ref("one") }),
+    template: `
+      <div>
+        <CuiTabs v-model="active">
+          <CuiTab value="one" label="One">1</CuiTab>
+          <CuiTab value="two" label="Two">2</CuiTab>
+          <CuiTab value="three" label="Three">3</CuiTab>
+        </CuiTabs>
+      </div>
+    `,
+  });
+
+describeRovingFocusContract("CuiTabs", {
+  mount: () => mount(threeTabs(), { attachTo: document.body }),
+  items: () => [...document.querySelectorAll<HTMLElement>('[role="tab"]')],
+  orientation: "horizontal",
+  wrap: true,
+});
+
+describe("CuiTabs keyboard with every tab disabled", () => {
+  it("does nothing on Home or End, rather than throwing", async () => {
+    const errors: unknown[] = [];
+    const wrapper = mount(
+      defineComponent({
+        components: { CuiTabs, CuiTab },
+        setup: () => ({ active: ref("one") }),
+        template: `<CuiTabs v-model="active"><CuiTab value="one" label="One" disabled>1</CuiTab><CuiTab value="two" label="Two" disabled>2</CuiTab></CuiTabs>`,
+      }),
+      { attachTo: document.body, global: { config: { errorHandler: (err) => errors.push(err) } } },
+    );
+    await wrapper.vm.$nextTick();
+    for (const key of ["Home", "End"]) {
+      wrapper.get('[role="tablist"]').element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    }
+    expect(errors).toEqual([]);
     wrapper.unmount();
   });
 });
