@@ -58,9 +58,10 @@ export function useListbox(options: UseListboxOptions) {
 
   const labelId = `${id}-label`;
   const listboxId = `${id}-listbox`;
-  // By position in the list as it is now. The component resets the highlight when the list
-  // changes under it (typing), so an id never names a different option than it did; a
-  // grouped list (#216) must still count options flat, never by DOM or group position.
+  // By position in the list as it is now. When the list changes under the highlight, the
+  // component moves the index to the option it was on (followHighlight, #346) or clears it,
+  // so the id the input names is always the highlighted option's; a grouped list (#216) must
+  // still count options flat, never by DOM or group position.
   const optionId = (i: number) => `${id}-option-${i}`;
 
   const labelledby = computed(() => options.labelledby?.() ?? (options.hasLabel() ? labelId : undefined));
@@ -184,7 +185,9 @@ export function useListbox(options: UseListboxOptions) {
  * Where the highlight belongs after the option list changes (#346): on the option it was on,
  * found again by value, or nowhere (-1) if that option has gone or is now disabled. The
  * highlight is an index, and so is the option id the input names, so the same index after
- * a change (a section added above, async results) would be a different option.
+ * a change (a section added above, async results) would be a different option. Watch a copy
+ * of the list (`() => list.value.slice()`), so a change made in place is seen, and `prev` is
+ * the list as it was.
  */
 export function followHighlight<T extends { value: unknown; disabled?: boolean }>(
   next: readonly T[],

@@ -282,7 +282,14 @@ const listbox = useListbox({
 // names: when the list changes under it (a section added above, the query clearing after a
 // multiple selection, async results arriving) the same index is a different option. Keep it
 // on the option it was on, found again by value, or clear it when that option has gone (#346).
-watch(filteredOptions, (next, prev) => (focusedIndex.value = followHighlight(next, prev, focusedIndex.value)));
+watch(
+  () => filteredOptions.value.slice(),
+  (next, prev) => {
+    focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
+    // Pushed down (or up) by the change: keep it in sight.
+    if (focusedIndex.value >= 0) listbox.scrollActiveIntoView();
+  },
+);
 
 // Open/close
 function openDropdown() {

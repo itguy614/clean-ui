@@ -257,7 +257,13 @@ const listbox = useListbox({
 
 // As in CuiCombobox (#346): a changed list keeps the highlight on the suggestion it was on,
 // rather than the same index, which would be a different one.
-watch(filteredSuggestions, (next, prev) => (focusedIndex.value = followHighlight(next, prev, focusedIndex.value)));
+watch(
+  () => filteredSuggestions.value.slice(),
+  (next, prev) => {
+    focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
+    if (focusedIndex.value >= 0) listbox.scrollActiveIntoView();
+  },
+);
 
 function onKeydown(e: KeyboardEvent) {
   // The Enter confirming an IME composition must not create a tag from it.

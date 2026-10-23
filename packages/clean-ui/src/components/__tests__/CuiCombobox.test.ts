@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
-import { nextTick } from "vue";
+import { nextTick, reactive } from "vue";
 import CuiCombobox from "../CuiCombobox.vue";
 import type { ComboboxOption } from "../CuiCombobox.vue";
 
@@ -218,6 +218,19 @@ describe("CuiCombobox highlight when the list changes", () => {
     expect(highlighted()).toBe("Banana");
     await w.find("input").trigger("keydown", { key: "Enter" });
     expect(w.emitted("update:modelValue")?.at(-1)).toEqual(["banana"]);
+  });
+
+  it("stays on the same option when the list is changed in place", async () => {
+    const options = reactive([...OPTIONS]);
+    const w = mount(CuiCombobox, { props: { options }, attachTo: document.body });
+    const input = w.find("input");
+    await input.trigger("focus");
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(highlighted()).toBe("Banana");
+    options.unshift({ value: "fav", label: "★ Favourite" });
+    await nextTick();
+    expect(highlighted()).toBe("Banana");
   });
 
   it("clears when the highlighted option leaves the list", async () => {
