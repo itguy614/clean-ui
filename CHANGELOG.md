@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Tailwind is optional** (#371): the README and the Installation page now say so outright.
+  The one stylesheet import is all Clean-UI needs, and there's no reason to add its `dist`
+  to Tailwind's `@source`.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added

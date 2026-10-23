@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CuiStack } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardBody, CuiStack } from "@itguy614/clean-ui";
 </script>
 
 <template>
@@ -27,6 +27,17 @@ import '@itguy614/clean-ui/styles'
 const app = createApp(App)
 app.use(createCleanUI())
 app.mount('#app')</code></pre>
+      <CuiCard variant="outline" class="mt-4">
+        <CuiCardBody>
+          <p class="text-sm">
+            <strong>Tailwind is optional.</strong> That one stylesheet import is everything
+            Clean-UI needs: it ships its own compiled CSS and builds no classes in your app.
+            Use Tailwind for your own markup if you like, but don't add Clean-UI's
+            <code class="cui-code">dist</code> to Tailwind's <code class="cui-code">@source</code>.
+            Scanning it gains nothing and can add unused utilities to your CSS.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
     </div>
 
     <div>
