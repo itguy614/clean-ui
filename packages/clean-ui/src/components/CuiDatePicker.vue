@@ -8,14 +8,19 @@ import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
   MONTH_NAMES, MONTH_NAMES_SHORT, DAY_NAMES_SHORT,
   daysInMonth, isSameDay, isToday,
-  formatDate, parseFormattedDate, formatToMask, formatToRaw,
+  formatDate, parseFormattedDate, formatToMask, formatToRaw, maskedFormat,
   toDateValue, dateToIso,
   type DisabledDateRange,
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 const messages = useMessages();
+// The label prop names the control (#391): a <label> with no `for` names nothing, and the
+// control's aria-labelledby took only the consumer's own id. Both now, label first.
+const labelId = useCuiId("date-picker-label");
+const labelledBy = computed(() => [props.label ? labelId : null, props.ariaLabelledby].filter(Boolean).join(" ") || undefined);
 
 export type DatePickerMode = "date" | "month";
 export type DatePickerValueType = "iso" | "date";
@@ -118,7 +123,8 @@ const inputPlaceholder = computed(() => props.placeholder ?? props.format.toLowe
 // Raw digits for CuiMaskedInput (strips separators from formatted date)
 const inputRaw = computed(() => {
   if (!selectedDate.value) return "";
-  return formatToRaw(formatDate(selectedDate.value, props.format));
+  // Padded as the mask is: a single M or D still takes two digits there.
+  return formatToRaw(formatDate(selectedDate.value, maskedFormat(props.format)));
 });
 
 // Emit the value
@@ -232,6 +238,7 @@ defineExpose({ el: rootEl, focus, blur });
   <div class="cui-date-picker" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
+      :id="labelId"
       :style="{
         display: 'block',
         marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
@@ -260,7 +267,7 @@ defineExpose({ el: rootEl, focus, blur });
         :autocomplete="autocomplete"
         :aria-describedby="ariaDescribedby"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        :aria-labelledby="labelledBy"
         :model-value="inputRaw"
         :mask="mask"
         :placeholder="inputPlaceholder"

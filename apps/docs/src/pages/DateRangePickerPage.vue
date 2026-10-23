@@ -88,12 +88,12 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
       </ul>
 
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The <code>label</code> prop renders plain text with no
-        <code>for</code> attribute, so it names nothing. Wrap the picker in a
-        <code>CuiFormField</code>, or pass <code>aria-labelledby</code> yourself — both
-        land on the start field. The end field takes no <code>id</code> or
-        <code>aria-*</code> of its own, so give the control a single name that covers the
-        pair rather than trying to label each half.
+        <strong>Each field is named</strong> by the <code>label</code> prop plus its half:
+        "Stay Start date" and "Stay End date" (the <code>dateRangePicker.start</code> and
+        <code>.end</code> messages). An <code>aria-labelledby</code> or
+        <code>aria-describedby</code> you pass reaches both. The end field opens the calendar
+        from the keyboard as the start field does, and focus returns to whichever field
+        opened it. The <code>id</code> and <code>name</code> props land on the start field.
       </p>
     </template>
 
@@ -173,6 +173,19 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
           :model-value="{ start: '2025-06-01', end: '2025-06-14' }"
           format="DD/MM/YYYY"
           label="European Format"
+        />
+      </Example>
+
+      <!-- Month names -->
+      <Example title="Month Names (MMMM D, YYYY)" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  format=&quot;MMMM D, YYYY&quot;
+  label=&quot;Long dates&quot;
+/>`">
+        <CuiDateRangePicker
+          :model-value="{ start: '2025-03-05', end: '2025-05-30' }"
+          format="MMMM D, YYYY"
+          label="Long dates"
         />
       </Example>
     </template>

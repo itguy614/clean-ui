@@ -304,6 +304,9 @@ const panelStyle = {
             <strong>The focus trap</strong> is a keydown handler, not a sentinel. It wraps Tab at the
             last focusable element and Shift+Tab at the first, so bind
             <code class="cui-code">onKeydown</code> on an element that contains the dialog.
+            Shift+Tab from the dialog itself, where focus lands on open, goes to the last control.
+            A dialog with nothing focusable keeps focus on itself, and disabled or hidden controls
+            don't count as the ends.
           </li>
           <li>
             <strong>Focus return</strong>: the element focused at open time gets focus back once the

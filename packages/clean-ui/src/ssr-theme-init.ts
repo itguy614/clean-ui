@@ -29,7 +29,7 @@ export const ssrThemeInitScript = `
 (function() {
   try {
     var theme = localStorage.getItem('cui-theme');
-    if (theme && theme !== 'default') {
+    if (theme && theme !== 'default' && theme !== 'navy') {
       document.documentElement.classList.add('cui-theme-' + theme);
     }
   } catch(e) {}

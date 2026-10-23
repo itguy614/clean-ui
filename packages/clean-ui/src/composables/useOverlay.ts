@@ -5,6 +5,7 @@ import { useLayerStack } from "./useLayerStack";
 import { usePresence } from "./usePresence";
 import { warnOnce } from "../utils/devWarn";
 import { motionDuration, type MotionDuration } from "../utils/motion";
+import { tabbableIn } from "../utils/focusable";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -89,8 +90,16 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   let enterFrame: number | null = null;
+  /** `exit: "timer"`'s pending close, cancelled by a re-open mid-exit (#339). */
+  let exitTimer: ReturnType<typeof setTimeout> | null = null;
 
   function openOverlay() {
+    // Re-opened mid-exit: the old timer would still hide it and report a close, and the
+    // consumer's echo of that close would start another.
+    if (exitTimer !== null) {
+      clearTimeout(exitTimer);
+      exitTimer = null;
+    }
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -129,6 +138,9 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   function closeOverlay() {
+    // Already closing, or closed: once is enough. Without this the consumer's v-model echo
+    // of the close, `open` turning false, started a second close and reported it twice (#339).
+    if (!isOpen.value) return;
     // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
     if (enterFrame !== null) {
       cancelAnimationFrame(enterFrame);
@@ -144,7 +156,8 @@ export function useOverlay(options: UseOverlayOptions) {
     }
 
     // Wait for exit animation
-    setTimeout(() => {
+    exitTimer = setTimeout(() => {
+      exitTimer = null;
       isVisible.value = false;
       finishClose();
     }, typeof animationDuration === "number" ? animationDuration : motionDuration(animationDuration, dialogRef.value));
@@ -175,26 +188,28 @@ export function useOverlay(options: UseOverlayOptions) {
   // A persistent overlay still takes the Escape and declines it.
   useLayerStack({ active: isOpen, onEscape: requestClose, modal: true });
 
+  // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339).
   function onKeydown(e: KeyboardEvent) {
-    // Focus trap
-    if (e.key === "Tab" && dialogRef.value) {
-      const focusable = dialogRef.value.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
+    const dialog = dialogRef.value;
+    if (e.key !== "Tab" || !dialog) return;
+    const items = tabbableIn(dialog);
+    // Nothing to tab to: focus stays on the dialog rather than leaving it.
+    if (!items.length) {
+      e.preventDefault();
+      dialog.focus();
+      return;
+    }
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    // On the dialog itself (where it opens), or somehow outside it: Shift+Tab would leave.
+    const atStart = active === first || active === dialog || !dialog.contains(active);
+    if (e.shiftKey && atStart) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
     }
   }
 

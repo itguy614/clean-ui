@@ -14,6 +14,7 @@ import {
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 
 export type DateRangePickerValueType = "iso" | "date";
@@ -86,6 +87,14 @@ const fieldStyle = computed(() => ({
 }));
 
 const messages = useMessages();
+// The label prop names the control (#391): a <label> with no `for` names nothing, and the
+// control's aria-labelledby took only the consumer's own id. Both now, label first.
+// Each input adds which half it is, so the two read "Stay Start date" and "Stay End date".
+const labelId = useCuiId("date-range-picker-label");
+const startNameId = useCuiId("date-range-picker-start");
+const endNameId = useCuiId("date-range-picker-end");
+const labelledBy = (half: string) =>
+  [props.label ? labelId : null, props.ariaLabelledby, half].filter(Boolean).join(" ");
 
 const emit = defineEmits<{
   "update:modelValue": [value: DateRangeValue];
@@ -94,6 +103,9 @@ const emit = defineEmits<{
 // State
 const selecting = ref<"start" | "end">("start");
 const startInputRef = useTemplateRef<HTMLInputElement>("startInput");
+const endInputRef = useTemplateRef<HTMLInputElement>("endInput");
+/** The field the panel was opened from, which focus returns to on close. */
+const openedFrom = ref<"start" | "end">("start");
 const startDate = ref<Date | null>(null);
 const endDate = ref<Date | null>(null);
 const hoverDate = ref<Date | null>(null);
@@ -133,7 +145,8 @@ const {
   anchor: () => startDate.value,
   selectDay: (date) => selectDay({ date, disabled: isDisabled(date) }),
   selectMonth,
-  focusTrigger: () => startInputRef.value?.focus({ preventScroll: true }),
+  // Back to whichever field opened it (#391): the end field opens the panel too.
+  focusTrigger: () => (openedFrom.value === "end" ? endInputRef.value : startInputRef.value)?.focus({ preventScroll: true }),
   onOpen: () => {
     selecting.value = "start";
     hoverDate.value = null;
@@ -282,6 +295,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   <div class="cui-date-range-picker" v-show="!hidden">
     <label
       v-if="label"
+      :id="labelId"
       :style="{
         display: 'block',
         marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
@@ -319,13 +333,14 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
         <CuiIcon name="calendar-blank" size="0.875rem" style="color: var(--cui-text-tertiary); flex-shrink: 0;" />
         <input
           ref="startInput"
+          @focus="openedFrom = 'start'"
           @keydown="onFieldKeydown"
           :id="id"
           :name="name"
           :autocomplete="autocomplete"
           :aria-describedby="ariaDescribedby"
           :aria-required="ariaRequired || undefined"
-          :aria-labelledby="ariaLabelledby"
+          :aria-labelledby="labelledBy(startNameId)"
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly
@@ -333,7 +348,17 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :style="fieldStyle"
         />
         <span :style="{ color: 'var(--cui-text-tertiary)', fontSize: '0.75rem', flexShrink: '0' }">{{ separator }}</span>
+        <!-- The end input was focusable but unnamed and deaf to keys (#391): it takes the
+             start input's keys, and its own name. -->
+        <!-- hidden: aria-labelledby still reads them, and browse mode doesn't read them as text. -->
+        <span :id="startNameId" hidden>{{ messages.dateRangePicker.start ?? messages.dateRangePicker.selectStart }}</span>
+        <span :id="endNameId" hidden>{{ messages.dateRangePicker.end ?? messages.dateRangePicker.selectEnd }}</span>
         <input
+          ref="endInput"
+          @keydown="onFieldKeydown"
+          @focus="openedFrom = 'end'"
+          :aria-labelledby="labelledBy(endNameId)"
+          :aria-describedby="ariaDescribedby"
           :value="endDisplay"
           :placeholder="endPlaceholder || props.format.toLowerCase()"
           readonly

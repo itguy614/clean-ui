@@ -16,7 +16,7 @@ and overridable at every level via CSS custom properties.
 - **8 built-in themes** + light/dark mode, all driven by `--cui-*` custom properties you can override on any scope.
 - **Accessible first** — WCAG AA contrast targets, ARIA attributes, keyboard navigation, focus management.
 - **TypeScript** — full type definitions; shared `CuiColor` / `CuiSize` / `CuiRounded` prop types across components.
-- **Tailwind CSS v4 compatible** — color scales registered via `@theme` so Tailwind utilities work alongside the components.
+- **Works with or without Tailwind** — no Tailwind needed in your app; if you use Tailwind CSS v4, the color scales are registered via `@theme` so its utilities match the components.
 - **Tree-shakeable, per-module ESM** — Vue is the only peer dependency. (ESM-only as of 1.0.)
 
 ## Installation
@@ -46,6 +46,11 @@ createApp(App).use(createCleanUI()).mount("#app");
   <CuiButton color="primary" variant="solid">Click me</CuiButton>
 </template>
 ```
+
+**Tailwind is optional.** `import "@itguy614/clean-ui/styles"` is everything Clean-UI
+needs: it ships its own compiled CSS and builds no classes in your app. Use Tailwind for
+your own markup if you like, but don't add Clean-UI's `dist` to Tailwind's `@source`.
+Scanning it gains nothing and can add unused utilities to your CSS.
 
 ### The stylesheet does not reset your page
 

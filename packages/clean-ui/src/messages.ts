@@ -123,7 +123,15 @@ export interface CuiCoreMessages {
     yearRange: (start: number, end: number) => string;
   };
   /** The prompt above the calendar while a range is being picked. */
-  dateRangePicker: { selectStart: string; selectEnd: string };
+  dateRangePicker: {
+    selectStart: string;
+    selectEnd: string;
+    /** The start and end inputs' names, after the picker's label (#391). Optional: without them, selectStart/selectEnd. */
+    start?: string;
+    end?: string;
+  };
+  /** The time picker's hour and minute steppers (#391). Optional, so an existing catalogue type-checks. */
+  timePicker?: { hours: string; minutes: string };
   copyButton: {
     /** Default `tooltip`, and the visible label. */
     copy: string;
@@ -223,6 +231,12 @@ export interface CuiCoreMessages {
     /** "All" option in a select filter. */
     all: string;
     search: string;
+    /**
+     * The search box's accessible name (#373), where it should differ from `search` (its
+     * placeholder, which is no name). Without it the box is named by `search`, less a
+     * trailing ellipsis, so a translated placeholder names it in the same language.
+     */
+    searchLabel?: string;
     /** Placeholder for a per-column filter input. */
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
@@ -237,6 +251,8 @@ export interface CuiCoreMessages {
     saveAs: string;
     save: string;
     viewName: string;
+    /** A saved view's delete button (#373). Optional, so an existing catalogue type-checks. */
+    deleteView?: (name: string) => string;
     resetViews: string;
     /** Described on a clickable row (aria-description), which has no role to say so (#232). */
     rowHint: string;
@@ -314,7 +330,8 @@ export const defaultMessages: CuiCoreMessages = {
     filter: (title) => `Filter ${title}`,
   },
   datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
-  dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date" },
+  dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
+  timePicker: { hours: "Hours", minutes: "Minutes" },
   copyButton: { copy: "Copy", copied: "Copied", copiedTooltip: "Copied!" },
   avatar: { label: "Avatar" },
   spinner: { label: "Loading" },
@@ -372,6 +389,7 @@ export const defaultMessages: CuiCoreMessages = {
     saveAs: "Save as...",
     save: "Save",
     viewName: "View name",
+    deleteView: (name) => `Delete view ${name}`,
     resetViews: "Reset to defaults",
     rowHint: "Press Enter to open",
     selectAll: "Select all rows",
@@ -384,11 +402,13 @@ export const defaultMessages: CuiCoreMessages = {
 };
 
 /** Deep-partial of CuiMessages — function-valued entries are replaced wholesale. */
+// NonNullable: an optional namespace (`timePicker?`, #391) is `{…} | undefined`, which
+// isn't an object, and its keys would all stay required.
 export type DeepPartialMessages = {
-  [K in keyof CuiMessages]?: CuiMessages[K] extends (...args: never[]) => unknown
+  [K in keyof CuiMessages]?: NonNullable<CuiMessages[K]> extends (...args: never[]) => unknown
     ? CuiMessages[K]
-    : CuiMessages[K] extends object
-      ? { [P in keyof CuiMessages[K]]?: CuiMessages[K][P] }
+    : NonNullable<CuiMessages[K]> extends object
+      ? { [P in keyof NonNullable<CuiMessages[K]>]?: NonNullable<CuiMessages[K]>[P] }
       : CuiMessages[K];
 };
 

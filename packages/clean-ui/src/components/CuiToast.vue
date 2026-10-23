@@ -45,8 +45,12 @@ const emit = defineEmits<{
   dismiss: [];
 }>();
 
-// Auto-dismiss timer
-const isPaused = ref(false);
+// Auto-dismiss timer. Paused while the pointer is over the toast or focus is in it: a
+// keyboard or switch user on the dismiss button or an action gets the same time a pointer
+// user does by hovering (#344, WCAG 2.2.1).
+const hovered = ref(false);
+const focused = ref(false);
+const isPaused = computed(() => hovered.value || focused.value);
 const elapsed = ref(0);
 let intervalId: ReturnType<typeof setInterval> | null = null;
 const TICK = 50; // ms
@@ -92,11 +96,16 @@ function dismiss() {
 }
 
 function onMouseEnter() {
-  isPaused.value = true;
+  hovered.value = true;
 }
 
 function onMouseLeave() {
-  isPaused.value = false;
+  hovered.value = false;
+}
+
+function onFocusOut(e: FocusEvent) {
+  // Still inside: focus moved from one of the toast's buttons to another.
+  if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) focused.value = false;
 }
 
 onMounted(() => {
@@ -165,6 +174,8 @@ const messages = useMessages();
     v-bind="liveAttrs"
     @mouseenter="onMouseEnter"
     @mouseleave="onMouseLeave"
+    @focusin="focused = true"
+    @focusout="onFocusOut"
   >
     <!-- Icon -->
     <div v-if="!noIcon" class="cui-toast__icon">

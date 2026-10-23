@@ -36,6 +36,59 @@
   --color-surface-950: oklch(0.196 0.016 270);
 }
 
+/* --- Navy as a class (#330) ---
+   The default theme lives in `@theme` (theme.css) and the dark block above, which a
+   scoped theme overrides for its whole subtree: so `<div class="cui-theme-default">` (or
+   `cui-theme-navy`) inside a Forest page needs the default scale as a class to switch
+   back. The same values as theme.css and the block above, which
+   `styles/__tests__/navy-theme-class.test.ts` holds them to. `useTheme` still adds no
+   class for "default": on the root, `@theme` already is it. */
+.cui-theme-default,
+.cui-theme-navy {
+  --color-primary-50:  oklch(0.97 0.02 270);
+  --color-primary-100: oklch(0.93 0.04 270);
+  --color-primary-200: oklch(0.86 0.08 270);
+  --color-primary-300: oklch(0.74 0.13 270);
+  --color-primary-400: oklch(0.62 0.17 270);
+  --color-primary-500: oklch(0.45 0.18 270);
+  --color-primary-600: oklch(0.40 0.16 270);
+  --color-primary-700: oklch(0.35 0.14 270);
+  --color-primary-800: oklch(0.28 0.11 270);
+  --color-primary-900: oklch(0.22 0.08 270);
+  --color-primary-950: oklch(0.17 0.06 270);
+
+  --color-surface-50:  oklch(0.975 0.005 270);
+  --color-surface-100: oklch(0.945 0.005 270);
+  --color-surface-200: oklch(0.900 0.006 270);
+  --color-surface-300: oklch(0.850 0.008 270);
+  --color-surface-400: oklch(0.780 0.008 270);
+  --color-surface-500: oklch(0.720 0.008 270);
+  --color-surface-600: oklch(0.620 0.010 270);
+  --color-surface-700: oklch(0.500 0.010 270);
+  --color-surface-800: oklch(0.380 0.010 270);
+  --color-surface-900: oklch(0.270 0.010 270);
+  --color-surface-950: oklch(0.196 0.010 270);
+}
+
+.dark .cui-theme-default,
+.cui-theme-default.dark,
+.cui-theme-default .dark,
+.dark .cui-theme-navy,
+.cui-theme-navy.dark,
+.cui-theme-navy .dark {
+  --color-surface-50:  oklch(0.983 0.008 270);
+  --color-surface-100: oklch(0.960 0.008 270);
+  --color-surface-200: oklch(0.900 0.008 270);
+  --color-surface-300: oklch(0.850 0.010 270);
+  --color-surface-400: oklch(0.780 0.010 270);
+  --color-surface-500: oklch(0.720 0.010 270);
+  --color-surface-600: oklch(0.620 0.012 270);
+  --color-surface-700: oklch(0.500 0.012 270);
+  --color-surface-800: oklch(0.380 0.014 270);
+  --color-surface-900: oklch(0.270 0.016 270);
+  --color-surface-950: oklch(0.196 0.016 270);
+}
+
 /* --- Forest: natural green primary (hue 150) --- */
 .cui-theme-forest {
   --color-primary-50:  #EDF7F0;

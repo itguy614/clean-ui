@@ -1,0 +1,29 @@
+import { describe, it, expect } from "vitest";
+import { mount } from "@vue/test-utils";
+import CuiProgress from "../CuiProgress.vue";
+
+// #390 — an indeterminate bar with show-label showed a percentage there is none of; the
+// circle didn't. Both now hide the default percentage, and both keep a label slot.
+describe("CuiProgress label while indeterminate", () => {
+  it.each(["bar", "circle"] as const)("%s: no percentage", (variant) => {
+    const w = mount(CuiProgress, { props: { variant, indeterminate: true, showLabel: true, value: 40 } });
+    expect(w.text()).not.toContain("%");
+  });
+
+  it.each(["bar", "circle"] as const)("%s: a label slot still shows", (variant) => {
+    const w = mount(CuiProgress, { props: { variant, indeterminate: true }, slots: { label: "Uploading…" } });
+    expect(w.text()).toContain("Uploading…");
+  });
+
+  it("shows the percentage when determinate", () => {
+    const w = mount(CuiProgress, { props: { showLabel: true, value: 40 } });
+    expect(w.text()).toContain("40%");
+  });
+
+  it.each(["bar", "circle"] as const)("%s: a label slot names the progressbar, and there's no value while indeterminate", (variant) => {
+    const w = mount(CuiProgress, { props: { variant, indeterminate: true }, slots: { label: "Uploading…" } });
+    const bar = w.find('[role="progressbar"]');
+    expect(bar.attributes("aria-valuenow")).toBeUndefined();
+    expect(w.find(`#${bar.attributes("aria-labelledby")}`).text()).toBe("Uploading…");
+  });
+});

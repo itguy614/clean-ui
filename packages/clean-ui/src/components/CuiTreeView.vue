@@ -197,6 +197,15 @@ function focusItem(id: string | number | null) {
   nextTick(() => elementFor(id)?.focus());
 }
 
+/** `id`, or the closest of its ancestors that isn't disabled; null if there is none. */
+function enabledAncestor(id: string | number | null): string | number | null {
+  const byId = new Map(visibleItems.value.map((v) => [v.node.id, v]));
+  for (let at = id == null ? undefined : byId.get(id); at; at = at.parentId == null ? undefined : byId.get(at.parentId)) {
+    if (!at.node.disabled) return at.node.id;
+  }
+  return null;
+}
+
 function currentItem(): VisibleItem | undefined {
   return visibleItems.value.find((item) => item.node.id === activeId.value);
 }
@@ -249,9 +258,11 @@ function onTreeKeydown(e: KeyboardEvent) {
       break;
     case "ArrowLeft":
       e.preventDefault();
-      // Open parent closes; anything else steps out to its parent.
+      // Open parent closes; anything else steps out to its parent, or the nearest enabled
+      // one above it: a disabled node can't take focus, and naming it would leave the tab
+      // stop on another node than the one with focus (#390).
       if (hasChildren && isExpanded) setNodeExpanded(node.id, false);
-      else if (parentId != null) focusItem(parentId);
+      else focusItem(enabledAncestor(parentId));
       break;
     case "Enter":
     case " ":
@@ -262,8 +273,9 @@ function onTreeKeydown(e: KeyboardEvent) {
       break;
     case "*": {
       e.preventDefault();
-      // Expand every sibling at this level, per the APG tree pattern.
-      const siblings = visibleItems.value.filter((i) => i.parentId === parentId && i.hasChildren);
+      // Expand every sibling at this level, per the APG tree pattern. Not a disabled one,
+      // which nothing could then collapse (#390).
+      const siblings = visibleItems.value.filter((i) => i.parentId === parentId && i.hasChildren && !i.node.disabled);
       if (siblings.length) {
         setExpanded(new Set([...expandedSet.value, ...siblings.map((i) => i.node.id)]));
       }
