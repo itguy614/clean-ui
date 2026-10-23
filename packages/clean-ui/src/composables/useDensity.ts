@@ -39,13 +39,18 @@ function applyDensity(id: DensityId) {
 
   // default == :root baseline, so no class is needed for it.
   if (id !== "default") root.classList.add(`${CLASS_PREFIX}${id}`);
-
-  safeSetItem(STORAGE_KEY, id);
 }
 
-// Apply on init + on change.
-applyDensity(activeDensity.value);
-watch(activeDensity, applyDensity);
+// Importing the library must not touch the page (#389): no rewriting <html>'s density
+// classes, which may be the consumer's own, and no writing to their localStorage. Unlike
+// useTheme, which restores on its first use, a density stored by an earlier setDensity is
+// still restored here, at import (#209 makes it lazy in 2.0); a stored "default" or an
+// invalid value leaves the page as it is. A change persists and applies via the watcher.
+if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
+watch(activeDensity, (id) => {
+  applyDensity(id);
+  safeSetItem(STORAGE_KEY, id);
+});
 
 /**
  * Density management composable. Shared singleton, mirrors `useTheme`.

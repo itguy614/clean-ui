@@ -55,7 +55,10 @@ const selectOptions = [
 &lt;div class="cui-density-comfortable"&gt; … &lt;/div&gt;</code></pre>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
           Or drive it reactively (persists to <code class="cui-code">localStorage</code>, mirrors
-          <code class="cui-code">useTheme</code>):
+          <code class="cui-code">useTheme</code>). Importing the library changes nothing on its
+          own: a density class you put on <code class="cui-code">&lt;html&gt;</code> yourself is
+          left alone, and only a choice made with <code class="cui-code">setDensity</code> is
+          stored and restored:
         </p>
         <pre class="cui-pre" style="margin-top: 0.5rem;"><code class="cui-code">import { useDensity } from "@itguy614/clean-ui";
 const { density, setDensity, presets } = useDensity();
