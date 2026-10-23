@@ -89,11 +89,11 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
 
       <p class="text-surface-700 dark:text-surface-300">
         <strong>Each field is named</strong> by the <code>label</code> prop plus its half:
-        "Stay, Start date" and "Stay, End date" (the <code>dateRangePicker.start</code> and
-        <code>.end</code> messages). An <code>aria-labelledby</code> you pass joins both. The
-        end field opens the calendar from the keyboard as the start field does. The
-        <code>id</code>, <code>name</code> and <code>aria-describedby</code> props still land
-        on the start field.
+        "Stay Start date" and "Stay End date" (the <code>dateRangePicker.start</code> and
+        <code>.end</code> messages). An <code>aria-labelledby</code> or
+        <code>aria-describedby</code> you pass reaches both. The end field opens the calendar
+        from the keyboard as the start field does, and focus returns to whichever field
+        opened it. The <code>id</code> and <code>name</code> props land on the start field.
       </p>
     </template>
 

@@ -354,8 +354,8 @@ defineExpose({ el: rootEl, focus, blur });
           :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
         >
           <!-- Hours -->
-          <span :id="hoursNameId" class="cui-sr-only">{{ messages.timePicker?.hours }}</span>
-          <span :id="minutesNameId" class="cui-sr-only">{{ messages.timePicker?.minutes }}</span>
+          <span :id="hoursNameId" hidden>{{ messages.timePicker?.hours }}</span>
+          <span :id="minutesNameId" hidden>{{ messages.timePicker?.minutes }}</span>
           <CuiInputStepper
             :aria-labelledby="hoursNameId"
             :model-value="hours"

@@ -402,11 +402,13 @@ export const defaultMessages: CuiCoreMessages = {
 };
 
 /** Deep-partial of CuiMessages — function-valued entries are replaced wholesale. */
+// NonNullable: an optional namespace (`timePicker?`, #391) is `{…} | undefined`, which
+// isn't an object, and its keys would all stay required.
 export type DeepPartialMessages = {
-  [K in keyof CuiMessages]?: CuiMessages[K] extends (...args: never[]) => unknown
+  [K in keyof CuiMessages]?: NonNullable<CuiMessages[K]> extends (...args: never[]) => unknown
     ? CuiMessages[K]
-    : CuiMessages[K] extends object
-      ? { [P in keyof CuiMessages[K]]?: CuiMessages[K][P] }
+    : NonNullable<CuiMessages[K]> extends object
+      ? { [P in keyof NonNullable<CuiMessages[K]>]?: NonNullable<CuiMessages[K]>[P] }
       : CuiMessages[K];
 };
 

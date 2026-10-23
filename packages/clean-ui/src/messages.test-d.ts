@@ -38,3 +38,8 @@ test("CuiConfigProvider's messages prop type-checks a satellite namespace", () =
   const wrongShape: DeepPartialMessages = { exampleSatellite: { greeting: 42 } };
   expectTypeOf(wrongShape).toMatchTypeOf<DeepPartialMessages>();
 });
+
+test("an optional namespace still takes a single key (#391)", () => {
+  const overrides: DeepPartialMessages = { timePicker: { hours: "Stunden" }, dateRangePicker: { start: "Beginn" } };
+  expectTypeOf(overrides).toMatchTypeOf<DeepPartialMessages>();
+});

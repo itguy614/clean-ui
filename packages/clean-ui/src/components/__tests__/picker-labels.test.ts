@@ -40,6 +40,17 @@ describe("picker labels name their controls", () => {
     expect(document.querySelector(".cui-popover__panel, [role='dialog']"), "the end input opens the calendar too").not.toBeNull();
   });
 
+  it("CuiDateRangePicker returns focus to the end field when it opened the calendar", async () => {
+    w = mount(CuiDateRangePicker, { props: { label: "Stay" }, attachTo: document.body });
+    const end = w.findAll("input")[1];
+    (end.element as HTMLInputElement).focus();
+    await end.trigger("focus");
+    await end.trigger("keydown", { key: "ArrowDown" });
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    for (let i = 0; i < 3; i++) await new Promise((r) => requestAnimationFrame(r));
+    expect(document.activeElement).toBe(end.element);
+  });
+
   it("CuiTimePicker's trigger is named by its label, and its steppers are hours and minutes", async () => {
     w = mount(CuiTimePicker, { props: { label: "Start time" }, attachTo: document.body });
     const trigger = w.find('[role="combobox"]');
