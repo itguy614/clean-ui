@@ -41,11 +41,12 @@ function applyDensity(id: DensityId) {
   if (id !== "default") root.classList.add(`${CLASS_PREFIX}${id}`);
 }
 
-// Importing the library must not touch the page (#389), as useTheme was fixed not to: no
-// rewriting <html>'s density classes, which may be the consumer's own, and no writing to
-// their localStorage. Only a density stored by an earlier setDensity is restored here; a
-// change persists and applies through the watcher. (#209 makes this lazy in 2.0.)
-if (safeGetItem(STORAGE_KEY) !== null && activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
+// Importing the library must not touch the page (#389): no rewriting <html>'s density
+// classes, which may be the consumer's own, and no writing to their localStorage. Unlike
+// useTheme, which restores on its first use, a density stored by an earlier setDensity is
+// still restored here, at import (#209 makes it lazy in 2.0); a stored "default" or an
+// invalid value leaves the page as it is. A change persists and applies via the watcher.
+if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
 watch(activeDensity, (id) => {
   applyDensity(id);
   safeSetItem(STORAGE_KEY, id);

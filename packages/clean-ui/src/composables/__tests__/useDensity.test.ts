@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { nextTick } from "vue";
 import { useDensity, DENSITY_PRESETS } from "../useDensity";
 
@@ -61,24 +61,31 @@ describe("useDensity at import", () => {
     vi.resetModules();
     return (await import("../useDensity")).useDensity;
   }
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    document.documentElement.className = "";
+  });
 
   it("leaves <html> and localStorage alone when nothing is stored", async () => {
-    localStorage.clear();
     document.documentElement.className = "cui-density-compact";
     const setItem = vi.spyOn(Storage.prototype, "setItem");
     await freshImport();
     expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
     expect(setItem).not.toHaveBeenCalled();
-    setItem.mockRestore();
-    document.documentElement.className = "";
+  });
+
+  it("leaves the consumer's class alone when the stored value isn't a density", async () => {
+    localStorage.setItem("cui-density", "huge");
+    document.documentElement.className = "cui-density-compact";
+    await freshImport();
+    expect(document.documentElement.className).toBe("cui-density-compact");
+    expect(localStorage.getItem("cui-density"), "not overwritten").toBe("huge");
   });
 
   it("still restores a density stored earlier", async () => {
     localStorage.setItem("cui-density", "comfortable");
-    document.documentElement.className = "";
     await freshImport();
     expect(densityClasses()).toEqual(["cui-density-comfortable"]);
-    localStorage.clear();
-    document.documentElement.className = "";
   });
 });
