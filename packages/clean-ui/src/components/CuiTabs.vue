@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, toRef, computed, nextTick, onMounted, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiScrollArea from "./CuiScrollArea.vue";
 import {
   useTabsProvider,
   type TabDefinition,
@@ -24,6 +25,13 @@ export interface CuiTabsProps extends HideableProps, ColorableProps {
   keepAlive?: boolean;
   /** Panel transition animation */
   transition?: TabTransition;
+  /**
+   * Buttons at the ends of an overflowing bar that scroll it, for a mouse with no
+   * horizontal wheel (#236). `auto` shows one on each side with more tabs; `always` shows
+   * both whenever there's room for them, the spent one disabled; `never` leaves only the
+   * edge fade. Pointer affordances only: the keyboard has the tablist's arrow keys.
+   */
+  scrollButtons?: "auto" | "always" | "never";
 }
 
 const props = withDefaults(defineProps<CuiTabsProps>(), {
@@ -32,6 +40,7 @@ const props = withDefaults(defineProps<CuiTabsProps>(), {
   color: "primary",
   keepAlive: true,
   transition: "fade",
+  scrollButtons: "auto",
   hidden: false,
 });
 
@@ -44,6 +53,7 @@ const activeTab = ref(props.modelValue ?? "");
 const previousTab = ref("");
 const tabs = ref<TabDefinition[]>([]);
 const barRef = ref<HTMLElement | null>(null);
+const areaRef = ref<InstanceType<typeof CuiScrollArea> | null>(null);
 
 // Sync external v-model
 watch(
@@ -165,6 +175,8 @@ function onKeydown(e: KeyboardEvent) {
 // --- Overflow scrolling ---
 // The bar scrolls when the tabs don't fit; without this the trailing tabs are
 // clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
+// CuiScrollArea (#143) is the scroller: its edge fades, its scroll buttons (#236) and
+// the scroll padding that keeps a tab clear of both. The tablist is a row inside it.
 
 /**
  * Within this set's own bar, by its id: a document-wide lookup can't see into a shadow root,
@@ -175,63 +187,19 @@ function tabElement(value: string): HTMLElement | null {
   return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
 }
 
-/** Which edges have content scrolled out of view — drives the edge fade mask. */
-const overflowEdges = ref<"none" | "start" | "end" | "both">("none");
-
-function updateOverflow() {
-  const el = barRef.value;
-  if (!el) return;
-  const horizontal = props.orientation === "horizontal";
-  const viewport = horizontal ? el.clientWidth : el.clientHeight;
-  const content = horizontal ? el.scrollWidth : el.scrollHeight;
-  // Math.abs: RTL scrollLeft is negative in some engines
-  const pos = Math.abs(horizontal ? el.scrollLeft : el.scrollTop);
-
-  // 1px tolerance absorbs sub-pixel layout rounding
-  if (content - viewport <= 1) {
-    overflowEdges.value = "none";
-    return;
-  }
-  const atStart = pos <= 1;
-  const atEnd = pos >= content - viewport - 1;
-  overflowEdges.value = atStart ? "end" : atEnd ? "start" : "both";
-}
-
 // The one way the bar brings the active tab into view — keyboard nav, v-model
-// changes and mount all land here. The bar's scroll-padding keeps the tab clear
-// of the edge fade rather than flush under it. The bar only: scrollIntoView would
-// scroll the page to a tab bar below the fold too (#243).
+// changes and mount all land here. The scroll padding keeps the tab clear of the
+// edge fade and the scroll buttons rather than under them. The bar only:
+// scrollIntoView would scroll the page to a tab bar below the fold too (#243).
 function scrollActiveIntoView() {
   const tab = tabElement(activeTab.value);
-  if (tab && barRef.value) scrollIntoViewWithin(barRef.value, tab);
+  const scroller = areaRef.value?.el;
+  if (tab && scroller) scrollIntoViewWithin(scroller, tab);
 }
 
-let resizeObserver: ResizeObserver | undefined;
+onMounted(() => nextTick(scrollActiveIntoView));
 
-onMounted(() => {
-  nextTick(() => {
-    scrollActiveIntoView();
-    updateOverflow();
-  });
-  if (typeof ResizeObserver !== "undefined" && barRef.value) {
-    resizeObserver = new ResizeObserver(updateOverflow);
-    resizeObserver.observe(barRef.value);
-  }
-});
-
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect();
-  resizeObserver = undefined;
-});
-
-watch(activeTab, () => {
-  scrollActiveIntoView();
-  updateOverflow();
-}, { flush: "post" });
-
-// Tabs registering/unregistering changes the scrollable width
-watch(() => tabs.value.length, updateOverflow, { flush: "post" });
-watch(() => props.orientation, updateOverflow, { flush: "post" });
+watch(activeTab, scrollActiveIntoView, { flush: "post" });
 
 // Slide direction
 
@@ -249,14 +217,20 @@ const messages = useMessages();
   >
     <!-- Tab bar -->
     <div class="cui-tabs__bar-outer">
+      <CuiScrollArea
+        ref="areaRef"
+        class="cui-tabs__scroll"
+        :orientation="orientation"
+        :region="false"
+        :indicator="scrollButtons === 'never' ? 'none' : 'button'"
+        :indicator-visibility="scrollButtons === 'always' ? 'always' : 'auto'"
+      >
       <div
         ref="barRef"
         class="cui-tabs__bar"
         role="tablist"
         :aria-orientation="orientation"
-        :data-overflow="overflowEdges"
         @keydown="onKeydown"
-        @scroll="updateOverflow"
       >
         <button
           v-for="tab in tabs"
@@ -297,6 +271,7 @@ const messages = useMessages();
           </button>
         </button>
       </div>
+      </CuiScrollArea>
     </div>
 
     <!-- Panels -->
@@ -323,47 +298,40 @@ const messages = useMessages();
 }
 
 /* --- Tab bar ---
-   Two elements on purpose: the outer holds the static chrome (underline border,
-   segmented track) while the inner is the scroll viewport, so the chrome neither
-   scrolls away nor gets caught by the inner's edge-fade mask. */
+   The outer holds the static chrome (underline border, segmented track); the scroll
+   viewport is CuiScrollArea's scroller inside it, so the chrome neither scrolls away nor
+   gets caught by the scroller's edge-fade mask. */
 .cui-tabs__bar-outer {
   display: flex;
   flex-shrink: 0;
   min-width: 0;
 }
 
-.cui-tabs__bar {
-  /* Width of the edge fade, and the scroll padding that keeps a tab clear of it. */
-  --_tab-fade-size: 1.5rem;
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  scroll-behavior: smooth;
-  /* Native bar is hidden — the edge fade is the overflow affordance. Consumers
-     wanting a visible one can add `.cui-scrollbar` and override these. */
-  scrollbar-width: none;
-  -webkit-mask-image: var(--_tab-fade, none);
-  mask-image: var(--_tab-fade, none);
+/* The scroll area fills the outer's track; the tablist is a row (or column) inside its
+   scroller, at least as long as the track and growing past it when the tabs don't fit. */
+.cui-tabs__scroll {
+  flex: 1 1 auto;
 }
 
-.cui-tabs__bar::-webkit-scrollbar {
+.cui-tabs__scroll > :deep(.cui-scroll-area__scroller) {
+  scroll-behavior: smooth;
+  /* No native bar: the edge fade and the scroll buttons are the overflow affordance.
+     Consumers wanting one can add `.cui-scrollbar` and override these. */
+  scrollbar-width: none;
+}
+
+.cui-tabs__scroll > :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cui-tabs__bar {
-    scroll-behavior: auto;
-  }
+.cui-tabs__bar {
+  display: flex;
 }
 
 .cui-tabs--horizontal .cui-tabs__bar {
   flex-direction: row;
-  gap: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  /* So a tab scrolled into view clears the fade instead of landing under it. */
-  scroll-padding-inline: var(--_tab-fade-size);
+  width: max-content;
+  min-width: 100%;
 }
 
 .cui-tabs--vertical .cui-tabs__bar-outer {
@@ -373,47 +341,29 @@ const messages = useMessages();
 
 .cui-tabs--vertical .cui-tabs__bar {
   flex-direction: column;
-  gap: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-padding-block: var(--_tab-fade-size);
 }
 
-/* Edge fade — set by the `data-overflow` state, which tracks scroll position */
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to right, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
+/* --- Scroll buttons (#236): CuiScrollArea's indicators, in the tab bar's own tokens.
+   Opaque, since they sit over the tabs: the surface the bar is on by default, the
+   track's own colour on a segmented bar. Declared here, so inside a tab bar these win
+   over a --cui-scroll-area-indicator-* set further up. --- */
+:where(.cui-tabs__scroll) {
+  --cui-scroll-area-indicator-bg: var(--cui-tabs-scroll-button-bg, var(--cui-surface-base));
+  --cui-scroll-area-indicator-color: var(--cui-tabs-scroll-button-color, var(--cui-text-secondary));
+  --cui-scroll-area-indicator-size: var(--cui-tabs-scroll-button-size, 2rem);
 }
 
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to left, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
+:where(.cui-tabs--segmented .cui-tabs__scroll) {
+  --cui-scroll-area-indicator-bg: var(--cui-tabs-scroll-button-bg, var(--cui-surface-bg));
 }
 
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="both"] {
-  --_tab-fade: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--_tab-fade-size),
-    #000 calc(100% - var(--_tab-fade-size)),
-    transparent 100%
-  );
+/* The full depth of the bar, so no tab shows above or below a button. */
+.cui-tabs--horizontal .cui-tabs__scroll :deep(.cui-scroll-area__indicator) {
+  height: 100%;
 }
 
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to bottom, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
-}
-
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to top, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
-}
-
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="both"] {
-  --_tab-fade: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--_tab-fade-size),
-    #000 calc(100% - var(--_tab-fade-size)),
-    transparent 100%
-  );
+.cui-tabs--vertical .cui-tabs__scroll :deep(.cui-scroll-area__indicator) {
+  width: 100%;
 }
 
 /* Underline variant */

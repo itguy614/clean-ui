@@ -5,6 +5,17 @@ export async function frames(n: number): Promise<void> {
   }
 }
 
+/** Wait for a smooth scroll on `el` to come to rest, on either axis. */
+export async function settleScroll(el: HTMLElement): Promise<void> {
+  let last = NaN;
+  for (let i = 0; i < 120; i++) {
+    await frames(3);
+    const pos = el.scrollLeft + el.scrollTop;
+    if (pos === last) return;
+    last = pos;
+  }
+}
+
 /**
  * Inject the library's tokens into the document, for suites that measure laid-out
  * geometry or resolved colours.

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CuiTabs scroll buttons** (#236): an overflowing tab bar shows a button on each side that
+  has more tabs, which scrolls the bar when clicked. A mouse with no horizontal wheel
+  couldn't reach the trailing tabs before, and the faint edge fade was the only sign they
+  existed. The new `scrollButtons` prop takes `auto` (the default), `always` (both buttons,
+  the spent one disabled) or `never`. The buttons are CuiScrollArea's indicators, outside
+  the tablist, not focusable and hidden from assistive tech: the keyboard keeps the arrow
+  keys. Works in vertical bars too. Restyle them with `--cui-tabs-scroll-button-bg`,
+  `-color` and `-size`, which inside a tab bar take the place of CuiScrollArea's
+  `--cui-scroll-area-indicator-*`.
 - **Tooltip warm window** (#264): once a tooltip has been open, the next one opened within `skipDelay` ms of the last closing shows at once, with no entry animation, and the one it replaces goes at once, even mid-fade, instead of fading beside it. The default is 300ms; a tooltip with 0 neither waits less nor warms the others. Only tooltips opened by hover or focus take part: one opened through `v-model:visible` or by a click is never closed by another, and doesn't warm the group. Moving along a toolbar then waits only at the first button. The first tooltip still waits its `showDelay`, so crossing a row by accident shows nothing. It's one window for the whole page.
 - **Motion tokens** (#261): `--cui-duration-instant/-press/-fast/-base/-slow` and
   `--cui-ease-out/-in-out/-drawer`. Every component transition and animation reads them,
@@ -25,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **An overflowing CuiTabs bar now shows scroll buttons by default** (#236). Pass
+  `scroll-buttons="never"` for the previous look. The bar is built on CuiScrollArea now:
+  the tablist sits inside its scroller, and the bar no longer carries `data-overflow`,
+  which was never public.
 - **Motion audit** (#269), after the rest of the 1.5.0 motion work:
   - Modals, slideovers, backdrops and alerts now close faster than they open, as floating
     panels and toasts already did. A modal's backdrop took 250ms to fade out on every close.
@@ -85,11 +98,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CuiScrollArea's scroll buttons** no longer take focus when clicked (#236). Focus landed
+  inside the `aria-hidden` edge, and the arrow keys of the toolbar or tablist the user was
+  on stopped working.
 - **CuiTabs** no longer scrolls the page to bring the active tab into view (#243). It used
   `scrollIntoView()`, which scrolls every scrollable ancestor, so a tab bar below the fold
   pulled the page down to it on load and on every `v-model` change. Now only the bar
   scrolls, still keeping the tab clear of the edge fade. The same internal helper keeps the
   arrow-key scrolling of CuiCombobox's and CuiTagInput's listboxes inside the listbox.
+- **CuiTabs' edge fade in a right-to-left page** (#236) faded the wrong edges: it was drawn
+  in physical directions. CuiScrollArea's fade follows the page's direction.
 - CuiContextMenu scales in from the cursor again (#269). It hid its transitions for the
   frame it measured in, on every open, so its entry only faded.
 - CuiDataGrid's bulk-action bar turns back if a row is selected again while it leaves
