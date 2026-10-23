@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Scoped themes follow through on three more slots** (#330). Light `--cui-text-tertiary`
+  and dark `--cui-secondary` were hardcoded at Navy's hue, so tertiary text kept an indigo
+  tint inside any other theme. Both now mix the theme's own scale steps. They're the same
+  lightness as before, and the contrast audit grades every theme at ~4.86:1 for tertiary text.
+  A new `cui-theme-default` class (`cui-theme-navy` too) carries the default scale, so a
+  subtree inside another theme can switch back to Navy. `useTheme` still adds no class for
+  the default on the page root.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added

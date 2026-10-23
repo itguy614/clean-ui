@@ -123,9 +123,10 @@
   /* --- Text color semantics (light mode) --- */
   --cui-text-body: var(--color-surface-900);
   --cui-text-secondary: var(--color-surface-700);
-  /* Custom step (~5:1 on white): lighter than secondary for hierarchy, but the
-     surface scale has no step between 600 (fails AA) and 700 that passes. */
-  --cui-text-tertiary: oklch(0.55 0.012 270);
+  /* Between surface 600 (fails AA on white) and 700, which the scale has no step for:
+     ~5:1, lighter than secondary text for hierarchy. Mixed from the theme's own two
+     steps, so it takes a scoped theme's tint instead of Navy's (#330). */
+  --cui-text-tertiary: color-mix(in oklab, var(--color-surface-600) 42%, var(--color-surface-700));
   --cui-text-emphasis: var(--color-surface-950);
   --cui-text-link: var(--cui-primary);
   --cui-text-link-hover: var(--cui-primary-hover);
@@ -291,7 +292,9 @@
 :root.dark,
 .dark {
   --cui-primary-text:       white;
-  --cui-secondary:            oklch(0.72 0.05 270);
+  /* Between secondary 100 and 300, brightened for AA on the dark base: from the scale,
+     like the light slot (#330). */
+  --cui-secondary:            color-mix(in oklab, var(--color-secondary-100) 39%, var(--color-secondary-300));
   --cui-secondary-hover:      var(--color-secondary-100);
   --cui-secondary-active:     var(--color-secondary-100);
   --cui-secondary-bg:         var(--color-secondary-900);
