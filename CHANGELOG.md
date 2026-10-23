@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Importing the library no longer touches the page's density** (#389). `useDensity` ran
+  at import: it removed any `cui-density-*` class you put on `<html>` yourself and wrote
+  `cui-density=default` into localStorage, whether or not you used density. Now only a
+  density chosen with `setDensity` is stored, and restored on the next load.
 - **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
   or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
   echo of the close started a second one, and re-opening during the exit didn't cancel the
