@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
-import { CuiStack, CuiCard, CuiCardBody, CuiButton, CuiFlex, CuiToggle, CuiInput, CuiBadge, useOverlay } from "@itguy614/clean-ui";
+import { CuiStack, CuiCard, CuiCardBody, CuiButton, CuiFlex, CuiToggle, CuiInput, CuiBadge, useOverlay, afterAnimations } from "@itguy614/clean-ui";
 import Example from "../components/Example.vue";
 import PropTable from "../components/PropTable.vue";
 
@@ -11,11 +11,12 @@ const name = ref("");
 const lastClosed = ref("never");
 const dialogEl = useTemplateRef<HTMLElement>("dialogEl");
 
-const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => persistent.value,
-  animationDuration: 150,
+  // The exit is the <Transition> below, so nothing waits on a copied duration (#263).
+  exit: "transition",
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => (lastClosed.value = new Date().toLocaleTimeString()),
 });
@@ -24,11 +25,11 @@ const overlayCode = `<script setup>
 const open = ref(false);
 const dialogEl = useTemplateRef("dialogEl");
 
-const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => false,
-  animationDuration: 150,
+  exit: "transition",
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => {},
 });
@@ -38,7 +39,9 @@ const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = use
   <CuiButton @click="open = true">Open overlay</CuiButton>
 
   <Teleport to="body">
-    <div v-if="isVisible" class="overlay" :class="{ 'is-in': isAnimating }"
+    <!-- Mounted until the exit has played; shown while open, so a re-open mid-exit reverses -->
+    <Transition :css="false" @leave="afterAnimations" @after-leave="onAfterLeave">
+    <div v-if="mounted" v-show="isVisible" class="overlay" :class="{ 'is-in': isAnimating }"
          @keydown="onKeydown" @click.self="onBackdropClick">
       <div ref="dialogEl" role="dialog" aria-modal="true"
            aria-labelledby="overlay-title" tabindex="-1" class="panel">
@@ -48,6 +51,7 @@ const { isVisible, isAnimating, onKeydown, onBackdropClick, closeOverlay } = use
         <CuiButton variant="solid" @click="closeOverlay">Save</CuiButton>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>`;
 
@@ -77,10 +81,17 @@ const options = [
   },
   {
     name: "animationDuration",
-    type: "number",
-    default: "200",
+    type: 'number | "instant" | "press" | "fast" | "base" | "slow"',
+    default: '"base"',
     description:
-      "Exit animation length in ms. The element stays mounted (isVisible) this long after closing begins, then the callbacks run.",
+      "With exit: \"timer\", how long the exit runs: a motion token's name, read from the dialog when it closes, or ms. The element stays mounted (isVisible) this long after closing begins, then the callbacks run.",
+  },
+  {
+    name: "exit",
+    type: '"timer" | "transition"',
+    default: '"timer"',
+    description:
+      "How it knows the exit has finished. \"transition\" waits for onAfterLeave from a <Transition> instead of a timer: render the overlay v-if=\"mounted\" v-show=\"isVisible\" inside <Transition :css=\"false\" @leave=\"afterAnimations\" @after-leave=\"onAfterLeave\">, and a re-open mid-exit reverses instead of restarting. CuiModal and CuiSlideover use it.",
   },
   {
     name: "onUpdateOpen",
@@ -98,7 +109,17 @@ const returns = [
   {
     name: "isVisible",
     type: "Ref<boolean>",
-    description: "Render the overlay while this is true (v-if). It turns on at open and off after the exit animation.",
+    description: 'Whether the overlay is shown. With exit: "transition", bind it with v-show, inside v-if="mounted". With the timer, render while it is true (v-if): it turns off after the exit animation.',
+  },
+  {
+    name: "mounted",
+    type: "Ref<boolean>",
+    description: 'With exit: "transition", render the overlay while this is true (v-if), and show it on isVisible (v-show). It turns on at open and off once the exit has played.',
+  },
+  {
+    name: "onAfterLeave",
+    type: "() => void",
+    description: 'With exit: "transition", the <Transition>\'s after-leave: the exit has played, so it unmounts and the callbacks run. A leave a re-open cancelled never calls it.',
   },
   {
     name: "isAnimating",
@@ -143,7 +164,7 @@ const overlayStyle = {
   justifyContent: "center",
   padding: "1rem",
   background: "color-mix(in srgb, var(--color-surface-950) 50%, transparent)",
-  transition: "opacity 150ms ease",
+  transition: "opacity var(--cui-duration-base) var(--cui-ease-out)",
 } as const;
 
 const panelStyle = {
@@ -190,8 +211,10 @@ const panelStyle = {
     </Example>
 
     <Teleport to="body">
+      <Transition :css="false" @leave="afterAnimations" @after-leave="onAfterLeave">
       <div
-        v-if="isVisible"
+        v-if="mounted"
+        v-show="isVisible"
         class="cui-docs-overlay"
         :style="{ ...overlayStyle, opacity: isAnimating ? 1 : 0 }"
         @keydown="onKeydown"
@@ -221,6 +244,7 @@ const panelStyle = {
           </CuiStack>
         </div>
       </div>
+      </Transition>
     </Teleport>
 
     <CuiCard variant="outline">

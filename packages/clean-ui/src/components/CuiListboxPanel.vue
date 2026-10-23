@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { usePresence } from "../composables/usePresence";
+import { panelTransition } from "../utils/motion";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { computeDropdownPosition } from "../utils/position";
 import type { CuiColor } from "../types/common";
@@ -50,6 +52,7 @@ const props = defineProps<{
   fontSize: string;
   itemPadding: string;
 }>();
+const { present, onAfterLeave } = usePresence(() => props.open);
 
 const el = ref<HTMLElement | null>(null);
 const position = ref<Record<string, string>>({});
@@ -78,7 +81,9 @@ function reposition() {
   // maxVisible, when it binds, decides where scrolling starts — it replaces maxHeight rather
   // than sitting under it. computeDropdownPosition still clamps either to the room on screen.
   const maxHeight = rowsHeight ?? props.maxHeight;
-  position.value = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight }).styles;
+  const { styles, transformOrigin } = computeDropdownPosition(props.anchor, "bottom", { matchWidth: true, maxHeight });
+  // Grows out of its field, above or below (#262; it animates in with #263).
+  position.value = { ...styles, "--_listbox-panel-transform-origin": transformOrigin };
 }
 
 // Re-measure when the rows change — added, removed or replaced, including a new list of
@@ -117,7 +122,7 @@ watch(
 );
 
 // Page scroll and resize move the field; at most once a frame. A scroll inside the panel
-// (the list itself, or scrollIntoView from the arrow keys) moves nothing.
+// (the list itself, or the arrow keys scrolling an option into view) moves nothing.
 let frame = 0;
 useEventListener(
   "window",
@@ -179,15 +184,20 @@ defineExpose({ el });
 
 <template>
   <Teleport to="body">
-    <div v-if="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
-      <slot />
-    </div>
+    <!-- Enters and leaves like the other anchored panels (#263), out of its field (#262). -->
+    <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
+      <div v-if="present" v-show="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
+        <slot />
+      </div>
+    </Transition>
   </Teleport>
 </template>
 
 <style scoped>
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-listbox-panel) {
+  /* Grows out of its field, above or below (#262). Private only: not a themeable slot. */
+  transform-origin: var(--_listbox-panel-transform-origin);
   background: var(--_listbox-panel-bg);
   border: var(--_listbox-panel-border);
   border-radius: var(--_listbox-panel-radius);

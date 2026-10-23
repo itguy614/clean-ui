@@ -121,7 +121,12 @@ const returns = [
   {
     name: "currentSide",
     type: 'ComputedRef<"top" | "bottom" | "left" | "right">',
-    description: "The side actually used, after flipping — for a side-dependent class or transform-origin.",
+    description: "The side actually used, after flipping — for a side-dependent class.",
+  },
+  {
+    name: "transformOrigin",
+    type: "ComputedRef<string>",
+    description: 'Where the panel should grow from: its edge facing the trigger, at the end it is aligned to ("center top", "left bottom"), after flipping. Bind it as transform-origin so a scale-in comes out of the trigger.',
   },
   {
     name: "isPositioned",

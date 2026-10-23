@@ -387,7 +387,7 @@ function optionClass(index: number, option: ComboboxOption) {
       <!-- Right icons -->
       <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
         <CuiSpinner v-if="isLoading" size="xs" />
-        <CuiIcon v-else name="caret-down" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }" />
+        <CuiIcon v-else name="caret-down" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--cui-duration-base) var(--cui-ease-in-out)' }" />
       </div>
     </div>
 
@@ -514,7 +514,7 @@ function optionClass(index: number, option: ComboboxOption) {
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   cursor: text;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
 }
 
 .cui-combobox__control--disabled {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, toRef, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { ref, toRef, computed, nextTick, onMounted, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiScrollArea from "./CuiScrollArea.vue";
 import {
   useTabsProvider,
   type TabDefinition,
@@ -11,6 +12,8 @@ import {
 import type { HideableProps, ColorableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { scrollIntoViewWithin } from "../utils/scroll";
+import { useListNavigation } from "../composables/useListNavigation";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -23,6 +26,13 @@ export interface CuiTabsProps extends HideableProps, ColorableProps {
   keepAlive?: boolean;
   /** Panel transition animation */
   transition?: TabTransition;
+  /**
+   * Buttons at the ends of an overflowing bar that scroll it, for a mouse with no
+   * horizontal wheel (#236). `auto` shows one on each side with more tabs; `always` shows
+   * both whenever there's room for them, the spent one disabled; `never` leaves only the
+   * edge fade. Pointer affordances only: the keyboard has the tablist's arrow keys.
+   */
+  scrollButtons?: "auto" | "always" | "never";
 }
 
 const props = withDefaults(defineProps<CuiTabsProps>(), {
@@ -31,6 +41,7 @@ const props = withDefaults(defineProps<CuiTabsProps>(), {
   color: "primary",
   keepAlive: true,
   transition: "fade",
+  scrollButtons: "auto",
   hidden: false,
 });
 
@@ -43,13 +54,28 @@ const activeTab = ref(props.modelValue ?? "");
 const previousTab = ref("");
 const tabs = ref<TabDefinition[]>([]);
 const barRef = ref<HTMLElement | null>(null);
+// The last switch came from the keyboard (#269): no panel transition, and the bar scrolls
+// at once. A click or a v-model change animates as before. Changed only by a switch: on the
+// panel already showing, a change would add the animation class and replay it.
+const keyed = ref(false);
+// The tab buttons' own colour and underline, which a pointer back over the bar fades again.
+const keyedButtons = ref(false);
+
+/** A click that switches tabs animates; one on the active or a disabled tab changes nothing. */
+function onTabClick(tab: TabDefinition) {
+  if (tab.disabled || tab.value === activeTab.value) return;
+  keyed.value = keyedButtons.value = false;
+  activate(tab.value);
+}
+const areaRef = ref<InstanceType<typeof CuiScrollArea> | null>(null);
 
 // Sync external v-model
-import { watch } from "vue";
 watch(
   () => props.modelValue,
   (val) => {
     if (val !== undefined && val !== activeTab.value) {
+      // A change from outside, not the echo of our own switch (that equals activeTab).
+      keyed.value = false;
       previousTab.value = activeTab.value;
       activeTab.value = val;
     }
@@ -118,53 +144,45 @@ useTabsProvider({
   tabId,
   panelId,
   slideDirection,
+  keyed,
 });
 
-// Keyboard navigation
+// Keyboard navigation: the shared index maths (#289), wrapping at the ends as tabs always
+// have. In a right-to-left page ArrowLeft goes on to the next tab, the way the bar reads.
+const nav = useListNavigation({
+  wrap: () => true,
+  orientation: () => props.orientation,
+  rtl: () => !!barRef.value && getComputedStyle(barRef.value).direction === "rtl",
+});
+
 function onKeydown(e: KeyboardEvent) {
-  const enabledTabs = tabs.value.filter((t) => !t.disabled);
-  const currentIdx = enabledTabs.findIndex((t) => t.value === activeTab.value);
-  if (currentIdx < 0) return;
-
-  const isHorizontal = props.orientation === "horizontal";
-  const nextKey = isHorizontal ? "ArrowRight" : "ArrowDown";
-  const prevKey = isHorizontal ? "ArrowLeft" : "ArrowUp";
-
-  let nextIdx = -1;
-
-  if (e.key === nextKey) {
-    e.preventDefault();
-    nextIdx = currentIdx < enabledTabs.length - 1 ? currentIdx + 1 : 0;
-  } else if (e.key === prevKey) {
-    e.preventDefault();
-    nextIdx = currentIdx > 0 ? currentIdx - 1 : enabledTabs.length - 1;
-  } else if (e.key === "Home") {
-    e.preventDefault();
-    nextIdx = 0;
-  } else if (e.key === "End") {
-    e.preventDefault();
-    nextIdx = enabledTabs.length - 1;
-  }
-
-  if (nextIdx >= 0) {
-    const target = enabledTabs[nextIdx].value;
-    const changed = target !== activeTab.value;
-    activate(target);
-    nextTick(() => {
-      // focus() would do its own instant scroll-into-view, interrupting the
-      // activeTab watcher's smooth one mid-animation and stopping with the tab
-      // half clipped (#235). So focus without scrolling, and leave the scroll
-      // to the watcher — which only fires on a change, so an already-active
-      // tab (Home on the first, End on the last) scrolls here instead.
-      tabElement(target)?.focus({ preventScroll: true });
-      if (!changed) scrollActiveIntoView();
-    });
-  }
+  const list = tabs.value;
+  const from = list.findIndex((t) => t.value === activeTab.value);
+  if (from < 0) return;
+  const to = nav.indexForKey(e, from, { count: list.length, isDisabled: (i) => !!list[i].disabled });
+  // -1: Home or End with every tab disabled.
+  if (to === null || to < 0) return;
+  e.preventDefault();
+  const target = list[to].value;
+  const changed = target !== activeTab.value;
+  keyed.value = keyedButtons.value = true;
+  activate(target);
+  nextTick(() => {
+    // focus() would do its own instant scroll-into-view, interrupting the
+    // activeTab watcher's smooth one mid-animation and stopping with the tab
+    // half clipped (#235). So focus without scrolling, and leave the scroll
+    // to the watcher — which only fires on a change, so an already-active
+    // tab (Home on the first, End on the last) scrolls here instead.
+    tabElement(target)?.focus({ preventScroll: true });
+    if (!changed) scrollActiveIntoView();
+  });
 }
 
 // --- Overflow scrolling ---
 // The bar scrolls when the tabs don't fit; without this the trailing tabs are
 // clipped by any `overflow: hidden` ancestor (Modal/Slideover) and unreachable.
+// CuiScrollArea (#143) is the scroller: its edge fades, its scroll buttons (#236) and
+// the scroll padding that keeps a tab clear of both. The tablist is a row inside it.
 
 /**
  * Within this set's own bar, by its id: a document-wide lookup can't see into a shadow root,
@@ -175,63 +193,20 @@ function tabElement(value: string): HTMLElement | null {
   return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
 }
 
-/** Which edges have content scrolled out of view — drives the edge fade mask. */
-const overflowEdges = ref<"none" | "start" | "end" | "both">("none");
-
-function updateOverflow() {
-  const el = barRef.value;
-  if (!el) return;
-  const horizontal = props.orientation === "horizontal";
-  const viewport = horizontal ? el.clientWidth : el.clientHeight;
-  const content = horizontal ? el.scrollWidth : el.scrollHeight;
-  // Math.abs: RTL scrollLeft is negative in some engines
-  const pos = Math.abs(horizontal ? el.scrollLeft : el.scrollTop);
-
-  // 1px tolerance absorbs sub-pixel layout rounding
-  if (content - viewport <= 1) {
-    overflowEdges.value = "none";
-    return;
-  }
-  const atStart = pos <= 1;
-  const atEnd = pos >= content - viewport - 1;
-  overflowEdges.value = atStart ? "end" : atEnd ? "start" : "both";
-}
-
 // The one way the bar brings the active tab into view — keyboard nav, v-model
-// changes and mount all land here. The bar's scroll-padding keeps the tab clear
-// of the edge fade rather than flush under it.
+// changes and mount all land here. The scroll padding keeps the tab clear of the
+// edge fade and the scroll buttons rather than under them. The bar only:
+// scrollIntoView would scroll the page to a tab bar below the fold too (#243).
 function scrollActiveIntoView() {
-  tabElement(activeTab.value)?.scrollIntoView?.({ inline: "nearest", block: "nearest" });
+  const tab = tabElement(activeTab.value);
+  const scroller = areaRef.value?.el;
+  if (tab && scroller) scrollIntoViewWithin(scroller, tab, keyed.value ? "instant" : undefined);
 }
 
-let resizeObserver: ResizeObserver | undefined;
+onMounted(() => nextTick(scrollActiveIntoView));
 
-onMounted(() => {
-  nextTick(() => {
-    scrollActiveIntoView();
-    updateOverflow();
-  });
-  if (typeof ResizeObserver !== "undefined" && barRef.value) {
-    resizeObserver = new ResizeObserver(updateOverflow);
-    resizeObserver.observe(barRef.value);
-  }
-});
+watch(activeTab, scrollActiveIntoView, { flush: "post" });
 
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect();
-  resizeObserver = undefined;
-});
-
-watch(activeTab, () => {
-  scrollActiveIntoView();
-  updateOverflow();
-}, { flush: "post" });
-
-// Tabs registering/unregistering changes the scrollable width
-watch(() => tabs.value.length, updateOverflow, { flush: "post" });
-watch(() => props.orientation, updateOverflow, { flush: "post" });
-
-// Slide direction
 
 const messages = useMessages();
 </script>
@@ -240,6 +215,7 @@ const messages = useMessages();
   <div
     v-show="!hidden"
     class="cui-tabs"
+    :data-keyed="keyedButtons || undefined"
     :class="[
       `cui-tabs--${variant}`,
       `cui-tabs--${orientation}`,
@@ -247,14 +223,21 @@ const messages = useMessages();
   >
     <!-- Tab bar -->
     <div class="cui-tabs__bar-outer">
+      <CuiScrollArea
+        ref="areaRef"
+        class="cui-tabs__scroll"
+        :orientation="orientation"
+        :region="false"
+        :indicator="scrollButtons === 'never' ? 'none' : 'button'"
+        :indicator-visibility="scrollButtons === 'always' ? 'always' : 'auto'"
+      >
       <div
         ref="barRef"
         class="cui-tabs__bar"
         role="tablist"
         :aria-orientation="orientation"
-        :data-overflow="overflowEdges"
         @keydown="onKeydown"
-        @scroll="updateOverflow"
+        @pointermove="keyedButtons = false"
       >
         <button
           v-for="tab in tabs"
@@ -277,7 +260,7 @@ const messages = useMessages();
           :aria-selected="activeTab === tab.value"
           :aria-disabled="tab.disabled || undefined"
           :tabindex="activeTab === tab.value ? 0 : -1"
-          @click="activate(tab.value)"
+          @click="onTabClick(tab)"
         >
           <span class="cui-tabs__tab-content">
             <component :is="tab.labelSlot" v-if="tab.labelSlot" />
@@ -295,6 +278,7 @@ const messages = useMessages();
           </button>
         </button>
       </div>
+      </CuiScrollArea>
     </div>
 
     <!-- Panels -->
@@ -321,47 +305,40 @@ const messages = useMessages();
 }
 
 /* --- Tab bar ---
-   Two elements on purpose: the outer holds the static chrome (underline border,
-   segmented track) while the inner is the scroll viewport, so the chrome neither
-   scrolls away nor gets caught by the inner's edge-fade mask. */
+   The outer holds the static chrome (underline border, segmented track); the scroll
+   viewport is CuiScrollArea's scroller inside it, so the chrome neither scrolls away nor
+   gets caught by the scroller's edge-fade mask. */
 .cui-tabs__bar-outer {
   display: flex;
   flex-shrink: 0;
   min-width: 0;
 }
 
-.cui-tabs__bar {
-  /* Width of the edge fade, and the scroll padding that keeps a tab clear of it. */
-  --_tab-fade-size: 1.5rem;
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  scroll-behavior: smooth;
-  /* Native bar is hidden — the edge fade is the overflow affordance. Consumers
-     wanting a visible one can add `.cui-scrollbar` and override these. */
-  scrollbar-width: none;
-  -webkit-mask-image: var(--_tab-fade, none);
-  mask-image: var(--_tab-fade, none);
+/* The scroll area fills the outer's track; the tablist is a row (or column) inside its
+   scroller, at least as long as the track and growing past it when the tabs don't fit. */
+.cui-tabs__scroll {
+  flex: 1 1 auto;
 }
 
-.cui-tabs__bar::-webkit-scrollbar {
+.cui-tabs__scroll > :deep(.cui-scroll-area__scroller) {
+  scroll-behavior: smooth;
+  /* No native bar: the edge fade and the scroll buttons are the overflow affordance.
+     Consumers wanting one can add `.cui-scrollbar` and override these. */
+  scrollbar-width: none;
+}
+
+.cui-tabs__scroll > :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cui-tabs__bar {
-    scroll-behavior: auto;
-  }
+.cui-tabs__bar {
+  display: flex;
 }
 
 .cui-tabs--horizontal .cui-tabs__bar {
   flex-direction: row;
-  gap: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  /* So a tab scrolled into view clears the fade instead of landing under it. */
-  scroll-padding-inline: var(--_tab-fade-size);
+  width: max-content;
+  min-width: 100%;
 }
 
 .cui-tabs--vertical .cui-tabs__bar-outer {
@@ -371,47 +348,29 @@ const messages = useMessages();
 
 .cui-tabs--vertical .cui-tabs__bar {
   flex-direction: column;
-  gap: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-padding-block: var(--_tab-fade-size);
 }
 
-/* Edge fade — set by the `data-overflow` state, which tracks scroll position */
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to right, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
+/* --- Scroll buttons (#236): CuiScrollArea's indicators, in the tab bar's own tokens.
+   Opaque, since they sit over the tabs: the surface the bar is on by default, the
+   track's own colour on a segmented bar. Declared here, so inside a tab bar these win
+   over a --cui-scroll-area-indicator-* set further up. --- */
+:where(.cui-tabs__scroll) {
+  --cui-scroll-area-indicator-bg: var(--cui-tabs-scroll-button-bg, var(--cui-surface-base));
+  --cui-scroll-area-indicator-color: var(--cui-tabs-scroll-button-color, var(--cui-text-secondary));
+  --cui-scroll-area-indicator-size: var(--cui-tabs-scroll-button-size, 2rem);
 }
 
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to left, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
+:where(.cui-tabs--segmented .cui-tabs__scroll) {
+  --cui-scroll-area-indicator-bg: var(--cui-tabs-scroll-button-bg, var(--cui-surface-bg));
 }
 
-.cui-tabs--horizontal .cui-tabs__bar[data-overflow="both"] {
-  --_tab-fade: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--_tab-fade-size),
-    #000 calc(100% - var(--_tab-fade-size)),
-    transparent 100%
-  );
+/* The full depth of the bar, so no tab shows above or below a button. */
+.cui-tabs--horizontal .cui-tabs__scroll :deep(.cui-scroll-area__indicator) {
+  height: 100%;
 }
 
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="end"] {
-  --_tab-fade: linear-gradient(to bottom, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
-}
-
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="start"] {
-  --_tab-fade: linear-gradient(to top, #000 calc(100% - var(--_tab-fade-size)), transparent 100%);
-}
-
-.cui-tabs--vertical .cui-tabs__bar[data-overflow="both"] {
-  --_tab-fade: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--_tab-fade-size),
-    #000 calc(100% - var(--_tab-fade-size)),
-    transparent 100%
-  );
+.cui-tabs--vertical .cui-tabs__scroll :deep(.cui-scroll-area__indicator) {
+  width: 100%;
 }
 
 /* Underline variant */
@@ -450,8 +409,15 @@ const messages = useMessages();
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   position: relative;
+}
+
+/* Arrowing along the bar moves the selection at once (#269): a colour or underline fading
+   behind each key press leaves a trail of half-selected tabs. A pointer moving over the bar
+   brings the fade back. */
+.cui-tabs[data-keyed] .cui-tabs__tab {
+  transition: none;
 }
 
 .cui-tabs__tab:hover:not(.cui-tabs__tab--disabled) {
@@ -505,7 +471,7 @@ const messages = useMessages();
   padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
 .cui-tabs__tab-close:hover {

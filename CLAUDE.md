@@ -125,6 +125,83 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   list — "once converted, stays converted". ~50 of the ~106 components still write paint
   inline; add yours to the list when its PR converts it.
 
+## Motion
+
+Motion must have a purpose: spatial continuity, a state change, feedback, or avoiding a
+jarring appear/disappear. "It looks nice" is not one.
+
+- **Frequency decides whether to animate.** Things used 100+ times a day (keyboard-driven
+  actions, list navigation, menu-item hover) get no motion, or a near-instant colour change.
+  A row the keyboard crosses (menu items, listbox options, tree nodes, date cells, transfer
+  list rows) changes colour with no transition at all: with key repeat a fade leaves a trail
+  of half-lit rows (#269). Occasional UI (modals, drawers, toasts, popovers) gets standard
+  motion.
+- **Use the tokens, never literals** (#261). Durations are `--cui-duration-instant/press/fast/base/slow`
+  (0/120/150/200/250ms), easings `--cui-ease-out/in-out/drawer`, all on `:root` in
+  `styles/main.css`. JS waits read the same values through `motionDuration(name, el)`
+  (`utils/motion.ts`), read from the element that animates (a teleported panel, not its
+  in-place wrapper) when the wait starts. Never hand-copy a CSS duration into a `setTimeout`.
+  `MOTION_DURATIONS` holds the defaults and a test keeps it in step with `main.css`.
+- **Easing:** enter/exit and hover feedback → `--cui-ease-out`; on-screen movement (a knob,
+  a chevron turning) → `--cui-ease-in-out`; a sheet sliding in → `--cui-ease-drawer`;
+  colour changes → `ease`; constant loops → `linear`. **Never `ease-in`.** It starts slowly,
+  so the interface feels laggy.
+- **Duration:** UI motion stays under 300ms, and exits are faster than entries (a menu
+  opens over `base`, closes over `fast`). A transition takes the duration of the state it
+  moves to, so give the hidden state the short one and the shown state the long one (CuiModal,
+  CuiBackdrop, CuiAlert). Loops keep their own longer durations.
+- **Entrances never start from `scale(0)`.** Start from about 0.95, with opacity 0.
+- **Floating panels scale from their trigger** (#262). Take `transformOrigin` from `usePopover`
+  or `computeDropdownPosition` (both use `transformOriginFor` in `utils/position.ts`), emit it as
+  `--_<component>-transform-origin` on the animated element, and read it back in a `:where()`
+  rule. It is private only, with no public `--cui-*` token, since a consumer has nothing to
+  restyle there: not one of the themeable slots. Never redo the side-to-origin mapping.
+  Measure inside a panel that is still scaling in with `offset*` values, or after its
+  animation ends: a rect is the shrunken one. Modals stay centred.
+- **Animate `transform` and `opacity` only.** No `width`/`height`/`max-height`/`top`/`left`/
+  `margin`/`padding` animation; collapsibles use `grid-template-rows: 0fr → 1fr`. Never
+  `transition: all`: name the properties.
+- **Interruptible UI uses transitions, not keyframes.** Anything that can be toggled quickly
+  (menus, toasts, toggles) must reverse cleanly mid-flight.
+- **Overlays enter and leave through `<Transition>`, never a close timer** (#263).
+  - **A floating panel** is rendered `v-if="present" v-show="open"` inside `<Transition v-bind="panelTransition" @after-leave="onAfterLeave">`, with `present`/`onAfterLeave` from `usePresence(() => open)` (internal) and `panelTransition` from `utils/motion.ts`. Its motion is one CSS transition on the `data-cui-panel="shown|hidden"` state attribute (`components-shared.css`), so a re-open mid-exit reverses the same element. An attribute, not a class: Vue rewrites `className` whenever the panel's own `:class` changes, which would strip a hook-added class mid-exit (#264). A tooltip replaced by the next one takes `.cui-panel--cut`, which cancels its transition outright.
+    - Not `v-if` alone: toggled mid-leave, it drops the panel and fades a new one in from zero.
+    - Not Vue's CSS mode (`name=`): it re-applies `enter-from` and dips first.
+  - **An element whose motion runs on its own state classes and its children's** (Modal, Slideover, Alert) uses `<Transition v-bind="subtreeTransition">`. Its leave waits on `afterAnimations`: the animations on the element itself and on descendants marked `data-cui-exit` (a backdrop, a dialog), ignoring loops. It doesn't wait on the whole subtree, so content's own animations can't hold a close up. `useOverlay`'s `exit: "transition"` hands back `mounted` and `onAfterLeave` for it. The timer mode is deprecated, and becomes the non-default in 2.0.
+  - **A list** uses `<TransitionGroup>`, with a `-move` class and leavers pinned out of the flow (CuiToastProvider's `pinLeaving`). Its CSS mode is fine there: a keyed item never re-enters, so nothing has to reverse.
+  - **Tests:** test-utils stubs `<Transition>` by default, and its stub never fires `after-leave`. Both test setups turn the stub off. In jsdom the JS hooks finish at once, since there's no Web Animations API to wait on. Assert real motion in a browser test (`exit-transitions.test.ts`).
+- **Gesture-driven motion writes `transform` directly on the moving element,** never as an
+  inline custom property on an ancestor, which recalculates style for every descendant on
+  every frame. This is the one exception to the themeable-properties pattern.
+- **Reduced motion removes movement and keeps fades and colour** (#265). Under `prefers-reduced-motion: reduce`, `main.css`:
+  - limits `transition-property` on `cui-*` elements and their contents to `opacity`, so a transform, a layout change or a colour snaps, and no transition the author didn't declare is added
+  - drops the movement from hidden states (`[data-cui-panel="hidden"]`, the toasts' enter and leave states, `[data-cui-exit]`, Alert's slide)
+  - stops one-off movement keyframes and decorative loops
+
+  Durations don't change, so JS waits still match. It reaches components and what they contain, slot content included. It never reaches the consumer's own page, or what they wrap in a utility class (`.cui-typography`, themes, density, `.cui-scrollbar`, which the rule excludes), so never write a `*` rule there.
+  - A new hidden state that moves joins section 2.
+  - A new loop needs a class to be listed by: an unclassed inline animation is missed.
+  - Code that waits on a `transitionend` must first check that a transition actually started (`el.getAnimations().length`), since a snapped property fires none (as CuiAccordionItem does).
+- **Press feedback:** a pressed CuiButton shrinks to `--cui-press-scale` (0.97). It is 1
+  under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
+  buttons), since a shrinking button opens a seam against its neighbour. Set the token on
+  the container.
+- **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`, in CSS. Don't write a transform from a mouseenter handler, which no media query can gate.
+- `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
+  - no `transition: all`
+  - no `ease-in`
+  - no entrance from a zero scale, in keyframes or a `<Transition>` class
+  - no literal duration
+  - no literal-delay `setTimeout`
+  - no layout-property transition
+  - no hover motion outside that media query
+  - every panel on its `FLOATING` list reads `transform-origin` from a private
+    `--_<component>-transform-origin` property
+
+  **A new floating panel joins that list.** Exemptions count their findings, each with its
+  reason and the issue that removes it, so a new violation in an exempt file still fails, and
+  so does a stale exemption.
+
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `RADIUS_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
 - `utils/color.ts` — color conversions + `resolveColor()` / `isColorRole()` for the role-or-CSS hybrid (Icon/Divider/Backdrop).
@@ -137,15 +214,16 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
 - `composables/useClickOutside.ts` — the only click-outside detection: `useClickOutside(targets, handler, { enabled: isOpen })`. Pass `enabled`, so a closed panel holds no document listener (#203); see `useEventListener` below for the guard.
 - `composables/useEventListener.ts` (internal) — `useEventListener("window" | "document", type | type[], handler, { enabled, capture })`: removes exactly what it added on unmount, and with `enabled` attaches only while it's true. The target is a *name*, so it is SSR-safe (passing `window` itself throws on the server before any guard runs). Every window/document listener in a component goes through it or `useClickOutside` — the guard in `useClickOutside.test.ts` fails otherwise.
 - `composables/usePointerDrag.ts` (internal) — `const drag = usePointerDrag()`; `drag.start(e, move)` from a `pointerdown`, which returns false (starting nothing) for any but the primary button. One drag at a time, on the document, following only the pointer that pressed; ends on its `pointerup`/`pointercancel`, on `drag.end()` and on unmount, removing every listener (`drag.active` is a readonly ref). Any drag that follows a pointer off its element uses it (#275) — a native control such as CuiSlider's range input needs none — and the dragged surface sets `touch-action: none`.
-- `composables/useRovingFocus.ts` — roving tabindex (#144): one tab stop for a group, arrows/Home/End (and optional wrap, type-ahead) move real focus between items. Bind `:tabindex="roving.tabIndex(i)"` on items and `@keydown`/`@focusin` on the container. New code must not hand-roll arrow keys over a group of focusable items (Accordion, DropdownMenu, ContextMenu, Tabs and TreeView still do — #289; RadioGroup's every-radio tab stop is a 2.0 change); an adopter registers with `describeRovingFocusContract()` in `composables/__tests__/roving-focus-contract.ts`. The index maths (next/prev, Home/End, wrap, disabled-skip, type-ahead) lives in the internal, DOM-free `useListNavigation.ts`, which `useListbox` (#205, focus stays in an input) is to share; it takes the current items per call. `useRovingFocus` never writes your `activeIndex` except on navigation, so it can be the selected index.
+- `composables/useRovingFocus.ts` — roving tabindex (#144): one tab stop for a group, arrows/Home/End (and optional wrap, type-ahead) move real focus between items. Bind `:tabindex="roving.tabIndex(i)"` on items and `@keydown`/`@focusin` on the container. New code must not hand-roll arrow keys over a group of focusable items: none does since #289, which moved Accordion, Tabs and TreeView onto `useListNavigation` (the menus already were, through `utils/menu.ts`). RadioGroup's every-radio tab stop is a 2.0 change; an adopter registers with `describeRovingFocusContract()` in `composables/__tests__/roving-focus-contract.ts`. The index maths (next/prev, Home/End, wrap, disabled-skip, type-ahead) lives in the internal, DOM-free `useListNavigation.ts`, which `useListbox` (#205, focus stays in an input), the menus, Accordion, Tabs and TreeView also use; it takes the current items per call. `useRovingFocus` never writes your `activeIndex` except on navigation, so it can be the selected index.
 - `composables/useListbox.ts` (internal) — a listbox whose focus stays in an input or trigger (#205): the ARIA combobox pattern with `aria-activedescendant`. `mode: "editable" | "select-only"` (Home/End, type-ahead and Space belong to select-only; in an editable one Home/End and Left/Right move the text cursor and hand the highlight back). Returns `inputAttrs`/`panelAttrs` to `v-bind` (role, expanded, controls, activedescendant — only while open and in range, never a dangling ref — labelledby), `optionId(i)`, `labelId`, a debounced `announcement` for an always-rendered `role="status"` region, and `onKeydown` (arrows, disabled-skip, Enter/Escape when given `select`/`close`). Rows are `CuiListboxOption` (`role="option"`, id, `aria-selected`). CuiCombobox and CuiTagInput use it; CuiSelect joins in #216.
 - `composables/useAsyncSearch.ts` (internal) — debounced async search for `fetchOptions`/`fetchSuggestions` (#245): only the latest search writes (earlier ones are aborted via the `AbortSignal` passed as the fetch's second argument), dropping below `minChars` cancels the pending and in-flight search, unmount cancels everything. `answered` is the query the results belong to — claim "nothing found" only when it equals what's typed. Never hand-roll a debounce + fetch in a component.
+- `composables/usePresence.ts` (internal) — `usePresence(() => open)` → `{ present, onAfterLeave }`: a panel that exits through `<Transition>` stays mounted from open until its leave has finished (see "Motion").
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
 - `composables/useTheme.ts` — theme switching, localStorage persistence
 - `composables/useToast.ts` — programmatic toast API
 - `styles/components-shared.css` — classes components carry beside their own, imported by `main.css` and by the browser test setup: `.cui-sr-only` (visually hidden, still announced), `.cui-control-group*` (the radio/checkbox/toggle group layout) and `.cui-field-error` (an error message's paint; the gap above it is the control's own layout). Never hand-write these — `styles/__tests__/shared-classes.test.ts` fails on a copy in either package (#217).
-- Shared keyframes in `main.css`: `cui-spin`, `cui-pulse`, `cui-glow`, `cui-shake`, `cui-bounce`, `cui-fade-in`, `cui-scale-in`. Components reference these — never define local `@keyframes` for shared animations.
+- Shared keyframes in `main.css`: `cui-spin`, `cui-pulse`, `cui-glow`, `cui-glow-fade`, `cui-shake`, `cui-bounce`, `cui-fade-in`, `cui-scale-in`. A glow is `cui-glow-fade` on an `::after` carrying a static shadow, since `cui-glow` animates `box-shadow`, which repaints every frame. Components reference these — never define local `@keyframes` for shared animations.
 
 ## Component Patterns
 
@@ -188,7 +266,7 @@ should not need a later "make it consistent" PR.
 - Buttons render as `<button>`, `<a>` (href prop), or `<router-link>` (to prop) via dynamic `component :is`
 - Named slots: `#prefix` and `#suffix` for icons/badges
 - `defineExpose({ el, focus, blur })` on all interactive components
-- No drop shadows on buttons — hover feedback via color transitions only
+- No drop shadows on buttons. Hover feedback is a colour transition; a press also shrinks the button to `--cui-press-scale` (see "Motion")
 - CuiButtonGroup merges buttons via `:deep(.cui-button)` selectors for radius stripping
 
 ### Form Controls (Radio, Checkbox, Toggle, Input, Select, etc.)

@@ -8,6 +8,8 @@ import {
   CuiFormField,
   CuiIcon,
   CuiInput,
+  CuiRadio,
+  CuiRadioGroup,
   CuiSlideover,
   CuiSlider,
   CuiStack,
@@ -43,6 +45,8 @@ const pendingClients = ref(3);
 const overflow = ref("general");
 const overflowWidth = ref(343);
 const overflowVariant = ref<"underline" | "segmented">("underline");
+const overflowButtons = ref<"auto" | "always" | "never">("auto");
+const overflowVertical = ref(false);
 const slideoverOpen = ref(false);
 const slideoverTab = ref("general");
 
@@ -107,7 +111,8 @@ function resetTabs() {
         <li>
           <strong>Arrow keys move between tabs</strong>, wrapping at both ends —
           <code>ArrowRight</code>/<code>ArrowLeft</code> when horizontal,
-          <code>ArrowDown</code>/<code>ArrowUp</code> when vertical.
+          <code>ArrowDown</code>/<code>ArrowUp</code> when vertical. In a right-to-left page
+          <code>ArrowLeft</code> goes on to the next tab, the way the bar reads.
           <code>Home</code> goes to the first tab, <code>End</code> to the last. Disabled
           tabs are skipped.
         </li>
@@ -351,6 +356,12 @@ function resetTabs() {
 <CuiTabs v-model=&quot;active&quot; transition=&quot;slide&quot;>...</CuiTabs>
 <CuiTabs v-model=&quot;active&quot; transition=&quot;none&quot;>...</CuiTabs>`">
         <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            The transition plays when a tab is clicked or <code class="cui-code">v-model</code>
+            changes. A tab reached with the arrow keys shows at once, and so does its underline:
+            arrowing along a bar is too frequent to animate. A slide comes in from the bar's
+            end, so from the left in a right-to-left page and from below in a vertical bar.
+          </p>
           <CuiFlex gap="3" class="flex-wrap">
             <CuiButton size="xs" :variant="transitionTab === 'fade' ? 'solid' : 'outline'" @click="transitionTab = 'fade'">Fade</CuiButton>
             <CuiButton size="xs" :variant="transitionTab === 'slide' ? 'solid' : 'outline'" @click="transitionTab = 'slide'">Slide</CuiButton>
@@ -398,7 +409,8 @@ function resetTabs() {
       </Example>
 
       <!-- Overflow -->
-      <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit -->
+      <Example title="Overflow in narrow containers" :code="`<!-- Nothing to configure — the tab bar scrolls when the tabs don't fit, with a
+     scroll button on each side that has more. scroll-buttons: auto (default) | always | never -->
 <div style=&quot;width: 343px&quot;>
 <CuiTabs v-model=&quot;active&quot;>
   <CuiTab value=&quot;general&quot; label=&quot;General&quot;>…</CuiTab>
@@ -408,9 +420,14 @@ function resetTabs() {
 </div>`">
         <CuiStack spacing="4">
           <p class="text-sm text-surface-500">
-            When the tabs are wider than their container the bar scrolls horizontally, and the
-            clipped edge fades to show there's more. Drag the width to see it engage — the active
-            tab is always scrolled into view, clear of the fade.
+            When the tabs are wider than their container the bar scrolls, the clipped edge fades,
+            and a button appears on each side that has more tabs: click it to bring the next
+            ones into view, even with a mouse that has no horizontal wheel. Drag the width to see
+            it engage. The active tab is always scrolled into view, clear of the fade and the
+            button. <code class="cui-code">always</code> keeps both buttons, disabling the spent
+            one; <code class="cui-code">never</code> leaves only the fade. Only the bar scrolls: scroll the
+            page so these tabs sit near the bottom of the window, press <em>Activate last
+            tab</em>, and the page stays where it is.
           </p>
           <p class="text-sm text-surface-500">
             From the keyboard: click a tab, then use <kbd>←</kbd> <kbd>→</kbd>
@@ -433,7 +450,13 @@ function resetTabs() {
             style="border-color: var(--cui-border)"
             :style="{ width: `${overflowWidth}px`, maxWidth: '100%' }"
           >
-            <CuiTabs v-model="overflow" :variant="overflowVariant">
+            <CuiTabs
+              v-model="overflow"
+              :variant="overflowVariant"
+              :scroll-buttons="overflowButtons"
+              :orientation="overflowVertical ? 'vertical' : 'horizontal'"
+              :style="overflowVertical ? { height: '10rem' } : undefined"
+            >
               <CuiTab
                 v-for="tab in overflowTabs"
                 :key="tab.value"
@@ -446,6 +469,12 @@ function resetTabs() {
           </div>
 
           <CuiFlex gap="4" align="center" wrap="wrap">
+            <CuiRadioGroup v-model="overflowButtons" variant="buttons" label="scroll-buttons" size="sm">
+              <CuiRadio value="auto" label="auto" />
+              <CuiRadio value="always" label="always" />
+              <CuiRadio value="never" label="never" />
+            </CuiRadioGroup>
+            <CuiToggle v-model="overflowVertical" label="Vertical (10rem tall)" />
             <CuiToggle
               :model-value="overflowVariant === 'segmented'"
               label="Segmented variant"

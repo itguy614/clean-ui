@@ -1,4 +1,5 @@
 import { ref, computed, watch, type Ref, type MaybeRefOrGetter, toValue } from "vue";
+import { transformOriginFor } from "../utils/position";
 import {
   useFloating,
   autoUpdate,
@@ -82,7 +83,7 @@ export function usePopover(options: UsePopoverOptions = {}) {
     if (!options.arrow || !middlewareData.value.arrow) return {};
 
     const { x, y } = middlewareData.value.arrow;
-    const side = placement.value.split("-")[0] as "top" | "bottom" | "left" | "right";
+    const side = currentSide.value;
 
     const staticSide: Record<string, string> = {
       top: "bottom",
@@ -101,6 +102,8 @@ export function usePopover(options: UsePopoverOptions = {}) {
 
   // Which side the floating element is on (after flip)
   const currentSide = computed(() => placement.value.split("-")[0] as "top" | "bottom" | "left" | "right");
+  // Where it grows from: the edge facing the trigger, after flipping and shifting (#262).
+  const transformOrigin = computed(() => transformOriginFor(placement.value, middlewareData.value.shift));
 
   return {
     referenceRef,
@@ -110,6 +113,7 @@ export function usePopover(options: UsePopoverOptions = {}) {
     arrowStyle,
     placement,
     currentSide,
+    transformOrigin,
     isPositioned,
     update,
   };

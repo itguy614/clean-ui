@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { defineComponent, ref } from "vue";
 import CuiTabs from "../CuiTabs.vue";
 import CuiTab from "../CuiTab.vue";
+import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
 function isShown(el: Element): boolean {
   return (el as HTMLElement).style.display !== "none";
@@ -174,61 +175,99 @@ describe("CuiTab #label slot", () => {
 });
 
 describe("CuiTabs overflow", () => {
-  /** jsdom reports every element as 0x0; fake a scrollable bar. */
-  function stubMetrics(
-    el: HTMLElement,
-    { client, scroll, pos }: { client: number; scroll: number; pos: number },
-  ) {
-    Object.defineProperty(el, "clientWidth", { value: client, configurable: true });
-    Object.defineProperty(el, "scrollWidth", { value: scroll, configurable: true });
-    Object.defineProperty(el, "scrollLeft", { value: pos, configurable: true, writable: true });
+  /** jsdom reports every element as 0x0; fake the scroller's size and position. */
+  function stubMetrics(el: HTMLElement, { client, scroll, pos }: { client: number; scroll: number; pos: number }) {
+    for (const [key, value] of Object.entries({ clientWidth: client, scrollWidth: scroll, scrollLeft: pos })) {
+      Object.defineProperty(el, key, { value, configurable: true, writable: true });
+    }
+    el.dispatchEvent(new Event("scroll"));
   }
+  const scrollerOf = (wrapper: ReturnType<typeof mount>) => wrapper.get(".cui-scroll-area__scroller").element as HTMLElement;
+  /** The scroll buttons showing, by edge. */
+  const shownButtons = (wrapper: ReturnType<typeof mount>) =>
+    wrapper.findAll(".cui-scroll-area__edge").filter((e) => !e.classes("cui-scroll-area__edge--hidden")).map((e) => (e.classes("cui-scroll-area__edge--start") ? "start" : "end"));
 
-  it("renders the tablist inside a separate scroll viewport", async () => {
+  it("renders the tablist inside the scroll area's scroller, with the chrome outside it", async () => {
     const wrapper = mount(makeHost());
     await wrapper.vm.$nextTick();
     const bar = wrapper.get('[role="tablist"]');
     expect(bar.classes()).toContain("cui-tabs__bar");
-    expect(bar.element.parentElement?.className).toContain("cui-tabs__bar-outer");
+    const scroller = bar.element.parentElement!;
+    expect(scroller.className).toContain("cui-scroll-area__scroller");
+    expect(scroller.closest(".cui-tabs__bar-outer")).not.toBeNull();
+    // The tablist's arrow keys are the keyboard's way along it: no second tab stop.
+    expect(scroller.getAttribute("tabindex")).toBeNull();
+    expect(scroller.getAttribute("role")).toBeNull();
   });
 
-  it("reports no overflow when the tabs fit", async () => {
-    const wrapper = mount(makeHost());
+  it("shows a scroll button only on a side with more tabs (auto)", async () => {
+    const wrapper = mount(makeHost(), { attachTo: document.body });
     await wrapper.vm.$nextTick();
-    expect(wrapper.get('[role="tablist"]').attributes("data-overflow")).toBe("none");
-  });
-
-  it("marks the clipped edges as content scrolls", async () => {
-    const wrapper = mount(makeHost());
+    const el = scrollerOf(wrapper);
+    stubMetrics(el, { client: 200, scroll: 200, pos: 0 });
     await wrapper.vm.$nextTick();
-    const bar = wrapper.get('[role="tablist"]');
-    const el = bar.element as HTMLElement;
+    expect(shownButtons(wrapper), "everything fits").toEqual([]);
 
     stubMetrics(el, { client: 200, scroll: 500, pos: 0 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("end");
-
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["end"]);
     stubMetrics(el, { client: 200, scroll: 500, pos: 150 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("both");
-
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["start", "end"]);
     stubMetrics(el, { client: 200, scroll: 500, pos: 300 });
-    await bar.trigger("scroll");
-    expect(bar.attributes("data-overflow")).toBe("start");
+    await wrapper.vm.$nextTick();
+    expect(shownButtons(wrapper)).toEqual(["start"]);
+    wrapper.unmount();
   });
 
-  it("scrolls the newly active tab into view on a v-model change", async () => {
+  it("keeps both buttons with always, the spent one disabled; none with never", async () => {
+    const always = mount(makeHost({ tabsProps: 'scroll-buttons="always"' }), { attachTo: document.body });
+    await always.vm.$nextTick();
+    stubMetrics(scrollerOf(always), { client: 200, scroll: 500, pos: 0 });
+    await always.vm.$nextTick();
+    expect(shownButtons(always)).toEqual(["start", "end"]);
+    const buttons = always.findAll(".cui-scroll-area__indicator");
+    expect(buttons.map((b) => b.attributes("disabled") !== undefined)).toEqual([true, false]);
+    // Pointer affordances only.
+    for (const b of buttons) expect(b.attributes("tabindex")).toBe("-1");
+    expect(always.find(".cui-scroll-area__edge").attributes("aria-hidden")).toBe("true");
+    always.unmount();
+
+    const never = mount(makeHost({ tabsProps: 'scroll-buttons="never"' }), { attachTo: document.body });
+    await never.vm.$nextTick();
+    stubMetrics(scrollerOf(never), { client: 200, scroll: 500, pos: 150 });
+    await never.vm.$nextTick();
+    expect(never.findAll(".cui-scroll-area__edge")).toHaveLength(0);
+    never.unmount();
+  });
+
+  it("keeps the scroll buttons out of the tablist", async () => {
+    const wrapper = mount(makeHost({ tabsProps: 'scroll-buttons="always"' }));
+    await wrapper.vm.$nextTick();
+    expect(wrapper.get('[role="tablist"]').findAll(".cui-scroll-area__indicator")).toHaveLength(0);
+  });
+
+  it("scrolls the bar, and only the bar, to the newly active tab on a v-model change", async () => {
     const wrapper = mount(makeHost(), { attachTo: document.body });
     await wrapper.vm.$nextTick();
 
+    const bar = (wrapper.find('[role="tablist"]').element as HTMLElement).parentElement as HTMLElement;
     const target = wrapper.findAll('[role="tab"]')[1].element as HTMLElement;
-    const spy = vi.fn();
-    target.scrollIntoView = spy;
+    // Past the bar's end: jsdom lays nothing out.
+    target.getBoundingClientRect = () => ({ left: 500, right: 600, top: 0, bottom: 30, width: 100, height: 30, x: 500, y: 0, toJSON() {} });
+    Object.defineProperty(bar, "clientWidth", { value: 300 });
+    const scrollBy = vi.fn();
+    bar.scrollBy = scrollBy as never;
+    // scrollIntoView would scroll the page too (#243).
+    const scrollIntoView = vi.fn();
+    target.scrollIntoView = scrollIntoView;
 
     (wrapper.vm as unknown as { active: string }).active = "two";
     await wrapper.vm.$nextTick();
 
-    expect(spy).toHaveBeenCalledWith({ inline: "nearest", block: "nearest" });
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy.mock.calls[0][0].left).toBeGreaterThan(0);
+    expect(scrollIntoView).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
@@ -295,5 +334,129 @@ describe("CuiTabs inside a form", () => {
     await wrapper.get(".cui-tabs__tab-close").trigger("click");
     expect(onSubmit).not.toHaveBeenCalled();
     wrapper.unmount();
+  });
+});
+
+// #289 — the shared index maths: one tab stop, arrows wrapping at the ends.
+const threeTabs = () =>
+  defineComponent({
+    components: { CuiTabs, CuiTab },
+    setup: () => ({ active: ref("one") }),
+    template: `
+      <div>
+        <CuiTabs v-model="active">
+          <CuiTab value="one" label="One">1</CuiTab>
+          <CuiTab value="two" label="Two">2</CuiTab>
+          <CuiTab value="three" label="Three">3</CuiTab>
+        </CuiTabs>
+      </div>
+    `,
+  });
+
+describeRovingFocusContract("CuiTabs", {
+  mount: () => mount(threeTabs(), { attachTo: document.body }),
+  items: () => [...document.querySelectorAll<HTMLElement>('[role="tab"]')],
+  orientation: "horizontal",
+  wrap: true,
+});
+
+describe("CuiTabs keyboard with every tab disabled", () => {
+  it("does nothing on Home or End, rather than throwing", async () => {
+    const errors: unknown[] = [];
+    const wrapper = mount(
+      defineComponent({
+        components: { CuiTabs, CuiTab },
+        setup: () => ({ active: ref("one") }),
+        template: `<CuiTabs v-model="active"><CuiTab value="one" label="One" disabled>1</CuiTab><CuiTab value="two" label="Two" disabled>2</CuiTab></CuiTabs>`,
+      }),
+      { attachTo: document.body, global: { config: { errorHandler: (err) => errors.push(err) } } },
+    );
+    await wrapper.vm.$nextTick();
+    for (const key of ["Home", "End"]) {
+      wrapper.get('[role="tablist"]').element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    }
+    expect(errors).toEqual([]);
+    wrapper.unmount();
+  });
+});
+
+// #269 — a tab switch from the keyboard is a hundred-times-a-day action: no panel
+// transition, and the bar scrolls at once. A click still animates.
+describe("CuiTabs motion by input", () => {
+  const host = () =>
+    mount(
+      defineComponent({
+        components: { CuiTabs, CuiTab },
+        setup: () => ({ active: ref("one") }),
+        template: `<CuiTabs v-model="active" transition="fade" :keep-alive="false">
+          <CuiTab value="one" label="One">1</CuiTab><CuiTab value="two" label="Two">2</CuiTab><CuiTab value="three" label="Three">3</CuiTab>
+        </CuiTabs>`,
+      }),
+      { attachTo: document.body },
+    );
+  const panel = () => document.querySelector<HTMLElement>('[role="tabpanel"]')!;
+
+  it("shows a panel reached by the keyboard with no transition", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    expect(panel().textContent).toBe("2");
+    expect(panel().classList.contains("cui-tab-fade")).toBe(false);
+    expect(w.get(".cui-tabs").attributes("data-keyed"), "the tab buttons change at once too").toBe("true");
+
+    await tabs[2].trigger("click");
+    await w.vm.$nextTick();
+    expect(panel().textContent).toBe("3");
+    expect(panel().classList.contains("cui-tab-fade"), "a click animates").toBe(true);
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBeUndefined();
+    w.unmount();
+  });
+
+  it("doesn't replay the panel's transition on Enter, or a click on the active tab", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    const shown = panel();
+    // Enter on a tab button is a click on it, the active one.
+    await tabs[1].trigger("click");
+    await w.vm.$nextTick();
+    expect(panel()).toBe(shown);
+    expect(shown.classList.contains("cui-tab-fade")).toBe(false);
+    w.unmount();
+  });
+
+  it("fades the tab buttons again once a pointer moves over the bar", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const tabs = w.findAll('[role="tab"]');
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBe("true");
+    await w.get('[role="tablist"]').trigger("pointermove");
+    expect(w.get(".cui-tabs").attributes("data-keyed")).toBeUndefined();
+    expect(panel().classList.contains("cui-tab-fade"), "and the panel isn't replayed").toBe(false);
+    w.unmount();
+  });
+
+  it("scrolls the bar at once for a keyboard switch", async () => {
+    const w = host();
+    await w.vm.$nextTick();
+    const scroller = w.get(".cui-scroll-area__scroller").element as HTMLElement;
+    const scrollBy = vi.fn();
+    scroller.scrollBy = scrollBy as never;
+    Object.defineProperty(scroller, "clientWidth", { value: 100 });
+    const tabs = w.findAll('[role="tab"]');
+    (tabs[1].element as HTMLElement).getBoundingClientRect = () => ({ left: 300, right: 400, top: 0, bottom: 30, width: 100, height: 30, x: 300, y: 0, toJSON() {} });
+    (tabs[0].element as HTMLElement).focus();
+    await tabs[0].trigger("keydown", { key: "ArrowRight" });
+    await w.vm.$nextTick();
+    expect(scrollBy).toHaveBeenCalled();
+    expect(scrollBy.mock.calls[0][0].behavior).toBe("instant");
+    w.unmount();
   });
 });

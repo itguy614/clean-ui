@@ -241,7 +241,7 @@ function revealMatch() {
         <li><strong>Home / End</strong> — first / last visible node.</li>
         <li><strong>Enter / Space</strong> — exactly what clicking the row does: selects, or toggles expansion when <code>selectable</code> is false.</li>
         <li><strong>*</strong> — expands every sibling at the current level.</li>
-        <li><strong>Typing</strong> — jumps to the next node whose label starts with what you type. The buffer accumulates for about 600ms, so a second letter continues the search instead of restarting it, and typing the same letter repeatedly cycles through the matches.</li>
+        <li><strong>Typing</strong> — jumps to the next node whose label starts with what you type. The buffer accumulates for about half a second, so a second letter continues the search instead of restarting it, and typing the same letter repeatedly cycles through the matches.</li>
       </ul>
 
       <p class="text-surface-700 dark:text-surface-300">

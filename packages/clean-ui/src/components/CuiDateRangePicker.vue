@@ -239,7 +239,6 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
     justifyContent: "center",
     fontSize: "0.8125rem",
     cursor: day.disabled ? "default" : "pointer",
-    transition: "background 0.1s ease, color 0.1s ease",
     position: "relative",
   };
 

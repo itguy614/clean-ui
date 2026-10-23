@@ -51,10 +51,17 @@ const elapsed = ref(0);
 let intervalId: ReturnType<typeof setInterval> | null = null;
 const TICK = 50; // ms
 
-const progressPercent = computed(() => {
-  if (!props.autoDismiss || props.autoDismiss === 0) return 0;
-  return Math.min((elapsed.value / props.autoDismiss) * 100, 100);
-});
+// The countdown bar is one CSS animation over autoDismiss (#266), paused with the timer:
+// no re-render per tick. It mounts whenever the toast becomes the active one, so it starts
+// as far in as the timer already is — read then, not on every tick.
+const countdownFrom = ref(0);
+watch(
+  () => props.active,
+  (isActive) => {
+    if (isActive) countdownFrom.value = elapsed.value;
+  },
+  { immediate: true },
+);
 
 function startTimer() {
   if (intervalId) return;
@@ -196,7 +203,11 @@ const messages = useMessages();
     >
       <div
         class="cui-toast__progress-bar"
-        :style="{ width: `${100 - progressPercent}%` }"
+        :style="{
+          animationDuration: `${autoDismiss}ms`,
+          animationDelay: `-${countdownFrom}ms`,
+          animationPlayState: isPaused ? 'paused' : 'running',
+        }"
       />
     </div>
   </div>
@@ -220,7 +231,6 @@ const messages = useMessages();
   min-width: 280px;
   max-width: 420px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
-  overflow: hidden;
 }
 
 /* --- Icon --- */
@@ -234,6 +244,9 @@ const messages = useMessages();
 .cui-toast__body {
   flex: 1;
   min-width: 0;
+  /* The toast doesn't clip its overflow (its glow sits outside it), so a long unbroken
+     word or URL wraps instead of running past the edge. */
+  overflow-wrap: anywhere;
 }
 
 .cui-toast__title {
@@ -275,7 +288,7 @@ const messages = useMessages();
   padding: 0;
   border-radius: 0.25rem;
   opacity: 0.6;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
   margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
 }
 
@@ -291,13 +304,38 @@ const messages = useMessages();
   right: 0;
   height: 3px;
   background: var(--_toast-progress-bg, rgb(255 255 255 / 0.2));
+  /* Clips the bar to the toast's rounded bottom corners itself, so the toast needs no
+     overflow: hidden — which would clip its glow (::after). */
+  overflow: hidden;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
+/* Drains towards the inline-start edge as the time runs down: one linear transform
+   animation over the whole autoDismiss, not a width updated per tick (#266). Its duration,
+   offset and pause come from the timer, inline. */
 .cui-toast__progress-bar {
+  width: 100%;
   height: 100%;
   background: var(--_toast-progress-bar, rgb(255 255 255 / 0.6));
-  transition: width 0.05s linear;
   border-radius: 0 3px 0 0;
+  animation-name: cui-toast-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+:where([dir="rtl"]) .cui-toast__progress-bar {
+  animation-name: cui-toast-countdown-rtl;
+}
+
+@keyframes cui-toast-countdown {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes cui-toast-countdown-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
 }
 
 /* Pulse, glow, shake — use shared keyframes from main.css */
@@ -305,9 +343,14 @@ const messages = useMessages();
   animation: cui-pulse 2.5s ease-in-out infinite;
 }
 
-.cui-toast--glow {
-  --_cui-glow-color: var(--_toast-focus-ring);
-  animation: cui-glow 2s ease-in-out infinite;
+.cui-toast--glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 12px 2px var(--_toast-focus-ring);
+  pointer-events: none;
+  animation: cui-glow-fade 2s ease-in-out infinite;
 }
 
 .cui-toast--shake {

@@ -227,7 +227,7 @@ const choice = useChoiceLabelling(props);
   border-radius: 50%;
   border: 1px solid var(--_radio-border);
   background: var(--_radio-bg);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   margin-top: 0.125rem; /* align with first line of text */
 }
 
@@ -247,19 +247,14 @@ const choice = useChoiceLabelling(props);
   height: 0.5rem;
   border-radius: 50%;
   background: var(--_radio-color);
-  animation: cui-radio-pop 0.15s ease;
+  animation: cui-radio-pop var(--cui-duration-fast) var(--cui-ease-out);
 }
 
+/* A brief settle, not a pop from nothing with an overshoot: a radio is a high-frequency
+   control (#266). */
 @keyframes cui-radio-pop {
-  0% {
-    transform: scale(0);
-  }
-  60% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* --- Label --- */
@@ -298,7 +293,7 @@ const choice = useChoiceLabelling(props);
   background: transparent;
   color: var(--_rb-color);
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background var(--cui-duration-fast) ease, color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
 }
 
 .cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active) {

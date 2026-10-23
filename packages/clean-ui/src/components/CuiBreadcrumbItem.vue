@@ -68,7 +68,7 @@ const linkProps = computed(() => {
 .cui-breadcrumb-item__link {
   color: var(--cui-text-secondary);
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color var(--cui-duration-fast) ease;
 }
 
 .cui-breadcrumb-item__link:hover:not(.cui-breadcrumb-item__link--current) {

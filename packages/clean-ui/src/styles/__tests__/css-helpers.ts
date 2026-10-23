@@ -1,4 +1,5 @@
 import { readdirSync, statSync } from "node:fs";
+import { expect } from "vitest";
 import { join } from "node:path";
 
 /** Helpers shared by the stylesheet guards (preflight, typography exclusion). */
@@ -55,4 +56,28 @@ export function walk(dir: string): string[] {
     if (statSync(path).isDirectory()) return entry === "__tests__" ? [] : walk(path);
     return [path];
   });
+}
+
+/** Block comments out, so a comment that mentions a rule can't satisfy or break it. */
+export function stripComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+/** An exemption: how many findings a file is allowed, and why. */
+export interface Exemption {
+  count: number;
+  why: string;
+}
+
+/**
+ * The guard pattern: every file's findings must match its exemption's count exactly, and
+ * every exemption must still be needed. A file with findings and no exemption fails, an
+ * extra finding in an exempt file fails, and so does a stale exemption.
+ */
+export function expectExemptions(found: Record<string, number>, exempt: Record<string, Exemption>): void {
+  const files = new Set([...Object.keys(found), ...Object.keys(exempt)]);
+  const mismatched = [...files]
+    .filter((f) => (found[f] ?? 0) !== (exempt[f]?.count ?? 0))
+    .map((f) => `${f}: ${found[f] ?? 0} found, ${exempt[f]?.count ?? 0} exempt`);
+  expect(mismatched).toEqual([]);
 }

@@ -31,6 +31,13 @@ const meta: ComponentMeta = {
           description: "Keep inactive panels mounted and hidden with v-show. false mounts a panel only while active",
         },
         { name: "transition", type: "fade | slide | none", default: "fade", description: "Panel entrance animation" },
+        {
+          name: "scrollButtons",
+          type: "auto | always | never",
+          default: "auto",
+          description:
+            "Buttons at the ends of an overflowing bar that scroll it, for a mouse with no horizontal wheel. auto shows one on each side with more tabs; always keeps both, the spent one disabled; never leaves only the edge fade. Not focusable: the keyboard has the arrow keys. Restyle with --cui-tabs-scroll-button-bg, -color and -size, which inside a tab bar take the place of CuiScrollArea's --cui-scroll-area-indicator-*",
+        },
         hiddenProp,
       ],
       slots: [{ name: "default", description: "CuiTab children. The tab buttons are rendered by CuiTabs, not here" }],

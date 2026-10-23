@@ -18,7 +18,7 @@ onMounted(() => {
   }
 });
 
-const expanded = computed(() => !!ctx?.isOpen.value && !ctx.isClosing.value);
+const expanded = computed(() => !!ctx?.isOpen.value);
 
 // A component vnode passes them on as attrs, so they land on CuiButton's <button>.
 const forwarded = computed(() => ({

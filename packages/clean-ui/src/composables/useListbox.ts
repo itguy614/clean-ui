@@ -1,5 +1,6 @@
 import { computed, nextTick, onScopeDispose, ref, watch, type Ref } from "vue";
 import { useListNavigation, type ListItems } from "./useListNavigation";
+import { scrollIntoViewWithin } from "../utils/scroll";
 
 /**
  * A listbox whose focus stays in an input or trigger (#205): the ARIA combobox pattern with
@@ -87,6 +88,7 @@ export function useListbox(options: UseListboxOptions) {
   // Only a keyboard move scrolls (and an opening that starts on the selection, which the
   // component asks for): a hover sets the highlight too, and scrolling then would drag the
   // list under the pointer.
+  //
   // Within the listbox only: scrollIntoView would scroll every scrollable ancestor too, the
   // page included, which moves the field under the pointer and repositions the panel.
   function scrollActiveIntoView() {
@@ -95,12 +97,7 @@ export function useListbox(options: UseListboxOptions) {
     nextTick(() => {
       const option = document.getElementById(optionId(i));
       const list = document.getElementById(listboxId);
-      if (!option || !list) return;
-      // The listbox is the panel, fixed-positioned, so it is the options' offsetParent.
-      const top = option.offsetTop;
-      const bottom = top + option.offsetHeight;
-      if (top < list.scrollTop) list.scrollTop = top;
-      else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+      if (option && list) scrollIntoViewWithin(list, option);
     });
   }
 

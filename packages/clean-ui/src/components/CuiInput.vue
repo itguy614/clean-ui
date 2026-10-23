@@ -215,7 +215,7 @@ const messages = useMessages();
   height: var(--_input-height);
   border: 1px solid var(--_input-border);
   background: var(--cui-surface-base);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   overflow: hidden;
 }
 
@@ -297,7 +297,7 @@ const messages = useMessages();
   color: var(--cui-text-tertiary);
   padding: 0;
   border-radius: 50%;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
 .cui-input__clear:hover {
@@ -319,7 +319,7 @@ const messages = useMessages();
   color: var(--cui-text-tertiary);
   padding: 0;
   border-radius: 0.25rem;
-  transition: color 0.15s ease;
+  transition: color var(--cui-duration-fast) ease;
 }
 
 .cui-input__password-toggle:hover {
@@ -331,6 +331,11 @@ const messages = useMessages();
 .cui-input__suffix-button {
   display: flex;
   align-items: stretch;
+}
+
+/* Flush against the input's border, so a press shrinking it (#261) would open a seam. */
+:where(.cui-input__prefix-button, .cui-input__suffix-button) {
+  --cui-press-scale: 1;
 }
 
 .cui-input__prefix-button {

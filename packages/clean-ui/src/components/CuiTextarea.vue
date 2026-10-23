@@ -191,7 +191,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
   display: flex;
   border: 1px solid var(--_ta-border);
   background: var(--cui-surface-base);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   overflow: hidden;
 }
 

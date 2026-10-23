@@ -75,7 +75,6 @@ function onClick() {
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: background 0.1s ease;
 }
 
 .cui-listbox-option--disabled {

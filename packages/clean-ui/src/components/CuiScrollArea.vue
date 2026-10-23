@@ -102,7 +102,9 @@ defineExpose({ el: area.scroller, focus, blur, update: area.update, scrollByPage
 
     <!-- Siblings of the scroller, never inside it: inside, they'd scroll away with the content
          (#125), and inside a role=tablist they'd break its ownership rules (#236). Pointer
-         affordances only — not focusable, hidden from assistive tech. -->
+         affordances only — not focusable, hidden from assistive tech. A click doesn't take
+         focus either (mousedown.prevent): it would land inside aria-hidden, and leave the
+         tablist or toolbar whose keys the user was on. -->
     <template v-if="indicator !== 'none'">
       <div
         v-for="edge in EDGES"
@@ -118,6 +120,7 @@ defineExpose({ el: area.scroller, focus, blur, update: area.update, scrollByPage
             class="cui-scroll-area__indicator"
             tabindex="-1"
             :disabled="!hasMore(edge)"
+            @mousedown.prevent
             @click="area.scrollByPage(edge)"
           >
             <CuiIcon v-bind="iconProps(edge)" size="1rem" />
@@ -186,7 +189,7 @@ defineExpose({ el: area.scroller, focus, blur, update: area.update, scrollByPage
   /* The strip spans the edge; only the indicator in it takes the pointer, so content under
      the rest of the strip stays clickable. */
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--cui-duration-fast) ease;
 }
 
 .cui-scroll-area__edge > * {
