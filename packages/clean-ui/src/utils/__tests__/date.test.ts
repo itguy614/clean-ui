@@ -60,6 +60,10 @@ describe("parseFormattedDate", () => {
     expect(parseFormattedDate("", "MM/DD/YYYY")).toBeNull();
   });
 
+  it("reads a format with spaces at its ends", () => {
+    same(parseFormattedDate(" 15 May 2025 ", " DD MMM YYYY "), new Date(2025, 4, 15));
+  });
+
   it("takes the 1st when the format has no day", () => {
     same(parseFormattedDate("May 2025", "MMMM YYYY"), new Date(2025, 4, 1));
   });

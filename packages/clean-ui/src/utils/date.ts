@@ -78,74 +78,83 @@ export function isToday(d: Date): boolean {
   return isSameDay(d, new Date());
 }
 
-/** Format a Date using a format string pattern */
 /**
- * The format tokens, longest first, so one alternation matches `MMMM` before `MMM`, `MM`
+ * What each format token writes, matches when parsing, and takes in an input mask. Listed
+ * longest first, so the one alternation built from them matches `MMMM` before `MMM`, `MM`
  * and `M`. Everything else in a format is literal.
  */
-const TOKEN = /YYYY|YY|MMMM|MMM|MM|M|DD|D/g;
+interface Parsed {
+  year: number;
+  month: number;
+  day: number;
+}
+const monthIndex = (names: string[], text: string) => names.findIndex((n) => n.toLowerCase() === text.toLowerCase());
+const TOKENS: Record<string, { write: (d: Date) => string; pattern: string; mask: string; read: (text: string, into: Parsed) => void }> = {
+  YYYY: { write: (d) => String(d.getFullYear()), pattern: "\\d{4}", mask: "####", read: (t, p) => (p.year = parseInt(t, 10)) },
+  YY: { write: (d) => String(d.getFullYear()).slice(-2), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.year = 2000 + parseInt(t, 10)) },
+  MMMM: { write: (d) => MONTH_NAMES[d.getMonth()], pattern: MONTH_NAMES.join("|"), mask: "AAAAAAAAAA", read: (t, p) => (p.month = monthIndex(MONTH_NAMES, t)) },
+  MMM: { write: (d) => MONTH_NAMES_SHORT[d.getMonth()], pattern: MONTH_NAMES_SHORT.join("|"), mask: "AAA", read: (t, p) => (p.month = monthIndex(MONTH_NAMES_SHORT, t)) },
+  MM: { write: (d) => String(d.getMonth() + 1).padStart(2, "0"), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.month = parseInt(t, 10) - 1) },
+  M: { write: (d) => String(d.getMonth() + 1), pattern: "\\d{1,2}", mask: "##", read: (t, p) => (p.month = parseInt(t, 10) - 1) },
+  DD: { write: (d) => String(d.getDate()).padStart(2, "0"), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.day = parseInt(t, 10)) },
+  D: { write: (d) => String(d.getDate()), pattern: "\\d{1,2}", mask: "##", read: (t, p) => (p.day = parseInt(t, 10)) },
+};
+const TOKEN = new RegExp(Object.keys(TOKENS).join("|"), "g");
 
+/**
+ * Format a Date using a format string pattern. One pass (#340): a replacement is never
+ * scanned again, so the "M" in "March" or the "D" in "Dec" stays a letter.
+ */
 export function formatDate(date: Date, format: string): string {
-  const y = date.getFullYear();
-  const m = date.getMonth();
-  const d = date.getDate();
-  const values: Record<string, string> = {
-    YYYY: String(y),
-    YY: String(y).slice(-2),
-    MMMM: MONTH_NAMES[m],
-    MMM: MONTH_NAMES_SHORT[m],
-    MM: String(m + 1).padStart(2, "0"),
-    M: String(m + 1),
-    DD: String(d).padStart(2, "0"),
-    D: String(d),
-  };
-  // One pass (#340): a replacement is never scanned again, so the "M" in "March" or the
-  // "D" in "Dec" stays a letter.
-  return format.replace(TOKEN, (token) => values[token]);
+  return format.replace(TOKEN, (token) => TOKENS[token].write(date));
+}
+
+/**
+ * The format an input mask holds: the mask gives `M` and `D` two digits (`##`), so a value
+ * written back into it has to be padded the same way, or a typed "01/09/25" in `M/D/YY`
+ * comes back as "1925" and redraws the field as "19/25/__".
+ */
+export function maskedFormat(format: string): string {
+  return format.replace(TOKEN, (token) => (token === "M" ? "MM" : token === "D" ? "DD" : token));
 }
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/** A format's full-match pattern and the tokens its groups hold, built once per format. */
+const parsers = new Map<string, { pattern: RegExp; tokens: string[] }>();
+function parserFor(format: string) {
+  let parser = parsers.get(format);
+  if (!parser) {
+    const tokens: string[] = [];
+    let source = "";
+    let last = 0;
+    for (const match of format.matchAll(TOKEN)) {
+      source += escapeRegExp(format.slice(last, match.index)) + `(${TOKENS[match[0]].pattern})`;
+      tokens.push(match[0]);
+      last = match.index + match[0].length;
+    }
+    source += escapeRegExp(format.slice(last));
+    parser = { pattern: new RegExp(`^${source}$`, "i"), tokens };
+    parsers.set(format, parser);
+  }
+  return parser;
+}
+
 /**
  * Parse a formatted date string back into a Date using the format pattern. The whole
- * string has to match (a half-typed date is `null`), and so does the date itself: no
- * 31 February rolling over into March.
+ * string has to match, token by token, so a month name of any length lines up (#340) and
+ * a half-typed date is `null`; so does a date that doesn't exist, such as 31 February.
+ * Without a day in the format, the 1st.
  */
 export function parseFormattedDate(value: string, format: string): Date | null {
   if (!value || !format) return null;
-
-  // The format as a pattern, token by token, so a month name of any length lines up (#340).
-  const groups: string[] = [];
-  let pattern = "";
-  let last = 0;
-  for (const match of format.matchAll(TOKEN)) {
-    pattern += escapeRegExp(format.slice(last, match.index));
-    const token = match[0];
-    groups.push(token);
-    pattern +=
-      token === "YYYY" ? "(\\d{4})"
-      : token === "MMMM" ? `(${MONTH_NAMES.join("|")})`
-      : token === "MMM" ? `(${MONTH_NAMES_SHORT.join("|")})`
-      : token.length === 2 ? "(\\d{2})"
-      : "(\\d{1,2})";
-    last = match.index + token.length;
-  }
-  pattern += escapeRegExp(format.slice(last));
-  const parts = new RegExp(`^${pattern}$`, "i").exec(value.trim());
+  const { pattern, tokens } = parserFor(format);
+  const parts = pattern.exec(value);
   if (!parts) return null;
 
-  let year = -1, month = -1, day = 1;
-  groups.forEach((token, i) => {
-    const part = parts[i + 1];
-    const lower = part.toLowerCase();
-    if (token === "YYYY") year = parseInt(part, 10);
-    else if (token === "YY") year = 2000 + parseInt(part, 10);
-    else if (token === "MMMM") month = MONTH_NAMES.findIndex((n) => n.toLowerCase() === lower);
-    else if (token === "MMM") month = MONTH_NAMES_SHORT.findIndex((n) => n.toLowerCase() === lower);
-    else if (token === "MM" || token === "M") month = parseInt(part, 10) - 1;
-    else day = parseInt(part, 10);
-  });
-
+  const parsed: Parsed = { year: -1, month: -1, day: 1 };
+  tokens.forEach((token, i) => TOKENS[token].read(parts[i + 1], parsed));
+  const { year, month, day } = parsed;
   if (year < 0 || month < 0 || month > 11 || day < 1) return null;
   const date = new Date(year, month, day);
   return date.getMonth() === month ? date : null;
@@ -153,18 +162,8 @@ export function parseFormattedDate(value: string, format: string): Date | null {
 
 /** Convert a format pattern to a mask pattern for CuiMaskedInput (uses # for digits) */
 export function formatToMask(format: string): string {
-  const masks: Record<string, string> = {
-    YYYY: "####",
-    YY: "##",
-    MMMM: "AAAAAAAAAA", // up to 10 chars
-    MMM: "AAA",
-    MM: "##",
-    M: "##",
-    DD: "##",
-    D: "##",
-  };
   // One pass, like formatDate (#340).
-  return format.replace(TOKEN, (token) => masks[token]);
+  return format.replace(TOKEN, (token) => TOKENS[token].mask);
 }
 
 /** Extract raw digits from a formatted date string (strips separators) */

@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CuiDatePicker and CuiDateRangePicker too. `parseFormattedDate` read the wrong characters
   after a month name of a different length, ignored `M` and `D`, and rolled 31 February
   over into March. It now matches the whole string, and returns `null` for a date that
-  doesn't exist.
+  doesn't exist. Typing a date into a CuiDatePicker whose format uses single-letter `M` or
+  `D` (`M/D/YY`) now keeps the digits in the field instead of redrawing it mid-entry.
 
 ## [1.5.0] - 2026-10-22
 
