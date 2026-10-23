@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { onScopeDispose, ref, watch } from "vue";
+import { computed, onScopeDispose, ref, watch } from "vue";
 import { useDataGridState, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
-import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
 
@@ -21,6 +20,9 @@ const props = withDefaults(defineProps<CuiDataGridSearchProps>(), {
 const messages = useMessages();
 // A placeholder is no name (WCAG 1.3.1, 4.1.2): a visually hidden label names the box.
 const labelId = useCuiId("grid-search-label");
+const name = computed(
+  () => props.label ?? messages.value.dataGrid.searchLabel ?? messages.value.dataGrid.search.replace(/[\s.…]+$/u, ""),
+);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 const grid = useDataGridState();
 const localQuery = ref(grid.searchQuery.value);
@@ -57,22 +59,19 @@ function onClear() {
 
 <template>
   <div class="cui-data-grid-search" style="position: relative; max-width: 20rem; flex: 1;">
-    <span :id="labelId" class="cui-sr-only">{{ label ?? messages.dataGrid.searchLabel ?? messages.dataGrid.search }}</span>
+    <span :id="labelId" class="cui-sr-only">{{ name }}</span>
     <CuiInput
       :model-value="localQuery"
       :aria-labelledby="labelId"
       :placeholder="messages.dataGrid.search"
       size="sm"
+      clearable
       @update:model-value="onInput"
+      @clear="onClear"
       @keydown.escape="onClear"
     >
       <template #prefix>
         <CuiIcon name="magnifying-glass" size="0.875rem" />
-      </template>
-      <template v-if="localQuery" #suffix>
-        <CuiButton variant="ghost" size="xs" :aria-label="messages.input.clear" @click="onClear" style="margin: -0.25rem;">
-          <CuiIcon name="x" size="0.75rem" />
-        </CuiButton>
       </template>
     </CuiInput>
   </div>

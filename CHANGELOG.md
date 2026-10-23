@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **CuiDataGrid's search box has an accessible name** (#373), so a default grid passes axe's
   `label` and `button-name` rules. It had only a placeholder, which is no name, and its clear
-  button only an icon. The box is named "Search" by default, or by the new `searchLabel` prop
-  ("Search tags"), and the clear button by `input.clear`. The name comes from a new
-  `dataGrid.searchLabel` message. It's optional, so an existing custom catalogue still
-  type-checks; without it the box is named by its `search` text.
+  button only an icon. The box is named by the `search` message less its ellipsis
+  ("Search"), so a translated catalogue names it in its own language, or by the new
+  `searchLabel` prop or optional `dataGrid.searchLabel` message ("Search tags"). The clear
+  button is CuiInput's own, named "Clear input", and it hands focus back to the box rather
+  than dropping it to the page. In the saved-views menu, each view's delete button
+  ("Delete view Mine", from a new optional `dataGrid.deleteView` message) and the save-as
+  field are named too.
 
 ## [1.5.0] - 2026-10-22
 

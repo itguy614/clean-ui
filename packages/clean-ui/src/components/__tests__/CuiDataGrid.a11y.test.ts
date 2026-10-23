@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { h } from "vue";
+import { defineComponent, h } from "vue";
 import CuiDataGrid from "../CuiDataGrid.vue";
+import CuiConfigProvider from "../CuiConfigProvider.vue";
 
 /**
  * #161 — sorting was a click handler on the <th>, unreachable by keyboard and unannounced,
@@ -109,10 +110,46 @@ describe("CuiDataGrid toolbar search names", () => {
     expect(nameOf(searchBox())).toBe("Search tags");
   });
 
-  it("names the clear button", async () => {
+  it("names the clear button, and hands focus back to the box when it clears", async () => {
     mountGrid({ hideToolbar: false, searchDebounce: 0 });
     await w!.find(".cui-data-grid-search input").setValue("ali");
-    const clear = w!.find(".cui-data-grid-search .cui-button");
+    const clear = w!.find(".cui-data-grid-search .cui-input__clear");
     expect(clear.attributes("aria-label")).toBe("Clear input");
+    await clear.trigger("click");
+    expect(searchBox().value).toBe("");
+    expect(document.activeElement, "not dropped to the body").toBe(searchBox());
+  });
+
+  it("names the box in the catalogue's language, from its search text", () => {
+    w = mount(
+      defineComponent({
+        render: () =>
+          h(CuiConfigProvider, { messages: { dataGrid: { search: "Rechercher…" } } }, () =>
+            h(CuiDataGrid, { columns, data }),
+          ),
+      }),
+      { attachTo: document.body },
+    );
+    expect(nameOf(searchBox())).toBe("Rechercher");
+  });
+});
+
+// #373, found in review — two controls in the saved-views menu were unnamed too.
+describe("CuiDataGrid saved-views menu names", () => {
+  it("names each view's delete button and the save-as field", async () => {
+    const view = { id: "v1", name: "Mine", config: {} };
+    const adapter = { load: async () => [view], save: async () => {}, remove: async () => {} };
+    w = mount(CuiDataGrid, { props: { columns, data, gridId: "g", viewAdapter: adapter }, attachTo: document.body });
+    await new Promise((r) => setTimeout(r));
+    const trigger = [...w.findAll(".cui-button")].find((b) => b.text().includes("Views"))!;
+    await trigger.trigger("click");
+    await new Promise((r) => setTimeout(r));
+    const del = document.querySelector<HTMLButtonElement>('.cui-dropdown-menu button[aria-label="Delete view Mine"]');
+    expect(del, "the delete button is named for its view").not.toBeNull();
+    const saveAs = [...document.querySelectorAll<HTMLElement>(".cui-dropdown-item")].find((el) => el.textContent?.includes("Save as"))!;
+    saveAs.click();
+    await new Promise((r) => setTimeout(r));
+    const field = document.querySelector<HTMLInputElement>(".cui-dropdown-menu input")!;
+    expect(document.getElementById(field.getAttribute("aria-labelledby")!)?.textContent).toBe("View name");
   });
 });

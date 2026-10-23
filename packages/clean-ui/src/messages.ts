@@ -224,9 +224,9 @@ export interface CuiCoreMessages {
     all: string;
     search: string;
     /**
-     * The search box's accessible name (#373); `search` is its placeholder, which is no name.
-     * Optional, so a catalogue written before 1.5.1 still type-checks; without it the box is
-     * named by its `search` text.
+     * The search box's accessible name (#373), where it should differ from `search` (its
+     * placeholder, which is no name). Without it the box is named by `search`, less a
+     * trailing ellipsis, so a translated placeholder names it in the same language.
      */
     searchLabel?: string;
     /** Placeholder for a per-column filter input. */
@@ -243,6 +243,8 @@ export interface CuiCoreMessages {
     saveAs: string;
     save: string;
     viewName: string;
+    /** A saved view's delete button (#373). Optional, so an existing catalogue type-checks. */
+    deleteView?: (name: string) => string;
     resetViews: string;
     /** Described on a clickable row (aria-description), which has no role to say so (#232). */
     rowHint: string;
@@ -368,7 +370,6 @@ export const defaultMessages: CuiCoreMessages = {
     filters: "Filters",
     all: "All",
     search: "Search…",
-    searchLabel: "Search",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
     columns: "Columns",
@@ -379,6 +380,7 @@ export const defaultMessages: CuiCoreMessages = {
     saveAs: "Save as...",
     save: "Save",
     viewName: "View name",
+    deleteView: (name) => `Delete view ${name}`,
     resetViews: "Reset to defaults",
     rowHint: "Press Enter to open",
     selectAll: "Select all rows",
