@@ -33,6 +33,12 @@ const scopedCode = `<div class="cui-theme-forest">
   <CuiButton variant="solid">Solid</CuiButton>
   <CuiBadge variant="subtle">Badge</CuiBadge>
 </div>`;
+const backToNavyCode = `<div class="cui-theme-forest">
+  <CuiButton variant="solid">Forest</CuiButton>
+  <div class="cui-theme-default">
+    <CuiButton variant="solid">Navy again</CuiButton>
+  </div>
+</div>`;
 </script>
 
 <template>
@@ -55,9 +61,8 @@ const scopedCode = `<div class="cui-theme-forest">
 const { theme, presets, setTheme } = useTheme()
 
 // Switch theme
-setTheme('navy')
 setTheme('forest')
-setTheme('default') // back to indigo
+setTheme('default') // back to Navy, the default (no class on &lt;html&gt;)
 
 // Reactive — components update instantly
 // Persists to localStorage automatically</code></pre>
@@ -199,7 +204,7 @@ const options = THEME_PRESETS.map((p: ThemePreset) => ({ value: p.id, label: p.l
             Themes are CSS classes. Apply them anywhere in the DOM tree:
           </p>
           <pre class="cui-pre"><code>&lt;!-- Global: apply to html or body --&gt;
-&lt;html class="cui-theme-navy"&gt;
+&lt;html class="cui-theme-forest"&gt;
 
 &lt;!-- Scoped: apply to a section --&gt;
 &lt;div class="cui-theme-forest"&gt;
@@ -233,6 +238,27 @@ setTheme('teal')
             </CuiStack>
           </div>
         </CuiGrid>
+      </Example>
+      <Example title="Back to Navy inside another theme" :code="backToNavyCode" class="mt-6">
+        <CuiStack spacing="3">
+          <p class="text-sm text-surface-500">
+            Navy is the default, so it has no class on the page root. Inside another theme, a
+            <code class="cui-code">cui-theme-default</code> (or
+            <code class="cui-code">cui-theme-navy</code>) element switches its part of the page
+            back.
+          </p>
+          <div class="cui-theme-forest">
+            <CuiFlex gap="3" align="center" class="flex-wrap">
+              <CuiButton variant="solid">Forest</CuiButton>
+              <div class="cui-theme-default">
+                <CuiFlex gap="3" align="center">
+                  <CuiButton variant="solid">Navy again</CuiButton>
+                  <CuiBadge variant="subtle">default</CuiBadge>
+                </CuiFlex>
+              </div>
+            </CuiFlex>
+          </div>
+        </CuiStack>
       </Example>
     </div>
 
