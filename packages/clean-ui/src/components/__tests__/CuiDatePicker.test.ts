@@ -188,3 +188,21 @@ it("opens the calendar from the field with ArrowDown", async () => {
     expect(wrapper!.emitted("update:modelValue")).toBeUndefined();
   });
 });
+
+// #340 — single-letter M and D: the mask gives them two digits each, so the value written
+// back into it has to be padded too, or a typed "01/09/25" redraws as "19/25/__".
+describe("CuiDatePicker typing in a format with single-letter tokens", () => {
+  it.each([
+    ["M/D/YY", "010925", "2025-01-09"],
+    ["D/M/YYYY", "09012025", "2025-01-09"],
+  ])("keeps %s's typed digits in the field", async (format, typed, iso) => {
+    const MaskedInput = (await import("../CuiMaskedInput.vue")).default;
+    const w = mount(CuiDatePicker, { props: { format, modelValue: null }, attachTo: document.body });
+    const field = w.findComponent(MaskedInput);
+    field.vm.$emit("update:modelValue", typed);
+    await w.vm.$nextTick();
+    expect(w.emitted("update:modelValue")?.at(-1)?.[0]).toBe(iso);
+    expect(field.props("modelValue"), "written back as typed, not unpadded").toBe(typed);
+    w.unmount();
+  });
+});

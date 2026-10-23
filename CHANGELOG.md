@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Date formats with month names** (#340). `formatDate` rewrote letters inside a month
+  name it had just written, so `MMMM D, YYYY` on 5 March read "3arch 5, 2025" and
+  `DD MMM YYYY` on 5 December "05 5ec 2025" (every month with an M or a D in its name), in
+  CuiDatePicker and CuiDateRangePicker too. `parseFormattedDate` read the wrong characters
+  after a month name of a different length, ignored `M` and `D`, and rolled 31 February
+  over into March. It now matches the whole string, and returns `null` for a date that
+  doesn't exist. Typing a date into a CuiDatePicker whose format uses single-letter `M` or
+  `D` (`M/D/YY`) now keeps the digits in the field instead of redrawing it mid-entry.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added
