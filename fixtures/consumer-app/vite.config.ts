@@ -10,6 +10,10 @@ import { resolve } from "node:path";
 // measure "this app without clean-ui" from the *same* source, for a true
 // gzip delta rather than clean-ui's own (unrelated) dist size.
 const baseline = process.env.CUI_BUNDLE_BASELINE === "1";
+// Which page to build: "basic" (index.html, App.vue) or "grid" (grid.html, GridApp.vue), the
+// size budget's second scenario (#377). Each has its own output directory.
+const scenario = process.env.CUI_BUNDLE_SCENARIO === "grid" ? "grid" : "basic";
+const outDir = [scenario === "grid" ? "dist-grid" : "dist", baseline ? "-baseline" : ""].join("");
 
 export default defineConfig({
   plugins: [vue()],
@@ -22,6 +26,7 @@ export default defineConfig({
       }
     : undefined,
   build: {
-    outDir: baseline ? "dist-baseline" : "dist",
+    outDir,
+    ...(scenario === "grid" ? { rollupOptions: { input: resolve(__dirname, "grid.html") } } : {}),
   },
 });

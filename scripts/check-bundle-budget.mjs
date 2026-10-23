@@ -36,13 +36,14 @@ function gzipTotal(distDir) {
     .reduce((total, file) => total + gzipSync(readFileSync(join(assetsDir, file))).length, 0);
 }
 
-function build(baseline) {
-  const outDir = baseline ? "dist-baseline" : "dist";
+/** Build one scenario's page (see fixtures/consumer-app/vite.config.ts), with or without clean-ui. */
+function build(scenario, baseline) {
+  const outDir = (scenario === "grid" ? "dist-grid" : "dist") + (baseline ? "-baseline" : "");
   rmSync(join(FIXTURE_DIR, outDir), { recursive: true, force: true });
   execFileSync("npm", ["run", "build"], {
     cwd: FIXTURE_DIR,
     stdio: "inherit",
-    env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? "1" : "0" },
+    env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? "1" : "0", CUI_BUNDLE_SCENARIO: scenario },
   });
   return gzipTotal(join(FIXTURE_DIR, outDir));
 }
@@ -53,28 +54,38 @@ if (!existsSync(join(FIXTURE_DIR, "node_modules", "@itguy614", "clean-ui"))) {
 if (!existsSync(BUDGET_FILE)) fail(`${BUDGET_FILE} does not exist.`);
 
 const { budgets } = JSON.parse(readFileSync(BUDGET_FILE, "utf-8"));
-const entry = budgets.find((b) => b.package === "@itguy614/clean-ui");
-if (!entry) fail(`No budget entry for "@itguy614/clean-ui" in ${BUDGET_FILE}.`);
+const entries = budgets.filter((b) => b.package === "@itguy614/clean-ui");
+if (!entries.length) fail(`No budget entry for "@itguy614/clean-ui" in ${BUDGET_FILE}.`);
 
-console.log("[check-bundle-budget] Building fixture with the real package...");
-const withPackage = build(false);
-console.log("[check-bundle-budget] Building fixture with the baseline stub...");
-const baseline = build(true);
-
-const delta = withPackage - baseline;
 const format = (bytes) => `${(bytes / 1024).toFixed(1)} kB`;
+const over = [];
 
-console.log(
-  `[check-bundle-budget] with-package: ${format(withPackage)}, baseline: ${format(baseline)}, ` +
-    `delta: ${format(delta)}, budget: ${format(entry.gzipBytes)}`,
-);
+// One budget per scenario (#377): the minimal page, and a grid with overlays, where 1.5.0
+// grew ~12 kB that the minimal page never saw.
+for (const entry of entries) {
+  const scenario = entry.scenario ?? "basic";
+  console.log(`[check-bundle-budget] ${scenario}: building with the real package...`);
+  const withPackage = build(scenario, false);
+  console.log(`[check-bundle-budget] ${scenario}: building with the baseline stub...`);
+  const baseline = build(scenario, true);
+  const delta = withPackage - baseline;
+  console.log(
+    `[check-bundle-budget] ${scenario}: with-package: ${format(withPackage)}, baseline: ${format(baseline)}, ` +
+      `delta: ${format(delta)}, budget: ${format(entry.gzipBytes)}`,
+  );
+  if (delta > entry.gzipBytes) {
+    over.push(
+      `the ${scenario} scenario grew by ${format(delta)} gzip, over its ${format(entry.gzipBytes)} budget ` +
+        `(measured ${entry.measured})`,
+    );
+  } else {
+    console.log(`✓ ${scenario}: bundle delta ${format(delta)} is within the ${format(entry.gzipBytes)} budget.`);
+  }
+}
 
-if (delta > entry.gzipBytes) {
+if (over.length) {
   fail(
-    `@itguy614/clean-ui grew the fixture bundle by ${format(delta)} gzip, over the ${format(entry.gzipBytes)} ` +
-      `budget (measured ${entry.measured}). If this growth is expected, update the "gzipBytes" and ` +
+    `@itguy614/clean-ui: ${over.join("; ")}. If this growth is expected, update the "gzipBytes" and ` +
       `"measured" fields in ${BUDGET_FILE} deliberately.`,
   );
 }
-
-console.log(`\n✓ Bundle delta ${format(delta)} is within the ${format(entry.gzipBytes)} budget.`);
