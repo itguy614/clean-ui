@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Toasts and keyboard focus** (#344). A toast's countdown paused on hover only, so a
+  keyboard or switch user on its dismiss button could lose it mid-read (WCAG 2.2.1); it now
+  pauses while focus is in the toast too. And when a toast that held focus went (dismissed,
+  cleared or pushed out by `maxToasts`) focus fell to the page, and the next Tab started
+  over from the top (WCAG 2.4.3). It now moves to the next toast, or the one before, or back
+  to where it was before it came into the stack.
 - **Scoped themes follow through on three more slots** (#330). Light `--cui-text-tertiary`
   and dark `--cui-secondary` were hardcoded at Navy's hue, so tertiary text kept an indigo
   tint inside any other theme. Both now mix the theme's own scale steps. They're the same
