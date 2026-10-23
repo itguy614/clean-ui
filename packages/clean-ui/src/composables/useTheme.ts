@@ -24,7 +24,10 @@ const CLASS_PREFIX = "cui-theme-";
 // Only the classes clean-ui itself may add. `applyTheme` strips these and no
 // others, so a consuming app's own `cui-theme-<brand>` class on <html> — a
 // documented way to ship a custom palette — is never removed (issue #85).
-const PRESET_CLASSES = new Set(THEME_PRESETS.map((p) => `${CLASS_PREFIX}${p.id}`));
+// The Navy classes too (#330): a scoped subtree's way back to the default, never left on
+// <html>, where the default needs no class and a class's literal scale would shadow a
+// consumer's own :root palette.
+const PRESET_CLASSES = new Set([...THEME_PRESETS.map((p) => `${CLASS_PREFIX}${p.id}`), `${CLASS_PREFIX}navy`]);
 
 function loadTheme(): string {
   // No-op default: with nothing stored, don't force a theme — "default" adds no
@@ -37,6 +40,8 @@ const activeTheme = ref<string>(loadTheme());
 
 function applyTheme(themeId: string) {
   if (typeof document === "undefined") return;
+  // "navy" is the default's name; it adds no class either.
+  if (themeId === "navy") themeId = "default";
 
   const root = document.documentElement;
   for (const cls of Array.from(root.classList)) {

@@ -14,7 +14,10 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
+// The save-as field's name: its placeholder is none (#373).
+const viewNameId = useCuiId("grid-view-name");
 const messages = useMessages();
 
 const props = defineProps<{
@@ -117,6 +120,7 @@ function onReset() {
             <button
               type="button"
               style="border: none; background: none; cursor: pointer; padding: calc(0.125rem * var(--cui-density-scale, 1)); color: var(--cui-text-tertiary); opacity: 0.6;"
+              :aria-label="messages.dataGrid.deleteView?.(view.name)"
               @click.stop="onRemove(view.id)"
             >
               <CuiIcon name="trash" size="0.75rem" />
@@ -143,8 +147,10 @@ function onReset() {
       </CuiDropdownItem>
 
       <div v-if="showSaveAs" style="padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1)); display: flex; gap: calc(0.375rem * var(--cui-density-scale, 1));">
+        <span :id="viewNameId" class="cui-sr-only">{{ messages.dataGrid.viewName }}</span>
         <CuiInput
           v-model="newViewName"
+          :aria-labelledby="viewNameId"
           :placeholder="messages.dataGrid.viewName"
           size="sm"
           style="flex: 1;"

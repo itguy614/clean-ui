@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
+  or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
+  echo of the close started a second one, and re-opening during the exit didn't cancel the
+  pending close. CuiModal and CuiSlideover use `exit: "transition"` and weren't affected.
+- **The overlay focus trap's gaps** (#339): Shift+Tab right after opening, from the dialog
+  itself, left the dialog; a dialog with nothing focusable didn't trap Tab at all; and a
+  disabled or hidden last control stopped Tab wrapping. All three are fixed, in CuiModal and
+  CuiSlideover too. The trap now knows what Tab really stops on: controls in a disabled
+  fieldset or under `visibility: hidden` don't count, an editable region (the markdown
+  editor) does, and a native radio group counts once.
+- **Toasts and keyboard focus** (#344). A toast's countdown paused on hover only, so a
+  keyboard or switch user on its dismiss button could lose it mid-read (WCAG 2.2.1); it now
+  pauses while focus is in the toast too. And when a toast that held focus went (dismissed,
+  cleared or pushed out by `maxToasts`) focus fell to the page, and the next Tab started
+  over from the top (WCAG 2.4.3). It now moves to the next toast, or the one before, or back
+  to where it was before it came into the stack.
+- **Scoped themes follow through on three more slots** (#330). Light `--cui-text-tertiary`
+  and dark `--cui-secondary` were hardcoded at Navy's hue, so tertiary text kept an indigo
+  tint inside any other theme. Both now mix the theme's own scale steps. They're the same
+  lightness as before, a touch less saturated, and the contrast audit grades every theme at
+  ~4.86:1 for tertiary text.
+  A new `cui-theme-default` class (`cui-theme-navy` too) carries the default scale, so a
+  subtree inside another theme can switch back to Navy. `useTheme` still adds no class for
+  the default on the page root, treats `setTheme("navy")` as the default, and removes either
+  Navy class from `<html>` when switching. Use them on a subtree only: on `<html>` their
+  literal scale would override your own `:root` palette.
+- **CuiCombobox and CuiTagInput keep the highlight on its option** when the list changes
+  under it (#346): an option added above it (a "Favorites" section), the query clearing
+  after a multiple selection, async results arriving. The highlight used to be cleared on
+  any change, and before 1.4 it stayed on the same index, which was then a different
+  option, so Enter picked the wrong one. It now follows the option by value, and clears
+  only when that option has gone or is disabled.
+- **CuiDataGrid's search box has an accessible name** (#373), so a default grid passes axe's
+  `label` and `button-name` rules. It had only a placeholder, which is no name, and its clear
+  button only an icon. The box is named by the `search` message less its ellipsis
+  ("Search"), so a translated catalogue names it in its own language, or by the new
+  `searchLabel` prop or optional `dataGrid.searchLabel` message ("Search tags"). The clear
+  button is CuiInput's own, named "Clear input", and it hands focus back to the box rather
+  than dropping it to the page. In the saved-views menu, each view's delete button
+  ("Delete view Mine", from a new optional `dataGrid.deleteView` message) and the save-as
+  field are named too.
+- **Saving a CuiDataGrid view on plain HTTP** (#370) threw a `TypeError`: the view's id
+  came from `crypto.randomUUID()`, which browsers provide only on HTTPS and localhost. A
+  device's own web UI or an intranet tool served over HTTP couldn't save views at all. The
+  id is now built from `crypto.getRandomValues()` where `randomUUID` is missing.
+- **Date formats with month names** (#340). `formatDate` rewrote letters inside a month
+  name it had just written, so `MMMM D, YYYY` on 5 March read "3arch 5, 2025" and
+  `DD MMM YYYY` on 5 December "05 5ec 2025" (every month with an M or a D in its name), in
+  CuiDatePicker and CuiDateRangePicker too. `parseFormattedDate` read the wrong characters
+  after a month name of a different length, ignored `M` and `D`, and rolled 31 February
+  over into March. It now matches the whole string, and returns `null` for a date that
+  doesn't exist. Typing a date into a CuiDatePicker whose format uses single-letter `M` or
+  `D` (`M/D/YY`) now keeps the digits in the field instead of redrawing it mid-entry.
+
 ### Documentation
 
 - **Tailwind is optional** (#371): the README and the Installation page now say so outright.

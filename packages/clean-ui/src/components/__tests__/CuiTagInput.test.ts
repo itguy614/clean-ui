@@ -140,3 +140,20 @@ describe("CuiTagInput empty state with async suggestions", () => {
     vi.useRealTimers();
   });
 });
+
+// #346 — the same index after the list changes is a different suggestion.
+describe("CuiTagInput highlight when the suggestions change", () => {
+  it("stays on the same suggestion when one is added above it", async () => {
+    const suggestions = [{ value: "red" }, { value: "green" }, { value: "blue" }];
+    const w = mount(CuiTagInput, { props: { modelValue: [], suggestions }, attachTo: document.body });
+    const input = w.find("input");
+    await input.trigger("focus");
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    const named = () => document.getElementById(input.element.getAttribute("aria-activedescendant") ?? "")?.textContent?.trim();
+    expect(named()).toBe("green");
+    await w.setProps({ suggestions: [{ value: "black" }, ...suggestions] });
+    expect(named()).toBe("green");
+    w.unmount();
+  });
+});

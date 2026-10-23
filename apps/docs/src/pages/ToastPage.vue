@@ -118,8 +118,14 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          Only the topmost toast counts down, and hovering pauses its progress bar — so a
-          toast cannot expire while it is being read.
+          Only the topmost toast counts down, and hovering or focusing it pauses the
+          countdown, so a toast can't expire while it's being read or while a keyboard user
+          is on its dismiss button.
+        </li>
+        <li>
+          When a toast that holds focus goes, dismissed, cleared or pushed out by
+          <code>maxToasts</code>, focus moves to the next toast, or the one before, or back
+          to where it was before it came into the stack. It never drops to the page.
         </li>
         <li>
           The role icon is decorative and the text carries the meaning.
@@ -269,12 +275,12 @@ dismissAll()`">
       </Example>
 
       <!-- Hover to pause -->
-      <Example title="Hover to Pause">
+      <Example title="Hover or Focus to Pause">
         <div class="rounded-lg border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-900">
           <p class="text-sm text-surface-600 dark:text-surface-400">
-            Hover over any toast to pause its auto-dismiss countdown.
-            The progress bar pauses and resumes when you move away.
-            Try triggering a toast and hovering over it.
+            Hover over any toast, or Tab to its dismiss button, to pause its auto-dismiss
+            countdown. The progress bar pauses and resumes when you move away. Press Enter on
+            the dismiss button with several toasts showing: focus moves to the next one.
           </p>
         </div>
       </Example>
