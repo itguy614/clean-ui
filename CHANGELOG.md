@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Saving a CuiDataGrid view on plain HTTP** (#370) threw a `TypeError`: the view's id
+  came from `crypto.randomUUID()`, which browsers provide only on HTTPS and localhost. A
+  device's own web UI or an intranet tool served over HTTP couldn't save views at all. The
+  id is now built from `crypto.getRandomValues()` where `randomUUID` is missing.
 - **Date formats with month names** (#340). `formatDate` rewrote letters inside a month
   name it had just written, so `MMMM D, YYYY` on 5 March read "3arch 5, 2025" and
   `DD MMM YYYY` on 5 December "05 5ec 2025" (every month with an M or a D in its name), in
