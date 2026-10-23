@@ -175,6 +175,19 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
           label="European Format"
         />
       </Example>
+
+      <!-- Month names -->
+      <Example title="Month Names (MMMM D, YYYY)" :code="`<CuiDateRangePicker
+  v-model=&quot;range&quot;
+  format=&quot;MMMM D, YYYY&quot;
+  label=&quot;Long dates&quot;
+/>`">
+        <CuiDateRangePicker
+          :model-value="{ start: '2025-03-05', end: '2025-05-30' }"
+          format="MMMM D, YYYY"
+          label="Long dates"
+        />
+      </Example>
     </template>
   </DocPage>
 </template>
