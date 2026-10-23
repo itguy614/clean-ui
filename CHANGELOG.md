@@ -15,6 +15,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   any change, and before 1.4 it stayed on the same index, which was then a different
   option, so Enter picked the wrong one. It now follows the option by value, and clears
   only when that option has gone or is disabled.
+- **CuiDataGrid's search box has an accessible name** (#373), so a default grid passes axe's
+  `label` and `button-name` rules. It had only a placeholder, which is no name, and its clear
+  button only an icon. The box is named by the `search` message less its ellipsis
+  ("Search"), so a translated catalogue names it in its own language, or by the new
+  `searchLabel` prop or optional `dataGrid.searchLabel` message ("Search tags"). The clear
+  button is CuiInput's own, named "Clear input", and it hands focus back to the box rather
+  than dropping it to the page. In the saved-views menu, each view's delete button
+  ("Delete view Mine", from a new optional `dataGrid.deleteView` message) and the save-as
+  field are named too.
+- **Saving a CuiDataGrid view on plain HTTP** (#370) threw a `TypeError`: the view's id
+  came from `crypto.randomUUID()`, which browsers provide only on HTTPS and localhost. A
+  device's own web UI or an intranet tool served over HTTP couldn't save views at all. The
+  id is now built from `crypto.getRandomValues()` where `randomUUID` is missing.
+- **Date formats with month names** (#340). `formatDate` rewrote letters inside a month
+  name it had just written, so `MMMM D, YYYY` on 5 March read "3arch 5, 2025" and
+  `DD MMM YYYY` on 5 December "05 5ec 2025" (every month with an M or a D in its name), in
+  CuiDatePicker and CuiDateRangePicker too. `parseFormattedDate` read the wrong characters
+  after a month name of a different length, ignored `M` and `D`, and rolled 31 February
+  over into March. It now matches the whole string, and returns `null` for a date that
+  doesn't exist. Typing a date into a CuiDatePicker whose format uses single-letter `M` or
+  `D` (`M/D/YY`) now keeps the digits in the field instead of redrawing it mid-entry.
 
 ## [1.5.0] - 2026-10-22
 

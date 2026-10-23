@@ -8,7 +8,7 @@ import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
   MONTH_NAMES, MONTH_NAMES_SHORT, DAY_NAMES_SHORT,
   daysInMonth, isSameDay, isToday,
-  formatDate, parseFormattedDate, formatToMask, formatToRaw,
+  formatDate, parseFormattedDate, formatToMask, formatToRaw, maskedFormat,
   toDateValue, dateToIso,
   type DisabledDateRange,
 } from "../utils/date";
@@ -118,7 +118,8 @@ const inputPlaceholder = computed(() => props.placeholder ?? props.format.toLowe
 // Raw digits for CuiMaskedInput (strips separators from formatted date)
 const inputRaw = computed(() => {
   if (!selectedDate.value) return "";
-  return formatToRaw(formatDate(selectedDate.value, props.format));
+  // Padded as the mask is: a single M or D still takes two digits there.
+  return formatToRaw(formatDate(selectedDate.value, maskedFormat(props.format)));
 });
 
 // Emit the value

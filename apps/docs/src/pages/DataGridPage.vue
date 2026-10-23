@@ -672,7 +672,9 @@ const count = computed(() => grid.filters.value.length);</code></pre>
                 live behind an API. Without one it defaults to
                 <code>localStorageViewAdapter(prefix = "cui-datagrid")</code>, which stores each
                 grid's views as JSON under <code>`${prefix}-views-${gridId}`</code> and treats a
-                missing or corrupt entry as no views.
+                missing or corrupt entry as no views. A new view's id is a random UUID, made even
+                on a page served over plain HTTP, where browsers leave out
+                <code>crypto.randomUUID()</code>.
               </p>
               <pre class="cui-pre"><code class="cui-code">import { useDataGrid, useDataGridViews, localStorageViewAdapter, type DataGridViewAdapter } from "@itguy614/clean-ui";
 
