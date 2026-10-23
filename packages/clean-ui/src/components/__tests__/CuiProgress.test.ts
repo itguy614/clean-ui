@@ -19,4 +19,11 @@ describe("CuiProgress label while indeterminate", () => {
     const w = mount(CuiProgress, { props: { showLabel: true, value: 40 } });
     expect(w.text()).toContain("40%");
   });
+
+  it.each(["bar", "circle"] as const)("%s: a label slot names the progressbar, and there's no value while indeterminate", (variant) => {
+    const w = mount(CuiProgress, { props: { variant, indeterminate: true }, slots: { label: "Uploading…" } });
+    const bar = w.find('[role="progressbar"]');
+    expect(bar.attributes("aria-valuenow")).toBeUndefined();
+    expect(w.find(`#${bar.attributes("aria-labelledby")}`).text()).toBe("Uploading…");
+  });
 });

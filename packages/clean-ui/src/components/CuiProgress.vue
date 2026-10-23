@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
+import { useCuiId } from "../composables/useCuiId";
 
 export type ProgressVariant = "bar" | "circle";
 export type ProgressAnimation = "none" | "stripe" | "shimmer";
@@ -32,6 +33,10 @@ const props = withDefaults(defineProps<CuiProgressProps>(), {
   animation: "none",
   hidden: false,
 });
+
+// A #label slot ("Uploading…") names the progressbar, whose children are presentational to
+// assistive tech, so its text alone would never be read (#390).
+const labelId = useCuiId("progress-label");
 
 const percent = computed(() => {
   if (props.indeterminate) return 0;
@@ -88,6 +93,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
     class="cui-progress-bar"
     :style="{ '--_progress-color': `var(--cui-${color})`, '--_progress-bg': `var(--cui-${color}-bg)` }"
     role="progressbar"
+    :aria-labelledby="$slots.label ? labelId : undefined"
     :aria-valuenow="indeterminate ? undefined : value"
     :aria-valuemin="0"
     :aria-valuemax="max"
@@ -108,7 +114,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
     </div>
     <!-- No percentage while indeterminate, there is none to show (#390); a label slot the
          consumer supplies ("Uploading…") still shows. -->
-    <div v-if="$slots.label || (showLabel && !indeterminate)" class="cui-progress-bar__label">
+    <div v-if="$slots.label || (showLabel && !indeterminate)" :id="labelId" class="cui-progress-bar__label">
       <slot name="label" :value="value" :max="max" :percent="percent">
         {{ percentLabel }}
       </slot>
@@ -127,6 +133,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
       '--_progress-bg': `var(--cui-${color}-bg)`,
     }"
     role="progressbar"
+    :aria-labelledby="$slots.label ? labelId : undefined"
     :aria-valuenow="indeterminate ? undefined : value"
     :aria-valuemin="0"
     :aria-valuemax="max"
@@ -163,6 +170,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
     <!-- Label -->
     <div
       v-if="$slots.label || (showLabel && !indeterminate)"
+      :id="labelId"
       class="cui-progress-circle__label"
       :style="{ fontSize: circleLabelSize[clampedSize] }"
     >
