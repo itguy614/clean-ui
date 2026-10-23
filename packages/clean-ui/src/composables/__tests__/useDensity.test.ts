@@ -61,6 +61,8 @@ describe("useDensity at import", () => {
     vi.resetModules();
     return (await import("../useDensity")).useDensity;
   }
+  // Earlier tests in this file store a density; each of these starts from nothing stored.
+  beforeEach(() => localStorage.clear());
   afterEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
