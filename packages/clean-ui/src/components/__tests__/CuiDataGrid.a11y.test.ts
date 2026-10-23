@@ -88,3 +88,31 @@ describe("CuiDataGrid sorting and naming", () => {
     expect(toggle.map((b) => b.attributes("aria-pressed"))).toEqual(["true", "false"]);
   });
 });
+
+// #373 — the toolbar's search box had only a placeholder, which is no accessible name, and
+// its clear button only an icon.
+describe("CuiDataGrid toolbar search names", () => {
+  const nameOf = (input: HTMLElement) =>
+    (input.getAttribute("aria-labelledby") ?? "")
+      .split(" ")
+      .map((id) => document.getElementById(id)?.textContent?.trim())
+      .join(" ");
+  const searchBox = () => document.querySelector<HTMLInputElement>(".cui-data-grid-search input")!;
+
+  it("names the search box 'Search' by default", () => {
+    mountGrid({ hideToolbar: false });
+    expect(nameOf(searchBox())).toBe("Search");
+  });
+
+  it("takes a name from searchLabel", () => {
+    mountGrid({ hideToolbar: false, searchLabel: "Search tags" });
+    expect(nameOf(searchBox())).toBe("Search tags");
+  });
+
+  it("names the clear button", async () => {
+    mountGrid({ hideToolbar: false, searchDebounce: 0 });
+    await w!.find(".cui-data-grid-search input").setValue("ali");
+    const clear = w!.find(".cui-data-grid-search .cui-button");
+    expect(clear.attributes("aria-label")).toBe("Clear input");
+  });
+});

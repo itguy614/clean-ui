@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **CuiDataGrid's search box has an accessible name** (#373), so a default grid passes axe's
+  `label` and `button-name` rules. It had only a placeholder, which is no name, and its clear
+  button only an icon. The box is named "Search" by default, or by the new `searchLabel` prop
+  ("Search tags"), and the clear button by `input.clear`. The name comes from a new
+  `dataGrid.searchLabel` message. It's optional, so an existing custom catalogue still
+  type-checks; without it the box is named by its `search` text.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added
