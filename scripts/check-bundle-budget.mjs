@@ -6,7 +6,8 @@
  * actually cares about. Requires fixtures/consumer-app's tarball install to
  * already be in place (run scripts/verify-fixture.mjs first).
  *
- * Method: build fixtures/consumer-app twice from the *same* source — once
+ * Method: for each scenario in the budget file (one fixture page each, see SCENARIOS),
+ * build fixtures/consumer-app twice from the *same* source — once
  * against the real package, once with it swapped for a same-shaped stub
  * (CUI_BUNDLE_BASELINE=1, see fixtures/consumer-app/vite.config.ts) — and
  * diff the gzip totals. Budgets are read from fixtures/size-budget.json,
@@ -36,14 +37,25 @@ function gzipTotal(distDir) {
     .reduce((total, file) => total + gzipSync(readFileSync(join(assetsDir, file))).length, 0);
 }
 
-/** Build one scenario's page (see fixtures/consumer-app/vite.config.ts), with or without clean-ui. */
+/**
+ * The fixture's pages, one per budget scenario (#377). `basic` is the minimal app; `grid`
+ * is a data grid with a modal, a slideover and toasts, where 1.5.0 grew ~12 kB that the
+ * minimal page never saw.
+ */
+const SCENARIOS = {
+  basic: { input: "index.html", outDir: "dist" },
+  grid: { input: "grid.html", outDir: "dist-grid" },
+};
+
+/** Build one scenario's page, with or without clean-ui, and return its gzip total. */
 function build(scenario, baseline) {
-  const outDir = (scenario === "grid" ? "dist-grid" : "dist") + (baseline ? "-baseline" : "");
+  const { input, outDir: base } = SCENARIOS[scenario];
+  const outDir = baseline ? `${base}-baseline` : base;
   rmSync(join(FIXTURE_DIR, outDir), { recursive: true, force: true });
   execFileSync("npm", ["run", "build"], {
     cwd: FIXTURE_DIR,
     stdio: "inherit",
-    env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? "1" : "0", CUI_BUNDLE_SCENARIO: scenario },
+    env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? "1" : "0", CUI_BUNDLE_INPUT: input, CUI_BUNDLE_OUTDIR: outDir },
   });
   return gzipTotal(join(FIXTURE_DIR, outDir));
 }
@@ -60,10 +72,11 @@ if (!entries.length) fail(`No budget entry for "@itguy614/clean-ui" in ${BUDGET_
 const format = (bytes) => `${(bytes / 1024).toFixed(1)} kB`;
 const over = [];
 
-// One budget per scenario (#377): the minimal page, and a grid with overlays, where 1.5.0
-// grew ~12 kB that the minimal page never saw.
 for (const entry of entries) {
   const scenario = entry.scenario ?? "basic";
+  if (!SCENARIOS[scenario]) {
+    fail(`Unknown scenario "${scenario}" in ${BUDGET_FILE}; the fixture has: ${Object.keys(SCENARIOS).join(", ")}.`);
+  }
   console.log(`[check-bundle-budget] ${scenario}: building with the real package...`);
   const withPackage = build(scenario, false);
   console.log(`[check-bundle-budget] ${scenario}: building with the baseline stub...`);
