@@ -223,6 +223,12 @@ export interface CuiCoreMessages {
     /** "All" option in a select filter. */
     all: string;
     search: string;
+    /**
+     * The search box's accessible name (#373), where it should differ from `search` (its
+     * placeholder, which is no name). Without it the box is named by `search`, less a
+     * trailing ellipsis, so a translated placeholder names it in the same language.
+     */
+    searchLabel?: string;
     /** Placeholder for a per-column filter input. */
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
@@ -237,6 +243,8 @@ export interface CuiCoreMessages {
     saveAs: string;
     save: string;
     viewName: string;
+    /** A saved view's delete button (#373). Optional, so an existing catalogue type-checks. */
+    deleteView?: (name: string) => string;
     resetViews: string;
     /** Described on a clickable row (aria-description), which has no role to say so (#232). */
     rowHint: string;
@@ -372,6 +380,7 @@ export const defaultMessages: CuiCoreMessages = {
     saveAs: "Save as...",
     save: "Save",
     viewName: "View name",
+    deleteView: (name) => `Delete view ${name}`,
     resetViews: "Reset to defaults",
     rowHint: "Press Enter to open",
     selectAll: "Select all rows",

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import {
   CuiAvatar,
   CuiBadge,
   CuiCombobox,
   CuiFlex,
+  CuiStack,
+  CuiToggle,
   type ComboboxOption,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
@@ -28,6 +30,23 @@ const fruits: ComboboxOption[] = [
   { value: "orange", label: "Orange" },
 ];
 const selectedFruit = ref<string | null>(null);
+
+// A list that changes while it's open (#346): a new option arrives at the top every two
+// seconds, and the highlight stays on the option you moved to.
+const liveFruits = ref<ComboboxOption[]>([...fruits]);
+const liveValue = ref<string | null>(null);
+const liveRunning = ref(false);
+let liveTimer: ReturnType<typeof setInterval> | undefined;
+let arrivals = 0;
+watch(liveRunning, (on) => {
+  clearInterval(liveTimer);
+  if (!on) return;
+  liveTimer = setInterval(() => {
+    arrivals += 1;
+    liveFruits.value = [{ value: `new-${arrivals}`, label: `New arrival ${arrivals}` }, ...liveFruits.value];
+  }, 2000);
+});
+onUnmounted(() => clearInterval(liveTimer));
 const selectedFruits = ref<string[]>([]);
 
 // Rich options with icons + descriptions
@@ -134,6 +153,22 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
               Selected: <code class="cui-code">{{ selectedFruits }}</code>
             </div>
           </CuiFlex>
+        </Example>
+
+        <!-- A list that changes while open -->
+        <Example title="A List That Changes While Open" :code="`<!-- Options can change under an open list: the highlight stays on the
+     option it was on, found again by value, or clears if that option is gone. -->
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; />`">
+          <CuiStack spacing="3">
+            <CuiToggle v-model="liveRunning" label="Add an option at the top every 2 seconds" />
+            <div style="width: 20rem;">
+              <CuiCombobox v-model="liveValue" :options="liveFruits" label="Fruit" placeholder="Arrow down to an option…" />
+            </div>
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              Turn it on, open the list and arrow down to an option. New ones arrive above it,
+              and the highlight stays put, so Enter picks the option you chose.
+            </p>
+          </CuiStack>
         </Example>
 
         <!-- Rounded -->

@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import type { DataGridSavedView, DataGridViewAdapter } from "../types/data-grid";
 import { safeGetItem, safeSetItem } from "../utils/storage";
+import { randomId } from "../utils/randomId";
 
 /** Built-in localStorage adapter */
 export function localStorageViewAdapter(prefix = "cui-datagrid"): DataGridViewAdapter {
@@ -62,7 +63,7 @@ export function useDataGridViews(options: UseDataGridViewsOptions) {
   async function saveView(name: string, config: DataGridSavedView["config"]) {
     const existing = views.value.find((v) => v.name === name);
     const view: DataGridSavedView = {
-      id: existing?.id ?? crypto.randomUUID(),
+      id: existing?.id ?? randomId(),
       name,
       config,
     };
