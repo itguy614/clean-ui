@@ -85,7 +85,7 @@ const meta: ComponentMeta = {
           name: "header",
           type: "boolean",
           default: "—",
-          description: "Force a <th> or a <td>. Unset, the cell takes it from its section — <th> inside CuiTableHead, <td> elsewhere",
+          description: "Force a <th> or a <td>. Unset, the cell takes it from its section — <th> inside CuiTableHead, <td> elsewhere. A header cell has scope=\"col\" in the head and scope=\"row\" in the body or foot",
         },
         { name: "align", type: "left | center | right", default: "left", description: "Text alignment. Right-align numbers" },
         { name: "width", type: "string", default: "—", description: "CSS width for the column" },

@@ -225,3 +225,24 @@ describe("CuiTable overflow containment", () => {
     spy.mockRestore();
   });
 });
+
+// #390 — a header cell in the body heads its row, but got scope="col".
+describe("CuiTableCell header scope", () => {
+  it("is col in the head and row in the body", () => {
+    const w = mount(CuiTable, {
+      slots: {
+        default: () => [
+          h(CuiTableHead, null, () => h(CuiTableRow, null, () => [h(CuiTableCell, null, () => "Name"), h(CuiTableCell, null, () => "Role")])),
+          h(CuiTableBody, null, () => h(CuiTableRow, null, () => [h(CuiTableCell, { header: true }, () => "Alice"), h(CuiTableCell, null, () => "Dev")])),
+        ],
+      },
+    });
+    const ths = w.findAll("th");
+    expect(ths.map((th) => [th.text(), th.attributes("scope")])).toEqual([
+      ["Name", "col"],
+      ["Role", "col"],
+      ["Alice", "row"],
+    ]);
+    expect(w.find("td").attributes("scope")).toBeUndefined();
+  });
+});

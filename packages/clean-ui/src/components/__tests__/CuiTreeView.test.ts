@@ -593,6 +593,38 @@ describe("CuiTreeView keyboard", () => {
     expect(focusedId(), "not out to the next sibling").toBe("p");
   });
 
+  it("doesn't expand or collapse a disabled parent on click, in expand-only mode (#390)", async () => {
+    const nodes: TreeNode[] = [{ id: "p", label: "Parent", disabled: true, children: [{ id: "c", label: "Child" }] }];
+    const wrapper = mountTree({ nodes, selectable: false });
+    expect(item("p").getAttribute("aria-expanded")).toBe("false");
+    await wrapper.find(".cui-tree-node__row").trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(item("p").getAttribute("aria-expanded"), "still collapsed").toBe("false");
+  });
+
+  it("ArrowLeft from a child of a disabled parent goes to the nearest enabled ancestor (#390)", async () => {
+    const nodes: TreeNode[] = [
+      { id: "g", label: "Grand", children: [{ id: "p", label: "Parent", disabled: true, children: [{ id: "c", label: "Child" }] }] },
+    ];
+    const wrapper = mountTree({ nodes, defaultExpanded: ["g", "p"] });
+    item("c").focus();
+    await press(wrapper, "ArrowLeft");
+    expect(focusedId()).toBe("g");
+    expect(tabStops()).toHaveLength(1);
+    expect(item("g").getAttribute("tabindex")).toBe("0");
+  });
+
+  it("* leaves a disabled sibling closed (#390)", async () => {
+    const nodes: TreeNode[] = [
+      { id: "a", label: "A", children: [{ id: "a1", label: "A1" }] },
+      { id: "b", label: "B", disabled: true, children: [{ id: "b1", label: "B1" }] },
+    ];
+    const wrapper = mountTree({ nodes });
+    item("a").focus();
+    await press(wrapper, "*");
+    expect(wrapper.emitted("update:expanded")![0]).toEqual([["a"]]);
+  });
+
   it("skips disabled nodes when moving", async () => {
     const withDisabled: TreeNode[] = [
       { id: "x", label: "Ex" },

@@ -17,6 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   focusable, unnamed field that ignored every key, is named and opens the calendar like
   the start field. New optional messages: `dateRangePicker.start` / `.end` and
   `timePicker.hours` / `.minutes`. An existing custom catalogue still type-checks.
+- **Small fixes** (#390):
+  - An `indeterminate` CuiProgress bar with `show-label` no longer shows a percentage it
+    doesn't have, as the circle already didn't. A `#label` slot still shows on both, so
+    "Uploading…" works while indeterminate, and it now names the progressbar for screen
+    readers too; before, its text was never read.
+  - A disabled CuiTreeView parent no longer expands or collapses when clicked in
+    expand-only mode (`selectable: false`), or with `*`. Selecting it was already blocked.
+    ArrowLeft from its child goes to the nearest enabled ancestor; it used to leave focus
+    where it was and move the tab stop to the first node.
+  - A `<CuiTableCell header>` in a table body gets `scope="row"`, so a screen reader reads
+    it as the header of its row rather than of a column.
+- **Importing the library no longer touches the page's density** (#389). `useDensity` ran
+  at import: it removed any `cui-density-*` class you put on `<html>` yourself and wrote
+  `cui-density=default` into localStorage, whether or not you used density. Now only a
+  density chosen with `setDensity` is stored, and restored on the next load.
 - **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
   or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
   echo of the close started a second one, and re-opening during the exit didn't cancel the

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { nextTick } from "vue";
 import { useDensity, DENSITY_PRESETS } from "../useDensity";
 
@@ -51,5 +51,43 @@ describe("useDensity", () => {
     useDensity().setDensity("comfortable");
     await nextTick();
     expect(useDensity().getDensity()).toBe("comfortable");
+  });
+});
+
+// #389 — importing the library ran applyDensity: it stripped a density class the consumer
+// put on <html>, and wrote "cui-density=default" into their localStorage.
+describe("useDensity at import", () => {
+  async function freshImport() {
+    vi.resetModules();
+    return (await import("../useDensity")).useDensity;
+  }
+  // Earlier tests in this file store a density; each of these starts from nothing stored.
+  beforeEach(() => localStorage.clear());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+    document.documentElement.className = "";
+  });
+
+  it("leaves <html> and localStorage alone when nothing is stored", async () => {
+    document.documentElement.className = "cui-density-compact";
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    await freshImport();
+    expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it("leaves the consumer's class alone when the stored value isn't a density", async () => {
+    localStorage.setItem("cui-density", "huge");
+    document.documentElement.className = "cui-density-compact";
+    await freshImport();
+    expect(document.documentElement.className).toBe("cui-density-compact");
+    expect(localStorage.getItem("cui-density"), "not overwritten").toBe("huge");
+  });
+
+  it("still restores a density stored earlier", async () => {
+    localStorage.setItem("cui-density", "comfortable");
+    await freshImport();
+    expect(densityClasses()).toEqual(["cui-density-comfortable"]);
   });
 });
