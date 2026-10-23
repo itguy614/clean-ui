@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Toasts and keyboard focus** (#344). A toast's countdown paused on hover only, so a
+  keyboard or switch user on its dismiss button could lose it mid-read (WCAG 2.2.1); it now
+  pauses while focus is in the toast too. And when a toast that held focus went (dismissed,
+  timed out or pushed out by `maxToasts`) focus fell to the page, and the next Tab started
+  over from the top (WCAG 2.4.3). It now moves to the next toast, or the one before, or back
+  to where it was before it came into the stack.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added

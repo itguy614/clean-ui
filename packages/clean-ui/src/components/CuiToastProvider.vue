@@ -76,9 +76,35 @@ const containerStyle = computed(() => {
  */
 function pinLeaving(el: Element) {
   const node = el as HTMLElement;
+  moveFocusOutOf(node);
   node.style.top = `${node.offsetTop}px`;
   node.style.left = `${node.offsetLeft}px`;
   node.style.width = `${node.offsetWidth}px`;
+}
+
+// Focus in a toast that goes (dismissed, timed out or pushed out by maxToasts) would fall to
+// <body>, and the next Tab start over from the top of the page (#344, WCAG 2.4.3). It moves
+// to the next toast instead, or the one before, or back to where it was before it came into
+// the stack.
+const TOAST_FOCUSABLE = 'button:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
+let returnFocusTo: HTMLElement | null = null;
+
+function onStackFocusin(e: FocusEvent) {
+  const from = e.relatedTarget;
+  if (from instanceof HTMLElement && !(e.currentTarget as HTMLElement).contains(from)) returnFocusTo = from;
+}
+
+function moveFocusOutOf(leaving: HTMLElement) {
+  if (!leaving.contains(document.activeElement)) return;
+  const all = [...(leaving.parentElement?.children ?? [])] as HTMLElement[];
+  const at = all.indexOf(leaving);
+  const staying = (t: HTMLElement) => t !== leaving && !t.classList.contains("cui-toast-leave-active");
+  const candidates = [...all.slice(at + 1), ...all.slice(0, at).reverse()].filter(staying);
+  for (const toast of candidates) {
+    const target = toast.querySelector<HTMLElement>(TOAST_FOCUSABLE);
+    if (target) return target.focus({ preventScroll: true });
+  }
+  if (returnFocusTo?.isConnected) returnFocusTo.focus({ preventScroll: true });
 }
 
 // Slide direction based on position
@@ -111,7 +137,7 @@ const visibleToasts = computed(() => {
   <Teleport to="body">
     <!-- Arrivals slide in from the screen edge, leavers fade out, and the rest move into
          place (#263): a TransitionGroup, so a removed toast no longer jumps the stack. -->
-    <TransitionGroup tag="div" name="cui-toast" :style="containerStyle" class="cui-toast-container" @before-leave="pinLeaving">
+    <TransitionGroup tag="div" name="cui-toast" :style="containerStyle" class="cui-toast-container" @before-leave="pinLeaving" @focusin="onStackFocusin">
       <div
         v-for="(toast, index) in visibleToasts"
         :key="toast.id"
