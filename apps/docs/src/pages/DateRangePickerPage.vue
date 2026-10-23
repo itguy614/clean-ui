@@ -88,12 +88,12 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
       </ul>
 
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The <code>label</code> prop renders plain text with no
-        <code>for</code> attribute, so it names nothing. Wrap the picker in a
-        <code>CuiFormField</code>, or pass <code>aria-labelledby</code> yourself — both
-        land on the start field. The end field takes no <code>id</code> or
-        <code>aria-*</code> of its own, so give the control a single name that covers the
-        pair rather than trying to label each half.
+        <strong>Each field is named</strong> by the <code>label</code> prop plus its half:
+        "Stay, Start date" and "Stay, End date" (the <code>dateRangePicker.start</code> and
+        <code>.end</code> messages). An <code>aria-labelledby</code> you pass joins both. The
+        end field opens the calendar from the keyboard as the start field does. The
+        <code>id</code>, <code>name</code> and <code>aria-describedby</code> props still land
+        on the start field.
       </p>
     </template>
 

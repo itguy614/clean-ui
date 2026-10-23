@@ -14,6 +14,7 @@ import {
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 
 export type DateRangePickerValueType = "iso" | "date";
@@ -86,6 +87,14 @@ const fieldStyle = computed(() => ({
 }));
 
 const messages = useMessages();
+// The label prop names the control (#391): a <label> with no `for` names nothing, and the
+// control's aria-labelledby took only the consumer's own id. Both now, label first.
+// Each input adds which half it is, so the two read "Stay, Start date" and "Stay, End date".
+const labelId = useCuiId("date-range-picker-label");
+const startNameId = useCuiId("date-range-picker-start");
+const endNameId = useCuiId("date-range-picker-end");
+const labelledBy = (half: string) =>
+  [props.label ? labelId : null, props.ariaLabelledby, half].filter(Boolean).join(" ");
 
 const emit = defineEmits<{
   "update:modelValue": [value: DateRangeValue];
@@ -282,6 +291,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   <div class="cui-date-range-picker" v-show="!hidden">
     <label
       v-if="label"
+      :id="labelId"
       :style="{
         display: 'block',
         marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
@@ -325,7 +335,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :autocomplete="autocomplete"
           :aria-describedby="ariaDescribedby"
           :aria-required="ariaRequired || undefined"
-          :aria-labelledby="ariaLabelledby"
+          :aria-labelledby="labelledBy(startNameId)"
           :value="startDisplay"
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly
@@ -333,7 +343,14 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :style="fieldStyle"
         />
         <span :style="{ color: 'var(--cui-text-tertiary)', fontSize: '0.75rem', flexShrink: '0' }">{{ separator }}</span>
+        <!-- The end input was focusable but unnamed and deaf to keys (#391): it takes the
+             start input's keys, and its own name. -->
+        <span :id="startNameId" class="cui-sr-only">{{ messages.dateRangePicker.start ?? messages.dateRangePicker.selectStart }}</span>
+        <span :id="endNameId" class="cui-sr-only">{{ messages.dateRangePicker.end ?? messages.dateRangePicker.selectEnd }}</span>
         <input
+          @keydown="onFieldKeydown"
+          :aria-labelledby="labelledBy(endNameId)"
+          :aria-describedby="ariaDescribedby"
           :value="endDisplay"
           :placeholder="endPlaceholder || props.format.toLowerCase()"
           readonly

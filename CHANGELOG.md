@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The pickers' `label` prop names its control** (#391). CuiDatePicker, CuiDateRangePicker
+  and CuiTimePicker rendered it as a `<label>` with no `for`, which names nothing, so screen
+  readers announced an unnamed field. It now names the control through `aria-labelledby`,
+  alongside any id you pass yourself. CuiTimePicker's hour and minute steppers are named
+  "Hours" and "Minutes", not two bare "spinbutton"s. CuiDateRangePicker's end field, a
+  focusable, unnamed field that ignored every key, is named and opens the calendar like
+  the start field. New optional messages: `dateRangePicker.start` / `.end` and
+  `timePicker.hours` / `.minutes`. An existing custom catalogue still type-checks.
 - **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
   or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
   echo of the close started a second one, and re-opening during the exit didn't cancel the

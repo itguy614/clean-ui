@@ -7,6 +7,8 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
+import { useMessages } from "../composables/useMessages";
+import { useCuiId } from "../composables/useCuiId";
 
 export type TimePickerFormat = "12" | "24";
 
@@ -35,6 +37,15 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
   disabled: false,
   hidden: false,
 });
+
+const messages = useMessages();
+// The label prop names the trigger (#391): a <label> with no `for` names nothing, and the
+// trigger is a div[role=combobox], which a `for` couldn't reach anyway. And the hour and
+// minute steppers announced as "spinbutton, 12", with nothing to say which was which.
+const labelId = useCuiId("time-picker-label");
+const hoursNameId = useCuiId("time-picker-hours");
+const minutesNameId = useCuiId("time-picker-minutes");
+const labelledBy = computed(() => [props.label ? labelId : null, props.ariaLabelledby].filter(Boolean).join(" ") || undefined);
 
 // Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
 // same `size` when placed side by side (#87).
@@ -282,6 +293,7 @@ defineExpose({ el: rootEl, focus, blur });
   <div class="cui-time-picker" ref="rootEl" v-show="!hidden">
     <label
       v-if="label"
+      :id="labelId"
       :style="{
         display: 'block',
         marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
@@ -310,7 +322,7 @@ defineExpose({ el: rootEl, focus, blur });
         :id="id"
         :aria-describedby="ariaDescribedby"
         :aria-required="ariaRequired || undefined"
-        :aria-labelledby="ariaLabelledby"
+        :aria-labelledby="labelledBy"
         :tabindex="disabled ? -1 : 0"
         @keydown="onTriggerKeydown"
         :style="{
@@ -342,7 +354,10 @@ defineExpose({ el: rootEl, focus, blur });
           :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
         >
           <!-- Hours -->
+          <span :id="hoursNameId" class="cui-sr-only">{{ messages.timePicker?.hours }}</span>
+          <span :id="minutesNameId" class="cui-sr-only">{{ messages.timePicker?.minutes }}</span>
           <CuiInputStepper
+            :aria-labelledby="hoursNameId"
             :model-value="hours"
             :min="hourMin"
             :max="hourMax"
@@ -359,6 +374,7 @@ defineExpose({ el: rootEl, focus, blur });
 
           <!-- Minutes -->
           <CuiInputStepper
+            :aria-labelledby="minutesNameId"
             :model-value="minutes"
             :min="0"
             :max="59"

@@ -106,12 +106,11 @@ const utilRoundTrip = computed(() => {
       </ul>
 
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The <code>label</code> prop renders plain text with no
-        <code>for</code> attribute, so it forms no association with the field — clicking it
-        does nothing and assistive technology does not read it with the input. Wrap the
-        picker in a <code>CuiFormField</code> instead, which supplies <code>id</code>,
-        <code>aria-labelledby</code> and <code>aria-describedby</code> through its slot
-        bindings, or pass those props yourself.
+        <strong>The <code>label</code> prop names the field</strong>, through
+        <code>aria-labelledby</code>, alongside any id you pass in
+        <code>aria-labelledby</code> yourself. Clicking the label doesn't focus the field; for
+        that, and for a description and an error message wired up together, wrap the picker
+        in a <code>CuiFormField</code>.
       </p>
     </template>
 
