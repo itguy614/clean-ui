@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **CuiDataGrid's search box has an accessible name** (#373), so a default grid passes axe's
+  `label` and `button-name` rules. It had only a placeholder, which is no name, and its clear
+  button only an icon. The box is named by the `search` message less its ellipsis
+  ("Search"), so a translated catalogue names it in its own language, or by the new
+  `searchLabel` prop or optional `dataGrid.searchLabel` message ("Search tags"). The clear
+  button is CuiInput's own, named "Clear input", and it hands focus back to the box rather
+  than dropping it to the page. In the saved-views menu, each view's delete button
+  ("Delete view Mine", from a new optional `dataGrid.deleteView` message) and the save-as
+  field are named too.
 - **Saving a CuiDataGrid view on plain HTTP** (#370) threw a `TypeError`: the view's id
   came from `crypto.randomUUID()`, which browsers provide only on HTTPS and localhost. A
   device's own web UI or an intranet tool served over HTTP couldn't save views at all. The
