@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-22
+
 ### Added
 
 - **CuiTabs scroll buttons** (#236): an overflowing tab bar shows a button on each side that
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- clean-ui-editor's peer range on `@itguy614/clean-ui` moves to `^1.5.0`: the editor's
+  focus transition reads the motion tokens (#261), which first ship in this release.
 - **CuiTabs motion follows the input** (#269). A tab reached with the arrow keys shows its
   panel with no transition, the tab buttons change at once, and the bar scrolls to it
   instantly. A click or a `v-model` change animates as before. A `slide` transition comes in
