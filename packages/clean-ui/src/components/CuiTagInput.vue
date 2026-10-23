@@ -4,7 +4,7 @@ import { useClickOutside } from "../composables/useClickOutside";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
-import { useListbox } from "../composables/useListbox";
+import { useListbox, followHighlight } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
 import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
@@ -255,9 +255,15 @@ const listbox = useListbox({
   },
 });
 
-// As in CuiCombobox: a changed list resets the highlight rather than leave it on a
-// different suggestion than the one the user moved to.
-watch(filteredSuggestions, () => (focusedIndex.value = -1));
+// As in CuiCombobox (#346): a changed list keeps the highlight on the suggestion it was on,
+// rather than the same index, which would be a different one.
+watch(
+  () => filteredSuggestions.value.slice(),
+  (next, prev) => {
+    focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
+    if (focusedIndex.value >= 0) listbox.scrollActiveIntoView();
+  },
+);
 
 function onKeydown(e: KeyboardEvent) {
   // The Enter confirming an IME composition must not create a tag from it.

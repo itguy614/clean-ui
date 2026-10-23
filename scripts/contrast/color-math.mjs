@@ -61,6 +61,32 @@ export function oklchToHex(L, C, H) {
   );
 }
 
+/** A hex colour in Oklab, for `color-mix(in oklab, …)`. */
+function hexToOklab(hex) {
+  const { r: R, g: G, b: B } = hexToRgb(hex);
+  const [r, g, b] = [R, G, B].map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+}
+
+/** `color-mix(in oklab, a pct%, b)`, as hex: what CSS computes for a slot built that way. */
+export function mixOklab(hexA, pct, hexB) {
+  const [L1, a1, b1] = hexToOklab(hexA);
+  const [L2, a2, b2] = hexToOklab(hexB);
+  const t = pct / 100;
+  const [L, a, b] = [L1 * t + L2 * (1 - t), a1 * t + a2 * (1 - t), b1 * t + b2 * (1 - t)];
+  return oklchToHex(L, Math.hypot(a, b), (Math.atan2(b, a) * 180) / Math.PI);
+}
+
 export function toHex(val) {
   if (!val) return null;
   val = val.trim();

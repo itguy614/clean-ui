@@ -80,6 +80,11 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
    * on large client-side grids too; a server-side grid wants it, since each search fetches.
    */
   searchDebounce?: number;
+  /**
+   * The search box's accessible name (#373). Defaults to the `dataGrid.searchLabel` message,
+   * "Search"; name what's searched, e.g. "Search tags", when a page has more than one grid.
+   */
+  searchLabel?: string;
   /** Hide column manager */
   hideColumnManager?: boolean;
   /** Hide filter panel toggle */
@@ -218,6 +223,7 @@ const messages = useMessages();
       v-if="!hideToolbar"
       :hide-search="hideSearch"
       :search-debounce="searchDebounce"
+      :search-label="searchLabel"
       :hide-column-manager="hideColumnManager"
       :hide-filter-toggle="hideFilterPanel"
       :has-card-slot="hasCardSlot"
