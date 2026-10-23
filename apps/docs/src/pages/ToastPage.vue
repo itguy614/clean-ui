@@ -123,7 +123,7 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
           is on its dismiss button.
         </li>
         <li>
-          When a toast that holds focus goes, dismissed, timed out or pushed out by
+          When a toast that holds focus goes, dismissed, cleared or pushed out by
           <code>maxToasts</code>, focus moves to the next toast, or the one before, or back
           to where it was before it came into the stack. It never drops to the page.
         </li>

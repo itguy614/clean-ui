@@ -54,7 +54,7 @@ describe("toast focus when a toast goes (real browser)", () => {
     expect(document.activeElement, "back to the opener, not <body>").toBe(opener);
   });
 
-  it("moves focus on when a focused toast times out", async () => {
+  it("moves focus on when a focused toast is dismissed in code", async () => {
     const opener = mountStack();
     opener.focus();
     api.toast({ title: "Stays", autoDismiss: 0 });
@@ -72,6 +72,29 @@ describe("toast focus when a toast goes (real browser)", () => {
     const id = api.toast({ title: "One", autoDismiss: 0 });
     await nextTick();
     api.dismiss(id);
+    await nextTick();
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it("moves focus on when a focused toast is pushed out by maxToasts", async () => {
+    const opener = mountStack({ maxToasts: 2 });
+    opener.focus();
+    api.toast({ title: "Oldest", autoDismiss: 0 });
+    api.toast({ title: "Middle", autoDismiss: 0 });
+    await nextTick();
+    dismissOf("Oldest").focus();
+    api.toast({ title: "Newest", autoDismiss: 0 });
+    await nextTick();
+    expect(document.activeElement).toBe(dismissOf("Middle"));
+  });
+
+  it("goes back to the opener when every toast is cleared at once", async () => {
+    const opener = mountStack();
+    opener.focus();
+    for (const title of ["One", "Two", "Three"]) api.toast({ title, autoDismiss: 0 });
+    await nextTick();
+    await userEvent.tab();
+    api.dismissAll();
     await nextTick();
     expect(document.activeElement).toBe(opener);
   });
