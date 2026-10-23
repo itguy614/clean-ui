@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { nextTick } from "vue";
 import { useDensity, DENSITY_PRESETS } from "../useDensity";
 
@@ -51,5 +51,34 @@ describe("useDensity", () => {
     useDensity().setDensity("comfortable");
     await nextTick();
     expect(useDensity().getDensity()).toBe("comfortable");
+  });
+});
+
+// #389 — importing the library ran applyDensity: it stripped a density class the consumer
+// put on <html>, and wrote "cui-density=default" into their localStorage.
+describe("useDensity at import", () => {
+  async function freshImport() {
+    vi.resetModules();
+    return (await import("../useDensity")).useDensity;
+  }
+
+  it("leaves <html> and localStorage alone when nothing is stored", async () => {
+    localStorage.clear();
+    document.documentElement.className = "cui-density-compact";
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    await freshImport();
+    expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
+    expect(setItem).not.toHaveBeenCalled();
+    setItem.mockRestore();
+    document.documentElement.className = "";
+  });
+
+  it("still restores a density stored earlier", async () => {
+    localStorage.setItem("cui-density", "comfortable");
+    document.documentElement.className = "";
+    await freshImport();
+    expect(densityClasses()).toEqual(["cui-density-comfortable"]);
+    localStorage.clear();
+    document.documentElement.className = "";
   });
 });
