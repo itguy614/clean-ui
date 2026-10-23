@@ -4,7 +4,7 @@ import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
-import { useListbox } from "../composables/useListbox";
+import { useListbox, followHighlight } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
 import { useAsyncSearch } from "../composables/useAsyncSearch";
 import CuiIcon from "./CuiIcon.vue";
@@ -279,9 +279,17 @@ const listbox = useListbox({
 });
 
 // The highlight is an index into the list as it is now, and so is the option id the input
-// names: when the list changes under it — the query clears after a multiple selection,
-// async results arrive — it would point at a different option. Start over instead.
-watch(filteredOptions, () => (focusedIndex.value = -1));
+// names: when the list changes under it (a section added above, the query clearing after a
+// multiple selection, async results arriving) the same index is a different option. Keep it
+// on the option it was on, found again by value, or clear it when that option has gone (#346).
+watch(
+  () => filteredOptions.value.slice(),
+  (next, prev) => {
+    focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
+    // Pushed down (or up) by the change: keep it in sight.
+    if (focusedIndex.value >= 0) listbox.scrollActiveIntoView();
+  },
+);
 
 // Open/close
 function openDropdown() {
