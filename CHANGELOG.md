@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Saving a CuiDataGrid view on plain HTTP** (#370) threw a `TypeError`: the view's id
+  came from `crypto.randomUUID()`, which browsers provide only on HTTPS and localhost. A
+  device's own web UI or an intranet tool served over HTTP couldn't save views at all. The
+  id is now built from `crypto.getRandomValues()` where `randomUUID` is missing.
+
 ## [1.5.0] - 2026-10-22
 
 ### Added
