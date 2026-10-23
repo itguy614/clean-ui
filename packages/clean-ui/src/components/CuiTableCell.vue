@@ -38,6 +38,8 @@ const isHeader = computed(() => {
 });
 
 const tag = computed(() => (isHeader.value ? "th" : "td"));
+// A header cell in the head heads its column; one in the body heads its row (#390).
+const headerScope = computed(() => (section && !section.isHead ? "row" : "col"));
 
 const cellStyle = computed(() => {
   const s: Record<string, string> = {};
@@ -56,7 +58,7 @@ const cellStyle = computed(() => {
     :style="cellStyle"
     :colspan="colspan"
     :rowspan="rowspan"
-    :scope="isHeader ? 'col' : undefined"
+    :scope="isHeader ? headerScope : undefined"
   >
     <slot />
   </component>

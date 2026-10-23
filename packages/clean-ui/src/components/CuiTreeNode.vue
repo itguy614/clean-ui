@@ -65,10 +65,14 @@ watch(isExpanded, (expanded) => {
 
 function onChevronClick(e: Event) {
   e.stopPropagation();
+  if (props.node.disabled) return;
   emit("toggle-expand", props.node);
 }
 
 function onNodeClick() {
+  // A disabled node does nothing, in either mode: selecting was already blocked, but in
+  // expand-only mode a click still opened or closed it (#390).
+  if (props.node.disabled) return;
   emit("node-focused", props.node.id);
   if (hasChildren.value && !props.selectable) {
     emit("toggle-expand", props.node);

@@ -106,7 +106,9 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
         :style="indeterminate ? {} : { '--_progress-percent': `${percent}%` }"
       />
     </div>
-    <div v-if="showLabel || $slots.label" class="cui-progress-bar__label">
+    <!-- No percentage while indeterminate, there is none to show (#390); a label slot the
+         consumer supplies ("Uploading…") still shows. -->
+    <div v-if="$slots.label || (showLabel && !indeterminate)" class="cui-progress-bar__label">
       <slot name="label" :value="value" :max="max" :percent="percent">
         {{ percentLabel }}
       </slot>
@@ -160,7 +162,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
     </svg>
     <!-- Label -->
     <div
-      v-if="(showLabel || $slots.label) && !indeterminate"
+      v-if="$slots.label || (showLabel && !indeterminate)"
       class="cui-progress-circle__label"
       :style="{ fontSize: circleLabelSize[clampedSize] }"
     >

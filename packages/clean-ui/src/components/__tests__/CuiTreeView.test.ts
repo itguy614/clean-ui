@@ -593,6 +593,15 @@ describe("CuiTreeView keyboard", () => {
     expect(focusedId(), "not out to the next sibling").toBe("p");
   });
 
+  it("doesn't expand or collapse a disabled parent on click, in expand-only mode (#390)", async () => {
+    const nodes: TreeNode[] = [{ id: "p", label: "Parent", disabled: true, children: [{ id: "c", label: "Child" }] }];
+    const wrapper = mountTree({ nodes, selectable: false });
+    expect(item("p").getAttribute("aria-expanded")).toBe("false");
+    await wrapper.find(".cui-tree-node__row").trigger("click");
+    await wrapper.vm.$nextTick();
+    expect(item("p").getAttribute("aria-expanded"), "still collapsed").toBe("false");
+  });
+
   it("skips disabled nodes when moving", async () => {
     const withDisabled: TreeNode[] = [
       { id: "x", label: "Ex" },

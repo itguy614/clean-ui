@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Small fixes** (#390):
+  - An `indeterminate` CuiProgress bar with `show-label` no longer shows a percentage it
+    doesn't have, as the circle already didn't. A `#label` slot still shows on both, so
+    "Uploading…" works while indeterminate.
+  - A disabled CuiTreeView parent no longer expands or collapses when clicked in
+    expand-only mode (`selectable: false`). Selecting it was already blocked.
+  - A `<CuiTableCell header>` in a table body gets `scope="row"`, so a screen reader reads
+    it as the header of its row rather than of a column.
 - **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
   or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
   echo of the close started a second one, and re-opening during the exit didn't cancel the
