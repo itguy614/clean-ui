@@ -58,6 +58,21 @@ describe("useTheme (#85)", () => {
     expect(hasClass("cui-theme-acme")).toBe(true); // custom still survives
   });
 
+  // #330 — cui-theme-navy is a class now, carrying the default scale for a subtree. On
+  // <html> its literals would shadow a consumer's own :root palette, so it never stays there.
+  it("treats setTheme('navy') as the default, and clears a Navy class from <html>", async () => {
+    root().classList.add("cui-theme-navy");
+    const useTheme = await freshUseTheme();
+    const { setTheme } = useTheme();
+    setTheme("forest");
+    await nextTick();
+    expect(hasClass("cui-theme-navy"), "a switch clears it").toBe(false);
+    setTheme("navy");
+    await nextTick();
+    expect(hasClass("cui-theme-forest")).toBe(false);
+    expect(hasClass("cui-theme-navy"), "and 'navy' adds none").toBe(false);
+  });
+
   it("setTheme('default') removes preset classes and adds none", async () => {
     const useTheme = await freshUseTheme();
     const { setTheme } = useTheme();

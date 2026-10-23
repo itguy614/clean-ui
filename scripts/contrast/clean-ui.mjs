@@ -19,7 +19,7 @@
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { contrastRatio, toHex, grade } from "./color-math.mjs";
+import { contrastRatio, toHex, grade, mixOklab } from "./color-math.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -188,7 +188,8 @@ const semantic = {
 // "solidHover" = --cui-{role}-solid-hover (solid button hover bg — 700-level)
 const semanticDark = {
   secondary: {
-    color: toHex("oklch(0.72 0.05 270)"), // brightened for AA on dark
+    // main.css: color-mix(in oklab, secondary-100 39%, secondary-300), brightened for AA on dark (#330).
+    color: mixOklab(toHex("oklch(0.94 0.015 270)"), 39, toHex("oklch(0.58 0.05 270)")),
     hover: toHex("oklch(0.94 0.015 270)"), // secondary-100
     bg: toHex("oklch(0.25 0.03 270)"), // secondary-900
     border: toHex("oklch(0.58 0.05 270)"), // secondary-300 (brighter for visibility)
@@ -316,7 +317,8 @@ export function run() {
     check("light", theme.name, "Body text (s-900) on white", sf["900"], WHITE, 4.5);
     check("light", theme.name, "Secondary text (s-700) on white", sf["700"], WHITE, 4.5);
     check("light", theme.name, "Secondary text (s-700) on surface-50", sf["700"], sBg, 4.5);
-    check("light", theme.name, "Tertiary text (custom ~0.55) on white", toHex("oklch(0.55 0.012 270)"), WHITE, 4.5);
+    // main.css: color-mix(in oklab, s-600 42%, s-700), the theme's own steps (#330).
+    check("light", theme.name, "Tertiary text (s-600/s-700 mix) on white", mixOklab(sf["600"], 42, sf["700"]), WHITE, 4.5);
     check("light", theme.name, "Code text (p-700) on code bg (s-100)", p["700"], sf["100"] || sBg, 4.5);
     check("light", theme.name, "Kbd (s-100 on s-800)", sf["100"] || WHITE, sf["800"] || "#333", 4.5);
 

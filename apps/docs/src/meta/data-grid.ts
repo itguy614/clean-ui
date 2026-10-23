@@ -60,6 +60,12 @@ const meta: ComponentMeta = {
       default: "300",
       description: "ms the search box waits after the last keystroke. Searching is indexed, so 0 is fine on large client-side grids; keep a delay for a server-side grid, where each search fetches",
     },
+    {
+      name: "searchLabel",
+      type: "string",
+      default: '"Search" (dataGrid.searchLabel)',
+      description: "The search box's accessible name. Name what's searched (\"Search tags\") when a page has more than one grid",
+    },
     { name: "hideColumnManager", type: "boolean", default: "false", description: "Hide the show/hide-columns menu" },
     { name: "hideFilterPanel", type: "boolean", default: "false", description: "Hide the filter-panel toggle" },
     { name: "filterPanelSide", type: "left | right", default: "right", description: "Which side the filter panel slides in from" },

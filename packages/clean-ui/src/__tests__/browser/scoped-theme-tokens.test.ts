@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import main from "../../styles/main.css?inline";
+import themeCss from "../../styles/theme.css?raw";
 
 /**
  * #329 — a theme class re-themes a subtree, not just the page. The semantic slots
@@ -101,5 +102,40 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
 
   it("leaves a subtree without a theme class on the page's", () => {
     expect(paint("var(--cui-primary)", "some-container")).toBe(paint("var(--cui-primary)", ""));
+  });
+
+  // #330 — three slots still kept Navy inside a scoped theme, and nothing could switch a
+  // subtree back to Navy.
+  /** The colour a probe paints inside `inner`, inside `outer`. */
+  function paintNested(value: string, outer: string, inner: string): string {
+    const host = document.createElement("div");
+    host.id = "fixture";
+    host.className = outer;
+    const scope = document.createElement("div");
+    scope.className = inner;
+    const probe = document.createElement("div");
+    probe.style.background = value;
+    scope.append(probe);
+    host.append(scope);
+    document.body.append(host);
+    const out = getComputedStyle(probe).backgroundColor;
+    host.remove();
+    return out;
+  }
+
+  /** Navy's own step, as theme.css's `@theme` declares it. */
+  const navyStep = (role: string, step: number) => paint(new RegExp(`--color-${role}-${step}:\\s*([^;]+);`).exec(themeCss)![1], "");
+
+  it.each(["cui-theme-default", "cui-theme-navy"])("switches a subtree back to Navy with %s", (navy) => {
+    expect(paintNested("var(--cui-primary)", "cui-theme-forest", navy)).toBe(navyStep("primary", 500));
+    expect(paintNested("var(--cui-surface-bg)", "cui-theme-forest", navy)).toBe(navyStep("surface", 100));
+    expect(paintNested("var(--cui-primary)", "cui-theme-forest", navy)).not.toBe(paint("var(--cui-primary)", "cui-theme-forest"));
+  });
+
+  it("tints tertiary text with the scoped theme's own surface", () => {
+    expect(paint("var(--cui-text-tertiary)", "cui-theme-forest")).not.toBe(paint("var(--cui-text-tertiary)", ""));
+    expect(paint("var(--cui-text-tertiary)", "cui-theme-forest")).toBe(
+      paint("color-mix(in oklab, var(--color-surface-600) 42%, var(--color-surface-700))", "cui-theme-forest"),
+    );
   });
 });
