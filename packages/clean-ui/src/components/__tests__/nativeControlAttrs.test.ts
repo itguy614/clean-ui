@@ -102,7 +102,9 @@ describe("native control attributes land on the focusable element", () => {
 
       const el = wrapper.find(aria);
       expect(el.attributes("aria-describedby")).toBe("d1");
-      expect(el.attributes("aria-labelledby")).toBe("l1");
+      // The range picker's start field adds which half it is after the consumer's id (#391).
+      if (name === "CuiDateRangePicker") expect(el.attributes("aria-labelledby")?.split(" ")[0]).toBe("l1");
+      else expect(el.attributes("aria-labelledby")).toBe("l1");
       if (ariaTarget) {
         expect(wrapper.find(target).attributes("aria-describedby"), `${name}: also on ${target}`).toBeUndefined();
         expect(wrapper.find(target).attributes("aria-labelledby")).toBeUndefined();

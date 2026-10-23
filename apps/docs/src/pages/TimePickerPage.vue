@@ -80,9 +80,10 @@ const time4 = ref("02:00 PM");
       </ul>
 
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps.</strong> The <code>label</code> prop renders plain text that
-        names nothing. Use <code>CuiFormField</code>, or pass
-        <code>aria-labelledby</code> pointing at your own label element.
+        <strong>The <code>label</code> prop names the trigger</strong>, through
+        <code>aria-labelledby</code>, alongside any id you pass yourself. In the panel, the
+        hour and minute steppers are named "Hours" and "Minutes" (the
+        <code>timePicker</code> messages).
       </p>
     </template>
 

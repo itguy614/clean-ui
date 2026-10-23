@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The pickers' `label` prop names its control** (#391). CuiDatePicker, CuiDateRangePicker
+  and CuiTimePicker rendered it as a `<label>` with no `for`, which names nothing, so screen
+  readers announced an unnamed field. It now names the control through `aria-labelledby`,
+  alongside any id you pass yourself. CuiTimePicker's hour and minute steppers are named
+  "Hours" and "Minutes", not two bare "spinbutton"s. CuiDateRangePicker's end field, a
+  focusable, unnamed field that ignored every key, is named and opens the calendar like
+  the start field. New optional messages: `dateRangePicker.start` / `.end` and
+  `timePicker.hours` / `.minutes`. An existing custom catalogue still type-checks.
 - **Small fixes** (#390):
   - An `indeterminate` CuiProgress bar with `show-label` no longer shows a percentage it
     doesn't have, as the circle already didn't. A `#label` slot still shows on both, so
