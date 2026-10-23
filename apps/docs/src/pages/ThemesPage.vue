@@ -61,9 +61,8 @@ const backToNavyCode = `<div class="cui-theme-forest">
 const { theme, presets, setTheme } = useTheme()
 
 // Switch theme
-setTheme('navy')
 setTheme('forest')
-setTheme('default') // back to indigo
+setTheme('default') // back to Navy, the default (no class on &lt;html&gt;)
 
 // Reactive — components update instantly
 // Persists to localStorage automatically</code></pre>
@@ -205,7 +204,7 @@ const options = THEME_PRESETS.map((p: ThemePreset) => ({ value: p.id, label: p.l
             Themes are CSS classes. Apply them anywhere in the DOM tree:
           </p>
           <pre class="cui-pre"><code>&lt;!-- Global: apply to html or body --&gt;
-&lt;html class="cui-theme-navy"&gt;
+&lt;html class="cui-theme-forest"&gt;
 
 &lt;!-- Scoped: apply to a section --&gt;
 &lt;div class="cui-theme-forest"&gt;

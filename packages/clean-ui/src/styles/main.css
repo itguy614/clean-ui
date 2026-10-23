@@ -272,9 +272,6 @@
   --cui-primary-solid-hover:  var(--color-primary-700);
   --cui-primary-solid-active: var(--color-primary-800);
 
-  /* --- Secondary (muted primary — also references scale for theme compat) --- */
-  /* Brightened from secondary-300 (0.58) for AA on subtle/outline text in dark. */
-
   /* --- Warning (dark text on bright amber — no solid override needed) --- */
   --cui-warning-text:       var(--color-surface-950);
 
