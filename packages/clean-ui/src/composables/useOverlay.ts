@@ -90,8 +90,16 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   let enterFrame: number | null = null;
+  /** `exit: "timer"`'s pending close, cancelled by a re-open mid-exit (#339). */
+  let exitTimer: ReturnType<typeof setTimeout> | null = null;
 
   function openOverlay() {
+    // Re-opened mid-exit: the old timer would still hide it and report a close, and the
+    // consumer's echo of that close would start another.
+    if (exitTimer !== null) {
+      clearTimeout(exitTimer);
+      exitTimer = null;
+    }
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -148,7 +156,8 @@ export function useOverlay(options: UseOverlayOptions) {
     }
 
     // Wait for exit animation
-    setTimeout(() => {
+    exitTimer = setTimeout(() => {
+      exitTimer = null;
       isVisible.value = false;
       finishClose();
     }, typeof animationDuration === "number" ? animationDuration : motionDuration(animationDuration, dialogRef.value));

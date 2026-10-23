@@ -11,12 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`useOverlay` reports a close once** (#339). With the default `exit: "timer"`, an Escape
   or backdrop close fired `onClose` (and `update:open`) twice: the consumer's `v-model`
-  echo of the close started a second one. CuiModal and CuiSlideover use `exit: "transition"`
-  and weren't affected.
+  echo of the close started a second one, and re-opening during the exit didn't cancel the
+  pending close. CuiModal and CuiSlideover use `exit: "transition"` and weren't affected.
 - **The overlay focus trap's gaps** (#339): Shift+Tab right after opening, from the dialog
   itself, left the dialog; a dialog with nothing focusable didn't trap Tab at all; and a
   disabled or hidden last control stopped Tab wrapping. All three are fixed, in CuiModal and
-  CuiSlideover too.
+  CuiSlideover too. The trap now knows what Tab really stops on: controls in a disabled
+  fieldset or under `visibility: hidden` don't count, an editable region (the markdown
+  editor) does, and a native radio group counts once.
 
 ## [1.5.0] - 2026-10-22
 

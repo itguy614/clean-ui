@@ -60,6 +60,20 @@ describe("useOverlay close", () => {
   });
 });
 
+describe("useOverlay re-opened mid-exit", () => {
+  it("cancels the old exit, so it neither hides the dialog nor reports a close", async () => {
+    vi.useFakeTimers();
+    const { open, closes, dialog } = await mountDialog();
+    await vi.advanceTimersByTimeAsync(50);
+    open.value = false;
+    await nextTick();
+    open.value = true;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(dialog(), "still open").not.toBeNull();
+    expect(closes).toHaveLength(0);
+  });
+});
+
 describe("useOverlay focus trap", () => {
   it("sends Shift+Tab from the dialog itself, where it opens, to the last control", async () => {
     const { dialog } = await mountDialog();
