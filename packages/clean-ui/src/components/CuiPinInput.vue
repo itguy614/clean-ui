@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, useTemplateRef } from "vue";
 import type { ColorableProps, FormControlProps, HideableProps, NativeControlProps, SizeableProps } from "../types/common";
-import { INPUT_SIZE_SCALE, clampSize } from "../utils/sizing";
+import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
 import { useEventListener } from "../composables/useEventListener";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
@@ -76,12 +76,6 @@ const sanitize = (text: string) => clean(text).slice(0, props.length);
 // Local state as well as the prop, so the component also works without a v-model (a plain
 // `<form>` reading it by `name`).
 const value = ref(sanitize(props.modelValue ?? ""));
-watch(
-  () => [props.modelValue, props.length, props.type, props.uppercase] as const,
-  () => {
-    if (props.modelValue !== undefined) value.value = sanitize(props.modelValue);
-  },
-);
 
 const inputEl = useTemplateRef<HTMLInputElement>("inputEl");
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
@@ -117,16 +111,37 @@ function syncSelection() {
   else active.value = Math.min(start, props.length - 1);
 }
 
+/**
+ * Write a new value. `complete` fires when the code becomes full, or when an edit reaches
+ * the last box of a full one (retyping the last digit, a full paste) — not on every
+ * correction of a middle digit, which would re-verify a code on each keystroke.
+ */
 function commit(next: string, caret: number) {
   const el = inputEl.value;
   if (el && el.value !== next) el.value = next;
   if (next !== value.value) {
+    const wasFull = value.value.length === props.length;
     value.value = next;
     emit("update:modelValue", next);
-    if (next.length === props.length) emit("complete", next);
+    if (next.length === props.length && (!wasFull || caret >= props.length)) emit("complete", next);
   }
   setCaret(caret);
 }
+
+// A new model from the parent, or a new length/type/uppercase, is cleaned again. A cleaned
+// value that differs is emitted back, so the parent's model is always what is shown. Focus
+// stays put: the caret follows to the first empty box at most.
+watch(
+  () => [props.modelValue, props.length, props.type, props.uppercase] as const,
+  () => {
+    const next = sanitize(props.modelValue ?? value.value);
+    const el = inputEl.value;
+    if (el && el.value !== next) el.value = next;
+    value.value = next;
+    if (next !== (props.modelValue ?? next)) emit("update:modelValue", next);
+    setCaret(Math.min(active.value, next.length));
+  },
+);
 
 // --- Native events ---
 
@@ -134,19 +149,38 @@ function commit(next: string, caret: number) {
 const isRejectedTyping = (e: InputEvent) => e.inputType === "insertText" && !!e.data && !clean(e.data);
 
 /**
- * A typed character the type does not accept never reaches the value. A drop, or a
- * replacement (some autofill paths), takes the same route as a paste.
+ * A typed character the type does not accept never reaches the value. Anything longer than
+ * one character — a keyboard's code suggestion, which arrives as `insertText`, or a
+ * replacement from autofill — takes the same route as a paste, so maxlength cannot cut it
+ * before it is cleaned.
  */
 function onBeforeInput(e: InputEvent) {
-  if (isRejectedTyping(e)) e.preventDefault();
-  if (e.inputType !== "insertFromDrop" && e.inputType !== "insertReplacementText") return;
+  if (e.isComposing) return;
+  if (isRejectedTyping(e)) {
+    e.preventDefault();
+    return;
+  }
+  if (e.inputType !== "insertText" && e.inputType !== "insertReplacementText") return;
   const text = e.data ?? e.dataTransfer?.getData("text/plain");
-  if (text == null) return;
+  if (text == null || (e.inputType === "insertText" && text.length < 2)) return;
   e.preventDefault();
   insertText(text);
 }
 
+/** A drop goes in at the box it lands on, not at the caret left from before. */
+function onDrop(e: DragEvent) {
+  e.preventDefault();
+  const text = e.dataTransfer?.getData("text/plain");
+  if (!text || props.readonly || props.disabled) return;
+  inputEl.value?.focus();
+  setCaret(boxAt(e.clientX));
+  insertText(text);
+}
+
 function onInput(e: Event) {
+  // Rewriting the value or the selection mid-composition makes an IME drop or repeat
+  // characters: wait for compositionend.
+  if ((e as InputEvent).isComposing) return;
   const el = e.target as HTMLInputElement;
   // Fallback for a browser without beforeinput: put the old value back rather than lose the
   // character the rejected one replaced.
@@ -184,7 +218,7 @@ function onPaste(e: ClipboardEvent) {
 }
 
 function onKeydown(e: KeyboardEvent) {
-  if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
+  if (e.isComposing || e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
   let next: number;
   switch (e.key) {
     case "ArrowLeft":
@@ -245,18 +279,19 @@ useEventListener("document", "selectionchange", syncSelection, { enabled: focuse
 // --- Rendering ---
 /** One character per box; changes only with the value, not on every caret move. */
 const chars = computed(() => Array.from({ length: props.length }, (_, i) => value.value[i] ?? ""));
-/** The box showing the caret, or -1 when none does. */
-const activeBox = computed(() => (focused.value && !props.readonly ? active.value : -1));
+/** The highlighted box, or -1 when unfocused. Readonly too: it is the only focus indicator. */
+const activeBox = computed(() => (focused.value ? active.value : -1));
 /** The blinking caret, in the first empty box only: a filled active box is highlighted. */
-const caretAt = computed(() => (activeBox.value === value.value.length ? activeBox.value : -1));
+const caretAt = computed(() =>
+  !props.readonly && activeBox.value === value.value.length ? activeBox.value : -1,
+);
 
-const SIZES = ["sm", "md", "lg"] as const;
 /**
  * Emitted as private `--_pin-input-*` properties; the stylesheet reads each back behind a
  * public `--cui-pin-input-*` token. See "Themeable Properties" in CLAUDE.md.
  */
 const style = computed(() => {
-  const s = INPUT_SIZE_SCALE[clampSize(props.size, SIZES)];
+  const s = INPUT_SIZE_SCALE[props.size];
   const c = props.error ? "error" : props.color;
   return {
     "--_pin-input-height": s.height,
@@ -284,7 +319,6 @@ defineExpose({ el: rootEl, focus, blur });
     ref="rootEl"
     class="cui-pin-input"
     :class="{
-      'cui-pin-input--focused': focused,
       'cui-pin-input--error': error,
       'cui-pin-input--disabled': disabled,
       'cui-pin-input--readonly': readonly,
@@ -341,6 +375,8 @@ defineExpose({ el: rootEl, focus, blur });
         @focus="onFocus"
         @blur="onBlur"
         @select="syncSelection"
+        @compositionend="onInput"
+        @drop="onDrop"
         @mousedown="onMousedown"
       />
     </div>

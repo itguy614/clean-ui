@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { clampedSizeProp, colorProp, disabledProp, hiddenProp, nativeControlProps } from "./shared";
+import { colorProp, disabledProp, hiddenProp, inputSizeProp, nativeControlProps } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Pin Input",
@@ -30,7 +30,7 @@ const meta: ComponentMeta = {
       description: "Help text under the label, linked by aria-describedby. Say how long the code is here",
     },
     colorProp("Color role for the caret box's border and focus ring"),
-    clampedSizeProp("sm, md, lg"),
+    inputSizeProp,
     {
       name: "error",
       type: "boolean",
@@ -49,7 +49,7 @@ const meta: ComponentMeta = {
 
   events: [
     { name: "update:modelValue", payload: "string", description: "Fires on every change (v-model)" },
-    { name: "complete", payload: "string", description: "Fires with the code when the last character is filled" },
+    { name: "complete", payload: "string", description: "Fires with the code when the last character is filled, and again when an edit reaches the last box of a full code. Correcting a middle character does not fire it" },
   ],
 
   methods: [

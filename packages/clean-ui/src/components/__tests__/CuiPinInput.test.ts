@@ -294,9 +294,91 @@ describe("CuiPinInput", () => {
     expect(style).toContain("--_pin-input-focus-border: var(--cui-success)");
   });
 
-  it("clamps xs and xl to the sizes it styles", () => {
+  it("sizes from the full input scale, so it lines up with CuiInput", () => {
+    const xs = setup({ size: "xs" }).w.attributes("style");
     const sm = setup({ size: "sm" }).w.attributes("style");
-    expect(setup({ size: "xs" }).w.attributes("style")).toBe(sm);
+    const xl = setup({ size: "xl" }).w.attributes("style");
+    const lg = setup({ size: "lg" }).w.attributes("style");
+    expect(xs).not.toBe(sm);
+    expect(xl).not.toBe(lg);
+  });
+
+  it("cleans a multi-character insertText (a keyboard's code suggestion) like a paste", () => {
+    const { w, input } = setup({ length: 6, modelValue: "12" });
+    input.focus();
+    const e = new InputEvent("beforeinput", { inputType: "insertText", data: "123 456", bubbles: true, cancelable: true });
+    input.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(true);
+    expect(emitted(w)).toEqual(["123456"]);
+  });
+
+  it("leaves the value alone mid-composition and cleans it on compositionend", async () => {
+    const { w, input } = setup({ length: 4, type: "alphanumeric", uppercase: true });
+    input.focus();
+    input.value = "a";
+    input.dispatchEvent(new InputEvent("input", { inputType: "insertCompositionText", data: "a", isComposing: true, bubbles: true }));
+    expect(input.value).toBe("a");
+    expect(emitted(w)).toEqual([]);
+    input.dispatchEvent(new CompositionEvent("compositionend", { data: "a", bubbles: true }));
+    expect(emitted(w)).toEqual(["A"]);
+  });
+
+  it("does not re-fire complete when a middle character of a full code is corrected", async () => {
+    const { w, input } = setup({ length: 4 });
+    input.focus();
+    await type(w, input, "1234");
+    expect(w.emitted("complete")).toHaveLength(1);
+    await w.find("input").trigger("keydown", { key: "Home" });
+    await type(w, input, "9");
+    expect(emitted(w).at(-1)).toBe("9234");
+    expect(w.emitted("complete")).toHaveLength(1);
+    await w.find("input").trigger("keydown", { key: "End" });
+    await type(w, input, "5");
+    expect(w.emitted("complete")).toEqual([["1234"], ["9235"]]);
+  });
+
+  it("emits a cleaned model back when the parent's value had characters it does not accept", async () => {
+    const { w } = setup({ length: 4, modelValue: "" });
+    await w.setProps({ modelValue: "12-34" });
+    expect(emitted(w)).toEqual(["1234"]);
+  });
+
+  it("re-cleans its own value when length changes without a v-model", async () => {
+    const { w, input } = setup({ length: 6 });
+    input.focus();
+    paste(input, "123456");
+    await w.setProps({ length: 4 });
+    expect(input.value).toBe("1234");
+    expect(boxText(w)).toEqual(["1", "2", "3", "4"]);
+  });
+
+  it("moves the caret back when the parent clears the code while focused", async () => {
+    const { w, input } = setup({ length: 4, modelValue: "1234" });
+    input.focus();
+    await w.setProps({ modelValue: "" });
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, 0]);
+    expect(w.findAll(".cui-pin-input__box")[0].classes()).toContain("cui-pin-input__box--active");
+  });
+
+  it("still marks the focused box when readonly, without a caret", async () => {
+    const { w, input } = setup({ length: 4, modelValue: "12", readonly: true });
+    input.focus();
+    await w.vm.$nextTick();
+    expect(w.find(".cui-pin-input__box--active").exists()).toBe(true);
+    expect(w.find(".cui-pin-input__caret").exists()).toBe(false);
+  });
+
+  it("puts a drop in the box it lands on, overwriting it as typing would", () => {
+    const { w, input } = setup({ length: 6, modelValue: "1234" });
+    const boxes = w.findAll(".cui-pin-input__box").map((b) => b.element as HTMLElement);
+    boxes.forEach((b, i) => (b.getBoundingClientRect = () => ({ right: (i + 1) * 40 }) as DOMRect));
+    const e = new Event("drop", { bubbles: true, cancelable: true }) as DragEvent;
+    Object.defineProperty(e, "dataTransfer", { value: { getData: () => "9" } });
+    Object.defineProperty(e, "clientX", { value: 20 });
+    input.dispatchEvent(e);
+    expect(e.defaultPrevented).toBe(true);
+    // Box 0, not the end where the caret was before the drop.
+    expect(emitted(w)).toEqual(["9234"]);
   });
 
   it("binds through CuiFormField inside a CuiForm", async () => {
