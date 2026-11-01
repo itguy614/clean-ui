@@ -47,6 +47,7 @@ const sections = [
   { id: "input", label: "Input", path: "/components/input", group: "Form Controls" },
   { id: "input-stepper", label: "Input Stepper", path: "/components/input-stepper", group: "Form Controls" },
   { id: "masked-input", label: "Masked Input", path: "/components/masked-input", group: "Form Controls" },
+  { id: "pin-input", label: "Pin Input", path: "/components/pin-input", group: "Form Controls" },
   { id: "radio", label: "Radio", path: "/components/radio", group: "Form Controls" },
   { id: "rating", label: "Rating", path: "/components/rating", group: "Form Controls" },
   { id: "select", label: "Select", path: "/components/select", group: "Form Controls" },

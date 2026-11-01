@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`CuiPinInput`** (#196), for a one-time code or PIN drawn as a row of boxes. One real
+  input underneath is the control: a screen reader meets a single text field named by the
+  label, and `autocomplete="one-time-code"` lets a phone offer the code from a text message.
+  The boxes only draw each character and the caret. Takes `length`, `type` (`digits` or
+  `alphanumeric`, with optional `uppercase`), `mask` (dots, on a password input), `size` and
+  `color`, extends the shared form-control props, and emits `complete` when the last
+  character is filled. A pasted code is cleaned of spaces and dashes before it is cut to
+  length. Themeable through `--cui-pin-input-*` tokens.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added
