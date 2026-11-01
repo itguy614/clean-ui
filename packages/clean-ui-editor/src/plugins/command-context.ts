@@ -213,7 +213,7 @@ export function createCommandContext(
       let abandon = () => {};
       try {
         return await new Promise((resolve) => {
-          let close: void | (() => void);
+          let close: unknown;
           // Settled by the UI: it closes itself, so unmounting has nothing left to close.
           const settle = (value: Parameters<typeof resolve>[0]) => {
             own.openCollects.delete(abandon);
@@ -221,7 +221,7 @@ export function createCommandContext(
           };
           abandon = () => {
             settle(null);
-            close?.();
+            if (typeof close === "function") close();
           };
           own.openCollects.add(abandon);
           close = open({ resolve: settle, cancel: () => settle(null) });

@@ -30,9 +30,12 @@ export interface CollectSettle<T> {
  *
  * It may return a function that closes that UI. If the editor unmounts while
  * the collection is still open, the editor calls it and `collect()` resolves
- * `null`, as on cancel (#409); a later `resolve`/`cancel` is ignored.
+ * `null`, as on cancel (#409); a later `resolve`/`cancel` is ignored. Any
+ * other return value (an async opener's promise) is ignored, which is why the
+ * return type is `unknown` and not `void | (() => void)`: that would reject
+ * every opener returning something else.
  */
-export type CollectOpener<T> = (settle: CollectSettle<T>) => void | (() => void);
+export type CollectOpener<T> = (settle: CollectSettle<T>) => unknown;
 
 /**
  * What every command and `isActive` query operates through. `doc` and

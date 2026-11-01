@@ -1,6 +1,13 @@
+import { escapeMarkdown } from "../../paste/convert-html";
+import { browserUrl } from "../../url-policy";
+
 /**
- * Builds `[label](destination)` / `![alt](destination)` from plain text and a URL, so
- * neither can break out of the construct (#408).
+ * Builds `[label](destination)` / `![alt](destination)` so neither part can break out of
+ * the construct (#408).
+ *
+ * A link's label stays markdown: it is often the selection the link was made from, and a
+ * bold or code span in it should survive. Only what can end or bend the label is escaped.
+ * An image's alt text is plain text, so every inline marker in it is escaped.
  *
  * Line breaks: a link label may span lines in CommonMark, but a blank line ends the
  * paragraph and the link with it, so the label's are folded into a single space. A URL
@@ -14,9 +21,28 @@ export function foldLineBreaks(text: string): string {
   return text.replace(/\s*[\r\n]\s*/g, " ");
 }
 
-/** `[`, `]` and `\` are what can end or bend a label; everything else stays markdown. */
+/**
+ * Escapes each backtick run with no closing run of the same length later in the label. A
+ * code span binds tighter than a link, so such a run would pair with a backtick past the
+ * `](` and swallow the destination; a paired one is a code span inside the label.
+ */
+function escapeUnpairedBackticks(label: string): string {
+  const runs = [...label.matchAll(/`+/g)];
+  const unpaired = new Set<number>();
+  for (let i = 0; i < runs.length; i++) {
+    const close = runs.findIndex((run, j) => j > i && run[0].length === runs[i]![0].length);
+    if (close === -1) unpaired.add(runs[i]!.index);
+    else i = close;
+  }
+  return label.replace(/`+/g, (run, index: number) => (unpaired.has(index) ? run.replace(/`/g, "\\`") : run));
+}
+
+/**
+ * `[`, `]`, `\` and an unpaired backtick are what can end or bend a label. Every `\` is
+ * doubled first, so no backtick is already escaped when the runs are paired.
+ */
 export function escapeLinkLabel(text: string): string {
-  return foldLineBreaks(text).replace(/[\\[\]]/g, "\\$&");
+  return escapeUnpairedBackticks(text.replace(/[\\[\]]/g, "\\$&"));
 }
 
 function hasUnbalancedParens(url: string): boolean {
@@ -33,25 +59,25 @@ function hasUnbalancedParens(url: string): boolean {
  *
  * - `\` is doubled, which is always a literal backslash; the parentheses are then never
  *   escaped, so counting them is enough.
- * - `<` and `>` are percent-encoded, as a browser would. Not backslash-escaped: the
- *   editor's own parser (lezer) ends a `<…>` destination at the first `>` regardless.
+ * - `<`, `>` and `` ` `` are percent-encoded, as a browser would. Not backslash-escaped:
+ *   the editor's own parser (lezer) ends a `<…>` destination at the first `>` regardless,
+ *   and a backtick would open a code span reaching past the link.
  * - A space, a control character or an unbalanced parenthesis needs the `<…>` form.
  */
 export function linkDestination(url: string): string {
-  const clean = url
-    .replace(/[\t\r\n]/g, "")
+  const clean = browserUrl(url)
     .replace(/\\/g, "\\\\")
-    .replace(/</g, "%3C")
-    .replace(/>/g, "%3E");
+    .replace(/[<>`]/g, (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`);
   return /[\x00-\x20\x7f]/.test(clean) || hasUnbalancedParens(clean) ? `<${clean}>` : clean;
 }
 
-/** The construct, from a label that is already markdown (a pasted anchor's converted children). */
+/** The construct, from a label that is already markdown (a pasted anchor's converted
+ * children). Its line breaks are still folded. */
 export function markdownLinkFromLabel(labelMarkdown: string, url: string, image = false): string {
-  return `${image ? "!" : ""}[${labelMarkdown}](${linkDestination(url)})`;
+  return `${image ? "!" : ""}[${foldLineBreaks(labelMarkdown)}](${linkDestination(url)})`;
 }
 
-/** The construct, from a plain-text label. */
+/** A link from its text, or an image from its alt text. */
 export function markdownLink(label: string, url: string, image = false): string {
-  return markdownLinkFromLabel(escapeLinkLabel(label), url, image);
+  return markdownLinkFromLabel(image ? escapeMarkdown(label) : escapeLinkLabel(label), url, image);
 }

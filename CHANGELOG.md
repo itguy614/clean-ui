@@ -48,12 +48,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ids.
 - **The link and image dialogs insert well-formed markdown whatever is typed** (#408). A `]`
   in the text ended the label early, and a space or an unbalanced parenthesis in the URL
-  broke the destination. The text now has `[`, `]` and `\` escaped and its line breaks
-  folded into a space. The URL is wrapped in `<…>` when it holds a space or an unbalanced
-  parenthesis, its `<`/`>` are percent-encoded, and its line breaks and tabs are dropped, as
-  a browser drops them. Pasted links and images get the same treatment. The viewer now
-  reads a `<…>` destination and backslash escapes in a URL, and runs its scheme check on
-  the result, so `[x](<javascript:…>)` is refused like `[x](javascript:…)`.
+  broke the destination. Link text stays markdown, with `[`, `]`, `\` and any unpaired
+  backtick escaped; an image's alt text is plain text, so every inline marker in it is
+  escaped. Line breaks in either fold into a space. The URL is wrapped in `<…>` when it
+  holds a space or an unbalanced parenthesis, its `<`, `>` and backticks are
+  percent-encoded, and its line breaks and tabs are dropped, as a browser drops them.
+  Pasted links and images get the same treatment. The URL scheme check now reads a URL as a
+  browser does (tabs and line breaks removed, control characters trimmed), so
+  `java<TAB>script:` is refused in the dialog and the viewer, and the viewer reads a `<…>`
+  destination and backslash escapes before checking, so `[x](<javascript:…>)` is refused
+  like `[x](javascript:…)`.
 - **Unmounting the markdown editor closes a link or image dialog it left open** (#409). The
   dialog is its own Vue app, so it stayed on screen, and submitting it wrote into the
   destroyed editor and raised an unhandled rejection. The command now sees a cancel. A

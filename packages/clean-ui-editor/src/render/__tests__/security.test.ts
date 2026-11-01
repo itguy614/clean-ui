@@ -43,7 +43,15 @@ describe("security: default configuration (no allowRawHtml)", () => {
   });
 
   // #408: the scheme check reads the destination's URL, not its source spelling.
-  it.each(["[x](<javascript:alert(1)>)", "[x](javascript\\:alert(1))", "![x](<javascript:alert(1)>)"])(
+  // A browser drops tabs and line breaks from a URL and trims C0 controls from its ends.
+  it.each([
+    "[x](<javascript:alert(1)>)",
+    "[x](javascript\\:alert(1))",
+    "![x](<javascript:alert(1)>)",
+    "[x](<java\tscript:alert(1)>)",
+    "[x](<\x01javascript:alert(1)>)",
+    "![x](<java\tscript:alert(1)>)",
+  ])(
     "neutralises a javascript: URL spelled %s",
     (markdown) => {
       const html = serializeMarkdownToHtml(markdown);

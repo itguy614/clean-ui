@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { escapeLinkLabel, linkDestination, markdownLink } from "../link-markdown";
+import { linkDestination, markdownLink, markdownLinkFromLabel } from "../link-markdown";
 import { serializeMarkdownToHtml } from "../../../render/serialize";
 
 // #408: what the link and image dialogs insert. Each case also goes through the editor's
@@ -10,12 +10,27 @@ describe("markdownLink", () => {
     ["a[b", "[a\\[b]"],
     ["a\\b", "[a\\\\b]"],
     ["*kept*", "[*kept*]"],
-  ])("escapes the label %j", (label, expected) => {
+    ["`code` kept", "[`code` kept]"],
+    ["a`b", "[a\\`b]"],
+    ["``a`b`` `c", "[``a`b`` \\`c]"],
+  ])("escapes the link text %j", (label, expected) => {
     expect(markdownLink(label, "u")).toBe(`${expected}(u)`);
   });
 
-  it("folds a label's line breaks into one space, so a blank line can't end the link", () => {
-    expect(escapeLinkLabel("one\n\n  two\r\nthree")).toBe("one two three");
+  it("escapes every inline marker in an image's alt text, which is plain text", () => {
+    expect(markdownLink("2*3*4 `x` [y]", "u", true)).toBe("![2\\*3\\*4 \\`x\\` \\[y\\]](u)");
+  });
+
+  it.each([false, true])("folds the label's line breaks into one space (image: %s)", (image) => {
+    expect(markdownLink("one\n\n  two\r\nthree", "u", image)).toBe(`${image ? "!" : ""}[one two three](u)`);
+  });
+
+  it("folds the line breaks of a label that is already markdown (a pasted anchor's)", () => {
+    expect(markdownLinkFromLabel("**foo**\n\nbar", "https://x")).toBe("[**foo** bar](https://x)");
+  });
+
+  it("an unpaired backtick can't take the destination into a code span", () => {
+    expect(serializeMarkdownToHtml(markdownLink("`", "http://a`b"))).toBe('<p><a href="http://a%60b">`</a></p>\n');
   });
 
   it.each([
@@ -50,9 +65,15 @@ describe("markdownLink", () => {
       );
     });
 
-    it("reads `<` and `>` back percent-encoded", () => {
-      const html = serializeMarkdownToHtml(markdownLink("x", "https://x.com/?q=<a>", image));
-      expect(html).toContain('"https://x.com/?q=%3Ca%3E"');
+    it("reads `<`, `>` and `` ` `` back percent-encoded", () => {
+      const html = serializeMarkdownToHtml(markdownLink("x", "https://x.com/?q=<a>`", image));
+      expect(html).toContain('"https://x.com/?q=%3Ca%3E%60"');
     });
+  });
+
+  it("reads an image's alt text back as it was typed", () => {
+    expect(serializeMarkdownToHtml(markdownLink("2*3*4 `x` _y_", "a.png", true))).toBe(
+      '<p><img src="a.png" alt="2*3*4 `x` _y_"></p>\n',
+    );
   });
 });

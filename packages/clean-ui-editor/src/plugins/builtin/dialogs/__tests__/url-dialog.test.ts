@@ -251,9 +251,9 @@ describe.each([
     expect(view.state.doc.toString()).toBe(bang + inserted);
   });
 
-  it("still refuses a disallowed scheme before building anything", async () => {
+  it.each(["javascript:alert(1) x", "java\tscript:alert(1)"])("still refuses %j before building anything", async (url) => {
     const { view } = await openDialog(command, plugin);
-    setInputValue(urlId, "javascript:alert(1) x");
+    setInputValue(urlId, url);
     clickButtonWithText("Insert");
     await nextTick();
     expect(view.state.doc.toString()).toBe("");

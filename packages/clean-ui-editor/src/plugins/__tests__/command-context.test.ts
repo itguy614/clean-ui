@@ -225,6 +225,14 @@ describe("createCommandContext", () => {
         expect(error).toHaveBeenCalledTimes(1);
       });
 
+      it("ignores an opener's return value that isn't a function, such as an async opener's promise", async () => {
+        const context = createCommandContext(() => null);
+        const result = context.collect(async () => {});
+
+        expect(() => disposeCommandContext(context)).not.toThrow();
+        await expect(result).resolves.toBeNull();
+      });
+
       it("resolves a later collection null without opening anything", async () => {
         const onCollectingChange = vi.fn();
         const disposed = createCommandContext(() => null, onCollectingChange);
