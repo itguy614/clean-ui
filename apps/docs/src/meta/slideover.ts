@@ -88,9 +88,14 @@ const meta: ComponentMeta = {
 
   tokens: [
     {
-      name: "--cui-slideover-size",
+      name: "--cui-slideover-width",
       default: "per size",
-      description: "Panel width for left/right, height for top/bottom",
+      description: "Width of a left or right panel. Overrides the size prop beneath where it is set",
+    },
+    {
+      name: "--cui-slideover-height",
+      default: "per size",
+      description: "Height of a top or bottom panel. Overrides the size prop beneath where it is set",
     },
     { name: "--cui-slideover-radius", default: "0", description: "Panel corner radius" },
   ],

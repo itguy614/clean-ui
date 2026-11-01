@@ -83,7 +83,7 @@ const formAgree = ref(false);
 
 /* global CSS — the class lands on the panel (.cui-modal), not a teleported wrapper */
 .wide-dialog {
-  width: 44rem;
+  max-width: 44rem;
   border-radius: 1.25rem;
 }
 
@@ -97,8 +97,9 @@ const formAgree = ref(false);
           <p>
             A class passed to CuiModal lands on its panel. The panel's width and radius are
             zero-specificity rules, so the class wins over <code>size</code> and
-            <code>rounded</code> with no <code>!important</code>. It still never grows wider
-            than the viewport allows.
+            <code>rounded</code> with no <code>!important</code>. The size is a
+            <code>max-width</code> on a full-width panel, so it still never grows wider than
+            the viewport allows.
           </p>
         </CuiModal>
       </Example>
@@ -106,7 +107,9 @@ const formAgree = ref(false);
         The modal teleports to <code>&lt;body&gt;</code>, so a token reaches it from
         <code>:root</code> or <code>body</code>, or from a class on the modal itself. A
         token set on a container around the <code>&lt;CuiModal&gt;</code> tag is not an
-        ancestor of the panel and does not apply.
+        ancestor of the panel and does not apply. A token beats the <code>size</code> and
+        <code>rounded</code> props of every modal beneath it, CuiConfirmDialog's included,
+        so to restyle one modal, give it a class.
       </p>
     </template>
 
@@ -597,7 +600,7 @@ const formAgree = ref(false);
 <!-- Global, not scoped: the class lands on the teleported panel, outside this page's scope. -->
 <style>
 .docs-wide-dialog {
-  width: 44rem;
+  max-width: 44rem;
   border-radius: 1.25rem;
 }
 </style>

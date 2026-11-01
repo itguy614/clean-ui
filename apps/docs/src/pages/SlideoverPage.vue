@@ -67,9 +67,9 @@ const formAgree = ref(false);
   border-radius: 1rem 0 0 1rem;
 }
 
-/* or every slideover on the page */
+/* or every left/right slideover on the page */
 :root {
-  --cui-slideover-radius: 1rem 0 0 1rem;
+  --cui-slideover-width: 24rem;
 }`"
       >
         <CuiButton variant="outline" size="sm" @click="restyled = true">Open</CuiButton>
@@ -82,10 +82,12 @@ const formAgree = ref(false);
         </CuiSlideover>
       </Example>
       <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
-        <code>--cui-slideover-size</code> is the width of a left or right panel and the
-        height of a top or bottom one. The slideover teleports to <code>&lt;body&gt;</code>,
-        so a token reaches it from <code>:root</code> or <code>body</code>, or from a class
-        on the slideover itself, not from a container around the tag.
+        <code>--cui-slideover-width</code> sizes left and right panels and
+        <code>--cui-slideover-height</code> top and bottom ones, so a page-wide drawer width
+        doesn't also set every sheet's height. A token beats the <code>size</code> prop of
+        every slideover beneath it. The slideover teleports to <code>&lt;body&gt;</code>, so
+        a token reaches it from <code>:root</code> or <code>body</code>, or from a class on
+        the slideover itself, not from a container around the tag.
       </p>
     </template>
 

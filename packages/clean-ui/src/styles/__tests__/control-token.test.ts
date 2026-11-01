@@ -156,7 +156,7 @@ const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-co
 const SLOTS = new Set([
   ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
-  "size", // a panel's main dimension, from a width-preset `size` prop (#407)
+  "width", // an overlay panel's width preset, which is not CuiSize (#407)
 ]);
 
 /** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */

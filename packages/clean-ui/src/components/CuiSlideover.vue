@@ -109,12 +109,14 @@ const verticalSizeMap: Record<string, string> = {
 };
 
 // The size is emitted as a private property and read back through the public token, so a
-// class forwarded onto the panel, or a container-level --cui-slideover-size, can restyle it
-// (#407). Position, the slide and the paint live in the stylesheet, keyed on these classes.
-const panelVars = computed(() => {
-  const map = isHorizontal.value ? horizontalSizeMap : verticalSizeMap;
-  return { "--_slideover-size": map[props.size] ?? props.size };
-});
+// class forwarded onto the panel, or a container-level --cui-slideover-width (left/right) or
+// --cui-slideover-height (top/bottom), can restyle it (#407). Position, the slide and the
+// paint live in the stylesheet, keyed on these classes.
+const panelVars = computed(() =>
+  isHorizontal.value
+    ? { "--_slideover-width": horizontalSizeMap[props.size] ?? props.size }
+    : { "--_slideover-height": verticalSizeMap[props.size] ?? props.size },
+);
 
 const panelClass = computed(() => [
   `cui-slideover__panel--${props.side}`,
@@ -192,8 +194,8 @@ const titleId = useCuiId("slideover-title");
 <style scoped>
 /* --- Panel --- */
 /* Themeable — zero specificity, so a class forwarded onto the panel (`<CuiSlideover class>`)
-   or a consumer's own `.cui-slideover__panel { … }` wins without `!important` (#407). `size`
-   is the width of a left or right panel and the height of a top or bottom one. */
+   or a consumer's own `.cui-slideover__panel { … }` wins without `!important` (#407). A token
+   per axis, so a page-wide drawer width doesn't also set every sheet's height. */
 :where(.cui-slideover__panel) {
   border-radius: var(--cui-slideover-radius, 0);
   background: var(--cui-surface-base);
@@ -201,11 +203,11 @@ const titleId = useCuiId("slideover-title");
 }
 
 :where(.cui-slideover__panel--left, .cui-slideover__panel--right) {
-  width: var(--cui-slideover-size, var(--_slideover-size));
+  width: var(--cui-slideover-width, var(--_slideover-width));
 }
 
 :where(.cui-slideover__panel--top, .cui-slideover__panel--bottom) {
-  height: var(--cui-slideover-size, var(--_slideover-size));
+  height: var(--cui-slideover-height, var(--_slideover-height));
 }
 
 .cui-slideover__panel {

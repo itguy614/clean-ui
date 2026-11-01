@@ -107,9 +107,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     {
-      name: "--cui-modal-size",
+      name: "--cui-modal-width",
       default: "per size",
-      description: "Panel width (sm 24rem … xl 64rem), never wider than the viewport allows",
+      description:
+        "Panel max-width (sm 24rem … xl 64rem). Overrides every modal's size prop beneath where it is set, CuiConfirmDialog's included",
     },
     { name: "--cui-modal-radius", default: "per rounded", description: "Panel corner radius" },
   ],

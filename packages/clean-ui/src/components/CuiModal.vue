@@ -107,7 +107,7 @@ const sizeMap: Record<string, string> = {
 // Emitted as private properties and read back through the public tokens, so a class
 // forwarded onto the panel, or a container-level --cui-modal-*, can restyle them (#407).
 const panelVars = computed(() => ({
-  "--_modal-size": sizeMap[props.size] ?? props.size,
+  "--_modal-width": sizeMap[props.size] ?? props.size,
   "--_modal-radius": RADIUS_SCALE[props.rounded],
 }));
 
@@ -204,10 +204,11 @@ const titleId = useCuiId("modal-title");
 
 /* --- Modal panel --- */
 /* Themeable — zero specificity, so a class forwarded onto the panel (`<CuiModal class>`)
-   or a consumer's own `.cui-modal { … }` wins without `!important` (#407). `size` is the
-   panel's width, capped by the structural max-width below. */
+   or a consumer's own `.cui-modal { … }` wins without `!important` (#407). The size preset
+   caps a full-width panel, so a consumer's `max-width` still widens or narrows it. */
 :where(.cui-modal) {
-  width: var(--cui-modal-size, var(--_modal-size));
+  width: 100%;
+  max-width: var(--cui-modal-width, var(--_modal-width));
   border-radius: var(--cui-modal-radius, var(--_modal-radius));
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-lg);
@@ -216,7 +217,6 @@ const titleId = useCuiId("modal-title");
 .cui-modal {
   display: flex;
   flex-direction: column;
-  max-width: 100%;
   max-height: calc(100vh - 8rem);
   outline: none;
   overflow: hidden;
