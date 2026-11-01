@@ -26,7 +26,7 @@ export interface UseScrollSpyReturn {
   /**
    * Make `id` the current section now, for a click on a nav entry. The observer stops
    * updating `activeId` until the scroll that follows settles (`scrollend`) or the user
-   * scrolls themselves (wheel, touch, a key), so a smooth scroll that passes other sections
+   * scrolls themselves (wheel, touch, a pointer press, a scrolling key), so a smooth scroll that passes other sections
    * on the way, or a last section that can never reach the band, does not override it.
    */
   setActive: (id: string) => void;
@@ -35,6 +35,8 @@ export interface UseScrollSpyReturn {
 }
 
 const DEFAULT_ROOT_MARGIN = "0px 0px -50% 0px";
+/** Keys that scroll a page. Others (Tab, Enter's key repeat) leave a click's hold alone. */
+const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
 
 /** `rootMargin` with `offset` taken off its top inset. */
 export function scrollSpyRootMargin(rootMargin = DEFAULT_ROOT_MARGIN, offset = 0): string {
@@ -87,8 +89,10 @@ export function useScrollSpy(
         above.delete(r.target);
       } else {
         inBand.delete(r.target);
-        const top = r.rootBounds?.top ?? 0;
-        if (r.boundingClientRect.bottom <= top) above.add(r.target);
+        const rect = r.boundingClientRect;
+        // A hidden or detached target has an all-zero rect: not scrolled past, just absent.
+        const hidden = rect.width === 0 && rect.height === 0;
+        if (!hidden && rect.bottom <= (r.rootBounds?.top ?? 0)) above.add(r.target);
         else above.delete(r.target);
       }
     }
@@ -109,6 +113,9 @@ export function useScrollSpy(
     const els = [...new Set(toValue(targets).map(resolve).filter((el): el is HTMLElement => !!el))];
     // Document order, not list order: "topmost" is about the page.
     ordered = els.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    // A clicked section that is no longer a target (the page changed under it) stops
+    // holding, or the new observer's first records would be ignored.
+    if (locked.value && !ordered.some((el) => el.id === activeId.value)) locked.value = false;
     if (!ordered.length) {
       if (!locked.value) activeId.value = null;
       return;
@@ -134,17 +141,35 @@ export function useScrollSpy(
     ),
   );
 
-  const unlock = () => (locked.value = false);
+  // The click's scroll ended: stop holding, but keep the clicked section until the next
+  // change, since a last section may never reach the band.
+  const settle = () => (locked.value = false);
+  // The reader took over (it may have cut the scroll short): track where they are now.
+  const takeOver = () => {
+    locked.value = false;
+    activeId.value = pick();
+  };
   // scrollend does not bubble from an element, hence capture; filter to our own scroller.
+  // The viewport's scrollend fires at the document, whichever element names it as root.
   useEventListener(
     "document",
     "scrollend",
     (e) => {
-      if (e.target === (rootEl ?? document)) unlock();
+      const viewport = !rootEl || rootEl === document.documentElement || rootEl === document.scrollingElement;
+      if (e.target === (viewport ? document : rootEl)) settle();
     },
     { enabled: locked, capture: true },
   );
-  useEventListener("window", ["wheel", "touchstart", "keydown"], unlock, { enabled: locked, capture: true });
+  // pointerdown covers a scrollbar drag, which fires no wheel or key event.
+  useEventListener("window", ["wheel", "touchstart", "pointerdown"], takeOver, { enabled: locked, capture: true });
+  useEventListener(
+    "window",
+    "keydown",
+    (e) => {
+      if (SCROLL_KEYS.has(e.key)) takeOver();
+    },
+    { enabled: locked, capture: true },
+  );
 
   onScopeDispose(() => {
     observer?.disconnect();

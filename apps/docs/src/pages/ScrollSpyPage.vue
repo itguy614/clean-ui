@@ -56,7 +56,7 @@ function go(e, id) {
 <\/script>
 
 <template>
-  <nav aria-label="Article">
+  <nav aria-label="Article sections">
     <a v-for="s in sections" :key="s.id" :href="\`#\${s.id}\`"
        :aria-current="s.id === activeId ? 'location' : undefined"
        @click="go($event, s.id)">{{ s.title }}</a>
@@ -112,7 +112,7 @@ const returns = [
     name: "setActive",
     type: "(id: string) => void",
     description:
-      "Makes id current immediately, for a click on a nav entry. The observer leaves activeId alone until that scroll ends (scrollend) or the reader scrolls themselves (wheel, touch or a key).",
+      "Makes id current immediately, for a click on a nav entry. The observer leaves activeId alone until that scroll ends (scrollend) or the reader scrolls themselves (wheel, touch, a pointer press or a scrolling key), which also re-reads where they are at once.",
   },
   {
     name: "refresh",
@@ -146,7 +146,7 @@ const returns = [
           <span>Current: <CuiBadge>{{ sections.find((s) => s.id === current)?.title }}</CuiBadge></span>
         </CuiFlex>
         <div style="display: flex; gap: 1.5rem; align-items: flex-start">
-          <nav aria-label="Article" style="flex-shrink: 0; width: 9rem">
+          <nav aria-label="Article sections" style="flex-shrink: 0; width: 9rem">
             <ul style="list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--cui-border)">
               <li v-for="s in sections" :key="s.id" style="margin: 0">
                 <a
@@ -171,7 +171,7 @@ const returns = [
           <div
             ref="scroller"
             tabindex="0"
-            aria-label="Article"
+            aria-label="Article text"
             role="region"
             style="flex: 1; min-width: 0; height: 20rem; overflow: auto; position: relative; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-lg, 0.5rem)"
           >

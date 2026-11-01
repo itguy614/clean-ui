@@ -25,14 +25,15 @@ class MockObserver {
     return [];
   }
   /** Report `ids` in the band, `aboveIds` scrolled past it, the rest below it. */
-  report(state: Record<string, "in" | "above" | "below">) {
+  report(state: Record<string, "in" | "above" | "below" | "hidden">) {
     const records = Object.entries(state).map(([id, where]) => {
       const target = document.getElementById(id)!;
-      const bottom = where === "above" ? -10 : where === "in" ? 50 : 900;
+      const bottom = { above: -10, in: 50, below: 900, hidden: 0 }[where];
+      const height = where === "hidden" ? 0 : 20;
       return {
         target,
         isIntersecting: where === "in",
-        boundingClientRect: { top: bottom - 20, bottom } as DOMRectReadOnly,
+        boundingClientRect: { top: bottom - height, bottom, width: height ? 100 : 0, height } as DOMRectReadOnly,
         rootBounds: { top: 0 } as DOMRectReadOnly,
       } as unknown as IntersectionObserverEntry;
     });
@@ -111,12 +112,57 @@ describe("useScrollSpy", () => {
     expect(api.activeId.value).toBe("c");
   });
 
-  it("hands control back when the user scrolls themselves", async () => {
+  it("hands control back, at once, when the user scrolls themselves", async () => {
+    const { api } = spy(() => ["a", "b", "c"]);
+    await nextTick();
+    api.setActive("c");
+    await nextTick();
+    // The click's scroll is cut short with b in the band.
+    latest().report({ a: "above", b: "in" });
+    expect(api.activeId.value).toBe("c");
+    window.dispatchEvent(new Event("wheel"));
+    expect(api.activeId.value).toBe("b");
+  });
+
+  it("keeps the hold through keys that don't scroll, not through ones that do", async () => {
     const { api } = spy(() => ["a", "b"]);
     await nextTick();
     api.setActive("b");
     await nextTick();
-    window.dispatchEvent(new Event("wheel"));
+    latest().report({ a: "in" });
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
+    await nextTick();
+    expect(api.activeId.value).toBe("b");
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
+    expect(api.activeId.value).toBe("a");
+  });
+
+  it("does not count a hidden target as scrolled past", async () => {
+    const { api } = spy(() => ["a", "b"]);
+    await nextTick();
+    latest().report({ a: "hidden", b: "below" });
+    expect(api.activeId.value).toBeNull();
+  });
+
+  it("drops the hold when the clicked section stops being a target", async () => {
+    const targets = ref(["a", "b"]);
+    const { api } = spy(() => targets.value);
+    await nextTick();
+    api.setActive("b");
+    await nextTick();
+    page.insertAdjacentHTML("beforeend", '<h2 id="x">x</h2>');
+    targets.value = ["c", "x"];
+    await nextTick();
+    latest().report({ c: "in" });
+    expect(api.activeId.value).toBe("c");
+  });
+
+  it("releases on the document's scrollend when the root is the root element", async () => {
+    const { api } = spy(() => ["a", "b"], { root: document.documentElement });
+    await nextTick();
+    api.setActive("b");
+    await nextTick();
+    document.dispatchEvent(new Event("scrollend"));
     latest().report({ a: "in" });
     expect(api.activeId.value).toBe("a");
   });
