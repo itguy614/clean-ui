@@ -33,8 +33,7 @@ import { codeBackgroundPlugin } from "../theme/code-decorations";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
-import { createCommandContext } from "../plugins/command-context";
-import { settledAt } from "../plugins/parse-settled";
+import { createCommandContext, peekedUnsettled } from "../plugins/command-context";
 import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
 import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
@@ -301,13 +300,11 @@ const commandContext = createCommandContext(
 const selectionVersion = ref(0);
 
 // A background parse can extend the tree under an unmoved cursor, which
-// changes what `isActive` sees (#256). Only while the cursor's block was
-// still unsettled, though: once it has closed, later chunks land elsewhere
-// and can't change the answer (`settledAt` in plugins/parse-settled.ts).
+// changes what `isActive` sees (#256). `isActive` answers from what is
+// already parsed and reads as inactive inside a block still being parsed;
+// only then can a later chunk change an answer, so only then re-render.
 function parseAdvanced(update: ViewUpdate): boolean {
-  const before = syntaxTree(update.startState);
-  if (before === syntaxTree(update.state)) return false;
-  return !settledAt(before, update.state.selection.main.head, update.state.doc.length);
+  return syntaxTree(update.startState) !== syntaxTree(update.state) && peekedUnsettled(commandContext);
 }
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {

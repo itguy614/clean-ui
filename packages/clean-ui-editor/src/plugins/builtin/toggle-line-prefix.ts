@@ -13,6 +13,22 @@ type LinePrefix = string | ((index: number) => string);
  */
 export type ToggleLinePrefixOptions = { match: string; insert?: LinePrefix } | { match: RegExp; insert: LinePrefix };
 
+function literalPrefix(prefix: string) {
+  return (text: string): string | null => (text.startsWith(prefix) ? prefix : null);
+}
+
+function patternPrefix(match: RegExp) {
+  // A flag-free copy: `g` makes `String.match()` drop the index, and `y`
+  // carries `lastIndex` over from one line to the next.
+  const pattern = new RegExp(match.source, match.flags.replace(/[gy]/g, ""));
+  return (text: string): string | null => {
+    // Only a match at the line start is a prefix, whether or not the pattern
+    // says `^`: stripping removes the first `length` characters of the line.
+    const found = pattern.exec(text);
+    return found?.index === 0 ? found[0] : null;
+  };
+}
+
 /**
  * The line-level sibling of `toggleInlineCommand`: toggles a prefix on every
  * line the selection touches. If every line already has it, it is stripped
@@ -23,13 +39,7 @@ export type ToggleLinePrefixOptions = { match: string; insert?: LinePrefix } | {
 export function toggleLinePrefixCommand(options: ToggleLinePrefixOptions): PluginCommandSpec {
   const { match } = options;
   const insert = options.insert ?? (match as string);
-  const matchedPrefix = (text: string): string | null => {
-    if (typeof match === "string") return text.startsWith(match) ? match : null;
-    // Only a match at the line start is a prefix, whether or not the pattern
-    // says `^`: stripping removes the first `length` characters of the line.
-    const found = text.match(match);
-    return found?.index === 0 ? found[0] : null;
-  };
+  const matchedPrefix = typeof match === "string" ? literalPrefix(match) : patternPrefix(match);
   const prefixFor = typeof insert === "string" ? () => insert : insert;
   const selectedLines = (context: CommandContext) => linesInRange(context.doc, context.selection.from, context.selection.to);
 

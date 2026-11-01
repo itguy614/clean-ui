@@ -1,5 +1,5 @@
 import type { EditorState } from "@codemirror/state";
-import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree } from "@codemirror/language";
 import type { SyntaxNode, Tree } from "@lezer/common";
 
 /** A safety net for a pathological document only, never the normal limit:
@@ -35,16 +35,24 @@ export function settledAt(tree: Tree, pos: number, docLength: number): boolean {
   return blocks.every((block) => block === null || block.nextSibling !== null);
 }
 
-/** The parser's own furthest tree, which may be ahead of `syntaxTree(state)`:
- * `ensureSyntaxTree` advances the parse without dispatching it. */
-function furthestTree(state: EditorState): Tree {
-  return ensureSyntaxTree(state, 0, 0) ?? syntaxTree(state);
+/** Where a partial tree may still change: from the start of its last
+ * top-level block (possibly cut short) onwards. A complete tree has none. */
+export function unsettledFrom(tree: Tree, docLength: number): number | null {
+  if (tree.length >= docLength) return null;
+  return tree.topNode.lastChild?.from ?? 0;
 }
 
-/** One answer per state and cursor, so the toolbar's `isActive` queries in a
- * single render share one parse (and one time cap) instead of each running
- * its own. */
-const cache = new WeakMap<EditorState, { pos: number; tree: Tree }>();
+/**
+ * The parser's own furthest tree, which may be ahead of `syntaxTree(state)`
+ * (`ensureSyntaxTree` advances the parse without dispatching the result).
+ * Never parses. `null` when the state has no language, so no tree at all.
+ */
+export function furthestTree(state: EditorState): Tree | null {
+  return ensureSyntaxTree(state, 0, 0);
+}
+
+/** One answer per state, so repeated lookups share one parse and one cap. */
+const cache = new WeakMap<EditorState, Tree>();
 
 /**
  * The parser finishes a long document in the background (#256), so the
@@ -53,23 +61,27 @@ const cache = new WeakMap<EditorState, { pos: number; tree: Tree }>();
  * toggle double-wraps instead of unwrapping. Parse on until the cursor's
  * top-level block has closed: never to the end of the document unless the
  * block runs that far. Only past `PARSE_CAP_MS` can the result still be
- * unsettled (check with `settledAt`).
+ * unsettled (check with `settledAt`). Blocks for as long as that takes, so it
+ * belongs in a command's `run`, never in a render.
+ *
+ * `null` when the state has no language.
  */
-export function treeSettledAt(state: EditorState, pos: number): Tree {
+export function treeSettledAt(state: EditorState): Tree | null {
   const cached = cache.get(state);
-  if (cached?.pos === pos) return cached.tree;
+  if (cached) return cached;
+  let tree = furthestTree(state);
+  if (!tree) return null;
 
+  const pos = state.selection.main.head;
   const docLength = state.doc.length;
   const deadline = Date.now() + PARSE_CAP_MS;
   let upto = state.doc.lineAt(pos).to;
   let step = FIRST_PARSE_STEP;
-  let tree: Tree;
-  for (;;) {
-    tree = ensureSyntaxTree(state, upto, Math.max(0, deadline - Date.now())) ?? furthestTree(state);
-    if (settledAt(tree, pos, docLength) || Date.now() >= deadline) break;
+  while (!settledAt(tree, pos, docLength) && Date.now() < deadline) {
+    tree = ensureSyntaxTree(state, upto, Math.max(0, deadline - Date.now())) ?? furthestTree(state) ?? tree;
     upto = Math.min(docLength, Math.max(upto, tree.length) + step);
     step *= 2;
   }
-  cache.set(state, { pos, tree });
+  cache.set(state, tree);
   return tree;
 }

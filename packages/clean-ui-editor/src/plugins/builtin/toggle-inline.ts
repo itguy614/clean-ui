@@ -1,4 +1,5 @@
 import type { CommandContext, PluginCommandSpec } from "../types";
+import { lookupConstruct, UNKNOWN_CONSTRUCT } from "../command-context";
 
 export interface ToggleInlineOptions {
   /** The `@lezer/markdown` node name this construct parses as (e.g.
@@ -18,7 +19,9 @@ export interface ToggleInlineOptions {
  */
 export function toggleInlineCommand({ nodeName, marker }: ToggleInlineOptions): PluginCommandSpec {
   function run(context: CommandContext): boolean {
-    const range = context.findConstructRange(nodeName);
+    const range = lookupConstruct(context, nodeName);
+    // Not parsed far enough to tell: wrapping could nest the markers.
+    if (range === UNKNOWN_CONSTRUCT) return false;
     if (range) {
       const inner = context.doc.slice(range.from + marker.length, range.to - marker.length);
       context.replaceRange(range.from, range.to, inner);

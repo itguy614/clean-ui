@@ -29,4 +29,12 @@ describe("toggleLinePrefixCommand", () => {
     command.run(context);
     expect(context.doc).toBe("1. Step 1. foo");
   });
+
+  it.each([["g"], ["y"], ["gy"]])("ignores a pattern's %s flag, matching each line on its own", (flags) => {
+    const command = toggleLinePrefixCommand({ match: new RegExp("\\d+\\.\\s", flags), insert: (i) => `${i + 1}. ` });
+    const context = contextFor("1. one\n2. two\n3. three", 0, 21);
+    expect(command.isActive!(context)).toBe(true);
+    command.run(context);
+    expect(context.doc).toBe("one\ntwo\nthree");
+  });
 });

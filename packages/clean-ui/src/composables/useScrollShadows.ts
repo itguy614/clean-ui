@@ -78,27 +78,15 @@ export const scrollShadowBottomStyle = {
   background: `linear-gradient(to top, ${fadeTo}, transparent)`,
 };
 
-/** What the left and right fades share: everything but the side they sit on. */
-const sideFade = {
+/** Inline style for a right edge fade */
+export const scrollShadowRightStyle = {
   position: "absolute" as const,
   borderRadius: "inherit",
+  right: "0",
   top: "0",
   bottom: "0",
   width: "36px",
   pointerEvents: "none" as const,
   zIndex: "20",
-};
-
-/** Inline style for a right edge fade */
-export const scrollShadowRightStyle = {
-  ...sideFade,
-  right: "0",
   background: `linear-gradient(to left, ${fadeTo}, transparent)`,
-};
-
-/** Inline style for a left edge fade */
-export const scrollShadowLeftStyle = {
-  ...sideFade,
-  left: "0",
-  background: `linear-gradient(to right, ${fadeTo}, transparent)`,
 };

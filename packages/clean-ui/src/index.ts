@@ -223,7 +223,7 @@ export type { CuiBannerProps, BannerPosition, BannerVariant } from "./components
 export type { CuiDividerProps, DividerOrientation, DividerLabelPosition, DividerVariant } from "./components/CuiDivider.vue";
 export type { CuiCopyButtonProps } from "./components/CuiCopyButton.vue";
 export { useCopyToClipboard } from "./composables/useCopyToClipboard";
-export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle, scrollShadowLeftStyle } from "./composables/useScrollShadows";
+export { useScrollShadows, scrollShadowTopStyle, scrollShadowBottomStyle, scrollShadowRightStyle } from "./composables/useScrollShadows";
 export { useScrollArea } from "./composables/useScrollArea";
 export type { UseScrollAreaOptions, ScrollAreaOrientation, ScrollAreaFade, ScrollAreaEdge, ScrollAreaFadeEdge } from "./composables/useScrollArea";
 export { motionDuration, MOTION_DURATIONS, afterAnimations } from "./utils/motion";

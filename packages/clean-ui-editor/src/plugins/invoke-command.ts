@@ -1,5 +1,6 @@
 import type { CommandContext } from "./types";
 import type { PluginRegistry } from "./registry";
+import { peeking } from "./command-context";
 
 export interface PluginErrorInfo {
   pluginId: string;
@@ -48,8 +49,10 @@ export function queryIsActive(
   const entry = registry.commands.get(commandId);
   if (!entry?.spec.isActive) return false;
 
+  const { spec } = entry;
   try {
-    return entry.spec.isActive(context);
+    // Toolbar renders run these: never block one on a background parse.
+    return peeking(context, () => spec.isActive?.(context) ?? false);
   } catch (error) {
     onError({ pluginId: entry.pluginId, commandId, error });
     return false;

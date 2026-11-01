@@ -1,6 +1,7 @@
 import type { StateEffectType } from "@codemirror/state";
 import { ViewPlugin, type DecorationSet, type EditorView, type ViewUpdate } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
+import { unsettledFrom } from "../plugins/parse-settled";
 
 export interface DecorationTriggers {
   /** Effects whose presence in any transaction forces a rebuild — state the
@@ -18,11 +19,17 @@ export interface DecorationTriggers {
 
 /** True when this update carries a different syntax tree, including one a
  * background parse extended with nothing else changing (#256), and the old
- * tree stopped short of the viewport's end. A chunk parsed wholly below the
- * viewport can't change what is drawn; scrolling there rebuilds anyway. */
+ * tree could still change inside the viewport: its last block may have been
+ * cut short, so anything from that block's start on is provisional. A chunk
+ * that only extends the tree below the viewport can't change what is drawn;
+ * scrolling there rebuilds anyway. */
 function treeChangedInView(update: ViewUpdate): boolean {
   const before = syntaxTree(update.startState);
-  return before !== syntaxTree(update.state) && before.length < update.view.viewport.to;
+  if (before === syntaxTree(update.state)) return false;
+  const from = unsettledFrom(before, update.startState.doc.length);
+  // A complete tree replaced (a language reconfigure) is a different case,
+  // and rare: rebuild.
+  return from === null || from < update.view.viewport.to;
 }
 
 /**

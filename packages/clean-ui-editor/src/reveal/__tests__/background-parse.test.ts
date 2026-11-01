@@ -1,13 +1,17 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { EditorSelection, EditorState, type Extension } from "@codemirror/state";
-import { EditorView, type DecorationSet, type ViewPlugin } from "@codemirror/view";
+import { Decoration, EditorView, type DecorationSet, type ViewPlugin } from "@codemirror/view";
 import { ensureSyntaxTree, forceParsing, syntaxTree } from "@codemirror/language";
 import { cuiMarkdownLanguage } from "../../language/markdown-language";
 import { revealExtension } from "..";
 import { revealPlugin } from "../reveal-plugin";
 import { listBulletPlugin } from "../list-bullet-plugin";
+import { decorationViewPlugin } from "../decoration-view-plugin";
 import { codeBackgroundPlugin } from "../../theme/code-decorations";
-import { createCommandContext } from "../../plugins/command-context";
+import { createCommandContext, lookupConstruct, peekedUnsettled, peeking } from "../../plugins/command-context";
+import { codeFencePlugin } from "../../plugins/builtin/code-fence";
+import { boldPlugin } from "../../plugins/builtin/bold";
+import { italicPlugin } from "../../plugins/builtin/italic";
 
 /**
  * #256 — CodeMirror parses a long document to a time budget and finishes it in the
@@ -90,6 +94,30 @@ describe("decoration plugins rebuild when a background parse completes (#256)", 
 
     expect(decorationCount(view, codeBackgroundPlugin as DecorationPlugin)).toBeGreaterThan(0);
   });
+
+  it("rebuilds when the tree already reached past the viewport but its last block was cut inside it", () => {
+    // A blockquote from the top of the document to well past the initial parse: the parse
+    // stops inside it, past the viewport, so the block the viewport shows is provisional.
+    const doc = `${"> a line of quoted text\n>\n".repeat(1000)}\n${DOC}`;
+    let builds = 0;
+    const plugin = decorationViewPlugin(() => {
+      builds++;
+      return Decoration.none;
+    });
+    view = new EditorView({
+      state: EditorState.create({ doc, extensions: [cuiMarkdownLanguage, plugin] }),
+      parent: document.body,
+    });
+    const before = syntaxTree(view.state);
+    expect(before.length).toBeGreaterThanOrEqual(view.viewport.to);
+    expect(before.length).toBeLessThan(doc.indexOf("\n\n"));
+    expect(before.topNode.lastChild!.from).toBeLessThan(view.viewport.to);
+    const initialBuilds = builds;
+
+    forceParsing(view, doc.length, 10_000);
+
+    expect(builds).toBeGreaterThan(initialBuilds);
+  });
 });
 
 describe("a command's construct lookup past the parsed tree (#256)", () => {
@@ -141,23 +169,68 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     expect(range).toEqual({ from: listFrom, to: doc.indexOf("\n\nafter") });
   });
 
-  it("past the time cap, reports a cut-short block as absent, never as a shorter range", () => {
-    const body = "const x = 1;\n".repeat(1500);
+  describe("past the time cap, inside a block still cut short", () => {
+    const body = "const x = **1**;\n".repeat(1500);
     const doc = `${DOC}\`\`\`js\n${body}\`\`\`\n\nafter\n`;
-    view = new EditorView({
-      state: EditorState.create({ doc, extensions: [cuiMarkdownLanguage] }),
-      parent: document.body,
-    });
     const fenceFrom = doc.indexOf("```js");
-    view.dispatch({ selection: EditorSelection.cursor(fenceFrom + 10) });
 
-    // A machine so slow that every clock read is half a second later.
-    let now = Date.now();
-    const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
-    const range = createCommandContext(() => view!).findConstructRange("FencedCode");
-    clock.mockRestore();
+    /** Runs `act` on a machine so slow that every clock read is half a second later. */
+    function onASlowMachine<T>(act: () => T): T {
+      let now = Date.now();
+      const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
+      try {
+        return act();
+      } finally {
+        clock.mockRestore();
+      }
+    }
 
-    // The parse gives up inside the block, so the only safe answer is "not found".
-    expect(range).toBeNull();
+    beforeEach(() => {
+      view = new EditorView({
+        state: EditorState.create({ doc, selection: EditorSelection.cursor(fenceFrom + 10), extensions: [cuiMarkdownLanguage] }),
+        parent: document.body,
+      });
+    });
+
+    it("the public lookup reports nothing, never a shorter range", () => {
+      const range = onASlowMachine(() => createCommandContext(() => view!).findConstructRange("FencedCode"));
+      expect(range).toBeNull();
+    });
+
+    it.each([
+      ["Code block", codeFencePlugin.commands.codeFence],
+      ["Bold", boldPlugin.commands.bold],
+    ])("%s does nothing rather than wrap inside the open block", (_name, command) => {
+      const context = createCommandContext(() => view!);
+      const handled = onASlowMachine(() => command.run(context));
+      expect(handled).toBe(false);
+      expect(view!.state.doc.toString()).toBe(doc);
+    });
+  });
+});
+
+describe("toolbar queries never parse (#256)", () => {
+  it("isActive answers from the tree already parsed, as inactive while the cursor's block is open", () => {
+    view = scrolledPastTheParse([]);
+    const pos = DOC.indexOf("*emphasis*", DOC.length / 2) + 3;
+    view.dispatch({ selection: EditorSelection.cursor(pos) });
+    const context = createCommandContext(() => view!);
+    const parsed = parsedSoFar(view);
+
+    const active = peeking(context, () => italicPlugin.commands.italic.isActive!(context));
+
+    expect(active).toBe(false);
+    expect(peekedUnsettled(context)).toBe(true);
+    expect(parsedSoFar(view)).toBe(parsed);
+  });
+});
+
+describe("a state with no language", () => {
+  it("finds no construct, and returns at once rather than waiting out the cap", () => {
+    // The clock is frozen, so a loop waiting on the cap would never end.
+    view = new EditorView({ state: EditorState.create({ doc: "*emphasis*", selection: EditorSelection.cursor(3) }), parent: document.body });
+    const context = createCommandContext(() => view!);
+    expect(context.findConstructRange("Emphasis")).toBeNull();
+    expect(lookupConstruct(context, "Emphasis")).toBeNull();
   });
 });
