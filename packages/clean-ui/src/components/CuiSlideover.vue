@@ -108,57 +108,21 @@ const verticalSizeMap: Record<string, string> = {
   full: "100vh",
 };
 
-const panelDimension = computed(() => {
+// The size is emitted as a private property and read back through the public token, so a
+// class forwarded onto the panel, or a container-level --cui-slideover-size, can restyle it
+// (#407). Position, the slide and the paint live in the stylesheet, keyed on these classes.
+const panelVars = computed(() => {
   const map = isHorizontal.value ? horizontalSizeMap : verticalSizeMap;
-  return map[props.size] ?? props.size;
+  return { "--_slideover-size": map[props.size] ?? props.size };
 });
 
-// Panel inline styles for size + position + transform
-const panelStyle = computed(() => {
-  const style: Record<string, string> = {
-    position: "absolute",
-    zIndex: "2",
-    display: "flex",
-    flexDirection: "column",
-    background: "var(--cui-surface-base)",
-    boxShadow: "0 16px 48px rgb(0 0 0 / 0.15)",
-    outline: "none",
-    overflow: "hidden",
-    // Slides out faster than it came in, with its backdrop (#269): the style flips with the
-    // visible class, so each transition takes the duration of the state it moves to.
-    transition: `transform var(--cui-duration-${isAnimating.value ? "slow" : "fast"}) var(--cui-ease-drawer)`,
-  };
-
-  if (isHorizontal.value) {
-    style.width = panelDimension.value;
-    style.maxWidth = props.size === "full" ? "100vw" : "calc(100vw - 2rem)";
-    style.top = "0";
-    style.height = "100%";
-  } else {
-    style.height = panelDimension.value;
-    style.maxHeight = props.size === "full" ? "100vh" : "calc(100vh - 2rem)";
-    style.left = "0";
-    style.width = "100%";
-  }
-
-  // Side position
-  if (props.side === "right") style.right = "0";
-  else if (props.side === "left") style.left = "0";
-  else if (props.side === "top") style.top = "0";
-  else if (props.side === "bottom") style.bottom = "0";
-
-  // Off-screen transform (overridden when visible)
-  if (!isAnimating.value) {
-    if (props.side === "right") style.transform = "translateX(100%)";
-    else if (props.side === "left") style.transform = "translateX(-100%)";
-    else if (props.side === "top") style.transform = "translateY(-100%)";
-    else if (props.side === "bottom") style.transform = "translateY(100%)";
-  } else {
-    style.transform = "translate(0)";
-  }
-
-  return style;
-});
+const panelClass = computed(() => [
+  `cui-slideover__panel--${props.side}`,
+  {
+    "cui-slideover__panel--full": props.size === "full",
+    "cui-slideover__panel--visible": isAnimating.value,
+  },
+]);
 
 // Generate id for aria-labelledby
 const titleId = useCuiId("slideover-title");
@@ -193,8 +157,8 @@ const titleId = useCuiId("slideover-title");
         ref="panelEl"
         data-cui-exit
         class="cui-slideover__panel"
-        :class="{ 'cui-slideover__panel--visible': isAnimating }"
-        :style="panelStyle"
+        :class="panelClass"
+        :style="panelVars"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="title ? titleId : undefined"
@@ -224,4 +188,83 @@ const titleId = useCuiId("slideover-title");
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+/* --- Panel --- */
+/* Themeable — zero specificity, so a class forwarded onto the panel (`<CuiSlideover class>`)
+   or a consumer's own `.cui-slideover__panel { … }` wins without `!important` (#407). `size`
+   is the width of a left or right panel and the height of a top or bottom one. */
+:where(.cui-slideover__panel) {
+  border-radius: var(--cui-slideover-radius, 0);
+  background: var(--cui-surface-base);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.15);
+}
+
+:where(.cui-slideover__panel--left, .cui-slideover__panel--right) {
+  width: var(--cui-slideover-size, var(--_slideover-size));
+}
+
+:where(.cui-slideover__panel--top, .cui-slideover__panel--bottom) {
+  height: var(--cui-slideover-size, var(--_slideover-size));
+}
+
+.cui-slideover__panel {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  overflow: hidden;
+  /* Slides out faster than it came in, with its backdrop (#269): a transition takes the
+     duration of the state it moves to. */
+  transition: transform var(--cui-duration-fast) var(--cui-ease-drawer);
+}
+
+.cui-slideover__panel--left,
+.cui-slideover__panel--right {
+  top: 0;
+  height: 100%;
+  max-width: calc(100vw - 2rem);
+}
+
+.cui-slideover__panel--top,
+.cui-slideover__panel--bottom {
+  left: 0;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+}
+
+/* After the side rules: lifts the cap on whichever axis the panel slides along. */
+.cui-slideover__panel--full {
+  max-width: 100vw;
+  max-height: 100vh;
+}
+
+/* Off-screen until visible. */
+.cui-slideover__panel--right {
+  right: 0;
+  transform: translateX(100%);
+}
+
+.cui-slideover__panel--left {
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.cui-slideover__panel--top {
+  top: 0;
+  transform: translateY(-100%);
+}
+
+.cui-slideover__panel--bottom {
+  bottom: 0;
+  transform: translateY(100%);
+}
+
+/* After the side rules, which it overrides at the same specificity. */
+.cui-slideover__panel--visible {
+  transform: translate(0);
+  transition-duration: var(--cui-duration-slow);
+}
+</style>
 

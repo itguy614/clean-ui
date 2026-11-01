@@ -19,6 +19,7 @@ import Example from "../components/Example.vue";
 import meta from "../meta/slideover";
 
 const usage = ref(false);
+const restyled = ref(false);
 const leftPanel = ref(false);
 const topPanel = ref(false);
 const bottomPanel = ref(false);
@@ -52,6 +53,40 @@ const formAgree = ref(false);
           <p>This is a basic slideover from the right edge. Click the X, press Escape, or click the backdrop to close.</p>
         </CuiSlideover>
       </Example>
+    </template>
+
+    <template #customization>
+      <Example
+        class="mt-4"
+        title="Restyle with a class"
+        :code="`<CuiSlideover v-model:visible=&quot;show&quot; class=&quot;floating-drawer&quot; title=&quot;Floating Drawer&quot;>...</CuiSlideover>
+
+/* global CSS — the class lands on the panel (.cui-slideover__panel) */
+.floating-drawer {
+  width: 24rem;
+  border-radius: 1rem 0 0 1rem;
+}
+
+/* or every slideover on the page */
+:root {
+  --cui-slideover-radius: 1rem 0 0 1rem;
+}`"
+      >
+        <CuiButton variant="outline" size="sm" @click="restyled = true">Open</CuiButton>
+        <CuiSlideover v-model:visible="restyled" class="docs-floating-drawer" title="Floating Drawer">
+          <p>
+            A class passed to CuiSlideover lands on its panel. The panel's size and radius
+            are zero-specificity rules, so the class wins over <code>size</code> with no
+            <code>!important</code>.
+          </p>
+        </CuiSlideover>
+      </Example>
+      <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
+        <code>--cui-slideover-size</code> is the width of a left or right panel and the
+        height of a top or bottom one. The slideover teleports to <code>&lt;body&gt;</code>,
+        so a token reaches it from <code>:root</code> or <code>body</code>, or from a class
+        on the slideover itself, not from a container around the tag.
+      </p>
     </template>
 
     <template #accessibility>
@@ -320,3 +355,11 @@ const formAgree = ref(false);
     </template>
   </DocPage>
 </template>
+
+<!-- Global, not scoped: the class lands on the teleported panel, outside this page's scope. -->
+<style>
+.docs-floating-drawer {
+  width: 24rem;
+  border-radius: 1rem 0 0 1rem;
+}
+</style>

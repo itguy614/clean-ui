@@ -104,6 +104,15 @@ const meta: ComponentMeta = {
       slots: [{ name: "default", description: "Footer content, usually actions" }],
     },
   ],
+
+  tokens: [
+    {
+      name: "--cui-modal-size",
+      default: "per size",
+      description: "Panel width (sm 24rem … xl 64rem), never wider than the viewport allows",
+    },
+    { name: "--cui-modal-radius", default: "per rounded", description: "Panel corner radius" },
+  ],
 };
 
 export default meta;

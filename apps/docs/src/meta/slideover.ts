@@ -85,6 +85,15 @@ const meta: ComponentMeta = {
       slots: [{ name: "default", description: "Footer content, usually actions" }],
     },
   ],
+
+  tokens: [
+    {
+      name: "--cui-slideover-size",
+      default: "per size",
+      description: "Panel width for left/right, height for top/bottom",
+    },
+    { name: "--cui-slideover-radius", default: "0", description: "Panel corner radius" },
+  ],
 };
 
 export default meta;

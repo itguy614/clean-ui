@@ -25,6 +25,7 @@ import Example from "../components/Example.vue";
 import meta from "../meta/modal";
 
 const usage = ref(false);
+const restyled = ref(false);
 const sized = ref({ sm: false, lg: false, xl: false, full: false, custom: false });
 const withFooter = ref(false);
 const scrolling = ref(false);
@@ -72,6 +73,41 @@ const formAgree = ref(false);
           <p>This is a basic modal with a title and body content. Click the X, press Escape, or click the backdrop to close.</p>
         </CuiModal>
       </Example>
+    </template>
+
+    <template #customization>
+      <Example
+        class="mt-4"
+        title="Restyle with a class"
+        :code="`<CuiModal v-model:visible=&quot;show&quot; class=&quot;wide-dialog&quot; title=&quot;Wide Dialog&quot;>...</CuiModal>
+
+/* global CSS — the class lands on the panel (.cui-modal), not a teleported wrapper */
+.wide-dialog {
+  width: 44rem;
+  border-radius: 1.25rem;
+}
+
+/* or every modal on the page */
+:root {
+  --cui-modal-radius: 1.25rem;
+}`"
+      >
+        <CuiButton variant="outline" size="sm" @click="restyled = true">Open</CuiButton>
+        <CuiModal v-model:visible="restyled" class="docs-wide-dialog" title="Wide Dialog">
+          <p>
+            A class passed to CuiModal lands on its panel. The panel's width and radius are
+            zero-specificity rules, so the class wins over <code>size</code> and
+            <code>rounded</code> with no <code>!important</code>. It still never grows wider
+            than the viewport allows.
+          </p>
+        </CuiModal>
+      </Example>
+      <p class="mt-4 text-sm text-surface-600 dark:text-surface-400">
+        The modal teleports to <code>&lt;body&gt;</code>, so a token reaches it from
+        <code>:root</code> or <code>body</code>, or from a class on the modal itself. A
+        token set on a container around the <code>&lt;CuiModal&gt;</code> tag is not an
+        ancestor of the panel and does not apply.
+      </p>
     </template>
 
     <template #accessibility>
@@ -557,3 +593,11 @@ const formAgree = ref(false);
     </template>
   </DocPage>
 </template>
+
+<!-- Global, not scoped: the class lands on the teleported panel, outside this page's scope. -->
+<style>
+.docs-wide-dialog {
+  width: 44rem;
+  border-radius: 1.25rem;
+}
+</style>
