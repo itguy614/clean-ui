@@ -8,8 +8,9 @@ export const codeFencePlugin = definePlugin({
       run(context) {
         const range = lookupConstruct(context, "FencedCode");
         // Not parsed far enough to tell: a fence inserted inside an open
-        // block would close it early and flip everything below it.
-        if (range === UNKNOWN_CONSTRUCT) return false;
+        // block would close it early and flip everything below it. Do
+        // nothing, but report it handled so no other binding runs instead.
+        if (range === UNKNOWN_CONSTRUCT) return true;
         if (range) {
           const block = context.doc.slice(range.from, range.to);
           const firstNewline = block.indexOf("\n");

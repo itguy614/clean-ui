@@ -20,8 +20,9 @@ export interface ToggleInlineOptions {
 export function toggleInlineCommand({ nodeName, marker }: ToggleInlineOptions): PluginCommandSpec {
   function run(context: CommandContext): boolean {
     const range = lookupConstruct(context, nodeName);
-    // Not parsed far enough to tell: wrapping could nest the markers.
-    if (range === UNKNOWN_CONSTRUCT) return false;
+    // Not parsed far enough to tell: wrapping could nest the markers. Do
+    // nothing, but report it handled so the shortcut doesn't reach the browser.
+    if (range === UNKNOWN_CONSTRUCT) return true;
     if (range) {
       const inner = context.doc.slice(range.from + marker.length, range.to - marker.length);
       context.replaceRange(range.from, range.to, inner);

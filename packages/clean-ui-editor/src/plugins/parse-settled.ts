@@ -1,11 +1,14 @@
 import type { EditorState } from "@codemirror/state";
-import { ensureSyntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree, language, syntaxTree } from "@codemirror/language";
 import type { SyntaxNode, Tree } from "@lezer/common";
 
 /** A safety net for a pathological document only, never the normal limit:
  * the parse below is bounded by distance (the cursor's block), not by time,
  * so a slow machine gets the same answer as a fast one. */
 const PARSE_CAP_MS = 1000;
+/** What a toolbar query may spend: a render must stay responsive. Progress
+ * carries over, so a long block settles over a few queries. */
+export const QUERY_PARSE_CAP_MS = 10;
 /** How far past the current parse frontier each extension reaches; doubles
  * on every round so a long block costs a handful of rounds, not hundreds. */
 const FIRST_PARSE_STEP = 4096;
@@ -42,16 +45,15 @@ export function unsettledFrom(tree: Tree, docLength: number): number | null {
   return tree.topNode.lastChild?.from ?? 0;
 }
 
-/**
- * The parser's own furthest tree, which may be ahead of `syntaxTree(state)`
+/** The parser's own furthest tree, which may be ahead of `syntaxTree(state)`
  * (`ensureSyntaxTree` advances the parse without dispatching the result).
- * Never parses. `null` when the state has no language, so no tree at all.
- */
-export function furthestTree(state: EditorState): Tree | null {
-  return ensureSyntaxTree(state, 0, 0);
+ * Never parses. */
+function furthestTree(state: EditorState): Tree {
+  return ensureSyntaxTree(state, 0, 0) ?? syntaxTree(state);
 }
 
-/** One answer per state, so repeated lookups share one parse and one cap. */
+/** The latest tree per state, kept once settled so repeated lookups on one
+ * state share one parse. */
 const cache = new WeakMap<EditorState, Tree>();
 
 /**
@@ -60,28 +62,31 @@ const cache = new WeakMap<EditorState, Tree>();
  * cursor is in and cut it off. Read as-is, either one says "not inside" and a
  * toggle double-wraps instead of unwrapping. Parse on until the cursor's
  * top-level block has closed: never to the end of the document unless the
- * block runs that far. Only past `PARSE_CAP_MS` can the result still be
- * unsettled (check with `settledAt`). Blocks for as long as that takes, so it
- * belongs in a command's `run`, never in a render.
+ * block runs that far. Only past `capMs` can the result still be unsettled
+ * (check with `settledAt`). A command waits up to `PARSE_CAP_MS`; a toolbar
+ * query passes a few milliseconds, and since progress is kept, repeated
+ * queries get there too.
  *
  * `null` when the state has no language.
  */
-export function treeSettledAt(state: EditorState): Tree | null {
+export function treeSettledAt(state: EditorState, capMs = PARSE_CAP_MS): Tree | null {
+  if (!state.facet(language)) return null;
   const cached = cache.get(state);
   if (cached) return cached;
   let tree = furthestTree(state);
-  if (!tree) return null;
 
   const pos = state.selection.main.head;
   const docLength = state.doc.length;
-  const deadline = Date.now() + PARSE_CAP_MS;
+  const deadline = Date.now() + capMs;
   let upto = state.doc.lineAt(pos).to;
   let step = FIRST_PARSE_STEP;
   while (!settledAt(tree, pos, docLength) && Date.now() < deadline) {
-    tree = ensureSyntaxTree(state, upto, Math.max(0, deadline - Date.now())) ?? furthestTree(state) ?? tree;
+    tree = ensureSyntaxTree(state, upto, Math.max(0, deadline - Date.now())) ?? furthestTree(state);
     upto = Math.min(docLength, Math.max(upto, tree.length) + step);
     step *= 2;
   }
-  cache.set(state, tree);
+  // Only a settled answer is final: an unsettled one may be a short query's,
+  // and a command after it must still be free to parse on.
+  if (settledAt(tree, pos, docLength)) cache.set(state, tree);
   return tree;
 }

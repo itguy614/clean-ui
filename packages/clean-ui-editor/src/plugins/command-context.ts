@@ -1,7 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 import type { ChangeSpec, EditorState } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
-import { furthestTree, settledAt, treeSettledAt } from "./parse-settled";
+import { QUERY_PARSE_CAP_MS, settledAt, treeSettledAt } from "./parse-settled";
 import type { CommandContext } from "./types";
 import type { CleanUIContext } from "@itguy614/clean-ui";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
@@ -35,16 +35,17 @@ export function lookupConstruct(context: CommandContext, nodeName: string): Cons
   return own ? own.lookup(nodeName) : context.findConstructRange(nodeName);
 }
 
-/** Runs an `isActive` query in peek mode: lookups answer from the tree
- * already parsed instead of blocking the render to parse further. */
+/** Runs an `isActive` query in peek mode: lookups parse for a few
+ * milliseconds at most instead of blocking the render. Re-entrant. */
 export function peeking<T>(context: CommandContext, query: () => T): T {
   const own = internals.get(context);
   if (!own) return query();
+  const outer = own.peeking;
   own.peeking = true;
   try {
     return query();
   } finally {
-    own.peeking = false;
+    own.peeking = outer;
   }
 }
 
@@ -93,12 +94,12 @@ export function createCommandContext(
     const view = requireView();
     const { state } = view;
     const pos = state.selection.main.head;
-    // A query answers from what is already parsed; only a command waits.
+    // A query parses briefly; only a command waits for the block to close.
     if (own.peeking && own.peekedState !== state) {
       own.peekedState = state;
       own.peekUnsettled = false;
     }
-    const tree = own.peeking ? furthestTree(state) : treeSettledAt(state);
+    const tree = own.peeking ? treeSettledAt(state, QUERY_PARSE_CAP_MS) : treeSettledAt(state);
     if (!tree) return null; // no language, so no constructs
     // The cursor's block may still be cut short: no range in it is safe to
     // rewrite, and "not inside" would make a toggle wrap inside it.

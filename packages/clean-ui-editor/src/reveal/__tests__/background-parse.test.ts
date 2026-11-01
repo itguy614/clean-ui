@@ -64,6 +64,17 @@ function parsedSoFar(v: EditorView): number {
   return ensureSyntaxTree(v.state, 0, 0)!.length;
 }
 
+/** Runs `act` on a machine so slow that every clock read is half a second later. */
+function onASlowMachine<T>(act: () => T): T {
+  let now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
+  try {
+    return act();
+  } finally {
+    clock.mockRestore();
+  }
+}
+
 function decorationCount(v: EditorView, plugin: DecorationPlugin): number {
   let count = 0;
   v.plugin(plugin)!.decorations.between(v.viewport.from, v.viewport.to, () => {
@@ -174,17 +185,6 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     const doc = `${DOC}\`\`\`js\n${body}\`\`\`\n\nafter\n`;
     const fenceFrom = doc.indexOf("```js");
 
-    /** Runs `act` on a machine so slow that every clock read is half a second later. */
-    function onASlowMachine<T>(act: () => T): T {
-      let now = Date.now();
-      const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
-      try {
-        return act();
-      } finally {
-        clock.mockRestore();
-      }
-    }
-
     beforeEach(() => {
       view = new EditorView({
         state: EditorState.create({ doc, selection: EditorSelection.cursor(fenceFrom + 10), extensions: [cuiMarkdownLanguage] }),
@@ -203,25 +203,31 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     ])("%s does nothing rather than wrap inside the open block", (_name, command) => {
       const context = createCommandContext(() => view!);
       const handled = onASlowMachine(() => command.run(context));
-      expect(handled).toBe(false);
+      expect(handled).toBe(true); // handled, so a shortcut doesn't fall through to the browser
       expect(view!.state.doc.toString()).toBe(doc);
     });
   });
 });
 
-describe("toolbar queries never parse (#256)", () => {
-  it("isActive answers from the tree already parsed, as inactive while the cursor's block is open", () => {
+describe("toolbar queries parse only briefly (#256)", () => {
+  function italicQuery() {
     view = scrolledPastTheParse([]);
     const pos = DOC.indexOf("*emphasis*", DOC.length / 2) + 3;
     view.dispatch({ selection: EditorSelection.cursor(pos) });
     const context = createCommandContext(() => view!);
-    const parsed = parsedSoFar(view);
+    return { context, ask: () => peeking(context, () => italicPlugin.commands.italic.isActive!(context)) };
+  }
 
-    const active = peeking(context, () => italicPlugin.commands.italic.isActive!(context));
-
-    expect(active).toBe(false);
+  it("reads as inactive, and flags it, when the short budget runs out first", () => {
+    const { context, ask } = italicQuery();
+    expect(onASlowMachine(ask)).toBe(false);
     expect(peekedUnsettled(context)).toBe(true);
-    expect(parsedSoFar(view)).toBe(parsed);
+  });
+
+  it("answers in full when the budget suffices", () => {
+    const { context, ask } = italicQuery();
+    expect(ask()).toBe(true);
+    expect(peekedUnsettled(context)).toBe(false);
   });
 });
 
