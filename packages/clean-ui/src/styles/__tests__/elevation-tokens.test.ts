@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { readFileSync } from "node:fs";
+import { sourceFiles, where } from "./css-helpers";
 
 /**
  * #224 — a drop shadow is `--cui-shadow-sm` / `-md` / `-lg` (main.css), which carry their
@@ -28,21 +28,7 @@ const EXEMPT: Record<string, { count: number; why: string }> = {
 };
 
 const BLACK = /rgba?\(\s*0[\s,]+0[\s,]+0\b/g;
-const PACKAGES = resolve(__dirname, "../../../..");
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) return entry === "__tests__" ? [] : walk(path);
-    return [path];
-  });
-}
-
-const where = (f: string) => relative(PACKAGES, f).split(sep).join("/");
-const files = readdirSync(PACKAGES)
-  .filter((pkg) => statSync(join(PACKAGES, pkg, "src"), { throwIfNoEntry: false })?.isDirectory())
-  .flatMap((pkg) => walk(join(PACKAGES, pkg, "src")))
-  .filter((f) => /\.(vue|css|ts)$/.test(f) && !/\.test(-d)?\.ts$/.test(f));
+const files = sourceFiles(/\.(vue|css|ts)$/);
 // Counted once, for both checks.
 const counts = new Map(files.map((f) => [where(f), (readFileSync(f, "utf-8").match(BLACK) ?? []).length]));
 

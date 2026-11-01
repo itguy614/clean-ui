@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { readTag, splitSelectorList, walk } from "./css-helpers";
+import { readTag, sourceFiles, splitSelectorList, where } from "./css-helpers";
 
-const SRC = resolve(__dirname, "../..");
+/** Every component in every package: the editor's roots have to be in scope too (#228). */
+const COMPONENTS = sourceFiles(/\.vue$/);
 const STYLES = resolve(__dirname, "..");
 
 /** Every top-level element of a component's <template>, as raw start tags. */
@@ -57,8 +58,10 @@ describe("no global reset ships from the library's CSS", () => {
     // `tailwindcss/theme.css` is fine and intentional — it engages the engine so
     // the `@theme` block in theme.css is compiled instead of shipping raw. The
     // bare entrypoint is what drags preflight and the utilities layer along.
-    for (const [file, source] of Object.entries(css)) {
-      expect(source, file).not.toMatch(/@import\s+["']tailwindcss["']/);
+    // Every package's stylesheets, not just this one's: a satellite's CSS lands in the
+    // consumer's page just the same (#228).
+    for (const file of sourceFiles(/\.(css|vue)$/)) {
+      expect(readFileSync(file, "utf8"), where(file)).not.toMatch(/@import\s+["']tailwindcss["']/);
     }
   });
 
@@ -101,7 +104,7 @@ describe("teleported roots stay inside the scope", () => {
   it("gives every <Teleport> root element a cui-* class", () => {
     const offenders: string[] = [];
 
-    for (const file of walk(SRC).filter((f) => f.endsWith(".vue"))) {
+    for (const file of COMPONENTS) {
       const source = readFileSync(file, "utf8");
       for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?=<[a-zA-Z])/g)) {
         let at = match.index + match[0].length;
@@ -113,7 +116,7 @@ describe("teleported roots stay inside the scope", () => {
           rootTag = readTag(source, at);
         }
         if (!/class="[^"]*\bcui-/.test(rootTag) && !/:class="[^"]*cui-/.test(rootTag)) {
-          offenders.push(`${file.replace(SRC + "/", "")}: ${rootTag.split("\n")[0].trim()}`);
+          offenders.push(`${where(file)}: ${rootTag.split("\n")[0].trim()}`);
         }
       }
     }
@@ -139,25 +142,35 @@ describe("every component root is inside the scope", () => {
     "CuiListboxPanel.vue": "teleports .cui-listbox-panel",
     "CuiModal.vue": "teleports .cui-modal-overlay",
     "CuiSlideover.vue": "teleports .cui-slideover-overlay",
-    // Root is <CuiModal>, which renders a Teleport root and so cannot inherit a
-    // fallthrough class — Vue warns if you pass one. Its rendered DOM root is
-    // CuiModal's own .cui-modal-overlay, which is already in scope.
-    "CuiConfirmDialog.vue": "root is CuiModal, which cannot inherit a class",
     // <Transition> is not an element either; the bar it wraps carries the class.
     "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
     "CuiAlert.vue": "wraps .cui-alert in a <Transition>, for its exit (#263)",
   };
 
+  /**
+   * A root that is another Cui component renders that component's root, which this same
+   * test checks in its own file (or exempts, with a reason). So it is in scope already,
+   * and needs no class of its own — passing one to a component with a <Teleport> root, as
+   * CuiConfirmDialog's and the editor's dialogs' <CuiModal> is, only makes Vue warn (#228).
+   */
+  const COMPOSED = /^<Cui[A-Z]/;
+
+  it("scans every package's components, the editor's as well as clean-ui's", () => {
+    // Every suite scans through `sourceFiles`, so this one check covers them all.
+    expect(COMPONENTS.map(where)).toContain("clean-ui-editor/src/components/CuiMarkdownEditor.vue");
+  });
+
   it("gives every root element a cui-* class", () => {
     const offenders: string[] = [];
 
-    for (const file of walk(SRC).filter((f) => f.endsWith(".vue"))) {
+    for (const file of COMPONENTS) {
       const name = file.split("/").pop()!;
       if (name in EXEMPT) continue;
 
       for (const root of templateRoots(readFileSync(file, "utf8"))) {
+        if (COMPOSED.test(root)) continue;
         if (!/class="[^"]*\bcui-/.test(root) && !/:class="[^"]*cui-/.test(root)) {
-          offenders.push(`${file.replace(SRC + "/", "")}: ${root.split("\n")[0].trim()}`);
+          offenders.push(`${where(file)}: ${root.split("\n")[0].trim()}`);
         }
       }
     }
@@ -169,10 +182,10 @@ describe("every component root is inside the scope", () => {
     // An exempt file that grew a normal root should drop off the list rather
     // than sit there excusing a real gap.
     for (const [name, why] of Object.entries(EXEMPT)) {
-      const file = walk(SRC).find((f) => f.endsWith("/" + name));
+      const file = COMPONENTS.find((f) => f.endsWith("/" + name));
       expect(file, `${name} is exempt but no longer exists`).toBeDefined();
       const roots = templateRoots(readFileSync(file!, "utf8"));
-      const exempted = roots.some((r) => /^<(slot|Teleport|Transition|CuiModal)\b/.test(r));
+      const exempted = roots.some((r) => /^<(slot|Teleport|Transition)\b/.test(r));
       expect(exempted, `${name} is exempt as "${why}" but its roots no longer match`).toBe(true);
     }
   });

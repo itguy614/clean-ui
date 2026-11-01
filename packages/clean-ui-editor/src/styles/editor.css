@@ -21,26 +21,44 @@
   flex-direction: column;
 }
 
+/**
+ * Themeable properties (#228), clean-ui's two-layer contract: the editor's own
+ * values are private `--_markdown-editor-*` properties, and the paint reads
+ * each back through its public token —
+ * `var(--cui-markdown-editor-<slot>, var(--_markdown-editor-<slot>))` — so a
+ * consumer can set `--cui-markdown-editor-border`, `-focus-border` or
+ * `-focus-ring` on the editor or on any container above it. The paint rules
+ * are wrapped whole in `:where()`, so they are zero-specificity and a plain
+ * consumer rule (`.cui-markdown-editor__control { … }`) wins without
+ * `!important`. Layout stays at normal specificity: changing it breaks the
+ * control rather than restyling it.
+ */
 .cui-markdown-editor__control {
-  --_cme-border: var(--cui-border-strong);
-  --_cme-focus-border: var(--cui-primary);
-  --_cme-focus-ring: var(--cui-primary-focus-ring);
+  --_markdown-editor-border: var(--cui-border-strong);
+  --_markdown-editor-focus-border: var(--cui-primary);
+  --_markdown-editor-focus-ring: var(--cui-primary-focus-ring);
 
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--_cme-border);
-  border-radius: var(--cui-button-radius, 0.375rem);
-  background: var(--cui-surface-base);
-  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   /* Reserved so the SSR shell and the hydrated, CodeMirror-mounted editor
      occupy the same height — CodeMirror's own styles are injected at
      runtime and are absent until then. */
   min-height: 8rem;
 }
 
-.cui-markdown-editor:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within {
-  border-color: var(--_cme-focus-border);
-  box-shadow: 0 0 0 2px var(--_cme-focus-ring);
+:where(.cui-markdown-editor__control) {
+  border: 1px solid var(--cui-markdown-editor-border, var(--_markdown-editor-border));
+  /* RADIUS_SCALE's `md`, the same fallback chain as the toolbar inside it —
+     a shorter one rounded the two differently when a consumer set only
+     `--cui-radius-md`, notching the corner where they meet. */
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  background: var(--cui-surface-base);
+  transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
+}
+
+:where(.cui-markdown-editor:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within) {
+  border-color: var(--cui-markdown-editor-focus-border, var(--_markdown-editor-focus-border));
+  box-shadow: 0 0 0 2px var(--cui-markdown-editor-focus-ring, var(--_markdown-editor-focus-ring));
 }
 
 .cui-markdown-editor--disabled .cui-markdown-editor__control {
@@ -48,10 +66,18 @@
   cursor: not-allowed;
 }
 
-.cui-markdown-editor--error .cui-markdown-editor__control {
-  --_cme-border: var(--cui-error);
-  --_cme-focus-border: var(--cui-error);
-  --_cme-focus-ring: var(--cui-error-focus-ring);
+/* The error state paints the error role directly rather than through the
+   public tokens, as CuiInput's does: a container that rethemes its editors'
+   borders must not also hide which one is invalid. Later in the file at the
+   same zero specificity, so it wins over the rules above and still loses to
+   a consumer's own rule. */
+:where(.cui-markdown-editor--error .cui-markdown-editor__control) {
+  border-color: var(--cui-error);
+}
+
+:where(.cui-markdown-editor--error:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within) {
+  border-color: var(--cui-error);
+  box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
 
 /* A keystroke rejected at `maxLength` — reuses the shared `cui-shake`
@@ -318,7 +344,7 @@
  */
 .cm-tooltip.cm-tooltip-autocomplete {
   border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, 0.375rem);
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1)); /* fallback: a clean-ui before 1.4 */
   overflow: hidden;

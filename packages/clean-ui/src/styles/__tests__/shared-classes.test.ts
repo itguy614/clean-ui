@@ -1,18 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { resolve, relative } from "node:path";
-import { readTag, walk } from "./css-helpers";
+import { readTag, sourceFiles, where } from "./css-helpers";
 
 // #217: two techniques every form control needs had been copied into components and had
 // drifted — the visually-hidden block (three spellings, a deprecated `clip`, one inline in a
 // template) and the field error message (two sizes, three line heights, one inline style).
 // `.cui-sr-only` and `.cui-field-error` in `styles/components-shared.css` are the one copy of
 // each. Both packages: the editor's error message was a ninth copy.
-const PACKAGES = resolve(__dirname, "../../../..");
-const files = ["clean-ui", "clean-ui-editor"]
-  .flatMap((pkg) => walk(resolve(PACKAGES, pkg, "src")))
-  .filter((f) => /\.(vue|css)$/.test(f) && !f.endsWith("components-shared.css"))
-  .map((f) => ({ name: relative(PACKAGES, f), src: readFileSync(f, "utf8") }));
+const files = sourceFiles(/\.(vue|css)$/)
+  .filter((f) => !f.endsWith("components-shared.css"))
+  .map((f) => ({ name: where(f), src: readFileSync(f, "utf8") }));
 const offenders = (pattern: RegExp) => files.filter((f) => pattern.test(f.src)).map((f) => f.name);
 
 

@@ -1,8 +1,37 @@
 import { readdirSync, statSync } from "node:fs";
 import { expect } from "vitest";
-import { join } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 
 /** Helpers shared by the stylesheet guards (preflight, typography exclusion). */
+
+/** The workspace's `packages/` directory. */
+export const PACKAGES = resolve(__dirname, "../../../..");
+
+/**
+ * The `src` of every workspace package — the library and each satellite — so the style
+ * contracts cover a package that consumes clean-ui as well as clean-ui itself (#228: the
+ * editor sat outside every one of them, which is how it shipped no public token). A new
+ * satellite is covered without anyone listing it.
+ */
+export const SOURCE_ROOTS = readdirSync(PACKAGES)
+  .map((pkg) => join(PACKAGES, pkg, "src"))
+  .filter((src) => statSync(src, { throwIfNoEntry: false })?.isDirectory());
+
+const SKIPPED_DIRS = new Set(["__tests__", "node_modules", "dist"]);
+
+/** Every source file in every package, tests and type tests aside: walked once per test file, on first use. */
+let sources: string[] | undefined;
+
+/** Every source file in every package whose path matches `pattern`. */
+export function sourceFiles(pattern: RegExp): string[] {
+  sources ??= SOURCE_ROOTS.flatMap((root) => walk(root)).filter((f) => !/\.test(-d)?\.ts$/.test(f));
+  return sources.filter((f) => pattern.test(f));
+}
+
+/** A path relative to `packages/`, with forward slashes: `clean-ui-editor/src/styles/editor.css`. */
+export function where(file: string): string {
+  return relative(PACKAGES, file).split(sep).join("/");
+}
 
 /** Split a selector list on top-level commas only — the ones inside `:where(…)` don't separate selectors. */
 export function splitSelectorList(selector: string): string[] {
@@ -51,9 +80,9 @@ export function script(source: string): string {
 }
 
 export function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) return entry === "__tests__" ? [] : walk(path);
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return SKIPPED_DIRS.has(entry.name) ? [] : walk(path);
     return [path];
   });
 }

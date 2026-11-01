@@ -12,6 +12,7 @@ import {
   CuiButton,
   CuiRadioGroup,
   CuiRadio,
+  CuiCheckbox,
 } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor, DEFAULT_PLUGINS, type CuiMarkdownEditorMode } from "@itguy614/clean-ui-editor";
 import PropTable from "../components/PropTable.vue";
@@ -86,6 +87,36 @@ const customToolbarDoc = ref("**Bold**, *italic* and [links](https://example.com
 
 const noItalicPlugins = computed(() => DEFAULT_PLUGINS.filter((p) => p.id !== "cui-italic"));
 const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, unstyled text.");
+
+// Theming: the tokens are set on this container, not on the editor, to show that they
+// inherit — an app can retheme every editor in a region from one ancestor.
+type ThemePreset = "default" | "success" | "info" | "quiet";
+const themePreset = ref<ThemePreset>("success");
+const themeRounded = ref(false);
+const themedDoc = ref("Click in here to see the **focus** border and ring.");
+/** A colour role's own border, colour and focus ring, as the editor's three tokens. */
+const rolePreset = (role: string) => ({
+  "--cui-markdown-editor-border": `var(--cui-${role}-border)`,
+  "--cui-markdown-editor-focus-border": `var(--cui-${role})`,
+  "--cui-markdown-editor-focus-ring": `var(--cui-${role}-focus-ring)`,
+});
+const THEME_PRESETS: Record<Exclude<ThemePreset, "default">, Record<string, string>> = {
+  success: rolePreset("success"),
+  info: rolePreset("info"),
+  quiet: {
+    "--cui-markdown-editor-border": "var(--cui-border)",
+    "--cui-markdown-editor-focus-border": "var(--cui-border-strong)",
+    "--cui-markdown-editor-focus-ring": "transparent",
+  },
+};
+const themeStyle = computed(() => ({
+  ...(themePreset.value === "default" ? {} : THEME_PRESETS[themePreset.value]),
+  ...(themeRounded.value ? { "--cui-radius-md": "1rem" } : {}),
+}));
+const themeCode = computed(() => {
+  const lines = Object.entries(themeStyle.value).map(([k, v]) => `  ${k}: ${v};`);
+  return `/* On any ancestor — or on .cui-markdown-editor itself */\n.notes-panel {\n${lines.length ? lines.join("\n") : "  /* nothing set: the editor's own defaults */"}\n}`;
+});
 </script>
 
 <template>
@@ -192,6 +223,43 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
           { name: 'image', type: '(none)', description: 'Open the image dialog — inserted by URL only in v1.' },
         ]"
       />
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Theming</h2>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        The editor follows clean-ui's themeable-property contract. Set these custom properties on
+        the editor or on any container above it — they inherit, so one rule can retheme every
+        editor in a region. The rules that read them have zero specificity, so a plain class
+        selector such as <code class="cui-code">.cui-markdown-editor__control { … }</code> also
+        wins without <code class="cui-code">!important</code>. The error state keeps
+        <code class="cui-code">--cui-error</code> whatever these are set to, so a rethemed region
+        still shows which field is invalid.
+      </p>
+      <CuiStack spacing="4">
+        <PropTable
+          :props="[
+            { name: '--cui-markdown-editor-border', type: 'color', default: 'var(--cui-border-strong)', description: 'The control\'s border at rest.' },
+            { name: '--cui-markdown-editor-focus-border', type: 'color', default: 'var(--cui-primary)', description: 'The border while the editor has focus.' },
+            { name: '--cui-markdown-editor-focus-ring', type: 'color', default: 'var(--cui-primary-focus-ring)', description: 'The 2px ring drawn outside the border while the editor has focus.' },
+            { name: '--cui-button-radius / --cui-radius-md', type: 'length', default: '0.375rem', description: 'The control\'s corner radius, shared with clean-ui\'s inputs and buttons. The toolbar follows it, so its corners always match the control\'s.' },
+          ]"
+        />
+        <Example title="Overriding the tokens on a container" :code="themeCode">
+          <CuiStack spacing="3">
+            <CuiRadioGroup v-model="themePreset" variant="buttons" label="Tokens on the container">
+              <CuiRadio value="default" label="Not set" />
+              <CuiRadio value="success" label="Success" />
+              <CuiRadio value="info" label="Info" />
+              <CuiRadio value="quiet" label="Quiet (no ring)" />
+            </CuiRadioGroup>
+            <CuiCheckbox v-model="themeRounded" label="Also set --cui-radius-md: 1rem" />
+            <div :style="themeStyle">
+              <CuiMarkdownEditor v-model="themedDoc" />
+            </div>
+          </CuiStack>
+        </Example>
+      </CuiStack>
     </div>
 
     <div>
