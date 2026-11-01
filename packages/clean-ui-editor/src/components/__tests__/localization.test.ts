@@ -93,8 +93,8 @@ describe("CuiMarkdownEditor localization (task 5.2.2)", () => {
 
   it("passes an overridden namespace's strings into the standalone link dialog", async () => {
     // The link dialog mounts as a *detached* Vue app (mount-standalone.ts) —
-    // this proves the override reaches it via CommandContext.messages, not
-    // provide/inject (which a detached app can't see).
+    // this proves the override reaches it anyway, through the clean-ui
+    // context the editor hands that app (CommandContext.cleanUI, #326).
     wrapper = mount(withProvider({ markdownEditor: { linkDialogTitle: "Insertar enlace" } }, { plugins: [linkPlugin] }));
     await nextTick();
 

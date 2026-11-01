@@ -1,6 +1,6 @@
 import { mountStandaloneDialog } from "./mount-standalone";
 import UrlDialog from "./UrlDialog.vue";
-import { pickUrlDialogMessages, type UrlDialogKind } from "../../../messages";
+import type { UrlDialogKind } from "../../../messages";
 import type { CommandContext } from "../../types";
 
 export interface UrlDialogValues {
@@ -9,8 +9,9 @@ export interface UrlDialogValues {
 }
 
 /**
- * Opens the link or image dialog through `context.collect()`, in the host's locale and
- * clean-ui context. Resolves the submitted values, or `null` on cancel.
+ * Opens the link or image dialog through `context.collect()`, in the host's clean-ui
+ * context — which also carries the editor's own strings, the dialog reading them from the
+ * provided catalog. Resolves the submitted values, or `null` on cancel.
  */
 export function openUrlDialog(
   context: CommandContext,
@@ -24,7 +25,6 @@ export function openUrlDialog(
         kind,
         initialUrl: initial.url,
         initialText: initial.text,
-        messages: pickUrlDialogMessages(context.messages, kind),
         onSubmit: (values: UrlDialogValues) => {
           settle.resolve(values);
           unmount();

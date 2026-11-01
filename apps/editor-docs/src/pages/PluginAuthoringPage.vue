@@ -189,6 +189,7 @@ export const boldPlugin = definePlugin({
       onSubmit: (value: string) =&gt; { settle.resolve(value); app.unmount(); el.remove(); },
       onCancel: () =&gt; { settle.cancel(); app.unmount(); el.remove(); },
     });
+    app.config.idPrefix = `my-dialog-${++dialogs}`; // ids are unique per app only
     context.cleanUI.provideTo(app); // before mount
     app.mount(el);
   }).then((value) =&gt; { if (value) context.insertAtCursor(value); });

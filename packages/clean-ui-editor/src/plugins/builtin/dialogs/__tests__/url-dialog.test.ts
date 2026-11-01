@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { defineComponent, h, nextTick } from "vue";
+import { defineComponent, h, nextTick, ref } from "vue";
 import { undo } from "@codemirror/commands";
-import { createCleanUI, CuiConfigProvider } from "@itguy614/clean-ui";
+import { createCleanUI, CuiConfigProvider, type DeepPartialMessages } from "@itguy614/clean-ui";
 import CuiMarkdownEditor from "../../../../components/CuiMarkdownEditor.vue";
 import { linkPlugin } from "../../link";
 import { imagePlugin } from "../../image";
@@ -148,6 +148,27 @@ describe.each([
     expect(nativeInput(urlId)!.getAttribute("aria-invalid")).toBe("true");
   });
 
+  it("clears the URL error once the URL is edited", async () => {
+    await openDialog(command, plugin);
+    clickButtonWithText("Insert");
+    await nextTick();
+    expect(nativeInput(urlId)!.getAttribute("aria-invalid")).toBe("true");
+
+    setInputValue(urlId, url);
+    await nextTick();
+    expect(nativeInput(urlId)!.hasAttribute("aria-invalid")).toBe(false);
+    expect(document.body.textContent).not.toContain("A URL is required.");
+  });
+
+  it("ignores an Enter that confirms an IME composition", async () => {
+    const { view } = await openDialog(command, plugin);
+    setInputValue(urlId, url);
+    nativeInput(textId)!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true }));
+    await flush();
+    expect(view.state.doc.toString()).toBe("");
+    expect(nativeInput(urlId)).not.toBeNull();
+  });
+
   it("refuses a javascript: URL with an inline error and inserts nothing", async () => {
     const { view } = await openDialog(command, plugin);
     setInputValue(urlId, "javascript:alert(1)");
@@ -219,6 +240,24 @@ describe("the dialog follows the host's clean-ui config", () => {
     expect(dialog?.querySelector("h3")?.textContent?.trim()).toBe("Insert link");
     expect(dialog?.querySelector("h2")).toBeNull();
     expect(dialog?.querySelector('button[aria-label="Fermer"]')).not.toBeNull();
+  });
+
+  it("follows a locale change made while it is open, its own strings and clean-ui's alike", async () => {
+    const messages = ref<DeepPartialMessages>({ close: "Fermer", markdownEditor: { linkDialogTitle: "Insérer un lien" } });
+    const Host = defineComponent(() => () =>
+      h(CuiConfigProvider, { messages: messages.value }, () => h(CuiMarkdownEditor, { modelValue: "", plugins: [linkPlugin] })),
+    );
+    wrapper = mount(Host);
+    await nextTick();
+    exposed(wrapper.findComponent(CuiMarkdownEditor) as VueWrapper).runCommand("link");
+    await nextTick();
+    const dialog = () => document.querySelector('[role="dialog"]')!;
+    expect(dialog().textContent).toContain("Insérer un lien");
+
+    messages.value = { close: "Cerrar", markdownEditor: { linkDialogTitle: "Insertar enlace" } };
+    await nextTick();
+    expect(dialog().textContent).toContain("Insertar enlace");
+    expect(dialog().querySelector('button[aria-label="Cerrar"]')).not.toBeNull();
   });
 
   it("falls back to the library's defaults with no host config", async () => {

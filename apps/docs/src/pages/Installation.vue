@@ -101,8 +101,12 @@ import { useCleanUIContext } from '@itguy614/clean-ui'
 // In setup()
 const cleanUI = useCleanUIContext()
 
+let dialogs = 0
+
 function openDialog() {
   const app = createApp(MyDialog)
+  // Generated ids are unique per app: keep this one's apart from your app's
+  app.config.idPrefix = `my-dialog-${++dialogs}`
   cleanUI.provideTo(app)
   app.mount(document.body.appendChild(document.createElement('div')))
 }</code></pre>
