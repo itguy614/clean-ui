@@ -244,8 +244,10 @@ Settled before drafting; these constrain the requirements below.
 
 ### Non-Functional Requirements
 
-- NFR1: The core entry's budget is **130 kB gzip**, measured as the delta a consumer bundle
-  grows by. The prototype spike measured 112.8 kB for CodeMirror, the markdown language, the
+- NFR1: The core entry's budget is **160 kB gzip**, measured as the delta a consumer bundle
+  grows by, counting the editor's stylesheet and the clean-ui components it uses internally.
+  (Revised from 130 kB in 1.6.0, #226: the original figure predated CI measurement, and the
+  first measured build was 150.7 kB. `fixtures/size-budget.json` gates it at 158 kB.) The prototype spike measured 112.8 kB for CodeMirror, the markdown language, the
   reveal layer and the autocomplete package the slash menu needs, leaving roughly 17 kB for the
   toolbar, dialogs and command layer. No module may resolve dependencies through a computed
   namespace index, the pattern that defeated tree-shaking in clean-ui issue #42.

@@ -161,9 +161,9 @@ const adapter = createMarkdownRenderAdapter(); // escapes raw HTML by default
             Measured on a real consumer build (packed tarball install, not this package's own
             <code class="cui-code">dist</code>), the whole editor — CodeMirror, the GFM markdown
             grammar, the reveal layer, every built-in plugin, the slash menu, its stylesheet and the
-            clean-ui components it uses internally — adds roughly <strong>151 kB gzip</strong> to a page
-            already using clean-ui, against a committed <strong>158 kB budget</strong> verified by this
-            repository's own CI. Avoiding <code class="cui-code">@codemirror/lang-markdown</code>'s
+            clean-ui components it uses internally — adds roughly <strong>151 kB gzip</strong>, against a
+            committed <strong>158 kB budget</strong> verified by this repository's own CI. A page that
+            already renders those clean-ui components pays less, since it has them already. Avoiding <code class="cui-code">@codemirror/lang-markdown</code>'s
             static dependency on the HTML/JS/CSS embedded-language grammar (built directly on
             <code class="cui-code">@lezer/markdown</code> instead) alone saves roughly
             <strong>70 kB gzip</strong> this editor has no use for. Importing
