@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { scrollShadowRightStyle, scrollShadowTopStyle, scrollShadowBottomStyle } from "../../composables/useScrollShadows";
+import { scrollShadowRightStyle, scrollShadowLeftStyle, scrollShadowTopStyle, scrollShadowBottomStyle } from "../../composables/useScrollShadows";
 
 /**
  * #125 — the overflow fades are painted rectangles sitting flush inside their scroller, so
@@ -33,6 +33,7 @@ describe("scroll shadows keep their scroller's corners (real browser)", () => {
 
   it.each([
     ["right", scrollShadowRightStyle],
+    ["left", scrollShadowLeftStyle],
     ["top", scrollShadowTopStyle],
     ["bottom", scrollShadowBottomStyle],
   ])("the %s fade takes its scroller's radius", (_edge, style) => {

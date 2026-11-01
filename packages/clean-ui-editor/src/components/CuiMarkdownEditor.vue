@@ -9,9 +9,9 @@ registerEditorIcons();
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
-import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, placeholder as placeholderExtension, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Compartment, Prec, Annotation, type Extension, type Transaction } from "@codemirror/state";
-import { syntaxHighlighting } from "@codemirror/language";
+import { syntaxHighlighting, syntaxTree } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
@@ -281,11 +281,20 @@ const commandContext = createCommandContext(
   () => messages.value,
 );
 
-// Bumped on every selection/document change so the toolbar's pressed state
+// Bumped on every selection/document/syntax-tree change so the toolbar's pressed state
 // (which reads live CodeMirror state through `isCommandActive`, not a Vue
 // ref) has a reactive dependency to re-render against — see updateListener
 // in createView() and CuiMarkdownEditorToolbar's `selectionVersion` prop.
 const selectionVersion = ref(0);
+
+// A background parse can extend the tree under an unmoved cursor, which
+// changes what `isActive` sees (#256). Only the update whose tree first
+// covers the cursor's line matters; later chunks land elsewhere, so they
+// don't re-render the toolbar.
+function parseReachedCursor(update: ViewUpdate): boolean {
+  const lineEnd = update.state.doc.lineAt(update.state.selection.main.head).to;
+  return syntaxTree(update.startState).length < lineEnd && syntaxTree(update.state).length >= lineEnd;
+}
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
   for (const warning of warnings) {
@@ -466,7 +475,7 @@ function createView(): EditorView {
             if (!external || doc !== lastKnownValue) emitModelValue.call(doc);
             docLength.value = update.state.doc.length;
           }
-          if (update.docChanged || update.selectionSet) selectionVersion.value++;
+          if (update.docChanged || update.selectionSet || parseReachedCursor(update)) selectionVersion.value++;
         }),
         EditorState.transactionFilter.of(maxLengthFilter),
         // Flush on blur as well as on unmount. Clicking a host button blurs the

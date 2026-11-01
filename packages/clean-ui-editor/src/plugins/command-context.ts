@@ -1,9 +1,14 @@
 import type { EditorView } from "@codemirror/view";
 import type { ChangeSpec } from "@codemirror/state";
-import { syntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import type { SyntaxNode } from "@lezer/common";
 import type { CommandContext } from "./types";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
+
+/** How long a command may spend parsing up to the cursor before it settles
+ * for the tree it has. `ensureSyntaxTree`'s own default: short enough not to
+ * be felt on a keypress. */
+const PARSE_BUDGET_MS = 50;
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
@@ -37,12 +42,17 @@ export function createCommandContext(
   function findConstructRange(nodeName: string): { from: number; to: number } | null {
     const view = requireView();
     const pos = view.state.selection.main.head;
+    // The parser finishes a long document in the background (#256), so the
+    // current tree may stop short of the cursor — read as "not inside", a
+    // toggle would double-wrap instead of unwrapping. Parse through the
+    // cursor's line first; past the time budget, fall back to what exists.
+    const tree = ensureSyntaxTree(view.state, view.state.doc.lineAt(pos).to, PARSE_BUDGET_MS) ?? syntaxTree(view.state);
     // Bias toward the node ending here first (side -1) — matters right
     // after a closing marker, e.g. the cursor landing at "**bold**|" should
     // still read as inside the bold construct — then fall back to the node
     // starting here (side 1) for a cursor at the open boundary.
     for (const side of [-1, 1] as const) {
-      let node: SyntaxNode | null = syntaxTree(view.state).resolveInner(pos, side);
+      let node: SyntaxNode | null = tree.resolveInner(pos, side);
       while (node) {
         if (node.name === nodeName) return { from: node.from, to: node.to };
         node = node.parent;

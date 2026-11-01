@@ -12,6 +12,7 @@ import {
   scrollShadowTopStyle,
   scrollShadowBottomStyle,
   scrollShadowRightStyle,
+  scrollShadowLeftStyle,
 } from "@itguy614/clean-ui";
 import Example from "../components/Example.vue";
 import PropTable from "../components/PropTable.vue";
@@ -30,17 +31,11 @@ async function setCount(n: number) {
   if (verticalEl.value) vertical.update(verticalEl.value);
 }
 
-// --- Horizontal: the right fade, plus a left one derived from it ---
+// --- Horizontal: left and right fades ---
 const chips = ["Design", "Engineering", "Marketing", "Sales", "Support", "Finance", "Legal", "Operations", "Research", "People"];
 const horizontal = useScrollShadows();
 const horizontalEl = useTemplateRef<HTMLElement>("horizontalEl");
 onMounted(() => horizontal.onMount(horizontalEl.value));
-const scrollShadowLeftStyle = {
-  ...scrollShadowRightStyle,
-  right: undefined,
-  left: "0",
-  background: "linear-gradient(to right, var(--cui-surface-base, white), transparent)",
-};
 
 const verticalCode = `<script setup>
 import { onMounted, useTemplateRef } from "vue";
@@ -65,13 +60,9 @@ onMounted(() => onMount(scroller.value));
 
 const horizontalCode = `const { canScrollLeft, canScrollRight, onScroll, onMount } = useScrollShadows();
 
-// There is no exported left fade: mirror the right one.
-const scrollShadowLeftStyle = {
-  ...scrollShadowRightStyle,
-  right: undefined,
-  left: "0",
-  background: "linear-gradient(to right, var(--cui-surface-base, white), transparent)",
-};`;
+// In the template, beside the scroller:
+// <div v-if="canScrollLeft" :style="scrollShadowLeftStyle" />
+// <div v-if="canScrollRight" :style="scrollShadowRightStyle" />`;
 
 const returns = [
   { name: "canScrollUp", type: "Ref<boolean>", description: "There is content above the visible area (more than 4px of it)." },
@@ -99,6 +90,7 @@ const styles = [
   { name: "scrollShadowTopStyle", type: "object", description: "36px fade across the top edge. z-index 5." },
   { name: "scrollShadowBottomStyle", type: "object", description: "36px fade across the bottom edge. z-index 5." },
   { name: "scrollShadowRightStyle", type: "object", description: "36px fade down the right edge. z-index 20." },
+  { name: "scrollShadowLeftStyle", type: "object", description: "36px fade down the left edge. z-index 20." },
 ];
 </script>
 
@@ -167,9 +159,8 @@ const styles = [
       <CuiCardBody>
         <p>
           <strong>Try:</strong> scroll the strip sideways, or narrow the window until it overflows.
-          There are only three exported styles, and none of them is a left fade. Spread
-          <code class="cui-code">scrollShadowRightStyle</code> and flip it, as the markdown editor's
-          toolbar did before it moved to CuiScrollArea. Notice also that a window resize doesn't re-measure: the right fade appears
+          The left fade is <code class="cui-code">scrollShadowLeftStyle</code>, the mirror of
+          <code class="cui-code">scrollShadowRightStyle</code>. Notice that a window resize doesn't re-measure: the right fade appears
           after your next scroll, not when the window narrows.
         </p>
       </CuiCardBody>

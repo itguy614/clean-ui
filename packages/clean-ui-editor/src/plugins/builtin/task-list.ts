@@ -1,34 +1,16 @@
 import { definePlugin } from "../define-plugin";
-import { linesInRange } from "./line-utils";
-
-const TASK_PREFIX_PATTERN = /^- \[[ xX]\]\s/;
-const NEW_TASK_PREFIX = "- [ ] ";
+import { toggleLinePrefixCommand } from "./toggle-line-prefix";
 
 export const taskListPlugin = definePlugin({
   id: "cui-task-list",
   commands: {
     taskList: {
-      run(context) {
-        const { from, to } = context.selection;
-        const lines = linesInRange(context.doc, from, to);
-        const allTasks = lines.every((line) => TASK_PREFIX_PATTERN.test(line.text));
-
-        context.replaceRanges(
-          lines.flatMap((line) => {
-            const match = line.text.match(TASK_PREFIX_PATTERN);
-            if (allTasks && match) return [{ from: line.start, to: line.start + match[0].length, text: "" }];
-            // New task items are always inserted unchecked — task 4.2.1's
-            // list-continuation ergonomics own what happens on further Enter.
-            if (!allTasks && !match) return [{ from: line.start, to: line.start, text: NEW_TASK_PREFIX }];
-            return [];
-          }),
-        );
-        return true;
-      },
-      isActive: (context) => {
-        const { from, to } = context.selection;
-        return linesInRange(context.doc, from, to).every((line) => TASK_PREFIX_PATTERN.test(line.text));
-      },
+      ...toggleLinePrefixCommand({
+        match: /^- \[[ xX]\]\s/,
+        // New task items are always inserted unchecked — task 4.2.1's
+        // list-continuation ergonomics own what happens on further Enter.
+        insert: "- [ ] ",
+      }),
       label: "Task list",
       icon: "list-task",
     },
