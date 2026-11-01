@@ -85,6 +85,38 @@ app.use(createCleanUI({
     </div>
 
     <div>
+      <h2 id="detached-apps" class="mb-4 text-2xl font-semibold">Carry the Config into a Detached App</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        A dialog mounted with its own <code>createApp()</code>, outside your component tree,
+        can't see what your app provides: its components fall back to the library's defaults
+        and the English messages. <code>useCleanUIContext()</code>, called in the setup of a
+        component inside your tree, captures the app's options, any
+        <code>CuiConfigProvider</code> above it and the message catalog;
+        <code>provideTo(app)</code> hands them to the other app before it mounts. They stay
+        live, so a later change to the provider reaches the dialog too.
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { createApp } from 'vue'
+import { useCleanUIContext } from '@itguy614/clean-ui'
+
+// In setup()
+const cleanUI = useCleanUIContext()
+
+let dialogs = 0
+
+function openDialog() {
+  const app = createApp(MyDialog)
+  // Generated ids are unique per app: keep this one's apart from your app's
+  app.config.idPrefix = `my-dialog-${++dialogs}`
+  cleanUI.provideTo(app)
+  app.mount(document.body.appendChild(document.createElement('div')))
+}</code></pre>
+      <p class="mt-3 text-surface-600 dark:text-surface-400">
+        The markdown editor's link and image dialogs use it, so they follow your app's heading
+        levels and messages.
+      </p>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Import Individual Components</h2>
       <p class="mb-3 text-surface-600 dark:text-surface-400">
         You can also import individual components without the plugin:

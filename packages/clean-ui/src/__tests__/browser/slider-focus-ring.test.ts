@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiSlider from "../../components/CuiSlider.vue";
 import preflight from "../../styles/preflight.css?inline";
-import { frames, installTokens, mountHosts } from "./helpers";
+import { frames, installTokens, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
  * #172 — the native range input is opacity: 0 and nothing drew a ring when it took

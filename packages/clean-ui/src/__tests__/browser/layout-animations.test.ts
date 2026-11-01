@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import { motionDuration } from "../../utils/motion";
 import CuiSlider from "../../components/CuiSlider.vue";
 import CuiProgress from "../../components/CuiProgress.vue";

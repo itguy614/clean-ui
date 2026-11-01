@@ -14,10 +14,12 @@ export default defineConfig({
     __CUI_EDITOR_VERSION__: JSON.stringify(pkg.version),
   },
   test: {
-    // Two projects, both inheriting the plugins/define above (extends: true):
+    // Three projects, all inheriting the plugins/define above (extends: true):
     // "jsdom" is the main component/composable suite; "ssr" proves
     // server-rendering properties jsdom can't — it always provides a DOM, so
-    // it can't fail a component that wrongly touches one during setup().
+    // it can't fail a component that wrongly touches one during setup();
+    // "browser" covers the cascade and laid-out geometry, neither of which
+    // jsdom models (#145). It mirrors clean-ui's own browser project.
     projects: [
       {
         extends: true,
@@ -26,7 +28,7 @@ export default defineConfig({
           environment: "jsdom",
           setupFiles: ["./src/test-setup.ts"],
           include: ["src/**/*.test.ts"],
-          exclude: ["**/node_modules/**", "**/dist/**", "src/__tests__/ssr/**"],
+          exclude: ["**/node_modules/**", "**/dist/**", "src/__tests__/ssr/**", "src/__tests__/browser/**"],
           testTimeout: 20_000,
           hookTimeout: 20_000,
         },
@@ -38,6 +40,20 @@ export default defineConfig({
           environment: "node",
           setupFiles: ["./src/test-setup-ssr.ts"],
           include: ["src/__tests__/ssr/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "browser",
+          include: ["src/__tests__/browser/**/*.test.ts"],
+          setupFiles: ["./src/__tests__/browser/setup.ts"],
+          browser: {
+            enabled: true,
+            provider: "playwright",
+            headless: true,
+            instances: [{ browser: "chromium" }],
+          },
         },
       },
     ],

@@ -3,7 +3,7 @@ import { userEvent } from "@vitest/browser/context";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h } from "vue";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import CuiTooltip from "../../components/CuiTooltip.vue";
 import { __resetTooltipGroup } from "../../composables/useTooltipGroup";
 

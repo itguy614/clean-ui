@@ -1,7 +1,10 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { defineComponent, h, useId } from "vue";
+import type { CleanUIContext } from "@itguy614/clean-ui";
 import { mountStandaloneDialog } from "../mount-standalone";
+
+const noContext: CleanUIContext = { provideTo() {} };
 
 // #182 made clean-ui's generated ids come from useId(), which is unique per Vue *app*.
 // The editor opens its link/image dialogs in a second app on the same document, so
@@ -20,7 +23,7 @@ describe("mountStandaloneDialog", () => {
 
   it("gives the standalone app ids that cannot collide with the host app's", () => {
     const host = mount(Probe, { attachTo: document.body });
-    cleanups.push(mountStandaloneDialog(Probe, {}), mountStandaloneDialog(Probe, {}));
+    cleanups.push(mountStandaloneDialog(Probe, {}, noContext), mountStandaloneDialog(Probe, {}, noContext));
     const ids = [...document.querySelectorAll(".probe")].map((el) => el.id);
     expect(ids).toHaveLength(3);
     expect(new Set(ids).size).toBe(3);

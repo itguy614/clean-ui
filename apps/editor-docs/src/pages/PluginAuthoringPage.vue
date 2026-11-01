@@ -172,6 +172,32 @@ export const boldPlugin = definePlugin({
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">A command that opens its own dialog</h2>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        A command has no place in the host's component tree, so a dialog it shows is its own Vue
+        app, mounted with <code class="cui-code">createApp()</code>. That app can't inject what the
+        host provides, so hand it on: <code class="cui-code">context.messages</code> carries this
+        package's strings, and <code class="cui-code">context.cleanUI.provideTo(app)</code> gives the
+        app the host's clean-ui defaults and catalog, so a CuiModal in it renders its title at the
+        host's heading level and names its close button in the host's language. The built-in link
+        and image commands do exactly this.
+      </p>
+      <pre class="cui-pre"><code class="cui-code">run(context) {
+  context.collect&lt;string&gt;((settle) =&gt; {
+    const el = document.body.appendChild(document.createElement("div"));
+    const app = createApp(MyDialog, {
+      onSubmit: (value: string) =&gt; { settle.resolve(value); app.unmount(); el.remove(); },
+      onCancel: () =&gt; { settle.cancel(); app.unmount(); el.remove(); },
+    });
+    app.config.idPrefix = `my-dialog-${++dialogs}`; // ids are unique per app only
+    context.cleanUI.provideTo(app); // before mount
+    app.mount(el);
+  }).then((value) =&gt; { if (value) context.insertAtCursor(value); });
+  return true;
+}</code></pre>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">The raw tier: a CodeMirror extension</h2>
       <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
         Highlighting every occurrence of a specific <em>word</em> (not a syntax construct) is

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import CuiFieldset from "../../components/CuiFieldset.vue";
 import CuiInput from "../../components/CuiInput.vue";
 

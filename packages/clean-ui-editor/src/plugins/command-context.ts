@@ -3,7 +3,10 @@ import type { ChangeSpec } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
 import { settledAt, treeSettledAt } from "./parse-settled";
 import type { CommandContext } from "./types";
+import type { CleanUIContext } from "@itguy614/clean-ui";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
+
+const NO_CLEAN_UI_CONTEXT: CleanUIContext = { provideTo() {} };
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
@@ -17,16 +20,20 @@ import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from ".
  *
  * `getMessages`, if supplied, is a live accessor over the resolved message
  * catalog (task 5.2.2) — a command that opens its own dialog (link, image)
- * reads `context.messages.linkDialog`/`.imageDialog` and passes those
- * strings down as plain props, since `mountStandaloneDialog` creates a
- * detached Vue app with no `inject()` access to the host's
- * `CuiConfigProvider`. Defaults to the English catalog so a context built
- * without this (e.g. a unit test) still works.
+ * reads `context.messages` and passes its strings down as plain props, since
+ * `mountStandaloneDialog` creates a detached Vue app with no `inject()`
+ * access to the host's `CuiConfigProvider`. Defaults to the English catalog
+ * so a context built without this (e.g. a unit test) still works.
+ *
+ * `cleanUI`, if supplied, is the host's clean-ui context (#326), which that
+ * same detached app is given so its clean-ui components follow the host's
+ * defaults and catalog. Defaults to one that provides nothing.
  */
 export function createCommandContext(
   getView: () => EditorView | null,
   onCollectingChange?: (isCollecting: boolean) => void,
   getMessages: () => CuiMarkdownEditorMessages = () => defaultMarkdownEditorMessages,
+  cleanUI: CleanUIContext = NO_CLEAN_UI_CONTEXT,
 ): CommandContext {
   function requireView(): EditorView {
     const view = getView();
@@ -125,5 +132,6 @@ export function createCommandContext(
     get messages() {
       return getMessages();
     },
+    cleanUI,
   };
 }

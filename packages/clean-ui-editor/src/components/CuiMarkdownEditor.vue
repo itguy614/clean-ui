@@ -15,7 +15,14 @@ import { syntaxHighlighting, syntaxTree } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
-import { CuiButton, CuiIcon, useColorScheme, useFieldDescribedBy, type AriaLabelableProps } from "@itguy614/clean-ui";
+import {
+  CuiButton,
+  CuiIcon,
+  useCleanUIContext,
+  useColorScheme,
+  useFieldDescribedBy,
+  type AriaLabelableProps,
+} from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { exitListWithBlankLine } from "../language/exit-list-blank-line";
@@ -276,10 +283,15 @@ const messages = useMarkdownEditorMessages();
 // context built once and reused (in the keymap below, and via `runCommand`)
 // always operates on the live view — including inside a `collect()`
 // continuation that runs after an awaited gap.
+//
+// The clean-ui context goes along for the same reason as the messages: a
+// dialog a command opens is a detached app that can't inject the host's
+// defaults or catalog itself (#326).
 const commandContext = createCommandContext(
   () => view,
   (collecting) => (isCollecting.value = collecting),
   () => messages.value,
+  useCleanUIContext(),
 );
 
 // Bumped on every selection/document/syntax-tree change so the toolbar's pressed state

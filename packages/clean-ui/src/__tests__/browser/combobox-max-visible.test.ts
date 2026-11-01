@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiCombobox from "../../components/CuiCombobox.vue";
-import { frames, mountHosts } from "./helpers";
+import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
 
 // #212: maxVisible was declared, documented and read by nothing; the panel's height came
 // from a fixed 320px cap. Real browser: it is measured from the rendered rows.

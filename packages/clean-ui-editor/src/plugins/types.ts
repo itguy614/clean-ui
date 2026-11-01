@@ -1,4 +1,5 @@
 import type { Extension } from "@codemirror/state";
+import type { CleanUIContext } from "@itguy614/clean-ui";
 import type { CuiMarkdownEditorMessages } from "../messages";
 
 /**
@@ -66,11 +67,20 @@ export interface CommandContext {
    * CodeMirror's own tree/`NodeType` types into the declarative surface).
    */
   findConstructRange(nodeName: string): { from: number; to: number } | null;
-  /** This package's resolved message catalog (task 5.2.2) — read by a
-   * command that renders its own dialog (link, image) so that UI honors the
-   * host's locale even though it mounts as a detached Vue app with no
-   * `inject()` access to `CuiConfigProvider`. */
+  /** This package's resolved message catalog (task 5.2.2), for a command
+   * that needs the host's strings outside any component — e.g. to pass them
+   * as plain props to a dialog. A dialog app given `cleanUI` below can also
+   * read them itself, with `useMessages()`. */
   readonly messages: CuiMarkdownEditorMessages;
+  /**
+   * The host's clean-ui context (#326) — its `createCleanUI()` defaults, any
+   * `CuiConfigProvider` above the editor, and clean-ui's message catalog. A
+   * command that mounts its own Vue app for a dialog calls
+   * `context.cleanUI.provideTo(app)` before mounting, so the clean-ui
+   * components in it (a CuiModal's heading level, its close label) match the
+   * host's rather than the library's defaults.
+   */
+  readonly cleanUI: CleanUIContext;
 }
 
 /** Synchronous, returns whether it handled the invocation (FR18). Async work
