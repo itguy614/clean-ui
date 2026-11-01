@@ -4,7 +4,7 @@ import { userEvent } from "@vitest/browser/context";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
 import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * #112 follow-up. Making the popover panel focusable (`opacity: 0` instead of

@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import { defineComponent, h, ref } from "vue";
 import { useClickOutside } from "../../composables/useClickOutside";
-import { frames, mountHosts } from "./helpers";
+import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
  * Review of #203. With click-outside attached only while open, a panel opened from a

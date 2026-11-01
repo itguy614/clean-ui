@@ -65,6 +65,12 @@ jobs:
         run: pnpm --filter @itguy614/clean-ui test:browser
         continue-on-error: true
 
+      # The editor's suite runs against clean-ui's built dist, like a consumer — the build
+      # step above has produced it. Same Playwright version, so the browser installed above.
+      - name: Run editor browser tests
+        run: pnpm --filter @itguy614/clean-ui-editor test:browser
+        continue-on-error: true
+
       # VERSION, every publishable package.json and the CHANGELOG heading all
       # have to agree. The publish workflow reads them from different sources,
       # so drift is silent *and green*: the wrong one bumped means npm and the

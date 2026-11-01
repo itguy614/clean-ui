@@ -3,7 +3,7 @@ import { cdp } from "@vitest/browser/context";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h } from "vue";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import { motionDuration } from "../../utils/motion";
 import CuiModal from "../../components/CuiModal.vue";
 import CuiDropdown from "../../components/CuiDropdown.vue";

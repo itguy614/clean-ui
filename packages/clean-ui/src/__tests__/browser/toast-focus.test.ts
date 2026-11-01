@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import { defineComponent, h, nextTick } from "vue";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import CuiToastProvider from "../../components/CuiToastProvider.vue";
 import { useToast } from "../../composables/useToast";
 

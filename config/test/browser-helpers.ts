@@ -1,3 +1,9 @@
+/**
+ * Helpers for the real-browser test projects of every workspace package (#145). Each
+ * package imports this file by relative path rather than through a workspace package or a
+ * copy: it is test-only, and a copy is how these drifted before (see `installTokens`).
+ */
+
 /** Wait `n` animation frames — for work that lands after paint, not after a tick. */
 export async function frames(n: number): Promise<void> {
   for (let i = 0; i < n; i++) {
@@ -27,7 +33,7 @@ export async function settleScroll(el: HTMLElement): Promise<void> {
  * numbers real.
  *
  * Lives here rather than in each suite's `beforeAll` because that is how it went wrong
- * last time: `setup.ts` exists because this "lived as a copy-pasted `beforeAll` in six
+ * last time: clean-ui's browser `setup.ts` exists because this "lived as a copy-pasted `beforeAll` in six
  * suites before", and the copies had drifted over which steps they defined.
  *
  * Returns a teardown for `afterAll`.
