@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-01
+
 ### Added
 
 - **`useCleanUIContext()`** (#326). Captures what clean-ui has provided above a component
@@ -63,6 +65,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   destroyed editor and raised an unhandled rejection. The command now sees a cancel. A
   plugin's own dialog gets the same by returning a close function from its `collect()`
   opener.
+
+- **The editor's `/render` subpath no longer ships CodeMirror** (#225). A page importing only
+  `createMarkdownRenderAdapter` paid about 88 kB gzip for an editor engine it never ran; it now
+  pays about 21 kB. The parser `/render` needs moved out of the module that builds the editor's
+  CodeMirror language, so the bundler can leave the rest behind.
+- **Editor decorations catch up when a long document finishes parsing** (#256). Past the first
+  parse chunk, code backgrounds, hidden markers in wysiwyg mode and list bullets stayed
+  undecorated until the next keystroke or scroll. Toolbar commands inside such a block now parse
+  until the block closes, rather than reading a half-parsed tree, and do nothing rather than wrap
+  when they cannot tell.
+
+### Tooling
+
+- **clean-ui-editor has a browser test project** (#145), with the browser test helpers shared
+  between both packages from `config/test/`. Its first tests assert the mode toggle keeps its own
+  background and border against CuiButton's cascade (#186), and the toolbar's corners.
+- **The editor has gzip budgets, and `/render` a CodeMirror guard** (#226). The fixture now
+  measures the editor barrel and `/render` separately (budgets 158 kB and 25 kB), and the build
+  fails if anything `/render` imports reaches `@codemirror/*`. The editor spec's NFR1 is revised
+  from 130 kB to 160 kB to match the first measured build.
 
 ## [1.5.1] - 2026-10-23
 
