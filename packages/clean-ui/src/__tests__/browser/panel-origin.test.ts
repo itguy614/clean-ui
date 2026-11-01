@@ -10,7 +10,7 @@ import CuiButton from "../../components/CuiButton.vue";
 import CuiDropdownSub from "../../components/CuiDropdownSub.vue";
 import CuiContextMenu from "../../components/CuiContextMenu.vue";
 import main from "../../styles/main.css?inline";
-import { installTokens } from "./helpers";
+import { installTokens } from "../../../../../config/test/browser-helpers";
 import { motionDuration } from "../../utils/motion";
 import { PANEL_OFFSET } from "../../utils/position";
 

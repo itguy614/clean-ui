@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiColorPicker from "../../components/CuiColorPicker.vue";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * #177 review — the swatches wrap into rows, so Up/Down move a row, as they look, rather

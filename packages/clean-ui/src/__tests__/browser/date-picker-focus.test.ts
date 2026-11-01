@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
 import preflight from "../../styles/preflight.css?inline";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * #74 — opening the calendar has to actually move focus into the grid.

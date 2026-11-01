@@ -6,7 +6,7 @@ import CuiModal from "../../components/CuiModal.vue";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
 import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * #286 — a picker's panel is a CuiPopover, a layer on the shared Escape stack (#278), so the

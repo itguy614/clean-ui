@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
 import preflight from "../../styles/preflight.css?inline";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * #74 — opening the time picker has to put focus inside the panel.

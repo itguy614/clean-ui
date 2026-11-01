@@ -5,7 +5,7 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import CuiTabs from "../../components/CuiTabs.vue";
 import CuiTab from "../../components/CuiTab.vue";
 import preflight from "../../styles/preflight.css?inline";
-import { frames, installTokens, mountHosts, settleScroll } from "./helpers";
+import { frames, installTokens, mountHosts, settleScroll } from "../../../../../config/test/browser-helpers";
 
 /**
  * #235 — arrow-keying to an off-screen tab in an overflowing bar left it partly clipped,

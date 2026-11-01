@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import CuiDataGrid from "../../components/CuiDataGrid.vue";
 import type { DataGridColumn } from "../../types/data-grid";
 import preflight from "../../styles/preflight.css?inline";
-import { frames, installTokens, mountHosts } from "./helpers";
+import { frames, installTokens, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
  * #233 — with bulk selection and a frozen data column, the checkbox column scrolled away

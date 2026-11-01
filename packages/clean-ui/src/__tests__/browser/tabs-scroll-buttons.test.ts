@@ -5,7 +5,7 @@ import CuiTabs from "../../components/CuiTabs.vue";
 import CuiTab from "../../components/CuiTab.vue";
 import main from "../../styles/main.css?inline";
 import { userEvent } from "@vitest/browser/context";
-import { frames, installTokens, mountHosts, settleScroll } from "./helpers";
+import { frames, installTokens, mountHosts, settleScroll } from "../../../../../config/test/browser-helpers";
 
 /**
  * #236 — an overflowing tab bar's only cue was a faint edge fade, and a wheel mouse
