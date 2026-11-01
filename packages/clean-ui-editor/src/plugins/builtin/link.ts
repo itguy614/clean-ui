@@ -1,5 +1,6 @@
 import { definePlugin } from "../define-plugin";
 import { openUrlDialog, type UrlDialogValues } from "./dialogs/open-url-dialog";
+import { escapeLinkLabel, foldLineBreaks, markdownLink, markdownLinkFromLabel } from "./link-markdown";
 import type { CommandContext } from "../types";
 
 const URL_LOOKING_PATTERN = /^(https?:\/\/|mailto:)\S+$/i;
@@ -10,7 +11,8 @@ function computeInitial(context: CommandContext): Partial<UrlDialogValues> {
   const { from, to, empty } = context.selection;
   if (empty) return {};
   const selected = context.doc.slice(from, to);
-  return URL_LOOKING_PATTERN.test(selected) ? { url: selected } : { text: selected };
+  // The text field is one line: an <input> would drop the breaks and run the words together.
+  return URL_LOOKING_PATTERN.test(selected) ? { url: selected } : { text: foldLineBreaks(selected) };
 }
 
 export const linkPlugin = definePlugin({
@@ -22,7 +24,7 @@ export const linkPlugin = definePlugin({
           // Cancelling leaves the document untouched (FR18a); this single
           // insertAtCursor call is the entire edit, so it's one undo step.
           // A link with no text shows its URL.
-          if (values) context.insertAtCursor(`[${values.text || values.url}](${values.url})`);
+          if (values) context.insertAtCursor(markdownLink(values.text || values.url, values.url));
         });
         // FR18: the command itself returns synchronously — it has "handled"
         // the invocation by opening the dialog, even though the edit (if
@@ -43,7 +45,11 @@ export const linkPlugin = definePlugin({
       selector: "a[href]",
       produces: "Link",
       degradeTo: "plainText",
-      toMarkdown: (el, c) => `[${c || el.getAttribute("href")}](${el.getAttribute("href")})`,
+      // `c` is already markdown, converted from the anchor's children: only the href is raw.
+      toMarkdown: (el, c) => {
+        const href = el.getAttribute("href")!;
+        return markdownLinkFromLabel(c || escapeLinkLabel(href), href);
+      },
     },
   ],
 });

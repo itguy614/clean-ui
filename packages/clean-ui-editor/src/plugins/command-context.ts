@@ -21,6 +21,9 @@ interface ContextInternals {
   peekedState: EditorState | null;
   /** A query on `peekedState` hit an unsettled block. */
   peekUnsettled: boolean;
+  /** Each open `collect()`: closes its UI and resolves it `null`. */
+  openCollects: Set<() => void>;
+  disposed: boolean;
 }
 const internals = new WeakMap<CommandContext, ContextInternals>();
 
@@ -56,6 +59,25 @@ export function peekedUnsettled(context: CommandContext): boolean {
 }
 
 /**
+ * The editor is unmounting (#409): every open `collect()` closes its UI and
+ * resolves `null`, as a cancel would, and a later one resolves `null` without
+ * opening anything. Nothing can then write into the destroyed view.
+ */
+export function disposeCommandContext(context: CommandContext): void {
+  const own = internals.get(context);
+  if (!own) return;
+  own.disposed = true;
+  for (const abandon of [...own.openCollects]) {
+    try {
+      abandon();
+    } catch (error) {
+      // One plugin's broken close must not keep the others' dialogs open.
+      console.error("[CuiMarkdownEditor] closing a dialog on unmount threw:", error);
+    }
+  }
+}
+
+/**
  * `getView` is a live accessor (not a captured reference) so a context built
  * once and reused across invocations always operates on the current view —
  * matters for `collect()` continuations, which run after an awaited gap.
@@ -88,7 +110,14 @@ export function createCommandContext(
     return view;
   }
 
-  const own: ContextInternals = { lookup, peeking: false, peekedState: null, peekUnsettled: false };
+  const own: ContextInternals = {
+    lookup,
+    peeking: false,
+    peekedState: null,
+    peekUnsettled: false,
+    openCollects: new Set(),
+    disposed: false,
+  };
 
   function lookup(nodeName: string): ConstructLookup {
     const view = requireView();
@@ -179,15 +208,26 @@ export function createCommandContext(
       view.dispatch(view.state.update({ changes, scrollIntoView: true }));
     },
     async collect(open) {
+      if (own.disposed) return null;
       onCollectingChange?.(true);
+      let abandon = () => {};
       try {
         return await new Promise((resolve) => {
-          open({
-            resolve: (value) => resolve(value),
-            cancel: () => resolve(null),
-          });
+          let close: unknown;
+          // Settled by the UI: it closes itself, so unmounting has nothing left to close.
+          const settle = (value: Parameters<typeof resolve>[0]) => {
+            own.openCollects.delete(abandon);
+            resolve(value);
+          };
+          abandon = () => {
+            settle(null);
+            if (typeof close === "function") close();
+          };
+          own.openCollects.add(abandon);
+          close = open({ resolve: settle, cancel: () => settle(null) });
         });
       } finally {
+        own.openCollects.delete(abandon);
         onCollectingChange?.(false);
       }
     },

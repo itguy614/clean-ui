@@ -33,7 +33,7 @@ import { codeBackgroundPlugin } from "../theme/code-decorations";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
-import { createCommandContext, peekedUnsettled } from "../plugins/command-context";
+import { createCommandContext, disposeCommandContext, peekedUnsettled } from "../plugins/command-context";
 import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
 import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
@@ -523,6 +523,9 @@ onBeforeUnmount(() => {
   // Vue drops emits from an unmounted instance, so an edit still queued in the
   // throttle has to go now or the host never hears the last keystrokes.
   emitModelValue.flush();
+  // A dialog a command opened is its own app and would outlive the editor, then
+  // write into the destroyed view on submit (#409).
+  disposeCommandContext(commandContext);
   view?.destroy();
   view = null;
 });

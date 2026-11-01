@@ -87,9 +87,17 @@ function renderRawHtml(node: SyntaxNode, markdown: string, ctx: SerializeOptions
   return ctx.allowRawHtml && ctx.sanitize ? ctx.sanitize(raw) : escapeHtml(raw);
 }
 
+/** The URL a link destination stands for: without its `<…>` form, its backslash escapes
+ * resolved. Before the scheme check, so `<javascript:…>` or `javascript\:…` is judged as
+ * the `javascript:` it is (#408). */
+function destinationUrl(raw: string): string {
+  const inner = raw.startsWith("<") && raw.endsWith(">") ? raw.slice(1, -1) : raw;
+  return inner.replace(/\\([!-/:-@[-`{-~])/g, "$1");
+}
+
 function renderLinkOrImage(node: SyntaxNode, markdown: string, ctx: SerializeOptions): string {
   const urlNode = node.getChild("URL");
-  const url = urlNode ? textOf(urlNode, markdown) : "";
+  const url = urlNode ? destinationUrl(textOf(urlNode, markdown)) : "";
   const allowed = isAllowedUrl(url);
   if (node.type.name === "Image") {
     const alt = renderChildren(node, markdown, ctx).replace(/<[^>]*>/g, "");

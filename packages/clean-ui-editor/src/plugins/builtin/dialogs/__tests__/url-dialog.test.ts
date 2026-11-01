@@ -233,6 +233,76 @@ describe("the link dialog's initial values", () => {
   });
 });
 
+// #408: the fields are plain text and a URL, not markdown, so neither may break the construct.
+describe.each([
+  { command: "link", plugin: linkPlugin, urlId: "cui-link-dialog-url", textId: "cui-link-dialog-label", bang: "" },
+  { command: "image", plugin: imagePlugin, urlId: "cui-image-dialog-url", textId: "cui-image-dialog-alt", bang: "!" },
+])("the $command dialog escapes what it inserts", ({ command, plugin, urlId, textId, bang }) => {
+  // The wiring only: link-markdown.test.ts has every case.
+  it.each([
+    ["a]b [c] \\d", "https://x.com", "[a\\]b \\[c\\] \\\\d](https://x.com)"],
+    ["x", "https://x.com/a b", "[x](<https://x.com/a b>)"],
+  ])("%j, %j", async (text, url, inserted) => {
+    const { view } = await openDialog(command, plugin);
+    setInputValue(urlId, url);
+    setInputValue(textId, text);
+    clickButtonWithText("Insert");
+    await flush();
+    expect(view.state.doc.toString()).toBe(bang + inserted);
+  });
+
+  it.each(["javascript:alert(1) x", "java\tscript:alert(1)"])("still refuses %j before building anything", async (url) => {
+    const { view } = await openDialog(command, plugin);
+    setInputValue(urlId, url);
+    clickButtonWithText("Insert");
+    await nextTick();
+    expect(view.state.doc.toString()).toBe("");
+    expect(document.body.textContent).toContain("scheme isn't allowed");
+  });
+});
+
+it("a link made from a multi-line selection keeps its words apart on one line (#408)", async () => {
+  const { view } = await openDialog("link", linkPlugin, "one\n\ntwo");
+  clickButtonWithText("Cancel");
+  await flush();
+  view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
+  exposed(wrapper!).runCommand("link");
+  await nextTick();
+  expect(nativeInput("cui-link-dialog-label")!.value).toBe("one two");
+  setInputValue("cui-link-dialog-url", "https://x.com");
+  clickButtonWithText("Insert");
+  await flush();
+  expect(view.state.doc.toString()).toBe("[one two](https://x.com)");
+});
+
+// #409: the dialog is a detached app, so nothing would remove it with the editor.
+describe.each([
+  { command: "link", plugin: linkPlugin },
+  { command: "image", plugin: imagePlugin },
+])("unmounting the editor with the $command dialog open", ({ command, plugin }) => {
+  it("closes the dialog, settling its collect() without a rejection", async () => {
+    const rejections: unknown[] = [];
+    const onRejection = (reason: unknown) => rejections.push(reason);
+    process.on("unhandledRejection", onRejection);
+    try {
+      await openDialog(command, plugin);
+      expect(document.querySelector(".cui-url-dialog")).not.toBeNull();
+
+      wrapper!.unmount();
+      wrapper = undefined;
+      await flush();
+      // A rejection is reported once the microtask queue drains: give it a turn.
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(document.querySelector(".cui-url-dialog")).toBeNull();
+      expect(document.body.childElementCount).toBe(0);
+      expect(rejections).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", onRejection);
+    }
+  });
+});
+
 // #326: the dialog is a detached app, so it can't inject the host's clean-ui config itself.
 describe("the dialog follows the host's clean-ui config", () => {
   it("takes the app's heading level and a provider's clean-ui messages", async () => {

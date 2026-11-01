@@ -182,16 +182,24 @@ export const boldPlugin = definePlugin({
         host's heading level and names its close button in the host's language. The built-in link
         and image commands do exactly this.
       </p>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        Return a function that closes the dialog. If the editor unmounts while it is open (a route
+        change, a <code class="cui-code">v-if</code>), the editor calls it and the
+        <code class="cui-code">collect()</code> promise resolves <code class="cui-code">null</code>,
+        as a cancel does, so the dialog doesn't outlive the editor it would write into.
+      </p>
       <pre class="cui-pre"><code class="cui-code">run(context) {
   context.collect&lt;string&gt;((settle) =&gt; {
     const el = document.body.appendChild(document.createElement("div"));
+    const close = () =&gt; { app.unmount(); el.remove(); };
     const app = createApp(MyDialog, {
-      onSubmit: (value: string) =&gt; { settle.resolve(value); app.unmount(); el.remove(); },
-      onCancel: () =&gt; { settle.cancel(); app.unmount(); el.remove(); },
+      onSubmit: (value: string) =&gt; { settle.resolve(value); close(); },
+      onCancel: () =&gt; { settle.cancel(); close(); },
     });
     app.config.idPrefix = `my-dialog-${++dialogs}`; // ids are unique per app only
     context.cleanUI.provideTo(app); // before mount
     app.mount(el);
+    return close; // called if the editor unmounts first
   }).then((value) =&gt; { if (value) context.insertAtCursor(value); });
   return true;
 }</code></pre>
