@@ -92,6 +92,9 @@ import CuiConfirmDialog from "./components/CuiConfirmDialog.vue";
 import CuiTimeline from "./components/CuiTimeline.vue";
 import CuiTimelineItem from "./components/CuiTimelineItem.vue";
 import CuiKbd from "./components/CuiKbd.vue";
+import CuiList from "./components/CuiList.vue";
+import CuiListItem from "./components/CuiListItem.vue";
+import CuiStatusDot from "./components/CuiStatusDot.vue";
 import CuiColorPicker from "./components/CuiColorPicker.vue";
 import CuiDatePicker from "./components/CuiDatePicker.vue";
 import CuiDateRangePicker from "./components/CuiDateRangePicker.vue";
@@ -108,6 +111,7 @@ import "./styles/main.css";
 
 // Component exports
 export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
+export { CuiList, CuiListItem, CuiStatusDot };
 
 // Type exports
 export type {
@@ -233,6 +237,10 @@ export type { CuiConfirmDialogProps, ConfirmDialogVariant } from "./components/C
 export type { CuiTimelineProps } from "./components/CuiTimeline.vue";
 export type { CuiTimelineItemProps } from "./components/CuiTimelineItem.vue";
 export type { CuiKbdProps } from "./components/CuiKbd.vue";
+export type { CuiListProps } from "./components/CuiList.vue";
+export type { CuiListItemProps } from "./components/CuiListItem.vue";
+export type { ListVariant } from "./components/list-context";
+export type { CuiStatusDotProps, StatusDotTone } from "./components/CuiStatusDot.vue";
 export type { CuiColorPickerProps, PresetPalette } from "./components/CuiColorPicker.vue";
 export type { CuiDatePickerProps, DatePickerMode, DatePickerValueType, DatePickerFillDay } from "./components/CuiDatePicker.vue";
 export type { DisabledDateRange } from "./utils/date";
@@ -420,6 +428,9 @@ export function createCleanUI(options: CleanUIOptions = {}) {
       app.component("CuiTimeline", CuiTimeline);
       app.component("CuiTimelineItem", CuiTimelineItem);
       app.component("CuiKbd", CuiKbd);
+      app.component("CuiList", CuiList);
+      app.component("CuiListItem", CuiListItem);
+      app.component("CuiStatusDot", CuiStatusDot);
       app.component("CuiColorPicker", CuiColorPicker);
       app.component("CuiDatePicker", CuiDatePicker);
       app.component("CuiDateRangePicker", CuiDateRangePicker);
