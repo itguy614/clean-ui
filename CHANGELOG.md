@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`useCleanUIContext()`** (#326). Captures what clean-ui has provided above a component
+  (the `createCleanUI()` options, any `CuiConfigProvider`, the message catalog) and hands it
+  to another Vue app with `provideTo(app)`, for a dialog mounted outside your tree. Live: a
+  later change to the provider reaches that app too.
+
+### Fixed
+
+- **The markdown editor's link and image dialogs follow the host's clean-ui config** (#326).
+  They mount as their own Vue app, so they ignored `headingLevels`, `roleIcons` and
+  clean-ui's own messages: the dialog title was always an `h2` and the close button always
+  "Close". They now take them from the editor's surroundings, the way they already took
+  the editor's own strings. Plugin authors get the same through `CommandContext.cleanUI`.
+  The editor now needs `@itguy614/clean-ui@^1.6.0`.
+- **The link and image dialogs are one dialog** (#222). Both labels now render the same
+  way, through CuiFormField: only the URL label was styled before. The message catalogue
+  is unchanged, all 18 `linkDialog*`/`imageDialog*` keys included, and so are the fields'
+  ids.
+
 ## [1.5.1] - 2026-10-23
 
 ### Fixed

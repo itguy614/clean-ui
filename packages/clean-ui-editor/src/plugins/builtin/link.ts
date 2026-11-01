@@ -1,18 +1,16 @@
 import { definePlugin } from "../define-plugin";
-import { mountStandaloneDialog } from "./dialogs/mount-standalone";
-import LinkDialog from "./dialogs/LinkDialog.vue";
-import { pickLinkDialogMessages } from "../../messages";
+import { openUrlDialog, type UrlDialogValues } from "./dialogs/open-url-dialog";
 import type { CommandContext } from "../types";
 
 const URL_LOOKING_PATTERN = /^(https?:\/\/|mailto:)\S+$/i;
 
 /** FR14: a URL-looking selection pre-fills the URL field; any other
- * selection becomes the link label rather than being discarded. */
-function computeInitial(context: CommandContext): { url: string; label: string } {
+ * selection becomes the link text rather than being discarded. */
+function computeInitial(context: CommandContext): Partial<UrlDialogValues> {
   const { from, to, empty } = context.selection;
-  if (empty) return { url: "", label: "" };
+  if (empty) return {};
   const selected = context.doc.slice(from, to);
-  return URL_LOOKING_PATTERN.test(selected) ? { url: selected, label: "" } : { url: "", label: selected };
+  return URL_LOOKING_PATTERN.test(selected) ? { url: selected } : { text: selected };
 }
 
 export const linkPlugin = definePlugin({
@@ -20,28 +18,12 @@ export const linkPlugin = definePlugin({
   commands: {
     link: {
       run(context) {
-        const initial = computeInitial(context);
-        context
-          .collect<{ url: string; label: string }>((settle) => {
-            const unmount = mountStandaloneDialog(LinkDialog, {
-              initialUrl: initial.url,
-              initialLabel: initial.label,
-              messages: pickLinkDialogMessages(context.messages),
-              onSubmit: (values: { url: string; label: string }) => {
-                settle.resolve(values);
-                unmount();
-              },
-              onCancel: () => {
-                settle.cancel();
-                unmount();
-              },
-            });
-          })
-          .then((values) => {
-            // Cancelling leaves the document untouched (FR18a); this single
-            // insertAtCursor call is the entire edit, so it's one undo step.
-            if (values) context.insertAtCursor(`[${values.label}](${values.url})`);
-          });
+        openUrlDialog(context, "link", computeInitial(context)).then((values) => {
+          // Cancelling leaves the document untouched (FR18a); this single
+          // insertAtCursor call is the entire edit, so it's one undo step.
+          // A link with no text shows its URL.
+          if (values) context.insertAtCursor(`[${values.text || values.url}](${values.url})`);
+        });
         // FR18: the command itself returns synchronously — it has "handled"
         // the invocation by opening the dialog, even though the edit (if
         // any) lands later, after the awaited collect() resolves.
