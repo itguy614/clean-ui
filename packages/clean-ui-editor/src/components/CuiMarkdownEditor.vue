@@ -290,8 +290,9 @@ const selectionVersion = ref(0);
 // A background parse can extend the tree under an unmoved cursor, which
 // changes what `isActive` sees (#256) — including a construct that started
 // on an earlier chunk and closes on a later one, so every chunk counts. This
-// only fires while a parse is unfinished: the toolbar's own render finishes
-// it when it can (see `commandTree` in command-context.ts).
+// only fires while a parse is unfinished, and the render it causes is cheap:
+// `isActive` parses no further than the cursor's block (`treeSettledAt` in
+// command-context.ts).
 function parseAdvanced(update: ViewUpdate): boolean {
   return syntaxTree(update.startState) !== syntaxTree(update.state);
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, type DecorationSet, type ViewPlugin } from "@codemirror/view";
 import { forceParsing, syntaxTree } from "@codemirror/language";
@@ -20,6 +20,9 @@ import { createCommandContext } from "../../plugins/command-context";
  * viewport (~3000 chars), and scrolling to the end of a long document moves the viewport
  * past the parsed tree without parsing any further. `forceParsing` then completes the tree
  * and dispatches exactly the update a background parse would.
+ *
+ * The clock is frozen: CodeMirror's parse budgets read `Date.now()`, so no budget can run
+ * out and a slow runner parses exactly as far as a fast one.
  */
 const BLOCK = "- item with `code` and *emphasis*\n\nA paragraph of filler text to push the list further down.\n\n";
 const DOC = BLOCK.repeat(1000); // ~100k chars, far past one parse chunk
@@ -27,9 +30,13 @@ const DOC = BLOCK.repeat(1000); // ~100k chars, far past one parse chunk
 type DecorationPlugin = ViewPlugin<{ decorations: DecorationSet }>;
 
 let view: EditorView | undefined;
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+});
 afterEach(() => {
   view?.destroy();
   view = undefined;
+  vi.useRealTimers();
 });
 
 /** A view scrolled to the end of `DOC`, whose syntax tree stops well short of it. */
@@ -82,13 +89,53 @@ describe("decoration plugins rebuild when a background parse completes (#256)", 
 describe("a command's construct lookup past the parsed tree (#256)", () => {
   it("parses up to the cursor rather than reading a short tree as 'not inside'", () => {
     view = scrolledPastTheParse([]);
-    // Inside the last "*emphasis*" in the document.
-    const pos = DOC.lastIndexOf("*emphasis*") + 3;
+    // Inside an "*emphasis*" in the middle of the document.
+    const pos = DOC.indexOf("*emphasis*", DOC.length / 2) + 3;
     view.dispatch({ selection: EditorSelection.cursor(pos) });
     expect(syntaxTree(view.state).length).toBeLessThan(pos);
 
     const range = createCommandContext(() => view!).findConstructRange("Emphasis");
 
     expect(range).toEqual({ from: pos - 3, to: pos - 3 + "*emphasis*".length });
+    // Bounded by the cursor's block, not the document: nowhere near the end was parsed.
+    expect(syntaxTree(view.state).length).toBeLessThan(DOC.length - 10_000);
+  });
+
+  it("parses on to the end of a block that runs past the cursor's line", () => {
+    // A fenced block, far down, whose closing fence is ~20k chars below the cursor:
+    // stopping at the cursor's line would cut the block short there.
+    const body = "const x = 1;\n".repeat(1500);
+    const doc = `${DOC}\`\`\`js\n${body}\`\`\`\n\nafter\n`;
+    view = new EditorView({
+      state: EditorState.create({ doc, extensions: [cuiMarkdownLanguage] }),
+      parent: document.body,
+    });
+    const fenceFrom = doc.indexOf("```js");
+    const pos = fenceFrom + 10;
+    view.dispatch({ selection: EditorSelection.cursor(pos) });
+    expect(syntaxTree(view.state).length).toBeLessThan(pos);
+
+    const range = createCommandContext(() => view!).findConstructRange("FencedCode");
+
+    expect(range).toEqual({ from: fenceFrom, to: doc.indexOf("\n\nafter") });
+  });
+
+  it("past the time cap, reports a cut-short block as absent, never as a shorter range", () => {
+    const body = "const x = 1;\n".repeat(1500);
+    const doc = `${DOC}\`\`\`js\n${body}\`\`\`\n\nafter\n`;
+    view = new EditorView({
+      state: EditorState.create({ doc, extensions: [cuiMarkdownLanguage] }),
+      parent: document.body,
+    });
+    const fenceFrom = doc.indexOf("```js");
+    view.dispatch({ selection: EditorSelection.cursor(fenceFrom + 10) });
+
+    // A machine so slow that every clock read is half a second later.
+    let now = Date.now();
+    vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
+    const range = createCommandContext(() => view!).findConstructRange("FencedCode");
+
+    // The parse gives up inside the block, so the only safe answer is "not found".
+    expect(range).toBeNull();
   });
 });

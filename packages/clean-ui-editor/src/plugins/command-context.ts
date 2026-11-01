@@ -5,29 +5,56 @@ import type { SyntaxNode, Tree } from "@lezer/common";
 import type { CommandContext } from "./types";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
 
-/** How long a command may spend finishing the parse before it settles for the
- * tree it has. `ensureSyntaxTree`'s own default: short enough not to be felt
- * on a keypress. */
-const PARSE_BUDGET_MS = 50;
+/** A safety net for a pathological document only, never the normal limit:
+ * the parse below is bounded by distance (the cursor's block), not by time,
+ * so a slow machine gets the same answer as a fast one. */
+const PARSE_CAP_MS = 1000;
+/** How far past the current parse frontier each extension reaches; doubles
+ * on every round so a long block costs a handful of rounds, not hundreds. */
+const FIRST_PARSE_STEP = 4096;
 
-/** One tree per state, so the toolbar's `isActive` queries for a single
- * render share one parse budget instead of spending one each. */
-const treeByState = new WeakMap<EditorState, Tree>();
+/** The block (a child of `Document`) that `pos` sits in on `side`, or `null`
+ * between blocks. */
+function topLevelBlockAt(tree: Tree, pos: number, side: -1 | 1): SyntaxNode | null {
+  let node: SyntaxNode = tree.resolve(pos, side);
+  if (!node.parent) return null;
+  while (node.parent?.parent) node = node.parent;
+  return node;
+}
+
+/** Whether `tree` is final around `pos`. A partial parse closes every block
+ * still open where it stopped, so a block reaching that point may be cut
+ * short; one that ends before it is complete, and so are its inline
+ * constructs, which are parsed only once their block closes. */
+function settledAt(tree: Tree, pos: number, docLength: number): boolean {
+  if (tree.length >= docLength) return true;
+  if (pos >= tree.length) return false;
+  return ([-1, 1] as const).every((side) => {
+    const block = topLevelBlockAt(tree, pos, side);
+    return !block || block.to < tree.length;
+  });
+}
 
 /**
  * The parser finishes a long document in the background (#256), so the
- * current tree may stop short of the cursor — read as "not inside", a toggle
- * would double-wrap instead of unwrapping. Finish the parse first; past the
- * time budget, settle for what exists. Parsing to the document's end rather
- * than the cursor's line: a parse stopped mid-block truncates that block.
+ * current tree may stop short of the cursor, or run into the block the
+ * cursor is in and cut it off. Read as-is, either one says "not inside" and a
+ * toggle double-wraps instead of unwrapping. Parse through the cursor's line,
+ * then on until the cursor's block has closed: never to the end of the
+ * document unless the block runs that far. Already-parsed text costs nothing,
+ * so repeated `isActive` queries in one toolbar render are cheap.
  */
-function commandTree(state: EditorState): Tree {
-  let tree = treeByState.get(state);
-  if (!tree) {
-    tree = ensureSyntaxTree(state, state.doc.length, PARSE_BUDGET_MS) ?? syntaxTree(state);
-    treeByState.set(state, tree);
+function treeSettledAt(state: EditorState, pos: number): Tree {
+  const docLength = state.doc.length;
+  const deadline = Date.now() + PARSE_CAP_MS;
+  let upto = state.doc.lineAt(pos).to;
+  let step = FIRST_PARSE_STEP;
+  for (;;) {
+    const tree = ensureSyntaxTree(state, upto, Math.max(0, deadline - Date.now())) ?? syntaxTree(state);
+    if (settledAt(tree, pos, docLength) || Date.now() >= deadline) return tree;
+    upto = Math.min(docLength, Math.max(upto, tree.length) + step);
+    step *= 2;
   }
-  return tree;
 }
 
 /**
@@ -62,7 +89,7 @@ export function createCommandContext(
   function findConstructRange(nodeName: string): { from: number; to: number } | null {
     const view = requireView();
     const pos = view.state.selection.main.head;
-    const tree = commandTree(view.state);
+    const tree = treeSettledAt(view.state, pos);
     // Bias toward the node ending here first (side -1) — matters right
     // after a closing marker, e.g. the cursor landing at "**bold**|" should
     // still read as inside the bold construct — then fall back to the node
@@ -70,9 +97,9 @@ export function createCommandContext(
     for (const side of [-1, 1] as const) {
       let node: SyntaxNode | null = tree.resolveInner(pos, side);
       while (node) {
-        // A partial parse closes every block still open where it stopped, so
-        // a node reaching that point may be cut short. Its range is not safe
-        // to rewrite: report it as absent rather than as a shorter construct.
+        // Only past PARSE_CAP_MS can a node still reach a partial parse's
+        // end, and then it may be cut short. Its range is not safe to
+        // rewrite: report it as absent rather than as a shorter construct.
         if (node.name === nodeName) {
           const maybeCut = node.to >= tree.length && tree.length < view.state.doc.length;
           return maybeCut ? null : { from: node.from, to: node.to };
