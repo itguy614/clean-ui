@@ -14,7 +14,7 @@ export const imagePlugin = definePlugin({
         });
         return true;
       },
-      isActive: (context) => context.findConstructRange("Image") !== null,
+      isActive: (context) => context.lookupConstruct("Image").status === "inside",
       label: "Image",
       icon: "image",
     },

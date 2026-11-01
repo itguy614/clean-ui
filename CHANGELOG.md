@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
+  It returns `{ status: "inside", range }`, `{ status: "outside" }` or
+  `{ status: "unknown" }` (the `ConstructLookup` type). "Unknown" means the cursor's block
+  isn't parsed far enough to say, on a document the parser can't settle within its time cap.
+  A plugin's toggle can now do nothing there, as the built-in ones already did, instead of
+  wrapping markers inside the construct. `findConstructRange` is unchanged and deprecated;
+  it goes in 2.0. `lookupConstruct` is a required member, so a test that builds a
+  `CommandContext` by hand, rather than with `createCommandContext()`, needs one added to
+  type-check.
+
+### Fixed
+
+- **The markdown editor's link and image dialogs follow a scoped theme** (#399). They mount
+  on `document.body`, so a `cui-theme-*` class or a `dark` class on a container around the
+  editor didn't reach them, and they rendered in the page's theme. They now take the
+  editor's nearest theme class and a scoped `dark` class when they open. A theme on
+  `<html>` already reached them and is not copied.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added

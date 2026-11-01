@@ -290,4 +290,28 @@ describe("createCommandContext", () => {
       expect(emphasis !== null || strong !== null).toBe(true);
     });
   });
+
+  // "unknown" needs a document the parser can't settle in time: background-parse.test.ts.
+  describe("lookupConstruct (#405)", () => {
+    it("reports outside when the cursor isn't in the construct", () => {
+      view = makeMarkdownView("plain text **bold** more text");
+      view.dispatch({ selection: { anchor: 3 } });
+      const context = createCommandContext(() => view!);
+
+      expect(context.lookupConstruct("StrongEmphasis")).toEqual({ status: "outside" });
+    });
+
+    it("reports inside, with the enclosing range, when it is", () => {
+      const doc = "plain text **bold** more text";
+      view = makeMarkdownView(doc);
+      view.dispatch({ selection: { anchor: doc.indexOf("bold") + 2 } });
+      const context = createCommandContext(() => view!);
+
+      const found = context.lookupConstruct("StrongEmphasis");
+      expect(found.status).toBe("inside");
+      if (found.status !== "inside") return;
+      expect(doc.slice(found.range.from, found.range.to)).toBe("**bold**");
+      expect(context.findConstructRange("StrongEmphasis")).toEqual(found.range);
+    });
+  });
 });

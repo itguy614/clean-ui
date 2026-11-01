@@ -2,20 +2,20 @@ import type { EditorView } from "@codemirror/view";
 import type { ChangeSpec, EditorState } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
 import { QUERY_PARSE_CAP_MS, settledAt, treeSettledAt } from "./parse-settled";
-import type { CommandContext } from "./types";
+import type { CommandContext, ConstructLookup } from "./types";
 import type { CleanUIContext } from "@itguy614/clean-ui";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
 
 const NO_CLEAN_UI_CONTEXT: CleanUIContext = { provideTo() {} };
 
-/** The cursor's block isn't parsed far enough to say either way. */
-export const UNKNOWN_CONSTRUCT = Symbol("unknown construct");
-export type ConstructLookup = { from: number; to: number } | null | typeof UNKNOWN_CONSTRUCT;
+const OUTSIDE: ConstructLookup = Object.freeze({ status: "outside" });
+const UNKNOWN: ConstructLookup = Object.freeze({ status: "unknown" });
 
-/** Internal to the package: what the public `CommandContext` can't express
- * yet (#405). Kept off the object so it adds nothing to the public type. */
+/** Internal to the package: state the editor drives that commands never see.
+ * Kept off the object so it adds nothing to the public type. */
 interface ContextInternals {
-  lookup(nodeName: string): ConstructLookup;
+  /** The editor's own element, for a dialog copying a scoped theme (#399). */
+  element(): HTMLElement | null;
   /** Inside an `isActive` query: answer from what is parsed, never parse. */
   peeking: boolean;
   peekedState: EditorState | null;
@@ -27,15 +27,10 @@ interface ContextInternals {
 }
 const internals = new WeakMap<CommandContext, ContextInternals>();
 
-/**
- * `findConstructRange` with "unknown" kept apart from "not inside", for the
- * built-in commands: on unknown, a toggle must do nothing, since wrapping
- * would nest markers or (for a fence) close the block early. A context this
- * package didn't build has no unknown to report.
- */
-export function lookupConstruct(context: CommandContext, nodeName: string): ConstructLookup {
-  const own = internals.get(context);
-  return own ? own.lookup(nodeName) : context.findConstructRange(nodeName);
+/** The element of the editor a context belongs to, while its view is mounted.
+ * `null` for a context this package didn't build. */
+export function editorElementOf(context: CommandContext): HTMLElement | null {
+  return internals.get(context)?.element() ?? null;
 }
 
 /** Runs an `isActive` query in peek mode: lookups parse for a few
@@ -111,7 +106,7 @@ export function createCommandContext(
   }
 
   const own: ContextInternals = {
-    lookup,
+    element: () => getView()?.dom ?? null,
     peeking: false,
     peekedState: null,
     peekUnsettled: false,
@@ -119,7 +114,7 @@ export function createCommandContext(
     disposed: false,
   };
 
-  function lookup(nodeName: string): ConstructLookup {
+  function lookupConstruct(nodeName: string): ConstructLookup {
     const view = requireView();
     const { state } = view;
     const pos = state.selection.main.head;
@@ -129,12 +124,12 @@ export function createCommandContext(
       own.peekUnsettled = false;
     }
     const tree = own.peeking ? treeSettledAt(state, QUERY_PARSE_CAP_MS) : treeSettledAt(state);
-    if (!tree) return null; // no language, so no constructs
+    if (!tree) return OUTSIDE; // no language, so no constructs
     // The cursor's block may still be cut short: no range in it is safe to
     // rewrite, and "not inside" would make a toggle wrap inside it.
     if (!settledAt(tree, pos, state.doc.length)) {
       if (own.peeking) own.peekUnsettled = true;
-      return UNKNOWN_CONSTRUCT;
+      return UNKNOWN;
     }
     // Bias toward the node ending here first (side -1) — matters right
     // after a closing marker, e.g. the cursor landing at "**bold**|" should
@@ -143,17 +138,17 @@ export function createCommandContext(
     for (const side of [-1, 1] as const) {
       let node: SyntaxNode | null = tree.resolveInner(pos, side);
       while (node) {
-        if (node.name === nodeName) return { from: node.from, to: node.to };
+        if (node.name === nodeName) return { status: "inside", range: { from: node.from, to: node.to } };
         node = node.parent;
       }
     }
-    return null;
+    return OUTSIDE;
   }
 
-  /** The public form can't say "unknown" yet (#405): it reads as absent. */
+  /** Deprecated (#405): "unknown" reads as absent here, as it always has. */
   function findConstructRange(nodeName: string): { from: number; to: number } | null {
-    const result = lookup(nodeName);
-    return result === UNKNOWN_CONSTRUCT ? null : result;
+    const result = lookupConstruct(nodeName);
+    return result.status === "inside" ? result.range : null;
   }
 
   function replaceRange(from: number, to: number, text: string): void {
@@ -231,6 +226,7 @@ export function createCommandContext(
         onCollectingChange?.(false);
       }
     },
+    lookupConstruct,
     findConstructRange,
     get messages() {
       return getMessages();

@@ -172,6 +172,62 @@ export const boldPlugin = definePlugin({
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Is the cursor inside a construct?</h2>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        A toggle has to know whether to add its markers or strip them.
+        <code class="cui-code">context.lookupConstruct(nodeName)</code> takes a
+        <code class="cui-code">@lezer/markdown</code> node name and answers one of three ways:
+      </p>
+      <ul class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        <li><code class="cui-code">{ status: "inside", range }</code>: the nearest enclosing node of that name, with its <code class="cui-code">from</code>/<code class="cui-code">to</code>.</li>
+        <li><code class="cui-code">{ status: "outside" }</code>: the cursor isn't in one.</li>
+        <li><code class="cui-code">{ status: "unknown" }</code>: the cursor's block isn't parsed far enough to say.</li>
+      </ul>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        "Unknown" only happens on a document too large or too pathological to parse within the
+        editor's time cap. A range there may be cut short, and acting as if the cursor were
+        outside would wrap markers inside the construct. Do nothing and return
+        <code class="cui-code">true</code>, so the shortcut doesn't fall through to the browser.
+        The built-in toggles do exactly this.
+      </p>
+      <pre class="cui-pre"><code class="cui-code">import { definePlugin } from "@itguy614/clean-ui-editor";
+
+// A strikethrough toggle of your own, written the way the built-in one is.
+export const strikePlugin = definePlugin({
+  id: "my-strikethrough",
+  commands: {
+    strike: {
+      run(context) {
+        const found = context.lookupConstruct("Strikethrough");
+        if (found.status === "unknown") return true; // can't tell yet: change nothing
+        if (found.status === "inside") {
+          const { from, to } = found.range;
+          context.replaceRange(from, to, context.doc.slice(from + 2, to - 2)); // strip the "~~"
+        } else {
+          context.wrapSelection("~~", "~~");
+        }
+        return true;
+      },
+      isActive: (context) =&gt; context.lookupConstruct("Strikethrough").status === "inside",
+      label: "Strikethrough",
+      icon: "strikethrough",
+    },
+  },
+});</code></pre>
+      <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
+        <code class="cui-code">findConstructRange(nodeName)</code>, which returns the range or
+        <code class="cui-code">null</code>, is deprecated and goes in 2.0. It reads "unknown" as
+        <code class="cui-code">null</code>, the same as "outside", so a toggle built on it wraps
+        where it should do nothing.
+      </p>
+      <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
+        If your tests build a <code class="cui-code">CommandContext</code> by hand rather than with
+        <code class="cui-code">createCommandContext()</code>, add a
+        <code class="cui-code">lookupConstruct</code> to it: it is a required member.
+      </p>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">A command that opens its own dialog</h2>
       <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
         A command has no place in the host's component tree, so a dialog it shows is its own Vue

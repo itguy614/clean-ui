@@ -31,7 +31,7 @@ export const linkPlugin = definePlugin({
         // any) lands later, after the awaited collect() resolves.
         return true;
       },
-      isActive: (context) => context.findConstructRange("Link") !== null,
+      isActive: (context) => context.lookupConstruct("Link").status === "inside",
       label: "Link",
       icon: "link",
     },
