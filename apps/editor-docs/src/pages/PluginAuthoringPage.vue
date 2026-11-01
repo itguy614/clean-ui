@@ -198,9 +198,9 @@ export const strikePlugin = definePlugin({
   commands: {
     strike: {
       run(context) {
-        const found = context.lookupConstruct("Strikethrough");
-        if (found.status === "unknown") return true; // can't tell yet: change nothing
-        if (found.status === "inside") {
+        const found = context.lookupConstruct?.("Strikethrough");
+        if (found?.status === "unknown") return true; // can't tell yet: change nothing
+        if (found?.status === "inside") {
           const { from, to } = found.range;
           context.replaceRange(from, to, context.doc.slice(from + 2, to - 2)); // strip the "~~"
         } else {
@@ -208,7 +208,7 @@ export const strikePlugin = definePlugin({
         }
         return true;
       },
-      isActive: (context) =&gt; context.lookupConstruct("Strikethrough").status === "inside",
+      isActive: (context) =&gt; context.lookupConstruct?.("Strikethrough")?.status === "inside",
       label: "Strikethrough",
       icon: "strikethrough",
     },
@@ -221,9 +221,9 @@ export const strikePlugin = definePlugin({
         where it should do nothing.
       </p>
       <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
-        If your tests build a <code class="cui-code">CommandContext</code> by hand rather than with
-        <code class="cui-code">createCommandContext()</code>, add a
-        <code class="cui-code">lookupConstruct</code> to it: it is a required member.
+        The editor always passes a context with <code class="cui-code">lookupConstruct</code>. It is
+        optional in the type until 2.0, so a test double you built by hand for 1.6 keeps compiling
+        and running; hence the <code class="cui-code">?.</code> above.
       </p>
     </div>
 

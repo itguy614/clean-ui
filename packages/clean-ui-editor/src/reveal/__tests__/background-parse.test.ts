@@ -199,7 +199,7 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     });
 
     it("lookupConstruct reports unknown, never outside or a shorter range (#405)", () => {
-      const found = onASlowMachine(() => createCommandContext(() => view!).lookupConstruct("FencedCode"));
+      const found = onASlowMachine(() => createCommandContext(() => view!).lookupConstruct!("FencedCode"));
       expect(found).toEqual({ status: "unknown" });
     });
 
@@ -210,9 +210,9 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
         commands: {
           callout: {
             run(context: CommandContext) {
-              const found = context.lookupConstruct("FencedCode");
-              if (found.status === "unknown") return true;
-              if (found.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
+              const found = context.lookupConstruct?.("FencedCode");
+              if (found?.status === "unknown") return true;
+              if (found?.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
               else context.wrapSelection(":::\n", "\n:::");
               return true;
             },
@@ -267,6 +267,6 @@ describe("a state with no language", () => {
     view = new EditorView({ state: EditorState.create({ doc: "*emphasis*", selection: EditorSelection.cursor(3) }), parent: document.body });
     const context = createCommandContext(() => view!);
     expect(context.findConstructRange("Emphasis")).toBeNull();
-    expect(context.lookupConstruct("Emphasis")).toEqual({ status: "outside" });
+    expect(context.lookupConstruct!("Emphasis")).toEqual({ status: "outside" });
   });
 });

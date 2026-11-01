@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   isn't parsed far enough to say, on a document the parser can't settle within its time cap.
   A plugin's toggle can now do nothing there, as the built-in ones already did, instead of
   wrapping markers inside the construct. `findConstructRange` is unchanged and deprecated;
-  it goes in 2.0. `lookupConstruct` is a required member, so a test that builds a
-  `CommandContext` by hand, rather than with `createCommandContext()`, needs one added to
-  type-check.
+  it goes in 2.0. The editor always supplies `lookupConstruct`, but it is optional in the
+  type until 2.0, so a `CommandContext` built by hand in a test keeps compiling, and the
+  built-in commands still run on one.
 
 ### Fixed
 

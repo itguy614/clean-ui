@@ -76,8 +76,13 @@ export interface CommandContext {
    * of the nearest such ancestor if so. `"unknown"` means the cursor's block
    * isn't parsed far enough to say (past the parse time cap): a command
    * should then change nothing and return `true`, as the built-ins do.
+   *
+   * Always present on the context the editor passes to a command. Optional in
+   * the type only so a test double built by hand against 1.6 still compiles
+   * and runs; call it as `context.lookupConstruct?.(name)`. Required in 2.0
+   * (#416).
    */
-  lookupConstruct(nodeName: string): ConstructLookup;
+  lookupConstruct?(nodeName: string): ConstructLookup;
   /**
    * The range of the nearest ancestor syntax node named `nodeName` enclosing
    * the current selection head, or `null` if the cursor isn't inside one —

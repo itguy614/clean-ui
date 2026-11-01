@@ -27,6 +27,17 @@ interface ContextInternals {
 }
 const internals = new WeakMap<CommandContext, ContextInternals>();
 
+/**
+ * `context.lookupConstruct`, for the built-in commands. A context built by hand
+ * (a 1.x test double) may lack it, since it is optional until 2.0; its
+ * `findConstructRange` answers then, with no "unknown" to report.
+ */
+export function lookupConstructIn(context: CommandContext, nodeName: string): ConstructLookup {
+  if (context.lookupConstruct) return context.lookupConstruct(nodeName);
+  const range = context.findConstructRange(nodeName);
+  return range ? { status: "inside", range } : OUTSIDE;
+}
+
 /** The element of the editor a context belongs to, while its view is mounted.
  * `null` for a context this package didn't build. */
 export function editorElementOf(context: CommandContext): HTMLElement | null {

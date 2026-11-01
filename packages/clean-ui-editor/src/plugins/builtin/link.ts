@@ -1,4 +1,5 @@
 import { definePlugin } from "../define-plugin";
+import { lookupConstructIn } from "../command-context";
 import { openUrlDialog, type UrlDialogValues } from "./dialogs/open-url-dialog";
 import { escapeLinkLabel, foldLineBreaks, markdownLink, markdownLinkFromLabel } from "./link-markdown";
 import type { CommandContext } from "../types";
@@ -31,7 +32,7 @@ export const linkPlugin = definePlugin({
         // any) lands later, after the awaited collect() resolves.
         return true;
       },
-      isActive: (context) => context.lookupConstruct("Link").status === "inside",
+      isActive: (context) => lookupConstructIn(context, "Link").status === "inside",
       label: "Link",
       icon: "link",
     },
