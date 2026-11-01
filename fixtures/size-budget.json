@@ -1,5 +1,5 @@
 {
-  "methodology": "Gzip delta of fixtures/consumer-app's built JS+CSS (dist/assets/*.{js,css}), per scenario: \"basic\" is index.html and App.vue, \"grid\" is grid.html and GridApp.vue, a data grid with a modal, a slideover and toasts (#377). Each is the build with @itguy614/clean-ui imported minus the same build with clean-ui swapped for a same-shaped stub (CUI_BUNDLE_BASELINE=1). See scripts/check-bundle-budget.mjs. This file is read, never auto-written, by CI — re-measure and update gzipBytes/measured by hand when a size increase is expected and accepted.",
+  "methodology": "Gzip delta of fixtures/consumer-app's built JS+CSS (dist/assets/*.{js,css}), per scenario: \"basic\" is index.html and App.vue, \"grid\" is grid.html and GridApp.vue, a data grid with a modal, a slideover and toasts (#377), \"editor\" is editor.html and EditorApp.vue, the whole markdown editor on a page already using clean-ui, and \"render\" is render.html and RenderApp.vue, the editor's /render subpath alone (#226). Each is the build with the entry's package imported minus the same build with that package swapped for a same-shaped stub (CUI_BUNDLE_BASELINE=<package>). See scripts/check-bundle-budget.mjs. This file is read, never auto-written, by CI — re-measure and update gzipBytes/measured by hand when a size increase is expected and accepted.",
   "budgets": [
     {
       "package": "@itguy614/clean-ui",
@@ -12,6 +12,18 @@
       "scenario": "grid",
       "gzipBytes": 116736,
       "measured": "2026-10-22"
+    },
+    {
+      "package": "@itguy614/clean-ui-editor",
+      "scenario": "editor",
+      "gzipBytes": 161792,
+      "measured": "2026-11-01"
+    },
+    {
+      "package": "@itguy614/clean-ui-editor",
+      "scenario": "render",
+      "gzipBytes": 24576,
+      "measured": "2026-11-01"
     }
   ]
 }

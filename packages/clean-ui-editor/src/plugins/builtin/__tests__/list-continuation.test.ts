@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import CuiMarkdownEditor from "../../../components/CuiMarkdownEditor.vue";
-import { gfmParser } from "../../../language/markdown-language";
+import { gfmParser } from "../../../language/gfm-parser";
 
 function exposed(wrapper: VueWrapper) {
   return wrapper.vm as unknown as { getView: () => import("@codemirror/view").EditorView };

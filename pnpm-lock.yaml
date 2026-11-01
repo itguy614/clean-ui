@@ -170,6 +170,9 @@ importers:
       '@vue/test-utils':
         specifier: ^2.4.0
         version: 2.4.6
+      es-module-lexer:
+        specifier: ^2.3.1
+        version: 2.3.1
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0

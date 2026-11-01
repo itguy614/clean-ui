@@ -9,6 +9,10 @@ dist
 dist-baseline
 dist-grid
 dist-grid-baseline
+dist-editor
+dist-editor-baseline
+dist-render
+dist-render-baseline
 combined-dist
 
 # IDE

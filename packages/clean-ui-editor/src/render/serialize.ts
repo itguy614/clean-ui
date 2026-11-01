@@ -1,5 +1,5 @@
 import type { SyntaxNode } from "@lezer/common";
-import { gfmParser } from "../language/markdown-language";
+import { gfmParser } from "../language/gfm-parser";
 import { escapeHtml } from "./html-escape";
 import { isAllowedUrl } from "../url-policy";
 

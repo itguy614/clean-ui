@@ -160,15 +160,18 @@ const adapter = createMarkdownRenderAdapter(); // escapes raw HTML by default
           <p class="text-sm" style="color: var(--cui-text-secondary);">
             Measured on a real consumer build (packed tarball install, not this package's own
             <code class="cui-code">dist</code>), the whole editor — CodeMirror, the GFM markdown
-            grammar, the reveal layer, every built-in plugin, the slash menu — costs roughly
-            <strong>55 kB gzip</strong> against a committed <strong>65 kB budget</strong>, verified on
-            every build by this repository's own CI. Avoiding <code class="cui-code">@codemirror/lang-markdown</code>'s
+            grammar, the reveal layer, every built-in plugin, the slash menu — adds roughly
+            <strong>151 kB gzip</strong> to a page already using clean-ui, against a committed
+            <strong>158 kB budget</strong> verified by this repository's own CI. Avoiding <code class="cui-code">@codemirror/lang-markdown</code>'s
             static dependency on the HTML/JS/CSS embedded-language grammar (built directly on
             <code class="cui-code">@lezer/markdown</code> instead) alone saves roughly
             <strong>70 kB gzip</strong> this editor has no use for. Importing
             <code class="cui-code">/render</code> is additional and entirely separate from that
             budget — a consumer who never imports it never pays for the markdown-to-HTML serializer at
-            all, which is the whole reason it lives at its own subpath instead of the core entry.
+            all, which is the whole reason it lives at its own subpath instead of the core entry. On
+            its own, with no editor, <code class="cui-code">/render</code> costs roughly
+            <strong>21 kB gzip</strong> (budget <strong>24 kB</strong>): the GFM parser and the
+            serializer, and no CodeMirror.
           </p>
         </CuiCardBody>
       </CuiCard>

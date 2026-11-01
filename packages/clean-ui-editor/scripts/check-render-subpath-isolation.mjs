@@ -7,10 +7,15 @@
  * that's the guarantee a real consumer's bundler sees. Run after `vite
  * build` (chained in package.json's `build` script) — mirrors the pattern
  * in clean-ui's own scripts/check-fixture-guarantees.mjs.
+ *
+ * The converse is checked too: `/render` reaches no `@codemirror/*` module,
+ * the guarantee the subpath exists for (#226). Its consumer-bundle cost is
+ * budgeted separately, in fixtures/size-budget.json.
  */
 import { readFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { init, parse } from "es-module-lexer";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = resolve(PACKAGE_ROOT, "dist");
@@ -54,6 +59,33 @@ if (!barrel.includes("./render/contract.js")) {
   console.error("✗ dist/index.js does not export the render contract (markAsTrustedHtml/TrustedHtml/MarkdownRenderAdapter)");
 } else {
   console.log("✓ dist/index.js exports the plain render contract (no renderer attached)");
+}
+
+// The guarantee the subpath exists for: /render reaches no CodeMirror (#225, #226). Under
+// `preserveModules` a bare specifier sits wherever the module that uses it does, so walk the
+// whole relative-import closure of dist/render.js rather than grepping the entry alone. A real
+// parser, as in clean-ui's check-dist-imports.mjs: the serializer's string literals are HTML and
+// markdown, where a regex could mistake text for an import.
+await init;
+const seen = new Set();
+const codemirrorImports = [];
+const queue = [RENDER_ENTRY];
+while (queue.length > 0) {
+  const file = queue.pop();
+  if (seen.has(file)) continue;
+  seen.add(file);
+  const [imports] = parse(readFileSync(file, "utf-8"), relative(DIST, file));
+  for (const { n: specifier } of imports) {
+    if (!specifier) continue; // a dynamic import with no static specifier
+    if (specifier.startsWith(".")) queue.push(resolve(dirname(file), specifier));
+    else if (specifier.startsWith("@codemirror/")) codemirrorImports.push(`${relative(DIST, file)} → ${specifier}`);
+  }
+}
+if (codemirrorImports.length > 0) {
+  failed++;
+  console.error(`✗ dist/render.js reaches @codemirror/* through its imports:\n  ${codemirrorImports.join("\n  ")}`);
+} else {
+  console.log(`✓ dist/render.js reaches no @codemirror/* import (${seen.size} modules walked)`);
 }
 
 if (failed > 0) {
