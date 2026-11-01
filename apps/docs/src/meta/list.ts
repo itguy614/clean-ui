@@ -55,9 +55,9 @@ const meta: ComponentMeta = {
           name: "as",
           type: "string",
           description:
-            "Render the row as this element, e.g. label. href and to win over it. With none of the three, a row with a click listener is a <button>, one without a <div>",
+            "Render the row as this element, e.g. label round a control. href and to win over it; as=button is a type=button button. Other elements are not made focusable. With none of the three, a row with a click listener is a <button>, one without a <div>",
         },
-        { ...disabledProp, description: "Disable the row: a button is disabled, a link loses its target, click is not emitted" },
+        { ...disabledProp, description: "Disable the row: a button is disabled, a link loses its target, click is not emitted. A plain row is only dimmed" },
         { ...hiddenProp, description: "Remove the item (v-if, so an inset list rounds the right corners)" },
       ],
       slots: [

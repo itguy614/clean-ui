@@ -40,13 +40,13 @@ const bluetooth = ref(false);
     v-for=&quot;p in printers&quot;
     :key=&quot;p.name&quot;
     :title=&quot;p.name&quot;
-    :subtitle=&quot;statusText(p)&quot;
+    :subtitle=&quot;STATUS[p.status].text&quot;
     icon=&quot;printer&quot;
     chevron
-    @click=&quot;open(p)&quot;
+    @click=&quot;opened = p.name&quot;
   >
     <template #subtitle-prefix>
-      <CuiStatusDot :tone=&quot;statusTone(p)&quot; />
+      <CuiStatusDot :tone=&quot;STATUS[p.status].tone&quot; />
     </template>
   </CuiListItem>
 </CuiList>`"

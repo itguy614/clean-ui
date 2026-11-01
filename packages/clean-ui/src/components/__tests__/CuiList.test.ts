@@ -101,6 +101,27 @@ describe("CuiListItem", () => {
     expect(list({}, [{ title: "A", as: "label" }]).find(".cui-list-item__row").element.tagName).toBe("LABEL");
   });
 
+  it("makes as=button a non-submitting button", () => {
+    const row = list({}, [{ title: "A", as: "button", onClick: () => {} }]).find(".cui-list-item__row");
+    expect(row.attributes("type")).toBe("button");
+    expect(row.classes()).toContain("cui-list-item__row--interactive");
+  });
+
+  it("gives an as element with a click listener the interactive styling", () => {
+    const row = list({}, [{ title: "A", as: "label", onClick: () => {} }]).find(".cui-list-item__row");
+    expect(row.classes()).toContain("cui-list-item__row--interactive");
+  });
+
+  it("lets the consumer's attributes win over the row defaults", () => {
+    const w = list({}, [
+      { title: "A", onClick: () => {}, type: "submit" },
+      { title: "B", as: "label", "aria-disabled": "true" },
+    ]);
+    const [button, label] = w.findAll(".cui-list-item__row");
+    expect(button.attributes("type")).toBe("submit");
+    expect(label.attributes("aria-disabled")).toBe("true");
+  });
+
   it("forwards attributes to the row, keeping class on the item", () => {
     const w = list({}, [{ title: "A", href: "/a", class: "mine", "aria-current": "page" }]);
     expect(w.find("li").classes()).toContain("mine");
@@ -116,6 +137,19 @@ describe("CuiListItem", () => {
       expect(row.classes()).not.toContain("cui-list-item__row--interactive");
       await row.trigger("click");
       expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it("drops a modified click listener (@click.once) on a disabled row", async () => {
+      const onClickOnce = vi.fn();
+      const row = list({}, [{ title: "A", as: "div", onClickOnce, disabled: true }]).find(".cui-list-item__row");
+      await row.trigger("click");
+      expect(onClickOnce).not.toHaveBeenCalled();
+    });
+
+    it("puts no aria-disabled on a generic element, where it announces nothing", () => {
+      const row = list({}, [{ title: "A", disabled: true }]).find(".cui-list-item__row");
+      expect(row.attributes("aria-disabled")).toBeUndefined();
+      expect(row.classes()).toContain("cui-list-item__row--disabled");
     });
 
     it("turns a link into a non-followable, non-focusable one", async () => {

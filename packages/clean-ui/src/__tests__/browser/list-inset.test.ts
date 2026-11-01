@@ -119,6 +119,12 @@ describe("CuiList variant=inset (real browser)", () => {
       expect(css(li, "left", "::before")).toBe("20px");
       expect(css(li, "right", "::before")).toBe("20px");
     }
+    // The row stacks above its item's divider, so a hover fill or focus ring covers the line
+    // rather than being crossed by it.
+    const row = items[1].querySelector(".cui-list-item__row")!;
+    expect(css(row, "position")).toBe("relative");
+    expect(Number(css(row, "z-index"))).toBeGreaterThan(0);
+    expect(css(items[1], "z-index", "::before")).toBe("auto");
     // The dividers are pseudo-elements: the list's children are exactly its rows.
     expect(items[0].parentElement!.children).toHaveLength(3);
   });

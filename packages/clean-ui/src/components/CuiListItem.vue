@@ -21,7 +21,8 @@ export interface CuiListItemProps extends HideableProps, DisableableProps {
   /**
    * Render the row as this element instead, e.g. `label` around a control. `href` and `to`
    * take precedence. Without any of the three, a row with a `click` listener is a
-   * `<button>` and one without is a plain `<div>`.
+   * `<button>` and one without is a plain `<div>`. An `as` element other than `button` is not
+   * made focusable: give it a focusable control, or use a click listener without `as`.
    */
   as?: string;
   /**
@@ -48,26 +49,42 @@ const attrs = useAttrs();
  * — not focusable, not followable — rather than a link that still navigates under an
  * `aria-disabled` it ignores.
  */
-const row = computed(() => {
+const row = computed((): { is: string; interactive: boolean; attrs: Record<string, unknown> } => {
   if ((props.to || props.href) && props.disabled) {
     return { is: "a", interactive: false, attrs: { role: "link", "aria-disabled": "true" } };
   }
   if (props.to) return { is: "router-link", interactive: true, attrs: { to: props.to } };
   if (props.href) return { is: "a", interactive: true, attrs: { href: props.href } };
-  if (props.as || !props.onClick) {
-    return { is: props.as ?? "div", interactive: false, attrs: { "aria-disabled": props.disabled ? "true" : undefined } };
+  // A button row, whether chosen by a click listener or asked for with `as="button"`: never a
+  // form's submit button, and natively disabled.
+  if ((!props.as && props.onClick) || props.as === "button") {
+    return {
+      is: "button",
+      interactive: !props.disabled,
+      attrs: props.disabled ? { type: "button", disabled: "" } : { type: "button" },
+    };
   }
-  return { is: "button", interactive: !props.disabled, attrs: { type: "button", disabled: props.disabled || undefined } };
+  // Any other element renders as asked. With a click listener it gets the hover fill — a
+  // `label` round a control, say, whose control is the focusable part. A disabled one is only
+  // dimmed: `aria-disabled` is not allowed on a generic element, so it would announce nothing.
+  return { is: props.as ?? "div", interactive: Boolean(props.onClick) && !props.disabled, attrs: {} };
 });
 
 /**
  * Fallthrough attributes other than `class` and `style`, which stay on the item. The rest —
  * `aria-current`, `target`, `data-*` — belong on the element a user actually reaches. Read
  * during render: `attrs` isn't reactive, but a change to it re-renders this component.
+ *
+ * The consumer's attributes come last, so they win over the defaults above. While disabled,
+ * any click listener that bypassed the `onClick` prop (`@click.once` compiles to
+ * `onClickOnce`) is dropped, so nothing fires on a disabled row.
  */
 function rowAttrs() {
   const { class: _class, style: _style, ...rest } = attrs;
-  return { ...rest, ...row.value.attrs };
+  if (props.disabled) {
+    for (const key of Object.keys(rest)) if (/^onClick/.test(key)) delete rest[key];
+  }
+  return { ...row.value.attrs, ...rest };
 }
 
 function onRowClick(event: MouseEvent) {
@@ -85,7 +102,8 @@ const rowRef = useTemplateRef<HTMLElement | ComponentPublicInstance>("rowRef");
 /** The row element itself — a `<router-link>` row's ref is the component, not its `<a>`. */
 const el = computed<HTMLElement | undefined>(() => {
   const r = rowRef.value;
-  return r instanceof HTMLElement ? r : (r?.$el as HTMLElement | undefined);
+  // No `instanceof HTMLElement`: that global doesn't exist during server rendering.
+  return r && "$el" in r ? (r.$el as HTMLElement) : (r ?? undefined);
 });
 
 function focus(opts?: FocusOptions) {
@@ -171,7 +189,7 @@ defineExpose({ el, focus, blur });
 }
 
 /* `--cui-text-body` holds 7:1 (AAA) against the list fill and the hover fill, in every theme
-   and both modes: see the LIST section of scripts/check-contrast.mjs (#234). */
+   and both modes: see the LIST section of scripts/contrast/clean-ui.mjs and list-subtitle-contrast.test.ts (#234). */
 :where(.cui-list-item__subtitle) {
   color: var(--cui-list-subtitle-color, var(--cui-text-body));
   font-size: var(--cui-list-subtitle-font-size, 0.8125rem);
@@ -225,6 +243,8 @@ defineExpose({ el, focus, blur });
 .cui-list-item {
   position: relative;
   min-width: 0;
+  /* Keeps the row's z-index inside the item, not competing with the page. */
+  isolation: isolate;
 }
 
 /* Rows meet at a divider, never at two borders. */
@@ -253,6 +273,10 @@ defineExpose({ el, focus, blur });
   align-items: center;
   width: 100%;
   margin: 0;
+  /* Above the divider, so a hover fill or the inset focus ring covers it rather than being
+     crossed by it. Transparent at rest, so the divider still shows. */
+  position: relative;
+  z-index: 1;
   font: inherit;
   text-align: start;
   text-decoration: none;
