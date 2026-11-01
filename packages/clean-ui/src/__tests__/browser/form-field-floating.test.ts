@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h, nextTick, type Component } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
+import themeCss from "../../styles/theme.css?raw";
 import { frames, injectStyle, mountHosts } from "../../../../../config/test/browser-helpers";
 // @ts-ignore -- an untyped script module, shared with the contrast audit (tests are not type-checked)
 import { contrastRatio } from "../../../../../scripts/contrast/color-math.mjs";
@@ -18,9 +19,12 @@ import CuiSelect from "../../components/CuiSelect.vue";
 describe("CuiFormField floating label (real browser)", () => {
   let removeStyle: () => void;
   beforeAll(() => {
-    // The real stylesheet, so the theme scales are the shipped ones. Transitions finish at
-    // once, so a measurement is of the state rather than a frame of the way there.
+    // The real stylesheet, so the theme scales are the shipped ones — the default scale too,
+    // which lives in a Tailwind `@theme` that is inert as raw CSS. Without it an undefined
+    // `--color-*` drops the controls' borders and leaves the labels' colours inherited.
+    // Transitions finish at once, so a measurement is of the state, not a frame on the way.
     removeStyle = injectStyle(`${main}
+      ${themeCss.replace(/@theme\s*\{/, ":root {")}
       :root { --cui-duration-fast: 0ms; }
       body { background: var(--cui-surface-base); }`);
   });
@@ -153,11 +157,40 @@ describe("CuiFormField floating label (real browser)", () => {
     await frames(2);
     expect(rests(label, box)).toBe(true);
     const l = rect(label);
-    const firstLine = rect(box).top + parseFloat(getComputedStyle(native).paddingTop) + parseFloat(getComputedStyle(native).lineHeight) / 2;
-    expect(Math.abs((l.top + l.bottom) / 2 - firstLine)).toBeLessThan(3);
+    const firstLine = rect(native).top + parseFloat(getComputedStyle(native).paddingTop) + parseFloat(getComputedStyle(native).lineHeight) / 2;
+    expect(Math.abs((l.top + l.bottom) / 2 - firstLine)).toBeLessThan(0.6);
     native.focus();
     await frames(2);
     expect(floats(label, box)).toBe(true);
+  });
+
+  it("focuses the control when the floated label is clicked, as any label does", async () => {
+    const { label, native } = field(CuiInput, {}, { modelValue: "ada@example.com" });
+    await frames(2);
+    const l = rect(label);
+    // What a real click at the label's centre would hit.
+    const hit = document.elementFromPoint((l.left + l.right) / 2, (l.top + l.bottom) / 2);
+    expect(hit?.closest("label")).toBe(label.parentElement);
+  });
+
+  it("lets a floated label use the field's width rather than its resting width", async () => {
+    const long = "Preferred contact email address for receipts and invoices";
+    const { label, box } = field(CuiInput, { label: long }, { modelValue: "x" });
+    await frames(2);
+    // Not cut short: the whole text fits, and the label stays within the field.
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+    expect(rect(label).right).toBeLessThanOrEqual(rect(box).right + 0.5);
+  });
+
+  it("floats back to the start edge right to left", async () => {
+    const { root, label, box, native } = field(CuiInput);
+    root.setAttribute("dir", "rtl");
+    await frames(2);
+    // Resting where the value starts, on the right.
+    expect(Math.abs(rect(label).right - rect(native).right)).toBeLessThan(2);
+    native.focus();
+    await frames(2);
+    expect(Math.abs(rect(label).right - rect(box).right)).toBeLessThan(2);
   });
 
   it("falls back to a top label on CuiSelect", async () => {
@@ -198,6 +231,8 @@ describe("CuiFormField floating label (real browser)", () => {
       await frames(2);
       // Floated over the field's background — the page's here.
       const floated = contrast(getComputedStyle(labelEl).color, getComputedStyle(document.body).backgroundColor);
+      // Measuring the label's real colour, not an inherited fallback.
+      expect(getComputedStyle(labelEl).color).not.toBe(getComputedStyle(document.body).color);
       expect(rest, `resting ${rest.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
       expect(floated, `floated ${floated.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
       await nextTick();

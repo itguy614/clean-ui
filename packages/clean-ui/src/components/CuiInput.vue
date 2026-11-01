@@ -109,6 +109,7 @@ const slots = useSlots();
 const floatingLabel = useFloatingLabel(() => ({
   kind: slots.prefix || slots.suffix || slots["prefix-button"] || slots["suffix-button"] ? "pinned" : "inline",
   size: props.size,
+  id: props.id,
   placeholder: props.placeholder,
 }));
 
@@ -159,8 +160,8 @@ const floatingLabel = useFloatingLabel(() => ({
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
-          :placeholder="floatingLabel.placeholder"
-          :data-cui-float-label="floatingLabel.marker"
+          :placeholder="floatingLabel().placeholder"
+          :data-cui-float-label="floatingLabel().marker"
           :disabled="disabled"
           :readonly="readonly"
           :aria-invalid="error || undefined"

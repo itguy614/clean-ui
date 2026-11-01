@@ -8,7 +8,7 @@ const meta: ComponentMeta = {
 
   props: [
     { name: "label", type: "string", description: "Label text. Rendered as a real <label> with for and an id, both of which reach the control through the slot bindings" },
-    { name: "labelPosition", type: "top | left | floating", default: "top", description: "top stacks label over control; left puts them side by side with an 8rem label column; floating rests the label inside an empty control and floats it above on focus or a value. floating needs a native input or textarea (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper); any other control gets a top label and a console warning" },
+    { name: "labelPosition", type: "top | left | floating", default: "top", description: "top stacks label over control; left puts them side by side with an 8rem label column; floating rests the label inside an empty control and floats it above on focus or a value. floating needs a native input or textarea (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper) given the field's id through the slot bindings; any other control gets a top label and a console warning" },
     { name: "for", type: "string", default: "auto", description: "The control's id. Omit it and the field generates one once, at setup — not in a computed, so it survives re-renders" },
     { name: "name", type: "string", description: "Field name — also the key into the form's values and errors. With a name and a parent CuiForm the field binds value and error automatically. Dot-paths work: address.city" },
     { name: "required", type: "boolean", default: "false", description: "Show the required marker. It is decoration only — see Known gaps" },

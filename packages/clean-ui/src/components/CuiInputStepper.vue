@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<CuiInputStepperProps>(), {
 
 // Inside a `labelPosition="floating"` CuiFormField (#191). The input always shows a number
 // and the minus button sits where a resting label would, so the label stays floated.
-const floatingLabel = useFloatingLabel(() => ({ kind: "pinned", size: props.size }));
+const floatingLabel = useFloatingLabel(() => ({ kind: "pinned", size: props.size, id: props.id }));
 
 const emit = defineEmits<{
   "update:modelValue": [value: number];
@@ -227,7 +227,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-valuemax="max"
         type="text"
         inputmode="numeric"
-        :data-cui-float-label="floatingLabel.marker"
+        :data-cui-float-label="floatingLabel().marker"
         :value="displayValue"
         :disabled="disabled"
         @keydown="onKeydown"
@@ -273,7 +273,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-valuemax="max"
         type="text"
         inputmode="numeric"
-        :data-cui-float-label="floatingLabel.marker"
+        :data-cui-float-label="floatingLabel().marker"
         :value="displayValue"
         :disabled="disabled"
         @keydown="onKeydown"

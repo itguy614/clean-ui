@@ -127,6 +127,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
 const floatingLabel = useFloatingLabel(() => ({
   kind: "multiline",
   size: props.size,
+  id: props.id,
   placeholder: props.placeholder,
 }));
 </script>
@@ -159,8 +160,8 @@ const floatingLabel = useFloatingLabel(() => ({
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :value="modelValue"
-        :placeholder="floatingLabel.placeholder"
-        :data-cui-float-label="floatingLabel.marker"
+        :placeholder="floatingLabel().placeholder"
+        :data-cui-float-label="floatingLabel().marker"
         :disabled="disabled"
         :readonly="readonly"
         :rows="rows"

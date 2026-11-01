@@ -109,6 +109,18 @@ describe("CuiFormField labelPosition=floating", () => {
     expect(w.find("label").attributes("for")).toBeTruthy();
   });
 
+  it("marks only the control the label names, not an input inside a composite", () => {
+    // A CuiInput without the field's id, as a transfer list's filter box or a grid's search is.
+    const w = mount(CuiFormField, {
+      props: { label: "Members", labelPosition: "floating" },
+      slots: { default: () => h("div", [h(CuiInput, { placeholder: "Filter" })]) },
+      attachTo: document.body,
+    });
+    expect(w.find("[data-cui-float-label]").exists()).toBe(false);
+    expect(w.find("input").attributes("placeholder")).toBe("Filter");
+    expect(floatWarnings()).toHaveLength(1);
+  });
+
   it("warns when switched to floating around an unsupported control", async () => {
     const w = mountField(CuiSelect, { labelPosition: "top" }, { options: [] });
     expect(floatWarnings()).toEqual([]);

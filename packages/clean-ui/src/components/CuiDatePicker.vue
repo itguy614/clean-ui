@@ -66,7 +66,7 @@ const props = withDefaults(defineProps<CuiDatePickerProps>(), {
 });
 
 // Not a floating-label control, though it renders one (#191): see useFloatingLabelProvider.
-useFloatingLabelProvider(() => false);
+useFloatingLabelProvider(() => null);
 
 const emit = defineEmits<{
   "update:modelValue": [value: string | Date | null];

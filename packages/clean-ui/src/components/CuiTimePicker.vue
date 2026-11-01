@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
 });
 
 // Not a floating-label control, though it renders one (#191): see useFloatingLabelProvider.
-useFloatingLabelProvider(() => false);
+useFloatingLabelProvider(() => null);
 
 const messages = useMessages();
 // The label prop names the trigger (#391): a <label> with no `for` names nothing, and the

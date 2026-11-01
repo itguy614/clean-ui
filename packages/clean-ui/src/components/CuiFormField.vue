@@ -121,10 +121,10 @@ const slotBindings = computed(() => {
   return base;
 });
 
-// Floating label (#191). Supported controls mark themselves while this is true (see
-// form-field-context.ts); the layout and the resting/floated states are all CSS. Without a
-// marked control the field stays a top label, and says why once, here.
-useFloatingLabelProvider(() => props.labelPosition === "floating");
+// Floating label (#191). The control carrying this field's id marks itself if it supports
+// floating (see form-field-context.ts); the layout and the resting/floated states are all
+// CSS. Without a marked control the field stays a top label, and says why once, here.
+useFloatingLabelProvider(() => (props.labelPosition === "floating" ? fieldId : null));
 
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
 function checkFloatingSupport() {
@@ -132,12 +132,13 @@ function checkFloatingSupport() {
   if (rootEl.value.querySelector("[data-cui-float-label]")) return;
   warnOnce(
     `[clean-ui] CuiFormField: labelPosition="floating" needs a control with a native <input> or ` +
-      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper). The control in ` +
-      `"${props.label}" isn't one, so its label is shown on top instead.`,
+      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper) given the field's id ` +
+      `(v-bind the slot props). The control in "${props.label}" isn't one, so its label is ` +
+      `shown on top instead.`,
   );
 }
 onMounted(checkFloatingSupport);
-watch(() => props.labelPosition, checkFloatingSupport, { flush: "post" });
+watch(() => [props.labelPosition, props.label], checkFloatingSupport, { flush: "post" });
 
 // Clear this field's error from the form when it unmounts (e.g. conditionally
 // shown fields) so stale errors don't linger in the aggregated map.
@@ -222,7 +223,9 @@ onBeforeUnmount(() => {
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--cui-text-body);
+  /* A private hook, so the floating label's resting state recolours it without a rule
+     that outranks a consumer's own colour for the label (#191). */
+  color: var(--_form-field-label-color, var(--cui-text-body));
   line-height: 1.4;
 }
 
@@ -293,9 +296,10 @@ onBeforeUnmount(() => {
   --_form-field-float-fs: 1rem;
   /* Where the control's text starts: its padding plus its 1px border. */
   --_form-field-float-inset: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1px);
-  /* A textarea's resting box: its first line plus top and bottom padding, so the label's
-     centre lands on that line. Its py is half its px at every size, so 2 × py = px. */
-  --_form-field-float-rest: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1.6 * var(--_form-field-float-fs));
+  /* A textarea's resting box: its first line plus top and bottom padding and borders, so
+     the label's centre lands on that line. Its py is half its px at every size, so
+     2 × py = px. */
+  --_form-field-float-rest: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1.6 * var(--_form-field-float-fs) + 2px);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   row-gap: calc(0.375rem * var(--cui-density-scale, 1));
@@ -328,25 +332,31 @@ onBeforeUnmount(() => {
 }
 
 .cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label {
+  /* 1 left to right, -1 right to left: the side the label floats back to. */
+  --_form-field-float-dir: 1;
   grid-area: 1 / 1;
-  /* Above the control's background, and out of the way of its clicks and caret. */
+  /* Above the control's background. */
   z-index: 1;
-  pointer-events: none;
   justify-self: start;
   align-self: stretch;
   min-width: 0;
-  /* Room for a trailing clear button or password toggle while it rests. */
-  max-width: calc(100% - var(--_form-field-float-inset) - 2rem);
+  /* Floated it may use the field's whole width, at its smaller scale. */
+  max-width: calc(100% / var(--_form-field-float-scale));
   margin-inline-start: var(--_form-field-float-inset);
   transform-origin: left center;
-  /* Floated: back to the field's left edge, above the control. */
+  /* Floated: back to the field's start edge, above the control. */
   transform:
-    translateX(calc(-1 * var(--_form-field-float-inset)))
+    translateX(calc(-1 * var(--_form-field-float-dir) * var(--_form-field-float-inset)))
     translateY(calc(-50% - var(--_form-field-float-gap) - var(--_form-field-float-line) / 2))
     scale(var(--_form-field-float-scale));
   transition:
     transform var(--cui-duration-fast) var(--cui-ease-in-out),
     color var(--cui-duration-fast) ease;
+}
+
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label:dir(rtl) {
+  --_form-field-float-dir: -1;
+  transform-origin: right center;
 }
 
 .cui-form-field--floating:has([data-cui-float-label~="multiline"]) > .cui-form-field__label {
@@ -365,8 +375,12 @@ onBeforeUnmount(() => {
    one; nor while the browser has autofilled it, which can show a value before the page can
    read it. A browser without `:autofill` drops this rule, and the label just stays up. */
 .cui-form-field--floating:not(:focus-within):has([data-cui-float-label][placeholder=" "]:placeholder-shown:not(:autofill)) > .cui-form-field__label {
+  --_form-field-label-color: var(--cui-text-secondary);
   transform: none;
-  color: var(--cui-text-secondary);
+  /* Over the control: out of the way of its clicks and caret, and clear of a trailing clear
+     button or password toggle. */
+  pointer-events: none;
+  max-width: calc(100% - var(--_form-field-float-inset) - 2rem);
 }
 
 /* --- Help text --- */

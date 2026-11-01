@@ -181,7 +181,8 @@ const floatPlan = ref<string | null>(null);
         <CuiStack spacing="4" class="max-w-md">
           <p class="text-sm text-surface-700 dark:text-surface-300">
             The label rests inside an empty control and floats above it on focus or once there
-            is a value, including one the browser autofills. Leave the control's own
+            is a value, including one the browser autofills. Spread the slot props
+            (<code>v-bind="f"</code>) so the control gets the field's id. Leave the control's own
             <code>placeholder</code> off: a control that has one keeps its label floated, since
             the two would sit on top of each other.
           </p>
