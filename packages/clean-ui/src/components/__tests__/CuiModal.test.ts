@@ -42,6 +42,22 @@ describe.each([
     warn.mockRestore();
     wrapper.unmount();
   });
+
+  it("lets a forwarded role, aria-labelledby or tabindex override the panel's own", async () => {
+    // A destructive confirm wants role="alertdialog"; a slideover assembled from
+    // sub-components is named by an aria-labelledby the consumer passes.
+    const wrapper = mount(component, {
+      props: { visible: true },
+      attrs: { role: "alertdialog", "aria-labelledby": "my-heading", tabindex: "0" },
+    });
+    await vi.runOnlyPendingTimersAsync();
+
+    const el = document.body.querySelector(panel) as HTMLElement;
+    expect(el.getAttribute("role")).toBe("alertdialog");
+    expect(el.getAttribute("aria-labelledby")).toBe("my-heading");
+    expect(el.getAttribute("tabindex")).toBe("0");
+    wrapper.unmount();
+  });
 });
 
 describe("CuiModal", () => {

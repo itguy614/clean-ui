@@ -45,7 +45,8 @@ export interface CuiSlideoverProps extends HideableProps, TitleAsProps {
 
 // The root is a <Teleport>, which can't take fallthrough attributes: Vue would drop a class
 // or a data-testid with a warning. They go on the dialog panel instead, the element that is
-// actually rendered, so a wrapper can give it its own cui-* class (#228).
+// actually rendered, so a wrapper can give it its own cui-* class (#228). Bound last, so a
+// consumer's own role (alertdialog), aria-labelledby or tabindex overrides the panel's.
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CuiSlideoverProps>(), {
@@ -189,7 +190,6 @@ const titleId = useCuiId("slideover-title");
 
       <!-- Panel -->
       <div
-        v-bind="$attrs"
         ref="panelEl"
         data-cui-exit
         class="cui-slideover__panel"
@@ -199,6 +199,7 @@ const titleId = useCuiId("slideover-title");
         aria-modal="true"
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
+        v-bind="$attrs"
       >
         <!-- Simple mode: title prop renders header + body wrapper -->
         <template v-if="title">

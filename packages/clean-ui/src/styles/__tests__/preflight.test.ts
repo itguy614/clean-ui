@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { readTag, sourceFiles, splitSelectorList, where } from "./css-helpers";
+import { readTag, script, sourceFiles, splitSelectorList, where } from "./css-helpers";
 
 /** Every component in every package: the editor's roots have to be in scope too (#228). */
 const COMPONENTS = sourceFiles(/\.vue$/);
@@ -149,28 +149,60 @@ describe("every component root is inside the scope", () => {
 
   /**
    * A root that is another Cui component passes its static cui-* class to that component's
-   * root by fallthrough — when there is a root element to take it. A component rooted at a
-   * <Teleport>, <Transition> or <slot /> has none: Vue drops the class with a warning.
-   * Those count only when they forward their attributes, class included, to the element
-   * they render (`inheritAttrs: false`, `v-bind="$attrs"` on a classed element), and are
-   * listed here — CuiConfirmDialog and the editor's UrlDialog are rooted at CuiModal (#228).
+   * root by fallthrough — when there is a single root element to take it. A component
+   * rooted at a <Teleport>, <Transition>, <slot /> or the like, or at several sibling roots,
+   * has none: Vue drops the class with a warning. Those count only when they forward their
+   * attributes, class included, to the element they render (`inheritAttrs: false`,
+   * `v-bind="$attrs"` on a classed element), and are listed here — CuiConfirmDialog and the
+   * editor's UrlDialog are rooted at CuiModal (#228). The chain is followed: a root at a
+   * component that is itself rooted at a class-dropping one is out of scope too.
    */
   const FORWARDING = ["CuiModal", "CuiSlideover"];
 
   /** A root tag carrying a static `cui-*` class. */
   const hasStaticCuiClass = (root: string) => /\sclass="[^"]*\bcui-/.test(root);
-  const NOT_AN_ELEMENT = /^<(slot|Teleport|Transition)\b/;
+
+  /** A root Vue renders no element of its own for. A TransitionGroup with a `tag` renders one. */
+  const notAnElement = (root: string) =>
+    /^<(slot|Teleport|Transition|KeepAlive|Suspense)(?![\w-])/.test(root) ||
+    (/^<TransitionGroup(?![\w-])/.test(root) && !/\stag="/.test(root));
+
+  const sourceOf = (component: string) => {
+    const file = COMPONENTS.find((f) => f.endsWith(`/${component}.vue`));
+    return file && readFileSync(file, "utf8");
+  };
+
+  /** `inheritAttrs: false` in the script itself, comments aside. */
+  const optsOutOfFallthrough = (source: string) => /\binheritAttrs\s*:\s*false\b/.test(script(source));
+
+  /** The template's start tags that bind `$attrs` and carry a static cui-* class. */
+  function forwardedTo(source: string): string[] {
+    const template = source.slice(source.indexOf("<template>"), source.lastIndexOf("</template>")).replace(/<!--[\s\S]*?-->/g, "");
+    return [...template.matchAll(/<[A-Za-z]/g)]
+      .map((m) => readTag(template, m.index!))
+      .filter((tag) => /\sv-bind="\$attrs"/.test(tag) && hasStaticCuiClass(tag));
+  }
+
+  /** Whether a component receiving a class by fallthrough puts it on an element in the end. */
+  function takesClass(component: string, seen = new Set<string>()): boolean {
+    if (FORWARDING.includes(component)) return true;
+    const source = sourceOf(component);
+    if (!source || seen.has(component) || optsOutOfFallthrough(source)) return false;
+    seen.add(component);
+    const roots = templateRoots(source);
+    // Several roots are a fragment, unless each after the first is a v-else branch.
+    if (roots.slice(1).some((r) => !/\sv-else(-if)?\b/.test(r))) return false;
+    return roots.every((r) => {
+      if (notAnElement(r)) return false;
+      const child = /^<(Cui[A-Za-z]+)\b/.exec(r)?.[1];
+      return !child || takesClass(child, seen);
+    });
+  }
 
   function rootInScope(root: string): boolean {
     const component = /^<(Cui[A-Za-z]+)\b/.exec(root)?.[1];
     if (!component) return hasStaticCuiClass(root) || /:class="[^"]*cui-/.test(root);
-    if (!hasStaticCuiClass(root)) return false;
-    if (FORWARDING.includes(component)) return true;
-    const file = COMPONENTS.find((f) => f.endsWith(`/${component}.vue`));
-    if (!file) return false;
-    const source = readFileSync(file, "utf8");
-    // Takes fallthrough: an element (or classed component) root, attributes not opted out.
-    return !/inheritAttrs:\s*false/.test(source) && !templateRoots(source).some((r) => NOT_AN_ELEMENT.test(r));
+    return hasStaticCuiClass(root) && takesClass(component);
   }
 
   it("scans every package's components, the editor's as well as clean-ui's", () => {
@@ -197,12 +229,10 @@ describe("every component root is inside the scope", () => {
 
   it("lists only wrappers that really forward their attributes to a classed element", () => {
     for (const name of FORWARDING) {
-      const file = COMPONENTS.find((f) => f.endsWith(`/${name}.vue`));
-      expect(file, `${name} is listed as forwarding but no longer exists`).toBeDefined();
-      const source = readFileSync(file!, "utf8");
-      expect(source, `${name} must opt out of fallthrough`).toMatch(/defineOptions\(\{[^}]*inheritAttrs:\s*false/);
-      const forwarded = [...source.matchAll(/<[a-z][\w-]*\b(?=[^>]*v-bind="\$attrs")/g)].map((m) => readTag(source, m.index!));
-      expect(forwarded.filter(hasStaticCuiClass), `${name} must bind $attrs on a cui-* classed element`).toHaveLength(1);
+      const source = sourceOf(name);
+      expect(source, `${name} is listed as forwarding but no longer exists`).toBeDefined();
+      expect(optsOutOfFallthrough(source!), `${name} must opt out of fallthrough`).toBe(true);
+      expect(forwardedTo(source!), `${name} must bind $attrs on one cui-* classed element`).toHaveLength(1);
     }
   });
 
@@ -213,7 +243,7 @@ describe("every component root is inside the scope", () => {
       const file = COMPONENTS.find((f) => f.endsWith("/" + name));
       expect(file, `${name} is exempt but no longer exists`).toBeDefined();
       const roots = templateRoots(readFileSync(file!, "utf8"));
-      const exempted = roots.some((r) => /^<(slot|Teleport|Transition)\b/.test(r));
+      const exempted = roots.some(notAnElement);
       expect(exempted, `${name} is exempt as "${why}" but its roots no longer match`).toBe(true);
     }
   });

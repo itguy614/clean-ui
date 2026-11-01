@@ -24,8 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CuiModal and CuiSlideover forward attributes to their dialog panel** (#228). Their root
   is a `<Teleport>`, so a `class`, `style`, `data-testid` or any other attribute passed to
   them was dropped with a Vue warning. They now land on `.cui-modal` /
-  `.cui-slideover__panel`, the element actually rendered. CuiConfirmDialog's panel and the
-  editor's link/image dialog now carry `cui-confirm-dialog` / `cui-url-dialog`.
+  `.cui-slideover__panel`, the element actually rendered, and override the panel's own
+  `role`, `aria-labelledby` or `tabindex` (a `role="alertdialog"` works now). Undeclared
+  listeners are forwarded too: a stray `@click` left on a `<CuiModal>`, which used to do
+  nothing, now fires for clicks inside the panel. CuiConfirmDialog's panel and the editor's
+  link/image dialog now carry `cui-confirm-dialog` / `cui-url-dialog`.
 
 ### Fixed
 
