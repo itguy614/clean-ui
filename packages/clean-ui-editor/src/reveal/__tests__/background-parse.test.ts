@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, type DecorationSet, type ViewPlugin } from "@codemirror/view";
-import { forceParsing, syntaxTree } from "@codemirror/language";
+import { ensureSyntaxTree, forceParsing, syntaxTree } from "@codemirror/language";
 import { cuiMarkdownLanguage } from "../../language/markdown-language";
 import { revealExtension } from "..";
 import { revealPlugin } from "../reveal-plugin";
@@ -54,6 +54,12 @@ function scrolledPastTheParse(extensions: Extension): EditorView {
   return v;
 }
 
+/** How far the parser itself has got. `syntaxTree(state)` lags behind it:
+ * `ensureSyntaxTree` advances the parse without dispatching the result. */
+function parsedSoFar(v: EditorView): number {
+  return ensureSyntaxTree(v.state, 0, 0)!.length;
+}
+
 function decorationCount(v: EditorView, plugin: DecorationPlugin): number {
   let count = 0;
   v.plugin(plugin)!.decorations.between(v.viewport.from, v.viewport.to, () => {
@@ -98,7 +104,7 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
 
     expect(range).toEqual({ from: pos - 3, to: pos - 3 + "*emphasis*".length });
     // Bounded by the cursor's block, not the document: nowhere near the end was parsed.
-    expect(syntaxTree(view.state).length).toBeLessThan(DOC.length - 10_000);
+    expect(parsedSoFar(view)).toBeLessThan(DOC.length - 10_000);
   });
 
   it("parses on to the end of a block that runs past the cursor's line", () => {
@@ -120,6 +126,21 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     expect(range).toEqual({ from: fenceFrom, to: doc.indexOf("\n\nafter") });
   });
 
+  it("parses on past a list cut at the cursor's line, rather than returning its first item", () => {
+    const tail = "- a *b*\n- c\n- d\n\nafter\n";
+    const doc = DOC + tail;
+    view = new EditorView({
+      state: EditorState.create({ doc, extensions: [cuiMarkdownLanguage] }),
+      parent: document.body,
+    });
+    const listFrom = DOC.length;
+    view.dispatch({ selection: EditorSelection.cursor(listFrom + 5) }); // in item 1
+
+    const range = createCommandContext(() => view!).findConstructRange("BulletList");
+
+    expect(range).toEqual({ from: listFrom, to: doc.indexOf("\n\nafter") });
+  });
+
   it("past the time cap, reports a cut-short block as absent, never as a shorter range", () => {
     const body = "const x = 1;\n".repeat(1500);
     const doc = `${DOC}\`\`\`js\n${body}\`\`\`\n\nafter\n`;
@@ -132,8 +153,9 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
 
     // A machine so slow that every clock read is half a second later.
     let now = Date.now();
-    vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => (now += 500));
     const range = createCommandContext(() => view!).findConstructRange("FencedCode");
+    clock.mockRestore();
 
     // The parse gives up inside the block, so the only safe answer is "not found".
     expect(range).toBeNull();
