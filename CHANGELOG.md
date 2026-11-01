@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`labelPosition="floating"` on CuiFormField** (#191). The label rests inside an empty
+  control and floats above it on focus or once there is a value. It is CSS only
+  (`:placeholder-shown` and `:focus-within`), so a value the browser autofills floats it
+  too, with no event to listen for. The label stays the same `<label>` throughout, with its
+  association, required marker, help and error text unchanged. Floated it is 12px text that
+  keeps 4.5:1 contrast. It moves by transform on the motion tokens, and snaps under reduced
+  motion. CuiInput (number included), CuiTextarea, CuiMaskedInput and CuiInputStepper
+  support it. A prefix, suffix or attached button keeps the label floated, clear of them.
+  Any other control (CuiSelect, the date and time pickers) falls back to a top label and
+  logs one console warning.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added

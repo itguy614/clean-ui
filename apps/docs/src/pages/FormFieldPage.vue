@@ -28,6 +28,14 @@ const plan = ref("");
 const features = ref<string[]>([]);
 const newsletter = ref(false);
 const agree = ref(false);
+
+// Floating-label examples, kept apart so the other examples' values don't fill them.
+const floatEmpty = ref("");
+const floatFilled = ref("Ada Lovelace");
+const floatError = ref("ada@");
+const floatSite = ref("");
+const floatNotes = ref("");
+const floatPlan = ref<string | null>(null);
 </script>
 
 <template>
@@ -58,6 +66,13 @@ const agree = ref(false);
         three on the control's own focusable element rather than on its wrapper.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+        <li>
+          A floating label is the same <code>&lt;label&gt;</code> in both positions, with its
+          <code>for</code>, its id and the required marker unchanged. It is never replaced by a
+          placeholder, which is not an accessible name. Floated it is 12px text, so it keeps the
+          4.5:1 contrast of body text. Its movement is a transform, which reduced motion turns
+          into a snap.
+        </li>
         <li>
           <code>for</code>/<code>id</code> alone is not enough. It forms an association
           only with <em>labelable</em> elements, which leaves a control like
@@ -152,6 +167,57 @@ const agree = ref(false);
           </CuiFormField>
           <CuiFormField label="Role" label-position="left" v-slot="f">
             <CuiSelect v-bind="f" v-model="role" :options="['Admin', 'Editor', 'Viewer']" placeholder="Choose..." />
+          </CuiFormField>
+        </CuiStack>
+      </Example>
+
+      <!-- Floating label -->
+      <Example title="Floating Label" :code="`<CuiFormField label=&quot;Full name&quot; label-position=&quot;floating&quot; v-slot=&quot;f&quot;>
+  <CuiInput v-bind=&quot;f&quot; v-model=&quot;name&quot; />
+</CuiFormField>
+<CuiFormField label=&quot;Notes&quot; label-position=&quot;floating&quot; v-slot=&quot;f&quot;>
+  <CuiTextarea v-bind=&quot;f&quot; v-model=&quot;notes&quot; :rows=&quot;3&quot; />
+</CuiFormField>`">
+        <CuiStack spacing="4" class="max-w-md">
+          <p class="text-sm text-surface-700 dark:text-surface-300">
+            The label rests inside an empty control and floats above it on focus or once there
+            is a value, including one the browser autofills. Leave the control's own
+            <code>placeholder</code> off: a control that has one keeps its label floated, since
+            the two would sit on top of each other.
+          </p>
+          <CuiFormField label="Full name (empty)" label-position="floating" help-text="Click in to float the label" v-slot="f">
+            <CuiInput v-bind="f" v-model="floatEmpty" autocomplete="name" />
+          </CuiFormField>
+          <CuiFormField label="Full name (filled)" label-position="floating" required v-slot="f">
+            <CuiInput v-bind="f" v-model="floatFilled" />
+          </CuiFormField>
+          <CuiFormField label="Email" label-position="floating" required error error-message="Enter a complete email address" v-slot="f">
+            <CuiInput v-bind="f" v-model="floatError" type="email" />
+          </CuiFormField>
+          <CuiFormField label="Website" label-position="floating" help-text="A prefix keeps the label floated" v-slot="f">
+            <CuiInput v-bind="f" v-model="floatSite">
+              <template #prefix>https://</template>
+            </CuiInput>
+          </CuiFormField>
+          <CuiFormField label="Notes" label-position="floating" v-slot="f">
+            <CuiTextarea v-bind="f" v-model="floatNotes" :rows="3" />
+          </CuiFormField>
+        </CuiStack>
+      </Example>
+
+      <Example title="Floating Label: Unsupported Controls" :code="`<!-- Falls back to a top label, and warns once in the console -->
+<CuiFormField label=&quot;Plan&quot; label-position=&quot;floating&quot; v-slot=&quot;f&quot;>
+  <CuiSelect v-bind=&quot;f&quot; v-model=&quot;plan&quot; :options=&quot;plans&quot; />
+</CuiFormField>`">
+        <CuiStack spacing="4" class="max-w-md">
+          <p class="text-sm text-surface-700 dark:text-surface-300">
+            Floating needs a control whose focus surface is a native <code>&lt;input&gt;</code>
+            or <code>&lt;textarea&gt;</code>: CuiInput (any type, number included), CuiTextarea,
+            CuiMaskedInput and CuiInputStepper. CuiSelect, the date and time pickers, and every
+            other control fall back to a top label and log one console warning.
+          </p>
+          <CuiFormField label="Plan" label-position="floating" v-slot="f">
+            <CuiSelect v-bind="f" v-model="floatPlan" :options="['Free', 'Pro', 'Enterprise']" placeholder="Choose..." />
           </CuiFormField>
         </CuiStack>
       </Example>

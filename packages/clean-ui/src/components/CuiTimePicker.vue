@@ -9,6 +9,7 @@ import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { useFloatingLabelProvider } from "./form-field-context";
 
 export type TimePickerFormat = "12" | "24";
 
@@ -37,6 +38,9 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
   disabled: false,
   hidden: false,
 });
+
+// Not a floating-label control, though it renders one (#191): see useFloatingLabelProvider.
+useFloatingLabelProvider(() => false);
 
 const messages = useMessages();
 // The label prop names the trigger (#391): a <label> with no `for` names nothing, and the

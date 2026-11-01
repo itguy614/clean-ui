@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { useMessages } from "../composables/useMessages";
-import { computed, inject, onBeforeUnmount } from "vue";
+import { computed, inject, onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { warnOnce } from "../utils/devWarn";
 import { FormContextKey } from "./form-context";
+import { useFloatingLabelProvider } from "./form-field-context";
 
-export type LabelPosition = "top" | "left";
+/**
+ * `floating` (#191) rests the label inside an empty control and floats it above on focus
+ * or a value. It needs a control whose focus surface is a native `<input>`/`<textarea>`
+ * (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper); with any other it is `top`.
+ */
+export type LabelPosition = "top" | "left" | "floating";
 
 export interface CuiFormFieldProps extends HideableProps, DisableableProps {
   /** Label text */
@@ -114,6 +121,24 @@ const slotBindings = computed(() => {
   return base;
 });
 
+// Floating label (#191). Supported controls mark themselves while this is true (see
+// form-field-context.ts); the layout and the resting/floated states are all CSS. Without a
+// marked control the field stays a top label, and says why once, here.
+useFloatingLabelProvider(() => props.labelPosition === "floating");
+
+const rootEl = useTemplateRef<HTMLElement>("rootEl");
+function checkFloatingSupport() {
+  if (props.labelPosition !== "floating" || !props.label || !rootEl.value) return;
+  if (rootEl.value.querySelector("[data-cui-float-label]")) return;
+  warnOnce(
+    `[clean-ui] CuiFormField: labelPosition="floating" needs a control with a native <input> or ` +
+      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper). The control in ` +
+      `"${props.label}" isn't one, so its label is shown on top instead.`,
+  );
+}
+onMounted(checkFloatingSupport);
+watch(() => props.labelPosition, checkFloatingSupport, { flush: "post" });
+
 // Clear this field's error from the form when it unmounts (e.g. conditionally
 // shown fields) so stale errors don't linger in the aggregated map.
 onBeforeUnmount(() => {
@@ -123,6 +148,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
+    ref="rootEl"
     v-show="!hidden"
     class="cui-form-field"
     :class="[
@@ -138,7 +164,7 @@ onBeforeUnmount(() => {
       class="cui-form-field__label"
       @click="onLabelClick"
     >
-      <span>{{ label }}</span>
+      <span class="cui-form-field__label-text">{{ label }}</span>
       <!-- The asterisk is decorative and aria-hidden, so it says nothing on its own. The
            state is carried by `aria-required` (forwarded through the slot bindings); this
            puts it in the visible label's text too, which is what a sighted screen-reader
@@ -176,7 +202,9 @@ onBeforeUnmount(() => {
   display: flex;
 }
 
-.cui-form-field--top {
+/* `floating` is `top` until its control says it can float (below), which is the fallback. */
+.cui-form-field--top,
+.cui-form-field--floating {
   flex-direction: column;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
@@ -210,10 +238,15 @@ onBeforeUnmount(() => {
 
    `line-height: inherit` on the markers, not a height on the label: the label already
    declares `line-height: 1.4`, but inheritance loses to any rule that matches the child
-   directly, and the docs' prose styles set spans to 1.5. That made the marker's line box
+   directly — the docs' prose styles set spans to 1.5, and the scoped base sets 1.5 on every
+   `cui-*` element. That made the marker's line box
    21px against the label text's 19.6px, and no height on the label can cap a child that
    is taller than it. Forcing the child to take the parent's computed value is what
    actually closes it. */
+.cui-form-field__label-text {
+  line-height: inherit;
+}
+
 .cui-form-field__required {
   color: var(--cui-error);
   font-weight: 600;
@@ -242,6 +275,98 @@ onBeforeUnmount(() => {
 .cui-form-field__control {
   display: flex;
   flex-direction: column;
+}
+
+/* --- Floating label (#191) --- see form-field-context.ts for the mechanism.
+   The label shares the control's grid cell, so it rests centred in an input. Floating is
+   transform only: into the room `padding-top` reserves above the control, where a top label
+   sits, so it needs no masking chip and never meets the help or error text. */
+.cui-form-field--floating:has([data-cui-float-label]) {
+  /* 14px → 12px floated. */
+  --_form-field-float-scale: 0.8571;
+  --_form-field-float-gap: calc(0.25rem * var(--cui-density-scale, 1));
+  /* The floated label's line box: 0.875rem × line-height 1.4 × the scale. */
+  --_form-field-float-line: calc(0.875rem * 1.4 * var(--_form-field-float-scale));
+  /* The control's horizontal padding and font size, from the marker's size (md by default).
+     form-field-float-sync.test.ts holds these to utils/sizing.ts. */
+  --_form-field-float-px: 0.75rem;
+  --_form-field-float-fs: 1rem;
+  /* Where the control's text starts: its padding plus its 1px border. */
+  --_form-field-float-inset: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1px);
+  /* A textarea's resting box: its first line plus top and bottom padding, so the label's
+     centre lands on that line. Its py is half its px at every size, so 2 × py = px. */
+  --_form-field-float-rest: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1.6 * var(--_form-field-float-fs));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: calc(0.375rem * var(--cui-density-scale, 1));
+  padding-top: calc(var(--_form-field-float-line) + var(--_form-field-float-gap));
+}
+
+.cui-form-field--floating:has([data-cui-float-label~="xs"]) { --_form-field-float-px: 0.5rem; --_form-field-float-fs: 0.75rem; }
+.cui-form-field--floating:has([data-cui-float-label~="sm"]) { --_form-field-float-px: 0.625rem; --_form-field-float-fs: 0.8125rem; }
+.cui-form-field--floating:has([data-cui-float-label~="lg"]) { --_form-field-float-px: 0.875rem; --_form-field-float-fs: 1.0625rem; }
+.cui-form-field--floating:has([data-cui-float-label~="xl"]) { --_form-field-float-px: 1rem; --_form-field-float-fs: 1.125rem; }
+/* TEXTAREA_SIZE_SCALE's px differs from the input's. */
+.cui-form-field--floating:has([data-cui-float-label="multiline xs"]) { --_form-field-float-px: 0.5rem; }
+.cui-form-field--floating:has([data-cui-float-label="multiline sm"]) { --_form-field-float-px: 0.75rem; }
+.cui-form-field--floating:has([data-cui-float-label="multiline md"]) { --_form-field-float-px: 1rem; }
+.cui-form-field--floating:has([data-cui-float-label="multiline lg"]) { --_form-field-float-px: 1.25rem; }
+.cui-form-field--floating:has([data-cui-float-label="multiline xl"]) { --_form-field-float-px: 1.5rem; }
+
+/* The body's children join the field's grid: the control in row 1 beside the label, the
+   help or error text in row 2. */
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__body {
+  display: contents;
+}
+
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__body > .cui-form-field__control {
+  grid-area: 1 / 1;
+}
+
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__body > :not(.cui-form-field__control) {
+  grid-area: 2 / 1;
+}
+
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label {
+  grid-area: 1 / 1;
+  /* Above the control's background, and out of the way of its clicks and caret. */
+  z-index: 1;
+  pointer-events: none;
+  justify-self: start;
+  align-self: stretch;
+  min-width: 0;
+  /* Room for a trailing clear button or password toggle while it rests. */
+  max-width: calc(100% - var(--_form-field-float-inset) - 2rem);
+  margin-inline-start: var(--_form-field-float-inset);
+  transform-origin: left center;
+  /* Floated: back to the field's left edge, above the control. */
+  transform:
+    translateX(calc(-1 * var(--_form-field-float-inset)))
+    translateY(calc(-50% - var(--_form-field-float-gap) - var(--_form-field-float-line) / 2))
+    scale(var(--_form-field-float-scale));
+  transition:
+    transform var(--cui-duration-fast) var(--cui-ease-in-out),
+    color var(--cui-duration-fast) ease;
+}
+
+.cui-form-field--floating:has([data-cui-float-label~="multiline"]) > .cui-form-field__label {
+  align-self: start;
+  height: var(--_form-field-float-rest);
+}
+
+.cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label > .cui-form-field__label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Resting: nothing focused in the field, and the control empty — its single-space
+   placeholder showing. A control's own placeholder is not `" "`, so it never rests over
+   one; nor while the browser has autofilled it, which can show a value before the page can
+   read it. A browser without `:autofill` drops this rule, and the label just stays up. */
+.cui-form-field--floating:not(:focus-within):has([data-cui-float-label][placeholder=" "]:placeholder-shown:not(:autofill)) > .cui-form-field__label {
+  transform: none;
+  color: var(--cui-text-secondary);
 }
 
 /* --- Help text --- */

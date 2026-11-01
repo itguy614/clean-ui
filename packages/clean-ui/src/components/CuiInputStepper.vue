@@ -2,6 +2,7 @@
 import { computed, useTemplateRef } from "vue";
 import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
+import { useFloatingLabel } from "./form-field-context";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<CuiInputStepperProps>(), {
   wrap: false,
   hidden: false,
 });
+
+// Inside a `labelPosition="floating"` CuiFormField (#191). The input always shows a number
+// and the minus button sits where a resting label would, so the label stays floated.
+const floatingLabel = useFloatingLabel(() => ({ kind: "pinned", size: props.size }));
 
 const emit = defineEmits<{
   "update:modelValue": [value: number];
@@ -222,6 +227,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-valuemax="max"
         type="text"
         inputmode="numeric"
+        :data-cui-float-label="floatingLabel.marker"
         :value="displayValue"
         :disabled="disabled"
         @keydown="onKeydown"
@@ -267,6 +273,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-valuemax="max"
         type="text"
         inputmode="numeric"
+        :data-cui-float-label="floatingLabel.marker"
         :value="displayValue"
         :disabled="disabled"
         @keydown="onKeydown"

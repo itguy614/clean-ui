@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref, useSlots, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
+import { useFloatingLabel } from "./form-field-context";
 
 export type InputType =
   | "text"
@@ -101,6 +102,16 @@ defineExpose({ el: inputRef, focus, blur });
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
 
+// Inside a `labelPosition="floating"` CuiFormField (#191). A prefix or an attached button
+// sits where the label would rest, so it stays floated rather than colliding with them;
+// an inline suffix is pinned for the same reason, since its width is unknown to the field.
+const slots = useSlots();
+const floatingLabel = useFloatingLabel(() => ({
+  kind: slots.prefix || slots.suffix || slots["prefix-button"] || slots["suffix-button"] ? "pinned" : "inline",
+  size: props.size,
+  placeholder: props.placeholder,
+}));
+
 </script>
 
 <template>
@@ -148,7 +159,8 @@ const messages = useMessages();
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
-          :placeholder="placeholder"
+          :placeholder="floatingLabel.placeholder"
+          :data-cui-float-label="floatingLabel.marker"
           :disabled="disabled"
           :readonly="readonly"
           :aria-invalid="error || undefined"

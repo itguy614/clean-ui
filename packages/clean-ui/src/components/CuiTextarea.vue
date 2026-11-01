@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useFloatingLabel } from "./form-field-context";
 
 export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
@@ -121,6 +122,13 @@ function blur() {
 defineExpose({ el: textareaRef, focus, blur });
 
 const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
+
+// Inside a `labelPosition="floating"` CuiFormField the label rests on the first line (#191).
+const floatingLabel = useFloatingLabel(() => ({
+  kind: "multiline",
+  size: props.size,
+  placeholder: props.placeholder,
+}));
 </script>
 
 <template>
@@ -151,7 +159,8 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :value="modelValue"
-        :placeholder="placeholder"
+        :placeholder="floatingLabel.placeholder"
+        :data-cui-float-label="floatingLabel.marker"
         :disabled="disabled"
         :readonly="readonly"
         :rows="rows"
