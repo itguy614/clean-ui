@@ -173,6 +173,8 @@ export type { ToastOptions, ToastPosition, ToastStackMode } from "./components/t
 export { ToastContextKey } from "./components/toast-context";
 export { useToast } from "./composables/useToast";
 export { useMessages } from "./composables/useMessages";
+// Hands the app's defaults and message catalog on to a detached app (#326).
+export { useCleanUIContext, type CleanUIContext } from "./composables/useCleanUIContext";
 export type { CuiConfigProviderProps } from "./components/CuiConfigProvider.vue";
 export { defaultMessages, mergeMessages } from "./messages";
 export type { CuiMessages, CuiCoreMessages, CuiMessageNamespaces, DeepPartialMessages, PaginationRange } from "./messages";

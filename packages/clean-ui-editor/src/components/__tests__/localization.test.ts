@@ -26,7 +26,7 @@ describe("CuiMarkdownEditor localization (task 5.2.2)", () => {
     wrapper?.unmount();
     wrapper = undefined;
     // mountStandaloneDialog appends outside the component tree — unmounting
-    // the wrapper doesn't clean it up (see link-image-dialogs.test.ts).
+    // the wrapper doesn't clean it up (see url-dialog.test.ts).
     document.body.innerHTML = "";
   });
 

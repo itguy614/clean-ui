@@ -12,6 +12,8 @@ import {
   CuiButton,
   CuiRadioGroup,
   CuiRadio,
+  CuiConfigProvider,
+  type DeepPartialMessages,
 } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor, DEFAULT_PLUGINS, type CuiMarkdownEditorMode } from "@itguy614/clean-ui-editor";
 import PropTable from "../components/PropTable.vue";
@@ -64,6 +66,9 @@ function reopenSession() {
 }
 
 const controlledMode = ref<CuiMarkdownEditorMode>("wysiwyg");
+
+const dialogDoc = ref("Select some text and press Mod-K to open the link dialog.");
+const dialogMessages: DeepPartialMessages = { close: "Close dialog", markdownEditor: { linkDialogTitle: "Add a link" } };
 
 const formValues = ref<{ bio: string; notes: string }>({ bio: "", notes: "" });
 function formResolver(values: Record<string, unknown>) {
@@ -281,6 +286,31 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
           <CuiStack spacing="2">
             <CuiMarkdownEditor v-model="basicDoc" v-model:mode="controlledMode" />
             <p class="text-sm" style="color: var(--cui-text-secondary);">Current mode: <code class="cui-code">{{ controlledMode }}</code></p>
+          </CuiStack>
+        </Example>
+
+        <Example
+          title="Dialogs follow the host's clean-ui config"
+          :code="`&lt;CuiConfigProvider
+  :heading-levels=&quot;{ modalHeader: 'h3' }&quot;
+  :messages=&quot;{ close: 'Close dialog', markdownEditor: { linkDialogTitle: 'Add a link' } }&quot;
+&gt;
+  &lt;CuiMarkdownEditor v-model=&quot;doc&quot; /&gt;
+&lt;/CuiConfigProvider&gt;`"
+        >
+          <CuiStack spacing="2">
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              The link and image dialogs mount as their own Vue app, outside the editor's tree,
+              yet they take the defaults and messages provided around the editor:
+              <code class="cui-code">createCleanUI()</code>'s options, any
+              <code class="cui-code">CuiConfigProvider</code>, and clean-ui's own catalog. Press
+              <code class="cui-code">Mod-K</code> here: the dialog is titled "Add a link", its
+              title is an <code class="cui-code">h3</code>, and its close button is named "Close
+              dialog".
+            </p>
+            <CuiConfigProvider :heading-levels="{ modalHeader: 'h3' }" :messages="dialogMessages">
+              <CuiMarkdownEditor v-model="dialogDoc" />
+            </CuiConfigProvider>
           </CuiStack>
         </Example>
 
