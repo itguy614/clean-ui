@@ -1,4 +1,4 @@
-import { nextTick, onMounted, onUpdated, ref, toValue, type MaybeRefOrGetter, type Ref } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, onUpdated, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import { firstIndex, nearestIndex, useListNavigation, type ListItems, type ListOrientation } from "./useListNavigation";
 
 export type RovingOrientation = ListOrientation;
@@ -23,6 +23,12 @@ export interface UseRovingFocusOptions {
    * selected index itself). Default a new ref at 0.
    */
   activeIndex?: Ref<number>;
+  /**
+   * Write the tab stop onto the items yourself, rather than the host binding
+   * `:tabindex="tabIndex(i)"`, and watch the container for items coming and going. For
+   * items the host does not render — slot content, as in CuiToolbar. Default `false`.
+   */
+  manageTabindex?: boolean;
 }
 
 const DISABLED = ":disabled, [aria-disabled='true']";
@@ -49,6 +55,7 @@ const DISABLED = ":disabled, [aria-disabled='true']";
  */
 export function useRovingFocus(options: UseRovingFocusOptions) {
   const activeIndex = options.activeIndex ?? ref(0);
+  const manage = options.manageTabindex ?? false;
 
   const container = () => toValue(options.container);
   const query = (): HTMLElement[] => Array.from(container()?.querySelectorAll<HTMLElement>(options.itemSelector) ?? []);
@@ -114,16 +121,39 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
     if (i !== -1) activeIndex.value = i;
   }
 
+  // `manageTabindex`: write the stop onto the items, as the attribute (a button's tabIndex
+  // is already 0 without one, and the markup should say which item holds the stop).
+  function applyTabStops(els = query()) {
+    els.forEach((el, i) => {
+      const stop = String(tabIndex(i));
+      if (el.getAttribute("tabindex") !== stop) el.setAttribute("tabindex", stop);
+    });
+  }
+
   // Keep exactly one tab stop as items come and go: when the active item is gone or
-  // disabled, the first enabled item holds it instead. Runs after the host renders, so
-  // items rendered by child components that update on their own aren't seen until it does.
-  function settle() {
+  // disabled, the first enabled item holds it instead. Runs after the host renders, and —
+  // with `manageTabindex` — when the container's DOM changes, for items a child renders on
+  // its own.
+  function refresh() {
     const els = query();
     const active = els[activeIndex.value];
     fallback.value = active && !active.matches(DISABLED) ? null : firstIndex(asItems(els));
+    if (manage) applyTabStops(els);
   }
-  onMounted(settle);
-  onUpdated(settle);
+  onMounted(refresh);
+  onUpdated(refresh);
+
+  let observer: MutationObserver | undefined;
+  if (manage) {
+    watch(activeIndex, () => applyTabStops(), { flush: "sync" });
+    onMounted(() => {
+      const root = container();
+      if (typeof MutationObserver === "undefined" || !root) return;
+      observer = new MutationObserver(refresh);
+      observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled", "aria-disabled"] });
+    });
+    onBeforeUnmount(() => observer?.disconnect());
+  }
 
   return { activeIndex, tabIndex, onKeydown, onFocusin, focusItem, focusNearest };
 }

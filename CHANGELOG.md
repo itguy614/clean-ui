@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`CuiToolbar` and `CuiToolbarSeparator`** (#190). The ARIA toolbar pattern: one tab stop
+  however many controls it holds, with the arrow keys (by `orientation`), Home and End moving
+  between them and a disabled control skipped. It renders none of its controls: CuiButton,
+  CuiButtonGroup and CuiSelect go in its slot, and the separator stands across its axis on
+  its own. A text input keeps its own tab stop and its caret keys, and an open select keeps
+  its arrows. `overflow="scroll"` keeps one line in a CuiScrollArea with edge fades, padded
+  so a focus ring isn't clipped. It needs an accessible name (`label`, `aria-label` or
+  `aria-labelledby`) and warns without one. Themeable through `--cui-toolbar-gap`, `-px`,
+  `-py`, `-bg`, `-border`, `-radius` and `--cui-toolbar-separator-bg`.
+- **`useRovingFocus({ manageTabindex: true })`** writes the tab stop onto the items itself
+  and follows them coming and going, for items the host doesn't render (slot content).
+  CuiToolbar is built on it.
+
+### Changed
+
+- **CuiDataGrid's toolbar and the markdown editor's toolbar are both CuiToolbars** (#190).
+  The grid's toolbar is now `role="toolbar"`, named "Table controls" (the new optional
+  `dataGrid.toolbar` message), and its buttons (filter, columns, view toggle, saved views
+  and anything in `#toolbar-start` / `#toolbar-end`) share one tab stop. The search box
+  keeps its own. The editor's toolbar drops its own keyboard handling and behaves as before.
+  The editor needs clean-ui 1.7.0 for this.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added

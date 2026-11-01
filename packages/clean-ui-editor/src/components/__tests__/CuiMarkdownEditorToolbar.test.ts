@@ -3,6 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
 import { DEFAULT_PLUGINS } from "../../plugins/default-plugins";
+import { press } from "../../../../clean-ui/src/composables/__tests__/roving-focus-contract";
 
 function exposed(wrapper: VueWrapper) {
   return wrapper.vm as unknown as {
@@ -98,27 +99,38 @@ describe("CuiMarkdownEditorToolbar (via CuiMarkdownEditor)", () => {
     expect(view.state.doc.toString()).toBe("****");
   });
 
-  it("ArrowRight/ArrowLeft move the roving tabindex between buttons", async () => {
-    wrapper = mount(CuiMarkdownEditor, { props: { modelValue: "", toolbar: ["bold", "italic", "strikethrough"] } });
+  it("arrow keys, Home and End move the roving tabindex between buttons", async () => {
+    wrapper = mount(CuiMarkdownEditor, {
+      props: { modelValue: "", toolbar: ["bold", "italic", "strikethrough"] },
+      attachTo: document.body,
+    });
     await nextTick();
 
-    const toolbar = wrapper.find('[role="toolbar"]');
-    const buttons = () => wrapper!.findAll('[role="toolbar"] [aria-label]');
+    const buttons = () => wrapper!.findAll('[role="toolbar"] [aria-label]').map((b) => b.element as HTMLElement);
+    // The keys are CuiToolbar's now (#190): `press` fires them on the focused button, as a
+    // user would.
 
-    expect(buttons()[0]!.attributes("tabindex")).toBe("0");
-    expect(buttons()[1]!.attributes("tabindex")).toBe("-1");
+    expect(buttons().map((b) => b.tabIndex)).toEqual([0, -1, -1]);
+    buttons()[0]!.focus();
 
-    await toolbar.trigger("keydown", { key: "ArrowRight" });
-    expect(buttons()[0]!.attributes("tabindex")).toBe("-1");
-    expect(buttons()[1]!.attributes("tabindex")).toBe("0");
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(buttons()[1]);
+    expect(buttons().map((b) => b.tabIndex)).toEqual([-1, 0, -1]);
 
-    await toolbar.trigger("keydown", { key: "ArrowLeft" });
-    expect(buttons()[0]!.attributes("tabindex")).toBe("0");
+    await press("ArrowLeft");
+    expect(document.activeElement).toBe(buttons()[0]);
 
-    await toolbar.trigger("keydown", { key: "End" });
-    expect(buttons()[2]!.attributes("tabindex")).toBe("0");
+    await press("End");
+    expect(document.activeElement).toBe(buttons()[2]);
 
-    await toolbar.trigger("keydown", { key: "Home" });
-    expect(buttons()[0]!.attributes("tabindex")).toBe("0");
+    // It has always come round at the ends.
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(buttons()[0]);
+    await press("ArrowLeft");
+    expect(document.activeElement).toBe(buttons()[2]);
+
+    await press("Home");
+    expect(document.activeElement).toBe(buttons()[0]);
+    expect(buttons().map((b) => b.tabIndex)).toEqual([0, -1, -1]);
   });
 });

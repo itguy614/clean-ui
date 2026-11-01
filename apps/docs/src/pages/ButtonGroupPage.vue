@@ -10,6 +10,7 @@ import {
   CuiFlex,
   CuiIcon,
   CuiStack,
+  CuiToolbar,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
@@ -46,7 +47,9 @@ import meta from "../meta/button-group";
         Grouping is presentational, so focus behaves exactly as it does for loose buttons:
         <kbd class="cui-kbd">Tab</kbd> moves to each one in turn. That is deliberate — a
         single tab stop with arrow-key movement is the ARIA <em>toolbar</em> pattern, and a
-        button group is not a toolbar. Reach for <code>CuiTabs</code> or
+        button group is not a toolbar. Put the groups in a
+        <router-link to="/components/toolbar">CuiToolbar</router-link> when the strip is dense
+        enough that a tab stop per button is in the way. Reach for <code>CuiTabs</code> or
         <code>CuiRadioGroup variant="buttons"</code> when the buttons are a single choice.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
@@ -259,10 +262,11 @@ import meta from "../meta/button-group";
           </CuiButtonGroup>
         </Example>
 
-        <!-- Real-World: Toolbar -->
+        <!-- Real-World: Toolbar. Groups inside a CuiToolbar keep their merged borders and
+             share its single tab stop (#190). -->
         <Example title="Real-World: Toolbar">
-          <CuiFlex gap="3" class="flex-wrap items-center">
-            <CuiButtonGroup label="Text formatting">
+          <CuiToolbar label="Text formatting" style="--cui-toolbar-gap: 0.75rem">
+            <CuiButtonGroup label="Text style">
               <CuiButton icon variant="outline" size="sm" aria-label="Bold">
                 <CuiIcon name="text-bolder" size="sm" />
               </CuiButton>
@@ -294,7 +298,7 @@ import meta from "../meta/button-group";
                 <CuiIcon name="arrow-u-up-right" size="sm" />
               </CuiButton>
             </CuiButtonGroup>
-          </CuiFlex>
+          </CuiToolbar>
         </Example>
 
       </CuiStack>

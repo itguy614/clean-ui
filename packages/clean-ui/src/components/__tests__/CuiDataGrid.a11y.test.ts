@@ -3,6 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
 import CuiDataGrid from "../CuiDataGrid.vue";
 import CuiConfigProvider from "../CuiConfigProvider.vue";
+import { press } from "../../composables/__tests__/roving-focus-contract";
 
 /**
  * #161 — sorting was a click handler on the <th>, unreachable by keyboard and unannounced,
@@ -151,5 +152,30 @@ describe("CuiDataGrid saved-views menu names", () => {
     await new Promise((r) => setTimeout(r));
     const field = document.querySelector<HTMLInputElement>(".cui-dropdown-menu input")!;
     expect(document.getElementById(field.getAttribute("aria-labelledby")!)?.textContent).toBe("View name");
+  });
+});
+
+// #190 — the toolbar is a CuiToolbar: the grid's buttons share one tab stop, and the search
+// box keeps its own, with its own arrow keys for the caret.
+describe("CuiDataGrid toolbar keyboard", () => {
+  it("is a named toolbar whose buttons are one tab stop, beside the search box's own", async () => {
+    mountGrid({ hideToolbar: false, columns: [{ ...columns[0], filterable: true }, columns[1]] });
+    await new Promise((r) => setTimeout(r));
+    const toolbar = w!.get('[role="toolbar"]');
+    expect(toolbar.attributes("aria-label")).toBe("Table controls");
+
+    const buttons = toolbar.findAll(".cui-button").map((b) => b.element as HTMLElement);
+    expect(buttons.length).toBeGreaterThan(1);
+    expect(buttons.map((b) => b.tabIndex)).toEqual([0, ...buttons.slice(1).map(() => -1)]);
+
+    buttons[0].focus();
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(buttons[1]);
+
+    const search = toolbar.get(".cui-data-grid-search input").element as HTMLInputElement;
+    expect(search.tabIndex).toBe(0);
+    search.focus();
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(search);
   });
 });

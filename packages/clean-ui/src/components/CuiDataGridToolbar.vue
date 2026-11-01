@@ -9,6 +9,7 @@ import CuiDataGridViewManager from "./CuiDataGridViewManager.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
+import CuiToolbar from "./CuiToolbar.vue";
 import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();
@@ -31,7 +32,9 @@ const activeFilterCount = computed(() => grid.filters.value.length);
 </script>
 
 <template>
-  <div class="cui-data-grid-toolbar">
+  <!-- One tab stop for the grid's buttons (#190). The search box is not an item: it keeps
+       its own tab stop and its own arrow keys. -->
+  <CuiToolbar class="cui-data-grid-toolbar" :label="messages.dataGrid.toolbar">
     <div class="cui-data-grid-toolbar__start">
       <slot name="toolbar-start" />
       <CuiDataGridSearch v-if="!hideSearch" :debounce="searchDebounce" :label="searchLabel" />
@@ -71,15 +74,12 @@ const activeFilterCount = computed(() => grid.filters.value.length);
         :adapter="viewAdapter"
       />
     </div>
-  </div>
+  </CuiToolbar>
 </template>
 
 <style>
 .cui-data-grid-toolbar {
-  display: flex;
-  align-items: center;
-  gap: calc(0.75rem * var(--cui-density-scale, 1));
-  flex-wrap: wrap;
+  --cui-toolbar-gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid-toolbar__start {

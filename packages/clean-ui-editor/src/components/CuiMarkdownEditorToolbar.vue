@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
-import { CuiButton, CuiIcon, CuiScrollArea } from "@itguy614/clean-ui";
+import { computed } from "vue";
+import { CuiButton, CuiIcon, CuiToolbar } from "@itguy614/clean-ui";
 import type { PluginRegistry } from "../plugins/registry";
 import { useMarkdownEditorMessages } from "../composables/useMarkdownEditorMessages";
 import { resolveCommandLabel } from "../messages";
@@ -35,47 +35,14 @@ const activeStates = computed(() => {
   void props.selectionVersion; // establishes the reactive dependency described above
   return new Map(entries.value.map((entry) => [entry.id, props.isCommandActive(entry.id)]));
 });
-
-function activate(id: string, index: number) {
-  focusedIndex.value = index;
-  props.runCommand(id);
-}
-
-// --- Roving tabindex (one tab stop, arrow-key navigation between buttons —
-// same pattern as CuiTabs' hand-rolled keyboard nav; no shared composable
-// for this exists yet in clean-ui). ---
-const focusedIndex = ref(0);
-const buttonRefs = ref<Array<InstanceType<typeof CuiButton> | null>>([]);
-
-function onKeydown(event: KeyboardEvent) {
-  const count = entries.value.length;
-  if (count === 0) return;
-  let next = -1;
-  if (event.key === "ArrowRight") next = (focusedIndex.value + 1) % count;
-  else if (event.key === "ArrowLeft") next = (focusedIndex.value - 1 + count) % count;
-  else if (event.key === "Home") next = 0;
-  else if (event.key === "End") next = count - 1;
-
-  if (next >= 0) {
-    event.preventDefault();
-    focusedIndex.value = next;
-    nextTick(() => buttonRefs.value[next]?.focus());
-  }
-}
 </script>
 
 <template>
-  <!-- The overflow is a CuiScrollArea (#143), which owns the scroller and its edge fades —
-       the arrangement this toolbar once got wrong, its fades scrolling away with the
-       buttons (#125). Not a region: the buttons are the keyboard path, one roving tab stop. -->
-  <div
-    class="cui-markdown-editor-toolbar"
-    role="toolbar"
-    :aria-label="messages.toolbarAriaLabel"
-    @keydown="onKeydown"
-  >
-    <!-- `keydown` stays on the toolbar, which is the element the roving tabindex belongs to. -->
-    <CuiScrollArea orientation="horizontal" :region="false" class="cui-markdown-editor-toolbar__scroll">
+  <!-- CuiToolbar (#190) owns the keyboard — one roving tab stop, arrows, Home/End — and the
+       overflow: a CuiScrollArea (#143), which owns the scroller and its edge fades, the
+       arrangement this toolbar once got wrong, its fades scrolling away with the buttons
+       (#125). `loop` keeps the arrows coming round at the ends, as they always have here. -->
+  <CuiToolbar class="cui-markdown-editor-toolbar" :label="messages.toolbarAriaLabel" overflow="scroll" loop>
     <!-- `solid` for the active/pressed state is a deliberate, sign-off exception
          to the library's general "subtle by default, bold by choice" rule
          (tinted `-bg`/`-border` for resting/selected state elsewhere — toggles,
@@ -85,23 +52,20 @@ function onKeydown(event: KeyboardEvent) {
          Word/Docs/Notion use for exactly this kind of icon toolbar. Not an
          oversight — see the UX review this was raised in. -->
     <CuiButton
-      v-for="(entry, index) in entries"
+      v-for="entry in entries"
       :key="entry.id"
-      :ref="(el) => (buttonRefs[index] = el as InstanceType<typeof CuiButton> | null)"
       size="sm"
       :variant="activeStates.get(entry.id) ? 'solid' : 'ghost'"
-      :tabindex="index === focusedIndex ? 0 : -1"
       :aria-pressed="entry.spec.isActive ? activeStates.get(entry.id) : undefined"
       :aria-label="entry.label"
       :title="entry.label"
-      @click="activate(entry.id, index)"
+      @click="runCommand(entry.id)"
     >
       <template v-if="entry.spec.icon" #prefix>
         <CuiIcon :name="entry.spec.icon" size="1em" />
       </template>
     </CuiButton>
-    </CuiScrollArea>
-  </div>
+  </CuiToolbar>
 </template>
 
 <style scoped>
@@ -114,22 +78,20 @@ function onKeydown(event: KeyboardEvent) {
      two can't be rounded differently (#228). */
   border-top-left-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
   border-top-right-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
+  /* The spacing it has always had, through CuiToolbar's tokens. */
+  --cui-toolbar-px: calc(0.375rem * var(--cui-density-scale, 1));
+  --cui-toolbar-py: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
-.cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller) {
-  display: flex;
-  align-items: center;
-  gap: calc(0.25rem * var(--cui-density-scale, 1));
-  padding: calc(0.375rem * var(--cui-density-scale, 1));
+.cui-markdown-editor-toolbar :deep(.cui-scroll-area__scroller) {
   scrollbar-width: none;
 }
 
-.cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {
+.cui-markdown-editor-toolbar :deep(.cui-scroll-area__scroller)::-webkit-scrollbar {
   display: none;
 }
 
 .cui-markdown-editor-toolbar :deep(.cui-button) {
-  flex-shrink: 0;
   min-width: 24px;
   min-height: 24px;
 }

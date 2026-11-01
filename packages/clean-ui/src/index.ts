@@ -10,6 +10,8 @@ import "./duplicate-guard";
 // Components
 import CuiButton from "./components/CuiButton.vue";
 import CuiButtonGroup from "./components/CuiButtonGroup.vue";
+import CuiToolbar from "./components/CuiToolbar.vue";
+import CuiToolbarSeparator from "./components/CuiToolbarSeparator.vue";
 import CuiGrid from "./components/CuiGrid.vue";
 import CuiGridItem from "./components/CuiGridItem.vue";
 import CuiFlex from "./components/CuiFlex.vue";
@@ -107,7 +109,7 @@ import CuiRating from "./components/CuiRating.vue";
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
+export { CuiButton, CuiButtonGroup, CuiToolbar, CuiToolbarSeparator, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider };
 
 // Type exports
 export type {
@@ -131,6 +133,10 @@ export type {
 } from "./types/common";
 export type { CuiButtonProps, ButtonVariant } from "./components/CuiButton.vue";
 export type { CuiButtonGroupProps, ButtonGroupOrientation } from "./components/CuiButtonGroup.vue";
+export type { CuiToolbarProps, ToolbarOverflow } from "./components/CuiToolbar.vue";
+export type { CuiToolbarSeparatorProps } from "./components/CuiToolbarSeparator.vue";
+export type { ToolbarContext } from "./components/toolbar-context";
+export { ToolbarContextKey } from "./components/toolbar-context";
 export type { CuiGridProps } from "./components/CuiGrid.vue";
 export type { CuiGridItemProps } from "./components/CuiGridItem.vue";
 export type { CuiFlexProps } from "./components/CuiFlex.vue";
@@ -338,6 +344,8 @@ export function createCleanUI(options: CleanUIOptions = {}) {
       app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))));
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
+      app.component("CuiToolbar", CuiToolbar);
+      app.component("CuiToolbarSeparator", CuiToolbarSeparator);
       app.component("CuiGrid", CuiGrid);
       app.component("CuiGridItem", CuiGridItem);
       app.component("CuiFlex", CuiFlex);

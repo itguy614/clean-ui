@@ -94,6 +94,13 @@ const segmented = useRovingFocus({
         arrows, and an arrow never moves focus out of the group. Focusing an item any other way —
         clicking it — moves the tab stop to it.
       </p>
+      <p>
+        For a toolbar, reach for <router-link to="/components/toolbar">CuiToolbar</router-link>, which
+        is built on this and takes its controls as slot content. When your items are slot content
+        too, so you can't bind their <code class="cui-code">tabindex</code>, pass
+        <code class="cui-code">manageTabindex: true</code>: the composable writes the stop onto the
+        items itself and watches the container for items coming and going.
+      </p>
     </div>
 
     <!-- Toolbar -->

@@ -61,6 +61,7 @@ const sections = [
   { id: "button", label: "Button", path: "/components/button", group: "Actions" },
   { id: "button-group", label: "Button Group", path: "/components/button-group", group: "Actions" },
   { id: "copy-button", label: "Copy Button", path: "/components/copy-button", group: "Actions" },
+  { id: "toolbar", label: "Toolbar", path: "/components/toolbar", group: "Actions" },
 
   // Feedback (alphabetical)
   { id: "alert", label: "Alert", path: "/components/alert", group: "Feedback" },
