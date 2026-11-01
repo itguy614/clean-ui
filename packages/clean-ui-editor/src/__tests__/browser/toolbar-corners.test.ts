@@ -41,8 +41,9 @@ describe("the editor toolbar carries the control's corners to its scroller (real
 
     // The precondition #125 needed: without overflow there is no fade to notch anything.
     expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
-    expect(getComputedStyle(control).borderTopRightRadius).toBe("10px");
-    expect(getComputedStyle(control).borderTopWidth).toBe("1px");
+    const c = getComputedStyle(control);
+    expect(c.borderTopRightRadius).toBe("10px");
+    expect(c.borderTopWidth).toBe("1px");
     // Only the top pair: the toolbar sits at the top of the control, so rounding the bottom
     // corners would notch the fade where it meets the text area.
     expect(corners(scroller)).toEqual(["9px", "9px", "0px", "0px"]);

@@ -39,8 +39,7 @@ export async function settleScroll(el: HTMLElement): Promise<void> {
  * Returns a teardown for `afterAll`.
  */
 export function installTokens(css: string): () => void {
-  const style = document.createElement("style");
-  style.textContent = `${css}
+  return injectStyle(`${css}
     :root {
       --color-surface-50:#fafafa; --color-surface-100:#f4f4f5; --color-surface-200:#e4e4e7;
       --color-surface-300:#d4d4d8; --color-surface-400:#a1a1aa; --color-surface-500:#71717a;
@@ -58,7 +57,13 @@ export function installTokens(css: string): () => void {
       --color-info-700:#1d4ed8; --color-info-900:#1e3a8a;
       --color-secondary-100:#f1f5f9; --color-secondary-300:#cbd5e1; --color-secondary-500:#64748b;
       --color-secondary-700:#334155; --color-secondary-900:#0f172a;
-    }`;
+    }`);
+}
+
+/** Append a `<style>` with `css` to the document. Returns a teardown for `afterAll`. */
+export function injectStyle(css: string): () => void {
+  const style = document.createElement("style");
+  style.textContent = css;
   document.head.append(style);
   return () => style.remove();
 }

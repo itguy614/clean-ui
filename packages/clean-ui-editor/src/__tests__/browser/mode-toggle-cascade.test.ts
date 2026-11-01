@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import { CuiButton } from "@itguy614/clean-ui";
 import CuiMarkdownEditor from "../../components/CuiMarkdownEditor.vue";
-import { mountHosts } from "../../../../../config/test/browser-helpers";
+import { injectStyle, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
  * #186 — the floating mode toggle is a ghost CuiButton that the editor's stylesheet repaints
@@ -24,13 +24,11 @@ describe("the mode toggle keeps the editor's own paint over CuiButton's (real br
 
   // CuiButton transitions its background, so a reading right after a hover would be the
   // start of the interpolation rather than where it settles.
-  let still: HTMLStyleElement;
+  let teardown: () => void;
   beforeAll(() => {
-    still = document.createElement("style");
-    still.textContent = ".cui-button { transition: none !important; }";
-    document.head.append(still);
+    teardown = injectStyle(".cui-button { transition: none !important; }");
   });
-  afterAll(() => still.remove());
+  afterAll(() => teardown());
 
   const fixtures = mountHosts();
   afterEach(() => fixtures.cleanup());
@@ -42,24 +40,24 @@ describe("the mode toggle keeps the editor's own paint over CuiButton's (real br
     return wrapper.get('[data-testid="cui-markdown-editor-mode-toggle"]').element as HTMLElement;
   }
 
-  const style = (el: Element) => getComputedStyle(el);
-
   it("paints the editor's background and border at rest", () => {
-    const toggle = modeToggle();
-    expect(style(toggle).backgroundColor).toBe(SURFACE);
-    expect(style(toggle).borderTopColor).toBe(BORDER);
-    expect(style(toggle).borderTopWidth).toBe("1px");
-    expect(style(toggle).borderTopStyle).toBe("solid");
-    expect(style(toggle).position).toBe("absolute");
+    const s = getComputedStyle(modeToggle());
+    expect(s.backgroundColor).toBe(SURFACE);
+    expect(s.borderTopColor).toBe(BORDER);
+    expect(s.borderTopWidth).toBe("1px");
+    expect(s.borderTopStyle).toBe("solid");
+    expect(s.position).toBe("absolute");
   });
 
   it("keeps them on hover, where CuiButton's ghost variant would tint it", async () => {
     const toggle = modeToggle();
     await userEvent.hover(toggle);
 
+    // A live declaration: it reads the hovered state.
+    const s = getComputedStyle(toggle);
     expect(toggle.matches(":hover")).toBe(true);
-    expect(style(toggle).backgroundColor).toBe(SURFACE);
-    expect(style(toggle).borderTopColor).toBe(BORDER);
+    expect(s.backgroundColor).toBe(SURFACE);
+    expect(s.borderTopColor).toBe(BORDER);
   });
 
   it("differs from what CuiButton alone paints, so the assertions above can fail", async () => {
@@ -70,9 +68,11 @@ describe("the mode toggle keeps the editor's own paint over CuiButton's (real br
     const button = fixtures.track(mount(CuiButton, { props: { variant: "ghost" }, slots: { default: () => "Go" }, attachTo: host }))
       .element as HTMLElement;
 
-    expect(style(button).backgroundColor).not.toBe(SURFACE);
-    expect(style(button).borderTopColor).not.toBe(BORDER);
+    // Live, so the last line reads the hovered state.
+    const s = getComputedStyle(button);
+    expect(s.backgroundColor).not.toBe(SURFACE);
+    expect(s.borderTopColor).not.toBe(BORDER);
     await userEvent.hover(button);
-    expect(style(button).backgroundColor).not.toBe(SURFACE);
+    expect(s.backgroundColor).not.toBe(SURFACE);
   });
 });
