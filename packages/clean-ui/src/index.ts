@@ -324,6 +324,7 @@ export type { ActiveBreakpoint } from "./composables/useBreakpoint";
 export { useOverlay, type UseOverlayOptions } from "./composables/useOverlay";
 export { useClickOutside } from "./composables/useClickOutside";
 export { useRovingFocus, type UseRovingFocusOptions, type RovingOrientation } from "./composables/useRovingFocus";
+export { useScrollSpy, type UseScrollSpyOptions, type UseScrollSpyReturn, type ScrollSpyTarget } from "./composables/useScrollSpy";
 export { useColorScheme } from "./composables/useColorScheme";
 // Public since 1.3.2: the editor is its second consumer (#221).
 export { useFieldDescribedBy, type DescribableProps } from "./composables/useFieldDescribedBy";

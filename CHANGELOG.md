@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`useScrollSpy()`** (#192). Tracks which section of a page the reader is in, for an
+  on-page nav: `useScrollSpy(targets, { rootMargin, offset, root })` returns
+  `{ activeId, setActive, refresh }`. An IntersectionObserver, never a scroll listener; of
+  the sections in the band the topmost is current, and between two headings the last one
+  scrolled past stays current. `offset` keeps a sticky header out of the band. `setActive`
+  marks a clicked entry at once and holds it while the smooth scroll passes the sections in
+  between. `targets` (ids or elements) can be a ref or getter. SSR-safe. The docs site's
+  "On this page" rail is rebuilt on it, and is now labelled by its title, marks the current
+  entry with `aria-current="location"` and a heavier bar and weight rather than colour alone,
+  and lets a modified click open an entry in a new tab.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added
