@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { resolve, relative } from "node:path";
-import { expectExemptions, splitSelectorList, stripComments, walk, type Exemption } from "./css-helpers";
+import { expectExemptions, sourceFiles, splitSelectorList, stripComments, where, type Exemption } from "./css-helpers";
 
 /**
  * #267 — the mechanical half of CLAUDE.md's "Motion" section. Without a written rule and a
@@ -11,7 +10,6 @@ import { expectExemptions, splitSelectorList, stripComments, walk, type Exemptio
  * over both packages. The scans read kebab-case declarations, in stylesheets and in inline
  * style strings; a camelCase binding (`transitionDuration: …`) isn't seen.
  */
-const PACKAGES = resolve(__dirname, "../../../..");
 
 /**
  * Comments and `prefers-reduced-motion: reduce` blocks out: the reduced rule clamps to a
@@ -40,10 +38,8 @@ function withoutBlocks(src: string, opening: RegExp): string {
   }
 }
 
-const sources = ["clean-ui", "clean-ui-editor"]
-  .flatMap((pkg) => walk(resolve(PACKAGES, pkg, "src")))
-  .filter((f) => /\.(vue|css|ts)$/.test(f))
-  .map((f) => ({ name: relative(PACKAGES, f), motion: motionSource(readFileSync(f, "utf8"), f.endsWith(".css")) }));
+const sources = sourceFiles(/\.(vue|css|ts)$/)
+  .map((f) => ({ name: where(f), motion: motionSource(readFileSync(f, "utf8"), f.endsWith(".css")) }));
 
 /**
  * `transition` / `animation` declarations, `name: value`, whole: a quoted inline style

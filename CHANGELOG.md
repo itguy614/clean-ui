@@ -13,8 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the `createCleanUI()` options, any `CuiConfigProvider`, the message catalog) and hands it
   to another Vue app with `provideTo(app)`, for a dialog mounted outside your tree. Live: a
   later change to the provider reaches that app too.
+- **The markdown editor has public themeable tokens** (#228): `--cui-markdown-editor-border`,
+  `-focus-border`, `-focus-ring` and `-radius`, set on the editor or on any container above
+  it. The rules reading them are zero-specificity, so a plain class rule also wins without
+  `!important`. The error state keeps `--cui-error` either way. The toolbar reads the same
+  radius token, so its corners always match the control's.
+
+### Changed
+
+- **CuiModal and CuiSlideover forward attributes to their dialog panel** (#228). Their root
+  is a `<Teleport>`, so a `class`, `style`, `data-testid` or any other attribute passed to
+  them was dropped with a Vue warning. They now land on `.cui-modal` /
+  `.cui-slideover__panel`, the element actually rendered, and override the panel's own
+  `role`, `aria-labelledby` or `tabindex` (a `role="alertdialog"` works now). Undeclared
+  listeners are forwarded too: a stray `@click` left on a `<CuiModal>`, which used to do
+  nothing, now fires for clicks inside the panel. CuiConfirmDialog's panel and the editor's
+  link/image dialog now carry `cui-confirm-dialog` / `cui-url-dialog`.
 
 ### Fixed
+
+- **The editor control's radius falls back through `--cui-radius-md`** (#228), like its
+  toolbar. With only `--cui-radius-md` set, the two were rounded differently and the
+  corner where they meet showed a notch.
 
 - **The markdown editor's link and image dialogs follow the host's clean-ui config** (#326).
   They mount as their own Vue app, so they ignored `headingLevels`, `roleIcons` and

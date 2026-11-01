@@ -36,7 +36,7 @@ export const modalFooterProps: PropRow[] = [
 const meta: ComponentMeta = {
   name: "Modal",
   description:
-    "Dialog overlay with a focus trap, background scroll lock and a configurable backdrop. Assemble it from the header/body/footer sub-components, or pass a title and let it build them for you.",
+    "Dialog overlay with a focus trap, background scroll lock and a configurable backdrop. Assemble it from the header/body/footer sub-components, or pass a title and let it build them for you. Attributes you pass — class, style, data-testid and the rest — land on the dialog panel (.cui-modal), the element actually rendered, rather than being dropped at its teleported root.",
   interactive: true,
 
   parts: [

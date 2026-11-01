@@ -1,14 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) return entry === "__tests__" ? [] : walk(path);
-    return [path];
-  });
-}
+import { readFileSync } from "node:fs";
+import { sourceFiles, where } from "./css-helpers";
 
 /**
  * #210 — a component reaching for a raw surface step (`var(--color-surface-100)`) instead
@@ -26,13 +18,8 @@ const EXEMPT: Record<string, { count: number; why: string }> = {
   "clean-ui/src/components/CuiTooltip.vue": { count: 3, why: "an inverted surface (dark in light mode) that no neutral slot describes" },
 };
 
-const PACKAGES = resolve(__dirname, "../../../..");
 // Every workspace package, so a new satellite is covered without anyone listing it.
-const files = readdirSync(PACKAGES)
-  .filter((pkg) => statSync(join(PACKAGES, pkg, "src"), { throwIfNoEntry: false })?.isDirectory())
-  .flatMap((pkg) => walk(join(PACKAGES, pkg, "src")))
-  .filter((f) => /\.(vue|css|ts)$/.test(f) && !/\.test(-d)?\.ts$/.test(f));
-const where = (f: string) => relative(PACKAGES, f).split(sep).join("/");
+const files = sourceFiles(/\.(vue|css|ts)$/);
 const rawSurfaceCount = (f: string) => (readFileSync(f, "utf-8").match(/var\(--color-surface-\d+/g) ?? []).length;
 
 describe("components use the neutral slots, not the raw surface scale (#210)", () => {
