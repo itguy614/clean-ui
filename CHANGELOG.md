@@ -20,7 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-py`, `-bg`, `-border`, `-radius` and `--cui-toolbar-separator-bg`.
 - **`useRovingFocus({ manageTabindex: true })`** writes the tab stop onto the items itself
   and follows them coming and going, for items the host doesn't render (slot content).
-  CuiToolbar is built on it.
+  CuiToolbar is built on it. `itemSelector` also takes a ref or getter.
+
+### Fixed
+
+- **`useRovingFocus` skips a hidden item** (`hidden`, or `v-show`'s `display: none`), as it
+  already skipped a disabled one (#190). The arrow keys used to stall on it, and it could
+  hold the group's only tab stop while unfocusable.
 
 ### Changed
 

@@ -139,6 +139,13 @@ const usageCode = `<CuiToolbar label="Formatting">
         tab order still reads naturally.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
+        A closed select opens on <kbd class="cui-kbd">↑</kbd>/<kbd class="cui-kbd">↓</kbd>,
+        <kbd class="cui-kbd">Home</kbd> and <kbd class="cui-kbd">End</kbd>, and a dropdown trigger
+        on <kbd class="cui-kbd">↑</kbd>/<kbd class="cui-kbd">↓</kbd>, and those keys stay theirs.
+        In a horizontal toolbar that costs nothing, since ←/→ still move past them. In a vertical
+        toolbar the arrows would stop at them, so keep selects and dropdowns out of a vertical one.
+      </p>
+      <p class="text-sm text-surface-700 dark:text-surface-300">
         Icon-only controls need their own <code>aria-label</code>, and a toggle should say whether
         it is on with <code>aria-pressed</code>.
       </p>

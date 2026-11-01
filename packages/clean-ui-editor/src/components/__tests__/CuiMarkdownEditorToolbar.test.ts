@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
 import CuiMarkdownEditor from "../CuiMarkdownEditor.vue";
 import { DEFAULT_PLUGINS } from "../../plugins/default-plugins";
-import { press } from "../../../../clean-ui/src/composables/__tests__/roving-focus-contract";
+import { press } from "../../../../../config/test/keyboard";
 
 function exposed(wrapper: VueWrapper) {
   return wrapper.vm as unknown as {

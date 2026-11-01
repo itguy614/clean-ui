@@ -78,9 +78,9 @@ const activeStates = computed(() => {
      two can't be rounded differently (#228). */
   border-top-left-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
   border-top-right-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
-  /* The spacing it has always had, through CuiToolbar's tokens. */
-  --cui-toolbar-px: calc(0.375rem * var(--cui-density-scale, 1));
-  --cui-toolbar-py: calc(0.375rem * var(--cui-density-scale, 1));
+  /* The spacing it has always had, as CuiToolbar's private defaults: a public --cui-toolbar-* token on any ancestor still wins. */
+  --_toolbar-px: calc(0.375rem * var(--cui-density-scale, 1));
+  --_toolbar-py: calc(0.375rem * var(--cui-density-scale, 1));
 }
 
 .cui-markdown-editor-toolbar :deep(.cui-scroll-area__scroller) {

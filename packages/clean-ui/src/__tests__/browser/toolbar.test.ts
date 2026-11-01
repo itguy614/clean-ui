@@ -115,4 +115,25 @@ describe("CuiToolbar overflow and focus ring (real browser)", () => {
     expect(buttons.at(-1)!.getBoundingClientRect().top).toBeGreaterThan(buttons[0].getBoundingClientRect().top);
     expect(wrapper.element.scrollWidth).toBeLessThanOrEqual(wrapper.element.clientWidth);
   });
+
+  // Found in review (#190): CuiDataGridToolbar and the editor set their spacing as the public
+  // token on the toolbar itself, which beat the same token set by a consumer on an ancestor.
+  // They set the private default now, which the public token overrides from anywhere.
+  it("lets a public token on an ancestor beat a built-on component's private default", async () => {
+    const el = host({ width: "600px" });
+    el.style.setProperty("--cui-toolbar-gap", "9px");
+    const wrapper = track(
+      mount(CuiToolbar, {
+        props: { label: "Formatting" },
+        attrs: { style: "--_toolbar-gap: 2px" },
+        slots: { default: () => [h(CuiButton, null, () => "A"), h(CuiButton, null, () => "B")] },
+        attachTo: el,
+      }),
+    );
+    await frames(1);
+    expect(getComputedStyle(wrapper.element).columnGap).toBe("9px");
+    el.style.removeProperty("--cui-toolbar-gap");
+    await frames(1);
+    expect(getComputedStyle(wrapper.element).columnGap).toBe("2px");
+  });
 });

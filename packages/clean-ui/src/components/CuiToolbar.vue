@@ -46,13 +46,15 @@ const props = withDefaults(defineProps<CuiToolbarProps>(), {
   hidden: false,
 });
 
+const OPEN_POPUP = "[aria-expanded='true']:is([role='combobox'], [aria-haspopup]:not([aria-haspopup='false']))";
+
 const root = useTemplateRef<HTMLElement>("rootRef");
 
 useToolbarProvider({ orientation: toRef(props, "orientation") });
 
 const roving = useRovingFocus({
   container: root,
-  itemSelector: props.itemSelector,
+  itemSelector: () => props.itemSelector,
   orientation: () => props.orientation,
   wrap: () => props.loop,
   // The controls are slot content the toolbar never renders, so it can't bind their
@@ -68,13 +70,15 @@ onMounted(() => {
 
 function onKeydown(e: KeyboardEvent) {
   // An open popup's trigger — an open CuiSelect — owns its arrow keys, even one that doesn't
-  // mark them handled. Anything that does is skipped by the composable, as is a key on a
-  // control that isn't an item (a text input).
-  if ((e.target as Element).matches?.("[aria-expanded='true']")) return;
+  // mark them handled. Only a popup: a disclosure button whose panel is open inline keeps
+  // nothing. Anything that marks a key handled is skipped by the composable, as is a key on
+  // a control that isn't an item (a text input).
+  if ((e.target as Element).matches?.(OPEN_POPUP)) return;
   roving.onKeydown(e);
 }
 
-const name = computed(() => (props.ariaLabelledby ? undefined : (props.label ?? props.ariaLabel)));
+// `||`, not `??`: an empty label (a catalogue still loading) is no name.
+const name = computed(() => (props.ariaLabelledby ? undefined : props.label || props.ariaLabel || undefined));
 
 /** Focus the control holding the tab stop. */
 function focus(opts?: FocusOptions) {
@@ -100,6 +104,7 @@ defineExpose({ el: root, focus, blur });
     :aria-labelledby="ariaLabelledby"
     @keydown="onKeydown"
     @focusin="roving.onFocusin"
+    @click="roving.onFocusin"
   >
     <!-- Not a region: the controls are the keyboard path, one roving tab stop, and a
          focusable scroller would be a second. -->
@@ -143,18 +148,22 @@ defineExpose({ el: root, focus, blur });
   border-radius: var(--cui-toolbar-radius, 0);
 }
 
+/* Spacing reads the public token, then a private default: a component built on the toolbar
+   (CuiDataGridToolbar, the editor's) sets `--_toolbar-*` on it, so a public token set on
+   any ancestor still wins over that default. */
+
 /* The flex box: the toolbar itself, or its scroller in scroll mode. */
 :where(.cui-toolbar--wrap, .cui-toolbar--scroll .cui-toolbar__scroll > .cui-scroll-area__scroller) {
-  gap: var(--cui-toolbar-gap, calc(0.25rem * var(--cui-density-scale, 1)));
+  gap: var(--cui-toolbar-gap, var(--_toolbar-gap, calc(0.25rem * var(--cui-density-scale, 1))));
 }
 
 :where(.cui-toolbar--wrap) {
-  padding: var(--cui-toolbar-py, 0) var(--cui-toolbar-px, 0);
+  padding: var(--cui-toolbar-py, var(--_toolbar-py, 0)) var(--cui-toolbar-px, var(--_toolbar-px, 0));
 }
 
 /* A scroller clips what overflows it, focus rings included: its padding defaults to the
    ring's 2px width plus its 2px offset, so a focused control's ring draws whole. */
 :where(.cui-toolbar--scroll .cui-toolbar__scroll > .cui-scroll-area__scroller) {
-  padding: var(--cui-toolbar-py, 0.25rem) var(--cui-toolbar-px, 0.25rem);
+  padding: var(--cui-toolbar-py, var(--_toolbar-py, 0.25rem)) var(--cui-toolbar-px, var(--_toolbar-px, 0.25rem));
 }
 </style>

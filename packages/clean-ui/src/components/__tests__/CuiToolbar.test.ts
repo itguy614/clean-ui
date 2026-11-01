@@ -255,6 +255,110 @@ describe("CuiToolbar", () => {
     expect(tools.map((b) => b.tabIndex)).toEqual([0, -1]);
   });
 
+  it("follows a change to the item selector after mount", async () => {
+    const selector = ref(".a");
+    wrapper = mount(
+      defineComponent(() => () =>
+        h(CuiToolbar, { label: "Formatting", itemSelector: selector.value }, () => [
+          h("button", { class: "a" }, "A"),
+          h("button", { class: "b" }, "B1"),
+          h("button", { class: "b" }, "B2"),
+        ]),
+      ),
+      { attachTo: document.body },
+    );
+    await nextTick();
+    selector.value = ".b";
+    await nextTick();
+    const bs = [...wrapper.element.querySelectorAll<HTMLElement>(".b")];
+    expect(bs.map((b) => b.getAttribute("tabindex"))).toEqual(["0", "-1"]);
+    bs[0].focus();
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(bs[1]);
+  });
+
+  // Found in review (#190): with the first control disabled, the fallback that put the stop
+  // on the second was never recomputed, so the stop stayed there whatever was focused.
+  it("moves the stop with focus when it started on a fallback past a disabled control", async () => {
+    wrapper = mount(CuiToolbar, {
+      props: { label: "Formatting" },
+      slots: { default: () => LABELS.map((l, i) => h(CuiButton, { key: l, disabled: i === 0 }, () => l)) },
+      attachTo: document.body,
+    });
+    await nextTick();
+    buttons()[1].focus();
+    await press("End");
+    expect(document.activeElement).toBe(buttons()[3]);
+    expect(buttons().map((b) => b.getAttribute("tabindex"))).toEqual(["-1", "-1", "-1", "0"]);
+  });
+
+  it("skips a hidden control, and never gives it the tab stop", async () => {
+    const hidden = ref(true);
+    wrapper = mount(CuiToolbar, {
+      props: { label: "Formatting" },
+      slots: { default: () => LABELS.map((l, i) => h(CuiButton, { key: l, hidden: i !== 3 && i % 2 === 0 && hidden.value }, () => l)) },
+      attachTo: document.body,
+    });
+    await nextTick();
+    // Bold (0) and Underline (2) are hidden.
+    expect(buttons().map((b) => b.getAttribute("tabindex"))).toEqual(["-1", "0", "-1", "-1"]);
+    buttons()[1].focus();
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(buttons()[3]);
+    await press("Home");
+    expect(document.activeElement).toBe(buttons()[1]);
+  });
+
+  it("moves the stop to a clicked control that doesn't take focus (Safari)", async () => {
+    wrapper = mountButtons();
+    await nextTick();
+    // A click with no focus, as Safari delivers it for a <button>.
+    buttons()[2].click();
+    await nextTick();
+    expect(buttons().map((b) => b.getAttribute("tabindex"))).toEqual(["-1", "-1", "0", "-1"]);
+  });
+
+  it("keeps the arrow keys on an expanded disclosure button, which isn't a popup", async () => {
+    wrapper = mount(CuiToolbar, {
+      props: { label: "Formatting" },
+      slots: {
+        default: () => [h(CuiButton, { "aria-expanded": "true" }, () => "Filters"), h(CuiButton, null, () => "Columns")],
+      },
+      attachTo: document.body,
+    });
+    await nextTick();
+    buttons()[0].focus();
+    await press("ArrowRight");
+    expect(document.activeElement).toBe(buttons()[1]);
+  });
+
+  it("keeps the stop on its control when one is added before it", async () => {
+    const extra = ref(false);
+    wrapper = mount(CuiToolbar, {
+      props: { label: "Formatting" },
+      slots: {
+        default: () => [
+          ...(extra.value ? [h(CuiButton, { key: "new" }, () => "New")] : []),
+          ...LABELS.map((l) => h(CuiButton, { key: l }, () => l)),
+        ],
+      },
+      attachTo: document.body,
+    });
+    await nextTick();
+    const underline = buttons()[2];
+    underline.focus();
+    extra.value = true;
+    await nextTick();
+    expect(buttons()[3]).toBe(underline);
+    expect(underline.getAttribute("tabindex")).toBe("0");
+    expect(buttons().filter((b) => b.getAttribute("tabindex") === "0")).toHaveLength(1);
+  });
+
+  it("is named by aria-label when label is empty", () => {
+    wrapper = mount(CuiToolbar, { props: { label: "" }, attrs: { "aria-label": "Formatting" } });
+    expect(wrapper.element.getAttribute("aria-label")).toBe("Formatting");
+  });
+
   it("wraps in a CuiScrollArea, not a focusable region, when overflow is scroll", () => {
     wrapper = mount(CuiToolbar, {
       props: { label: "Formatting", overflow: "scroll" },

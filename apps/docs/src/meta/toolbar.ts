@@ -46,7 +46,7 @@ const meta: ComponentMeta = {
   slots: [
     {
       name: "default",
-      description: "The controls: CuiButton, CuiButtonGroup, CuiSelect, CuiDropdown and CuiPopover triggers, and CuiToolbarSeparator between sets",
+      description: "The controls: CuiButton, CuiButtonGroup, CuiSelect, CuiDropdown and CuiPopover triggers, and CuiToolbarSeparator between sets. A select or dropdown keeps the vertical arrows to open itself, so it belongs in a horizontal toolbar",
     },
   ],
 

@@ -79,7 +79,7 @@ const activeFilterCount = computed(() => grid.filters.value.length);
 
 <style>
 .cui-data-grid-toolbar {
-  --cui-toolbar-gap: calc(0.75rem * var(--cui-density-scale, 1));
+  --_toolbar-gap: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
 .cui-data-grid-toolbar__start {
