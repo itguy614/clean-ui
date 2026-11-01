@@ -81,7 +81,7 @@ function submit(e?: KeyboardEvent) {
 </script>
 
 <template>
-  <CuiModal v-model:visible="visible" size="sm" @close="props.onCancel">
+  <CuiModal class="cui-url-dialog" v-model:visible="visible" size="sm" @close="props.onCancel">
     <CuiModalHeader :title="messages.title" @close="props.onCancel" />
     <CuiModalBody>
       <CuiStack spacing="3">

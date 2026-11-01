@@ -148,17 +148,29 @@ describe("every component root is inside the scope", () => {
   };
 
   /**
-   * A root that is another Cui component renders that component's root, which this same
-   * test checks in its own file (or exempts, with a reason). So it is in scope already,
-   * and needs no class of its own — passing one to a component with a <Teleport> root, as
-   * CuiConfirmDialog's and the editor's dialogs' <CuiModal> is, only makes Vue warn (#228).
-   * Not a renderless one, though: a <slot /> root renders no element, so whatever it wraps
-   * would be out of scope.
+   * A root that is another Cui component passes its static cui-* class to that component's
+   * root by fallthrough — when there is a root element to take it. A component rooted at a
+   * <Teleport>, <Transition> or <slot /> has none: Vue drops the class with a warning.
+   * Those count only when they forward their attributes, class included, to the element
+   * they render (`inheritAttrs: false`, `v-bind="$attrs"` on a classed element), and are
+   * listed here — CuiConfirmDialog and the editor's UrlDialog are rooted at CuiModal (#228).
    */
-  function composesRenderedComponent(root: string): boolean {
-    const name = /^<(Cui[A-Za-z]+)/.exec(root)?.[1];
-    const file = name && COMPONENTS.find((f) => f.endsWith(`/${name}.vue`));
-    return !!file && !templateRoots(readFileSync(file, "utf8")).every((r) => /^<slot\b/.test(r));
+  const FORWARDING = ["CuiModal", "CuiSlideover"];
+
+  /** A root tag carrying a static `cui-*` class. */
+  const hasStaticCuiClass = (root: string) => /\sclass="[^"]*\bcui-/.test(root);
+  const NOT_AN_ELEMENT = /^<(slot|Teleport|Transition)\b/;
+
+  function rootInScope(root: string): boolean {
+    const component = /^<(Cui[A-Za-z]+)\b/.exec(root)?.[1];
+    if (!component) return hasStaticCuiClass(root) || /:class="[^"]*cui-/.test(root);
+    if (!hasStaticCuiClass(root)) return false;
+    if (FORWARDING.includes(component)) return true;
+    const file = COMPONENTS.find((f) => f.endsWith(`/${component}.vue`));
+    if (!file) return false;
+    const source = readFileSync(file, "utf8");
+    // Takes fallthrough: an element (or classed component) root, attributes not opted out.
+    return !/inheritAttrs:\s*false/.test(source) && !templateRoots(source).some((r) => NOT_AN_ELEMENT.test(r));
   }
 
   it("scans every package's components, the editor's as well as clean-ui's", () => {
@@ -174,14 +186,24 @@ describe("every component root is inside the scope", () => {
       if (name in EXEMPT) continue;
 
       for (const root of templateRoots(readFileSync(file, "utf8"))) {
-        if (composesRenderedComponent(root)) continue;
-        if (!/class="[^"]*\bcui-/.test(root) && !/:class="[^"]*cui-/.test(root)) {
+        if (!rootInScope(root)) {
           offenders.push(`${where(file)}: ${root.split("\n")[0].trim()}`);
         }
       }
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it("lists only wrappers that really forward their attributes to a classed element", () => {
+    for (const name of FORWARDING) {
+      const file = COMPONENTS.find((f) => f.endsWith(`/${name}.vue`));
+      expect(file, `${name} is listed as forwarding but no longer exists`).toBeDefined();
+      const source = readFileSync(file!, "utf8");
+      expect(source, `${name} must opt out of fallthrough`).toMatch(/defineOptions\(\{[^}]*inheritAttrs:\s*false/);
+      const forwarded = [...source.matchAll(/<[a-z][\w-]*\b(?=[^>]*v-bind="\$attrs")/g)].map((m) => readTag(source, m.index!));
+      expect(forwarded.filter(hasStaticCuiClass), `${name} must bind $attrs on a cui-* classed element`).toHaveLength(1);
+    }
   });
 
   it("keeps the exemption list honest", () => {

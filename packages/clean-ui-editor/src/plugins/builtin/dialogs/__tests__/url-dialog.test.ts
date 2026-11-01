@@ -84,6 +84,16 @@ describe.each([
     inserted: "![A picture](https://example.com/pic.png)",
   },
 ])("the $command dialog", ({ command, plugin, urlId, textId, title, labels, url, text, inserted }) => {
+  it("gives the rendered panel the dialog's own cui-* class (#228)", async () => {
+    // Its root is CuiModal, which forwards the class to the panel it teleports — so the
+    // dialog sits inside clean-ui's scoped base under its own name.
+    await openDialog(command, plugin);
+    await flush();
+    const panel = document.body.querySelector('[role="dialog"]');
+    expect(panel?.classList.contains("cui-modal")).toBe(true);
+    expect(panel?.classList.contains("cui-url-dialog")).toBe(true);
+  });
+
   it("opens without editing, and submitting inserts the markdown as one undo step", async () => {
     const { view, handled } = await openDialog(command, plugin);
     expect(handled).toBe(true);

@@ -43,6 +43,11 @@ export interface CuiSlideoverProps extends HideableProps, TitleAsProps {
   backdropGradient?: string;
 }
 
+// The root is a <Teleport>, which can't take fallthrough attributes: Vue would drop a class
+// or a data-testid with a warning. They go on the dialog panel instead, the element that is
+// actually rendered, so a wrapper can give it its own cui-* class (#228).
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   visible: false,
   side: "right",
@@ -184,6 +189,7 @@ const titleId = useCuiId("slideover-title");
 
       <!-- Panel -->
       <div
+        v-bind="$attrs"
         ref="panelEl"
         data-cui-exit
         class="cui-slideover__panel"
