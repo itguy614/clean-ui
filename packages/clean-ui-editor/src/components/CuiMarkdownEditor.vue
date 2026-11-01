@@ -9,13 +9,20 @@ registerEditorIcons();
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
-import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, placeholder as placeholderExtension, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Compartment, Prec, Annotation, type Extension, type Transaction } from "@codemirror/state";
-import { syntaxHighlighting } from "@codemirror/language";
+import { syntaxHighlighting, syntaxTree } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
-import { CuiButton, CuiIcon, useColorScheme, useFieldDescribedBy, type AriaLabelableProps } from "@itguy614/clean-ui";
+import {
+  CuiButton,
+  CuiIcon,
+  useCleanUIContext,
+  useColorScheme,
+  useFieldDescribedBy,
+  type AriaLabelableProps,
+} from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { exitListWithBlankLine } from "../language/exit-list-blank-line";
@@ -26,7 +33,7 @@ import { codeBackgroundPlugin } from "../theme/code-decorations";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
-import { createCommandContext } from "../plugins/command-context";
+import { createCommandContext, disposeCommandContext, peekedUnsettled } from "../plugins/command-context";
 import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
 import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
@@ -275,17 +282,30 @@ const messages = useMarkdownEditorMessages();
 // context built once and reused (in the keymap below, and via `runCommand`)
 // always operates on the live view — including inside a `collect()`
 // continuation that runs after an awaited gap.
+//
+// The clean-ui context goes along for the same reason as the messages: a
+// dialog a command opens is a detached app that can't inject the host's
+// defaults or catalog itself (#326).
 const commandContext = createCommandContext(
   () => view,
   (collecting) => (isCollecting.value = collecting),
   () => messages.value,
+  useCleanUIContext(),
 );
 
-// Bumped on every selection/document change so the toolbar's pressed state
+// Bumped on every selection/document/syntax-tree change so the toolbar's pressed state
 // (which reads live CodeMirror state through `isCommandActive`, not a Vue
 // ref) has a reactive dependency to re-render against — see updateListener
 // in createView() and CuiMarkdownEditorToolbar's `selectionVersion` prop.
 const selectionVersion = ref(0);
+
+// A background parse can extend the tree under an unmoved cursor, which
+// changes what `isActive` sees (#256). `isActive` answers from what is
+// already parsed and reads as inactive inside a block still being parsed;
+// only then can a later chunk change an answer, so only then re-render.
+function parseAdvanced(update: ViewUpdate): boolean {
+  return syntaxTree(update.startState) !== syntaxTree(update.state) && peekedUnsettled(commandContext);
+}
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
   for (const warning of warnings) {
@@ -466,7 +486,7 @@ function createView(): EditorView {
             if (!external || doc !== lastKnownValue) emitModelValue.call(doc);
             docLength.value = update.state.doc.length;
           }
-          if (update.docChanged || update.selectionSet) selectionVersion.value++;
+          if (update.docChanged || update.selectionSet || parseAdvanced(update)) selectionVersion.value++;
         }),
         EditorState.transactionFilter.of(maxLengthFilter),
         // Flush on blur as well as on unmount. Clicking a host button blurs the
@@ -503,6 +523,9 @@ onBeforeUnmount(() => {
   // Vue drops emits from an unmounted instance, so an edit still queued in the
   // throttle has to go now or the host never hears the last keystrokes.
   emitModelValue.flush();
+  // A dialog a command opened is its own app and would outlive the editor, then
+  // write into the destroyed view on submit (#409).
+  disposeCommandContext(commandContext);
   view?.destroy();
   view = null;
 });

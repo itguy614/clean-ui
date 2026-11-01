@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
-import { installTokens, mountHosts } from "./helpers";
+import { installTokens, mountHosts } from "../../../../../config/test/browser-helpers";
 import CuiToggle from "../../components/CuiToggle.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiButtonGroup from "../../components/CuiButtonGroup.vue";

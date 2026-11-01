@@ -15,7 +15,7 @@ const SKIP_TAGS = new Set(["script", "style", "noscript", "template", "iframe", 
 // needlessly noisy without preventing anything real.
 const MARKDOWN_SPECIAL_CHARS = /([\\`*_[\]()~])/g;
 
-function escapeMarkdown(text: string): string {
+export function escapeMarkdown(text: string): string {
   return text.replace(MARKDOWN_SPECIAL_CHARS, "\\$1");
 }
 

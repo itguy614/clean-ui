@@ -1,11 +1,16 @@
 import { definePlugin } from "../define-plugin";
+import { lookupConstruct, UNKNOWN_CONSTRUCT } from "../command-context";
 
 export const codeFencePlugin = definePlugin({
   id: "cui-code-fence",
   commands: {
     codeFence: {
       run(context) {
-        const range = context.findConstructRange("FencedCode");
+        const range = lookupConstruct(context, "FencedCode");
+        // Not parsed far enough to tell: a fence inserted inside an open
+        // block would close it early and flip everything below it. Do
+        // nothing, but report it handled so no other binding runs instead.
+        if (range === UNKNOWN_CONSTRUCT) return true;
         if (range) {
           const block = context.doc.slice(range.from, range.to);
           const firstNewline = block.indexOf("\n");

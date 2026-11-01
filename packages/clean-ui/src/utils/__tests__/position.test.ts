@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
+import { sourceFiles, where } from "../../styles/__tests__/css-helpers";
 import { computeDropdownPosition, transformOriginFor, OVERLAY_Z_INDEX } from "../position";
 
 /** An anchor at the given viewport rect; the viewport is 1000×800. */
@@ -111,23 +110,15 @@ describe("computeDropdownPosition's transform-origin", () => {
 // seven places) and doesn't move when a consumer re-layers the library.
 describe("overlay z-index", () => {
   it("is never a bare 99xx outside utils/position.ts — inline or in a stylesheet", () => {
-    const src = join(dirname(fileURLToPath(import.meta.url)), "../..");
-    const offenders: string[] = [];
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const path = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          if (entry.name !== "__tests__") walk(path);
-        } else if (/\.(vue|ts|css)$/.test(entry.name) && !path.endsWith(join("utils", "position.ts"))) {
-          // A bare literal, not the token's own fallback inside var(--cui-z-overlay, 9990).
-          if (/z-?index\s*:\s*["'`]?99\d\d/i.test(readFileSync(path, "utf8"))) offenders.push(path.slice(src.length + 1));
-        }
-      }
-    };
-    walk(src);
+    // Every package: an editor panel stacked on a bare literal wouldn't move either (#228).
+    const offenders = sourceFiles(/\.(vue|ts|css)$/)
+      .filter((f) => where(f) !== "clean-ui/src/utils/position.ts")
+      // A bare literal, not the token's own fallback inside var(--cui-z-overlay, 9990).
+      .filter((f) => /z-?index\s*:\s*["'`]?99\d\d/i.test(readFileSync(f, "utf8")))
+      .map(where);
     // The layout debug overlays stack their labels by nesting depth (9999 - depth): a
     // developer aid, not part of the overlay scale.
-    const exempt = ["components/CuiGrid.vue", "components/CuiFlex.vue"];
+    const exempt = ["clean-ui/src/components/CuiGrid.vue", "clean-ui/src/components/CuiFlex.vue"];
     expect(offenders.filter((f) => !exempt.includes(f))).toEqual([]);
   });
 });

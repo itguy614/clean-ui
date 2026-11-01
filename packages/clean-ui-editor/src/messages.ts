@@ -160,7 +160,12 @@ export function resolveCommandLabel(messages: CuiMarkdownEditorMessages, command
   return typeof value === "string" ? value : fallback;
 }
 
-export interface LinkDialogMessages {
+/** Which URL dialog (#222): a link, whose second field is its text, or an image, whose
+ * second field is its alt text. */
+export type UrlDialogKind = "link" | "image";
+
+/** The strings `UrlDialog` renders, picked for one kind from the flat catalog. */
+export interface UrlDialogMessages {
   title: string;
   urlLabel: string;
   urlPlaceholder: string;
@@ -172,42 +177,27 @@ export interface LinkDialogMessages {
   urlSchemeNotAllowed: string;
 }
 
-export function pickLinkDialogMessages(messages: CuiMarkdownEditorMessages): LinkDialogMessages {
-  return {
-    title: messages.linkDialogTitle,
-    urlLabel: messages.linkDialogUrlLabel,
-    urlPlaceholder: messages.linkDialogUrlPlaceholder,
-    textLabel: messages.linkDialogTextLabel,
-    textPlaceholder: messages.linkDialogTextPlaceholder,
-    cancel: messages.linkDialogCancel,
-    insert: messages.linkDialogInsert,
-    urlRequired: messages.linkDialogUrlRequired,
-    urlSchemeNotAllowed: messages.linkDialogUrlSchemeNotAllowed,
-  };
-}
+/** The second field's keys: the one place the two kinds' catalog names differ. */
+const URL_DIALOG_TEXT_KEYS = {
+  link: { label: "linkDialogTextLabel", placeholder: "linkDialogTextPlaceholder" },
+  image: { label: "imageDialogAltLabel", placeholder: "imageDialogAltPlaceholder" },
+} as const satisfies Record<UrlDialogKind, Record<"label" | "placeholder", keyof CuiMarkdownEditorMessages>>;
 
-export interface ImageDialogMessages {
-  title: string;
-  urlLabel: string;
-  urlPlaceholder: string;
-  altLabel: string;
-  altPlaceholder: string;
-  cancel: string;
-  insert: string;
-  urlRequired: string;
-  urlSchemeNotAllowed: string;
-}
-
-export function pickImageDialogMessages(messages: CuiMarkdownEditorMessages): ImageDialogMessages {
+/**
+ * One dialog's strings, from that kind's `linkDialog*` or `imageDialog*` keys. The catalog
+ * keeps a full set per kind, so a host can word the two differently.
+ */
+export function pickUrlDialogMessages(messages: CuiMarkdownEditorMessages, kind: UrlDialogKind): UrlDialogMessages {
+  const text = URL_DIALOG_TEXT_KEYS[kind];
   return {
-    title: messages.imageDialogTitle,
-    urlLabel: messages.imageDialogUrlLabel,
-    urlPlaceholder: messages.imageDialogUrlPlaceholder,
-    altLabel: messages.imageDialogAltLabel,
-    altPlaceholder: messages.imageDialogAltPlaceholder,
-    cancel: messages.imageDialogCancel,
-    insert: messages.imageDialogInsert,
-    urlRequired: messages.imageDialogUrlRequired,
-    urlSchemeNotAllowed: messages.imageDialogUrlSchemeNotAllowed,
+    title: messages[`${kind}DialogTitle`],
+    urlLabel: messages[`${kind}DialogUrlLabel`],
+    urlPlaceholder: messages[`${kind}DialogUrlPlaceholder`],
+    textLabel: messages[text.label],
+    textPlaceholder: messages[text.placeholder],
+    cancel: messages[`${kind}DialogCancel`],
+    insert: messages[`${kind}DialogInsert`],
+    urlRequired: messages[`${kind}DialogUrlRequired`],
+    urlSchemeNotAllowed: messages[`${kind}DialogUrlSchemeNotAllowed`],
   };
 }

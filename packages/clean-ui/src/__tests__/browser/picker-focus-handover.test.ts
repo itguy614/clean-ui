@@ -4,7 +4,7 @@ import { userEvent } from "@vitest/browser/context";
 import { h, defineComponent } from "vue";
 import CuiDatePicker from "../../components/CuiDatePicker.vue";
 import CuiTimePicker from "../../components/CuiTimePicker.vue";
-import { frames } from "./helpers";
+import { frames } from "../../../../../config/test/browser-helpers";
 
 /**
  * Two pickers on one page. Opening the second closes the first, and a close

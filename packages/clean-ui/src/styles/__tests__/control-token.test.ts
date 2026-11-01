@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
+import { PACKAGES, sourceFiles, splitSelectorList, stripComments } from "./css-helpers";
 
-const COMPONENTS = resolve(__dirname, "../../components");
+/** Every component in every package, by file name — the editor's as well as clean-ui's (#228). */
+const COMPONENT_FILES = sourceFiles(/\.vue$/);
+const COMPONENTS = new Map(COMPONENT_FILES.map((f) => [basename(f), f]));
 
 /**
  * #114 — a component must not write a themeable property as a bare declaration in its
@@ -55,6 +58,10 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiProgress.vue", issue: "#211" },
   { file: "CuiBackdrop.vue", issue: "#211" },
   { file: "CuiAvatarGroup.vue", issue: "#211" },
+  // The editor's paint lives in its stylesheet, read through public tokens (#228).
+  { file: "CuiMarkdownEditor.vue", issue: "#228" },
+  { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
+  { file: "CuiMarkdownViewer.vue", issue: "#228" },
 ];
 
 /** Properties a consumer has a legitimate claim on. Layout and geometry are not here. */
@@ -92,10 +99,21 @@ function styleSource(source: string): string {
     .replace(/\/\/[^\n]*/g, "");
 }
 
+/** `MarkdownEditor` → `markdown-editor`, the private prefix's spelling. */
+const kebab = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+
 describe("converted components emit themeable properties as tokens (#114)", () => {
+  it("finds every listed component, in clean-ui and the editor", () => {
+    expect(CONVERTED.filter(({ file }) => !COMPONENTS.has(file))).toEqual([]);
+    // Keyed by file name, so two packages sharing one would leave one of them unscanned.
+    expect(COMPONENTS.size).toBe(COMPONENT_FILES.length);
+  });
+
   for (const { file, issue } of CONVERTED) {
     it(`${file} writes no bare themeable declaration in its style binding`, () => {
-      const script = styleSource(readFileSync(resolve(COMPONENTS, file), "utf-8"));
+      const path = COMPONENTS.get(file);
+      if (!path) return; // reported by the test above
+      const script = styleSource(readFileSync(path, "utf-8"));
 
       const offenders = THEMEABLE.filter(
         (prop) =>
@@ -110,8 +128,82 @@ describe("converted components emit themeable properties as tokens (#114)", () =
 
       expect(
         offenders,
-        `${file} (${issue}) must emit these as --_${file.replace(/^Cui|\.vue$/g, "").toLowerCase()}-* custom properties`,
+        `${file} (${issue}) must emit these as --_${kebab(file.replace(/^Cui|\.vue$/g, ""))}-* custom properties`,
       ).toEqual([]);
+    });
+  }
+});
+
+/**
+ * #228 — the stylesheet half, for a component whose paint lives in a separate stylesheet
+ * rather than its SFC. The editor declared `--_cme-*` properties and consumed them
+ * directly, so no public token existed and none of its rules was zero-specificity: a
+ * consumer could not retheme its border or focus ring without `!important`. Opt-in, like
+ * `CONVERTED`.
+ */
+const CONVERTED_STYLESHEETS: Array<{ file: string; component: string; part: string; issue: string }> = [
+  // `part` is the element the tokens paint; `--error` is the state allowed to paint it at
+  // normal specificity, so neither tokens nor a consumer rule can hide an invalid field.
+  { file: "clean-ui-editor/src/styles/editor.css", component: "markdown-editor", part: "cui-markdown-editor__control", issue: "#228" },
+];
+
+/** The properties a themeable slot paints. */
+const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-color)?)\s*:/;
+
+/** CLAUDE.md's slot vocabulary — a closed set, like the colour-role slots. */
+const SLOTS = new Set([
+  ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
+  ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
+]);
+
+/** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */
+function isWholeWhere(selector: string): boolean {
+  if (!selector.startsWith(":where(")) return false;
+  let depth = 0;
+  for (let i = ":where".length; i < selector.length; i++) {
+    if (selector[i] === "(") depth++;
+    else if (selector[i] === ")" && --depth === 0) return i === selector.length - 1;
+  }
+  return false;
+}
+
+describe("converted stylesheets read every private property through its public token (#228)", () => {
+  for (const { file, component, part, issue } of CONVERTED_STYLESHEETS) {
+    const css = stripComments(readFileSync(resolve(PACKAGES, file), "utf-8"));
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: splitSelectorList(m[1].trim()), body: m[2] }));
+
+    it(`${file} (${issue}) reads its private properties only as the public token's fallback`, () => {
+      const reads = [
+        ...css.matchAll(new RegExp(`(var\\(\\s*--cui-${component}-([\\w-]+)\\s*,\\s*)?var\\(\\s*--_${component}-([\\w-]+)\\s*\\)`, "g")),
+      ];
+      // A scan that matched nothing would pass vacuously.
+      expect(reads.length).toBeGreaterThan(0);
+      // Each read is wrapped, and the public token names the same slot as the private one.
+      expect(reads.filter((m) => m[2] !== m[3]).map((m) => m[0])).toEqual([]);
+      // Every slot, declared or read, is from the vocabulary.
+      const slots = new Set([...css.matchAll(new RegExp(`--(?:cui-|_)${component}-([\\w-]+)`, "g"))].map((m) => m[1]));
+      expect([...slots].filter((s) => !SLOTS.has(s))).toEqual([]);
+      // And no private property keeps an old ad-hoc prefix.
+      expect(css).not.toMatch(/--_(btn|sel|ta|cb|cme)-/);
+    });
+
+    it(`${file} (${issue}) wraps every rule that reads a public token whole in :where()`, () => {
+      const reading = new RegExp(`var\\(\\s*--cui-${component}-`);
+      const selectors = rules.filter(({ body }) => reading.test(body)).flatMap(({ selectors }) => selectors);
+      expect(selectors.length).toBeGreaterThan(0);
+      expect(selectors.filter((s) => !isWholeWhere(s))).toEqual([]);
+    });
+
+    it(`${file} (${issue}) paints ${part} only through zero-specificity rules, its error state aside`, () => {
+      // Once converted, stays converted: a rule that paints the part without reading a token —
+      // `… :focus-within { border-color: var(--cui-primary) }` — would outrank both the token
+      // and a consumer's rule, and the check above would never look at it.
+      const targetsPart = new RegExp(`\\.${part}(?![\\w-])[^\\s>+~]*\\)?$`);
+      const offenders = rules
+        .filter(({ body }) => PAINT.test(body))
+        .flatMap(({ selectors }) => selectors)
+        .filter((s) => targetsPart.test(s) && !isWholeWhere(s) && !s.includes(`${component}--error`));
+      expect(offenders).toEqual([]);
     });
   }
 });

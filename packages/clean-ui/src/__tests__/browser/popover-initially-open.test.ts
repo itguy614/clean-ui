@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { h } from "vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiButton from "../../components/CuiButton.vue";
-import { frames, mountHosts } from "./helpers";
+import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
  * #248 — a popover mounted with v-model:visible already true. The panel is hidden until

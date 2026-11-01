@@ -1,9 +1,81 @@
 import type { EditorView } from "@codemirror/view";
-import type { ChangeSpec } from "@codemirror/state";
-import { syntaxTree } from "@codemirror/language";
+import type { ChangeSpec, EditorState } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
+import { QUERY_PARSE_CAP_MS, settledAt, treeSettledAt } from "./parse-settled";
 import type { CommandContext } from "./types";
+import type { CleanUIContext } from "@itguy614/clean-ui";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
+
+const NO_CLEAN_UI_CONTEXT: CleanUIContext = { provideTo() {} };
+
+/** The cursor's block isn't parsed far enough to say either way. */
+export const UNKNOWN_CONSTRUCT = Symbol("unknown construct");
+export type ConstructLookup = { from: number; to: number } | null | typeof UNKNOWN_CONSTRUCT;
+
+/** Internal to the package: what the public `CommandContext` can't express
+ * yet (#405). Kept off the object so it adds nothing to the public type. */
+interface ContextInternals {
+  lookup(nodeName: string): ConstructLookup;
+  /** Inside an `isActive` query: answer from what is parsed, never parse. */
+  peeking: boolean;
+  peekedState: EditorState | null;
+  /** A query on `peekedState` hit an unsettled block. */
+  peekUnsettled: boolean;
+  /** Each open `collect()`: closes its UI and resolves it `null`. */
+  openCollects: Set<() => void>;
+  disposed: boolean;
+}
+const internals = new WeakMap<CommandContext, ContextInternals>();
+
+/**
+ * `findConstructRange` with "unknown" kept apart from "not inside", for the
+ * built-in commands: on unknown, a toggle must do nothing, since wrapping
+ * would nest markers or (for a fence) close the block early. A context this
+ * package didn't build has no unknown to report.
+ */
+export function lookupConstruct(context: CommandContext, nodeName: string): ConstructLookup {
+  const own = internals.get(context);
+  return own ? own.lookup(nodeName) : context.findConstructRange(nodeName);
+}
+
+/** Runs an `isActive` query in peek mode: lookups parse for a few
+ * milliseconds at most instead of blocking the render. Re-entrant. */
+export function peeking<T>(context: CommandContext, query: () => T): T {
+  const own = internals.get(context);
+  if (!own) return query();
+  const outer = own.peeking;
+  own.peeking = true;
+  try {
+    return query();
+  } finally {
+    own.peeking = outer;
+  }
+}
+
+/** Whether the latest queries met a block still being parsed, so a later
+ * parse chunk can change their answers. */
+export function peekedUnsettled(context: CommandContext): boolean {
+  return internals.get(context)?.peekUnsettled ?? false;
+}
+
+/**
+ * The editor is unmounting (#409): every open `collect()` closes its UI and
+ * resolves `null`, as a cancel would, and a later one resolves `null` without
+ * opening anything. Nothing can then write into the destroyed view.
+ */
+export function disposeCommandContext(context: CommandContext): void {
+  const own = internals.get(context);
+  if (!own) return;
+  own.disposed = true;
+  for (const abandon of [...own.openCollects]) {
+    try {
+      abandon();
+    } catch (error) {
+      // One plugin's broken close must not keep the others' dialogs open.
+      console.error("[CuiMarkdownEditor] closing a dialog on unmount threw:", error);
+    }
+  }
+}
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
@@ -17,16 +89,20 @@ import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from ".
  *
  * `getMessages`, if supplied, is a live accessor over the resolved message
  * catalog (task 5.2.2) — a command that opens its own dialog (link, image)
- * reads `context.messages.linkDialog`/`.imageDialog` and passes those
- * strings down as plain props, since `mountStandaloneDialog` creates a
- * detached Vue app with no `inject()` access to the host's
- * `CuiConfigProvider`. Defaults to the English catalog so a context built
- * without this (e.g. a unit test) still works.
+ * reads `context.messages` and passes its strings down as plain props, since
+ * `mountStandaloneDialog` creates a detached Vue app with no `inject()`
+ * access to the host's `CuiConfigProvider`. Defaults to the English catalog
+ * so a context built without this (e.g. a unit test) still works.
+ *
+ * `cleanUI`, if supplied, is the host's clean-ui context (#326), which that
+ * same detached app is given so its clean-ui components follow the host's
+ * defaults and catalog. Defaults to one that provides nothing.
  */
 export function createCommandContext(
   getView: () => EditorView | null,
   onCollectingChange?: (isCollecting: boolean) => void,
   getMessages: () => CuiMarkdownEditorMessages = () => defaultMarkdownEditorMessages,
+  cleanUI: CleanUIContext = NO_CLEAN_UI_CONTEXT,
 ): CommandContext {
   function requireView(): EditorView {
     const view = getView();
@@ -34,21 +110,50 @@ export function createCommandContext(
     return view;
   }
 
-  function findConstructRange(nodeName: string): { from: number; to: number } | null {
+  const own: ContextInternals = {
+    lookup,
+    peeking: false,
+    peekedState: null,
+    peekUnsettled: false,
+    openCollects: new Set(),
+    disposed: false,
+  };
+
+  function lookup(nodeName: string): ConstructLookup {
     const view = requireView();
-    const pos = view.state.selection.main.head;
+    const { state } = view;
+    const pos = state.selection.main.head;
+    // A query parses briefly; only a command waits for the block to close.
+    if (own.peeking && own.peekedState !== state) {
+      own.peekedState = state;
+      own.peekUnsettled = false;
+    }
+    const tree = own.peeking ? treeSettledAt(state, QUERY_PARSE_CAP_MS) : treeSettledAt(state);
+    if (!tree) return null; // no language, so no constructs
+    // The cursor's block may still be cut short: no range in it is safe to
+    // rewrite, and "not inside" would make a toggle wrap inside it.
+    if (!settledAt(tree, pos, state.doc.length)) {
+      if (own.peeking) own.peekUnsettled = true;
+      return UNKNOWN_CONSTRUCT;
+    }
     // Bias toward the node ending here first (side -1) — matters right
     // after a closing marker, e.g. the cursor landing at "**bold**|" should
     // still read as inside the bold construct — then fall back to the node
     // starting here (side 1) for a cursor at the open boundary.
     for (const side of [-1, 1] as const) {
-      let node: SyntaxNode | null = syntaxTree(view.state).resolveInner(pos, side);
+      let node: SyntaxNode | null = tree.resolveInner(pos, side);
       while (node) {
         if (node.name === nodeName) return { from: node.from, to: node.to };
         node = node.parent;
       }
     }
     return null;
+  }
+
+  /** The public form can't say "unknown" yet (#405): it reads as absent. */
+  function findConstructRange(nodeName: string): { from: number; to: number } | null {
+    const result = lookup(nodeName);
+    return result === UNKNOWN_CONSTRUCT ? null : result;
   }
 
   function replaceRange(from: number, to: number, text: string): void {
@@ -62,7 +167,7 @@ export function createCommandContext(
     );
   }
 
-  return {
+  const context: CommandContext = {
     get doc() {
       return requireView().state.doc.toString();
     },
@@ -103,15 +208,26 @@ export function createCommandContext(
       view.dispatch(view.state.update({ changes, scrollIntoView: true }));
     },
     async collect(open) {
+      if (own.disposed) return null;
       onCollectingChange?.(true);
+      let abandon = () => {};
       try {
         return await new Promise((resolve) => {
-          open({
-            resolve: (value) => resolve(value),
-            cancel: () => resolve(null),
-          });
+          let close: unknown;
+          // Settled by the UI: it closes itself, so unmounting has nothing left to close.
+          const settle = (value: Parameters<typeof resolve>[0]) => {
+            own.openCollects.delete(abandon);
+            resolve(value);
+          };
+          abandon = () => {
+            settle(null);
+            if (typeof close === "function") close();
+          };
+          own.openCollects.add(abandon);
+          close = open({ resolve: settle, cancel: () => settle(null) });
         });
       } finally {
+        own.openCollects.delete(abandon);
         onCollectingChange?.(false);
       }
     },
@@ -119,5 +235,8 @@ export function createCommandContext(
     get messages() {
       return getMessages();
     },
+    cleanUI,
   };
+  internals.set(context, own);
+  return context;
 }

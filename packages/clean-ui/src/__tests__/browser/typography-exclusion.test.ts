@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { h } from "vue";
 import main from "../../styles/main.css?inline";
-import { installTokens, mountHosts } from "./helpers";
+import { installTokens, mountHosts } from "../../../../../config/test/browser-helpers";
 import CuiTable from "../../components/CuiTable.vue";
 import CuiTableBody from "../../components/CuiTableBody.vue";
 import CuiTableRow from "../../components/CuiTableRow.vue";

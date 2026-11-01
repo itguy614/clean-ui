@@ -109,9 +109,11 @@ function onKeydown(event: KeyboardEvent) {
   position: relative;
   /* The control owns the radius and does not clip (`overflow: visible`), so the toolbar
      carries its top corners down to the overflow fades, which inherit from here. Inset by
-     the control's 1px border, the way CuiInput nests its attached buttons (#125). */
-  border-top-left-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
-  border-top-right-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
+     the control's 1px border, the way CuiInput nests its attached buttons (#125). The same
+     token the control reads (editor.css; the private value is set on the control), so the
+     two can't be rounded differently (#228). */
+  border-top-left-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
+  border-top-right-radius: calc(var(--cui-markdown-editor-radius, var(--_markdown-editor-radius)) - 1px);
 }
 
 .cui-markdown-editor-toolbar__scroll :deep(.cui-scroll-area__scroller) {

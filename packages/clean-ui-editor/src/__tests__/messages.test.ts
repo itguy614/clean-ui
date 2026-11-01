@@ -3,8 +3,7 @@ import {
   defaultMarkdownEditorMessages,
   mergeMarkdownEditorMessages,
   resolveCommandLabel,
-  pickLinkDialogMessages,
-  pickImageDialogMessages,
+  pickUrlDialogMessages,
 } from "../messages";
 
 describe("mergeMarkdownEditorMessages", () => {
@@ -43,15 +42,13 @@ describe("resolveCommandLabel", () => {
   });
 });
 
-describe("pickLinkDialogMessages / pickImageDialogMessages", () => {
-  it("extracts the flat linkDialog* fields into the dialog's own shape", () => {
-    const picked = pickLinkDialogMessages(defaultMarkdownEditorMessages);
-    expect(picked).toEqual({
-      title: "Insert link",
-      urlLabel: "URL",
-      urlPlaceholder: "https://example.com",
-      textLabel: "Text",
-      textPlaceholder: "Link text",
+describe("pickUrlDialogMessages", () => {
+  it.each([
+    ["link", { title: "Insert link", urlLabel: "URL", urlPlaceholder: "https://example.com", textLabel: "Text", textPlaceholder: "Link text" }],
+    ["image", { title: "Insert image", urlLabel: "Image URL", urlPlaceholder: "https://example.com/image.png", textLabel: "Alt text", textPlaceholder: "Describes the image" }],
+  ] as const)("picks the %s dialog's strings from the flat catalog", (kind, distinct) => {
+    expect(pickUrlDialogMessages(defaultMarkdownEditorMessages, kind)).toEqual({
+      ...distinct,
       cancel: "Cancel",
       insert: "Insert",
       urlRequired: "A URL is required.",
@@ -59,18 +56,18 @@ describe("pickLinkDialogMessages / pickImageDialogMessages", () => {
     });
   });
 
-  it("extracts the flat imageDialog* fields into the dialog's own shape", () => {
-    const picked = pickImageDialogMessages(defaultMarkdownEditorMessages);
-    expect(picked).toEqual({
-      title: "Insert image",
-      urlLabel: "Image URL",
-      urlPlaceholder: "https://example.com/image.png",
-      altLabel: "Alt text",
-      altPlaceholder: "Describes the image",
-      cancel: "Cancel",
-      insert: "Insert",
-      urlRequired: "A URL is required.",
-      urlSchemeNotAllowed: "This URL scheme isn't allowed.",
-    });
+  it("reads each kind's own keys, even where the defaults coincide", () => {
+    // Cancel, Insert and the two errors read the same in English for both kinds, so the
+    // defaults alone can't tell a picker reading the wrong kind's key. Every dialog key
+    // here holds its own name.
+    const own = Object.fromEntries(
+      Object.keys(defaultMarkdownEditorMessages)
+        .filter((k) => /^(link|image)Dialog/.test(k))
+        .map((k) => [k, k]),
+    );
+    const catalog = mergeMarkdownEditorMessages(own);
+    expect(Object.values(pickUrlDialogMessages(catalog, "link"))).toEqual(Object.keys(own).filter((k) => k.startsWith("link")));
+    expect(Object.values(pickUrlDialogMessages(catalog, "image"))).toEqual(Object.keys(own).filter((k) => k.startsWith("image")));
   });
 });
+

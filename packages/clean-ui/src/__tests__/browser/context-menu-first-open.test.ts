@@ -4,7 +4,7 @@ import { userEvent } from "@vitest/browser/context";
 import { h } from "vue";
 import CuiContextMenu from "../../components/CuiContextMenu.vue";
 import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
-import { frames, mountHosts } from "./helpers";
+import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
 
 // #291: the first right-click opened the panel invisible, and its first item unfocused.
 // Real input, real scheduler, real focus rules.

@@ -1,7 +1,7 @@
 import { NodeProp } from "@lezer/common";
-import { GFM, parser as baseParser } from "@lezer/markdown";
 import { Language, languageDataProp, foldNodeProp, indentNodeProp } from "@codemirror/language";
 import { markdownLanguage } from "@codemirror/lang-markdown";
+import { gfmParser } from "./gfm-parser";
 
 /**
  * The markdown language, built directly from `@lezer/markdown` + `GFM` —
@@ -37,16 +37,7 @@ function isList(type: { name: string }): boolean {
   return type.name === "OrderedList" || type.name === "BulletList";
 }
 
-/**
- * The GFM-configured parser with no CodeMirror-specific props — a plain
- * `@lezer/markdown` `MarkdownParser`, reused as-is by the render subpath
- * (`src/render/`) so a document parses identically whether it's being
- * edited or rendered to HTML, with no second markdown-parser dependency and
- * no `@codemirror/*` import (NFR1a's tree-shaking discipline extends to that
- * subpath, which must also stay DOM-free — see task 6.1.3).
- */
-export const gfmParser = baseParser.configure([GFM]);
-
+/** `gfmParser` (see `gfm-parser.ts`) plus the CodeMirror-specific node props. */
 const configuredParser = gfmParser.configure([
   {
     props: [

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { relative, resolve } from "node:path";
-import { readTag, splitSelectorList, walk } from "./css-helpers";
+import { resolve } from "node:path";
+import { readTag, sourceFiles, splitSelectorList, where } from "./css-helpers";
 
 /**
  * #147 — `.cui-typography` is opt-in, but consumers put it *around* components (the docs
@@ -14,11 +14,9 @@ import { readTag, splitSelectorList, walk } from "./css-helpers";
  *  - every element a component renders that a block styles carries a component's `cui-*`
  *    class — not just a typography helper's, which the second block lets through.
  */
-const PACKAGES = resolve(__dirname, "../../../..");
 const EXCLUSION = /^\.cui-typography :where\(\s*:not\(\[class\^="cui-"\]\):not\(\[class\*=" cui-"\]\)/;
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
-const sources = (ext: string) =>
-  ["clean-ui", "clean-ui-editor"].flatMap((pkg) => walk(resolve(PACKAGES, pkg, "src"))).filter((f) => f.endsWith(ext));
+const sources = (ext: ".css" | ".vue") => sourceFiles(new RegExp(`\\${ext}$`));
 
 /** Top-level selectors in some CSS that reach an element inside a typography scope (the font-family `*` aside). */
 function proseSelectors(css: string): string[] {
@@ -69,7 +67,7 @@ describe("the typography layer leaves components alone (#147)", () => {
       .flatMap((f) => {
         const text = readFileSync(f, "utf-8");
         const css = f.endsWith(".vue") ? [...text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n") : text;
-        return proseSelectors(css).map((s) => `${relative(PACKAGES, f)}: ${s}`);
+        return proseSelectors(css).map((s) => `${where(f)}: ${s}`);
       });
     expect(elsewhere).toEqual([]);
   });
@@ -90,14 +88,14 @@ describe("the typography layer leaves components alone (#147)", () => {
       const start = source.search(/^<template>/m);
       if (start === -1) continue;
       const template = source.slice(start, source.lastIndexOf("</template>")).replace(/<!--[\s\S]*?-->/g, "");
-      const where = relative(PACKAGES, file);
+      const name = where(file);
       for (const m of template.matchAll(open)) {
         const tag = readTag(template, m.index!);
         const binding = m[1] === "component" ? /:is="([^"]+)"/.exec(tag)?.[1] : undefined;
-        if (binding && `${where}:${binding}` in DYNAMIC_EXEMPT) continue;
+        if (binding && `${name}:${binding}` in DYNAMIC_EXEMPT) continue;
         // A static class only — one a binding adds may be conditional — naming a component.
         const classes = /\sclass="([^"]*)"/.exec(tag)?.[1].split(/\s+/) ?? [];
-        if (!classes.some((c) => c.startsWith("cui-") && !HELPERS.has(c))) unclassed.push(`${where}: ${tag.slice(0, 70)}`);
+        if (!classes.some((c) => c.startsWith("cui-") && !HELPERS.has(c))) unclassed.push(`${name}: ${tag.slice(0, 70)}`);
       }
     }
     expect(unclassed).toEqual([]);

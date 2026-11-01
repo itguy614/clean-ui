@@ -1,4 +1,5 @@
 import { createApp, type Component } from "vue";
+import type { CleanUIContext } from "@itguy614/clean-ui";
 
 /**
  * Mounts a Vue component as its own standalone app in a detached DOM node —
@@ -8,10 +9,17 @@ import { createApp, type Component } from "vue";
  * is what a `collect()` `open()` callback (src/plugins/types.ts) does in
  * practice for a real dialog, as opposed to the plain-callback openers used
  * in Phase 03's tests.
+ *
+ * `cleanUI` (the command's `context.cleanUI`) is provided to the new app, so the
+ * clean-ui components in it follow the host's defaults and catalog (#326).
  */
 let standaloneCount = 0;
 
-export function mountStandaloneDialog<P extends Record<string, unknown>>(component: Component, props: P): () => void {
+export function mountStandaloneDialog<P extends Record<string, unknown>>(
+  component: Component,
+  props: P,
+  cleanUI: CleanUIContext,
+): () => void {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const app = createApp(component, props);
@@ -19,6 +27,7 @@ export function mountStandaloneDialog<P extends Record<string, unknown>>(compone
   // distinct prefix, this app's ids ("cui-modal-title-v-0", ...) can duplicate the host
   // app's on the same document and cross-wire aria-labelledby.
   app.config.idPrefix = `cui-standalone-${++standaloneCount}`;
+  cleanUI.provideTo(app);
   app.mount(container);
   return () => {
     app.unmount();

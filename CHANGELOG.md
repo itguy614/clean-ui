@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-01
+
+### Added
+
+- **`useCleanUIContext()`** (#326). Captures what clean-ui has provided above a component
+  (the `createCleanUI()` options, any `CuiConfigProvider`, the message catalog) and hands it
+  to another Vue app with `provideTo(app)`, for a dialog mounted outside your tree. Live: a
+  later change to the provider reaches that app too.
+- **The markdown editor has public themeable tokens** (#228): `--cui-markdown-editor-border`,
+  `-focus-border`, `-focus-ring` and `-radius`, set on the editor or on any container above
+  it. The rules reading them are zero-specificity, so a plain class rule also wins without
+  `!important`. The error state keeps `--cui-error` either way. The toolbar reads the same
+  radius token, so its corners always match the control's.
+
+### Changed
+
+- **CuiModal and CuiSlideover forward attributes to their dialog panel** (#228). Their root
+  is a `<Teleport>`, so a `class`, `style`, `data-testid` or any other attribute passed to
+  them was dropped with a Vue warning. They now land on `.cui-modal` /
+  `.cui-slideover__panel`, the element actually rendered, and override the panel's own
+  `role`, `aria-labelledby` or `tabindex` (a `role="alertdialog"` works now). Undeclared
+  listeners are forwarded too: a stray `@click` left on a `<CuiModal>`, which used to do
+  nothing, now fires for clicks inside the panel. CuiConfirmDialog's panel and the editor's
+  link/image dialog now carry `cui-confirm-dialog` / `cui-url-dialog`.
+
+### Fixed
+
+- **The editor control's radius falls back through `--cui-radius-md`** (#228), like its
+  toolbar. With only `--cui-radius-md` set, the two were rounded differently and the
+  corner where they meet showed a notch.
+
+- **The markdown editor's link and image dialogs follow the host's clean-ui config** (#326).
+  They mount as their own Vue app, so they ignored `headingLevels`, `roleIcons` and
+  clean-ui's own messages: the dialog title was always an `h2` and the close button always
+  "Close". They now take them from the editor's surroundings, the way they already took
+  the editor's own strings. Plugin authors get the same through `CommandContext.cleanUI`.
+  The editor now needs `@itguy614/clean-ui@^1.6.0`.
+- **The link and image dialogs are one dialog** (#222). Both labels now render the same
+  way, through CuiFormField: only the URL label was styled before. The message catalogue
+  is unchanged, all 18 `linkDialog*`/`imageDialog*` keys included, and so are the fields'
+  ids.
+- **The link and image dialogs insert well-formed markdown whatever is typed** (#408). A `]`
+  in the text ended the label early, and a space or an unbalanced parenthesis in the URL
+  broke the destination. Link text stays markdown, with `[`, `]`, `\` and any unpaired
+  backtick escaped; an image's alt text is plain text, so every inline marker in it is
+  escaped. Line breaks in either fold into a space. The URL is wrapped in `<…>` when it
+  holds a space or an unbalanced parenthesis, its `<`, `>` and backticks are
+  percent-encoded, and its line breaks and tabs are dropped, as a browser drops them.
+  Pasted links and images get the same treatment. The URL scheme check now reads a URL as a
+  browser does (tabs and line breaks removed, control characters trimmed), so
+  `java<TAB>script:` is refused in the dialog and the viewer, and the viewer reads a `<…>`
+  destination and backslash escapes before checking, so `[x](<javascript:…>)` is refused
+  like `[x](javascript:…)`.
+- **Unmounting the markdown editor closes a link or image dialog it left open** (#409). The
+  dialog is its own Vue app, so it stayed on screen, and submitting it wrote into the
+  destroyed editor and raised an unhandled rejection. The command now sees a cancel. A
+  plugin's own dialog gets the same by returning a close function from its `collect()`
+  opener.
+
+- **The editor's `/render` subpath no longer ships CodeMirror** (#225). A page importing only
+  `createMarkdownRenderAdapter` paid about 88 kB gzip for an editor engine it never ran; it now
+  pays about 21 kB. The parser `/render` needs moved out of the module that builds the editor's
+  CodeMirror language, so the bundler can leave the rest behind.
+- **Editor decorations catch up when a long document finishes parsing** (#256). Past the first
+  parse chunk, code backgrounds, hidden markers in wysiwyg mode and list bullets stayed
+  undecorated until the next keystroke or scroll. Toolbar commands inside such a block now parse
+  until the block closes, rather than reading a half-parsed tree, and do nothing rather than wrap
+  when they cannot tell.
+
+### Tooling
+
+- **clean-ui-editor has a browser test project** (#145), with the browser test helpers shared
+  between both packages from `config/test/`. Its first tests assert the mode toggle keeps its own
+  background and border against CuiButton's cascade (#186), and the toolbar's corners.
+- **The editor has gzip budgets, and `/render` a CodeMirror guard** (#226). The fixture now
+  measures the editor barrel and `/render` separately (budgets 158 kB and 25 kB), and the build
+  fails if anything `/render` imports reaches `@codemirror/*`. The editor spec's NFR1 is revised
+  from 130 kB to 160 kB to match the first measured build.
+
 ## [1.5.1] - 2026-10-23
 
 ### Fixed

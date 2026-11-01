@@ -16,6 +16,50 @@ afterEach(() => {
   document.body.style.overflow = "";
 });
 
+describe.each([
+  { name: "CuiModal", component: CuiModal, panel: ".cui-modal" },
+  { name: "CuiSlideover", component: CuiSlideover, panel: ".cui-slideover__panel" },
+])("$name forwards attributes to its panel (#228)", ({ component, panel }) => {
+  // The root is a <Teleport>, which can't take fallthrough attributes, so these used to be
+  // dropped with a warning. A wrapper relies on the class landing on the rendered panel.
+  it("puts a class and an arbitrary attribute on the panel, without a Vue warning", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const wrapper = mount(component, {
+      props: { visible: true },
+      attrs: { class: "cui-my-dialog", "data-testid": "my-dialog", style: "color: rgb(1, 2, 3)" },
+    });
+    await vi.runOnlyPendingTimersAsync();
+
+    const el = document.body.querySelector(panel) as HTMLElement;
+    expect(el.classList.contains("cui-my-dialog")).toBe(true);
+    expect(el.getAttribute("data-testid")).toBe("my-dialog");
+    expect(el.style.color).toBe("rgb(1, 2, 3)");
+    // The panel's own attributes and classes stay.
+    expect(el.getAttribute("role")).toBe("dialog");
+    expect(el.classList.contains(panel.slice(1))).toBe(true);
+    expect(warn.mock.calls.flat().join("\n")).not.toMatch(/Extraneous non-props attributes/);
+
+    warn.mockRestore();
+    wrapper.unmount();
+  });
+
+  it("lets a forwarded role, aria-labelledby or tabindex override the panel's own", async () => {
+    // A destructive confirm wants role="alertdialog"; a slideover assembled from
+    // sub-components is named by an aria-labelledby the consumer passes.
+    const wrapper = mount(component, {
+      props: { visible: true },
+      attrs: { role: "alertdialog", "aria-labelledby": "my-heading", tabindex: "0" },
+    });
+    await vi.runOnlyPendingTimersAsync();
+
+    const el = document.body.querySelector(panel) as HTMLElement;
+    expect(el.getAttribute("role")).toBe("alertdialog");
+    expect(el.getAttribute("aria-labelledby")).toBe("my-heading");
+    expect(el.getAttribute("tabindex")).toBe("0");
+    wrapper.unmount();
+  });
+});
+
 describe("CuiModal", () => {
   it("does not render the dialog when visible is false", () => {
     const wrapper = mount(CuiModal, { props: { visible: false } });

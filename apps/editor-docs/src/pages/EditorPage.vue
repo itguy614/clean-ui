@@ -12,6 +12,9 @@ import {
   CuiButton,
   CuiRadioGroup,
   CuiRadio,
+  CuiCheckbox,
+  CuiConfigProvider,
+  type DeepPartialMessages,
 } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor, DEFAULT_PLUGINS, type CuiMarkdownEditorMode } from "@itguy614/clean-ui-editor";
 import PropTable from "../components/PropTable.vue";
@@ -65,6 +68,9 @@ function reopenSession() {
 
 const controlledMode = ref<CuiMarkdownEditorMode>("wysiwyg");
 
+const dialogDoc = ref("Select some text and press Mod-K to open the link dialog.");
+const dialogMessages: DeepPartialMessages = { close: "Close dialog", markdownEditor: { linkDialogTitle: "Add a link" } };
+
 const formValues = ref<{ bio: string; notes: string }>({ bio: "", notes: "" });
 function formResolver(values: Record<string, unknown>) {
   const errors: Record<string, string> = {};
@@ -86,6 +92,36 @@ const customToolbarDoc = ref("**Bold**, *italic* and [links](https://example.com
 
 const noItalicPlugins = computed(() => DEFAULT_PLUGINS.filter((p) => p.id !== "cui-italic"));
 const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, unstyled text.");
+
+// Theming: the tokens are set on this container, not on the editor, to show that they
+// inherit — an app can retheme every editor in a region from one ancestor.
+type ThemePreset = "default" | "success" | "info" | "quiet";
+const themePreset = ref<ThemePreset>("success");
+const themeRounded = ref(false);
+const themedDoc = ref("Click in here to see the **focus** border and ring.");
+/** A colour role's own border, colour and focus ring, as the editor's three tokens. */
+const rolePreset = (role: string) => ({
+  "--cui-markdown-editor-border": `var(--cui-${role}-border)`,
+  "--cui-markdown-editor-focus-border": `var(--cui-${role})`,
+  "--cui-markdown-editor-focus-ring": `var(--cui-${role}-focus-ring)`,
+});
+const THEME_PRESETS: Record<Exclude<ThemePreset, "default">, Record<string, string>> = {
+  success: rolePreset("success"),
+  info: rolePreset("info"),
+  quiet: {
+    "--cui-markdown-editor-border": "var(--cui-border)",
+    "--cui-markdown-editor-focus-border": "var(--cui-border-strong)",
+    "--cui-markdown-editor-focus-ring": "transparent",
+  },
+};
+const themeStyle = computed(() => ({
+  ...(themePreset.value === "default" ? {} : THEME_PRESETS[themePreset.value]),
+  ...(themeRounded.value ? { "--cui-markdown-editor-radius": "1rem" } : {}),
+}));
+const themeCode = computed(() => {
+  const lines = Object.entries(themeStyle.value).map(([k, v]) => `  ${k}: ${v};`);
+  return `/* On any ancestor — or on .cui-markdown-editor itself */\n.notes-panel {\n${lines.length ? lines.join("\n") : "  /* nothing set: the editor's own defaults */"}\n}`;
+});
 </script>
 
 <template>
@@ -195,6 +231,45 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
     </div>
 
     <div>
+      <h2 class="mb-4 text-2xl font-semibold">Theming</h2>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        The editor follows clean-ui's themeable-property contract. Set these custom properties on
+        the editor or on any container above it — they inherit, so one rule can retheme every
+        editor in a region. The rules that read them have zero specificity, so a plain class
+        selector such as <code class="cui-code">.cui-markdown-editor__control { … }</code> also
+        wins without <code class="cui-code">!important</code>. Change the corners through
+        <code class="cui-code">--cui-markdown-editor-radius</code> rather than a plain
+        <code class="cui-code">border-radius</code> rule: the toolbar rounds its own corners from
+        the same token. The error state keeps <code class="cui-code">--cui-error</code> whatever
+        these, or a plain rule, set, so a rethemed region still shows which field is invalid.
+      </p>
+      <CuiStack spacing="4">
+        <PropTable
+          :props="[
+            { name: '--cui-markdown-editor-border', type: 'color', default: 'var(--cui-border-strong)', description: 'The control\'s border at rest.' },
+            { name: '--cui-markdown-editor-focus-border', type: 'color', default: 'var(--cui-primary)', description: 'The border while the editor has focus.' },
+            { name: '--cui-markdown-editor-focus-ring', type: 'color', default: 'var(--cui-primary-focus-ring)', description: 'The 2px ring drawn outside the border while the editor has focus.' },
+            { name: '--cui-markdown-editor-radius', type: 'length', default: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))', description: 'The control\'s corner radius. The toolbar follows it, so their corners always match. Unset, it follows clean-ui\'s shared control radius, like CuiInput.' },
+          ]"
+        />
+        <Example title="Overriding the tokens on a container" :code="themeCode">
+          <CuiStack spacing="3">
+            <CuiRadioGroup v-model="themePreset" variant="buttons" label="Tokens on the container">
+              <CuiRadio value="default" label="Not set" />
+              <CuiRadio value="success" label="Success" />
+              <CuiRadio value="info" label="Info" />
+              <CuiRadio value="quiet" label="Quiet (no ring)" />
+            </CuiRadioGroup>
+            <CuiCheckbox v-model="themeRounded" label="Also set --cui-markdown-editor-radius: 1rem" />
+            <div :style="themeStyle">
+              <CuiMarkdownEditor v-model="themedDoc" />
+            </div>
+          </CuiStack>
+        </Example>
+      </CuiStack>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">Examples</h2>
       <CuiStack spacing="6">
         <Example
@@ -281,6 +356,31 @@ const excludedDoc = ref("Type _italic_ or *italic* here — it stays literal, un
           <CuiStack spacing="2">
             <CuiMarkdownEditor v-model="basicDoc" v-model:mode="controlledMode" />
             <p class="text-sm" style="color: var(--cui-text-secondary);">Current mode: <code class="cui-code">{{ controlledMode }}</code></p>
+          </CuiStack>
+        </Example>
+
+        <Example
+          title="Dialogs follow the host's clean-ui config"
+          :code="`&lt;CuiConfigProvider
+  :heading-levels=&quot;{ modalHeader: 'h3' }&quot;
+  :messages=&quot;{ close: 'Close dialog', markdownEditor: { linkDialogTitle: 'Add a link' } }&quot;
+&gt;
+  &lt;CuiMarkdownEditor v-model=&quot;doc&quot; /&gt;
+&lt;/CuiConfigProvider&gt;`"
+        >
+          <CuiStack spacing="2">
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              The link and image dialogs mount as their own Vue app, outside the editor's tree,
+              yet they take the defaults and messages provided around the editor:
+              <code class="cui-code">createCleanUI()</code>'s options, any
+              <code class="cui-code">CuiConfigProvider</code>, and clean-ui's own catalog. Press
+              <code class="cui-code">Mod-K</code> here: the dialog is titled "Add a link", its
+              title is an <code class="cui-code">h3</code>, and its close button is named "Close
+              dialog".
+            </p>
+            <CuiConfigProvider :heading-levels="{ modalHeader: 'h3' }" :messages="dialogMessages">
+              <CuiMarkdownEditor v-model="dialogDoc" />
+            </CuiConfigProvider>
           </CuiStack>
         </Example>
 

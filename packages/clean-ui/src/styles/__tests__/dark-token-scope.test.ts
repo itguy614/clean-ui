@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
-
-const SRC = resolve(__dirname, "../..");
+import { readFileSync } from "node:fs";
+import { sourceFiles, where } from "./css-helpers";
 
 /**
  * #121 — design tokens must be declared on the element carrying `dark`, never
@@ -16,16 +14,8 @@ const SRC = resolve(__dirname, "../..");
  * longer be re-themed. The blanket form is muscle memory in this codebase, so
  * the rule needs a build failure behind it rather than a line in CLAUDE.md.
  */
-function sourceFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    if (entry === "node_modules" || entry === "dist" || entry === "__tests__") continue;
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) out.push(...sourceFiles(full));
-    else if (/\.(css|vue)$/.test(entry)) out.push(full);
-  }
-  return out;
-}
+// Every package's stylesheets and components — the editor's tokens inherit the same way (#228).
+const FILES = sourceFiles(/\.(css|vue)$/);
 
 /**
  * Every `selector { … }` rule, ignoring comments. Statement at-rules
@@ -45,14 +35,14 @@ function rules(css: string): Array<{ selector: string; body: string }> {
 describe("dark-mode token declarations stay on the scoping root (#121)", () => {
   const offenders: string[] = [];
 
-  for (const file of sourceFiles(SRC)) {
+  for (const file of FILES) {
     for (const { selector, body } of rules(readFileSync(file, "utf-8"))) {
       // `.dark *` — the blanket form, matching every descendant.
       if (!/\.dark\s*\*/.test(selector)) continue;
       const declared = [...body.matchAll(/(--(?:cui|color)-[\w-]+)\s*:/g)].map((m) => m[1]);
       if (declared.length > 0) {
         offenders.push(
-          `${file.replace(`${SRC}/`, "")}: ${selector.replace(/\s+/g, " ")} declares ${declared.join(", ")}`,
+          `${where(file)}: ${selector.replace(/\s+/g, " ")} declares ${declared.join(", ")}`,
         );
       }
     }
