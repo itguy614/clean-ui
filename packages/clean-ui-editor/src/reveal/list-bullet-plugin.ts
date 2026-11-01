@@ -1,10 +1,10 @@
 import { RangeSetBuilder } from "@codemirror/state";
-import { Decoration, EditorView, ViewPlugin, WidgetType, type DecorationSet, type ViewUpdate } from "@codemirror/view";
+import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import type { SyntaxNode } from "@lezer/common";
-import { setGranularityEffect } from "./granularity";
-import { activeConstructsField, setActiveConstructsEffect } from "./construct-policy";
-import { isRevealed, refreshRevealEffect } from "./reveal-plugin";
+import { activeConstructsField } from "./construct-policy";
+import { decorationViewPlugin } from "./decoration-view-plugin";
+import { isRevealed, revealTriggers } from "./reveal-plugin";
 
 /** A purely decorative stand-in for a hidden `ListMark` ("-", "*", "+") —
  * `aria-hidden` because the real marker text stays in the DOM for the
@@ -116,22 +116,4 @@ function computeBulletDecorations(view: EditorView): DecorationSet {
   return builder.finish();
 }
 
-export const listBulletPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = computeBulletDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.view.compositionStarted) return;
-
-      const granularityChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setGranularityEffect)));
-      const constructsChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setActiveConstructsEffect)));
-      const focusChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(refreshRevealEffect)));
-      if (update.docChanged || update.viewportChanged || update.selectionSet || granularityChanged || constructsChanged || focusChanged) {
-        this.decorations = computeBulletDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (value) => value.decorations },
-);
+export const listBulletPlugin = decorationViewPlugin(computeBulletDecorations, revealTriggers);

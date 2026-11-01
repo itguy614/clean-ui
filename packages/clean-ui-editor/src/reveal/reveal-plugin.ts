@@ -1,9 +1,10 @@
 import { RangeSetBuilder, StateEffect } from "@codemirror/state";
-import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from "@codemirror/view";
+import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import type { SyntaxNode } from "@lezer/common";
 import { granularityField, setGranularityEffect } from "./granularity";
 import { activeConstructsField, setActiveConstructsEffect } from "./construct-policy";
+import { decorationViewPlugin, type DecorationTriggers } from "./decoration-view-plugin";
 import { isMarkerNodeName, hasMandatoryTrailingSpace, isHiddenLinkDestination } from "./constructs";
 
 /**
@@ -69,6 +70,16 @@ function isEligibleListItem(ref: { name: string; node: SyntaxNode }, activeConst
   return ref.name === "ListItem" && ref.node.parent !== null && activeConstructs.has(ref.node.parent.name);
 }
 
+/** What makes a reveal-dependent decoration stale, beyond the document,
+ * viewport and syntax tree `decorationViewPlugin` always watches. Shared with
+ * `list-bullet-plugin.ts` so the bullet widget and its marker can never
+ * refresh on different updates. */
+export const revealTriggers: DecorationTriggers = {
+  effects: [setGranularityEffect, setActiveConstructsEffect, refreshRevealEffect],
+  selection: true,
+  pauseDuringComposition: true,
+};
+
 function computeDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const activeConstructs = view.state.field(activeConstructsField);
@@ -107,30 +118,13 @@ function computeDecorations(view: EditorView): DecorationSet {
  * same line) — never revealed at all while unfocused, so an incidental
  * default cursor position before the user's first interaction can't reveal
  * anything. Recomputes on document, selection, viewport, granularity and
- * focus changes — a granularity change alone sets none of the `ViewUpdate`
+ * focus changes, and when a background parse extends the syntax tree — a
+ * granularity change alone sets none of the `ViewUpdate`
  * flags, which is exactly the bug the prototype spike caught. Suspended
  * entirely while an IME composition is in progress (FR10): touching the DOM
  * mid-composition can displace the candidate window or abort it outright.
  */
-export const revealPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = computeDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.view.compositionStarted) return;
-
-      const granularityChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setGranularityEffect)));
-      const constructsChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(setActiveConstructsEffect)));
-      const focusChanged = update.transactions.some((tr) => tr.effects.some((effect) => effect.is(refreshRevealEffect)));
-      if (update.docChanged || update.viewportChanged || update.selectionSet || granularityChanged || constructsChanged || focusChanged) {
-        this.decorations = computeDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (value) => value.decorations },
-);
+export const revealPlugin = decorationViewPlugin(computeDecorations, revealTriggers);
 
 /** Dispatches a no-op-for-state, recompute-trigger effect on focus/blur —
  * `hasFocus` itself doesn't make `ViewUpdate` see anything change, so

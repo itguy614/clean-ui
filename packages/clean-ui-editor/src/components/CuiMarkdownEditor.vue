@@ -9,9 +9,9 @@ registerEditorIcons();
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, useTemplateRef } from "vue";
-import { EditorView, keymap, drawSelection, placeholder as placeholderExtension } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, placeholder as placeholderExtension, type ViewUpdate } from "@codemirror/view";
 import { EditorState, Compartment, Prec, Annotation, type Extension, type Transaction } from "@codemirror/state";
-import { syntaxHighlighting } from "@codemirror/language";
+import { syntaxHighlighting, syntaxTree } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
@@ -33,7 +33,7 @@ import { codeBackgroundPlugin } from "../theme/code-decorations";
 import { editorThemeExtension } from "../theme/editor-theme";
 import { cuiMarkdownHighlightStyle } from "../theme/syntax-highlight";
 import { buildRegistry, type PluginRegistry, type RegistryWarning } from "../plugins/registry";
-import { createCommandContext } from "../plugins/command-context";
+import { createCommandContext, peekedUnsettled } from "../plugins/command-context";
 import { invokeCommand, queryIsActive, type PluginErrorInfo } from "../plugins/invoke-command";
 import { slashMenuExtension } from "../plugins/slash-menu";
 import { DEFAULT_PLUGINS } from "../plugins/default-plugins";
@@ -293,11 +293,19 @@ const commandContext = createCommandContext(
   useCleanUIContext(),
 );
 
-// Bumped on every selection/document change so the toolbar's pressed state
+// Bumped on every selection/document/syntax-tree change so the toolbar's pressed state
 // (which reads live CodeMirror state through `isCommandActive`, not a Vue
 // ref) has a reactive dependency to re-render against — see updateListener
 // in createView() and CuiMarkdownEditorToolbar's `selectionVersion` prop.
 const selectionVersion = ref(0);
+
+// A background parse can extend the tree under an unmoved cursor, which
+// changes what `isActive` sees (#256). `isActive` answers from what is
+// already parsed and reads as inactive inside a block still being parsed;
+// only then can a later chunk change an answer, so only then re-render.
+function parseAdvanced(update: ViewUpdate): boolean {
+  return syntaxTree(update.startState) !== syntaxTree(update.state) && peekedUnsettled(commandContext);
+}
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
   for (const warning of warnings) {
@@ -478,7 +486,7 @@ function createView(): EditorView {
             if (!external || doc !== lastKnownValue) emitModelValue.call(doc);
             docLength.value = update.state.doc.length;
           }
-          if (update.docChanged || update.selectionSet) selectionVersion.value++;
+          if (update.docChanged || update.selectionSet || parseAdvanced(update)) selectionVersion.value++;
         }),
         EditorState.transactionFilter.of(maxLengthFilter),
         // Flush on blur as well as on unmount. Clicking a host button blurs the
