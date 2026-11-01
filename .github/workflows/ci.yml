@@ -98,5 +98,8 @@ jobs:
 
       # Gzip delta the fixture bundle grows by from importing the package,
       # against the committed budget in fixtures/size-budget.json.
+      # Every entry, for every package: the editor's barrel and its /render
+      # subpath are budgeted separately, so /render pulling CodeMirror back in
+      # fails here (#225, #226).
       - name: Check bundle size budget
         run: node scripts/check-bundle-budget.mjs

@@ -1,5 +1,5 @@
 // Stand-in for @itguy614/clean-ui, used only when measuring the size budget's
-// baseline (scripts/check-bundle-budget.mjs, CUI_BUNDLE_BASELINE=1 via
+// baseline (scripts/check-bundle-budget.mjs, CUI_BUNDLE_BASELINE="@itguy614/clean-ui" via
 // vite.config.ts's alias). Same exports App.vue and GridApp.vue use, so the *same* source
 // builds against "no clean-ui" without a second fixture app — the gzip
 // difference between the two builds is clean-ui's real cost to this app.
