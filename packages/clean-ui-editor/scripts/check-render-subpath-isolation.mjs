@@ -69,6 +69,8 @@ if (!barrel.includes("./render/contract.js")) {
 await init;
 const seen = new Set();
 const codemirrorImports = [];
+const unresolved = [];
+const PACKAGE_NAME = JSON.parse(readFileSync(resolve(PACKAGE_ROOT, "package.json"), "utf-8")).name;
 const queue = [RENDER_ENTRY];
 while (queue.length > 0) {
   const file = queue.pop();
@@ -77,13 +79,26 @@ while (queue.length > 0) {
   const [imports] = parse(readFileSync(file, "utf-8"), relative(DIST, file));
   for (const { n: specifier } of imports) {
     if (!specifier) continue; // a dynamic import with no static specifier
-    if (specifier.startsWith(".")) queue.push(resolve(dirname(file), specifier));
-    else if (specifier.startsWith("@codemirror/")) codemirrorImports.push(`${relative(DIST, file)} → ${specifier}`);
+    const from = `${relative(DIST, file)} → ${specifier}`;
+    if (specifier.startsWith(".")) {
+      const target = resolve(dirname(file), specifier);
+      if (existsSync(target)) queue.push(target);
+      else unresolved.push(from);
+    } else if (specifier.startsWith("@codemirror/")) {
+      codemirrorImports.push(from);
+    } else if (specifier === PACKAGE_NAME || specifier.startsWith(`${PACKAGE_NAME}/`)) {
+      // A self-reference (`/codemirror`, the barrel) leaves this walk, and leads straight back in.
+      codemirrorImports.push(`${from} (a self-reference this walk cannot follow)`);
+    }
   }
+}
+if (unresolved.length > 0) {
+  failed++;
+  console.error(`✗ dist/render.js's import closure has unresolvable relative import(s):\n  ${unresolved.join("\n  ")}`);
 }
 if (codemirrorImports.length > 0) {
   failed++;
-  console.error(`✗ dist/render.js reaches @codemirror/* through its imports:\n  ${codemirrorImports.join("\n  ")}`);
+  console.error(`✗ dist/render.js reaches (or may reach) @codemirror/* through its imports:\n  ${codemirrorImports.join("\n  ")}`);
 } else {
   console.log(`✓ dist/render.js reaches no @codemirror/* import (${seen.size} modules walked)`);
 }

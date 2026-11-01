@@ -22,7 +22,7 @@
     {
       "package": "@itguy614/clean-ui-editor",
       "scenario": "render",
-      "gzipBytes": 24576,
+      "gzipBytes": 25600,
       "measured": "2026-11-01"
     }
   ]

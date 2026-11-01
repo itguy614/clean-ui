@@ -32,11 +32,13 @@ Two things a successor phase inherits:
   those results should not be re-derived. What remains is device- and assistive-technology
   specific: selection handles, caret placement by tap, on-screen keyboard behaviour, and how the
   exposed markers actually sound.
-- **No committed bundle budget for the editor.** `fixtures/size-budget.json` carries an entry for
-  clean-ui only. The editor's own budget (the v1 specification set 130 kB gzip) is not yet gated
-  in CI, so nothing currently fails when the editor grows. Every phase below adds weight —
-  uploads, table widgets, rendered blocks — so this should be closed before, not after, that
-  weight arrives.
+- **The editor's budget is gated, but above the v1 specification.** Since #226,
+  `fixtures/size-budget.json` carries two editor entries, checked in CI: the barrel (measured
+  150.7 kB gzip, budget 158 kB) and `/render` alone (measured 22.2 kB, budget 25 kB). The barrel's
+  figure counts the editor's stylesheet and the clean-ui components it uses internally, and is
+  over NFR1's 130 kB. The budget stops further growth; it does not settle whether NFR1 is revised
+  or the editor trimmed back to it. Every phase below adds weight — uploads, table widgets,
+  rendered blocks — so that decision should come before, not after, that weight arrives.
 
 ## Invariants Later Phases Must Preserve
 

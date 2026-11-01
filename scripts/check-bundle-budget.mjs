@@ -58,7 +58,9 @@ function build(scenario, pkg, baseline) {
   const { input, outDir: base } = SCENARIOS[scenario];
   const outDir = baseline ? `${base}-baseline` : base;
   rmSync(join(FIXTURE_DIR, outDir), { recursive: true, force: true });
-  execFileSync("npm", ["run", "build"], {
+  // `vite build` alone, not the fixture's `npm run build`: its vue-tsc pass doesn't depend on
+  // the baseline aliases (they are Vite-only) and verify-fixture.mjs has already run it.
+  execFileSync(join(FIXTURE_DIR, "node_modules", ".bin", "vite"), ["build"], {
     cwd: FIXTURE_DIR,
     stdio: "inherit",
     env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? pkg : "", CUI_BUNDLE_INPUT: input, CUI_BUNDLE_OUTDIR: outDir },
@@ -76,7 +78,9 @@ for (const pkg of requested) {
 }
 const entries = requested.length ? budgets.filter((b) => requested.includes(b.package)) : budgets;
 
-for (const pkg of new Set(entries.map((b) => b.package))) {
+// Every budgeted package, not just the requested ones: a scenario can use more than its own
+// (the editor's page uses clean-ui too, its peer).
+for (const pkg of new Set(budgets.map((b) => b.package))) {
   if (!existsSync(join(FIXTURE_DIR, "node_modules", ...pkg.split("/")))) {
     fail(`fixtures/consumer-app has no installed ${pkg} — run scripts/verify-fixture.mjs first.`);
   }
