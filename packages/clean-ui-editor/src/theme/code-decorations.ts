@@ -1,6 +1,7 @@
 import { RangeSetBuilder } from "@codemirror/state";
-import { Decoration, EditorView, ViewPlugin, type DecorationSet, type ViewUpdate } from "@codemirror/view";
+import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
+import { decorationViewPlugin } from "../reveal/decoration-view-plugin";
 
 /**
  * Background styling for code, distinct from `cuiMarkdownHighlightStyle`'s
@@ -54,17 +55,7 @@ function computeCodeDecorations(view: EditorView): DecorationSet {
   return builder.finish();
 }
 
-export const codeBackgroundPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = computeCodeDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = computeCodeDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (value) => value.decorations },
-);
+/** Document, viewport and syntax-tree changes only: unlike the reveal
+ * plugins, code backgrounds depend on neither the selection nor focus, nor
+ * on any reveal effect — the narrower trigger set is correct, not drift. */
+export const codeBackgroundPlugin = decorationViewPlugin(computeCodeDecorations);
