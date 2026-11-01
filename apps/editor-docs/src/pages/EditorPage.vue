@@ -111,7 +111,7 @@ const THEME_PRESETS: Record<Exclude<ThemePreset, "default">, Record<string, stri
 };
 const themeStyle = computed(() => ({
   ...(themePreset.value === "default" ? {} : THEME_PRESETS[themePreset.value]),
-  ...(themeRounded.value ? { "--cui-radius-md": "1rem" } : {}),
+  ...(themeRounded.value ? { "--cui-markdown-editor-radius": "1rem" } : {}),
 }));
 const themeCode = computed(() => {
   const lines = Object.entries(themeStyle.value).map(([k, v]) => `  ${k}: ${v};`);
@@ -232,9 +232,11 @@ const themeCode = computed(() => {
         the editor or on any container above it — they inherit, so one rule can retheme every
         editor in a region. The rules that read them have zero specificity, so a plain class
         selector such as <code class="cui-code">.cui-markdown-editor__control { … }</code> also
-        wins without <code class="cui-code">!important</code>. The error state keeps
-        <code class="cui-code">--cui-error</code> whatever these are set to, so a rethemed region
-        still shows which field is invalid.
+        wins without <code class="cui-code">!important</code>. Change the corners through
+        <code class="cui-code">--cui-markdown-editor-radius</code> rather than a plain
+        <code class="cui-code">border-radius</code> rule: the toolbar rounds its own corners from
+        the same token. The error state keeps <code class="cui-code">--cui-error</code> whatever
+        these, or a plain rule, set, so a rethemed region still shows which field is invalid.
       </p>
       <CuiStack spacing="4">
         <PropTable
@@ -242,7 +244,7 @@ const themeCode = computed(() => {
             { name: '--cui-markdown-editor-border', type: 'color', default: 'var(--cui-border-strong)', description: 'The control\'s border at rest.' },
             { name: '--cui-markdown-editor-focus-border', type: 'color', default: 'var(--cui-primary)', description: 'The border while the editor has focus.' },
             { name: '--cui-markdown-editor-focus-ring', type: 'color', default: 'var(--cui-primary-focus-ring)', description: 'The 2px ring drawn outside the border while the editor has focus.' },
-            { name: '--cui-button-radius / --cui-radius-md', type: 'length', default: '0.375rem', description: 'The control\'s corner radius, shared with clean-ui\'s inputs and buttons. The toolbar follows it, so its corners always match the control\'s.' },
+            { name: '--cui-markdown-editor-radius', type: 'length', default: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))', description: 'The control\'s corner radius. The toolbar follows it, so their corners always match. Unset, it follows clean-ui\'s shared control radius, like CuiInput.' },
           ]"
         />
         <Example title="Overriding the tokens on a container" :code="themeCode">
@@ -253,7 +255,7 @@ const themeCode = computed(() => {
               <CuiRadio value="info" label="Info" />
               <CuiRadio value="quiet" label="Quiet (no ring)" />
             </CuiRadioGroup>
-            <CuiCheckbox v-model="themeRounded" label="Also set --cui-radius-md: 1rem" />
+            <CuiCheckbox v-model="themeRounded" label="Also set --cui-markdown-editor-radius: 1rem" />
             <div :style="themeStyle">
               <CuiMarkdownEditor v-model="themedDoc" />
             </div>

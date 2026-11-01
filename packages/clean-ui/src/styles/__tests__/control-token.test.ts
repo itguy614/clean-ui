@@ -4,7 +4,8 @@ import { basename, resolve } from "node:path";
 import { PACKAGES, sourceFiles, splitSelectorList, stripComments } from "./css-helpers";
 
 /** Every component in every package, by file name — the editor's as well as clean-ui's (#228). */
-const COMPONENTS = new Map(sourceFiles(/\.vue$/).map((f) => [basename(f), f]));
+const COMPONENT_FILES = sourceFiles(/\.vue$/);
+const COMPONENTS = new Map(COMPONENT_FILES.map((f) => [basename(f), f]));
 
 /**
  * #114 — a component must not write a themeable property as a bare declaration in its
@@ -104,6 +105,8 @@ const kebab = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLo
 describe("converted components emit themeable properties as tokens (#114)", () => {
   it("finds every listed component, in clean-ui and the editor", () => {
     expect(CONVERTED.filter(({ file }) => !COMPONENTS.has(file))).toEqual([]);
+    // Keyed by file name, so two packages sharing one would leave one of them unscanned.
+    expect(COMPONENTS.size).toBe(COMPONENT_FILES.length);
   });
 
   for (const { file, issue } of CONVERTED) {
@@ -138,9 +141,14 @@ describe("converted components emit themeable properties as tokens (#114)", () =
  * consumer could not retheme its border or focus ring without `!important`. Opt-in, like
  * `CONVERTED`.
  */
-const CONVERTED_STYLESHEETS: Array<{ file: string; component: string; issue: string }> = [
-  { file: "clean-ui-editor/src/styles/editor.css", component: "markdown-editor", issue: "#228" },
+const CONVERTED_STYLESHEETS: Array<{ file: string; component: string; part: string; issue: string }> = [
+  // `part` is the element the tokens paint; `--error` is the state allowed to paint it at
+  // normal specificity, so neither tokens nor a consumer rule can hide an invalid field.
+  { file: "clean-ui-editor/src/styles/editor.css", component: "markdown-editor", part: "cui-markdown-editor__control", issue: "#228" },
 ];
+
+/** The properties a themeable slot paints. */
+const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-color)?)\s*:/;
 
 /** CLAUDE.md's slot vocabulary — a closed set, like the colour-role slots. */
 const SLOTS = new Set([
@@ -160,8 +168,9 @@ function isWholeWhere(selector: string): boolean {
 }
 
 describe("converted stylesheets read every private property through its public token (#228)", () => {
-  for (const { file, component, issue } of CONVERTED_STYLESHEETS) {
+  for (const { file, component, part, issue } of CONVERTED_STYLESHEETS) {
     const css = stripComments(readFileSync(resolve(PACKAGES, file), "utf-8"));
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: splitSelectorList(m[1].trim()), body: m[2] }));
 
     it(`${file} (${issue}) reads its private properties only as the public token's fallback`, () => {
       const reads = [
@@ -180,11 +189,21 @@ describe("converted stylesheets read every private property through its public t
 
     it(`${file} (${issue}) wraps every rule that reads a public token whole in :where()`, () => {
       const reading = new RegExp(`var\\(\\s*--cui-${component}-`);
-      const selectors = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-        .filter((m) => reading.test(m[2]))
-        .flatMap((m) => splitSelectorList(m[1].trim()));
+      const selectors = rules.filter(({ body }) => reading.test(body)).flatMap(({ selectors }) => selectors);
       expect(selectors.length).toBeGreaterThan(0);
       expect(selectors.filter((s) => !isWholeWhere(s))).toEqual([]);
+    });
+
+    it(`${file} (${issue}) paints ${part} only through zero-specificity rules, its error state aside`, () => {
+      // Once converted, stays converted: a rule that paints the part without reading a token —
+      // `… :focus-within { border-color: var(--cui-primary) }` — would outrank both the token
+      // and a consumer's rule, and the check above would never look at it.
+      const targetsPart = new RegExp(`\\.${part}(?![\\w-])[^\\s>+~]*\\)?$`);
+      const offenders = rules
+        .filter(({ body }) => PAINT.test(body))
+        .flatMap(({ selectors }) => selectors)
+        .filter((s) => targetsPart.test(s) && !isWholeWhere(s) && !s.includes(`${component}--error`));
+      expect(offenders).toEqual([]);
     });
   }
 });

@@ -152,8 +152,14 @@ describe("every component root is inside the scope", () => {
    * test checks in its own file (or exempts, with a reason). So it is in scope already,
    * and needs no class of its own — passing one to a component with a <Teleport> root, as
    * CuiConfirmDialog's and the editor's dialogs' <CuiModal> is, only makes Vue warn (#228).
+   * Not a renderless one, though: a <slot /> root renders no element, so whatever it wraps
+   * would be out of scope.
    */
-  const COMPOSED = /^<Cui[A-Z]/;
+  function composesRenderedComponent(root: string): boolean {
+    const name = /^<(Cui[A-Za-z]+)/.exec(root)?.[1];
+    const file = name && COMPONENTS.find((f) => f.endsWith(`/${name}.vue`));
+    return !!file && !templateRoots(readFileSync(file, "utf8")).every((r) => /^<slot\b/.test(r));
+  }
 
   it("scans every package's components, the editor's as well as clean-ui's", () => {
     // Every suite scans through `sourceFiles`, so this one check covers them all.
@@ -168,7 +174,7 @@ describe("every component root is inside the scope", () => {
       if (name in EXEMPT) continue;
 
       for (const root of templateRoots(readFileSync(file, "utf8"))) {
-        if (COMPOSED.test(root)) continue;
+        if (composesRenderedComponent(root)) continue;
         if (!/class="[^"]*\bcui-/.test(root) && !/:class="[^"]*cui-/.test(root)) {
           offenders.push(`${where(file)}: ${root.split("\n")[0].trim()}`);
         }

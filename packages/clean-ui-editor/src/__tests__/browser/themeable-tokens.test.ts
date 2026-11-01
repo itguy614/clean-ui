@@ -6,7 +6,7 @@ import { frames, injectStyle, mountHosts } from "../../../../../config/test/brow
 /**
  * #228 — the editor's themeable contract, measured. Its border and focus ring were private
  * `--_cme-*` properties read directly, so a consumer could not retheme them at all. Now each
- * is read as `var(--cui-markdown-editor-<slot>, var(--_markdown-editor-<slot>))` in a
+ * (and now its radius) is read as `var(--cui-markdown-editor-<slot>, var(--_markdown-editor-<slot>))` in a
  * zero-specificity rule, and these are the two routes that promises: a token set on a
  * container *above* the editor (inherited, not just set on the element itself), and a plain
  * consumer rule with no `!important`.
@@ -100,6 +100,27 @@ describe("the editor's themeable tokens (real browser)", () => {
     await focus(content);
     expect(s.borderTopColor).toBe(ERROR);
     expect(s.boxShadow).not.toContain(FOCUS_RING);
+  });
+
+  it("keeps the error colour over a consumer's plain border rule", async () => {
+    // The error state is at normal specificity, as CuiInput's is, so restyling the
+    // border with a plain rule doesn't erase it either.
+    const remove = injectStyle(".cui-markdown-editor__control { border-color: rgb(10, 11, 12); }");
+    try {
+      const { control } = await editor(`--cui-error: ${ERROR};`, { error: true });
+      expect(getComputedStyle(control).borderTopColor).toBe(ERROR);
+    } finally {
+      remove();
+    }
+  });
+
+  it("rounds the control and its toolbar together from --cui-markdown-editor-radius", async () => {
+    // The supported route to a different radius: both read the token, so the toolbar's
+    // corners stay inset by exactly the border and nothing notches.
+    const { control, q } = await editor("width: 240px; --cui-markdown-editor-radius: 12px;");
+    const scroller = q(".cui-markdown-editor-toolbar .cui-scroll-area__scroller");
+    expect(getComputedStyle(control).borderTopRightRadius).toBe("12px");
+    expect(getComputedStyle(scroller).borderTopRightRadius).toBe("11px");
   });
 
   it("rounds the control from --cui-radius-md, like the toolbar inside it", async () => {

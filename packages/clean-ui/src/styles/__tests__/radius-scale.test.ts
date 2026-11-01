@@ -32,10 +32,22 @@ describe("rounded scale", () => {
   // `--cui-radius-md` — or through a component's own private token, which does.
   it("every --cui-button-radius fallback goes through --cui-radius-md", () => {
     const offenders = sourceFiles(/\.(vue|css|ts)$/).flatMap((f) =>
-      (readFileSync(f, "utf8").match(/var\(\s*--cui-button-radius\b[^;}]*/g) ?? [])
-        .filter((read) => !/--cui-radius-md|var\(\s*--_/.test(read))
+      buttonRadiusReads(readFileSync(f, "utf8"))
+        .filter((read) => !/^var\(\s*--cui-button-radius\s*,\s*var\(\s*(--cui-radius-md\s*,|--_)/.test(read))
         .map((read) => `${where(f)}: ${read}`),
     );
     expect(offenders).toEqual([]);
   });
 });
+
+/** Each `var(--cui-button-radius…)` expression in `source`, whole — to its own closing paren. */
+function buttonRadiusReads(source: string): string[] {
+  return [...source.matchAll(/var\(\s*--cui-button-radius\b/g)].map((m) => {
+    let depth = 0;
+    for (let i = m.index!; i < source.length; i++) {
+      if (source[i] === "(") depth++;
+      else if (source[i] === ")" && --depth === 0) return source.slice(m.index, i + 1);
+    }
+    return source.slice(m.index);
+  });
+}

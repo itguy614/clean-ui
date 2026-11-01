@@ -26,17 +26,25 @@
  * values are private `--_markdown-editor-*` properties, and the paint reads
  * each back through its public token —
  * `var(--cui-markdown-editor-<slot>, var(--_markdown-editor-<slot>))` — so a
- * consumer can set `--cui-markdown-editor-border`, `-focus-border` or
- * `-focus-ring` on the editor or on any container above it. The paint rules
- * are wrapped whole in `:where()`, so they are zero-specificity and a plain
- * consumer rule (`.cui-markdown-editor__control { … }`) wins without
- * `!important`. Layout stays at normal specificity: changing it breaks the
- * control rather than restyling it.
+ * consumer can set `--cui-markdown-editor-border`, `-focus-border`,
+ * `-focus-ring` or `-radius` on the editor or on any container above it. The
+ * paint rules are wrapped whole in `:where()`, so they are zero-specificity
+ * and a plain consumer rule (`.cui-markdown-editor__control { … }`) wins
+ * without `!important`. Layout, and the error state, stay at normal
+ * specificity: changing those breaks the control rather than restyling it.
+ *
+ * The radius is a token rather than left to a plain rule because the toolbar
+ * (CuiMarkdownEditorToolbar.vue) rounds its own top corners from the same
+ * value, inset by the border: set `--cui-markdown-editor-radius` and both
+ * follow; a plain `border-radius` on the control alone would notch the corner
+ * where they meet (#125). Its default is RADIUS_SCALE's `md`, the same chain
+ * as every clean-ui control.
  */
 .cui-markdown-editor__control {
   --_markdown-editor-border: var(--cui-border-strong);
   --_markdown-editor-focus-border: var(--cui-primary);
   --_markdown-editor-focus-ring: var(--cui-primary-focus-ring);
+  --_markdown-editor-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
 
   display: flex;
   flex-direction: column;
@@ -48,10 +56,7 @@
 
 :where(.cui-markdown-editor__control) {
   border: 1px solid var(--cui-markdown-editor-border, var(--_markdown-editor-border));
-  /* RADIUS_SCALE's `md`, the same fallback chain as the toolbar inside it —
-     a shorter one rounded the two differently when a consumer set only
-     `--cui-radius-md`, notching the corner where they meet. */
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-markdown-editor-radius, var(--_markdown-editor-radius));
   background: var(--cui-surface-base);
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
 }
@@ -66,16 +71,14 @@
   cursor: not-allowed;
 }
 
-/* The error state paints the error role directly rather than through the
-   public tokens, as CuiInput's does: a container that rethemes its editors'
-   borders must not also hide which one is invalid. Later in the file at the
-   same zero specificity, so it wins over the rules above and still loses to
-   a consumer's own rule. */
-:where(.cui-markdown-editor--error .cui-markdown-editor__control) {
+/* The error state paints the error role directly, at normal specificity, as
+   CuiInput's `.cui-input--error` does: neither a container's tokens nor a
+   consumer's plain rule restyling the border may hide which field is invalid. */
+.cui-markdown-editor--error .cui-markdown-editor__control {
   border-color: var(--cui-error);
 }
 
-:where(.cui-markdown-editor--error:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within) {
+.cui-markdown-editor--error:not(.cui-markdown-editor--disabled) .cui-markdown-editor__control:focus-within {
   border-color: var(--cui-error);
   box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
