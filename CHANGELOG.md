@@ -46,6 +46,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   way, through CuiFormField: only the URL label was styled before. The message catalogue
   is unchanged, all 18 `linkDialog*`/`imageDialog*` keys included, and so are the fields'
   ids.
+- **The link and image dialogs insert well-formed markdown whatever is typed** (#408). A `]`
+  in the text ended the label early, and a space or an unbalanced parenthesis in the URL
+  broke the destination. The text now has `[`, `]` and `\` escaped and its line breaks
+  folded into a space. The URL is wrapped in `<…>` when it holds a space or an unbalanced
+  parenthesis, its `<`/`>` are percent-encoded, and its line breaks and tabs are dropped, as
+  a browser drops them. Pasted links and images get the same treatment. The viewer now
+  reads a `<…>` destination and backslash escapes in a URL, and runs its scheme check on
+  the result, so `[x](<javascript:…>)` is refused like `[x](javascript:…)`.
+- **Unmounting the markdown editor closes a link or image dialog it left open** (#409). The
+  dialog is its own Vue app, so it stayed on screen, and submitting it wrote into the
+  destroyed editor and raised an unhandled rejection. The command now sees a cancel. A
+  plugin's own dialog gets the same by returning a close function from its `collect()`
+  opener.
 
 ## [1.5.1] - 2026-10-23
 

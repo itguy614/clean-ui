@@ -27,8 +27,12 @@ export interface CollectSettle<T> {
  * an awaitable `Promise<T | null>` and is the seam FR18a asks for — the
  * dialog itself belongs to the plugin author (e.g. Phase 04's link dialog),
  * not this package.
+ *
+ * It may return a function that closes that UI. If the editor unmounts while
+ * the collection is still open, the editor calls it and `collect()` resolves
+ * `null`, as on cancel (#409); a later `resolve`/`cancel` is ignored.
  */
-export type CollectOpener<T> = (settle: CollectSettle<T>) => void;
+export type CollectOpener<T> = (settle: CollectSettle<T>) => void | (() => void);
 
 /**
  * What every command and `isActive` query operates through. `doc` and

@@ -11,7 +11,8 @@ export interface UrlDialogValues {
 /**
  * Opens the link or image dialog through `context.collect()`, in the host's clean-ui
  * context — which also carries the editor's own strings, the dialog reading them from the
- * provided catalog. Resolves the submitted values, or `null` on cancel.
+ * provided catalog. Resolves the submitted values, or `null` on cancel or when the editor
+ * unmounts with the dialog still open.
  */
 export function openUrlDialog(
   context: CommandContext,
@@ -36,5 +37,7 @@ export function openUrlDialog(
       },
       context.cleanUI,
     );
+    // The editor closes it if it unmounts first (#409).
+    return unmount;
   });
 }

@@ -1,8 +1,9 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { history, undo } from "@codemirror/commands";
-import { createCommandContext } from "../command-context";
+import { createCommandContext, disposeCommandContext } from "../command-context";
+import type { CollectSettle } from "../types";
 import { cuiMarkdownLanguage } from "../../language/markdown-language";
 
 function makeView(doc: string): EditorView {
@@ -22,6 +23,7 @@ describe("createCommandContext", () => {
   afterEach(() => {
     view?.destroy();
     view = undefined;
+    vi.restoreAllMocks();
   });
 
   it("throws a clear error when invoked after the view is gone, rather than a generic null-access failure", () => {
@@ -169,6 +171,70 @@ describe("createCommandContext", () => {
       await context.collect<string>((settle) => settle.cancel());
 
       expect(view.state.doc.toString()).toBe("untouched");
+    });
+
+    // #409: the editor disposes its context when it unmounts.
+    describe("on dispose", () => {
+      it("closes each open collection once and resolves it null; a late settle is ignored", async () => {
+        const context = createCommandContext(() => null);
+        const closes = [vi.fn(), vi.fn()];
+        const settles: Array<CollectSettle<string>> = [];
+        const results = closes.map((close) =>
+          context.collect<string>((settle) => {
+            settles.push(settle);
+            return close;
+          }),
+        );
+
+        disposeCommandContext(context);
+        settles[0]!.resolve("too late");
+
+        await expect(Promise.all(results)).resolves.toEqual([null, null]);
+        for (const close of closes) expect(close).toHaveBeenCalledTimes(1);
+      });
+
+      it("leaves a collection the UI already settled to close itself", async () => {
+        const context = createCommandContext(() => null);
+        const close = vi.fn();
+        const result = context.collect<string>((settle) => {
+          settle.resolve("done");
+          return close;
+        });
+
+        disposeCommandContext(context);
+
+        await expect(result).resolves.toBe("done");
+        expect(close).not.toHaveBeenCalled();
+      });
+
+      it("still closes the others when one close throws", async () => {
+        const context = createCommandContext(() => null);
+        const error = vi.spyOn(console, "error").mockImplementation(() => {});
+        const close = vi.fn();
+        const results = [
+          context.collect(() => () => {
+            throw new Error("broken");
+          }),
+          context.collect(() => close),
+        ];
+
+        disposeCommandContext(context);
+
+        await expect(Promise.all(results)).resolves.toEqual([null, null]);
+        expect(close).toHaveBeenCalledTimes(1);
+        expect(error).toHaveBeenCalledTimes(1);
+      });
+
+      it("resolves a later collection null without opening anything", async () => {
+        const onCollectingChange = vi.fn();
+        const disposed = createCommandContext(() => null, onCollectingChange);
+        disposeCommandContext(disposed);
+        const open = vi.fn();
+
+        await expect(disposed.collect(open)).resolves.toBeNull();
+        expect(open).not.toHaveBeenCalled();
+        expect(onCollectingChange).not.toHaveBeenCalled();
+      });
     });
   });
 

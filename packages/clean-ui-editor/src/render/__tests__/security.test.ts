@@ -42,6 +42,15 @@ describe("security: default configuration (no allowRawHtml)", () => {
     expect(html).not.toContain("javascript:");
   });
 
+  // #408: the scheme check reads the destination's URL, not its source spelling.
+  it.each(["[x](<javascript:alert(1)>)", "[x](javascript\\:alert(1))", "![x](<javascript:alert(1)>)"])(
+    "neutralises a javascript: URL spelled %s",
+    (markdown) => {
+      const html = serializeMarkdownToHtml(markdown);
+      expect(html).not.toMatch(/<a |<img/);
+    },
+  );
+
   it("neutralises a data: URL in link syntax", () => {
     const html = serializeMarkdownToHtml("[click me](data:text/html,<script>alert(1)</script>)");
     expect(html).not.toContain("<a ");
