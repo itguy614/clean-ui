@@ -12,6 +12,8 @@ import { injectStyle, mountHosts } from "../../../../../config/test/browser-help
  * themeable rules are zero-specificity (#114). A CuiButton change that gives one of them
  * specificity back — a `:hover` left outside its `:where()` — would make the toggle
  * transparent again with nothing failing. This is that cross-package contract, measured.
+ * setup.ts loads editor.css before clean-ui's sheet, so even a CuiButton rule that only
+ * ties with the editor's rule fails here.
  *
  * Real browser: the cascade and resolved `var()`s are exactly what jsdom does not model.
  */
@@ -74,5 +76,6 @@ describe("the mode toggle keeps the editor's own paint over CuiButton's (real br
     expect(s.borderTopColor).not.toBe(BORDER);
     await userEvent.hover(button);
     expect(s.backgroundColor).not.toBe(SURFACE);
+    expect(s.borderTopColor).not.toBe(BORDER);
   });
 });

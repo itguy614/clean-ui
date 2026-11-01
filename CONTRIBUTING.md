@@ -96,8 +96,8 @@ shouldn't fail just because nobody's run `playwright install` yet.
   project as non-blocking for now (`continue-on-error`) — a red run there is a signal to look at,
   not (yet) a merge blocker. `@itguy614/clean-ui-editor` has the same project
   (`pnpm --filter @itguy614/clean-ui-editor test:browser`); it runs against clean-ui's built
-  `dist`, so build clean-ui first. Helpers both packages share (`installTokens`, `frames`,
-  `mountHosts`, `settleScroll`) live in `config/test/browser-helpers.ts`, imported by relative
+  `dist`, so build clean-ui first. Helpers both packages share (`installTokens`, `injectStyle`,
+  `frames`, `mountHosts`, `settleScroll`) live in `config/test/browser-helpers.ts`, imported by relative
   path.
 
 ## Commits & pull requests
