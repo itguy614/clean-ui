@@ -1,14 +1,34 @@
 import type { EditorView } from "@codemirror/view";
-import type { ChangeSpec } from "@codemirror/state";
+import type { ChangeSpec, EditorState } from "@codemirror/state";
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
-import type { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode, Tree } from "@lezer/common";
 import type { CommandContext } from "./types";
 import { defaultMarkdownEditorMessages, type CuiMarkdownEditorMessages } from "../messages";
 
-/** How long a command may spend parsing up to the cursor before it settles
- * for the tree it has. `ensureSyntaxTree`'s own default: short enough not to
- * be felt on a keypress. */
+/** How long a command may spend finishing the parse before it settles for the
+ * tree it has. `ensureSyntaxTree`'s own default: short enough not to be felt
+ * on a keypress. */
 const PARSE_BUDGET_MS = 50;
+
+/** One tree per state, so the toolbar's `isActive` queries for a single
+ * render share one parse budget instead of spending one each. */
+const treeByState = new WeakMap<EditorState, Tree>();
+
+/**
+ * The parser finishes a long document in the background (#256), so the
+ * current tree may stop short of the cursor — read as "not inside", a toggle
+ * would double-wrap instead of unwrapping. Finish the parse first; past the
+ * time budget, settle for what exists. Parsing to the document's end rather
+ * than the cursor's line: a parse stopped mid-block truncates that block.
+ */
+function commandTree(state: EditorState): Tree {
+  let tree = treeByState.get(state);
+  if (!tree) {
+    tree = ensureSyntaxTree(state, state.doc.length, PARSE_BUDGET_MS) ?? syntaxTree(state);
+    treeByState.set(state, tree);
+  }
+  return tree;
+}
 
 /**
  * `getView` is a live accessor (not a captured reference) so a context built
@@ -42,11 +62,7 @@ export function createCommandContext(
   function findConstructRange(nodeName: string): { from: number; to: number } | null {
     const view = requireView();
     const pos = view.state.selection.main.head;
-    // The parser finishes a long document in the background (#256), so the
-    // current tree may stop short of the cursor — read as "not inside", a
-    // toggle would double-wrap instead of unwrapping. Parse through the
-    // cursor's line first; past the time budget, fall back to what exists.
-    const tree = ensureSyntaxTree(view.state, view.state.doc.lineAt(pos).to, PARSE_BUDGET_MS) ?? syntaxTree(view.state);
+    const tree = commandTree(view.state);
     // Bias toward the node ending here first (side -1) — matters right
     // after a closing marker, e.g. the cursor landing at "**bold**|" should
     // still read as inside the bold construct — then fall back to the node
@@ -54,7 +70,13 @@ export function createCommandContext(
     for (const side of [-1, 1] as const) {
       let node: SyntaxNode | null = tree.resolveInner(pos, side);
       while (node) {
-        if (node.name === nodeName) return { from: node.from, to: node.to };
+        // A partial parse closes every block still open where it stopped, so
+        // a node reaching that point may be cut short. Its range is not safe
+        // to rewrite: report it as absent rather than as a shorter construct.
+        if (node.name === nodeName) {
+          const maybeCut = node.to >= tree.length && tree.length < view.state.doc.length;
+          return maybeCut ? null : { from: node.from, to: node.to };
+        }
         node = node.parent;
       }
     }

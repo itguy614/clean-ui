@@ -17,9 +17,12 @@ export interface DecorationTriggers {
 }
 
 /** True when this update carries a different syntax tree, including one a
- * background parse extended with nothing else changing (#256). */
-function syntaxTreeChanged(update: ViewUpdate): boolean {
-  return syntaxTree(update.startState) !== syntaxTree(update.state);
+ * background parse extended with nothing else changing (#256), and the old
+ * tree stopped short of the viewport's end. A chunk parsed wholly below the
+ * viewport can't change what is drawn; scrolling there rebuilds anyway. */
+function treeChangedInView(update: ViewUpdate): boolean {
+  const before = syntaxTree(update.startState);
+  return before !== syntaxTree(update.state) && before.length < update.view.viewport.to;
 }
 
 /**
@@ -46,18 +49,25 @@ export function decorationViewPlugin(
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
+      /** A trigger arrived while paused for composition: rebuild on the first
+       * update after it, since that update may carry no trigger of its own. */
+      stale = false;
       constructor(view: EditorView) {
         this.decorations = compute(view);
       }
       update(update: ViewUpdate) {
-        if (pauseDuringComposition && update.view.compositionStarted) return;
-        if (
+        const triggered =
           update.docChanged ||
           update.viewportChanged ||
           (selection && update.selectionSet) ||
-          syntaxTreeChanged(update) ||
-          hasTriggerEffect(update)
-        ) {
+          treeChangedInView(update) ||
+          hasTriggerEffect(update);
+        if (pauseDuringComposition && update.view.compositionStarted) {
+          this.stale ||= triggered;
+          return;
+        }
+        if (triggered || this.stale) {
+          this.stale = false;
           this.decorations = compute(update.view);
         }
       }

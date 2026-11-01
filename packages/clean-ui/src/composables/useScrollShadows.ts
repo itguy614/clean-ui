@@ -102,4 +102,3 @@ export const scrollShadowLeftStyle = {
   left: "0",
   background: `linear-gradient(to right, ${fadeTo}, transparent)`,
 };
-

@@ -25,7 +25,10 @@ export function toggleLinePrefixCommand(options: ToggleLinePrefixOptions): Plugi
   const insert = options.insert ?? (match as string);
   const matchedPrefix = (text: string): string | null => {
     if (typeof match === "string") return text.startsWith(match) ? match : null;
-    return text.match(match)?.[0] ?? null;
+    // Only a match at the line start is a prefix, whether or not the pattern
+    // says `^`: stripping removes the first `length` characters of the line.
+    const found = text.match(match);
+    return found?.index === 0 ? found[0] : null;
   };
   const prefixFor = typeof insert === "string" ? () => insert : insert;
   const selectedLines = (context: CommandContext) => linesInRange(context.doc, context.selection.from, context.selection.to);

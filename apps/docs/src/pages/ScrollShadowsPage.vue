@@ -100,7 +100,7 @@ const styles = [
       <h1>Scroll Shadows</h1>
       <p class="cui-lead">
         <code class="cui-code">useScrollShadows()</code> tracks whether a scroll container has more
-        content in each direction. The three exported style objects draw an edge fade for each.
+        content in each direction. The four exported style objects draw an edge fade for each.
       </p>
       <CuiAlert color="warning" title="Deprecated">
         Use <RouterLink to="/components/scroll-area">CuiScrollArea or useScrollArea</RouterLink>
