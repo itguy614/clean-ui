@@ -18,6 +18,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of gliding under `prefers-reduced-motion`. It returns `false` when there is nothing
   to scroll to, so a link can keep its native navigation. The docs site's "On this page" rail
   uses both.
+- **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
+  routine, non-destructive confirm no longer has to look like an error, a warning or an info
+  notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
+  takes `false` to render no icon tile, with the title flush left and no gap where the tile
+  was, and now also accepts an icon component as well as a registered name. `confirmColor`
+  overrides only the confirm button's colour role, for any variant; the tile and the
+  type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
+  dialogs render as before. The primary icon is a sealed question mark rather than the plain
+  `?`, which is CuiIcon's glyph for an unknown icon name.
+
+### Changed
+
+- **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
+  CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
+  select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
+  markup and styles are gone, and with them that class as a styling hook: CuiBadge paints
+  its colours inline, so chip colour now follows the select's `color` prop, as it does in
+  the other two. A long label is cut short with an ellipsis instead of wrapping. Removing a
+  chip still leaves the panel closed. Enter or Space on a chip's remove button now removes
+  it (it used to open the panel), and focus returns to the trigger. Backspace on the
+  trigger removes the last chip, as in CuiCombobox. A disabled or readonly select shows its
+  chips with no remove button.
+- **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
+  `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
+  out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
+  100%; a fully opaque colour is still `#rrggbb`. **Check before upgrading** if you store
+  the picker's hex value in a 7-character column, validate it with a 6-digit pattern, or
+  compare it as a string: translucent colours now have two more digits. The change comes from
+  `formatColor(r, g, b, a, "hex")`, which now appends the alpha byte when `a < 1` (an alpha
+  that rounds to `ff` stays six digits). `parseColor` now reads the alpha of `#rrggbbaa` and
+  `#rgba` instead of ignoring it, so the picker, its text field and an 8-digit `v-model` value
+  round-trip; a colour passed in with an alpha keeps it even without `show-alpha`, as an
+  `rgba()` value already did. Also:
+  - `parseColor` and `hexToRgb` return `null` for hex containing a non-hex character
+    (`#12345z` used to read as `#123405`). `hexToRgb` also accepts 4 digits, and still
+    returns the colour without its alpha.
+  - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
+    so they no longer emit `rgba(…, 1.00)`.
+  - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+
+### Fixed
+
+- **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
+  icon is decorative; the title and message carry the meaning.
 
 ## [1.7.0] - 2026-11-02
 
