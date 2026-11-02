@@ -92,6 +92,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   helper. A disabled CuiButton's clicks are held back by a capture-phase listener instead of
   `pointer-events: none`, which also blocked right-click and long-press, and that covers
   every click listener on it, `@click.capture` included.
+- **The data grid's bulk-action bar and the transfer list's move buttons are toolbars** (#421).
+  Each row is a `CuiToolbar`, so it is one tab stop with the arrow keys, Home and End moving
+  between its buttons, instead of a tab stop per button. The bulk bar's actions and Clear run
+  left to right, named “Bulk actions” (the new optional `dataGrid.bulkActions` message), with
+  the selection count beside the toolbar. The transfer list's six buttons run top to bottom,
+  named “Move items” (the new optional `transferList.actions` message), one tab stop between
+  the two panels. A move button with nothing to do is now `aria-disabled` and
+  stays focusable (CuiButton's `focusableWhenDisabled`) rather than natively `disabled`, so
+  the toolbar keeps its tab stop and a button keeps focus when its own move disables it; a
+  disabled transfer list still disables them natively. "Nothing to do" now matches what each
+  move does: Move all is disabled when only disabled items are left, Move selected when the
+  marked items are filtered out of sight, and Move up / Move down on the first / last item.
+  Clearing the selection from the bulk bar hands focus to the grid's select-all checkbox,
+  rather than dropping it with the bar.
 - **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
   CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
   select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
