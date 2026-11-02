@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
+  It returns `{ status: "inside", range }`, `{ status: "outside" }` or
+  `{ status: "unknown" }` (the `ConstructLookup` type). "Unknown" means the cursor's block
+  isn't parsed far enough to say, on a document the parser can't settle within its time cap.
+  A plugin's toggle can now do nothing there, as the built-in ones already did, instead of
+  wrapping markers inside the construct. `findConstructRange` is unchanged and deprecated;
+  it goes in 2.0. The editor always supplies `lookupConstruct`, but it is optional in the
+  type until 2.0, so a `CommandContext` built by hand in a test keeps compiling, and the
+  built-in commands still run on one.
+
 ### Changed
 
 - **CuiModal and CuiSlideover width and radius are themeable tokens** (#407). Since #228
@@ -20,6 +32,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full-width panel, so an existing `max-width` override keeps working. The slideover's
   position, slide and paint moved from its style binding into its stylesheet; nothing
   changes visually.
+
+### Fixed
+
+- **The markdown editor's link and image dialogs follow a scoped theme** (#399). They mount
+  on `document.body`, so a `cui-theme-*` class or a `dark` class on a container around the
+  editor didn't reach them, and they rendered in the page's theme. They now take the
+  editor's nearest theme class and a scoped `dark` class when they open. A theme on
+  `<html>` already reached them and is not copied.
+- **An overlay no longer takes focus back from a field its content focused** (found reviewing
+  #420). CuiModal, CuiSlideover and CuiConfirmDialog focus their panel on the frame after
+  opening, which came after content that focused its own field on mount, so the markdown
+  editor's link dialog opened with focus on the panel instead of the URL field. The panel
+  now takes focus only when nothing inside it already has it.
 
 ## [1.6.0] - 2026-11-01
 
