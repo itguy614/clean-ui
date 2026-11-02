@@ -111,7 +111,7 @@ shouldn't fail just because nobody's run `playwright install` yet.
 ## Releases
 
 This repo can publish more than one npm package (`packages/*` without `"private": true` —
-today just `@itguy614/clean-ui`), but every one of them shares **one version number**:
+today `@itguy614/clean-ui` and `@itguy614/clean-ui-editor`), but every one of them shares **one version number**:
 
 - The root `VERSION` file, the root `CHANGELOG.md`, and `git` tags (`vMAJOR.MINOR.PATCH`) are the
   single source of truth. Every publishable package's `package.json` version moves together with
@@ -134,6 +134,28 @@ today just `@itguy614/clean-ui`), but every one of them shares **one version num
 the same new version, tags it, and pushes. `.github/workflows/publish-npm.yml` then runs the
 skip-if-unchanged logic above per package once that tag reaches `master` — the skill itself doesn't
 need to know which packages actually changed; the workflow decides that per package at publish time.
+
+### Publishing credentials: npm Trusted Publishing
+
+There is no npm token. `publish-npm.yml` authenticates with npm **Trusted Publishing**: the
+runner mints a short-lived OIDC token (`id-token: write`) and npm exchanges it for credentials
+scoped to that one run. It also attaches a provenance attestation to every release, which needs
+each package's `repository.url` to stay `git+https://github.com/itguy614/clean-ui.git`. Publishing
+is CI-only by decision — there is no fallback token for publishing from a laptop.
+
+- **Each published package is registered once on npmjs.com:** package → **Settings** → **Trusted
+  Publisher** → **GitHub Actions**, with owner `itguy614`, repository `clean-ui`, workflow
+  filename `publish-npm.yml`, and no environment.
+- **A new publishable package has to be registered before its first release.** The publish
+  matrix picks it up from `packages/*` automatically, but its first publish fails until it is.
+  For a package that has never been published at all, check npm's docs for how to create it
+  first.
+- **The workflow filename is load-bearing.** Renaming `publish-npm.yml` breaks publishing until
+  every package's Trusted Publisher setting names the new file.
+- **A failed publish reports `E404 Not Found`, not an auth error.** npm hides whether a scoped
+  package exists from an unauthorized publish, so a 404 on `PUT` almost always means the Trusted
+  Publisher setting doesn't match the run (package, repository or workflow filename), or the npm
+  CLI is older than 11.5.1.
 
 `fixtures/consumer-app/package.json` also has a `"version"` field — it's `"private": true` test
 infrastructure, not part of lockstep, and should be left alone. A version-bump tool that scans the

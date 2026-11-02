@@ -1,3 +1,6 @@
+# THIS FILE'S NAME IS LOAD-BEARING. Every package's npm Trusted Publisher names
+# `publish-npm.yml`; renaming or moving it breaks publishing until each one is
+# updated. See CONTRIBUTING.md → "Publishing credentials: npm Trusted Publishing".
 name: Publish to npm
 
 # Publish only when a release reaches master (e.g. the develop → master release
@@ -10,7 +13,7 @@ on:
       - master
 
 permissions:
-  contents: write # create GitHub Releases
+  contents: read
 
 jobs:
   discover:
@@ -18,7 +21,7 @@ jobs:
     outputs:
       packages: ${{ steps.list.outputs.packages }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: list
         # Matrix over every publishable package (packages/* without "private":
         # true) — adding one there extends this matrix automatically, no
@@ -28,22 +31,29 @@ jobs:
   publish:
     needs: discover
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Lets the runner mint the short-lived OIDC token npm exchanges for
+      # publish credentials scoped to this run (Trusted Publishing).
+      id-token: write
     strategy:
       matrix:
         package: ${{ fromJson(needs.discover.outputs.packages) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # Full history + tags: the changed-files guard below diffs this
           # package's directory against the previous release tag.
           fetch-depth: 0
           fetch-tags: true
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          # Trusted Publishing needs npm >= 11.5.1, first bundled in Node 24.5.0
+          # (a bare `24` could resolve to a cached 24.0–24.4).
+          node-version: ^24.5.0
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
@@ -103,18 +113,20 @@ jobs:
         if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
         run: pnpm --filter "${{ steps.version-check.outputs.name }}..." build
 
+      # Trusted Publishing attaches provenance automatically (no `--provenance`),
+      # which requires package.json `repository.url` to name this repository.
       - name: Publish to npm
         if: steps.version-check.outputs.publish == 'true' && steps.changed-check.outputs.changed == 'true'
         working-directory: ${{ matrix.package }}
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release:
     needs: publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create GitHub Releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Create GitHub Release
         env:
