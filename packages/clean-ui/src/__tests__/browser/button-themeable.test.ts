@@ -108,7 +108,7 @@ describe("CuiButton themeable properties (real browser)", () => {
       const on = render({ variant: "ghost", pressed: true });
       expect(paint(off, "background-color")).toBe("rgba(0, 0, 0, 0)");
       expect(paint(on, "background-color")).toBe("rgb(13, 23, 33)"); // --cui-primary-bg → 100
-      expect(paint(on, "border-top-color")).toBe("rgb(14, 24, 34)"); // --cui-primary-border → 300
+      expect(paint(on, "border-top-color")).toBe("rgb(10, 20, 30)"); // --cui-primary → 500
       expect(paint(on, "color")).toBe("rgb(12, 22, 32)"); // --cui-primary-hover → 700
     });
 

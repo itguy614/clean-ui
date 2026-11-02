@@ -4,18 +4,13 @@ import CuiPagination from "./CuiPagination.vue";
 
 const grid = useDataGridState();
 
-const emit = defineEmits<{
-  navigate: [];
-}>();
-
+// No navigate of its own: CuiDataGrid's watcher on page and page size emits it, once (#372).
 function onPageChange(val: number) {
   grid.setPage(val);
-  emit("navigate");
 }
 
 function onPerPageChange(val: number) {
   grid.setPerPage(val);
-  emit("navigate");
 }
 </script>
 

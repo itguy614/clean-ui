@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends object = DataGridRow">
-import { toRef, watch, useSlots, type Ref } from "vue";
+import { computed, toRef, watch, useSlots, type Ref } from "vue";
 import { useDataGrid, provideDataGrid, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import type {
   DataGridColumn,
@@ -103,6 +103,9 @@ export interface CuiDataGridProps<T extends object = DataGridRow> extends Hideab
    * Enable row virtualization for large datasets.
    * Requires maxHeight to be set.
    * Recommended for >= 500 rows in client-side mode.
+   * Client-side, it turns paging off while the table is shown (#317): the table windows
+   * every searched, filtered and sorted row and the pagination bar is hidden. Card view
+   * keeps paging, since it is not virtualized. A server-side grid still pages.
    */
   virtualize?: boolean;
   /**
@@ -167,6 +170,7 @@ type RowActionPayload = { action: DataGridRowAction; row: T };
 type BulkActionPayload = { action: DataGridBulkAction; rows: T[] };
 
 const slots = useSlots();
+const hasCardSlot = !!slots.card;
 
 const grid = useDataGrid({
   columns: () => props.columns,
@@ -178,7 +182,13 @@ const grid = useDataGrid({
   defaultPerPage: props.perPageOptions?.[0] ?? 15,
   initialView: props.initialView,
   hydrateFromUrl: props.hydrateUrl,
+  // Only the table is virtualized; card view renders every row it is given.
+  paginate: () => !props.virtualize || showCards(),
 });
+// A declaration, so hoisted: the getter above may run before this line is reached.
+function showCards() {
+  return grid.viewMode.value === "card" && hasCardSlot;
+}
 
 provideDataGrid(grid);
 
@@ -204,7 +214,6 @@ watch(
   },
 );
 
-const hasCardSlot = !!slots.card;
 
 defineExpose({
   clearSelection: grid.clearSelection,
@@ -212,6 +221,17 @@ defineExpose({
   getConfig: grid.getConfig,
   loadConfig: grid.loadConfig,
   resetToDefaults: grid.resetToDefaults,
+  /** Rows after search, filters and sort, before paging; server-side, the current page's. */
+  processedRows: grid.processedRows as Readonly<Ref<DataGridRow[]>>,
+  /** The page shown (1 while unpaged — client-side with `virtualize`). */
+  page: computed(() => grid.paginationMeta.value.current_page) as Readonly<Ref<number>>,
+  /** The last page (1 while unpaged). */
+  lastPage: computed(() => grid.paginationMeta.value.last_page) as Readonly<Ref<number>>,
+  /**
+   * Go to a page, clamped to 1..lastPage (#372). Does what a pagination click does: the
+   * page changes and, server-side, the watcher above emits `navigate`.
+   */
+  setPage: (n: number): void => void grid.setPage(n),
 });
 const messages = useMessages();
 </script>
@@ -269,7 +289,7 @@ const messages = useMessages();
         <div style="flex: 1; min-width: 0;">
           <!-- Card view -->
           <CuiDataGridCardView
-            v-if="grid.viewMode.value === 'card' && hasCardSlot"
+            v-if="showCards()"
             :row-key="rowKey"
           >
             <template #card="cardProps">
@@ -316,8 +336,7 @@ const messages = useMessages();
 
     <!-- Pagination -->
     <CuiDataGridPagination
-      v-if="!hidePagination && !loading && grid.displayData.value.length > 0"
-      @navigate="onNavigate"
+      v-if="!hidePagination && grid.paginated.value && !loading && grid.displayData.value.length > 0"
     />
 
     <!-- Bulk action bar -->

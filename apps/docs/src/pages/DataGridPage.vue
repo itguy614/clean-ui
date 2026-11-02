@@ -156,6 +156,27 @@ const slideoverOpen = computed({
   get: () => openRow.value !== null,
   set: (v) => { if (!v) openRow.value = null; },
 });
+
+// Previous / Next in the grid's own order (#372). A template ref unwraps exposed refs.
+interface StepGridApi {
+  processedRows: DataGridRow[];
+  setPage: (page: number) => void;
+  getConfig: () => { perPage: number };
+}
+const stepGrid = ref<StepGridApi | null>(null);
+const stepData: DataGridRow[] = data.map(({ _actions, ...rest }) => rest);
+const stepRow = ref<DataGridRow | null>(null);
+const stepRows = computed(() => stepGrid.value?.processedRows ?? []);
+const stepIndex = computed(() => stepRows.value.findIndex((r) => r.id === stepRow.value?.id));
+
+function step(by: number) {
+  const index = stepIndex.value + by;
+  const row = stepRows.value[index];
+  if (!row || !stepGrid.value) return;
+  stepRow.value = row;
+  // Show the page the row is on, so it is in view when the panel closes.
+  stepGrid.value.setPage(Math.floor(index / stepGrid.value.getConfig().perPage) + 1);
+}
 </script>
 
 <template>
@@ -405,8 +426,10 @@ const slideoverOpen = computed({
             <p class="text-sm" style="color: var(--cui-text-secondary); margin: 0;">
               <CuiIcon name="info" size="0.875rem" style="vertical-align: -2px;" />
               Only the rows in the viewport (plus a small overscan buffer) are in the DOM,
-              so scrolling stays smooth regardless of dataset size. <strong>Virtualization
-              requires <code>max-height</code></strong> — it defines the scroll viewport.
+              so scrolling stays smooth regardless of dataset size. Client-side, it turns paging
+              off: the table scrolls through every row and there is no pagination bar.
+              <strong>Virtualization requires <code>max-height</code></strong> — it defines the
+              scroll viewport.
               Enable it at <strong>≥ 500 rows</strong> in client-side mode; server-side grids
               paginate at the API layer and rarely need it.
             </p>
@@ -431,8 +454,6 @@ const slideoverOpen = computed({
   max-height=&quot;320px&quot;
   virtualize
   hide-toolbar
-  hide-pagination
-  :per-page-options=&quot;[10000]&quot;
   @row-click=&quot;({ row }) => (openRow = row)&quot;
 />
 <CuiSlideover v-model:visible=&quot;slideoverOpen&quot; :title=&quot;openRow?.name&quot;>…</CuiSlideover>`">
@@ -455,8 +476,6 @@ const slideoverOpen = computed({
             size="sm"
             virtualize
             hide-toolbar
-            hide-pagination
-            :per-page-options="[10000]"
             @row-click="({ row }) => (openRow = row)"
           />
         </div>
@@ -467,6 +486,63 @@ const slideoverOpen = computed({
             <div><strong>Status:</strong> {{ openRow.status }}</div>
           </CuiStack>
         </CuiSlideover>
+      </Example>
+
+      <!-- Previous / Next over the grid's order -->
+      <Example title="Previous / Next in the Grid's Order" :code="`<script setup lang=&quot;ts&quot;>
+const grid = ref(); // template ref: exposed refs arrive unwrapped
+const current = ref<DataGridRow | null>(null);
+const index = computed(() => grid.value?.processedRows.findIndex((r) => r.id === current.value?.id) ?? -1);
+
+function step(by: number) {
+  const i = index.value + by;
+  const row = grid.value.processedRows[i]; // searched, filtered and sorted, not paged
+  if (!row) return;
+  current.value = row;
+  grid.value.setPage(Math.floor(i / grid.value.getConfig().perPage) + 1);
+}
+&lt;/script>
+
+<CuiDataGrid ref=&quot;grid&quot; :columns=&quot;columns&quot; :data=&quot;rows&quot; :per-page-options=&quot;[5, 10]&quot;
+  @row-click=&quot;({ row }) => (current = row)&quot; />
+<CuiButton :disabled=&quot;index <= 0&quot; @click=&quot;step(-1)&quot;>Previous</CuiButton>
+<CuiButton :disabled=&quot;index < 0 || index >= grid.processedRows.length - 1&quot; @click=&quot;step(1)&quot;>Next</CuiButton>`">
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="text-sm" style="color: var(--cui-text-secondary); margin: 0;">
+              <CuiIcon name="info" size="0.875rem" style="vertical-align: -2px;" />
+              <code>processedRows</code> is every row after search, filters and sort, before
+              paging, and <code>setPage</code> moves the grid. Search or sort, open a row, then
+              step past the end of the page: the grid follows to the row's page.
+            </p>
+          </CuiCardBody>
+        </CuiCard>
+        <CuiStack spacing="3" class="mt-3">
+          <CuiDataGrid
+            ref="stepGrid"
+            :columns="simpleColumns"
+            :data="stepData"
+            :per-page-options="[5, 10]"
+            search-label="Search people"
+            hide-column-manager
+            hide-filter-panel
+            @row-click="({ row }) => (stepRow = row)"
+          />
+          <CuiFlex gap="3" class="items-center">
+            <CuiButton size="sm" :disabled="stepIndex <= 0" @click="step(-1)">Previous</CuiButton>
+            <span class="text-sm" style="color: var(--cui-text-secondary);" aria-live="polite">
+              <template v-if="stepIndex >= 0">{{ stepRow?.name }} — {{ stepIndex + 1 }} of {{ stepRows.length }}</template>
+              <template v-else>Click a row</template>
+            </span>
+            <CuiButton
+              size="sm"
+              :disabled="stepIndex < 0 || stepIndex >= stepRows.length - 1"
+              @click="step(1)"
+            >
+              Next
+            </CuiButton>
+          </CuiFlex>
+        </CuiStack>
       </Example>
 
       <!-- Striped + bordered -->
@@ -508,12 +584,15 @@ const slideoverOpen = computed({
                   getter to follow changes), <code>data</code> (a <code>Ref</code> of rows or of a
                   Laravel-style <code>PaginatedData</code> page), <code>serverSide</code>,
                   <code>rowKey</code> (default <code>"id"</code>), <code>defaultPerPage</code>
-                  (default 15), <code>initialView</code> (a <code>DataGridViewConfig</code>) and
-                  <code>hydrateFromUrl</code>.
+                  (default 15), <code>initialView</code> (a <code>DataGridViewConfig</code>),
+                  <code>hydrateFromUrl</code> and <code>paginate</code> (default
+                  <code>true</code>; <code>false</code> makes <code>displayData</code> every
+                  processed row, for markup that windows rows itself).
                 </li>
                 <li>
                   <strong>State</strong> (refs): <code>displayData</code> (the current page,
-                  already searched, filtered and sorted), <code>paginationMeta</code>,
+                  already searched, filtered and sorted), <code>processedRows</code> (every row
+                  searched, filtered and sorted, before paging), <code>paginationMeta</code>,
                   <code>visibleColumns</code>, <code>sort</code>, <code>filters</code>,
                   <code>searchQuery</code>, <code>page</code>, <code>perPage</code>,
                   <code>selectedRows</code>, <code>viewMode</code>, <code>isDirty</code>.
@@ -522,7 +601,7 @@ const slideoverOpen = computed({
                   <strong>Actions:</strong> <code>applySort(key)</code> (cycles asc → desc →
                   none), <code>applyFilter(filter)</code>, <code>removeFilter</code>,
                   <code>clearFilters</code>, <code>search(query, field?)</code>,
-                  <code>setPage</code>, <code>setPerPage</code>, <code>toggleSelection</code>,
+                  <code>setPage(n)</code> (clamped to the last page), <code>setPerPage</code>, <code>toggleSelection</code>,
                   <code>selectAll</code>, <code>toggleColumnVisibility</code>,
                   <code>reorderColumns</code>, <code>getQueryParams()</code>,
                   <code>getConfig()</code> / <code>loadConfig(config)</code>,

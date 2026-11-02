@@ -4,7 +4,7 @@ import { hiddenProp, titleAsProp, visibleProp } from "./shared";
 const meta: ComponentMeta = {
   name: "Confirm Dialog",
   description:
-    "A CuiModal preset for confirming a destructive or irreversible action — role icon, matching confirm button, and an optional type-the-word gate.",
+    "A CuiModal preset for confirming an action, destructive or routine — role icon, matching confirm button, and an optional type-the-word gate.",
   interactive: true,
 
   props: [
@@ -19,9 +19,16 @@ const meta: ComponentMeta = {
     { name: "message", type: "string", description: "Body text. The default slot replaces it and may contain markup" },
     {
       name: "variant",
-      type: "danger | warning | info",
+      type: "danger | warning | info | primary",
       default: "danger",
-      description: "Picks the icon and the confirm button's color role — error, warning, info respectively",
+      description:
+        "Picks the icon and the confirm button's color role — error, warning, info, primary respectively. Use primary for a routine, non-destructive confirm",
+    },
+    {
+      name: "confirmColor",
+      type: "CuiColor",
+      default: "from variant",
+      description: "Confirm button color role, overriding the variant's. The icon tile keeps the variant's color",
     },
     { name: "confirmText", type: "string", default: "Confirm", description: "Confirm button label" },
     { name: "cancelText", type: "string", default: "Cancel", description: "Cancel button label" },
@@ -39,8 +46,10 @@ const meta: ComponentMeta = {
     },
     {
       name: "icon",
-      type: "string",
-      description: "Override the variant's icon with a name from the static icon registry",
+      type: "string | Component | false",
+      default: "from variant",
+      description:
+        "Override the variant's icon with a registered name or an icon component. false renders no icon tile, and the title sits flush left",
     },
     {
       name: "loading",

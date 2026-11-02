@@ -12,6 +12,16 @@ export type ToastPosition =
 
 export type ToastStackMode = "expanded" | "collapsed";
 
+/** A button on a programmatic toast: "Undo", "Retry", "View" (#345). */
+export interface ToastAction {
+  /** Button text */
+  label: string;
+  /** Runs when the button is pressed */
+  onClick: () => void;
+  /** Dismiss the toast after `onClick` runs (default true) */
+  dismissOnClick?: boolean;
+}
+
 export interface ToastOptions {
   /** Unique id (auto-generated if not provided) */
   id?: string;
@@ -40,13 +50,39 @@ export interface ToastOptions {
    * (`role="alert"`), everything else → polite (`role="status"`).
    */
   live?: LiveRegionMode;
+  /** A button rendered in the toast, e.g. Undo or Retry */
+  action?: ToastAction;
+  /** Pause auto-dismiss while hovered (default true) */
+  pauseOnHover?: boolean;
+  /** Pause auto-dismiss while focus is inside the toast (default true) */
+  pauseOnFocus?: boolean;
+  /**
+   * Pause auto-dismiss while another toast is on top (default true). With all three
+   * `pause*` options `false`, `autoDismiss` is a wall-clock deadline.
+   */
+  pauseWhenInactive?: boolean;
 }
 
-export interface ToastInstance extends Required<Pick<ToastOptions, "id" | "color" | "variant" | "dismissible" | "autoDismiss" | "showProgress" | "animation" | "noIcon">> {
+export interface ToastInstance
+  extends Required<
+    Pick<
+      ToastOptions,
+      | "id"
+      | "color"
+      | "variant"
+      | "dismissible"
+      | "autoDismiss"
+      | "showProgress"
+      | "animation"
+      | "noIcon"
+    >
+  >,
+    Pick<ToastOptions, "pauseOnHover" | "pauseOnFocus" | "pauseWhenInactive"> {
   title?: string;
   description?: string;
   icon?: string;
   live?: LiveRegionMode;
+  action?: ToastAction;
   createdAt: number;
 }
 
@@ -87,6 +123,11 @@ export function createToastState(
       icon: options.icon,
       noIcon: options.noIcon ?? false,
       live: options.live,
+      action: options.action,
+      // Left undefined when not given, so CuiToast's own defaults (true) apply.
+      pauseOnHover: options.pauseOnHover,
+      pauseOnFocus: options.pauseOnFocus,
+      pauseWhenInactive: options.pauseWhenInactive,
       createdAt: Date.now(),
     };
 

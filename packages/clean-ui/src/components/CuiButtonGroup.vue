@@ -100,16 +100,26 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
   margin-top: -1px;
 }
 
-/* Ensure hovered/focused/active button appears above siblings so borders aren't hidden */
+/* Lift a button above its siblings so the shared border shows its edge, in three tiers: a
+   hovered button, then a selected one, then a focused one. A hovered neighbour must stay
+   below a selected button, or its hover fill paints over the selected border it overlaps. */
 .cui-button-group > :deep(.cui-button:hover),
-.cui-button-group > :deep(.cui-button:focus-visible),
+.cui-button-group > :deep(.cui-dropdown .cui-button:hover) {
+  z-index: 1;
+  position: relative;
+}
+
 .cui-button-group > :deep(.cui-button[aria-pressed="true"]),
 .cui-button-group > :deep(.cui-button.cui-button--active),
 .cui-button-group > :deep(.cui-radio-button--active),
-.cui-button-group > :deep([aria-checked="true"]),
-.cui-button-group > :deep(.cui-dropdown .cui-button:hover),
+.cui-button-group > :deep([aria-checked="true"]) {
+  z-index: 2;
+  position: relative;
+}
+
+.cui-button-group > :deep(.cui-button:focus-visible),
 .cui-button-group > :deep(.cui-dropdown .cui-button:focus-visible) {
-  z-index: 1;
+  z-index: 3;
   position: relative;
 }
 </style>

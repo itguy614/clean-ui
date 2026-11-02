@@ -7,12 +7,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, CuiRounded, TitleAsProps } from "../types/common";
+import type { HideableProps, CuiRounded, TitleAsProps, OverlayFocusProps } from "../types/common";
 import { RADIUS_SCALE } from "../utils/sizing";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiModalProps extends HideableProps, TitleAsProps {
+export interface CuiModalProps extends HideableProps, TitleAsProps, OverlayFocusProps {
   /** Controls modal visibility (v-model:visible) */
   visible?: boolean;
   /**
@@ -66,6 +66,10 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
+  // `undefined`, not Vue's boolean `false`: `returnFocus` accepts `false`, and Vue would
+  // otherwise cast an absent prop to it and stop returning focus at all.
+  initialFocus: undefined,
+  returnFocus: undefined,
   rounded: "md",
   hidden: false,
 });
@@ -73,8 +77,13 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
 const emit = defineEmits<{
   "update:visible": [value: boolean];
   close: [];
+  /** The entry has finished and focus is in place (#374). */
+  "after-enter": [];
+  /** The exit has finished and focus has been returned (#374). */
+  "after-leave": [];
 }>();
 
+const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const dialogRef = useTemplateRef<HTMLElement>("dialogEl");
 
 const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
@@ -88,6 +97,11 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
+  rootRef: overlayRef,
+  initialFocus: () => props.initialFocus,
+  returnFocus: () => props.returnFocus,
+  onOpened: () => emit("after-enter"),
+  onClosed: () => emit("after-leave"),
 });
 
 // Closed while `hidden`: v-show is already off, so no leave runs to report the close.
@@ -123,6 +137,7 @@ const titleId = useCuiId("modal-title");
     <div
       v-if="mounted"
       v-show="isVisible && !hidden"
+      ref="overlayEl"
       class="cui-modal-overlay"
       :class="{ 'cui-modal-overlay--visible': isAnimating }"
       @keydown="onKeydown"

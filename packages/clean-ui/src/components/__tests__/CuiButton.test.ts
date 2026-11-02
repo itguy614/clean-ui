@@ -182,7 +182,17 @@ describe("CuiButton", () => {
       expect(token(wrapper, "--_button-pressed-bg")).toBe("");
       await wrapper.setProps({ pressed: true });
       expect(token(wrapper, "--_button-pressed-bg")).toBe("var(--cui-success-bg)");
-      expect(token(wrapper, "--_button-pressed-border")).toBe("1px solid var(--cui-success-border)");
+      expect(token(wrapper, "--_button-pressed-border")).toBe("1px solid var(--cui-success)");
+    });
+
+    // The role tint means "pressed" only, so a toggle switched on under the pointer
+    // doesn't look the same as one merely hovered.
+    it("gives a toggle a neutral hover, pressed or not, and leaves other buttons alone", () => {
+      const off = mount(CuiButton, { props: { variant: "ghost", pressed: false } });
+      expect(token(off, "--_button-hover-bg")).toBe("var(--cui-surface-bg)");
+      expect(token(off, "--_button-active-bg")).toBe("var(--cui-surface-dark-bg)");
+      const plain = mount(CuiButton, { props: { variant: "ghost" } });
+      expect(token(plain, "--_button-hover-bg")).toBe("var(--cui-primary-bg)");
     });
 
     it("combines with focusableWhenDisabled", () => {
