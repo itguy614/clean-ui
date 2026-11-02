@@ -69,6 +69,11 @@ const router = createRouter({
       component: () => import('../pages/ButtonGroupPage.vue'),
     },
     {
+      path: '/components/toolbar',
+      name: 'toolbar',
+      component: () => import('../pages/ToolbarPage.vue'),
+    },
+    {
       path: '/foundations/icons',
       name: 'icons',
       component: () => import('../pages/IconPage.vue'),

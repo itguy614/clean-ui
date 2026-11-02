@@ -66,8 +66,8 @@ const width = ref(320);
           { name: 'Arrow Up / Down', type: 'Slash menu', description: 'Move the highlighted slash-menu entry' },
           { name: 'Enter', type: 'Slash menu', description: 'Runs the highlighted entry\'s command' },
           { name: 'Escape', type: 'Slash menu', description: 'Dismisses the menu, leaving whatever was typed untouched' },
-          { name: 'Tab', type: 'Toolbar', description: 'One tab stop for the whole toolbar (roving tabindex) — arrow keys move between buttons, not Tab' },
-          { name: 'Arrow Left / Right', type: 'Toolbar', description: 'Move focus between toolbar buttons' },
+          { name: 'Tab', type: 'Toolbar', description: 'One tab stop for the whole toolbar (it is a CuiToolbar) — arrow keys move between buttons, not Tab' },
+          { name: 'Arrow Left / Right', type: 'Toolbar', description: 'Move focus between toolbar buttons, coming round at either end' },
           { name: 'Home / End', type: 'Toolbar', description: 'Jump to the first / last toolbar button' },
         ]"
       />

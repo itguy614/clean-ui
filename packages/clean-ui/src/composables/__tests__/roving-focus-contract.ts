@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import type { VueWrapper } from "@vue/test-utils";
 import { nextTick } from "vue";
+import { press } from "../../../../../config/test/keyboard";
 
 /**
  * The shared roving-focus contract (#144). Every component built on `useRovingFocus` runs
@@ -24,13 +25,8 @@ export interface RovingFocusContractOptions {
   wrap?: boolean;
 }
 
-/** Dispatch a keydown on the focused element (or `target`); resolves to the event, after a tick. */
-export async function press(key: string, target: Element | null = document.activeElement) {
-  const e = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
-  (target ?? document.body).dispatchEvent(e);
-  await nextTick();
-  return e;
-}
+// Shared with the editor's tests, so it lives with the workspace's test helpers.
+export { press };
 
 export function describeRovingFocusContract(name: string, opts: RovingFocusContractOptions) {
   const forward = opts.orientation === "horizontal" ? "ArrowRight" : "ArrowDown";

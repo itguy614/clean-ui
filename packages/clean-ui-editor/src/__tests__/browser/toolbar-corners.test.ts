@@ -53,4 +53,15 @@ describe("the editor toolbar carries the control's corners to its scroller (real
     const { scroller } = await editor("4px");
     expect(corners(scroller)).toEqual(["3px", "3px", "0px", "0px"]);
   });
+
+  // #190 — the toolbar is a CuiToolbar now, whose own scroll padding is 4px: the editor's
+  // spacing has to arrive through CuiToolbar's tokens, or it quietly tightens.
+  it("keeps its own spacing inside CuiToolbar's scroller", async () => {
+    const { scroller } = await editor("10px");
+    const s = getComputedStyle(scroller);
+    expect([s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft]).toEqual(["6px", "6px", "6px", "6px"]);
+    expect(s.columnGap).toBe("4px");
+    // The mask is the overflow fade, on the scroller that clips.
+    expect(s.maskImage).toContain("linear-gradient");
+  });
 });
