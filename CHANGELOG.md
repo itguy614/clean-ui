@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-02
+
 ### Added
 
 - **`labelPosition="floating"` on CuiFormField** (#191). An inset label: it sits inside the
@@ -101,6 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and anything in `#toolbar-start` / `#toolbar-end`) share one tab stop. The search box
   keeps its own. The editor's toolbar drops its own keyboard handling and behaves as before.
   The editor needs clean-ui 1.7.0 for this.
+- **The markdown editor's peer floor is `@itguy614/clean-ui@^1.7.0`**, since its toolbar is a
+  CuiToolbar.
 
 ### Fixed
 

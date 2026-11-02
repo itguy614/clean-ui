@@ -24,7 +24,7 @@ const cspDoc = ref("This editor was constructed with a cspNonce prop.");
       <p class="text-sm" style="color: var(--cui-text-secondary);">
         Covered in full on the <router-link to="/installation" style="color: var(--cui-primary);">Installation
         page</router-link> — <code class="cui-code">vue@^3.5.0</code> and
-        <code class="cui-code">@itguy614/clean-ui@^1.6.0</code> as peers, a runtime mismatch check
+        <code class="cui-code">@itguy614/clean-ui@^1.7.0</code> as peers, a runtime mismatch check
         that names both versions rather than trusting <code class="cui-code">peerDependencies</code>
         resolution alone.
       </p>
