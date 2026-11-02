@@ -7,6 +7,121 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-02
+
+### Added
+
+- **`labelPosition="floating"` on CuiFormField** (#191). An inset label: it sits inside the
+  control, resting at the value's size over an empty one and, on focus or once there is a
+  value, shrinking into the top of the box with the value below it. To hold both, a
+  floating control is one size step taller and keeps its own font size: md 48px, lg 56px,
+  xl 64px, density-scaled; xs and sm are too short and fall back to a top label. It is CSS
+  only (`:placeholder-shown` and `:focus-within`), so a value the browser autofills floats it
+  too, with no event to listen for. The label stays the same `<label>` throughout, with its
+  association, required marker, help and error text unchanged. It is `--cui-text-secondary`
+  at rest and `--cui-text-tertiary` floated (4.5:1 in every theme), `--cui-error` on error,
+  and is not recoloured by focus. It moves by transform on the motion tokens, and snaps
+  under reduced motion. A control's own placeholder stays hidden until focus. A leading icon
+  keeps the resting label after it; prefix text or a suffix keeps it floated. CuiInput
+  (number included), CuiTextarea (whose label's room is always reserved), CuiMaskedInput and
+  a horizontal CuiInputStepper support it. Any other control (CuiSelect, the date and time
+  pickers, a CuiInput with an attached button) falls back to a top label and logs one
+  console warning.
+- **`CuiList` / `CuiListItem`** (#195). A presentational list: a real `<ul>`/`<li>` (or `ol`,
+  or `div` rows), each row a link (`href`/`to`), a `<button>` (a `click` listener), any
+  element (`as`) or plain content, with a leading icon, a one-line title and subtitle, and a
+  trailing chevron or `#trailing` content. Dividers are pseudo-elements, so a screen reader's
+  item count is the row count. Themeable through `--cui-list-*` tokens.
+- **`CuiList variant="inset"`** (#234), the settings-app grouped list: each row paints the
+  card fill and border (defaulting to the `--cui-card-*` values), the first and last round
+  their outer corners, the hover fill follows the row's shape, and the dividers are inset to
+  the row padding. The subtitle holds WCAG AAA (7:1) on the fill and under hover, in both
+  modes and every theme.
+- **`CuiStatusDot`** (#234). An 8px status dot with a `tone` (`success`, `info`, `warning`,
+  `error`, `neutral`). `aria-hidden` unless given a `label`.
+- **`CuiPinInput`** (#196), for a one-time code or PIN drawn as a row of boxes. One real
+  input underneath is the control: a screen reader meets a single text field named by the
+  label, and `autocomplete="one-time-code"` lets a phone offer the code from a text message.
+  The boxes only draw each character and the caret. Takes `length`, `type` (`digits` or
+  `alphanumeric`, with optional `uppercase`), `mask` (dots, on a password input), `size` and
+  `color`, extends the shared form-control props, and emits `complete` when the last
+  character is filled. A pasted code is cleaned of spaces and dashes before it is cut to
+  length. Themeable through `--cui-pin-input-*` tokens.
+- **`useScrollSpy()`** (#192). Tracks which section of a page the reader is in, for an
+  on-page nav: `useScrollSpy(targets, { rootMargin, offset, root })` returns
+  `{ activeId, setActive, refresh }`. An IntersectionObserver, never a scroll listener; of
+  the sections in the band the topmost is current, and between two headings the last one
+  scrolled past stays current. `offset` keeps a sticky header out of the band. `setActive`
+  marks a clicked entry at once and holds it while the smooth scroll passes the sections in
+  between. `targets` (ids or elements) can be a ref or getter. SSR-safe. The docs site's
+  "On this page" rail is rebuilt on it, and is now labelled by its title, marks the current
+  entry with `aria-current="location"` and a heavier bar and weight rather than colour alone,
+  and lets a modified click open an entry in a new tab.
+- **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
+  It returns `{ status: "inside", range }`, `{ status: "outside" }` or
+  `{ status: "unknown" }` (the `ConstructLookup` type). "Unknown" means the cursor's block
+  isn't parsed far enough to say, on a document the parser can't settle within its time cap.
+  A plugin's toggle can now do nothing there, as the built-in ones already did, instead of
+  wrapping markers inside the construct. `findConstructRange` is unchanged and deprecated;
+  it goes in 2.0. The editor always supplies `lookupConstruct`, but it is optional in the
+  type until 2.0, so a `CommandContext` built by hand in a test keeps compiling, and the
+  built-in commands still run on one.
+- **`CuiToolbar` and `CuiToolbarSeparator`** (#190). The ARIA toolbar pattern: one tab stop
+  however many controls it holds, with the arrow keys (by `orientation`), Home and End moving
+  between them and a disabled control skipped. It renders none of its controls: CuiButton,
+  CuiButtonGroup and CuiSelect go in its slot, and the separator stands across its axis on
+  its own. A text input keeps its own tab stop and its caret keys, and an open select keeps
+  its arrows. `overflow="scroll"` keeps one line in a CuiScrollArea with edge fades, padded
+  so a focus ring isn't clipped. It needs an accessible name (`label`, `aria-label` or
+  `aria-labelledby`) and warns without one. Themeable through `--cui-toolbar-gap`, `-px`,
+  `-py`, `-bg`, `-border`, `-radius` and `--cui-toolbar-separator-bg`.
+- **`useRovingFocus({ manageTabindex: true })`** writes the tab stop onto the items itself
+  and follows them coming and going, for items the host doesn't render (slot content).
+  CuiToolbar is built on it. `itemSelector` also takes a ref or getter.
+
+### Changed
+
+- **CuiModal and CuiSlideover width and radius are themeable tokens** (#407). Since #228
+  a class passed to either lands on its panel, but the panel's width and radius were inline
+  declarations, so that class could not change them without `!important`. They are now
+  zero-specificity rules reading `--cui-modal-width` / `--cui-modal-radius` and
+  `--cui-slideover-width` (left/right) / `--cui-slideover-height` (top/bottom) /
+  `--cui-slideover-radius`, set on `:root`, `body` or the overlay itself; a plain class
+  rule wins too. A token beats the `size`/`rounded` props of every overlay beneath it, so
+  restyle a single one with a class. The modal's size is still a `max-width` on a
+  full-width panel, so an existing `max-width` override keeps working. The slideover's
+  position, slide and paint moved from its style binding into its stylesheet; nothing
+  changes visually.
+- **CuiButtonGroup merges corners only where two painted buttons meet** (found reviewing
+  #417). A ghost button draws no edge, so a painted button beside one keeps its corners: a
+  lone pressed toggle in a row of ghost ones stays whole, and a run of pressed ones merges
+  into one shape, rounded at its ends. A group of painted buttons, the radio "buttons"
+  variant and dropdowns merge as before. CuiButton now carries `cui-button--ghost`.
+- **CuiDataGrid's toolbar and the markdown editor's toolbar are both CuiToolbars** (#190).
+  The grid's toolbar is now `role="toolbar"`, named "Table controls" (the new optional
+  `dataGrid.toolbar` message), and its buttons (filter, columns, view toggle, saved views
+  and anything in `#toolbar-start` / `#toolbar-end`) share one tab stop. The search box
+  keeps its own. The editor's toolbar drops its own keyboard handling and behaves as before.
+  The editor needs clean-ui 1.7.0 for this.
+- **The markdown editor's peer floor is `@itguy614/clean-ui@^1.7.0`**, since its toolbar is a
+  CuiToolbar.
+
+### Fixed
+
+- **The markdown editor's link and image dialogs follow a scoped theme** (#399). They mount
+  on `document.body`, so a `cui-theme-*` class or a `dark` class on a container around the
+  editor didn't reach them, and they rendered in the page's theme. They now take the
+  editor's nearest theme class and a scoped `dark` class when they open. A theme on
+  `<html>` already reached them and is not copied.
+- **An overlay no longer takes focus back from a field its content focused** (found reviewing
+  #420). CuiModal, CuiSlideover and CuiConfirmDialog focus their panel on the frame after
+  opening, which came after content that focused its own field on mount, so the markdown
+  editor's link dialog opened with focus on the panel instead of the URL field. The panel
+  now takes focus only when nothing inside it already has it.
+- **`useRovingFocus` skips a hidden item** (`hidden`, or `v-show`'s `display: none`), as it
+  already skipped a disabled one (#190). The arrow keys used to stall on it, and it could
+  hold the group's only tab stop while unfocusable.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added

@@ -20,6 +20,7 @@ const SKIP: Record<string, string> = {
   CuiTab: "needs <CuiTabs> context — covered by CuiTabs.test.ts",
   CuiAccordionItem: "needs <CuiAccordion> context — covered by CuiAccordion.test.ts",
   CuiBreadcrumbItem: "needs <CuiBreadcrumb> context — covered by CuiBreadcrumb.test.ts",
+  CuiListItem: "needs <CuiList> context — covered by CuiList.test.ts",
   CuiTableHead: "needs <CuiTable> context — covered by CuiTable.test.ts",
   CuiTableBody: "needs <CuiTable> context — covered by CuiTable.test.ts",
   CuiTableFoot: "needs <CuiTable> context — covered by CuiTable.test.ts",
@@ -35,6 +36,7 @@ const SKIP: Record<string, string> = {
   CuiDropdownDivider: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
   CuiDropdownHeader: "needs <CuiDropdown> context — covered by CuiDropdown.test.ts",
   CuiTimelineItem: "needs <CuiTimeline> context — covered by CuiTimeline.test.ts",
+  CuiToolbarSeparator: "needs <CuiToolbar> context — covered by CuiToolbar.test.ts",
 };
 
 /** Minimal props for components that need them to render meaningfully. */
@@ -54,6 +56,7 @@ const PROPS: Record<string, Record<string, unknown>> = {
   CuiCopyButton: { value: "copy me" },
   CuiStepper: { steps: [] },
   CuiTreeView: { nodes: [] },
+  CuiToolbar: { label: "Toolbar" },
 };
 
 function isComponent(value: unknown): value is Component {

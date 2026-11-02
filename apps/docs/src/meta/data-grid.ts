@@ -51,7 +51,7 @@ const meta: ComponentMeta = {
     },
     { name: "virtualRowHeight", type: "number", default: "auto", description: "Fixed row height in px for the virtualizer. Omit and the first rendered row is measured" },
     { name: "perPageOptions", type: "number[]", default: "[15, 25, 50, 100]", description: "Options in the per-page selector. The first is the initial page size" },
-    { name: "hideToolbar", type: "boolean", default: "false", description: "Hide the whole toolbar row" },
+    { name: "hideToolbar", type: "boolean", default: "false", description: "Hide the whole toolbar row. It is a CuiToolbar: its buttons, slot content included, share one tab stop and the arrow keys; the search box keeps its own" },
     { name: "hidePagination", type: "boolean", default: "false", description: "Hide the pagination bar" },
     { name: "hideSearch", type: "boolean", default: "false", description: "Hide the search field" },
     {
@@ -78,7 +78,7 @@ const meta: ComponentMeta = {
 
   slots: [
     { name: "toolbar-start", description: "Content at the leading end of the toolbar, before the search field" },
-    { name: "toolbar-end", description: "Content at the trailing end of the toolbar, after the column and filter controls" },
+    { name: "toolbar-end", description: "Content at the trailing end of the toolbar, before the filter and column controls" },
     { name: "empty", description: "Replaces the built-in empty state shown when nothing matches" },
     { name: "card", payload: "{ row }", description: "One card in card view. Providing it is what makes the card/table toggle appear" },
     {

@@ -69,6 +69,7 @@ function reopenSession() {
 const controlledMode = ref<CuiMarkdownEditorMode>("wysiwyg");
 
 const dialogDoc = ref("Select some text and press Mod-K to open the link dialog.");
+const themedDialogDoc = ref("Press Mod-K: the link dialog is violet too.");
 const dialogMessages: DeepPartialMessages = { close: "Close dialog", markdownEditor: { linkDialogTitle: "Add a link" } };
 
 const formValues = ref<{ bio: string; notes: string }>({ bio: "", notes: "" });
@@ -381,6 +382,27 @@ const themeCode = computed(() => {
             <CuiConfigProvider :heading-levels="{ modalHeader: 'h3' }" :messages="dialogMessages">
               <CuiMarkdownEditor v-model="dialogDoc" />
             </CuiConfigProvider>
+          </CuiStack>
+        </Example>
+
+        <Example
+          title="Dialogs follow a scoped theme"
+          :code="`&lt;div class=&quot;cui-theme-violet&quot;&gt;
+  &lt;CuiMarkdownEditor v-model=&quot;doc&quot; /&gt;
+&lt;/div&gt;`"
+        >
+          <CuiStack spacing="2">
+            <p class="text-sm" style="color: var(--cui-text-secondary);">
+              The dialogs also take the theme around the editor: the nearest
+              <code class="cui-code">cui-theme-*</code> class, and a <code class="cui-code">dark</code>
+              class set on a container rather than on <code class="cui-code">&lt;html&gt;</code>.
+              They read it when they open, so a theme changed while one is open shows the next
+              time. Press <code class="cui-code">Mod-K</code> here: the dialog's Insert button
+              and the URL field's focus ring are violet, whatever theme the site is in.
+            </p>
+            <div class="cui-theme-violet">
+              <CuiMarkdownEditor v-model="themedDialogDoc" />
+            </div>
           </CuiStack>
         </Example>
 
