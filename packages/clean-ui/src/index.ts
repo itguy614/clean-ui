@@ -130,6 +130,8 @@ export type {
   SizeableProps,
   DisableableProps,
   TitleAsProps,
+  CuiFocusTarget,
+  OverlayFocusProps,
   FormControlProps,
   AriaLabelableProps,
   NativeControlProps,

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`after-enter` / `after-leave` events and `initialFocus` / `returnFocus` props on
+  CuiModal and CuiSlideover** (#374). `after-enter` fires once the entry animation has
+  finished and focus is in place; `after-leave` once the exit has finished and focus has been
+  returned, after `close`. Each fires once per open or close, and not at all for an open
+  closed before its entry ends. `initialFocus` names the element focused on open — a selector
+  scoped to the panel, an element, or a function returning one — and wins over a field the
+  content focused itself on mount; `returnFocus` names the element focused once closed, in
+  place of the opener, and a function there is called at close time, so it can pick an
+  element that did not exist at open (the row last shown in a details panel with Previous /
+  Next). `returnFocus: false` leaves focus alone. Either one naming nothing falls back to the
+  default: the panel, and the opener (or its restore key). `useOverlay` takes them as
+  `initialFocus`, `returnFocus`, `onOpened`, `onClosed` and `rootRef`. The shared prop type
+  is exported as `CuiFocusTarget`.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

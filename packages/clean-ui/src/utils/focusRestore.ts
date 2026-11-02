@@ -12,6 +12,8 @@
  * overlay open still loses focus. The event type below lands in the published types too, so
  * `cui-restore-focus` is typed in consumers' DocumentEventMap.
  */
+import type { CuiFocusTarget } from "../types/common";
+
 export const RESTORE_FOCUS_EVENT = "cui-restore-focus";
 export const RESTORE_FOCUS_ATTR = "data-cui-restore-focus";
 
@@ -30,4 +32,17 @@ export function restoreKeyOf(el: Element | null): string | null {
 export function returnFocus(el: HTMLElement | null, key: string | null) {
   if (el?.isConnected) el.focus();
   else if (key) document.dispatchEvent(new CustomEvent(RESTORE_FOCUS_EVENT, { detail: key }));
+}
+
+/**
+ * The element a `CuiFocusTarget` names (#374): a selector looked up in `scope`, an element
+ * as given, or a function's result. Null if it names nothing.
+ */
+export function resolveFocusTarget(
+  target: CuiFocusTarget | undefined,
+  scope: ParentNode | null | undefined,
+): HTMLElement | null {
+  if (typeof target === "string") return scope?.querySelector<HTMLElement>(target) ?? null;
+  if (typeof target === "function") return target();
+  return target ?? null;
 }
