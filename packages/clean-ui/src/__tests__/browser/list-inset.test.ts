@@ -119,14 +119,24 @@ describe("CuiList variant=inset (real browser)", () => {
       expect(css(li, "left", "::before")).toBe("20px");
       expect(css(li, "right", "::before")).toBe("20px");
     }
-    // The row stacks above its item's divider, so a hover fill or focus ring covers the line
-    // rather than being crossed by it.
-    const row = items[1].querySelector(".cui-list-item__row")!;
+    // The divider stacks above its row, so a hovered row keeps the line above it (found in
+    // review: the hover fill hid it). A focused row goes back above, so the line doesn't
+    // cross the inset focus ring.
+    const row = items[1].querySelector<HTMLElement>(".cui-list-item__row")!;
     expect(css(row, "position")).toBe("relative");
-    expect(Number(css(row, "z-index"))).toBeGreaterThan(0);
-    expect(css(items[1], "z-index", "::before")).toBe("auto");
+    const divider = Number(css(items[1], "z-index", "::before"));
+    expect(divider).toBeGreaterThan(Number(css(row, "z-index")));
     // The dividers are pseudo-elements: the list's children are exactly its rows.
     expect(items[0].parentElement!.children).toHaveLength(3);
+  });
+
+  it("draws a keyboard-focused row's ring over its divider", async () => {
+    const items = inset(3);
+    const row = items[1].querySelector<HTMLElement>(".cui-list-item__row")!;
+    items[0].querySelector<HTMLElement>(".cui-list-item__row")!.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(row);
+    expect(Number(css(row, "z-index"))).toBeGreaterThan(Number(css(items[1], "z-index", "::before")));
   });
 
   it("truncates a long title to one line", () => {

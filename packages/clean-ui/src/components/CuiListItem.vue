@@ -266,6 +266,8 @@ defineExpose({ el, focus, blur });
   inset-inline: var(--cui-list-px, calc(1rem * var(--cui-density-scale, 1)));
   border-top: 1px solid var(--cui-list-divider-color, var(--cui-border));
   pointer-events: none;
+  /* Above the row, so a hovered or pressed row keeps the line above it. */
+  z-index: 2;
 }
 
 .cui-list-item__row {
@@ -273,8 +275,8 @@ defineExpose({ el, focus, blur });
   align-items: center;
   width: 100%;
   margin: 0;
-  /* Above the divider, so a hover fill or the inset focus ring covers it rather than being
-     crossed by it. Transparent at rest, so the divider still shows. */
+  /* Stacked so the divider (z-index 2) draws over a hover fill, and the inset focus ring
+     (below) over the divider rather than being crossed by it. */
   position: relative;
   z-index: 1;
   font: inherit;
@@ -285,6 +287,10 @@ defineExpose({ el, focus, blur });
 
 .cui-list-item__row--interactive {
   cursor: pointer;
+}
+
+.cui-list-item__row:focus-visible {
+  z-index: 3;
 }
 
 .cui-list-item__row--disabled {
