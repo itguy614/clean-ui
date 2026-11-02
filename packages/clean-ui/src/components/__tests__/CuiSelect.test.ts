@@ -187,3 +187,88 @@ describe("CuiSelect native form participation", () => {
     w.unmount();
   });
 });
+
+// #301: multi-select chips are CuiBadge, as CuiCombobox's and CuiTagInput's are.
+describe("CuiSelect chips", () => {
+  const multi = (props: Record<string, unknown> = {}) =>
+    mount(CuiSelect, { props: { options: OPTIONS, multiple: true, modelValue: ["a", "c"], ...props }, attachTo: document.body });
+
+  it("renders one removable CuiBadge per value, in the select's color, a size below it", () => {
+    const w = multi({ color: "success", size: "lg" });
+    const chips = w.findAllComponents({ name: "CuiBadge" });
+    expect(chips.map((c) => c.text())).toEqual(["Apple", "Cherry"]);
+    expect(chips[0].props()).toMatchObject({ color: "success", size: "md", removable: true });
+    expect(w.findAll(".cui-badge__remove")[0].attributes("aria-label")).toBeTruthy();
+    expect(w.find(".cui-select__chip").exists()).toBe(false);
+    w.unmount();
+  });
+
+  it("removing a chip drops that value without opening the panel", async () => {
+    const w = multi();
+    await w.findAll(".cui-badge__remove")[0].trigger("click");
+    expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["c"]]);
+    expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    expect(w.get('[role="combobox"]').attributes("aria-expanded")).toBe("false");
+    w.unmount();
+  });
+
+  it("hands focus back to the trigger when the focused chip goes, and leaves focus elsewhere alone", async () => {
+    const w = mount(
+      { components: { CuiSelect }, template: `<div><input class="other" /><CuiSelect v-model="v" :options="o" multiple /></div>`, data: () => ({ v: ["a", "b", "c"], o: OPTIONS }) },
+      { attachTo: document.body },
+    );
+    const trigger = w.get('[role="combobox"]').element;
+    const remove = w.findAll(".cui-badge__remove");
+    (remove[0].element as HTMLElement).focus();
+    await remove[0].trigger("click");
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement).toBe(trigger);
+    const other = w.get(".other").element as HTMLInputElement;
+    other.focus();
+    await w.findAll(".cui-badge__remove")[0].trigger("click");
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement).toBe(other);
+    w.unmount();
+  });
+
+  it("Enter or Space on a chip's remove button doesn't reach the listbox", async () => {
+    const w = multi();
+    for (const key of ["Enter", " "]) {
+      await w.find(".cui-badge__remove").trigger("keydown", { key });
+      expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    }
+    w.unmount();
+  });
+
+  it("Backspace on the trigger drops the last chip; a modified Backspace doesn't", async () => {
+    const w = multi();
+    const trigger = w.get('[role="combobox"]');
+    await trigger.trigger("keydown", { key: "Backspace", metaKey: true });
+    await trigger.trigger("keydown", { key: "Backspace", ctrlKey: true });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+    await trigger.trigger("keydown", { key: "Backspace" });
+    expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["a"]]);
+    expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    w.unmount();
+  });
+
+  it.each(["disabled", "readonly"])("a %s select shows no remove button and ignores Backspace", async (state) => {
+    const w = multi({ [state]: true });
+    expect(w.findAllComponents({ name: "CuiBadge" })).toHaveLength(2);
+    expect(w.find(".cui-badge__remove").exists()).toBe(false);
+    await w.get('[role="combobox"]').trigger("keydown", { key: "Backspace" });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+    w.unmount();
+  });
+
+  it("the #selected slot still renders a single value", () => {
+    const w = mount(CuiSelect, {
+      props: { options: OPTIONS, modelValue: "b" },
+      slots: { selected: `<template #selected="{ option }"><em class="custom">{{ option.label }}!</em></template>` },
+    });
+    expect(w.get(".custom").text()).toBe("Banana!");
+    w.unmount();
+  });
+});

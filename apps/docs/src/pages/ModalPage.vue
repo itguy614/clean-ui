@@ -47,6 +47,20 @@ const stackedInner = ref(false);
 const stackedChoice = ref("");
 const rounded = ref({ none: false, lg: false, full: false });
 
+// Focus on open and close (#374)
+const focusHeading = ref(false);
+const focusLog = ref<string[]>([]);
+const logEvent = (name: string) => (focusLog.value = [...focusLog.value, name].slice(-4));
+const rows = ["Invoice 1001", "Invoice 1002", "Invoice 1003", "Invoice 1004"];
+const rowDetails = ref(false);
+const lastViewed = ref(0);
+function openRow(i: number) {
+  lastViewed.value = i;
+  rowDetails.value = true;
+}
+// Called when the modal has closed, so it sees the row last shown, not the one that opened it.
+const lastViewedRow = () => document.querySelector<HTMLElement>(`[data-docs-row="${lastViewed.value}"]`);
+
 // SVG backdrop images as data URIs (built in script to avoid template encoding issues)
 const gridSvg = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="none"/><path d="M40 0H0v40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/></svg>')}`;
 const dotSvg = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="1.5" fill="rgba(255,255,255,0.25)"/></svg>')}`;
@@ -197,6 +211,74 @@ const formAgree = ref(false);
               <code class="cui-code">h2</code>. Use <code class="cui-code">div</code> when the title
               is decorative and should stay out of the document outline.
             </p>
+          </CuiModal>
+        </Example>
+
+        <!-- Focus on open -->
+        <Example title="Focus on open (initialFocus, after-enter)" :code="`<CuiModal
+  v-model:visible=&quot;show&quot;
+  title=&quot;Saved profiles&quot;
+  initial-focus=&quot;.profiles-heading&quot;
+  @after-enter=&quot;log('after-enter')&quot;
+  @after-leave=&quot;log('after-leave')&quot;
+>
+  <h3 class=&quot;profiles-heading&quot; tabindex=&quot;-1&quot;>3 saved profiles</h3>
+  ...
+</CuiModal>`">
+          <CuiFlex gap="2" align="center" wrap="wrap">
+            <CuiButton variant="outline" size="sm" @click="focusHeading = true">Open, focusing a heading</CuiButton>
+            <span class="text-sm" style="color: var(--cui-text-secondary)">
+              Events: {{ focusLog.length ? focusLog.join(" → ") : "none yet" }}
+            </span>
+          </CuiFlex>
+          <CuiModal
+            v-model:visible="focusHeading"
+            title="Saved profiles"
+            initial-focus=".docs-profiles-heading"
+            @after-enter="logEvent('after-enter')"
+            @after-leave="logEvent('after-leave')"
+          >
+            <h3 class="docs-profiles-heading" tabindex="-1">3 saved profiles</h3>
+            <p>
+              Focus lands on this heading rather than the panel. A selector is looked up inside the
+              panel; an element, or a function returning one, works too. The heading needs
+              <code class="cui-code">tabindex="-1"</code> to take focus.
+              <code class="cui-code">after-enter</code> fires once the entry has finished and focus is
+              in place; <code class="cui-code">after-leave</code> once the exit has finished and focus
+              has been returned.
+            </p>
+          </CuiModal>
+        </Example>
+
+        <!-- Return focus elsewhere -->
+        <Example title="Return focus elsewhere (returnFocus)" :code="`<button v-for=&quot;(row, i) in rows&quot; :data-row=&quot;i&quot; @click=&quot;openRow(i)&quot;>{{ row }}</button>
+
+<CuiModal
+  v-model:visible=&quot;show&quot;
+  :title=&quot;rows[lastViewed]&quot;
+  :return-focus=&quot;lastViewedRow&quot;
+>
+  <!-- const lastViewedRow = () => document.querySelector('[data-row=&quot;' + lastViewed + '&quot;]') -->
+  <CuiButton @click=&quot;lastViewed--&quot;>Previous</CuiButton>
+  <CuiButton @click=&quot;lastViewed++&quot;>Next</CuiButton>
+</CuiModal>`">
+          <CuiFlex gap="2" wrap="wrap">
+            <CuiButton v-for="(row, i) in rows" :key="row" :data-docs-row="i" variant="outline" size="sm" @click="openRow(i)">
+              {{ row }}
+            </CuiButton>
+          </CuiFlex>
+          <CuiModal v-model:visible="rowDetails" :title="rows[lastViewed]" :return-focus="lastViewedRow">
+            <CuiStack spacing="4">
+              <p>
+                Step to another row with Previous / Next, then close. Focus goes to the row last shown,
+                not the one that opened the modal. The function is called once the modal has closed;
+                <code class="cui-code">false</code> would leave focus alone.
+              </p>
+              <CuiFlex gap="2">
+                <CuiButton size="sm" :disabled="lastViewed === 0" @click="lastViewed--">Previous</CuiButton>
+                <CuiButton size="sm" :disabled="lastViewed === rows.length - 1" @click="lastViewed++">Next</CuiButton>
+              </CuiFlex>
+            </CuiStack>
           </CuiModal>
         </Example>
 

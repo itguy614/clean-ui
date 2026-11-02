@@ -102,6 +102,32 @@ export interface TitleAsProps {
   titleAs?: CuiTitleAs;
 }
 
+/**
+ * Where an overlay puts focus (#374): a CSS selector, an element, or a function returning
+ * one. CuiModal's and CuiSlideover's `initialFocus` scope a selector to the panel;
+ * `returnFocus` resolves it in the document, and calls a function at close time, so it can
+ * name an element that did not exist when the overlay opened.
+ */
+export type CuiFocusTarget = string | HTMLElement | (() => HTMLElement | null);
+
+/** The focus props CuiModal and CuiSlideover share (#374). */
+export interface OverlayFocusProps {
+  /**
+   * Element focused when the overlay opens. A selector is scoped to the panel, and an
+   * element outside the panel is ignored. Unset, or naming nothing it can focus, the panel
+   * itself is focused — unless the content already focused one of its own fields on mount,
+   * which keeps it.
+   */
+  initialFocus?: CuiFocusTarget;
+  /**
+   * Element focused when the overlay has closed, in place of the opener. A function is
+   * called at close time. `false` leaves focus where it is. Unset, or naming nothing it can
+   * focus (gone, hidden or disabled by then), focus returns to the opener (or, if it has
+   * unmounted, through its restore key).
+   */
+  returnFocus?: CuiFocusTarget | false;
+}
+
 export interface RoleIconProps {
   /**
    * Replace the role icon. A name in the static icon registry (built-ins plus

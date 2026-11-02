@@ -104,7 +104,7 @@ export const BUILTIN_ICONS: Record<string, Component> = {
   "arrow-counter-clockwise": PhArrowCounterClockwise,
   "bookmark-simple": PhBookmarkSimple,
 
-  // --- Status (COLOR_ICON_MAP + CuiConfirmDialog) ---
+  // --- Status (COLOR_ICON_MAP) ---
   "check-circle": PhCheckCircle,
   info: PhInfo,
   warning: PhWarning,
