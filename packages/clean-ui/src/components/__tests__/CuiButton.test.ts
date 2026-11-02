@@ -183,7 +183,6 @@ describe("CuiButton", () => {
       await wrapper.setProps({ pressed: true });
       expect(token(wrapper, "--_button-pressed-bg")).toBe("var(--cui-success-bg)");
       expect(token(wrapper, "--_button-pressed-border")).toBe("1px solid var(--cui-success)");
-      expect(token(wrapper, "--_button-pressed-bar")).toBe("var(--cui-success)");
     });
 
     // The role tint means "pressed" only, so a toggle switched on under the pointer
@@ -194,8 +193,6 @@ describe("CuiButton", () => {
       expect(token(off, "--_button-active-bg")).toBe("var(--cui-surface-dark-bg)");
       const plain = mount(CuiButton, { props: { variant: "ghost" } });
       expect(token(plain, "--_button-hover-bg")).toBe("var(--cui-primary-bg)");
-      const solid = mount(CuiButton, { props: { variant: "solid", pressed: true } });
-      expect(token(solid, "--_button-pressed-bar")).toBe("var(--cui-primary-text)");
     });
 
     it("combines with focusableWhenDisabled", () => {

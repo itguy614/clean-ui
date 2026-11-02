@@ -130,11 +130,10 @@ defineExpose({ el: elRef, focus, blur });
 
 /**
  * A pressed toggle's look (#396). Subtle-first like every other selected state: the tinted
- * fill, a role-coloured edge, the stronger text colour, and a 2px bar along the bottom in
- * the role colour. The bar is the part that reads under the pointer: a toggle's hover is a
- * neutral fill (see `togglePaint`), so pressed and hover differ in hue, edge and bar, not
- * only in strength. Solid is already filled: it takes the darker shade its hover uses, and
- * its bar is drawn in the text colour.
+ * fill, a role-coloured edge and the stronger text colour. A toggle's hover is a neutral fill
+ * (see `togglePaint`), so pressed and hover differ in hue and edge, not only in strength,
+ * and a toggle switched on under the pointer reads as pressed at once. Solid is already
+ * filled: it takes the darker shade its hover uses.
  */
 function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
   if (v === "solid") {
@@ -142,7 +141,6 @@ function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
       "--_button-pressed-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
       "--_button-pressed-color": `var(--cui-${c}-text)`,
       "--_button-pressed-border": "1px solid transparent",
-      "--_button-pressed-bar": `var(--cui-${c}-text)`,
     };
   }
   // Ghost and outline gain a solid role edge; dash keeps its dashes.
@@ -151,7 +149,6 @@ function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
     "--_button-pressed-bg": `var(--cui-${c}-bg)`,
     "--_button-pressed-color": `var(--cui-${c}-hover)`,
     "--_button-pressed-border": `1px ${style} var(--cui-${c})`,
-    "--_button-pressed-bar": `var(--cui-${c})`,
   };
 }
 
@@ -324,9 +321,6 @@ const buttonStyle = computed(() => {
   background: var(--cui-button-pressed-bg, var(--_button-pressed-bg));
   color: var(--cui-button-pressed-color, var(--_button-pressed-color));
   border: var(--cui-button-pressed-border, var(--_button-pressed-border));
-  /* Inset, so it costs no layout and sits inside merged corners. Private: a consumer
-     restyling the pressed look sets its fill, colour and edge; the bar follows the role. */
-  box-shadow: inset 0 -2px 0 var(--_button-pressed-bar);
 }
 
 :where(.cui-button:active:not(.cui-button--disabled)) {

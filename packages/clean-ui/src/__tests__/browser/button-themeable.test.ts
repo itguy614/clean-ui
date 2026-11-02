@@ -110,9 +110,6 @@ describe("CuiButton themeable properties (real browser)", () => {
       expect(paint(on, "background-color")).toBe("rgb(13, 23, 33)"); // --cui-primary-bg → 100
       expect(paint(on, "border-top-color")).toBe("rgb(10, 20, 30)"); // --cui-primary → 500
       expect(paint(on, "color")).toBe("rgb(12, 22, 32)"); // --cui-primary-hover → 700
-      // The bar along the bottom, which tells pressed from a (neutral) toggle hover.
-      expect(paint(on, "box-shadow")).toBe("rgb(10, 20, 30) 0px -2px 0px 0px inset");
-      expect(paint(off, "box-shadow")).toBe("none");
     });
 
     it("keeps the pressed look under the pointer", async () => {

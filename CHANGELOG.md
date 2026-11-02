@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   long-press still reach a wrapping CuiContextMenu. It keeps its place in a CuiToolbar's
   arrow-key order, as the WAI-ARIA toolbar pattern asks, and a CuiDropdownTrigger around it
   doesn't open from the keyboard while it is disabled. `pressed` renders `aria-pressed` and a
-  selected look for every variant and colour (the tinted fill, a coloured edge, stronger
-  text and a 2px bar along the bottom; solid takes its darker shade). A toggle's hover is a
+  selected look for every variant and colour (the tinted fill, a coloured edge and stronger
+  text; solid takes its darker shade). A toggle's hover is a
   neutral fill, pressed or not, so a toggle switched on under the pointer reads as pressed
   at once. The look is themeable through the new `--cui-button-pressed-bg`,
   `--cui-button-pressed-color` and `--cui-button-pressed-border` tokens. Left unset, the
