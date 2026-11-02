@@ -130,9 +130,11 @@ defineExpose({ el: elRef, focus, blur });
 
 /**
  * A pressed toggle's look (#396). Subtle-first like every other selected state: the tinted
- * fill, a role-coloured edge and the stronger text colour, so it reads apart from the
- * unpressed button's hover, which has the fill but neither of the other two. Solid is the
- * exception, already filled: it takes the darker shade its hover uses.
+ * fill, a role-coloured edge, the stronger text colour, and a 2px bar along the bottom in
+ * the role colour. The bar is the part that reads under the pointer: a toggle's hover is a
+ * neutral fill (see `togglePaint`), so pressed and hover differ in hue, edge and bar, not
+ * only in strength. Solid is already filled: it takes the darker shade its hover uses, and
+ * its bar is drawn in the text colour.
  */
 function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
   if (v === "solid") {
@@ -140,15 +142,31 @@ function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
       "--_button-pressed-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
       "--_button-pressed-color": `var(--cui-${c}-text)`,
       "--_button-pressed-border": "1px solid transparent",
+      "--_button-pressed-bar": `var(--cui-${c}-text)`,
     };
   }
-  // Ghost and outline both gain a solid edge (ghost the lighter one); dash keeps its dashes.
+  // Ghost and outline gain a solid role edge; dash keeps its dashes.
   const style = v === "dash" ? "dashed" : "solid";
-  const edge = v === "ghost" ? `var(--cui-${c}-border)` : `var(--cui-${c})`;
   return {
     "--_button-pressed-bg": `var(--cui-${c}-bg)`,
     "--_button-pressed-color": `var(--cui-${c}-hover)`,
-    "--_button-pressed-border": `1px ${style} ${edge}`,
+    "--_button-pressed-border": `1px ${style} var(--cui-${c})`,
+    "--_button-pressed-bar": `var(--cui-${c})`,
+  };
+}
+
+/**
+ * A toggle's hover and press, pressed or not (#396). Neutral, so the role tint means
+ * "pressed" only: with the tinted hover an ordinary button has, a toggle just switched on
+ * looked the same as one merely hovered until the pointer left. Solid keeps its own.
+ */
+function togglePaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
+  if (v === "solid") return {};
+  return {
+    "--_button-hover-bg": "var(--cui-surface-bg)",
+    "--_button-hover-color": `var(--cui-${c})`,
+    "--_button-hover-border": v === "ghost" ? "transparent" : "var(--cui-border-strong)",
+    "--_button-active-bg": "var(--cui-surface-dark-bg)",
   };
 }
 
@@ -168,6 +186,7 @@ const buttonStyle = computed(() => {
   const v = props.variant;
   const s = BUTTON_SIZE_SCALE[props.size];
 
+  const toggle = props.pressed !== undefined ? togglePaint(c, v) : {};
   const base: Record<string, string> = {
     "--_button-height": s.height,
     "--_button-px": props.icon ? "0px" : s.px,
@@ -202,6 +221,7 @@ const buttonStyle = computed(() => {
       "--_button-hover-color": `var(--cui-${c}-hover)`,
       "--_button-hover-border": `var(--cui-${c})`,
       "--_button-active-bg": `var(--cui-${c}-subtle)`,
+      ...toggle,
     };
   }
 
@@ -214,6 +234,7 @@ const buttonStyle = computed(() => {
     "--_button-hover-bg": `var(--cui-${c}-bg)`,
     "--_button-hover-color": `var(--cui-${c}-hover)`,
     "--_button-active-bg": `var(--cui-${c}-subtle)`,
+    ...toggle,
   };
 });
 </script>
@@ -303,6 +324,9 @@ const buttonStyle = computed(() => {
   background: var(--cui-button-pressed-bg, var(--_button-pressed-bg));
   color: var(--cui-button-pressed-color, var(--_button-pressed-color));
   border: var(--cui-button-pressed-border, var(--_button-pressed-border));
+  /* Inset, so it costs no layout and sits inside merged corners. Private: a consumer
+     restyling the pressed look sets its fill, colour and edge; the bar follows the role. */
+  box-shadow: inset 0 -2px 0 var(--_button-pressed-bar);
 }
 
 :where(.cui-button:active:not(.cui-button--disabled)) {
