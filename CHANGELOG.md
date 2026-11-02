@@ -7,6 +7,119 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`after-enter` / `after-leave` events and `initialFocus` / `returnFocus` props on
+  CuiModal and CuiSlideover** (#374). `after-enter` fires once the entry animation has
+  finished and focus is in place; `after-leave` once the exit has finished and focus has been
+  returned, after `close`. Each fires once per open or close, and not at all for an open
+  closed before its entry ends. `initialFocus` names the element focused on open — a selector
+  scoped to the panel, an element, or a function returning one — and wins over a field the
+  content focused itself on mount; `returnFocus` names the element focused once closed, in
+  place of the opener, and a function there is called at close time, so it can pick an
+  element that did not exist at open (the row last shown in a details panel with Previous /
+  Next). `returnFocus: false` leaves focus alone. Either one naming nothing falls back to the
+  default: the panel, and the opener (or its restore key). `useOverlay` takes them as
+  `initialFocus`, `returnFocus`, `onOpened`, `onClosed` and `rootRef`. The shared prop type
+  is exported as `CuiFocusTarget`.
+- **Toast actions and pause opt-outs through `useToast()`** (#345). `ToastOptions` (and the
+  `toast.success/error/warning/info` helpers) take `action: { label, onClick, dismissOnClick? }`,
+  which `CuiToastProvider` renders as a small ghost `CuiButton` in the toast's colour (on a
+  `variant: "solid"` toast, a solid button matching its fill, so the label stays legible), a real
+  `<button>` inside its live region (`role="status"`/`"alert"` unchanged). The toast is
+  dismissed after `onClick` unless `dismissOnClick: false`. In `stackMode="collapsed"` a click
+  on the action is no longer taken as the collapsed toast's dismiss click, and a collapsed
+  toast drops its clipped peek while keyboard focus (`:focus-visible`) is inside it, so its
+  action is never focused out of sight. Three new options, all default `true`, turn off the countdown's pauses:
+  `pauseOnHover`, `pauseOnFocus` and `pauseWhenInactive` (waiting while another toast is on
+  top); with all three `false`, `autoDismiss` is a wall-clock deadline, for a time limit
+  that is genuinely essential such as a server-side undo window. `CuiToast` takes the same
+  three as props. The countdown is now one timeout for the time that is left on a
+  monotonic clock, instead of a 50ms interval counting ticks: a pause no longer loses time,
+  a late interval no longer stretches it, a change to `autoDismiss` is picked up, and a
+  toast waiting behind another no longer polls. `ToastAction` is exported.
+- **CuiDataGrid exposes `processedRows`, `page`, `lastPage` and `setPage`** (#372).
+  `processedRows` is the rows after search, filters and sort, before paging (server-side,
+  the current page's rows); `setPage(page)` moves the grid to a page, clamped to
+  `1..lastPage`, and does what a pagination click does, server-side `navigate` included.
+  `page` and `lastPage` are readonly. `useDataGrid` returns `processedRows` and a
+  `paginated` flag, takes a `paginate` option (default `true`), and its `setPage` now
+  clamps to `1..last page` (no upper bound for a server-side grid fed a plain array) and
+  returns whether the page changed. A client-side page left past the end — the data shrank,
+  or `hydrateFromUrl` read `?page=99` — now reads as the last page instead of an empty one.
+- **`initial` and `scrollTo()` on `useScrollSpy()`** (#423). `initial` is the id `activeId`
+  reports while no section has reached the band: on first paint, during SSR, and above the
+  first section (a ref or getter is followed). `scrollTo(id)` scrolls a section into view
+  `offset` pixels below the scroller's top (or at the section's own `scroll-margin-top`, if
+  larger, so it lands where a #hash link does) and marks it current at once, holding it until
+  the scroll settles so the highlight doesn't pass through the sections in between; it jumps
+  instead of gliding under `prefers-reduced-motion`. It returns `false` when there is nothing
+  to scroll to, so a link can keep its native navigation. The docs site's "On this page" rail
+  uses both.
+- **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
+  routine, non-destructive confirm no longer has to look like an error, a warning or an info
+  notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
+  takes `false` to render no icon tile, with the title flush left and no gap where the tile
+  was, and now also accepts an icon component as well as a registered name. `confirmColor`
+  overrides only the confirm button's colour role, for any variant; the tile and the
+  type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
+  dialogs render as before. The primary icon is a sealed question mark rather than the plain
+  `?`, which is CuiIcon's glyph for an unknown icon name.
+
+### Changed
+
+- **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
+  CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
+  select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
+  markup and styles are gone, and with them that class as a styling hook: CuiBadge paints
+  its colours inline, so chip colour now follows the select's `color` prop, as it does in
+  the other two. A long label is cut short with an ellipsis instead of wrapping. Removing a
+  chip still leaves the panel closed. Enter or Space on a chip's remove button now removes
+  it (it used to open the panel), and focus returns to the trigger. Backspace on the
+  trigger removes the last chip, as in CuiCombobox. A disabled or readonly select shows its
+  chips with no remove button.
+- **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
+  `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
+  out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
+  100%; a fully opaque colour is still `#rrggbb`. **Check before upgrading** if you store
+  the picker's hex value in a 7-character column, validate it with a 6-digit pattern, or
+  compare it as a string: translucent colours now have two more digits. The change comes from
+  `formatColor(r, g, b, a, "hex")`, which now appends the alpha byte when `a < 1` (an alpha
+  that rounds to `ff` stays six digits). `parseColor` now reads the alpha of `#rrggbbaa` and
+  `#rgba` instead of ignoring it, so the picker, its text field and an 8-digit `v-model` value
+  round-trip; a colour passed in with an alpha keeps it even without `show-alpha`, as an
+  `rgba()` value already did. Also:
+  - `parseColor` and `hexToRgb` return `null` for hex containing a non-hex character
+    (`#12345z` used to read as `#123405`). `hexToRgb` also accepts 4 digits, and still
+    returns the colour without its alpha.
+  - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
+    so they no longer emit `rgba(…, 1.00)`.
+  - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+
+### Fixed
+
+- **`virtualize` windowed only one page of a client-side grid** (#317). The grid paged
+  before the table virtualized, so a 10,000-row grid scrolled through 15 rows and needed
+  the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the
+  table is shown: the table windows every searched, filtered and sorted row and the
+  pagination bar is hidden (`page` and `lastPage` read 1). Card view, which is not
+  virtualized, and server-side grids still page. With paging off, the header's select-all
+  selects every searched and filtered row, not 15.
+- **A server-side CuiDataGrid emitted `navigate` twice for one pagination click** (#372):
+  once from the pagination bar and once from the grid's own watcher on the page. It now
+  emits once.
+- **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
+  icon is decorative; the title and message carry the meaning.
+
+### Tooling
+
+- **The fixture guarantees check every fixture page** (#384). The icon-barrel, Tailwind
+  utilities and global-reset checks read only the basic page; they now build and check the
+  grid, editor and `/render` pages too, and a failure names the page. The pages are listed
+  once, in `scripts/fixture-scenarios.mjs`, which the bundle budget reads as well, so a new
+  page is budgeted and guarded together. A page can opt out of a check only there, with
+  the reason.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

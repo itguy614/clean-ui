@@ -58,6 +58,18 @@ describe("server rendering (node environment)", () => {
 
     await expect(renderToString(h(Consumer))).resolves.toContain("usage");
   });
+
+  it("reports useScrollSpy's initial id on the server, where scrollTo is a no-op (#423)", async () => {
+    const Consumer = defineComponent({
+      setup() {
+        const { activeId, scrollTo } = useScrollSpy(() => ["intro", "usage"], { initial: "intro", offset: 64 });
+        scrollTo("usage");
+        return () => h("nav", String(activeId.value));
+      },
+    });
+
+    await expect(renderToString(h(Consumer))).resolves.toContain(">intro<");
+  });
 });
 
 // #203: the floating components register global listeners in setup. Passing `window` as

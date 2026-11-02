@@ -1,6 +1,13 @@
 import type { ComponentMeta } from "./types";
 import { hiddenProp, titleAsProp, visibleProp } from "./shared";
-import { backdropProps, modalBodyProps, modalFooterProps, modalHeaderProps } from "./modal";
+import {
+  backdropProps,
+  modalBodyProps,
+  modalFooterProps,
+  modalHeaderProps,
+  overlayEvents,
+  overlayFocusProps,
+} from "./modal";
 
 /**
  * The panel is its own component, but everything inside it is CuiModal's — the same
@@ -50,6 +57,7 @@ const meta: ComponentMeta = {
           type: "boolean",
           description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0",
         },
+        ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,
       ],
@@ -60,10 +68,7 @@ const meta: ComponentMeta = {
             "With title set, the body content. Without it, the whole panel — supply CuiModalHeader / CuiModalBody / CuiModalFooter yourself",
         },
       ],
-      events: [
-        { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
-        { name: "close", payload: "—", description: "Fires once the exit animation has finished" },
-      ],
+      events: overlayEvents,
     },
     {
       name: "CuiModalHeader",

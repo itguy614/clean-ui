@@ -41,6 +41,21 @@ const meta: ComponentMeta = {
         { name: "autoDismiss", type: "number", default: "5000", description: "Auto-dismiss after N ms (0 to disable)" },
         { name: "showProgress", type: "boolean", default: "true", description: "Show countdown progress bar" },
         { name: "animation", type: "pulse | glow | shake | none", default: "none", description: "Persistent attention animation" },
+        {
+          name: "action",
+          type: "{ label: string; onClick: () => void; dismissOnClick?: boolean }",
+          description:
+            "A button in the toast (Undo, Retry, View), rendered as a small ghost CuiButton in the toast's colour (a solid one matching the fill on a solid toast). The toast is dismissed after onClick unless dismissOnClick is false",
+        },
+        { name: "pauseOnHover", type: "boolean", default: "true", description: "Pause auto-dismiss while the pointer is over the toast" },
+        { name: "pauseOnFocus", type: "boolean", default: "true", description: "Pause auto-dismiss while focus is inside the toast" },
+        {
+          name: "pauseWhenInactive",
+          type: "boolean",
+          default: "true",
+          description:
+            "Wait while another toast is on top. With all three pause options false, autoDismiss is a wall-clock deadline",
+        },
         ...roleIconProps,
         liveProp,
         hiddenProp,

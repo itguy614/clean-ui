@@ -92,7 +92,9 @@ jobs:
 
       # The package guarantees (no icon barrel, no Tailwind utilities layer,
       # single-instance dependencies), expressed as assertions over that
-      # fixture's build output rather than asserted in a changelog.
+      # fixture's build output rather than asserted in a changelog. Needs the
+      # fixture installed (above); it builds every page in
+      # scripts/fixture-scenarios.mjs itself and checks each one.
       - name: Check fixture guarantees
         run: node scripts/check-fixture-guarantees.mjs
 

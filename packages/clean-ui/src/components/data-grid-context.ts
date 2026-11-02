@@ -36,7 +36,8 @@ export interface DataGridContext {
   // Pagination
   page: Ref<number>;
   perPage: Ref<number>;
-  setPage: (n: number) => void;
+  /** Clamped to 1..last page; returns whether the page shown changed. */
+  setPage: (n: number) => boolean;
   setPerPage: (n: number) => void;
 
   // Selection
@@ -60,7 +61,15 @@ export interface DataGridContext {
   toggleFilterPanelPin: () => void;
 
   // Data access
+  /** The rows to render: the current page, or every processed row when not `paginated`. */
   displayData: ComputedRef<DataGridRow[]>;
+  /**
+   * Rows after search, filters and sort, before paging (#372). Server-side, the current
+   * page's rows — the server did the rest.
+   */
+  processedRows: ComputedRef<DataGridRow[]>;
+  /** Whether rows are split into pages: always server-side; client-side unless `paginate` is false. */
+  paginated: ComputedRef<boolean>;
   paginationMeta: ComputedRef<{
     current_page: number;
     last_page: number;

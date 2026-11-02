@@ -25,8 +25,17 @@ export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegion
   showProgress?: boolean;
   /** Persistent animation */
   animation?: AlertAnimation;
-  /** Whether this toast is the topmost (active) — timer only runs when true */
+  /** Whether this toast is the topmost (active) — timer only runs when true, unless `pauseWhenInactive` is false */
   active?: boolean;
+  /** Pause auto-dismiss while hovered */
+  pauseOnHover?: boolean;
+  /** Pause auto-dismiss while focus is inside the toast */
+  pauseOnFocus?: boolean;
+  /**
+   * Pause auto-dismiss while the toast is not `active` (another one is on top). With all
+   * three `pause*` props false, `autoDismiss` is a wall-clock deadline (#345).
+   */
+  pauseWhenInactive?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToastProps>(), {
@@ -38,6 +47,9 @@ const props = withDefaults(defineProps<CuiToastProps>(), {
   animation: "none",
   noIcon: false,
   active: true,
+  pauseOnHover: true,
+  pauseOnFocus: true,
+  pauseWhenInactive: true,
   hidden: false,
 });
 
@@ -47,51 +59,50 @@ const emit = defineEmits<{
 
 // Auto-dismiss timer. Paused while the pointer is over the toast or focus is in it: a
 // keyboard or switch user on the dismiss button or an action gets the same time a pointer
-// user does by hovering (#344, WCAG 2.2.1).
+// user does by hovering (#344, WCAG 2.2.1). Each pause can be turned off, for a time limit
+// that is genuinely essential, such as a server-side undo window (#345).
 const hovered = ref(false);
 const focused = ref(false);
-const isPaused = computed(() => hovered.value || focused.value);
-const elapsed = ref(0);
-let intervalId: ReturnType<typeof setInterval> | null = null;
-const TICK = 50; // ms
+/** Whether the countdown (and its bar) runs while this toast isn't the topmost one. */
+const counts = computed(() => props.active || !props.pauseWhenInactive);
+const isPaused = computed(
+  () => !counts.value || (props.pauseOnHover && hovered.value) || (props.pauseOnFocus && focused.value),
+);
+let elapsed = 0;
+let timer: ReturnType<typeof setTimeout> | undefined;
+let resumedAt = 0;
+let done = false;
 
 // The countdown bar is one CSS animation over autoDismiss (#266), paused with the timer:
-// no re-render per tick. It mounts whenever the toast becomes the active one, so it starts
-// as far in as the timer already is — read then, not on every tick.
+// no re-render per tick. It mounts whenever the toast starts counting, so it starts as far
+// in as the timer already is — read then, not on every tick.
 const countdownFrom = ref(0);
-watch(
-  () => props.active,
-  (isActive) => {
-    if (isActive) countdownFrom.value = elapsed.value;
-  },
-  { immediate: true },
-);
+watch(counts, (isCounting) => {
+  if (isCounting) countdownFrom.value = elapsed;
+}, { immediate: true });
 
-function startTimer() {
-  if (intervalId) return;
-  if (!props.autoDismiss || props.autoDismiss === 0) return;
-  intervalId = setInterval(() => {
-    if (!isPaused.value && props.active) {
-      elapsed.value += TICK;
-      if (elapsed.value >= props.autoDismiss!) {
-        dismiss();
-      }
-    }
-  }, TICK);
+// One timeout for the time that is left, armed while counting; a pause banks the time that
+// passed. No polling, and no time lost to a pause. performance.now() is monotonic, so a
+// system clock change can't move a deadline.
+function stopTimer() {
+  if (timer) elapsed += performance.now() - resumedAt;
+  clearTimeout(timer);
+  timer = undefined;
 }
 
-// Start timer when becoming the topmost toast
-watch(
-  () => props.active,
-  (isActive) => {
-    if (isActive && !intervalId) {
-      startTimer();
-    }
-  },
-);
+function syncTimer() {
+  stopTimer();
+  if (isPaused.value || done || !props.autoDismiss) return;
+  resumedAt = performance.now();
+  timer = setTimeout(dismiss, props.autoDismiss - elapsed);
+}
+
+watch([isPaused, () => props.autoDismiss], syncTimer);
 
 function dismiss() {
-  if (intervalId) clearInterval(intervalId);
+  // Once only: a hover or focus change while the leave plays must not re-arm it.
+  done = true;
+  stopTimer();
   emit("dismiss");
 }
 
@@ -108,15 +119,9 @@ function onFocusOut(e: FocusEvent) {
   if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) focused.value = false;
 }
 
-onMounted(() => {
-  if (props.active) {
-    startTimer();
-  }
-});
+onMounted(syncTimer);
 
-onUnmounted(() => {
-  if (intervalId) clearInterval(intervalId);
-});
+onUnmounted(stopTimer);
 
 // Toast style based on variant
 const toastStyle = computed(() => {
@@ -209,7 +214,7 @@ const messages = useMessages();
 
     <!-- Progress bar -->
     <div
-      v-if="showProgress && autoDismiss && autoDismiss > 0 && active"
+      v-if="showProgress && autoDismiss && counts"
       class="cui-toast__progress"
     >
       <div
