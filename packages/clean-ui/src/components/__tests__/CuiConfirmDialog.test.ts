@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { toRaw } from "vue";
 import { mount, flushPromises } from "@vue/test-utils";
 import CuiConfirmDialog from "../CuiConfirmDialog.vue";
+import CuiModal from "../CuiModal.vue";
 import CuiButton from "../CuiButton.vue";
 import CuiInput from "../CuiInput.vue";
 import CuiIcon from "../CuiIcon.vue";
@@ -173,5 +174,45 @@ describe("CuiConfirmDialog", () => {
       expect(wrapper.emitted("confirm")).toHaveLength(1);
       wrapper.unmount();
     });
+  });
+});
+
+describe("CuiConfirmDialog focus forwarding (#437)", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("passes initialFocus and returnFocus to its CuiModal", async () => {
+    const returnFocus = () => null;
+    const wrapper = mount(CuiConfirmDialog, {
+      props: { visible: true, initialFocus: "button", returnFocus },
+    });
+    await flushPromises();
+    const modal = wrapper.findComponent(CuiModal);
+    expect(modal.props("initialFocus")).toBe("button");
+    expect(modal.props("returnFocus")).toBe(returnFocus);
+    wrapper.unmount();
+  });
+
+  it("leaves both unset when none is given, so returnFocus is not cast to false", async () => {
+    const wrapper = mount(CuiConfirmDialog, { props: { visible: true } });
+    await flushPromises();
+    const modal = wrapper.findComponent(CuiModal);
+    expect(modal.props("initialFocus")).toBeUndefined();
+    expect(modal.props("returnFocus")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("re-emits the modal's after-enter and after-leave, once each", async () => {
+    // Stubbed, so the real modal's own transition timing can't add emits of its own.
+    const wrapper = mount(CuiConfirmDialog, { props: { visible: true }, global: { stubs: { CuiModal: true } } });
+    const modal = wrapper.findComponent(CuiModal);
+    modal.vm.$emit("after-enter");
+    expect(wrapper.emitted("after-enter")).toHaveLength(1);
+    expect(wrapper.emitted("after-leave")).toBeUndefined();
+    modal.vm.$emit("after-leave");
+    expect(wrapper.emitted("after-leave")).toHaveLength(1);
+    expect(wrapper.emitted("after-enter")).toHaveLength(1);
+    wrapper.unmount();
   });
 });

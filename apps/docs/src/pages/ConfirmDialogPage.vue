@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiConfirmDialog } from "@itguy614/clean-ui";
+import { CuiButton, CuiConfirmDialog, CuiFlex } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/confirm-dialog";
@@ -18,6 +18,10 @@ const showConfirmColor = ref(false);
 const loadingState = ref(false);
 
 const lastAction = ref("(no action yet)");
+
+// Focus on close (#437)
+const showReturn = ref(false);
+const returnLeaves = ref(0);
 
 function onUsageConfirm() {
   lastAction.value = "Basic: confirmed";
@@ -335,6 +339,32 @@ function onLoadingConfirm() {
             confirm-text="Delete"
             :loading="loadingState"
             @confirm="onLoadingConfirm"
+          />
+        </Example>
+
+        <!-- Return focus elsewhere -->
+        <Example title="Return focus elsewhere (returnFocus, after-leave)" :code="`<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Archive project?&quot;
+  variant=&quot;primary&quot;
+  return-focus=&quot;#next-step&quot;
+  @confirm=&quot;show = false&quot;
+  @after-leave=&quot;leaves++&quot;
+/>
+<CuiButton id=&quot;next-step&quot;>Next step</CuiButton>`">
+          <CuiFlex gap="2" align="center" wrap="wrap">
+            <CuiButton variant="outline" @click="showReturn = true">Archive project</CuiButton>
+            <CuiButton id="docs-confirm-next-step" variant="ghost">Next step</CuiButton>
+            <span class="text-sm" style="color: var(--cui-text-secondary);">after-leave fired: {{ returnLeaves }}</span>
+          </CuiFlex>
+          <CuiConfirmDialog
+            v-model:visible="showReturn"
+            title="Archive project?"
+            message="Confirm or cancel, then watch where focus lands: on the Next step button, not the opener. after-leave fires once focus has been returned."
+            variant="primary"
+            return-focus="#docs-confirm-next-step"
+            @confirm="showReturn = false"
+            @after-leave="returnLeaves++"
           />
         </Example>
     </template>

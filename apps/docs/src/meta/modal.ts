@@ -26,10 +26,8 @@ export const overlayFocusProps: PropRow[] = [
   },
 ];
 
-/** The events that report an overlay's entry and exit, shared by CuiModal and CuiSlideover. */
-export const overlayEvents: EventRow[] = [
-  { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
-  { name: "close", payload: "—", description: "Fires once the exit animation has finished" },
+/** after-enter / after-leave — also forwarded by CuiConfirmDialog, which wraps CuiModal. */
+export const overlayLifecycleEvents: EventRow[] = [
   {
     name: "after-enter",
     payload: "—",
@@ -40,6 +38,13 @@ export const overlayEvents: EventRow[] = [
     payload: "—",
     description: "The exit has finished and focus has been returned — after close. Once per close",
   },
+];
+
+/** The events that report an overlay's entry and exit, shared by CuiModal and CuiSlideover. */
+export const overlayEvents: EventRow[] = [
+  { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
+  { name: "close", payload: "—", description: "Fires once the exit animation has finished" },
+  ...overlayLifecycleEvents,
 ];
 
 /** The header/body/footer trio, reused verbatim by CuiSlideover. */
