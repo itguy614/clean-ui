@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
+  CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
+  select's `color`, one size step below the control. The hand-rolled `cui-select__chip`
+  markup and styles are gone; a consumer rule targeting `.cui-select__chip` should target
+  `.cui-select .cui-badge` instead. Removing a chip still leaves the panel closed, and now
+  hands focus back to the trigger. Backspace on the trigger removes the last chip, as it
+  does in CuiCombobox. A disabled or readonly select shows its chips with no remove button.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

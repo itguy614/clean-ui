@@ -187,3 +187,56 @@ describe("CuiSelect native form participation", () => {
     w.unmount();
   });
 });
+
+// #301: multi-select chips are CuiBadge, as CuiCombobox's and CuiTagInput's are.
+describe("CuiSelect chips", () => {
+  const multi = (props: Record<string, unknown> = {}) =>
+    mount(CuiSelect, { props: { options: OPTIONS, multiple: true, modelValue: ["a", "c"], ...props }, attachTo: document.body });
+
+  it("renders one removable CuiBadge per value, in the select's color, a size below it", () => {
+    const w = multi({ color: "success", size: "lg" });
+    const chips = w.findAllComponents({ name: "CuiBadge" });
+    expect(chips.map((c) => c.text())).toEqual(["Apple", "Cherry"]);
+    expect(chips[0].props()).toMatchObject({ color: "success", size: "md", removable: true });
+    expect(w.findAll(".cui-badge__remove")[0].attributes("aria-label")).toBeTruthy();
+    expect(w.find(".cui-select__chip").exists()).toBe(false);
+    w.unmount();
+  });
+
+  it("removing a chip drops that value without opening the panel, and refocuses the trigger", async () => {
+    const w = multi();
+    await w.findAll(".cui-badge__remove")[0].trigger("click");
+    expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["c"]]);
+    expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    expect(w.get('[role="combobox"]').attributes("aria-expanded")).toBe("false");
+    await nextTick();
+    expect(document.activeElement).toBe(w.get('[role="combobox"]').element);
+    w.unmount();
+  });
+
+  it("Backspace on the trigger drops the last chip", async () => {
+    const w = multi();
+    await w.get('[role="combobox"]').trigger("keydown", { key: "Backspace" });
+    expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["a"]]);
+    expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    w.unmount();
+  });
+
+  it.each(["disabled", "readonly"])("a %s select shows no remove button and ignores Backspace", async (state) => {
+    const w = multi({ [state]: true });
+    expect(w.findAllComponents({ name: "CuiBadge" })).toHaveLength(2);
+    expect(w.find(".cui-badge__remove").exists()).toBe(false);
+    await w.get('[role="combobox"]').trigger("keydown", { key: "Backspace" });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+    w.unmount();
+  });
+
+  it("the #selected slot still renders a single value", () => {
+    const w = mount(CuiSelect, {
+      props: { options: OPTIONS, modelValue: "b" },
+      slots: { selected: `<template #selected="{ option }"><em class="custom">{{ option.label }}!</em></template>` },
+    });
+    expect(w.get(".custom").text()).toBe("Banana!");
+    w.unmount();
+  });
+});
