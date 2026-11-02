@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { defineComponent, h, ref } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { useColorScheme } from "../../composables/useColorScheme";
+import { useScrollSpy } from "../../composables/useScrollSpy";
 import CuiSelect from "../../components/CuiSelect.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
 import CuiTagInput from "../../components/CuiTagInput.vue";
@@ -42,6 +43,20 @@ describe("server rendering (node environment)", () => {
     // onMounted never runs during server rendering, so useColorScheme never
     // touches `document` or `MutationObserver` — isDark stays at its default.
     await expect(renderToString(h(Consumer))).resolves.toContain("false");
+  });
+
+  // #192: ids are looked up, and the observer and listeners created, only after mount.
+  it("renders useScrollSpy's consumer without DOM access", async () => {
+    const Consumer = defineComponent({
+      setup() {
+        const el = ref<HTMLElement | null>(null);
+        const { activeId, setActive } = useScrollSpy(() => ["intro", "usage"], { root: el, offset: 64 });
+        setActive("usage");
+        return () => h("nav", { ref: el }, String(activeId.value));
+      },
+    });
+
+    await expect(renderToString(h(Consumer))).resolves.toContain("usage");
   });
 });
 
