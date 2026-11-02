@@ -16,7 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was, and now also accepts an icon component as well as a registered name. `confirmColor`
   overrides only the confirm button's colour role, for any variant; the tile and the
   type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
-  dialogs render as before.
+  dialogs render as before. The primary icon is a sealed question mark rather than the plain
+  `?`, which is CuiIcon's glyph for an unknown icon name.
+
+### Fixed
+
+- **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
+  icon is decorative; the title and message carry the meaning.
 
 ## [1.7.0] - 2026-11-02
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, type Component } from "vue";
-import { PhInfo, PhQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
+import { PhInfo, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
@@ -88,12 +88,14 @@ const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: Compo
   danger: { color: "error", icon: PhWarningCircle },
   warning: { color: "warning", icon: PhWarning },
   info: { color: "info", icon: PhInfo },
-  primary: { color: "primary", icon: PhQuestion },
+  // Not PhQuestion: that is CuiIcon's fallback glyph for an unknown name, so a routine
+  // confirm would look like a broken icon and an `icon` typo would go unnoticed.
+  primary: { color: "primary", icon: PhSealQuestion },
 };
 
 const cfg = computed(() => variantConfig[props.variant]);
 
-const confirmColor = computed(() => props.confirmColor ?? cfg.value.color);
+const resolvedConfirmColor = computed(() => props.confirmColor ?? cfg.value.color);
 
 // `false` hides the tile; anything else falsy (unset, "") falls back to the variant's icon.
 // CuiIcon takes a name and a component as separate props, so forward by type.
@@ -142,6 +144,7 @@ function onCancel() {
       <div
         v-if="tileIcon"
         class="cui-confirm-dialog__icon"
+        aria-hidden="true"
         :style="{
           width: '2.5rem',
           height: '2.5rem',
@@ -248,7 +251,7 @@ function onCancel() {
         <CuiButton
           variant="solid"
           size="sm"
-          :color="confirmColor"
+          :color="resolvedConfirmColor"
           :disabled="confirmDisabled || loading"
           @click="onConfirm"
         >

@@ -74,8 +74,6 @@ describe("built-in icon map", () => {
     ["caret-up", "caret-down", "caret-up-down"],
     // CuiRating icon / halfIcon defaults
     ["star", "star-half"],
-    // CuiConfirmDialog's per-color cfg.icon
-    ["warning", "warning-circle", "info"],
     // CuiIcon's own unknown-name fallback
     ["question"],
   ])("covers the dynamic helper set %#", (...names) => {

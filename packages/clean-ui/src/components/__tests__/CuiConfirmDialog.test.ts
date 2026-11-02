@@ -5,7 +5,8 @@ import CuiConfirmDialog from "../CuiConfirmDialog.vue";
 import CuiButton from "../CuiButton.vue";
 import CuiInput from "../CuiInput.vue";
 import CuiIcon from "../CuiIcon.vue";
-import { PhInfo, PhQuestion, PhRocket, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
+import { PhInfo, PhRocket, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
+import { FALLBACK_ICON } from "../../icons/builtin";
 
 // CuiConfirmDialog wraps CuiModal, which teleports content into <body> and opens
 // on mount via an onMounted/nextTick flush — so await flushPromises() before
@@ -106,11 +107,15 @@ describe("CuiConfirmDialog", () => {
       ["danger", "error", PhWarningCircle],
       ["warning", "warning", PhWarning],
       ["info", "info", PhInfo],
-      ["primary", "primary", PhQuestion],
+      ["primary", "primary", PhSealQuestion],
     ] as const)("variant %s sets the tile and confirm button colour and the icon", async (variant, color, icon) => {
       const wrapper = await open(variant ? { variant } : {});
       expect(tile()).not.toBeNull();
+      // Decorative: the title and message carry the meaning.
+      expect(tile()!.getAttribute("aria-hidden")).toBe("true");
       expect(tileIcon(wrapper).props("icon")).toBe(icon);
+      // A variant's icon must never read as CuiIcon's "unknown name" glyph.
+      expect(tileIcon(wrapper).props("icon")).not.toBe(FALLBACK_ICON);
       expect(tile()!.getAttribute("style")).toContain(`var(--cui-${color}-bg)`);
       expect(findButtonByText(wrapper, "Go").props("color")).toBe(color);
       wrapper.unmount();
