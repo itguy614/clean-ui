@@ -74,14 +74,6 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   pressed: undefined,
 });
 
-/**
- * Declared, so a listener isn't a fallthrough attribute bound straight to the element: the
- * root's own handler forwards the event, and holds it back while disabled. Native
- * `disabled` already does that for a plain button; a focusable disabled one and a disabled
- * link (an `<a>` without `href`, which still fires `click`) need it done here.
- */
-const emit = defineEmits<{ click: [event: MouseEvent] }>();
-
 warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
 
 const isDisabled = computed(() => props.disabled || props.loading);
@@ -91,7 +83,8 @@ const isDisabled = computed(() => props.disabled || props.loading);
  * CuiListItem shares (#422).
  */
 const root = computed((): { is: string | Component; attrs: Record<string, unknown> } => {
-  const dead = disabledLink(props, isDisabled.value, "button");
+  // A `to` button is a link, so it stays one; an `href` button is `role="button"` either way.
+  const dead = disabledLink(props, isDisabled.value, props.to ? "link" : "button");
   if (dead) return dead;
   if (props.to) return { is: "router-link", attrs: { to: props.to } };
   if (props.href) return { is: "a", attrs: { href: props.href, role: "button" } };
@@ -101,19 +94,25 @@ const root = computed((): { is: string | Component; attrs: Record<string, unknow
       type: props.type,
       disabled: (isDisabled.value && !props.focusableWhenDisabled) || undefined,
       "aria-disabled": isDisabled.value ? "true" : undefined,
+      // Tells CuiToolbar's roving focus to keep it in the arrow-key order (#396).
+      "data-cui-focusable-disabled": (isDisabled.value && props.focusableWhenDisabled) || undefined,
     },
   };
 });
 
-function onClick(event: MouseEvent) {
-  if (isDisabled.value) {
-    // Cancels a submit button's form submission too, Enter in a field included: implicit
-    // submission is a click on the default button.
-    event.preventDefault();
-    event.stopPropagation();
-    return;
-  }
-  emit("click", event);
+/**
+ * Holds every click back while disabled. Native `disabled` does that for a plain button; a
+ * focusable disabled one and a disabled link (an `<a>` without `href` still fires `click`)
+ * need it here. In the capture phase, and first among the element's capture listeners (the
+ * component's own come before fallthrough ones), so `stopImmediatePropagation` reaches
+ * every listener a consumer put on the button, `@click`, `@click.capture` and ancestors'
+ * bubbling ones alike. `preventDefault` cancels a submit button's form submission too, Enter
+ * in a field included: implicit submission is a click on the default button.
+ */
+function onClickCapture(event: MouseEvent) {
+  if (!isDisabled.value) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
 }
 
 // Expose element ref and focus method
@@ -130,25 +129,15 @@ function blur() {
 defineExpose({ el: elRef, focus, blur });
 
 /**
- * Every value this component computes is emitted as a PRIVATE `--_button-*` custom
- * property, never as a bare declaration. The stylesheet below reads each one as
- * `var(--cui-button-<slot>, var(--_button-<slot>))`, so the public token wins wherever a
- * consumer sets it — including on an ancestor — and this computed value is the default.
- *
- * Emitting the *public* token here instead would look simpler and be wrong: an inline
- * custom property beats an inherited one, so `.toolbar { --cui-button-bg: … }` on a
- * container could never take effect. See "Themeable properties" in CLAUDE.md (#114).
- */
-/**
  * A pressed toggle's look (#396). Subtle-first like every other selected state: the tinted
  * fill, a role-coloured edge and the stronger text colour, so it reads apart from the
  * unpressed button's hover, which has the fill but neither of the other two. Solid is the
- * exception, already filled: it takes the pressed shade.
+ * exception, already filled: it takes the darker shade its hover uses.
  */
 function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
   if (v === "solid") {
     return {
-      "--_button-pressed-bg": `var(--cui-${c}-solid-active, var(--cui-${c}-active))`,
+      "--_button-pressed-bg": `var(--cui-${c}-solid-hover, var(--cui-${c}-hover))`,
       "--_button-pressed-color": `var(--cui-${c}-text)`,
       "--_button-pressed-border": "1px solid transparent",
     };
@@ -163,6 +152,17 @@ function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
   };
 }
 
+
+/**
+ * Every value this component computes is emitted as a PRIVATE `--_button-*` custom
+ * property, never as a bare declaration. The stylesheet below reads each one as
+ * `var(--cui-button-<slot>, var(--_button-<slot>))`, so the public token wins wherever a
+ * consumer sets it — including on an ancestor — and this computed value is the default.
+ *
+ * Emitting the *public* token here instead would look simpler and be wrong: an inline
+ * custom property beats an inherited one, so `.toolbar { --cui-button-bg: … }` on a
+ * container could never take effect. See "Themeable properties" in CLAUDE.md (#114).
+ */
 const buttonStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
@@ -229,12 +229,15 @@ const buttonStyle = computed(() => {
       'cui-button--icon': icon,
       'cui-button--pressed': pressed,
       'cui-button--ghost': variant === 'ghost',
+      // Draws no edge, so CuiButtonGroup doesn't merge corners against it. A pressed ghost
+      // button has one (#396).
+      'cui-button--edgeless': variant === 'ghost' && !pressed,
     }"
     :style="buttonStyle"
     v-bind="root.attrs"
     :aria-busy="loading || undefined"
     :aria-pressed="pressed"
-    @click="onClick"
+    @click.capture="onClickCapture"
   >
     <!-- Prefix slot (icons, badges) -->
     <span v-if="$slots.prefix" class="cui-button__prefix">
@@ -307,6 +310,14 @@ const buttonStyle = computed(() => {
   /* Press feedback (#261): a brief shrink, `--cui-press-scale` (0.97; 1 turns it off, as
      reduced motion does). */
   transform: scale(var(--cui-press-scale, 0.97));
+}
+
+/* Pressing a pressed toggle mixes a little of its text colour into its fill. The variant's
+   active fill can't be used: it is drawn for the unpressed button's text (a ghost's pale tint
+   would take the white text of a solid pressed look), and for solid it is the pressed shade's
+   neighbour. */
+:where(.cui-button--pressed:active:not(.cui-button--disabled)) {
+  background: color-mix(in srgb, var(--cui-button-pressed-bg, var(--_button-pressed-bg)) 85%, currentColor);
 }
 
 /* In the rule rather than only on the token, so a consumer's --cui-press-scale can't turn

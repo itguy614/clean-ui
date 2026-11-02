@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the tab order: it gets `aria-disabled="true"` and the disabled look instead of native
   `disabled`, so it keeps focus when it becomes disabled under the keyboard. A click, Enter
   or Space does nothing (a submit button's form isn't submitted), but `contextmenu` and
-  long-press still reach a wrapping CuiContextMenu. `pressed` renders `aria-pressed` and a
+  long-press still reach a wrapping CuiContextMenu. It keeps its place in a CuiToolbar's
+  arrow-key order, as the WAI-ARIA toolbar pattern asks, and a CuiDropdownTrigger around it
+  doesn't open from the keyboard while it is disabled. `pressed` renders `aria-pressed` and a
   selected look for every variant and colour (the tinted fill, a coloured edge and stronger
   text; solid takes its darker shade), themeable through the new `--cui-button-pressed-bg`,
   `--cui-button-pressed-color` and `--cui-button-pressed-border` tokens. Left unset, the
@@ -25,12 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **A disabled CuiButton link drops its `to`, as well as its `href`** (#422). It renders an
-  `<a>` with no target, `role="button"` and `aria-disabled="true"` — no longer a live
-  `<router-link>` held back by `pointer-events: none`, and no longer `tabindex="-1"`, which
-  left it focusable by script and by a click. CuiListItem renders a disabled link the same
-  way, through the same internal helper. CuiButton's `click` is now a declared event: it is
-  held back while disabled, rather than relying on `pointer-events: none`, which also blocked
-  right-click and long-press.
+  `<a>` with no target and `aria-disabled="true"`, keeping the role it has when enabled
+  (`button` for `href`, `link` for `to`) — no longer a live `<router-link>` held back by
+  `pointer-events: none`, and no longer `tabindex="-1"`, which left it focusable by script
+  and by a click. CuiListItem renders a disabled link the same way, through the same internal
+  helper. A disabled CuiButton's clicks are held back by a capture-phase listener instead of
+  `pointer-events: none`, which also blocked right-click and long-press, and that covers
+  every click listener on it, `@click.capture` included.
 
 ## [1.7.0] - 2026-11-02
 

@@ -32,7 +32,12 @@ export interface UseRovingFocusOptions {
   manageTabindex?: boolean;
 }
 
-const DISABLED = ":disabled, [aria-disabled='true']";
+/**
+ * Skipped items. A focusable disabled control (CuiButton's `focusableWhenDisabled`, which
+ * marks itself `data-cui-focusable-disabled`) is not: the WAI-ARIA toolbar pattern keeps it
+ * in the arrow-key order, so it can be reached, and keeps focus when it becomes disabled.
+ */
+const DISABLED = ":disabled, [aria-disabled='true']:not([data-cui-focusable-disabled])";
 
 /** Hidden inside the group (`hidden`, or `v-show`'s inline `display: none`): it can't take focus. */
 function hiddenWithin(el: HTMLElement, root: HTMLElement | null | undefined): boolean {
@@ -55,7 +60,8 @@ function hiddenWithin(el: HTMLElement, root: HTMLElement | null | undefined): bo
  *
  * Items are read from the DOM with `itemSelector` when a key is pressed, so `i` in
  * `tabIndex(i)` must be the item's position among the matches — don't `v-if` an item out
- * inside the loop. A `disabled`, `aria-disabled="true"` or hidden item is skipped. An arrow
+ * inside the loop. A `disabled`, `aria-disabled="true"` or hidden item is skipped, except
+ * an `aria-disabled` one marked `data-cui-focusable-disabled`. An arrow
  * never moves focus out of the group, and `Tab` leaves it as usual. Focusing an item any
  * other way moves the tab stop to it; bind `onFocusin` to `click` as well, since Safari
  * doesn't focus a clicked button.
@@ -180,7 +186,7 @@ export function useRovingFocus(options: UseRovingFocusOptions) {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["disabled", "aria-disabled", "hidden", "style"],
+        attributeFilter: ["disabled", "aria-disabled", "data-cui-focusable-disabled", "hidden", "style"],
       });
     });
     onBeforeUnmount(() => observer?.disconnect());

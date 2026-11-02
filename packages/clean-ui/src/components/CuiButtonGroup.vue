@@ -51,18 +51,18 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 }
 
 /* Strip inner border-radius where two buttons meet. Only painted buttons meet: a ghost
-   button draws no edge, so beside one a painted button keeps its corners — unless it is
-   pressed (#396), which gives it an edge, so it counts as painted. A lone pressed
+   button (`cui-button--edgeless`) draws no edge, so beside one a painted button keeps its
+   corners; a pressed ghost button has one, and counts as painted (#396). A lone pressed
    toggle among ghost ones stays whole, and a run of pressed ones merges into one shape
    (#190 review). A dropdown still merges by position. */
-.cui-button-group--horizontal > :deep(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)):has(+ :is(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)), .cui-dropdown))),
+.cui-button-group--horizontal > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
 .cui-button-group--horizontal > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
 .cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.cui-button-group--horizontal > :deep(:is(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)), .cui-dropdown) + .cui-button:not(.cui-button--ghost:not(.cui-button--pressed))),
+.cui-button-group--horizontal > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
 .cui-button-group--horizontal > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
 .cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-left-radius: 0;
@@ -78,14 +78,14 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 }
 
 /* Strip inner border-radius on vertical buttons, by the same rule. */
-.cui-button-group--vertical > :deep(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)):has(+ :is(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)), .cui-dropdown))),
+.cui-button-group--vertical > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
 .cui-button-group--vertical > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
 .cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.cui-button-group--vertical > :deep(:is(.cui-button:not(.cui-button--ghost:not(.cui-button--pressed)), .cui-dropdown) + .cui-button:not(.cui-button--ghost:not(.cui-button--pressed))),
+.cui-button-group--vertical > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
 .cui-button-group--vertical > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
 .cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-left-radius: 0;

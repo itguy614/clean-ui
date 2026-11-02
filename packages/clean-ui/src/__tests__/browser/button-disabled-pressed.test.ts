@@ -1,12 +1,13 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
-import { h, nextTick } from "vue";
+import { defineComponent, h, nextTick, ref } from "vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiContextMenu from "../../components/CuiContextMenu.vue";
 import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 import CuiList from "../../components/CuiList.vue";
 import CuiListItem from "../../components/CuiListItem.vue";
+import CuiToolbar from "../../components/CuiToolbar.vue";
 import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
 
 /**
@@ -17,12 +18,12 @@ describe("CuiButton focusableWhenDisabled (real browser, #396)", () => {
   const { host, track, cleanup } = mountHosts();
   afterEach(cleanup);
 
-  function render(props: Record<string, unknown>) {
+  function render(props: Record<string, unknown>, attrs: Record<string, unknown> = {}) {
     const el = host({});
     const before = document.createElement("button");
     before.textContent = "Before";
     el.append(before);
-    const wrapper = track(mount(CuiButton, { props, slots: { default: "Switch" }, attachTo: el }));
+    const wrapper = track(mount(CuiButton, { props, attrs, slots: { default: "Switch" }, attachTo: el }));
     return { wrapper, before, button: wrapper.element as HTMLButtonElement };
   }
 
@@ -41,12 +42,38 @@ describe("CuiButton focusableWhenDisabled (real browser, #396)", () => {
   });
 
   it("does nothing on a click, Enter or Space", async () => {
-    const { wrapper, button } = render({ focusableWhenDisabled: true, disabled: true });
+    const onClick = vi.fn();
+    const { button } = render({ focusableWhenDisabled: true, disabled: true }, { onClick });
     await userEvent.click(button, { force: true });
     button.focus();
     await userEvent.keyboard("{Enter}");
     await userEvent.keyboard(" ");
-    expect(wrapper.emitted("click")).toBeUndefined();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("keeps its place in a CuiToolbar's arrow-key order while busy", async () => {
+    const busy = ref(false);
+    track(
+      mount(
+        defineComponent({
+          setup: () => () =>
+            h(CuiToolbar, { label: "Quick switch" }, () =>
+              ["A", "B", "C"].map((id) =>
+                h(CuiButton, { key: id, id: `tb-${id}`, focusableWhenDisabled: true, disabled: busy.value }, () => id),
+              ),
+            ),
+        }),
+        { attachTo: host({}) },
+      ),
+    );
+    const b = document.getElementById("tb-B")!;
+    b.focus();
+    busy.value = true;
+    await frames(2); // the toolbar's MutationObserver re-applies the tab stops
+    expect(document.activeElement).toBe(b);
+    expect(b.getAttribute("tabindex")).toBe("0");
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(document.getElementById("tb-C"));
   });
 
   it("is hit by the pointer, so a wrapping CuiContextMenu still opens", async () => {

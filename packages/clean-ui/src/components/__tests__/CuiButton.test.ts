@@ -101,9 +101,16 @@ describe("CuiButton", () => {
       const parent = document.createElement("div");
       parent.addEventListener("click", onParentClick);
       document.body.append(parent);
-      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true }, attachTo: parent });
-      await wrapper.trigger("click");
-      expect(wrapper.emitted("click")).toBeUndefined();
+      const onClick = vi.fn();
+      const onClickCapture = vi.fn();
+      const wrapper = mount(CuiButton, {
+        props: { disabled: true, focusableWhenDisabled: true },
+        attrs: { onClick, onClickCapture },
+        attachTo: parent,
+      });
+      (wrapper.element as HTMLElement).click();
+      expect(onClick).not.toHaveBeenCalled();
+      expect(onClickCapture).not.toHaveBeenCalled();
       expect(onParentClick).not.toHaveBeenCalled();
       wrapper.unmount();
       parent.remove();
@@ -125,12 +132,20 @@ describe("CuiButton", () => {
     });
 
     it("emits click again once enabled", async () => {
-      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true } });
+      const onClick = vi.fn();
+      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true }, attrs: { onClick } });
       await wrapper.setProps({ disabled: false });
       await wrapper.trigger("click");
-      expect(wrapper.emitted("click")).toHaveLength(1);
+      expect(onClick).toHaveBeenCalledTimes(1);
       expect(wrapper.attributes("aria-disabled")).toBeUndefined();
     });
+  });
+
+  it("marks a focusable disabled button for roving focus, and only while disabled", async () => {
+    const wrapper = mount(CuiButton, { props: { focusableWhenDisabled: true } });
+    expect(wrapper.attributes("data-cui-focusable-disabled")).toBeUndefined();
+    await wrapper.setProps({ disabled: true });
+    expect(wrapper.attributes("data-cui-focusable-disabled")).toBe("true");
   });
 
   describe("pressed (#396)", () => {
@@ -154,6 +169,14 @@ describe("CuiButton", () => {
       expect(wrapper.classes()).toContain("cui-button--pressed");
     });
 
+    it("marks only an unpressed ghost button edgeless", async () => {
+      const wrapper = mount(CuiButton, { props: { variant: "ghost", pressed: false } });
+      expect(wrapper.classes()).toContain("cui-button--edgeless");
+      await wrapper.setProps({ pressed: true });
+      expect(wrapper.classes()).not.toContain("cui-button--edgeless");
+      expect(wrapper.classes()).toContain("cui-button--ghost");
+    });
+
     it("emits the pressed paint as private tokens, only while pressed", async () => {
       const wrapper = mount(CuiButton, { props: { variant: "ghost", color: "success", pressed: false } });
       expect(token(wrapper, "--_button-pressed-bg")).toBe("");
@@ -171,18 +194,20 @@ describe("CuiButton", () => {
   });
 
   describe("disabled link (#422)", () => {
+    // The role an enabled one has: `role="button"` on an `href` button, a link for `to`.
     it.each([
-      ["href", { href: "/foo" }],
-      ["to", { to: "/foo" }],
-    ])("drops the %s, so the link can't be focused or followed", async (_, target) => {
-      const wrapper = mount(CuiButton, { props: { ...target, disabled: true } });
+      ["href", { href: "/foo" }, "button"],
+      ["to", { to: "/foo" }, "link"],
+    ])("drops the %s, so the link can't be focused or followed", (_, target, role) => {
+      const onClick = vi.fn();
+      const wrapper = mount(CuiButton, { props: { ...target, disabled: true }, attrs: { onClick } });
       expect(wrapper.element.tagName).toBe("A");
       expect(wrapper.attributes("href")).toBeUndefined();
       expect(wrapper.attributes("tabindex")).toBeUndefined();
-      expect(wrapper.attributes("role")).toBe("button");
+      expect(wrapper.attributes("role")).toBe(role);
       expect(wrapper.attributes("aria-disabled")).toBe("true");
-      await wrapper.trigger("click");
-      expect(wrapper.emitted("click")).toBeUndefined();
+      (wrapper.element as HTMLElement).click();
+      expect(onClick).not.toHaveBeenCalled();
     });
 
     it("ignores focusableWhenDisabled on a link", () => {

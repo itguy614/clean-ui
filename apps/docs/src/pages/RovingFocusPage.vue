@@ -90,7 +90,9 @@ const segmented = useRovingFocus({
         Tab moves into and out of the group; the arrow keys, Home and End move between its items.
       </p>
       <p>
-        Disabled items are skipped, right-to-left layouts swap the meaning of the left and right
+        Disabled items are skipped (an <code>aria-disabled</code> item marked
+        <code>data-cui-focusable-disabled</code>, as CuiButton's
+        <code>focusableWhenDisabled</code> is, keeps its place), right-to-left layouts swap the meaning of the left and right
         arrows, and an arrow never moves focus out of the group. Focusing an item any other way —
         clicking it — moves the tab stop to it.
       </p>
