@@ -111,6 +111,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
   icon is decorative; the title and message carry the meaning.
 
+### Tooling
+
+- **The fixture guarantees check every fixture page** (#384). The icon-barrel, Tailwind
+  utilities and global-reset checks read only the basic page; they now build and check the
+  grid, editor and `/render` pages too, and a failure names the page. The pages are listed
+  once, in `scripts/fixture-scenarios.mjs`, which the bundle budget reads as well, so a new
+  page is budgeted and guarded together. A page can opt out of a check only there, with
+  the reason.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added
