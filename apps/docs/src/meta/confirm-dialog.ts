@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "./types";
+import { overlayEvents, overlayFocusProps } from "./modal";
 import { hiddenProp, titleAsProp, visibleProp } from "./shared";
 
 const meta: ComponentMeta = {
@@ -57,6 +58,7 @@ const meta: ComponentMeta = {
       default: "false",
       description: "Spinner on the confirm button, and disables it. You own the flag — confirm does not set it",
     },
+    ...overlayFocusProps,
     hiddenProp,
   ],
 
@@ -76,6 +78,7 @@ const meta: ComponentMeta = {
       payload: "—",
       description: "Cancel or the X was pressed. Escape and a backdrop click close the dialog without emitting this",
     },
+    ...overlayEvents.filter((e) => e.name.startsWith("after-")),
   ],
 };
 

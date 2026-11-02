@@ -2,7 +2,7 @@
 import { ref, computed, watch, type Component } from "vue";
 import { PhInfo, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
 import { useCuiId } from "../composables/useCuiId";
-import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
+import type { CuiColor, HideableProps, OverlayFocusProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
@@ -14,7 +14,7 @@ import { useHeadingLevel } from "../utils/configure";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info" | "primary";
 
-export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps {
+export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps, OverlayFocusProps {
   /** Control visibility (v-model:visible) */
   visible?: boolean;
   /** Dialog title */
@@ -53,6 +53,10 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   // `icon` accepts `false`, so Vue's Boolean casting would turn an absent prop into `false`
   // and hide the tile by default. An explicit default keeps "absent" meaning "the variant's".
   icon: undefined,
+  // Same reason as CuiModal: `returnFocus` accepts `false`, which Vue would otherwise cast an
+  // absent prop to, and stop returning focus at all.
+  initialFocus: undefined,
+  returnFocus: undefined,
 });
 
 // Its own `titleAs`, else the app's default (#149), else the library's.
@@ -73,6 +77,10 @@ const emit = defineEmits<{
   "update:visible": [value: boolean];
   confirm: [];
   cancel: [];
+  /** The entry has finished and focus is in place (#437). */
+  "after-enter": [];
+  /** The exit has finished and focus has been returned (#437). */
+  "after-leave": [];
 }>();
 
 const typedWord = ref("");
@@ -130,7 +138,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal class="cui-confirm-dialog" :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" @update:visible="emit('update:visible', $event)">
+  <CuiModal class="cui-confirm-dialog" :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" :initial-focus="initialFocus" :return-focus="returnFocus" @update:visible="emit('update:visible', $event)" @after-enter="emit('after-enter')" @after-leave="emit('after-leave')">
     <!-- Custom header with icon badge -->
     <div
       :style="{

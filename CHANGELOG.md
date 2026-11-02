@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CuiConfirmDialog forwards `initialFocus`, `returnFocus`, `after-enter` and `after-leave`**
+  (#437) to its CuiModal, with CuiModal's types and defaults (#374).
+
 - **`focusableWhenDisabled` and `pressed` on CuiButton** (#396), for toggle buttons in a
   toolbar or button bar. `focusableWhenDisabled` keeps a disabled or loading `<button>` in
   the tab order: it gets `aria-disabled="true"` and the disabled look instead of native
