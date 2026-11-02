@@ -2,7 +2,7 @@
 import { computed, inject, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
-import type { CuiColor, HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
 
 export interface CuiRadioProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
@@ -98,11 +98,8 @@ const choice = useChoiceLabelling(props);
     }"
     :style="{
       '--_rb-color': `var(--cui-${resolvedColor})`,
-      '--_rb-hover': `var(--cui-${resolvedColor}-hover)`,
-      '--_rb-active': `var(--cui-${resolvedColor}-active)`,
       '--_rb-bg': `var(--cui-${resolvedColor}-bg)`,
       '--_rb-text': `var(--cui-${resolvedColor}-text)`,
-      '--_rb-border': `var(--cui-${resolvedColor}-border)`,
       '--_rb-solid': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
       '--_rb-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`,
       height: buttonSizeStyles.height,

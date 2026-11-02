@@ -228,7 +228,6 @@ const tooltipStyle = computed(() => ({
     : {}),
 }));
 
-const hasContent = computed(() => props.text || true); // #content slot checked in template
 </script>
 
 <template>

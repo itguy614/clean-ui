@@ -118,7 +118,7 @@ const componentTpl = [
 ].join("\n");
 
 const contextTpl = [
-  'import type { InjectionKey, Ref } from "vue";',
+  'import type { InjectionKey } from "vue";',
   '',
   'export interface __NAME__Context {',
   '  // shared reactive state provided to descendants, e.g.:',

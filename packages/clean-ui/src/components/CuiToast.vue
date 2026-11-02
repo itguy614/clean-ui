@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import type { CuiColor, HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } from "../types/common";
+import type { HideableProps, ColorableProps, LiveRegionProps, RoleIconProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import type { AlertAnimation, AlertVariant } from "./CuiAlert.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";

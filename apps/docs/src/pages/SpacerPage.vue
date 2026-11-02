@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, computed } from "vue";
 import { ShowDebugKey } from "../keys";
-import { CuiFlex, CuiSpacer, CuiStack } from "@itguy614/clean-ui";
+import { CuiFlex, CuiSpacer } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/spacer";

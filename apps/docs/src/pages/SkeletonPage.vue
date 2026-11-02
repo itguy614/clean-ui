@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CuiCard, CuiCardBody, CuiCardHeader, CuiCardMedia, CuiFlex, CuiGrid, CuiSkeleton, CuiStack } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardBody, CuiCardMedia, CuiFlex, CuiGrid, CuiSkeleton, CuiStack } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/skeleton";

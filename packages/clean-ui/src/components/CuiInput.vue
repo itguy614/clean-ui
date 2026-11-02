@@ -158,7 +158,6 @@ function prefixIsIcon(): boolean {
         '--_input-float-offset': floatingLabel().float?.offset,
         '--_input-font-size': dims.fontSize,
         '--_input-px': dims.px,
-        '--_input-color': `var(--cui-${color})`,
         '--_input-focus-ring': `var(--cui-${color}-focus-ring)`,
         '--_input-border': error ? 'var(--cui-error)' : `var(--cui-border-strong)`,
         '--_input-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,

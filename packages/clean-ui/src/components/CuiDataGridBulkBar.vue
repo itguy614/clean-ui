@@ -11,7 +11,7 @@ import { panelTransition } from "../utils/motion";
 
 const messages = useMessages();
 
-const props = defineProps<{
+defineProps<{
   actions: DataGridBulkAction[];
 }>();
 

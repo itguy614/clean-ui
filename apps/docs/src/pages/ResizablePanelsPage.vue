@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiResizablePanels, CuiStack } from "@itguy614/clean-ui";
+import { CuiResizablePanels } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/resizable-panels";

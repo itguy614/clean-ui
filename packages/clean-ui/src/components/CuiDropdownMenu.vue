@@ -13,7 +13,7 @@ export interface CuiDropdownMenuProps {
   minWidth?: string;
 }
 
-const props = withDefaults(defineProps<CuiDropdownMenuProps>(), {
+withDefaults(defineProps<CuiDropdownMenuProps>(), {
   minWidth: "12rem",
 });
 

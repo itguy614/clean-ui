@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, useTemplateRef } from "vue";
-import type { CuiColor, HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
-import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
 

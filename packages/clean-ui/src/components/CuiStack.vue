@@ -12,7 +12,7 @@ export interface CuiStackProps extends HideableProps {
   debug?: boolean;
 }
 
-const props = withDefaults(defineProps<CuiStackProps>(), {
+withDefaults(defineProps<CuiStackProps>(), {
   orientation: "vertical",
   spacing: "4",
   debug: false,

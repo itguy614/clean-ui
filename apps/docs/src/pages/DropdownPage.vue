@@ -197,7 +197,7 @@ const theme = ref("system");
         </Example>
 
         <!-- Check Items -->
-        <Example title="Check Items (toggle)" :code="`<CuiDropdown>
+        <Example title="Check Items (toggle; the menu stays open on click)" :code="`<CuiDropdown>
   <CuiDropdownTrigger>
     <CuiButton variant=&quot;outline&quot;>View</CuiButton>
   </CuiDropdownTrigger>

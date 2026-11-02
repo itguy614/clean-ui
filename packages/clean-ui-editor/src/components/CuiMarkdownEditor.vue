@@ -13,7 +13,7 @@ import { EditorView, keymap, drawSelection, placeholder as placeholderExtension,
 import { EditorState, Compartment, Prec, Annotation, type Extension, type Transaction } from "@codemirror/state";
 import { syntaxHighlighting, syntaxTree } from "@codemirror/language";
 import { history, historyKeymap, defaultKeymap, indentWithTab } from "@codemirror/commands";
-import { insertNewlineContinueMarkup, deleteMarkupBackward, markdownKeymap } from "@codemirror/lang-markdown";
+import { markdownKeymap } from "@codemirror/lang-markdown";
 import { completionKeymap } from "@codemirror/autocomplete";
 import {
   CuiButton,

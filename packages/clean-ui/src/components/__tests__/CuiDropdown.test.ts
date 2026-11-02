@@ -155,6 +155,8 @@ describe("CuiDropdownCheckItem", () => {
     expect(
       document.body.querySelector('[role="menuitemcheckbox"]')!.getAttribute("aria-checked"),
     ).toBe("true");
+    // A check item keeps the menu open, so several can be toggled in one visit.
+    expect(menuInBody()).not.toBeNull();
 
     wrapper.unmount();
   });

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
-import type { DataGridFilter } from "../types/data-grid";
 import CuiInput from "./CuiInput.vue";
 import CuiSelect from "./CuiSelect.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
