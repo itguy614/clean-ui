@@ -322,6 +322,13 @@ export function run() {
     check("light", theme.name, "Code text (p-700) on code bg (s-100)", p["700"], sf["100"] || sBg, 4.5);
     check("light", theme.name, "Kbd (s-100 on s-800)", sf["100"] || WHITE, sf["800"] || "#333", 4.5);
 
+    // CuiList (#234): the subtitle (--cui-text-body) holds AAA on the list fill
+    // (--cui-surface-base) and under the hover fill (--cui-surface-bg).
+    console.log("│  LIST (AAA subtitle)");
+    check("light", theme.name, "List subtitle (s-900) on list fill (white)", sf["900"], WHITE, 7.0);
+    check("light", theme.name, "List subtitle (s-900) on hover fill (s-100)", sf["900"], sf["100"], 7.0);
+    check("light", theme.name, "List title (s-950) on hover fill (s-100)", sf["950"], sf["100"], 4.5);
+
     console.log("│  BORDERS (surface tokens)");
     check("light", theme.name, "cui-border (s-500) on white", sBorder, WHITE, 3.0, true);
     check("light", theme.name, "cui-border (s-500) on surface-50", sBorder, sBg, 3.0, true);
@@ -368,6 +375,11 @@ export function run() {
     check("dark", theme.name, "Tertiary text (s-500) on s-900", ds["500"] || "#777", dsBg, 4.5);
     check("dark", theme.name, "Code text (p-200) on code bg (s-900)", p["200"], dsBg, 4.5);
     check("dark", theme.name, "Kbd (s-100 on s-700)", ds["100"] || "#eee", ds["700"] || "#444", 4.5);
+
+    console.log("│  LIST (AAA subtitle)");
+    check("dark", theme.name, "List subtitle (s-200) on list fill (s-900)", ds["200"], dsBg, 7.0);
+    check("dark", theme.name, "List subtitle (s-200) on hover fill (s-800)", ds["200"], ds["800"], 7.0);
+    check("dark", theme.name, "List title (s-50) on hover fill (s-800)", ds["50"], ds["800"], 4.5);
 
     console.log("│  BORDERS (surface tokens)");
     check("dark", theme.name, "cui-border (s-600) on s-900", dsBorder, dsBg, 3.0);

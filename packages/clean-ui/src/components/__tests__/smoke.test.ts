@@ -20,6 +20,7 @@ const SKIP: Record<string, string> = {
   CuiTab: "needs <CuiTabs> context — covered by CuiTabs.test.ts",
   CuiAccordionItem: "needs <CuiAccordion> context — covered by CuiAccordion.test.ts",
   CuiBreadcrumbItem: "needs <CuiBreadcrumb> context — covered by CuiBreadcrumb.test.ts",
+  CuiListItem: "needs <CuiList> context — covered by CuiList.test.ts",
   CuiTableHead: "needs <CuiTable> context — covered by CuiTable.test.ts",
   CuiTableBody: "needs <CuiTable> context — covered by CuiTable.test.ts",
   CuiTableFoot: "needs <CuiTable> context — covered by CuiTable.test.ts",

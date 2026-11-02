@@ -45,6 +45,7 @@ export {
   type DecorationRule,
   type CollectOpener,
   type CollectSettle,
+  type ConstructLookup,
   type EditorSelectionRange,
   type PluginErrorInfo,
 } from "./plugins";
