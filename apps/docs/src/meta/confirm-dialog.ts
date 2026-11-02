@@ -1,5 +1,5 @@
 import type { ComponentMeta } from "./types";
-import { overlayEvents, overlayFocusProps } from "./modal";
+import { overlayFocusProps, overlayLifecycleEvents } from "./modal";
 import { hiddenProp, titleAsProp, visibleProp } from "./shared";
 
 const meta: ComponentMeta = {
@@ -78,7 +78,7 @@ const meta: ComponentMeta = {
       payload: "—",
       description: "Cancel or the X was pressed. Escape and a backdrop click close the dialog without emitting this",
     },
-    ...overlayEvents.filter((e) => e.name.startsWith("after-")),
+    ...overlayLifecycleEvents,
   ],
 };
 

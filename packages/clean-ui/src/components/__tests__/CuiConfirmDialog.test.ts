@@ -204,8 +204,8 @@ describe("CuiConfirmDialog focus forwarding (#437)", () => {
   });
 
   it("re-emits the modal's after-enter and after-leave, once each", async () => {
-    const wrapper = mount(CuiConfirmDialog, { props: { visible: true } });
-    await flushPromises();
+    // Stubbed, so the real modal's own transition timing can't add emits of its own.
+    const wrapper = mount(CuiConfirmDialog, { props: { visible: true }, global: { stubs: { CuiModal: true } } });
     const modal = wrapper.findComponent(CuiModal);
     modal.vm.$emit("after-enter");
     expect(wrapper.emitted("after-enter")).toHaveLength(1);

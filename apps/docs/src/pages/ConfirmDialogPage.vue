@@ -21,7 +21,7 @@ const lastAction = ref("(no action yet)");
 
 // Focus on close (#437)
 const showReturn = ref(false);
-const returnLog = ref("none yet");
+const returnLeaves = ref(0);
 
 function onUsageConfirm() {
   lastAction.value = "Basic: confirmed";
@@ -349,12 +349,13 @@ function onLoadingConfirm() {
   variant=&quot;primary&quot;
   return-focus=&quot;#next-step&quot;
   @confirm=&quot;show = false&quot;
-  @after-leave=&quot;log = 'after-leave'&quot;
-/>`">
+  @after-leave=&quot;leaves++&quot;
+/>
+<CuiButton id=&quot;next-step&quot;>Next step</CuiButton>`">
           <CuiFlex gap="2" align="center" wrap="wrap">
             <CuiButton variant="outline" @click="showReturn = true">Archive project</CuiButton>
             <CuiButton id="docs-confirm-next-step" variant="ghost">Next step</CuiButton>
-            <span class="text-sm" style="color: var(--cui-text-secondary);">Event: {{ returnLog }}</span>
+            <span class="text-sm" style="color: var(--cui-text-secondary);">after-leave fired: {{ returnLeaves }}</span>
           </CuiFlex>
           <CuiConfirmDialog
             v-model:visible="showReturn"
@@ -363,7 +364,7 @@ function onLoadingConfirm() {
             variant="primary"
             return-focus="#docs-confirm-next-step"
             @confirm="showReturn = false"
-            @after-leave="returnLog = 'after-leave'"
+            @after-leave="returnLeaves++"
           />
         </Example>
     </template>

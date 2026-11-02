@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick, ref } from "vue";
 import main from "../../styles/main.css?inline";
@@ -67,7 +67,7 @@ describe("CuiConfirmDialog focus and lifecycle events (real browser)", () => {
     expect(t.names()).toEqual(["after-enter"]);
     expect(t.events[0].focus, "the panel is focused by default").toBe(document.querySelector(".cui-modal"));
     t.visible.value = false;
-    await settle();
+    await vi.waitFor(() => expect(t.names()).toContain("after-leave"), { timeout: 3000 });
     await settle();
     expect(t.names(), "once each").toEqual(["after-enter", "after-leave"]);
     expect(t.events[1].focus).toBe(t.byT("opener"));
@@ -87,8 +87,7 @@ describe("CuiConfirmDialog focus and lifecycle events (real browser)", () => {
     await t.open();
     await settle();
     t.visible.value = false;
-    await settle();
-    await settle();
+    await vi.waitFor(() => expect(t.names()).toContain("after-leave"), { timeout: 3000 });
     expect(document.activeElement).toBe(t.byT("next"));
     expect(t.events.at(-1)).toMatchObject({ name: "after-leave", focus: t.byT("next") });
   });
