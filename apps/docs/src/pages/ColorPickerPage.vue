@@ -46,10 +46,10 @@ const utilFormats = computed(() => {
 });
 
 const conversions = [
-  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha digit or byte is read as 0–1, unrounded (#…80 is 128/255). Anything else — named colours, space-separated syntax — is null." },
-  { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". When a < 1, hex appends the alpha byte (#rrggbbaa; an alpha that rounds to ff stays #rrggbb), and rgb and hsl switch to rgba()/hsla() with alpha to two decimals." },
+  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha digit or byte is read as 0–1, unrounded (#…80 is 128/255). Hex with a non-hex character is null, and so is anything else — named colours, space-separated syntax." },
+  { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". When a < 1, hex appends the alpha byte (#rrggbbaa; an alpha that rounds to ff stays #rrggbb), and rgb and hsl switch to rgba()/hsla() with alpha to two decimals, unless it rounds to 1.00." },
   { fn: "rgbToHex(r, g, b)", returns: "string", notes: "Lowercase #rrggbb; channels are rounded." },
-  { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 4, 6 or 8 digits, leading # optional; the alpha of a 4- or 8-digit value is discarded (parseColor keeps it). Any other length is null." },
+  { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 4, 6 or 8 hex digits, leading # optional; the alpha of a 4- or 8-digit value is discarded (parseColor keeps it). Any other length or character is null." },
   { fn: "rgbToHsl(r, g, b)", returns: "HSL", notes: "h 0–360, s and l 0–100 (percent), all rounded to integers." },
   { fn: "hslToRgb(h, s, l)", returns: "RGB", notes: "s and l are percentages (0–100), not fractions." },
   { fn: "rgbToHsv(r, g, b)", returns: "HSV", notes: "h 0–360, s and v 0–1, unrounded — the picker's gradient coordinates." },
@@ -74,7 +74,7 @@ function onPickerChange(val: string) {
 function onHexInput(val: string | number) {
   let hex = String(val).replace(/[^#a-fA-F0-9]/g, "");
   if (!hex.startsWith("#")) hex = "#" + hex;
-  if (/^#(?:[a-f0-9]{2}){3,4}$/i.test(hex)) {
+  if (/^#(?:[a-f0-9]{3,4}|(?:[a-f0-9]{2}){3,4})$/i.test(hex)) {
     inputColor.value = hex;
   }
 }

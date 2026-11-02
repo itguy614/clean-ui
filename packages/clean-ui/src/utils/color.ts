@@ -102,7 +102,7 @@ export function hexToRgb(hex: string): RGB | null {
 function hexToRgba(hex: string): RGBA | null {
   let m = hex.replace("#", "");
   if (m.length === 3 || m.length === 4) m = m.replace(/./g, "$&$&");
-  if (m.length !== 6 && m.length !== 8) return null;
+  if ((m.length !== 6 && m.length !== 8) || !/^[0-9a-f]+$/i.test(m)) return null;
   const byte = (i: number) => parseInt(m.slice(i, i + 2), 16);
   return { r: byte(0), g: byte(2), b: byte(4), a: m.length === 8 ? byte(6) / 255 : 1 };
 }
@@ -185,13 +185,16 @@ export function formatColor(r: number, g: number, b: number, a: number, format: 
     const alpha = Math.round(Math.max(0, Math.min(1, a)) * 255);
     return rgbToHex(r, g, b) + (alpha < 255 ? hexByte(alpha) : "");
   }
+  // Two decimals, and opaque when that rounds to 1: never "rgba(…, 1.00)".
+  const alpha = Math.max(0, Math.min(1, a)).toFixed(2);
+  const translucent = alpha !== "1.00";
   if (format === "rgb") {
-    return a < 1 ? `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})` : `rgb(${r}, ${g}, ${b})`;
+    return translucent ? `rgba(${r}, ${g}, ${b}, ${alpha})` : `rgb(${r}, ${g}, ${b})`;
   }
   if (format === "hsl") {
     const hsl = rgbToHsl(r, g, b);
-    return a < 1
-      ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${a.toFixed(2)})`
+    return translucent
+      ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${alpha})`
       : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   }
   return rgbToHex(r, g, b);

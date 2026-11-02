@@ -58,4 +58,24 @@ describe("CuiColorPicker hex with alpha", () => {
     expect(lastEmit()).toBe("#ff000040");
     expect(opacity().attributes("aria-valuenow")).toBe("25");
   });
+
+  it("rejects a malformed alpha byte typed into the text field", async () => {
+    mountPicker({ modelValue: "#80404080" });
+    await nextTick();
+    const input = w!.find("input");
+    await input.setValue("#ff0000zz");
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+    expect(input.element.value).toBe("#80404080");
+    expect(opacity().attributes("aria-valuenow")).toBe("50");
+  });
+
+  it("selects only the swatch whose alpha matches", async () => {
+    mountPicker({ modelValue: "#ff0000", palette: ["#ff000080", "#ff0000"] });
+    await nextTick();
+    const checked = () => w!.findAll('[role="radio"]').map((r) => r.attributes("aria-checked"));
+    expect(checked()).toEqual(["false", "true"]);
+    await w!.setProps({ modelValue: "#ff000080" });
+    expect(checked()).toEqual(["true", "false"]);
+  });
 });

@@ -60,6 +60,22 @@ describe("parseColor hex alpha", () => {
   });
 });
 
+describe("parseColor malformed hex", () => {
+  it("rejects a non-hex digit anywhere instead of reading a prefix", () => {
+    for (const bad of ["#ff0000zz", "#f00z", "#12345z", "#ff00001g", "#ff0000-1", "#gg0000"]) {
+      expect(parseColor(bad), bad).toBeNull();
+    }
+  });
+});
+
+describe("formatColor rgb/hsl alpha", () => {
+  it("is opaque when the alpha rounds to 1.00, never rgba(…, 1.00)", () => {
+    expect(formatColor(255, 0, 0, 0.996, "rgb")).toBe("rgb(255, 0, 0)");
+    expect(formatColor(255, 0, 0, 0.996, "hsl")).toBe("hsl(0, 100%, 50%)");
+    expect(formatColor(255, 0, 0, 0.5, "rgb")).toBe("rgba(255, 0, 0, 0.50)");
+  });
+});
+
 describe("hexToRgb", () => {
   it("still returns the colour alone, dropping any alpha", () => {
     expect(hexToRgb("#804b4080")).toEqual({ r: 128, g: 75, b: 64 });
