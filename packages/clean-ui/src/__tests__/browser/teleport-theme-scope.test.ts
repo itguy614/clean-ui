@@ -168,6 +168,28 @@ describe("teleported panels keep the theme scope they were opened from (real bro
     expect(tokensOn(root)).toEqual(expected);
   });
 
+  it("draws a scoped theme plus dark in that theme, not the page theme's dark scale", async () => {
+    // The page is ruby (later in themes.css than violet) and the dark class sits further out
+    // than the violet box. The panel carries both classes on one element, which also matches
+    // ruby's `.cui-theme-ruby .dark`: the same-element form has to outrank it.
+    const html = document.documentElement;
+    html.classList.add("cui-theme-ruby");
+    cleanups.push(() => html.classList.remove("cui-theme-ruby"));
+    const outer = document.createElement("div");
+    outer.className = "dark";
+    const box = document.createElement("div");
+    box.className = "cui-theme-violet";
+    const probe = document.createElement("div");
+    box.append(probe);
+    outer.append(box);
+    document.body.append(outer);
+    const expected = tokensOn(probe);
+    outer.remove();
+
+    const root = await FAMILIES.CuiModal(scope("dark", "cui-theme-violet"));
+    expect(tokensOn(root)).toEqual(expected);
+  });
+
   it("takes the nearest of two nested themes", async () => {
     const root = await FAMILIES.CuiTooltip(scope("cui-theme-forest", "cui-theme-violet"));
     expect(root.classList.contains("cui-theme-violet")).toBe(true);

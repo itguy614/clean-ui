@@ -268,7 +268,7 @@ setTheme('teal')
             back.
           </p>
           <div class="cui-theme-forest">
-            <CuiFlex gap="3" align="center" class="flex-wrap">
+            <CuiFlex gap="3" align="center">
               <CuiButton variant="solid">Forest</CuiButton>
               <div class="cui-theme-default">
                 <CuiFlex gap="3" align="center">
@@ -288,7 +288,7 @@ setTheme('teal')
             keeps that box's theme and a scoped <code class="cui-code">dark</code> class. Change
             either while a panel is open and it follows.
           </p>
-          <CuiFlex gap="4" align="center" class="flex-wrap">
+          <CuiFlex gap="4" align="center">
             <CuiRadioGroup v-model="panelTheme" variant="buttons" label="Box theme">
               <CuiRadio v-for="t in scopedThemes" :key="t" :value="t" :label="t" />
             </CuiRadioGroup>
@@ -297,7 +297,7 @@ setTheme('teal')
           <div :class="panelScopeClass">
             <CuiCard>
               <CuiCardBody>
-                <CuiFlex gap="3" align="center" class="flex-wrap">
+                <CuiFlex gap="3" align="center">
                   <CuiButton variant="solid" @click="panelModal = true">Open modal</CuiButton>
                   <CuiDropdown>
                     <CuiDropdownTrigger>

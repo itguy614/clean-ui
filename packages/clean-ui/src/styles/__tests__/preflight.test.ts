@@ -106,7 +106,7 @@ describe("teleported roots stay inside the scope", () => {
 
     for (const file of COMPONENTS) {
       const source = readFileSync(file, "utf8");
-      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?=<[a-zA-Z])/g)) {
+      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?:<!--[\s\S]*?-->\s*)*(?=<[a-zA-Z])/g)) {
         let at = match.index + match[0].length;
         let rootTag = readTag(source, at);
         // A <Transition> around the teleported element (#263) isn't an element: look through it.
@@ -131,7 +131,7 @@ describe("teleported roots stay inside the scope", () => {
 
     for (const file of COMPONENTS) {
       const source = readFileSync(file, "utf8");
-      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?=<[a-zA-Z])/g)) {
+      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?:<!--[\s\S]*?-->\s*)*(?=<[a-zA-Z])/g)) {
         let at = match.index + match[0].length;
         const tags = [readTag(source, at)];
         while (/^<Transition(Group)?\b/.test(tags.at(-1)!)) {
