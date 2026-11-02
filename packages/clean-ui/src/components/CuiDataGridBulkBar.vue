@@ -4,6 +4,7 @@ import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiToolbar from "./CuiToolbar.vue";
 import { useMessages } from "../composables/useMessages";
 import { usePresence } from "../composables/usePresence";
 import { panelTransition } from "../utils/motion";
@@ -50,28 +51,27 @@ function onAction(action: DataGridBulkAction) {
           {{ messages.dataGrid.selected(shownCount) }}
         </span>
 
-        <div class="cui-data-grid-bulk-bar__actions">
-          <CuiButton
-            v-for="action in actions"
-            :key="action.key"
-            size="xs"
-            :variant="action.variant === 'destructive' ? 'solid' : 'outline'"
-            :color="action.variant === 'destructive' ? 'error' : 'primary'"
-            @click="onAction(action)"
-          >
-            {{ action.label }}
-          </CuiButton>
-        </div>
+        <!-- The actions and the clear button are one tab stop, arrows between them (#421);
+             the count is text beside the toolbar, not one of its controls. -->
+        <CuiToolbar class="cui-data-grid-bulk-bar__toolbar" :label="messages.dataGrid.bulkActions">
+          <div class="cui-data-grid-bulk-bar__actions">
+            <CuiButton
+              v-for="action in actions"
+              :key="action.key"
+              size="xs"
+              :variant="action.variant === 'destructive' ? 'solid' : 'outline'"
+              :color="action.variant === 'destructive' ? 'error' : 'primary'"
+              @click="onAction(action)"
+            >
+              {{ action.label }}
+            </CuiButton>
+          </div>
 
-        <CuiButton
-          variant="ghost"
-          size="xs"
-          @click="grid.clearSelection()"
-          style="margin-left: auto;"
-        >
-          <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
-          {{ messages.clear }}
-        </CuiButton>
+          <CuiButton class="cui-data-grid-bulk-bar__clear" variant="ghost" size="xs" @click="grid.clearSelection()">
+            <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
+            {{ messages.clear }}
+          </CuiButton>
+        </CuiToolbar>
       </div>
     </div>
   </Transition>
@@ -106,6 +106,17 @@ function onAction(action: DataGridBulkAction) {
   font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
+}
+
+/* The toolbar takes the rest of the row, so the clear button can sit at its end. */
+.cui-data-grid-bulk-bar__toolbar {
+  --_toolbar-gap: calc(0.75rem * var(--cui-density-scale, 1));
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-data-grid-bulk-bar__clear {
+  margin-left: auto;
 }
 
 .cui-data-grid-bulk-bar__actions {

@@ -3,6 +3,7 @@ import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
+import CuiToolbar from "./CuiToolbar.vue";
 import type { HideableProps, DisableableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
@@ -445,28 +446,31 @@ const panelStyle = computed(() => ({
       </div>
     </div>
 
-    <!-- Action buttons -->
-    <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(targetLabel)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
+    <!-- Move buttons: one vertical toolbar, one tab stop between the lists, Up/Down between
+         its buttons (#421). A button disabled by the marks (nothing marked yet) stays
+         focusable, so the stop doesn't vanish and focus isn't dropped when a move empties
+         the marks; a disabled transfer list disables them outright. -->
+    <CuiToolbar class="cui-transfer-list__actions" orientation="vertical" :label="messages.transferList.actions">
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveSelectedTo(targetLabel)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
         <CuiIcon name="caret-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(targetLabel)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveAllTo(targetLabel)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
         <CuiIcon name="caret-double-right" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(sourceLabel)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveSelectedTo(sourceLabel)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
         <CuiIcon name="caret-left" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(sourceLabel)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveAllTo(sourceLabel)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
         <CuiIcon name="caret-double-left" size="0.875rem" />
       </CuiButton>
-      <div :style="{ height: '0.5rem' }" />
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveUp" :disabled="disabled || targetSelected.size !== 1" @click="moveUp">
+      <div class="cui-transfer-list__actions-gap" aria-hidden="true" />
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveUp" :disabled="disabled || targetSelected.size !== 1" @click="moveUp">
         <CuiIcon name="caret-up" size="0.875rem" />
       </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveDown" :disabled="disabled || targetSelected.size !== 1" @click="moveDown">
+      <CuiButton variant="outline" size="xs" :focusable-when-disabled="!disabled" :aria-label="messages.transferList.moveDown" :disabled="disabled || targetSelected.size !== 1" @click="moveDown">
         <CuiIcon name="caret-down" size="0.875rem" />
       </CuiButton>
-    </div>
+    </CuiToolbar>
 
     <!-- Target panel -->
     <div :style="panelStyle">
@@ -535,6 +539,18 @@ const panelStyle = computed(() => ({
     </div>
   </div>
 </template>
+
+<style>
+/* Structural: the move toolbar sits between the lists, its buttons centred down the middle. */
+.cui-transfer-list__actions {
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cui-transfer-list__actions-gap {
+  height: 0.5rem;
+}
+</style>
 
 <style scoped>
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */

@@ -224,6 +224,12 @@ const slideoverOpen = computed({
           <code>tableView</code>, <code>cardView</code>).
         </li>
         <li>
+          The bulk-action bar is a <code>CuiToolbar</code> named “Bulk actions”
+          (<code>dataGrid.bulkActions</code>): its actions and Clear are one tab stop, and the
+          Left/Right arrows, Home and End move between them. The “N items selected” count sits
+          beside the toolbar, not among its controls.
+        </li>
+        <li>
           Give the grid a heading immediately above it. Neither the table nor the toolbar
           names what the rows are, and a page with two grids on it is otherwise two
           identical-sounding regions.

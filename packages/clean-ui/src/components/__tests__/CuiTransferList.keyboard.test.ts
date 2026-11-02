@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h, nextTick } from "vue";
 import CuiTransferList from "../CuiTransferList.vue";
-import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
+import { describeRovingFocusContract, press as pressKey } from "../../composables/__tests__/roving-focus-contract";
 
 /**
  * #170 — both lists were click-only divs, so a keyboard user could mark nothing, every
@@ -74,7 +74,7 @@ describe("CuiTransferList keyboard and ARIA", () => {
     await nextTick();
     expect(options("Available").map((o) => o.attributes("aria-selected"))).toEqual(["true", "true", "false", "false"]);
     const moveSelected = w!.find('button[aria-label="Move selected to Selected"]');
-    expect((moveSelected.element as HTMLButtonElement).disabled).toBe(false);
+    expect(moveSelected.attributes("aria-disabled")).toBeUndefined();
     await moveSelected.trigger("click");
     expect(options("Selected").map((o) => o.text())).toEqual(["Alpha", "Bravo"]);
   });
@@ -97,7 +97,7 @@ describe("CuiTransferList keyboard and ARIA", () => {
     press(bravo, " ");
     press(bravo, "Enter");
     await nextTick();
-    expect((w!.find('button[aria-label="Move selected to Selected"]').element as HTMLButtonElement).disabled).toBe(true);
+    expect(w!.find('button[aria-label="Move selected to Selected"]').attributes("aria-disabled")).toBe("true");
     expect(w!.props("modelValue")).toEqual(["b"]);
   });
 
@@ -177,6 +177,69 @@ describe("CuiTransferList keyboard and ARIA", () => {
     const names = inputs.map((i) => document.getElementById(i.attributes("aria-labelledby")!)?.textContent);
     expect(names).toEqual(["Filter Available", "Filter Selected"]);
   });
+});
+
+/**
+ * #421 — the six move buttons were six tab stops between the lists. They are one vertical
+ * CuiToolbar now: Tab goes source list, buttons, target list, and Up/Down move between them.
+ */
+describe("CuiTransferList move buttons as a toolbar", () => {
+  const toolbar = () => w!.find('[role="toolbar"]');
+  const moveButtons = () => [...toolbar().element.querySelectorAll<HTMLButtonElement>(".cui-button")];
+
+  it("is a vertical toolbar named from the messages, holding all six buttons", async () => {
+    mountList();
+    await nextTick();
+    expect(toolbar().attributes("aria-label")).toBe("Move items");
+    expect(toolbar().attributes("aria-orientation")).toBe("vertical");
+    expect(moveButtons()).toHaveLength(6);
+  });
+
+  it("keeps a button disabled by the marks focusable, so the toolbar keeps its one tab stop", async () => {
+    // Nothing marked and nothing selected: four of the six have nothing to do.
+    mountList();
+    await nextTick();
+    const btns = moveButtons();
+    expect(btns.map((b) => b.disabled)).toEqual([false, false, false, false, false, false]);
+    expect(btns.map((b) => b.getAttribute("aria-disabled"))).toEqual(["true", null, "true", "true", "true", "true"]);
+    expect(btns.map((b) => b.getAttribute("tabindex"))).toEqual(["0", "-1", "-1", "-1", "-1", "-1"]);
+  });
+
+  it("moves between the buttons with Up and Down, through disabled ones", async () => {
+    mountList();
+    await nextTick();
+    moveButtons()[0].focus();
+    await pressKey("ArrowDown");
+    expect(document.activeElement).toBe(moveButtons()[1]);
+    await pressKey("ArrowDown");
+    expect(document.activeElement).toBe(moveButtons()[2]); // aria-disabled, still reached
+    await pressKey("End");
+    expect(document.activeElement).toBe(moveButtons()[5]);
+    expect(moveButtons()[5].getAttribute("tabindex")).toBe("0");
+  });
+
+  it("does nothing on a click on a button disabled by the marks", async () => {
+    mountList();
+    await nextTick();
+    await w!.find('button[aria-label="Move selected to Selected"]').trigger("click");
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("disables every button outright on a disabled transfer list", async () => {
+    mountList({ disabled: true });
+    await nextTick();
+    expect(moveButtons().every((b) => b.disabled)).toBe(true);
+  });
+});
+
+describeRovingFocusContract("CuiTransferList move buttons", {
+  mount: () =>
+    mount(CuiTransferList, {
+      props: { items: items.filter((i) => !i.disabled), modelValue: ["d"], filterable: false },
+      attachTo: document.body,
+    }),
+  items: () => [...document.querySelectorAll<HTMLElement>('[role="toolbar"] .cui-button')],
+  orientation: "vertical",
 });
 
 describeRovingFocusContract("CuiTransferList source list", {

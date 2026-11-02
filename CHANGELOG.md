@@ -34,6 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   helper. A disabled CuiButton's clicks are held back by a capture-phase listener instead of
   `pointer-events: none`, which also blocked right-click and long-press, and that covers
   every click listener on it, `@click.capture` included.
+- **The data grid's bulk-action bar and the transfer list's move buttons are toolbars** (#421).
+  Each row is a `CuiToolbar`, so it is one tab stop with the arrow keys, Home and End moving
+  between its buttons, instead of a tab stop per button. The bulk bar's actions and Clear run
+  left to right, named “Bulk actions” (the new optional `dataGrid.bulkActions` message), with
+  the selection count beside the toolbar. The transfer list's six buttons run top to bottom,
+  named “Move items” (the new optional `transferList.actions` message), so Tab goes source
+  list, buttons, target list. A move button with nothing to do is now `aria-disabled` and
+  stays focusable (CuiButton's `focusableWhenDisabled`) rather than natively `disabled`, so
+  the toolbar keeps its tab stop and a button keeps focus when its own move disables it; a
+  disabled transfer list still disables them natively.
 
 ## [1.7.0] - 2026-11-02
 

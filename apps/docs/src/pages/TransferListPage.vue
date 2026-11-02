@@ -84,6 +84,15 @@ const selectedSimple = ref<string[]>([]);
           and focus moves on to the nearest item left in its list.
         </li>
         <li>
+          The six arrow buttons are one vertical <code>CuiToolbar</code> named “Move items”
+          (<code>transferList.actions</code>), so Tab goes source list → buttons → target list,
+          and Arrow Up and Down, Home and End move between the buttons. A button with nothing
+          to do (no item marked yet) is <code>aria-disabled</code> rather than
+          <code>disabled</code>: it stays reachable and says it is unavailable, and the
+          toolbar's tab stop doesn't disappear — nor drop focus when a move empties the marks.
+          A disabled transfer list disables them outright.
+        </li>
+        <li>
           The six arrow buttons are named — “Move selected to Selected”, “Move all to
           Available”, “Move up”, … — from the panel titles, and the filter fields are named
           “Filter Available” and “Filter Selected”. The names come from the message catalogue
