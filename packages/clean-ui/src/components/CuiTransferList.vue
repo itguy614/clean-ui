@@ -3,6 +3,7 @@ import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
+import CuiToolbar from "./CuiToolbar.vue";
 import type { HideableProps, DisableableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
@@ -97,24 +98,35 @@ const filteredTargetItems = computed(() => {
 
 // Actions
 // Only the marked items the filter shows move: a mark on an item filtered out of sight
-// stays, rather than moving something the user can't see.
+// stays, rather than moving something the user can't see. What each move would move is
+// computed once, so a button is disabled exactly when its move would do nothing (#421).
+const markedShown = (shown: TransferListItem[], marks: Set<string | number>) =>
+  shown.filter((i) => marks.has(i.value)).map((i) => i.value);
+const movableToTarget = computed(() => markedShown(filteredSourceItems.value, sourceSelected.value));
+const movableAllToTarget = computed(() => sourceItems.value.filter((i) => !i.disabled).map((i) => i.value));
+const movableToSource = computed(() => markedShown(filteredTargetItems.value, targetSelected.value));
+/** The one marked item's place in the selected list, for Move up / down; -1 unless exactly one. */
+const reorderIndex = computed(() =>
+  targetSelected.value.size === 1 ? props.modelValue.indexOf([...targetSelected.value][0]) : -1,
+);
+
 function moveToTarget() {
   if (props.disabled) return;
-  const moving = filteredSourceItems.value.filter((i) => sourceSelected.value.has(i.value)).map((i) => i.value);
+  const moving = movableToTarget.value;
   sourceSelected.value = new Set([...sourceSelected.value].filter((v) => !moving.includes(v)));
   emit("update:modelValue", [...props.modelValue, ...moving]);
 }
 
 function moveAllToTarget() {
   if (props.disabled) return;
-  const next = [...props.modelValue, ...sourceItems.value.filter((i) => !i.disabled).map((i) => i.value)];
+  const next = [...props.modelValue, ...movableAllToTarget.value];
   sourceSelected.value = new Set();
   emit("update:modelValue", next);
 }
 
 function moveToSource() {
   if (props.disabled) return;
-  const remove = new Set(filteredTargetItems.value.filter((i) => targetSelected.value.has(i.value)).map((i) => i.value));
+  const remove = new Set(movableToSource.value);
   targetSelected.value = new Set([...targetSelected.value].filter((v) => !remove.has(v)));
   emit("update:modelValue", props.modelValue.filter((v) => !remove.has(v)));
 }
@@ -125,26 +137,14 @@ function moveAllToSource() {
   emit("update:modelValue", []);
 }
 
-function moveUp() {
-  if (props.disabled || targetSelected.value.size !== 1) return;
-  const val = [...targetSelected.value][0];
+/** Swap the one marked item with its neighbour `by` places away, if there is one. */
+function reorder(by: -1 | 1) {
+  const idx = reorderIndex.value;
+  const to = idx + by;
+  if (props.disabled || idx === -1 || to < 0 || to >= props.modelValue.length) return;
   const arr = [...props.modelValue];
-  const idx = arr.indexOf(val);
-  if (idx > 0) {
-    [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
-    emit("update:modelValue", arr);
-  }
-}
-
-function moveDown() {
-  if (props.disabled || targetSelected.value.size !== 1) return;
-  const val = [...targetSelected.value][0];
-  const arr = [...props.modelValue];
-  const idx = arr.indexOf(val);
-  if (idx < arr.length - 1) {
-    [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
-    emit("update:modelValue", arr);
-  }
+  [arr[idx], arr[to]] = [arr[to], arr[idx]];
+  emit("update:modelValue", arr);
 }
 
 type Marks = Ref<Set<string | number>>;
@@ -330,6 +330,20 @@ defineExpose({
   },
 });
 
+// The move toolbar's buttons, top to bottom. Each is disabled exactly when it has nothing to do.
+const moveButtons = computed(() => {
+  const t = messages.value.transferList;
+  const idx = reorderIndex.value;
+  return [
+    { key: "to-target", label: t.moveSelectedTo(targetLabel.value), icon: "caret-right", idle: movableToTarget.value.length === 0, run: moveToTarget },
+    { key: "all-to-target", label: t.moveAllTo(targetLabel.value), icon: "caret-double-right", idle: movableAllToTarget.value.length === 0, run: moveAllToTarget },
+    { key: "to-source", label: t.moveSelectedTo(sourceLabel.value), icon: "caret-left", idle: movableToSource.value.length === 0, run: moveToSource },
+    { key: "all-to-source", label: t.moveAllTo(sourceLabel.value), icon: "caret-double-left", idle: targetItems.value.length === 0, run: moveAllToSource },
+    { key: "up", label: t.moveUp, icon: "caret-up", idle: idx <= 0, run: () => reorder(-1), gapBefore: true },
+    { key: "down", label: t.moveDown, icon: "caret-down", idle: idx === -1 || idx === props.modelValue.length - 1, run: () => reorder(1) },
+  ];
+});
+
 // Size config
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; itemPad: string; titleFont: string }> = {
@@ -445,28 +459,25 @@ const panelStyle = computed(() => ({
       </div>
     </div>
 
-    <!-- Action buttons -->
-    <div :style="{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(targetLabel)" :disabled="disabled || sourceSelected.size === 0" @click="moveToTarget">
-        <CuiIcon name="caret-right" size="0.875rem" />
-      </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(targetLabel)" :disabled="disabled || sourceItems.length === 0" @click="moveAllToTarget">
-        <CuiIcon name="caret-double-right" size="0.875rem" />
-      </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveSelectedTo(sourceLabel)" :disabled="disabled || targetSelected.size === 0" @click="moveToSource">
-        <CuiIcon name="caret-left" size="0.875rem" />
-      </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveAllTo(sourceLabel)" :disabled="disabled || targetItems.length === 0" @click="moveAllToSource">
-        <CuiIcon name="caret-double-left" size="0.875rem" />
-      </CuiButton>
-      <div :style="{ height: '0.5rem' }" />
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveUp" :disabled="disabled || targetSelected.size !== 1" @click="moveUp">
-        <CuiIcon name="caret-up" size="0.875rem" />
-      </CuiButton>
-      <CuiButton variant="outline" size="xs" :aria-label="messages.transferList.moveDown" :disabled="disabled || targetSelected.size !== 1" @click="moveDown">
-        <CuiIcon name="caret-down" size="0.875rem" />
-      </CuiButton>
-    </div>
+    <!-- Move buttons: one vertical toolbar, one tab stop between the lists, Up/Down between
+         its buttons (#421). A button disabled by the marks (nothing marked yet) stays
+         focusable, so the stop doesn't vanish and focus isn't dropped when a move empties
+         the marks; a disabled transfer list disables them outright. -->
+    <CuiToolbar class="cui-transfer-list__actions" orientation="vertical" :label="messages.transferList.actions">
+      <template v-for="b in moveButtons" :key="b.key">
+        <div v-if="b.gapBefore" class="cui-transfer-list__actions-gap" aria-hidden="true" />
+        <CuiButton
+          variant="outline"
+          size="xs"
+          :focusable-when-disabled="!disabled"
+          :aria-label="b.label"
+          :disabled="disabled || b.idle"
+          @click="b.run"
+        >
+          <CuiIcon :name="b.icon" size="0.875rem" />
+        </CuiButton>
+      </template>
+    </CuiToolbar>
 
     <!-- Target panel -->
     <div :style="panelStyle">
@@ -535,6 +546,18 @@ const panelStyle = computed(() => ({
     </div>
   </div>
 </template>
+
+<style>
+/* Structural: the move toolbar sits between the lists, its buttons centred down the middle. */
+.cui-transfer-list__actions {
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cui-transfer-list__actions-gap {
+  height: 0.5rem;
+}
+</style>
 
 <style scoped>
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */

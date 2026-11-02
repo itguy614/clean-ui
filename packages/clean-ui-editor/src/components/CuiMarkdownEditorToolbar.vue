@@ -43,20 +43,19 @@ const activeStates = computed(() => {
        arrangement this toolbar once got wrong, its fades scrolling away with the buttons
        (#125). `loop` keeps the arrows coming round at the ends, as they always have here. -->
   <CuiToolbar class="cui-markdown-editor-toolbar" :label="messages.toolbarAriaLabel" overflow="scroll" loop>
-    <!-- `solid` for the active/pressed state is a deliberate, sign-off exception
-         to the library's general "subtle by default, bold by choice" rule
-         (tinted `-bg`/`-border` for resting/selected state elsewhere — toggles,
-         checkboxes, radios, badges): an icon-only formatting toggle needs the
-         clearest possible pressed/unpressed contrast at a glance, with no label
-         to fall back on, and full-fill active state is the same convention
-         Word/Docs/Notion use for exactly this kind of icon toolbar. Not an
-         oversight — see the UX review this was raised in. -->
+    <!-- A formatting toggle is a ghost button with `pressed` (#396), which renders
+         `aria-pressed` and the selected look; a command without `isActive` isn't a toggle
+         and gets no `aria-pressed` at all. The look is solid, not CuiButton's subtle
+         pressed default: a deliberate, signed-off exception to "subtle by default" — an
+         icon-only formatting toggle needs the clearest possible on/off contrast at a glance,
+         with no label to fall back on, the convention Word, Docs and Notion use for exactly
+         this kind of toolbar. Set through the public pressed tokens below. -->
     <CuiButton
       v-for="entry in entries"
       :key="entry.id"
       size="sm"
-      :variant="activeStates.get(entry.id) ? 'solid' : 'ghost'"
-      :aria-pressed="entry.spec.isActive ? activeStates.get(entry.id) : undefined"
+      variant="ghost"
+      :pressed="entry.spec.isActive ? activeStates.get(entry.id) : undefined"
       :aria-label="entry.label"
       :title="entry.label"
       @click="runCommand(entry.id)"
@@ -81,6 +80,15 @@ const activeStates = computed(() => {
   /* The spacing it has always had, as CuiToolbar's private defaults: a public --cui-toolbar-* token on any ancestor still wins. */
   --_toolbar-px: calc(0.375rem * var(--cui-density-scale, 1));
   --_toolbar-py: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+/* A pressed toggle is solid (see the template). The public tokens, declared here so they
+   beat any set on an ancestor, as the solid variant did; zero-specificity, so a consumer's
+   plain .cui-markdown-editor-toolbar rule still wins. */
+:where(.cui-markdown-editor-toolbar) {
+  --cui-button-pressed-bg: var(--cui-primary-solid, var(--cui-primary));
+  --cui-button-pressed-color: var(--cui-primary-text);
+  --cui-button-pressed-border: 1px solid transparent;
 }
 
 .cui-markdown-editor-toolbar :deep(.cui-scroll-area__scroller) {

@@ -106,7 +106,8 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   `height`, `px`, `py`, `gap`, `font-size`, `radius`, `hover-bg`, `hover-color`,
   `hover-border`, `active-bg`, `focus-ring`, `focus-border`, `width` (an overlay
   panel's width preset — CuiModal, a left/right CuiSlideover — which is not `CuiSize`; a
-  top/bottom slideover's preset is `height` — #407). Private prefix matches the
+  top/bottom slideover's preset is `height` — #407), and `pressed-bg`, `pressed-color`,
+  `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396). Private prefix matches the
   public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
   (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
   The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)

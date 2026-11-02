@@ -51,17 +51,18 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 }
 
 /* Strip inner border-radius where two buttons meet. Only painted buttons meet: a ghost
-   button draws no edge, so beside one a painted button keeps its corners. A lone pressed
+   button (`cui-button--edgeless`) draws no edge, so beside one a painted button keeps its
+   corners; a pressed ghost button has one, and counts as painted (#396). A lone pressed
    toggle among ghost ones stays whole, and a run of pressed ones merges into one shape
    (#190 review). A dropdown still merges by position. */
-.cui-button-group--horizontal > :deep(.cui-button:not(.cui-button--ghost):has(+ :is(.cui-button:not(.cui-button--ghost), .cui-dropdown))),
+.cui-button-group--horizontal > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
 .cui-button-group--horizontal > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
 .cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.cui-button-group--horizontal > :deep(:is(.cui-button:not(.cui-button--ghost), .cui-dropdown) + .cui-button:not(.cui-button--ghost)),
+.cui-button-group--horizontal > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
 .cui-button-group--horizontal > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
 .cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-left-radius: 0;
@@ -77,14 +78,14 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 }
 
 /* Strip inner border-radius on vertical buttons, by the same rule. */
-.cui-button-group--vertical > :deep(.cui-button:not(.cui-button--ghost):has(+ :is(.cui-button:not(.cui-button--ghost), .cui-dropdown))),
+.cui-button-group--vertical > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
 .cui-button-group--vertical > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
 .cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-.cui-button-group--vertical > :deep(:is(.cui-button:not(.cui-button--ghost), .cui-dropdown) + .cui-button:not(.cui-button--ghost)),
+.cui-button-group--vertical > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
 .cui-button-group--vertical > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
 .cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
   border-top-left-radius: 0;
@@ -99,16 +100,26 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
   margin-top: -1px;
 }
 
-/* Ensure hovered/focused/active button appears above siblings so borders aren't hidden */
+/* Lift a button above its siblings so the shared border shows its edge, in three tiers: a
+   hovered button, then a selected one, then a focused one. A hovered neighbour must stay
+   below a selected button, or its hover fill paints over the selected border it overlaps. */
 .cui-button-group > :deep(.cui-button:hover),
-.cui-button-group > :deep(.cui-button:focus-visible),
+.cui-button-group > :deep(.cui-dropdown .cui-button:hover) {
+  z-index: 1;
+  position: relative;
+}
+
 .cui-button-group > :deep(.cui-button[aria-pressed="true"]),
 .cui-button-group > :deep(.cui-button.cui-button--active),
 .cui-button-group > :deep(.cui-radio-button--active),
-.cui-button-group > :deep([aria-checked="true"]),
-.cui-button-group > :deep(.cui-dropdown .cui-button:hover),
+.cui-button-group > :deep([aria-checked="true"]) {
+  z-index: 2;
+  position: relative;
+}
+
+.cui-button-group > :deep(.cui-button:focus-visible),
 .cui-button-group > :deep(.cui-dropdown .cui-button:focus-visible) {
-  z-index: 1;
+  z-index: 3;
   position: relative;
 }
 </style>

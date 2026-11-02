@@ -71,6 +71,9 @@ function onKeyup(e: KeyboardEvent) {
 function onKeydown(e: KeyboardEvent) {
   if (e.key === " ") spaceDownHere = true;
   if (!ctx || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  // A focusable disabled trigger (CuiButton's `focusableWhenDisabled`, #396) keeps focus but
+  // must not open the menu; a natively disabled one never gets the key.
+  if ((e.target as Element).closest?.("[aria-disabled='true']")) return;
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
     // Any trigger mode: it is the keyboard's way into a hover menu too.
     e.preventDefault();

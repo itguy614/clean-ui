@@ -24,6 +24,8 @@ describe("CuiButton themeable properties (real browser)", () => {
         --color-primary-500: rgb(10, 20, 30);
         --color-primary-600: rgb(11, 21, 31);
         --color-primary-700: rgb(12, 22, 32);
+        --color-primary-100: rgb(13, 23, 33);
+        --color-primary-300: rgb(14, 24, 34);
       }
       /* CuiButton transitions background over 0.15s, so the computed value immediately
          after a hover is the start of the interpolation, not the target. */
@@ -98,6 +100,35 @@ describe("CuiButton themeable properties (real browser)", () => {
     const el = render({ variant: "solid" }, "--cui-button-hover-bg: rgb(7, 8, 9)");
     await userEvent.hover(el);
     expect(paint(el, "background-color")).toBe("rgb(7, 8, 9)");
+  });
+
+  describe("pressed (#396)", () => {
+    it("paints a pressed ghost toggle and leaves an unpressed one bare", () => {
+      const off = render({ variant: "ghost", pressed: false });
+      const on = render({ variant: "ghost", pressed: true });
+      expect(paint(off, "background-color")).toBe("rgba(0, 0, 0, 0)");
+      expect(paint(on, "background-color")).toBe("rgb(13, 23, 33)"); // --cui-primary-bg → 100
+      expect(paint(on, "border-top-color")).toBe("rgb(10, 20, 30)"); // --cui-primary → 500
+      expect(paint(on, "color")).toBe("rgb(12, 22, 32)"); // --cui-primary-hover → 700
+    });
+
+    it("keeps the pressed look under the pointer", async () => {
+      const el = render({ variant: "outline", pressed: true });
+      const resting = paint(el, "background-color");
+      await userEvent.hover(el);
+      expect(paint(el, "background-color")).toBe(resting);
+      expect(paint(el, "border-top-color")).toBe("rgb(10, 20, 30)"); // --cui-primary → 500
+    });
+
+    it("lets the pressed tokens, set on an ancestor, win", () => {
+      const el = render(
+        { variant: "ghost", pressed: true },
+        "--cui-button-pressed-bg: rgb(1, 2, 3); --cui-button-pressed-color: rgb(4, 5, 6); --cui-button-pressed-border: 2px solid rgb(7, 8, 9)",
+      );
+      expect(paint(el, "background-color")).toBe("rgb(1, 2, 3)");
+      expect(paint(el, "color")).toBe("rgb(4, 5, 6)");
+      expect(paint(el, "border-top-color")).toBe("rgb(7, 8, 9)");
+    });
   });
 
   describe("inside a .cui-typography scope", () => {
