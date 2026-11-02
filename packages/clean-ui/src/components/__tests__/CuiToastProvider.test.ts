@@ -25,6 +25,17 @@ function mountProvider(props: Record<string, unknown> = {}) {
 const staying = () =>
   [...document.querySelectorAll<HTMLElement>(".cui-toast-wrapper")].filter((t) => !t.classList.contains("cui-toast-leave-active"));
 const actionButton = () => document.querySelector<HTMLButtonElement>(".cui-toast-action");
+/**
+ * Click once the render's own millisecond is over. Vue ignores an event stamped no later than
+ * the moment its listener was attached (so a click that began before a re-render can't hit the
+ * new handler), and a synthetic click straight after a render shares that millisecond: the
+ * handler is silently skipped about half the time (#438). A person can't click that fast.
+ */
+async function clickAfterRender(el: HTMLElement) {
+  const rendered = Date.now();
+  while (Date.now() <= rendered) await new Promise((r) => setTimeout(r, 0));
+  el.click();
+}
 const settle = async () => {
   await nextTick();
   await flushPromises();
@@ -76,7 +87,7 @@ describe("CuiToastProvider action", () => {
     const onClick = vi.fn();
     api.toast({ title: "Deleted", autoDismiss: 0, action: { label: "Undo", onClick } });
     await nextTick();
-    actionButton()!.click();
+    await clickAfterRender(actionButton()!);
     await settle();
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(staying()).toHaveLength(0);
@@ -87,7 +98,7 @@ describe("CuiToastProvider action", () => {
     const onClick = vi.fn();
     api.toast({ title: "Upload failed", autoDismiss: 0, action: { label: "Retry", onClick, dismissOnClick: false } });
     await nextTick();
-    actionButton()!.click();
+    await clickAfterRender(actionButton()!);
     await settle();
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(staying()).toHaveLength(1);
@@ -114,7 +125,7 @@ describe("CuiToastProvider action in stackMode=collapsed", () => {
     api.toast({ title: "Newer", autoDismiss: 0 });
     await nextTick();
     expect(staying()[0].classList.contains("cui-toast-wrapper--collapsed")).toBe(true);
-    actionButton()!.click();
+    await clickAfterRender(actionButton()!);
     await settle();
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(staying(), "both toasts still there").toHaveLength(2);
@@ -125,7 +136,7 @@ describe("CuiToastProvider action in stackMode=collapsed", () => {
     api.toast({ title: "Older", autoDismiss: 0, action: { label: "Retry", onClick: () => {}, dismissOnClick: false } });
     api.toast({ title: "Newer", autoDismiss: 0 });
     await nextTick();
-    staying()[0].querySelector<HTMLElement>(".cui-toast__title")!.click();
+    await clickAfterRender(staying()[0].querySelector<HTMLElement>(".cui-toast__title")!);
     await settle();
     expect(staying()).toHaveLength(1);
     expect(staying()[0].textContent).toContain("Newer");
