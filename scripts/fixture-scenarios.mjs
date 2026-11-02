@@ -10,7 +10,9 @@
  * CodeMirror back in fails (#226).
  *
  * `skipGuarantees` maps a guarantee id (see check-fixture-guarantees.mjs) to the reason it
- * does not hold for that page. A guarantee runs on every scenario that doesn't list it.
+ * does not hold for that page. A guarantee runs on every scenario that doesn't list it, and
+ * a listed one that holds again fails, so the skip is removed. Every page passes every
+ * guarantee today, so each map is empty.
  */
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";

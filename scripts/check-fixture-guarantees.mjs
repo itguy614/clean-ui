@@ -22,13 +22,17 @@ import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
 
 const FIXTURE_NODE_MODULES = join(FIXTURE_DIR, "node_modules");
 
+/**
+ * A page's built assets of the given types, concatenated. Throws when there are none: a
+ * guarantee run over an empty string passes without having checked anything.
+ */
 function readBuiltAssets(distDir, extensions) {
   const assetsDir = join(distDir, "assets");
-  if (!existsSync(assetsDir)) return "";
-  return readdirSync(assetsDir)
-    .filter((file) => extensions.some((ext) => file.endsWith(ext)))
-    .map((file) => readFileSync(join(assetsDir, file), "utf-8"))
-    .join("\n");
+  const files = existsSync(assetsDir)
+    ? readdirSync(assetsDir).filter((file) => extensions.some((ext) => file.endsWith(ext)))
+    : [];
+  if (files.length === 0) throw new Error(`no ${extensions.join("/")} assets in ${assetsDir} to check.`);
+  return files.map((file) => readFileSync(join(assetsDir, file), "utf-8")).join("\n");
 }
 
 /** Every installed directory named `packageName` whose own package.json confirms it. */
@@ -72,7 +76,7 @@ function findInstalledCopies(root, packageName) {
 const GUARANTEES = [
   {
     id: "icon-barrel",
-    name: "@itguy614/clean-ui: no full icon-package barrel in the built bundle (#42)",
+    name: "no full icon-package barrel in the built bundle (#42)",
     check(distDir) {
       const js = readBuiltAssets(distDir, [".js"]);
       const distinctIcons = new Set(js.match(/Ph[A-Z][A-Za-z0-9]*/g) ?? []);
@@ -92,7 +96,7 @@ const GUARANTEES = [
   },
   {
     id: "no-tailwind-utilities",
-    name: "@itguy614/clean-ui: no base Tailwind utilities layer in the built stylesheet (#62)",
+    name: "no base Tailwind utilities layer in the built stylesheet (#62)",
     check(distDir) {
       const css = readBuiltAssets(distDir, [".css"]);
       const utilityMarkers = [".flex{", ".grid{", ".hidden{", ".block{", ".container{", ".sr-only{", ".inline-flex{"];
@@ -105,7 +109,7 @@ const GUARANTEES = [
   },
   {
     id: "no-global-reset",
-    name: "@itguy614/clean-ui: no global reset in the built stylesheet (#72)",
+    name: "no global reset in the built stylesheet (#72)",
     check(distDir) {
       const css = readBuiltAssets(distDir, [".css"]);
 
@@ -158,7 +162,7 @@ function fail(message) {
 
 // A skip naming a guarantee that doesn't exist (renamed, or a typo) would silently
 // stop skipping nothing — or, worse, outlive the guarantee it excused.
-for (const [scenario, { skipGuarantees }] of Object.entries(SCENARIOS)) {
+for (const [scenario, { skipGuarantees = {} }] of Object.entries(SCENARIOS)) {
   for (const id of Object.keys(skipGuarantees)) {
     if (!GUARANTEES.some((g) => g.id === id && g.scope !== "install")) {
       fail(`scenario "${scenario}" skips "${id}", which is not a build-output guarantee.`);
@@ -177,8 +181,16 @@ for (const scenario of Object.keys(SCENARIOS)) {
   console.log(`[check-fixture-guarantees] building the ${scenario} page...`);
   try {
     builds[scenario] = buildScenario(scenario);
-  } catch {
-    fail(`the ${scenario} page failed to build — see the vite output above.`);
+  } catch (err) {
+    fail(`the ${scenario} page failed to build (${err.message}) — see any vite output above.`);
+  }
+}
+
+function runCheck(check, ...args) {
+  try {
+    return check(...args);
+  } catch (err) {
+    return err.message;
   }
 }
 
@@ -196,15 +208,21 @@ function report(label, failure) {
 
 for (const { id, name, scope, check } of GUARANTEES) {
   if (scope === "install") {
-    report(name, check());
+    report(name, runCheck(check));
     continue;
   }
-  for (const [scenario, { skipGuarantees }] of Object.entries(SCENARIOS)) {
-    if (id in skipGuarantees) {
-      console.log(`- ${name} [${scenario}]: skipped (${skipGuarantees[id]})`);
-      continue;
+  for (const [scenario, { skipGuarantees = {} }] of Object.entries(SCENARIOS)) {
+    const label = `${name} [${scenario}]`;
+    const failure = runCheck(check, builds[scenario]);
+    if (!(id in skipGuarantees)) {
+      report(label, failure);
+    } else if (failure) {
+      console.log(`- ${label}: skipped (${skipGuarantees[id]})`);
+    } else {
+      // A skip outliving its reason hides the next regression on that page; like the
+      // repo's other exemption lists, a stale one fails.
+      report(label, `skipped (${skipGuarantees[id]}), but it holds now — remove the skip from scripts/fixture-scenarios.mjs.`);
     }
-    report(`${name} [${scenario}]`, check(builds[scenario]));
   }
 }
 
