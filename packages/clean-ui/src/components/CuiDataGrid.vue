@@ -183,9 +183,12 @@ const grid = useDataGrid({
   initialView: props.initialView,
   hydrateFromUrl: props.hydrateUrl,
   // Only the table is virtualized; card view renders every row it is given.
-  paginate: () => !props.virtualize || showCards.value,
+  paginate: () => !props.virtualize || showCards(),
 });
-const showCards = computed(() => grid.viewMode.value === "card" && hasCardSlot);
+// A declaration, so hoisted: the getter above may run before this line is reached.
+function showCards() {
+  return grid.viewMode.value === "card" && hasCardSlot;
+}
 
 provideDataGrid(grid);
 
@@ -211,14 +214,6 @@ watch(
   },
 );
 
-/**
- * Go to a page from outside (#372), clamped to 1..lastPage. Does what a pagination click
- * does — the same state change and, server-side, the same `navigate` — and, like one,
- * nothing for the page already shown.
- */
-function setPage(n: number) {
-  if (grid.setPage(n)) onNavigate();
-}
 
 defineExpose({
   clearSelection: grid.clearSelection,
@@ -232,7 +227,11 @@ defineExpose({
   page: computed(() => grid.paginationMeta.value.current_page) as Readonly<Ref<number>>,
   /** The last page (1 while unpaged). */
   lastPage: computed(() => grid.paginationMeta.value.last_page) as Readonly<Ref<number>>,
-  setPage,
+  /**
+   * Go to a page, clamped to 1..lastPage (#372). Does what a pagination click does: the
+   * page changes and, server-side, the watcher above emits `navigate`.
+   */
+  setPage: (n: number): void => void grid.setPage(n),
 });
 const messages = useMessages();
 </script>
@@ -290,7 +289,7 @@ const messages = useMessages();
         <div style="flex: 1; min-width: 0;">
           <!-- Card view -->
           <CuiDataGridCardView
-            v-if="showCards"
+            v-if="showCards()"
             :row-key="rowKey"
           >
             <template #card="cardProps">
@@ -338,7 +337,6 @@ const messages = useMessages();
     <!-- Pagination -->
     <CuiDataGridPagination
       v-if="!hidePagination && grid.paginated.value && !loading && grid.displayData.value.length > 0"
-      @navigate="onNavigate"
     />
 
     <!-- Bulk action bar -->

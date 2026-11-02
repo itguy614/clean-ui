@@ -48,7 +48,7 @@ const meta: ComponentMeta = {
       type: "boolean",
       default: "false",
       description:
-        "Render only the visible rows plus overscan. Needs maxHeight; worth it from roughly 500 client-side rows. Client-side it turns paging off while the table is shown: the table windows every searched, filtered and sorted row and the pagination bar is hidden. Card view and server-side grids still page",
+        "Render only the visible rows plus overscan. Needs maxHeight; worth it from roughly 500 client-side rows. Client-side it turns paging off while the table is shown: the table windows every searched, filtered and sorted row and the pagination bar is hidden, so select-all selects all of them. Card view and server-side grids still page",
     },
     { name: "virtualRowHeight", type: "number", default: "auto", description: "Fixed row height in px for the virtualizer. Omit and the first rendered row is measured" },
     { name: "perPageOptions", type: "number[]", default: "[15, 25, 50, 100]", description: "Options in the per-page selector. The first is the initial page size" },

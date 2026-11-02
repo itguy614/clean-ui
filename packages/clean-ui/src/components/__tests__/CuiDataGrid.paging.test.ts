@@ -84,7 +84,7 @@ describe("CuiDataGrid exposed paging (#372)", () => {
     }
   });
 
-  it("server-side, setPage emits what a pagination click emits", async () => {
+  it("server-side, setPage emits what a pagination click emits: one navigate", async () => {
     const page: PaginatedData = { data: data.slice(0, 10), current_page: 1, last_page: 4, per_page: 10, total: 40, from: 1, to: 10 };
 
     const { wrapper: clicked } = mountGrid({ serverSide: true, data: page });
@@ -97,13 +97,36 @@ describe("CuiDataGrid exposed paging (#372)", () => {
     expect(api.processedRows).toHaveLength(10); // the page the server sent
     api.setPage(2);
     await nextTick();
-    expect(fromClick?.length).toBeGreaterThan(0);
+    expect(fromClick?.length).toBe(1);
     expect(wrapper.emitted("navigate")).toEqual(fromClick);
 
-    // Clamped to the server's last page; the page already shown is a no-op, as a click is.
+    // The server hasn't answered: asking for page 2 again sends nothing, and going back
+    // to 1 still works — "current" is the page asked for, not the stale one shown.
+    api.setPage(2);
+    await nextTick();
+    expect(wrapper.emitted("navigate")).toHaveLength(1);
     api.setPage(1);
     await nextTick();
-    expect(wrapper.emitted("navigate")).toEqual(fromClick);
+    api.setPage(99); // clamped to the server's last page
+    await nextTick();
+    expect(wrapper.emitted("navigate")!.map(([p]) => (p as { page: number }).page)).toEqual([2, 1, 4]);
+  });
+
+  it("server-side, a last_page of 0 (no results) never asks for page 0", async () => {
+    const empty: PaginatedData = { data: [], current_page: 1, last_page: 0, per_page: 10, total: 0, from: null, to: null };
+    const { wrapper, api } = mountGrid({ serverSide: true, data: empty });
+    api.setPage(3);
+    await nextTick();
+    expect(wrapper.emitted("navigate")).toBeUndefined();
+  });
+
+  it("page never reads past lastPage when the data shrinks", async () => {
+    const { wrapper, api } = mountGrid();
+    api.setPage(4);
+    await nextTick();
+    await wrapper.setProps({ data: data.slice(0, 12) });
+    expect([api.page, api.lastPage]).toEqual([2, 2]);
+    expect(bodyNames()).toEqual(["Row 11", "Row 12"]);
   });
 });
 

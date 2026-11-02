@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1..lastPage`, and does what a pagination click does, server-side `navigate` included.
   `page` and `lastPage` are readonly. `useDataGrid` returns `processedRows` and a
   `paginated` flag, takes a `paginate` option (default `true`), and its `setPage` now
-  clamps to `1..last page` and returns whether the page changed.
+  clamps to `1..last page` (no upper bound for a server-side grid fed a plain array) and
+  returns whether the page changed. A client-side page left past the end — the data shrank,
+  or `hydrateFromUrl` read `?page=99` — now reads as the last page instead of an empty one.
 
 ### Fixed
 
@@ -24,7 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the
   table is shown: the table windows every searched, filtered and sorted row and the
   pagination bar is hidden (`page` and `lastPage` read 1). Card view, which is not
-  virtualized, and server-side grids still page.
+  virtualized, and server-side grids still page. With paging off, the header's select-all
+  selects every searched and filtered row, not 15.
+- **A server-side CuiDataGrid emitted `navigate` twice for one pagination click** (#372):
+  once from the pagination bar and once from the grid's own watcher on the page. It now
+  emits once.
 
 ## [1.7.0] - 2026-11-02
 
