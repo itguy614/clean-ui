@@ -189,14 +189,17 @@ function selectOption(opt: SelectOption) {
   }
 }
 
-// Chips are CuiBadge, as CuiCombobox's and CuiTagInput's are (#301). Removing one hands
-// focus back to the trigger, since the button that had it is gone.
+// Chips are CuiBadge, as CuiCombobox's and CuiTagInput's are (#301); they are removable
+// only while the select is editable, and onKeydown returns early otherwise. If focus was
+// in the select (on the trigger, or the chip's own button) and the removal took it away,
+// hand it back to the trigger rather than leaving it on <body>.
 function removeChip(value: string | number) {
-  if (props.disabled || props.readonly) return;
-  if (props.multiple && Array.isArray(props.modelValue)) {
-    emit("update:modelValue", props.modelValue.filter((v) => v !== value));
-    nextTick(() => triggerRef.value?.focus());
-  }
+  if (!props.multiple || !Array.isArray(props.modelValue)) return;
+  const hadFocus = !!triggerRef.value?.contains(document.activeElement);
+  emit("update:modelValue", props.modelValue.filter((v) => v !== value));
+  nextTick(() => {
+    if (hadFocus && !triggerRef.value?.contains(document.activeElement)) triggerRef.value?.focus();
+  });
 }
 
 function clear() {
@@ -225,9 +228,12 @@ const listbox = useListbox({
 });
 
 function onKeydown(e: KeyboardEvent) {
-  if (props.disabled || props.readonly) return;
+  // A key pressed on a chip's remove button belongs to that button: Enter or Space there
+  // must click it, not open the panel.
+  if (props.disabled || props.readonly || e.target !== triggerRef.value) return;
   // Backspace drops the last chip, as it does in CuiCombobox with an empty query.
-  if (e.key === "Backspace" && e.target === triggerRef.value && props.multiple && hasValue.value) {
+  const modified = e.ctrlKey || e.metaKey || e.altKey;
+  if (e.key === "Backspace" && !modified && props.multiple && hasValue.value) {
     e.preventDefault();
     removeChip((props.modelValue as Array<string | number>).at(-1)!);
     return;
@@ -299,14 +305,14 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
           <!-- Multi: chips -->
           <template v-if="multiple && Array.isArray(modelValue) && modelValue.length > 0">
             <CuiBadge
-              v-for="val in modelValue"
+              v-for="(val, i) in modelValue"
               :key="String(val)"
               :color="color"
               :size="chipSize"
               :removable="!disabled && !readonly"
               @remove="removeChip(val)"
             >
-              {{ normalizedOptions.find((o) => o.value === val)?.label ?? val }}
+              <span class="cui-select__chip-label">{{ selectedLabels[i] }}</span>
             </CuiBadge>
           </template>
           <!-- Single: label (with #selected slot) -->
@@ -488,6 +494,24 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 
 .cui-select__placeholder {
   color: var(--cui-text-tertiary);
+}
+
+/* --- Chips (multi-select): CuiBadge never wraps, so a long label is cut short with an
+   ellipsis rather than spilling out of the trigger. --- */
+.cui-select__value :deep(.cui-badge) {
+  max-width: 100%;
+}
+
+.cui-select__value :deep(.cui-badge__content) {
+  min-width: 0;
+}
+
+.cui-select__chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* The badge's line-height of 1; the scoped base sets 1.5 on a classed span (#351). */
+  line-height: inherit;
 }
 
 /* --- Actions (clear + chevron) --- */

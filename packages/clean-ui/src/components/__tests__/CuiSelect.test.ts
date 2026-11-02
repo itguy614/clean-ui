@@ -203,20 +203,52 @@ describe("CuiSelect chips", () => {
     w.unmount();
   });
 
-  it("removing a chip drops that value without opening the panel, and refocuses the trigger", async () => {
+  it("removing a chip drops that value without opening the panel", async () => {
     const w = multi();
     await w.findAll(".cui-badge__remove")[0].trigger("click");
     expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["c"]]);
     expect(document.querySelector(".cui-select__dropdown")).toBeNull();
     expect(w.get('[role="combobox"]').attributes("aria-expanded")).toBe("false");
-    await nextTick();
-    expect(document.activeElement).toBe(w.get('[role="combobox"]').element);
     w.unmount();
   });
 
-  it("Backspace on the trigger drops the last chip", async () => {
+  it("hands focus back to the trigger when the focused chip goes, and leaves focus elsewhere alone", async () => {
+    const w = mount(
+      { components: { CuiSelect }, template: `<div><input class="other" /><CuiSelect v-model="v" :options="o" multiple /></div>`, data: () => ({ v: ["a", "b", "c"], o: OPTIONS }) },
+      { attachTo: document.body },
+    );
+    const trigger = w.get('[role="combobox"]').element;
+    const remove = w.findAll(".cui-badge__remove");
+    (remove[0].element as HTMLElement).focus();
+    await remove[0].trigger("click");
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement).toBe(trigger);
+    const other = w.get(".other").element as HTMLInputElement;
+    other.focus();
+    await w.findAll(".cui-badge__remove")[0].trigger("click");
+    await nextTick();
+    await nextTick();
+    expect(document.activeElement).toBe(other);
+    w.unmount();
+  });
+
+  it("Enter or Space on a chip's remove button doesn't reach the listbox", async () => {
     const w = multi();
-    await w.get('[role="combobox"]').trigger("keydown", { key: "Backspace" });
+    for (const key of ["Enter", " "]) {
+      await w.find(".cui-badge__remove").trigger("keydown", { key });
+      expect(document.querySelector(".cui-select__dropdown")).toBeNull();
+    }
+    w.unmount();
+  });
+
+  it("Backspace on the trigger drops the last chip; a modified Backspace doesn't", async () => {
+    const w = multi();
+    const trigger = w.get('[role="combobox"]');
+    await trigger.trigger("keydown", { key: "Backspace", metaKey: true });
+    await trigger.trigger("keydown", { key: "Backspace", ctrlKey: true });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+    await trigger.trigger("keydown", { key: "Backspace" });
     expect(w.emitted("update:modelValue")!.at(-1)).toEqual([["a"]]);
     expect(document.querySelector(".cui-select__dropdown")).toBeNull();
     w.unmount();
