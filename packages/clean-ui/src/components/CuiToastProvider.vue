@@ -126,7 +126,7 @@ function runAction(id: string, action: ToastAction) {
 // A click anywhere on a collapsed toast dismisses it, except on one of its buttons: those
 // do their own thing, and an action with `dismissOnClick: false` must leave it open (#345).
 function onWrapperClick(e: MouseEvent, toast: { id: string; _collapsed: boolean }) {
-  if (toast._collapsed && !(e.target as Element).closest("button, a[href]")) state.dismiss(toast.id);
+  if (toast._collapsed && !(e.target as Element).closest(TOAST_FOCUSABLE)) state.dismiss(toast.id);
 }
 
 // Slide direction based on position
@@ -171,8 +171,10 @@ const visibleToasts = computed(() => {
         <!-- The collapsed stack's peek, on an inner element: the wrapper's transform and
              opacity belong to the TransitionGroup, whose move and leave would overwrite or
              lose to them (#263). Emitted as private properties and applied by the stylesheet,
-             which drops the peek while focus is inside, so a keyboard user's action or dismiss
-             button is never clipped out of sight (#345). -->
+             which drops the peek while keyboard focus (:focus-visible) is inside, so a keyboard
+             user's action or dismiss button is never clipped out of sight (#345). Not
+             :focus-within: a mouse press focuses the button too, and the toast would grow out
+             from under the pointer before the click lands. -->
         <div
           class="cui-toast-wrapper__peek"
           :style="toast._collapsed ? {
@@ -234,13 +236,12 @@ const visibleToasts = computed(() => {
   cursor: pointer;
 }
 
-.cui-toast-wrapper--collapsed:not(:focus-within) > .cui-toast-wrapper__peek {
+.cui-toast-wrapper--collapsed:not(:has(:focus-visible)) > .cui-toast-wrapper__peek {
   transform: var(--_toast-peek-transform);
   opacity: var(--_toast-peek-opacity);
   max-height: 3rem;
   overflow: hidden;
 }
-
 /* --- Enter, leave and move (#263) ---
    Arrive over `slow` from the screen edge they belong to; leave faster, fading where they
    are (pinned there by pinLeaving, out of the flow) while the rest slide into place. CSS

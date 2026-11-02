@@ -45,7 +45,7 @@ const meta: ComponentMeta = {
           name: "action",
           type: "{ label: string; onClick: () => void; dismissOnClick?: boolean }",
           description:
-            "A button in the toast (Undo, Retry, View), rendered as a small ghost CuiButton in the toast's colour. The toast is dismissed after onClick unless dismissOnClick is false",
+            "A button in the toast (Undo, Retry, View), rendered as a small ghost CuiButton in the toast's colour (a solid one matching the fill on a solid toast). The toast is dismissed after onClick unless dismissOnClick is false",
         },
         { name: "pauseOnHover", type: "boolean", default: "true", description: "Pause auto-dismiss while the pointer is over the toast" },
         { name: "pauseOnFocus", type: "boolean", default: "true", description: "Pause auto-dismiss while focus is inside the toast" },

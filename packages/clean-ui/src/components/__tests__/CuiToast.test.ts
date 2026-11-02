@@ -99,12 +99,36 @@ describe("CuiToast pause opt-outs", () => {
     expect(w.emitted("dismiss")).toHaveLength(1);
   });
 
-  it("counts the time that passed, not the ticks, when the interval fires late", async () => {
+  it("loses no time to a pause: it resumes with exactly what was left", async () => {
     vi.useFakeTimers();
     w = mount(CuiToast, { props: { ...base, active: true }, attachTo: document.body });
-    // A throttled tab: the clock moves on, the interval doesn't fire.
-    vi.setSystemTime(Date.now() + 1000);
-    vi.advanceTimersByTime(50);
+    const root = w.find(".cui-toast");
+    vi.advanceTimersByTime(430);
+    await root.trigger("mouseenter");
+    vi.advanceTimersByTime(5000);
+    await root.trigger("mouseleave");
+    vi.advanceTimersByTime(560);
+    expect(w.emitted("dismiss"), "570ms were left").toBeUndefined();
+    vi.advanceTimersByTime(10);
+    expect(w.emitted("dismiss")).toHaveLength(1);
+  });
+
+  it("dismisses once: a hover after it has gone doesn't re-arm the countdown", async () => {
+    vi.useFakeTimers();
+    w = mount(CuiToast, { props: { ...base, active: true }, attachTo: document.body });
+    vi.advanceTimersByTime(1000);
+    const root = w.find(".cui-toast");
+    await root.trigger("mouseenter");
+    await root.trigger("mouseleave");
+    vi.advanceTimersByTime(1000);
+    expect(w.emitted("dismiss")).toHaveLength(1);
+  });
+
+  it("follows a change to autoDismiss", async () => {
+    vi.useFakeTimers();
+    w = mount(CuiToast, { props: { ...base, autoDismiss: 0, active: true }, attachTo: document.body });
+    await w.setProps({ autoDismiss: 500 });
+    vi.advanceTimersByTime(510);
     expect(w.emitted("dismiss")).toHaveLength(1);
   });
 });

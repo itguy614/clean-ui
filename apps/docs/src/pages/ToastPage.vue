@@ -69,10 +69,13 @@ function shakeToast() {
 }
 
 const theme = ref<"Design" | "Code">("Code");
+let undoId: string | undefined;
 function undoToast() {
   const previous = theme.value;
   theme.value = previous === "Code" ? "Design" : "Code";
-  toast.success(`Switched to ${theme.value}`, {
+  // Only the latest switch can be undone: drop the older toast, whose Undo would be stale.
+  if (undoId) dismiss(undoId);
+  undoId = toast.success(`Switched to ${theme.value}`, {
     autoDismiss: 10000,
     action: { label: "Undo", onClick: () => (theme.value = previous) },
   });
@@ -90,9 +93,8 @@ function hardDeadlineToast() {
   });
 }
 
-let attempts = 0;
 function retryToast() {
-  attempts = 0;
+  let attempts = 0; // per toast
   const id = toast.error("Upload failed", {
     description: "The server didn't respond.",
     autoDismiss: 0,
@@ -183,7 +185,7 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
         <li>
           An <code>action</code> is a real <code>&lt;button&gt;</code> inside the toast's live
           region, reached with Tab like the dismiss button. In a collapsed stack, a toast
-          unclips while focus is inside it, so its action is never focused out of sight.
+          unclips while keyboard focus is inside it, so its action is never focused out of sight.
         </li>
         <li>
           <code>pauseOnHover</code>, <code>pauseOnFocus</code> and
@@ -245,7 +247,9 @@ toast.info('Update available')`">
       <Example title="Undo Action" :code="`const previous = theme.value
 theme.value = 'Design'
 
-toast.success('Switched to Design', {
+// Only the latest switch can be undone
+if (undoId) dismiss(undoId)
+undoId = toast.success('Switched to Design', {
   autoDismiss: 10000,
   action: { label: 'Undo', onClick: () => (theme.value = previous) },
 })`">

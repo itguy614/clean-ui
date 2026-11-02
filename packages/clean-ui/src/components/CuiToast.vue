@@ -69,9 +69,9 @@ const isPaused = computed(
   () => !counts.value || (props.pauseOnHover && hovered.value) || (props.pauseOnFocus && focused.value),
 );
 let elapsed = 0;
-let intervalId: ReturnType<typeof setInterval> | undefined;
-let lastTick = 0;
-const TICK = 50; // ms: how often the countdown checks the clock, not what it adds
+let timer: ReturnType<typeof setTimeout> | undefined;
+let resumedAt = 0;
+let done = false;
 
 // The countdown bar is one CSS animation over autoDismiss (#266), paused with the timer:
 // no re-render per tick. It mounts whenever the toast starts counting, so it starts as far
@@ -81,28 +81,27 @@ watch(counts, (isCounting) => {
   if (isCounting) countdownFrom.value = elapsed;
 }, { immediate: true });
 
-// Runs only while counting, and measures the time that actually passed, not the number of
-// ticks: an interval fires late on a busy main thread or in a background tab, which would
-// stretch a deadline.
-function startTimer() {
-  if (intervalId || !props.autoDismiss) return;
-  lastTick = Date.now();
-  intervalId = setInterval(() => {
-    const now = Date.now();
-    elapsed += now - lastTick;
-    lastTick = now;
-    if (elapsed >= props.autoDismiss) dismiss();
-  }, TICK);
-}
-
+// One timeout for the time that is left, armed while counting; a pause banks the time that
+// passed. No polling, and no time lost to a pause. performance.now() is monotonic, so a
+// system clock change can't move a deadline.
 function stopTimer() {
-  clearInterval(intervalId);
-  intervalId = undefined;
+  if (timer) elapsed += performance.now() - resumedAt;
+  clearTimeout(timer);
+  timer = undefined;
 }
 
-watch(isPaused, (paused) => (paused ? stopTimer() : startTimer()));
+function syncTimer() {
+  stopTimer();
+  if (isPaused.value || done || !props.autoDismiss) return;
+  resumedAt = performance.now();
+  timer = setTimeout(dismiss, props.autoDismiss - elapsed);
+}
+
+watch([isPaused, () => props.autoDismiss], syncTimer);
 
 function dismiss() {
+  // Once only: a hover or focus change while the leave plays must not re-arm it.
+  done = true;
   stopTimer();
   emit("dismiss");
 }
@@ -120,7 +119,7 @@ function onFocusOut(e: FocusEvent) {
   if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) focused.value = false;
 }
 
-onMounted(() => isPaused.value || startTimer());
+onMounted(syncTimer);
 
 onUnmounted(stopTimer);
 

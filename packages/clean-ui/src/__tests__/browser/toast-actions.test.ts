@@ -67,6 +67,22 @@ describe("toast actions (real browser)", () => {
     expect(toastOf("Upload failed"), "dismissOnClick: false keeps it").toBeDefined();
   });
 
+  it("a mouse click on a collapsed toast's action lands: it doesn't unclip under the pointer", async () => {
+    mountStack({ stackMode: "collapsed", position: "bottom-center" });
+    let clicks = 0;
+    api.toast({ title: "Older", autoDismiss: 0, action: { label: "Retry", onClick: () => clicks++, dismissOnClick: false } });
+    api.toast({ title: "Newer", autoDismiss: 0 });
+    await nextTick();
+    await wait(motionDuration("slow") + 100);
+    const older = toastOf("Older")!;
+    // Short enough that the action shows inside the peek.
+    await userEvent.click(older.querySelector<HTMLButtonElement>(".cui-toast-action")!);
+    await nextTick();
+    expect(clicks).toBe(1);
+    expect(toastOf("Older"), "not taken as a dismiss click").toBeDefined();
+    expect(getComputedStyle(older.querySelector(".cui-toast-wrapper__peek")!).maxHeight, "mouse focus keeps the peek").not.toBe("none");
+  });
+
   it("an inactive, hovered, focused toast with every pause off goes on time", async () => {
     mountStack({ position: "top-right" });
     api.toast({

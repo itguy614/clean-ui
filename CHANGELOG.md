@@ -16,14 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<button>` inside its live region (`role="status"`/`"alert"` unchanged). The toast is
   dismissed after `onClick` unless `dismissOnClick: false`. In `stackMode="collapsed"` a click
   on the action is no longer taken as the collapsed toast's dismiss click, and a collapsed
-  toast drops its clipped peek while focus is inside it, so its action is never focused out
-  of sight. Three new options, all default `true`, turn off the countdown's pauses:
+  toast drops its clipped peek while keyboard focus (`:focus-visible`) is inside it, so its
+  action is never focused out of sight. Three new options, all default `true`, turn off the countdown's pauses:
   `pauseOnHover`, `pauseOnFocus` and `pauseWhenInactive` (waiting while another toast is on
   top); with all three `false`, `autoDismiss` is a wall-clock deadline, for a time limit
   that is genuinely essential such as a server-side undo window. `CuiToast` takes the same
-  three as props. The countdown now measures the time that actually passed rather than
-  counting interval ticks, so a late interval (a busy main thread, a background tab) no
-  longer stretches it. `ToastAction` is exported.
+  three as props. The countdown is now one timeout for the time that is left on a
+  monotonic clock, instead of a 50ms interval counting ticks: a pause no longer loses time,
+  a late interval no longer stretches it, a change to `autoDismiss` is picked up, and a
+  toast waiting behind another no longer polls. `ToastAction` is exported.
 
 ## [1.7.0] - 2026-11-02
 
