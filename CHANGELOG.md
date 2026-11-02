@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`initial` and `scrollTo()` on `useScrollSpy()`** (#423). `initial` is the id `activeId`
+  reports while no section has reached the band: on first paint, during SSR, and above the
+  first section (a ref or getter is followed). `scrollTo(id)` scrolls a section into view
+  `offset` pixels below the scroller's top and marks it current at once, holding it until the
+  scroll settles so the highlight doesn't pass through the sections in between; it jumps
+  instead of gliding under `prefers-reduced-motion`. The docs site's "On this page" rail uses
+  both.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

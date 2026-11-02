@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, onMounted, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import { useScrollSpy } from "@itguy614/clean-ui";
 import { slug } from "../utils/slug";
-import { isPlainClick, scrollBehavior } from "../utils/link";
+import { isPlainClick } from "../utils/link";
 
 /**
  * Sticky on-page nav, right rail.
@@ -23,15 +23,23 @@ const route = useRoute();
 const entries = ref<Entry[]>([]);
 
 // The current entry is the topmost heading in the top fifth of the viewport, below the
-// 56px sticky header, or else the last heading to have scrolled above that band: "where am
-// I" when reading. A plain "is it visible" test picks the lowest visible heading, which
-// reads as the nav running ahead of the reader.
-const { activeId: spied, setActive } = useScrollSpy(
+// sticky header, or else the last heading to have scrolled above that band: "where am I"
+// when reading. A plain "is it visible" test picks the lowest visible heading, which reads
+// as the nav running ahead of the reader.
+//
+// The offset is read off the headings' own `scroll-margin-top` (main.css: the 56px header
+// plus some air), so a click lands a heading exactly where a #hash link does, and the two
+// can't drift apart. 72px (4.5rem at the default font size) until the first read.
+const offset = ref(72);
+const { activeId, scrollTo } = useScrollSpy(
   () => entries.value.map((e) => e.id),
-  { rootMargin: "0px 0px -80% 0px", offset: 56 },
+  {
+    rootMargin: "0px 0px -80% 0px",
+    offset,
+    // Above the first heading nothing has reached the band yet: the first entry is current.
+    initial: () => entries.value[0]?.id,
+  },
 );
-// Above the first heading nothing has reached the band yet: the first entry is current.
-const activeId = computed(() => spied.value ?? entries.value[0]?.id ?? null);
 
 function collect() {
   // Every h2/h3, not only those already carrying an id: `DocPage` and `Example` assign
@@ -59,6 +67,8 @@ function collect() {
     seen.add(el.id);
     return { id: el.id, text, level: el.tagName === "H2" ? 2 : 3 };
   });
+  // Read after the ids are assigned: the scroll-margin rule matches only headings with one.
+  if (nodes[0]) offset.value = parseFloat(getComputedStyle(nodes[0]).scrollMarginTop) || offset.value;
 }
 
 function go(e: MouseEvent, id: string) {
@@ -68,8 +78,7 @@ function go(e: MouseEvent, id: string) {
   if (!el) return;
   e.preventDefault();
   // Current at once, and held while the smooth scroll passes the sections in between.
-  setActive(id);
-  el.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  scrollTo(id);
   // Move keyboard focus to the section too, or the nav is a mouse-only affordance.
   el.setAttribute("tabindex", "-1");
   el.focus({ preventScroll: true });

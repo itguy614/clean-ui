@@ -235,6 +235,91 @@ describe("useScrollSpy", () => {
   });
 });
 
+describe("useScrollSpy initial (#423)", () => {
+  it("reports initial before the observer has said anything", () => {
+    const { api } = spy(() => ["a", "b"], { initial: "a" });
+    // Synchronously after setup: no observer exists yet.
+    expect(api.activeId.value).toBe("a");
+  });
+
+  it("gives way to the observer, and comes back when nothing has reached the band", async () => {
+    const { api } = spy(() => ["a", "b", "c"], { initial: "a" });
+    await nextTick();
+    latest().report({ a: "above", b: "in" });
+    expect(api.activeId.value).toBe("b");
+    // Scrolled back above the first section.
+    latest().report({ a: "below", b: "below" });
+    expect(api.activeId.value).toBe("a");
+  });
+
+  it("follows a getter", async () => {
+    const first = ref<string | undefined>(undefined);
+    const { api } = spy(() => ["a", "b"], { initial: () => first.value });
+    expect(api.activeId.value).toBeNull();
+    first.value = "b";
+    await nextTick();
+    expect(api.activeId.value).toBe("b");
+  });
+});
+
+describe("useScrollSpy scrollTo (#423)", () => {
+  function rect(top: number) {
+    return { top, bottom: top + 20, left: 0, right: 100, width: 100, height: 20, x: 0, y: top, toJSON() {} } as DOMRect;
+  }
+  let windowScroll: ReturnType<typeof vi.spyOn<Window, "scrollTo">>;
+  beforeEach(() => {
+    windowScroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+  });
+  afterEach(() => windowScroll.mockRestore());
+
+  it("scrolls the root so the section sits offset pixels below its top, and marks it at once", async () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    root.scrollTop = 100;
+    root.getBoundingClientRect = () => rect(40);
+    document.getElementById("c")!.getBoundingClientRect = () => rect(340);
+    const scrollTo = vi.fn();
+    root.scrollTo = scrollTo as typeof root.scrollTo;
+    const { api } = spy(() => ["a", "b", "c"], { root, offset: 48 });
+    await nextTick();
+    latest().report({ a: "in" });
+
+    api.scrollTo("c");
+    expect(api.activeId.value).toBe("c");
+    // 100 already scrolled, + 300 from the root's top to c, - the 48px header.
+    expect(scrollTo).toHaveBeenCalledWith({ top: 352, behavior: "smooth" });
+    // Held while the scroll passes b on its way.
+    latest().report({ a: "above", b: "in" });
+    expect(api.activeId.value).toBe("c");
+    root.remove();
+  });
+
+  it("scrolls the window when the viewport is the scroller", async () => {
+    document.getElementById("b")!.getBoundingClientRect = () => rect(500);
+    const { api } = spy(() => ["a", "b"], { offset: 56 });
+    await nextTick();
+    api.scrollTo("b");
+    expect(windowScroll).toHaveBeenCalledWith({ top: window.scrollY + 444, behavior: "smooth" });
+    expect(api.activeId.value).toBe("b");
+  });
+
+  it("jumps instead of gliding under reduced motion", async () => {
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduce"), media: q }));
+    const { api } = spy(() => ["a", "b"]);
+    await nextTick();
+    api.scrollTo("b");
+    expect(windowScroll).toHaveBeenCalledWith(expect.objectContaining({ behavior: "auto" }));
+  });
+
+  it("does nothing for an id that isn't on the page", async () => {
+    const { api } = spy(() => ["a", "b"], { initial: "a" });
+    await nextTick();
+    api.scrollTo("missing");
+    expect(windowScroll).not.toHaveBeenCalled();
+    expect(api.activeId.value).toBe("a");
+  });
+});
+
 describe("scrollSpyRootMargin", () => {
   it("takes the offset off the top inset", () => {
     expect(scrollSpyRootMargin(undefined, 0)).toBe("0px 0px -50% 0px");

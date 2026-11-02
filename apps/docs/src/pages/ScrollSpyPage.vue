@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { CuiStack, CuiCard, CuiCardBody, CuiButton, CuiToggle, CuiFlex, CuiBadge, useScrollSpy } from "@itguy614/clean-ui";
 import Example from "../components/Example.vue";
 import PropTable from "../components/PropTable.vue";
-import { isPlainClick, scrollBehavior } from "../utils/link";
+import { isPlainClick } from "../utils/link";
 
 // --- A scrolling article with a sticky header and an on-page nav beside it ---
 const HEADER = 48;
@@ -17,19 +17,16 @@ const sections = ref([
 const withOffset = ref(true);
 const scroller = useTemplateRef<HTMLElement>("scroller");
 
-const { activeId, setActive } = useScrollSpy(() => sections.value.map((s) => s.id), {
+const { activeId: current, scrollTo } = useScrollSpy(() => sections.value.map((s) => s.id), {
   root: scroller,
   offset: () => (withOffset.value ? HEADER : 0),
+  initial: () => sections.value[0].id,
 });
-const current = computed(() => activeId.value ?? sections.value[0].id);
 
 function go(e: MouseEvent, id: string) {
   if (!isPlainClick(e)) return;
-  const el = document.getElementById(id);
-  if (!el || !scroller.value) return;
   e.preventDefault();
-  setActive(id);
-  scroller.value.scrollTo({ top: el.offsetTop - HEADER, behavior: scrollBehavior() });
+  scrollTo(id);
 }
 
 let added = 0;
@@ -42,16 +39,18 @@ const articleCode = `<script setup>
 const scroller = useTemplateRef("scroller");
 const sections = ref([{ id: "overview", title: "Overview" }, …]);
 
-const { activeId, setActive } = useScrollSpy(
+const { activeId, scrollTo } = useScrollSpy(
   () => sections.value.map((s) => s.id),   // a getter: sections can come and go
-  { root: scroller, offset: 48 },           // 48px sticky header inside the scroller
+  {
+    root: scroller,
+    offset: 48,                             // 48px sticky header inside the scroller
+    initial: () => sections.value[0].id,    // marked on first paint, and above the first heading
+  },
 );
 
 function go(e, id) {
   e.preventDefault();
-  setActive(id);                            // current now, held while the scroll runs
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  scroller.value.scrollTo({ top: document.getElementById(id).offsetTop - 48, behavior: reduce ? "auto" : "smooth" });
+  scrollTo(id);   // current now, held while the scroll runs; lands 48px down, below the header
 }
 <\/script>
 
@@ -67,10 +66,10 @@ function go(e, id) {
   </div>
 </template>`;
 
-const pageCode = `// The whole page scrolls: leave root out. The docs header is 56px tall.
-const { activeId, setActive } = useScrollSpy(
+const pageCode = `// The whole page scrolls: leave root out. 72px clears the 56px header with some air.
+const { activeId, scrollTo } = useScrollSpy(
   () => headings.value.map((h) => h.id),
-  { rootMargin: "0px 0px -80% 0px", offset: 56 },
+  { rootMargin: "0px 0px -80% 0px", offset: 72, initial: () => headings.value[0]?.id },
 );`;
 
 const params = [
@@ -91,7 +90,7 @@ const params = [
     type: "MaybeRefOrGetter<number>",
     default: "0",
     description:
-      "Pixels taken off the top of the band, for a sticky header: a heading hidden under it is not in view. Added to rootMargin's top inset when that is in pixels; replaces it when that is a percentage.",
+      "Pixels taken off the top of the band, for a sticky header: a heading hidden under it is not in view. Added to rootMargin's top inset when that is in pixels; replaces it when that is a percentage. scrollTo() lands a section this far below the scroller's top.",
   },
   {
     name: "options.root",
@@ -99,20 +98,32 @@ const params = [
     default: "viewport",
     description: "The element that scrolls. Leave it out when the page itself scrolls.",
   },
+  {
+    name: "options.initial",
+    type: "MaybeRefOrGetter<string | null>",
+    default: "null",
+    description:
+      "The id reported while no section has reached the band: on first paint before the observer has run, during SSR, and above the first section. Usually the first section, so the nav always marks something. A getter follows a list that changes.",
+  },
 ];
 
 const returns = [
   {
     name: "activeId",
     type: "Readonly<Ref<string | null>>",
+    description: "The current section's id, or initial (null unless set) until a section has reached the band.",
+  },
+  {
+    name: "scrollTo",
+    type: "(id: string) => void",
     description:
-      "The current section's id. Null until a section has reached the band, so fall back to the first one if your nav should always mark something.",
+      "Scrolls section id into view, offset pixels below the scroller's top, and makes it current at once, held like setActive so the highlight doesn't pass through the sections in between. Smooth, or instant under prefers-reduced-motion. Does nothing if no element has that id. Moving focus to the section is up to you.",
   },
   {
     name: "setActive",
     type: "(id: string) => void",
     description:
-      "Makes id current immediately, for a click on a nav entry. The observer leaves activeId alone until that scroll ends (scrollend) or the reader scrolls themselves (wheel, touch, a pointer press or a scrolling key), which also re-reads where they are at once.",
+      "Makes id current immediately without scrolling, for when you scroll yourself. The observer leaves activeId alone until that scroll ends (scrollend) or the reader scrolls themselves (wheel, touch, a pointer press or a scrolling key), which also re-reads where they are at once.",
   },
   {
     name: "refresh",
@@ -214,7 +225,21 @@ const returns = [
             Scroll until a heading is hidden behind the sticky header. With the toggle on, the next
             heading is current. Turn the toggle off and the hidden heading wins again.
           </li>
-          <li>Click <em>FAQ</em>. It is marked at once and stays marked while the scroll passes the others.</li>
+          <li>
+            Scroll back to the top. <em>Overview</em> stays marked even before its heading reaches the
+            band: that is <code class="cui-code">initial</code>, which is also what the nav shows on
+            first paint.
+          </li>
+          <li>
+            Click <em>FAQ</em>. <code class="cui-code">scrollTo</code> marks it at once, keeps it
+            marked while the scroll passes the others, and stops with the heading just below the
+            sticky header.
+          </li>
+          <li>
+            Turn the toggle off and click <em>Usage</em>: the heading now stops under the header,
+            since <code class="cui-code">scrollTo</code> uses the same offset as the spy.
+          </li>
+          <li>With your system set to reduce motion, the clicks jump instead of gliding.</li>
           <li>Press <em>Add a section</em>: the new heading joins the nav and is tracked straight away.</li>
           <li>The current entry is bold, with a wider bar, and carries <code class="cui-code">aria-current="location"</code>: not colour alone.</li>
         </ul>
@@ -231,7 +256,7 @@ const returns = [
     <!-- API -->
     <div>
       <h2>API</h2>
-      <pre class="cui-pre"><code class="cui-code">useScrollSpy(targets, options?): { activeId, setActive, refresh }</code></pre>
+      <pre class="cui-pre"><code class="cui-code">useScrollSpy(targets, options?): { activeId, scrollTo, setActive, refresh }</code></pre>
     </div>
 
     <CuiCard variant="outline">
@@ -255,22 +280,28 @@ const returns = [
             "Topmost" means first in document order, whatever order the targets are listed in.
           </li>
           <li>
-            Call it during a component's setup. It is SSR-safe: on the server nothing is observed and
-            <code class="cui-code">activeId</code> stays null. The observer and its listeners go away
-            when the component unmounts.
+            Call it during a component's setup. It is SSR-safe: on the server nothing is observed,
+            <code class="cui-code">activeId</code> is <code class="cui-code">initial</code> (or null),
+            and <code class="cui-code">scrollTo</code> does nothing. The observer and its listeners go
+            away when the component unmounts.
           </li>
           <li>
             Where <code class="cui-code">scrollend</code> isn't supported, a section set by
-            <code class="cui-code">setActive</code> stays current until the reader scrolls.
+            <code class="cui-code">scrollTo</code> or <code class="cui-code">setActive</code> stays
+            current until the reader scrolls.
           </li>
           <li>
             The last sections of a short page may never reach the band. Use a band that reaches
             further down (a smaller negative bottom margin), or pad the end of the page.
           </li>
           <li>
-            It tracks; it doesn't scroll or render. Make the nav real links
-            (<code class="cui-code">href="#id"</code>), give it an accessible name, and mark the current
-            entry with <code class="cui-code">aria-current="location"</code> and something besides colour.
+            It doesn't render the nav. Make it real links
+            (<code class="cui-code">href="#id"</code>) that call <code class="cui-code">scrollTo</code>
+            on a plain click, give it an accessible name, and mark the current entry with
+            <code class="cui-code">aria-current="location"</code> and something besides colour.
+            <code class="cui-code">scrollTo</code> doesn't move focus: give the heading
+            <code class="cui-code">tabindex="-1"</code> and focus it with
+            <code class="cui-code">preventScroll</code>, as this site's rail does.
           </li>
         </ul>
       </CuiCardBody>
