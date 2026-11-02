@@ -37,6 +37,12 @@ export interface CollectSettle<T> {
  */
 export type CollectOpener<T> = (settle: CollectSettle<T>) => unknown;
 
+/** What {@link CommandContext.lookupConstruct} found at the selection head. */
+export type ConstructLookup =
+  | { readonly status: "inside"; readonly range: { readonly from: number; readonly to: number } }
+  | { readonly status: "outside" }
+  | { readonly status: "unknown" };
+
 /**
  * What every command and `isActive` query operates through. `doc` and
  * `selection` are live getters over the current view state, not a snapshot
@@ -65,13 +71,25 @@ export interface CommandContext {
   /** Opens an async collection gate (FR18a). Resolves `null` on cancel. */
   collect<T>(open: CollectOpener<T>): Promise<T | null>;
   /**
+   * Whether the selection head is inside a syntax node named `nodeName`
+   * (a `@lezer/markdown` node name, e.g. `"StrongEmphasis"`), with the range
+   * of the nearest such ancestor if so. `"unknown"` means the cursor's block
+   * isn't parsed far enough to say (past the parse time cap): a command
+   * should then change nothing and return `true`, as the built-ins do.
+   *
+   * Always present on the context the editor passes to a command. Optional in
+   * the type only so a test double built by hand against 1.6 still compiles
+   * and runs; call it as `context.lookupConstruct?.(name)`. Required in 2.0
+   * (#416).
+   */
+  lookupConstruct?(nodeName: string): ConstructLookup;
+  /**
    * The range of the nearest ancestor syntax node named `nodeName` enclosing
-   * the current selection head, or `null` if the cursor isn't inside one.
-   * Built-in toggle commands (bold, italic, headings, ...) use this for
-   * `isActive` and to find the exact range to strip on toggle-off (FR12) —
-   * added once those commands, the tier's first real users, needed it (a
-   * plain node-name string in, a plain range out, so it doesn't leak
-   * CodeMirror's own tree/`NodeType` types into the declarative surface).
+   * the current selection head, or `null` if the cursor isn't inside one —
+   * or if that can't be known yet, which this form can't tell apart.
+   *
+   * @deprecated Use {@link CommandContext.lookupConstruct}, which reports
+   * "unknown" separately. Removed in 2.0 (#416).
    */
   findConstructRange(nodeName: string): { from: number; to: number } | null;
   /** This package's resolved message catalog (task 5.2.2), for a command

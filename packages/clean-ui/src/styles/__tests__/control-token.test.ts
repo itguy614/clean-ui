@@ -59,6 +59,8 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiBackdrop.vue", issue: "#211" },
   { file: "CuiAvatarGroup.vue", issue: "#211" },
   { file: "CuiPinInput.vue", issue: "#196" },
+  { file: "CuiModal.vue", issue: "#407" },
+  { file: "CuiSlideover.vue", issue: "#407" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -155,6 +157,7 @@ const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-co
 const SLOTS = new Set([
   ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
+  "width", // an overlay panel's width preset, which is not CuiSize (#407)
 ]);
 
 /** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */

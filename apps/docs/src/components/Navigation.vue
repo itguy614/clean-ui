@@ -105,6 +105,7 @@ const sections = [
   { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
   { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
   { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },
+  { id: "scroll-spy", label: "Scroll Spy", path: "/composables/scroll-spy", group: "Composables" },
   { id: "breakpoint", label: "Breakpoint & Layout Context", path: "/composables/breakpoint", group: "Composables" },
   { id: "color-scheme", label: "Color Scheme", path: "/composables/color-scheme", group: "Composables" },
   { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
