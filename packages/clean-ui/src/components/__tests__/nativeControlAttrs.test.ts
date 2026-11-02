@@ -14,6 +14,7 @@ import CuiCheckbox from "../CuiCheckbox.vue";
 import CuiRadio from "../CuiRadio.vue";
 import CuiToggle from "../CuiToggle.vue";
 import CuiMaskedInput from "../CuiMaskedInput.vue";
+import CuiPinInput from "../CuiPinInput.vue";
 import CuiDatePicker from "../CuiDatePicker.vue";
 import CuiDateRangePicker from "../CuiDateRangePicker.vue";
 import CuiFormField from "../CuiFormField.vue";
@@ -65,6 +66,7 @@ const CONTROLS: {
   { name: "CuiRadio", component: CuiRadio, props: { value: "a" }, target: "input", ariaTarget: '[role="radio"]' },
   { name: "CuiToggle", component: CuiToggle, target: "input", ariaTarget: '[role="switch"]' },
   { name: "CuiMaskedInput", component: CuiMaskedInput, props: { mask: "00/00" }, target: "input" },
+  { name: "CuiPinInput", component: CuiPinInput, target: "input" },
   { name: "CuiDatePicker", component: CuiDatePicker, target: "input" },
   { name: "CuiDateRangePicker", component: CuiDateRangePicker, target: "input" },
   // No native form control at all — its focusable surface is the trigger, so

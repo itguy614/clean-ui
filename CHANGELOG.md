@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CuiPinInput`** (#196), for a one-time code or PIN drawn as a row of boxes. One real
+  input underneath is the control: a screen reader meets a single text field named by the
+  label, and `autocomplete="one-time-code"` lets a phone offer the code from a text message.
+  The boxes only draw each character and the caret. Takes `length`, `type` (`digits` or
+  `alphanumeric`, with optional `uppercase`), `mask` (dots, on a password input), `size` and
+  `color`, extends the shared form-control props, and emits `complete` when the last
+  character is filled. A pasted code is cleaned of spaces and dashes before it is cut to
+  length. Themeable through `--cui-pin-input-*` tokens.
 - **`useScrollSpy()`** (#192). Tracks which section of a page the reader is in, for an
   on-page nav: `useScrollSpy(targets, { rootMargin, offset, root })` returns
   `{ activeId, setActive, refresh }`. An IntersectionObserver, never a scroll listener; of
@@ -19,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "On this page" rail is rebuilt on it, and is now labelled by its title, marks the current
   entry with `aria-current="location"` and a heavier bar and weight rather than colour alone,
   and lets a modified click open an entry in a new tab.
-
 - **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
   It returns `{ status: "inside", range }`, `{ status: "outside" }` or
   `{ status: "unknown" }` (the `ConstructLookup` type). "Unknown" means the cursor's block

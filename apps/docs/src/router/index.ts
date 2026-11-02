@@ -246,6 +246,11 @@ const router = createRouter({
       component: () => import('../pages/MaskedInputPage.vue'),
     },
     {
+      path: '/components/pin-input',
+      name: 'pin-input',
+      component: () => import('../pages/PinInputPage.vue'),
+    },
+    {
       path: '/components/input',
       name: 'input',
       component: () => import('../pages/InputPage.vue'),
