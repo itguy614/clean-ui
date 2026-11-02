@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiIcon, CuiStack } from "@itguy614/clean-ui";
+import { reactive, ref } from "vue";
+import { CuiButton, CuiButtonGroup, CuiCard, CuiCardBody, CuiFlex, CuiIcon, CuiStack, CuiToolbar } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/button";
@@ -13,6 +13,82 @@ function simulateLoad() {
     isLoading.value = false;
   }, 2000);
 }
+
+// focusableWhenDisabled: the same save, with and without the prop.
+const saving = reactive({ kept: false, lost: false });
+function save(which: keyof typeof saving) {
+  saving[which] = true;
+  setTimeout(() => (saving[which] = false), 2000);
+}
+
+// pressed: one toggle per variant.
+const variants = ["solid", "outline", "dash", "ghost"] as const;
+const pressedVariants = ref<string[]>(["outline", "ghost"]);
+function toggleVariant(v: string) {
+  pressedVariants.value = pressedVariants.value.includes(v)
+    ? pressedVariants.value.filter((p) => p !== v)
+    : [...pressedVariants.value, v];
+}
+
+// A toggle-button bar: one pressed button, and every button busy while a switch is in flight.
+const buckets = ["Design", "Review", "Meetings", "Admin"];
+const running = ref("Design");
+const switching = ref(false);
+function switchTo(bucket: string) {
+  if (bucket === running.value) return;
+  switching.value = true;
+  setTimeout(() => {
+    running.value = bucket;
+    switching.value = false;
+  }, 1500);
+}
+
+const marks = [
+  { id: "bold", label: "Bold", icon: "text-bolder" },
+  { id: "italic", label: "Italic", icon: "text-italic" },
+  { id: "underline", label: "Underline", icon: "text-underline" },
+];
+const marksOn = ref<string[]>(["bold", "italic"]);
+function toggleMark(id: string) {
+  marksOn.value = marksOn.value.includes(id) ? marksOn.value.filter((m) => m !== id) : [...marksOn.value, id];
+}
+
+const focusableCode = `<CuiButton variant="solid" focusableWhenDisabled :loading="saving" @click="save">
+  Save
+</CuiButton>`;
+
+const pressedCode = `<CuiButton :pressed="bold" @click="bold = !bold">Bold</CuiButton>
+<CuiButton variant="ghost" :pressed="italic" @click="italic = !italic">Italic</CuiButton>`;
+
+const toolbarCode = `<CuiToolbar label="Quick switch">
+  <CuiButton
+    v-for="bucket in buckets"
+    :key="bucket"
+    focusableWhenDisabled
+    :disabled="switching"
+    :pressed="running === bucket"
+    @click="switchTo(bucket)"
+  >
+    {{ bucket }}
+  </CuiButton>
+</CuiToolbar>
+
+<CuiToolbar label="Formatting">
+  <CuiButtonGroup label="Text style">
+    <CuiButton
+      v-for="mark in marks"
+      :key="mark.id"
+      icon
+      size="sm"
+      variant="ghost"
+      :pressed="marksOn.includes(mark.id)"
+      :aria-label="mark.label"
+      @click="toggleMark(mark.id)"
+    >
+      <CuiIcon :name="mark.icon" size="sm" />
+    </CuiButton>
+  </CuiButtonGroup>
+</CuiToolbar>`;
 </script>
 
 <template>
@@ -84,8 +160,21 @@ function simulateLoad() {
           label stays in the accessible name rather than being replaced by the spinner.
         </li>
         <li>
-          Disabled links use <code>aria-disabled</code> with <code>tabindex="-1"</code>
-          — an <code>&lt;a&gt;</code> has no <code>disabled</code> attribute.
+          A disabled link drops its <code>href</code>/<code>to</code> and renders an
+          <code>&lt;a&gt;</code> without one, with <code>aria-disabled="true"</code>: an
+          <code>&lt;a&gt;</code> has no <code>disabled</code> attribute, and without a target
+          it can't be focused, clicked through, middle-clicked or opened in a new tab.
+        </li>
+        <li>
+          A disabled or loading <code>&lt;button&gt;</code> is natively <code>disabled</code>,
+          which takes it out of the tab order and drops focus to the page if it was focused.
+          <code>focusableWhenDisabled</code> keeps it focusable instead, with
+          <code>aria-disabled="true"</code>: the WAI-ARIA pattern for a control that is
+          disabled for a moment, or that sits in a toolbar.
+        </li>
+        <li>
+          <code>pressed</code> makes it a toggle button: <code>aria-pressed</code> follows the
+          prop. Keep the label the same in both states; the pressed state is what changes.
         </li>
         <li>
           An icon-only button has no text, so give it an accessible name with
@@ -204,6 +293,99 @@ function simulateLoad() {
             <CuiButton disabled variant="outline">Outline Disabled</CuiButton>
             <CuiButton disabled variant="ghost">Ghost Disabled</CuiButton>
           </CuiFlex>
+        </Example>
+
+        <!-- Focusable when disabled -->
+        <Example title="Focusable When Disabled" :code="focusableCode">
+          <CuiStack spacing="3">
+            <CuiFlex gap="3" class="items-center flex-wrap">
+              <CuiButton variant="solid" focusable-when-disabled :loading="saving.kept" @click="save('kept')">
+                Save (keeps focus)
+              </CuiButton>
+              <CuiButton variant="solid" :loading="saving.lost" @click="save('lost')">Save (loses focus)</CuiButton>
+            </CuiFlex>
+            <p class="text-sm text-surface-600 dark:text-surface-400">
+              <strong>Try:</strong> Tab to each and press Enter. The first stays focused while it
+              saves, and Enter or Space does nothing until it's done; the second drops focus to
+              the page.
+            </p>
+          </CuiStack>
+        </Example>
+
+        <!-- Pressed -->
+        <Example title="Toggle Buttons (pressed)" :code="pressedCode">
+          <CuiStack spacing="3">
+            <CuiFlex gap="3" class="items-center flex-wrap">
+              <CuiButton
+                v-for="v in variants"
+                :key="v"
+                :variant="v"
+                :pressed="pressedVariants.includes(v)"
+                @click="toggleVariant(v)"
+              >
+                {{ v }}
+              </CuiButton>
+            </CuiFlex>
+            <CuiFlex gap="3" class="items-center flex-wrap">
+              <CuiButton
+                v-for="v in variants"
+                :key="v"
+                :variant="v"
+                color="success"
+                :pressed="pressedVariants.includes(v)"
+                @click="toggleVariant(v)"
+              >
+                {{ v }}
+              </CuiButton>
+            </CuiFlex>
+            <p class="text-sm text-surface-600 dark:text-surface-400">
+              <strong>Try:</strong> click each to toggle it. A pressed button takes the tinted
+              fill, a coloured edge and stronger text (solid takes its darker shade), restyled
+              with <code>--cui-button-pressed-bg</code>, <code>-color</code> and
+              <code>-border</code>.
+            </p>
+          </CuiStack>
+        </Example>
+
+        <!-- Toggle bar in a toolbar -->
+        <Example title="Toggle Buttons in a Toolbar" :code="toolbarCode">
+          <CuiStack spacing="4">
+            <CuiToolbar label="Quick switch">
+              <CuiButton
+                v-for="bucket in buckets"
+                :key="bucket"
+                focusable-when-disabled
+                :disabled="switching"
+                :pressed="running === bucket"
+                @click="switchTo(bucket)"
+              >
+                {{ bucket }}
+              </CuiButton>
+            </CuiToolbar>
+            <CuiToolbar label="Formatting">
+              <CuiButtonGroup label="Text style">
+                <CuiButton
+                  v-for="mark in marks"
+                  :key="mark.id"
+                  icon
+                  size="sm"
+                  variant="ghost"
+                  :pressed="marksOn.includes(mark.id)"
+                  :aria-label="mark.label"
+                  @click="toggleMark(mark.id)"
+                >
+                  <CuiIcon :name="mark.icon" size="sm" />
+                </CuiButton>
+              </CuiButtonGroup>
+            </CuiToolbar>
+            <p class="text-sm text-surface-600 dark:text-surface-400">
+              <strong>Try:</strong> pick another bucket with the keyboard. Every button is
+              busy while the switch runs but focus stays where it was, and the new one shows
+              pressed when it lands. Right-click still reaches a wrapping
+              <code>CuiContextMenu</code> while busy. In the formatting bar, the pressed toggles
+              merge into one shape; turn the middle one off and each keeps its own corners.
+            </p>
+          </CuiStack>
         </Example>
 
         <!-- Mixed: Color + Variant Combos -->

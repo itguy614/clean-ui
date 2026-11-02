@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import CuiButton from "../CuiButton.vue";
 
@@ -86,5 +86,121 @@ describe("CuiButton", () => {
     const wrapper = mount(CuiButton);
     await wrapper.trigger("click");
     expect(wrapper.emitted("click")).toHaveLength(1);
+  });
+
+  describe("focusableWhenDisabled (#396)", () => {
+    it("keeps a disabled button out of native disabled, marked aria-disabled", () => {
+      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true } });
+      expect(wrapper.attributes("disabled")).toBeUndefined();
+      expect(wrapper.attributes("aria-disabled")).toBe("true");
+      expect(wrapper.classes()).toContain("cui-button--disabled");
+    });
+
+    it("does the same while loading", () => {
+      const wrapper = mount(CuiButton, { props: { loading: true, focusableWhenDisabled: true } });
+      expect(wrapper.attributes("disabled")).toBeUndefined();
+      expect(wrapper.attributes("aria-disabled")).toBe("true");
+    });
+
+    it("swallows a click, so neither the consumer nor an ancestor sees it", async () => {
+      const onParentClick = vi.fn();
+      const parent = document.createElement("div");
+      parent.addEventListener("click", onParentClick);
+      document.body.append(parent);
+      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true }, attachTo: parent });
+      await wrapper.trigger("click");
+      expect(wrapper.emitted("click")).toBeUndefined();
+      expect(onParentClick).not.toHaveBeenCalled();
+      wrapper.unmount();
+      parent.remove();
+    });
+
+    it("cancels a submit button's form submission", () => {
+      const form = document.createElement("form");
+      const onSubmit = vi.fn((e: Event) => e.preventDefault());
+      form.addEventListener("submit", onSubmit);
+      document.body.append(form);
+      const wrapper = mount(CuiButton, {
+        props: { type: "submit", disabled: true, focusableWhenDisabled: true },
+        attachTo: form,
+      });
+      (wrapper.element as HTMLButtonElement).click();
+      expect(onSubmit).not.toHaveBeenCalled();
+      wrapper.unmount();
+      form.remove();
+    });
+
+    it("emits click again once enabled", async () => {
+      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true } });
+      await wrapper.setProps({ disabled: false });
+      await wrapper.trigger("click");
+      expect(wrapper.emitted("click")).toHaveLength(1);
+      expect(wrapper.attributes("aria-disabled")).toBeUndefined();
+    });
+  });
+
+  describe("pressed (#396)", () => {
+    it("renders no aria-pressed when unset — not a toggle", () => {
+      const wrapper = mount(CuiButton);
+      expect(wrapper.attributes("aria-pressed")).toBeUndefined();
+      expect(wrapper.classes()).not.toContain("cui-button--pressed");
+    });
+
+    it("leaves a consumer's own aria-pressed alone when unset", () => {
+      const wrapper = mount(CuiButton, { attrs: { "aria-pressed": "mixed" } });
+      expect(wrapper.attributes("aria-pressed")).toBe("mixed");
+    });
+
+    it("follows the prop", async () => {
+      const wrapper = mount(CuiButton, { props: { pressed: false } });
+      expect(wrapper.attributes("aria-pressed")).toBe("false");
+      expect(wrapper.classes()).not.toContain("cui-button--pressed");
+      await wrapper.setProps({ pressed: true });
+      expect(wrapper.attributes("aria-pressed")).toBe("true");
+      expect(wrapper.classes()).toContain("cui-button--pressed");
+    });
+
+    it("emits the pressed paint as private tokens, only while pressed", async () => {
+      const wrapper = mount(CuiButton, { props: { variant: "ghost", color: "success", pressed: false } });
+      expect(token(wrapper, "--_button-pressed-bg")).toBe("");
+      await wrapper.setProps({ pressed: true });
+      expect(token(wrapper, "--_button-pressed-bg")).toBe("var(--cui-success-bg)");
+      expect(token(wrapper, "--_button-pressed-border")).toBe("1px solid var(--cui-success-border)");
+    });
+
+    it("counts a pressed ghost button as painted: it draws an edge", async () => {
+      const wrapper = mount(CuiButton, { props: { variant: "ghost", pressed: false } });
+      expect(wrapper.classes()).toContain("cui-button--ghost");
+      await wrapper.setProps({ pressed: true });
+      expect(wrapper.classes()).not.toContain("cui-button--ghost");
+    });
+
+    it("combines with focusableWhenDisabled", () => {
+      const wrapper = mount(CuiButton, { props: { pressed: true, disabled: true, focusableWhenDisabled: true } });
+      expect(wrapper.attributes("aria-pressed")).toBe("true");
+      expect(wrapper.attributes("aria-disabled")).toBe("true");
+      expect(wrapper.attributes("disabled")).toBeUndefined();
+    });
+  });
+
+  describe("disabled link (#422)", () => {
+    it.each([
+      ["href", { href: "/foo" }],
+      ["to", { to: "/foo" }],
+    ])("drops the %s, so the link can't be focused or followed", async (_, target) => {
+      const wrapper = mount(CuiButton, { props: { ...target, disabled: true } });
+      expect(wrapper.element.tagName).toBe("A");
+      expect(wrapper.attributes("href")).toBeUndefined();
+      expect(wrapper.attributes("tabindex")).toBeUndefined();
+      expect(wrapper.attributes("role")).toBe("button");
+      expect(wrapper.attributes("aria-disabled")).toBe("true");
+      await wrapper.trigger("click");
+      expect(wrapper.emitted("click")).toBeUndefined();
+    });
+
+    it("ignores focusableWhenDisabled on a link", () => {
+      const wrapper = mount(CuiButton, { props: { href: "/foo", disabled: true, focusableWhenDisabled: true } });
+      expect(wrapper.attributes("href")).toBeUndefined();
+    });
   });
 });

@@ -4,6 +4,7 @@ import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { warnVariantColor } from "../utils/devWarn";
+import { disabledLink } from "../utils/disabled-link";
 import type {
   CuiColor,
   CuiRounded,
@@ -40,6 +41,21 @@ export interface CuiButtonProps
    * combination where the floor currently binds.
    */
   icon?: boolean;
+  /**
+   * Keep a disabled or loading `<button>` focusable (#396). It gets `aria-disabled="true"`
+   * and the disabled look instead of native `disabled`, so it stays in the tab order and
+   * keeps focus when it becomes disabled under the keyboard (a request in flight). A click,
+   * Enter or Space does nothing, but `contextmenu` and long-press still reach a wrapping
+   * CuiContextMenu. The WAI-ARIA pattern for a disabled control in a toolbar. No effect on
+   * a link, which is never focusable while disabled.
+   */
+  focusableWhenDisabled?: boolean;
+  /**
+   * A toggle button's state (#396): renders `aria-pressed` and a selected look for the
+   * current `variant` and `color`, themeable through `--cui-button-pressed-bg`, `-color` and
+   * `-border`. Leave it unset for a button that isn't a toggle — no `aria-pressed` at all.
+   */
+  pressed?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiButtonProps>(), {
@@ -52,14 +68,30 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   disabled: false,
   hidden: false,
   icon: false,
+  focusableWhenDisabled: false,
+  // Not `false`: a boolean prop with no default is cast to `false`, and `false` here means
+  // "a toggle that is off", which renders `aria-pressed="false"`.
+  pressed: undefined,
 });
+
+/**
+ * Declared, so a listener isn't a fallthrough attribute bound straight to the element: the
+ * root's own handler forwards the event, and holds it back while disabled. Native
+ * `disabled` already does that for a plain button; a focusable disabled one and a disabled
+ * link (an `<a>` without `href`, which still fires `click`) need it done here.
+ */
+const emit = defineEmits<{ click: [event: MouseEvent] }>();
 
 warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
 
 const isDisabled = computed(() => props.disabled || props.loading);
 
+/** A disabled link drops its target, through the helper CuiListItem shares (#422). */
+const deadLink = computed(() => disabledLink(props, isDisabled.value, "button"));
+
 // Determine the root element tag
 const tag = computed<string | Component>(() => {
+  if (deadLink.value) return deadLink.value.is;
   if (props.to) return "router-link";
   if (props.href) return "a";
   return "button";
@@ -67,22 +99,26 @@ const tag = computed<string | Component>(() => {
 
 // Build root element attributes based on tag
 const rootAttrs = computed(() => {
-  if (props.to) {
-    return { to: props.to, ...(isDisabled.value ? { "aria-disabled": "true", tabindex: "-1" } : {}) };
-  }
-  if (props.href) {
-    return {
-      href: isDisabled.value ? undefined : props.href,
-      role: "button",
-      ...(isDisabled.value ? { "aria-disabled": "true", tabindex: "-1" } : {}),
-    };
-  }
+  if (deadLink.value) return deadLink.value.attrs;
+  if (props.to) return { to: props.to };
+  if (props.href) return { href: props.href, role: "button" };
   return {
     type: props.type,
-    disabled: isDisabled.value || undefined,
-    "aria-disabled": isDisabled.value || undefined,
+    disabled: (isDisabled.value && !props.focusableWhenDisabled) || undefined,
+    "aria-disabled": isDisabled.value ? "true" : undefined,
   };
 });
+
+function onClick(event: MouseEvent) {
+  if (isDisabled.value) {
+    // Cancels a submit button's form submission too, Enter in a field included: implicit
+    // submission is a click on the default button.
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  emit("click", event);
+}
 
 // Expose element ref and focus method
 const elRef = useTemplateRef<HTMLElement>("buttonRef");
@@ -107,6 +143,28 @@ defineExpose({ el: elRef, focus, blur });
  * custom property beats an inherited one, so `.toolbar { --cui-button-bg: … }` on a
  * container could never take effect. See "Themeable properties" in CLAUDE.md (#114).
  */
+/**
+ * A pressed toggle's look (#396). Subtle-first like every other selected state: the tinted
+ * fill, a role-coloured edge and the stronger text colour, so it reads apart from the
+ * unpressed button's hover, which has the fill but neither of the other two. Solid is the
+ * exception, already filled: it takes the pressed shade.
+ */
+function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
+  if (v === "solid") {
+    return {
+      "--_button-pressed-bg": `var(--cui-${c}-solid-active, var(--cui-${c}-active))`,
+      "--_button-pressed-color": `var(--cui-${c}-text)`,
+      "--_button-pressed-border": "1px solid transparent",
+    };
+  }
+  return {
+    "--_button-pressed-bg": `var(--cui-${c}-bg)`,
+    "--_button-pressed-color": `var(--cui-${c}-hover)`,
+    // Ghost and outline both gain a solid edge; dash keeps its dashes.
+    "--_button-pressed-border": `1px ${v === "dash" ? "dashed" : "solid"} var(--cui-${c}${v === "ghost" ? "-border" : ""})`,
+  };
+}
+
 const buttonStyle = computed(() => {
   const c = props.color;
   const v = props.variant;
@@ -122,6 +180,7 @@ const buttonStyle = computed(() => {
     // An icon button is its own opt-out of the target-size floor (#118). Set on the
     // element itself, so it relaxes this button without touching anything around it.
     ...(props.icon ? { "--cui-control-min-target": "0px" } : {}),
+    ...(props.pressed ? pressedPaint(c, v) : {}),
   };
 
   if (v === "solid") {
@@ -167,10 +226,18 @@ const buttonStyle = computed(() => {
     v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
-    :class="{ 'cui-button--disabled': isDisabled, 'cui-button--icon': icon, 'cui-button--ghost': variant === 'ghost' }"
+    :class="{
+      'cui-button--disabled': isDisabled,
+      'cui-button--icon': icon,
+      'cui-button--pressed': pressed,
+      // A pressed ghost button draws an edge, so CuiButtonGroup merges it like any painted one.
+      'cui-button--ghost': variant === 'ghost' && !pressed,
+    }"
     :style="buttonStyle"
     v-bind="rootAttrs"
     :aria-busy="loading || undefined"
+    :aria-pressed="pressed"
+    @click="onClick"
   >
     <!-- Prefix slot (icons, badges) -->
     <span v-if="$slots.prefix" class="cui-button__prefix">
@@ -230,6 +297,14 @@ const buttonStyle = computed(() => {
   border-color: var(--cui-button-hover-border, var(--_button-hover-border, transparent));
 }
 
+/* After the hover rule, so a pressed toggle keeps its look under the pointer, and before the
+   active rule, so pressing it still gives feedback. */
+:where(.cui-button--pressed) {
+  background: var(--cui-button-pressed-bg, var(--_button-pressed-bg));
+  color: var(--cui-button-pressed-color, var(--_button-pressed-color));
+  border: var(--cui-button-pressed-border, var(--_button-pressed-border));
+}
+
 :where(.cui-button:active:not(.cui-button--disabled)) {
   background: var(--cui-button-active-bg, var(--_button-active-bg));
   /* Press feedback (#261): a brief shrink, `--cui-press-scale` (0.97; 1 turns it off, as
@@ -285,11 +360,6 @@ const buttonStyle = computed(() => {
 .cui-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* aria-disabled (links) — prevent click via CSS */
-.cui-button[aria-disabled="true"] {
-  pointer-events: none;
 }
 
 /* --- Slots --- */

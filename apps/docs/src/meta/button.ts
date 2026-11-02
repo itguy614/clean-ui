@@ -26,7 +26,25 @@ const meta: ComponentMeta = {
       description: "Icon-only: square, no horizontal padding. Also opts out of the 24px minimum target size",
     },
     { name: "loading", type: "boolean", default: "false", description: "Shows spinner and disables interaction" },
-    { name: "disabled", type: "boolean", default: "false", description: "Disabled state (uses aria-disabled for links)" },
+    {
+      name: "disabled",
+      type: "boolean",
+      default: "false",
+      description: "Disabled state. A disabled link drops its href/to: an <a> with no href, not focusable or followable",
+    },
+    {
+      name: "focusableWhenDisabled",
+      type: "boolean",
+      default: "false",
+      description:
+        "Keep a disabled or loading <button> in the tab order: aria-disabled instead of native disabled. Clicks and Enter/Space do nothing; right-click and long-press still reach a wrapping CuiContextMenu",
+    },
+    {
+      name: "pressed",
+      type: "boolean",
+      default: "undefined",
+      description: "A toggle button's state: renders aria-pressed and a selected look. Unset means not a toggle (no aria-pressed)",
+    },
     { name: "hidden", type: "boolean", default: "false", description: "Hides the button with v-show" },
   ],
 
@@ -52,6 +70,9 @@ const meta: ComponentMeta = {
     { name: "--cui-button-hover-border", default: "per variant", description: "Border color on hover" },
     { name: "--cui-button-active-bg", default: "per variant", description: "Background while pressed" },
     { name: "--cui-button-focus-ring", default: "per color", description: "Focus-visible outline color" },
+    { name: "--cui-button-pressed-bg", default: "per variant", description: "Background of a pressed toggle (pressed)" },
+    { name: "--cui-button-pressed-color", default: "per variant", description: "Label color of a pressed toggle" },
+    { name: "--cui-button-pressed-border", default: "per variant", description: "Border shorthand of a pressed toggle" },
     {
       name: "--cui-control-min-target",
       default: "24px",
