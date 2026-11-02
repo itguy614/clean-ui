@@ -227,7 +227,8 @@ const slideoverOpen = computed({
           The bulk-action bar is a <code>CuiToolbar</code> named “Bulk actions”
           (<code>dataGrid.bulkActions</code>): its actions and Clear are one tab stop, and the
           Left/Right arrows, Home and End move between them. The “N items selected” count sits
-          beside the toolbar, not among its controls.
+          beside the toolbar, not among its controls. Clear hides the bar, so it hands focus to
+          the select-all checkbox.
         </li>
         <li>
           Give the grid a heading immediately above it. Neither the table nor the toolbar

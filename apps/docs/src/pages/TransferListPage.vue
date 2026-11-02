@@ -85,9 +85,10 @@ const selectedSimple = ref<string[]>([]);
         </li>
         <li>
           The six arrow buttons are one vertical <code>CuiToolbar</code> named “Move items”
-          (<code>transferList.actions</code>), so Tab goes source list → buttons → target list,
-          and Arrow Up and Down, Home and End move between the buttons. A button with nothing
-          to do (no item marked yet) is <code>aria-disabled</code> rather than
+          (<code>transferList.actions</code>): one tab stop between the source list and the
+          target panel (its filter field, then its list), with Arrow Up and Down, Home and End
+          moving between the buttons. A button with nothing to do (nothing marked, a marked
+          item already at the top, only disabled items left) is <code>aria-disabled</code> rather than
           <code>disabled</code>: it stays reachable and says it is unavailable, and the
           toolbar's tab stop doesn't disappear — nor drop focus when a move empties the marks.
           A disabled transfer list disables them outright.

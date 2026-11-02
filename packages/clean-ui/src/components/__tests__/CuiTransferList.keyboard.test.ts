@@ -225,6 +225,36 @@ describe("CuiTransferList move buttons as a toolbar", () => {
     expect(w!.emitted("update:modelValue")).toBeUndefined();
   });
 
+  const ariaDisabled = (name: string) => w!.find(`button[aria-label="${name}"]`).attributes("aria-disabled");
+
+  it("disables Move all when only disabled items are left to move", async () => {
+    mountList({ modelValue: ["a", "b", "d"] }); // Charlie, disabled, is all that's left
+    await nextTick();
+    expect(ariaDisabled("Move all to Selected")).toBe("true");
+  });
+
+  it("disables Move selected when the marked items are filtered out of sight", async () => {
+    mountList();
+    press(options("Available")[0].element, " "); // Alpha
+    await nextTick();
+    expect(ariaDisabled("Move selected to Selected")).toBeUndefined();
+    await w!.findAll("input")[0].setValue("del");
+    expect(ariaDisabled("Move selected to Selected")).toBe("true");
+  });
+
+  it("disables Move up on the first item and Move down on the last", async () => {
+    mountList({ modelValue: ["a", "b"] });
+    press(options("Selected")[0].element, " ");
+    await nextTick();
+    expect([ariaDisabled("Move up"), ariaDisabled("Move down")]).toEqual(["true", undefined]);
+    press(options("Selected")[0].element, " ");
+    press(options("Selected")[1].element, " ");
+    await nextTick();
+    expect([ariaDisabled("Move up"), ariaDisabled("Move down")]).toEqual([undefined, "true"]);
+    await w!.find('button[aria-label="Move up"]').trigger("click");
+    expect(w!.props("modelValue")).toEqual(["b", "a"]);
+  });
+
   it("disables every button outright on a disabled transfer list", async () => {
     mountList({ disabled: true });
     await nextTick();

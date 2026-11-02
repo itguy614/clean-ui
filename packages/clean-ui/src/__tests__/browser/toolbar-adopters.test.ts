@@ -141,4 +141,13 @@ describe("CuiDataGridBulkBar toolbar (real browser)", () => {
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(buttons[3]);
   });
+
+  it("hands focus to the select-all checkbox when Clear hides the bar", async () => {
+    const { buttons } = await mountGrid();
+    buttons[0].focus();
+    await userEvent.keyboard("{End}");
+    await userEvent.keyboard("{Enter}");
+    await frames(1);
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Select all rows");
+  });
 });

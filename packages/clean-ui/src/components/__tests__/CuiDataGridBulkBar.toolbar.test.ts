@@ -74,6 +74,15 @@ describe("CuiDataGridBulkBar as a toolbar", () => {
     expect(document.activeElement?.textContent?.trim()).toBe("Clear");
     expect(buttons().map((b) => b.getAttribute("tabindex"))).toEqual(["-1", "-1", "-1", "0"]);
   });
+
+  it("hands focus to the select-all checkbox when Clear, focused, hides the bar", async () => {
+    await mountWithSelection();
+    const clear = buttons()[3];
+    clear.focus();
+    clear.click();
+    await nextTick();
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Select all rows");
+  });
 });
 
 describeRovingFocusContract("CuiDataGridBulkBar", {

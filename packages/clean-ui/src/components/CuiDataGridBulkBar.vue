@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, useTemplateRef, watch } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
@@ -41,11 +41,25 @@ function getSelectedRows(): DataGridRow[] {
 function onAction(action: DataGridBulkAction) {
   emit("bulk-action", { action, rows: getSelectedRows() });
 }
+
+const barEl = useTemplateRef<HTMLElement>("barEl");
+
+/**
+ * Clearing hides the bar, focused control and all: hand focus to the grid's first selection
+ * checkbox (select-all, else the first row's), so a keyboard user isn't dropped on <body>.
+ */
+function onClear() {
+  const bar = barEl.value;
+  const hadFocus = !!bar?.contains(document.activeElement);
+  grid.clearSelection();
+  if (!hadFocus) return;
+  bar!.closest(".cui-data-grid")?.querySelector<HTMLElement>('.cui-data-grid__content table [role="checkbox"]')?.focus();
+}
 </script>
 
 <template>
   <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
-    <div v-if="present" v-show="isVisible" class="cui-data-grid-bulk-bar">
+    <div v-if="present" ref="barEl" v-show="isVisible" class="cui-data-grid-bulk-bar">
       <div class="cui-data-grid-bulk-bar__inner">
         <span class="cui-data-grid-bulk-bar__count">
           {{ messages.dataGrid.selected(shownCount) }}
@@ -67,7 +81,7 @@ function onAction(action: DataGridBulkAction) {
             </CuiButton>
           </div>
 
-          <CuiButton class="cui-data-grid-bulk-bar__clear" variant="ghost" size="xs" @click="grid.clearSelection()">
+          <CuiButton class="cui-data-grid-bulk-bar__clear" variant="ghost" size="xs" @click="onClear">
             <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
             {{ messages.clear }}
           </CuiButton>
@@ -121,6 +135,8 @@ function onAction(action: DataGridBulkAction) {
 
 .cui-data-grid-bulk-bar__actions {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 

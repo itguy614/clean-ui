@@ -39,11 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   between its buttons, instead of a tab stop per button. The bulk bar's actions and Clear run
   left to right, named “Bulk actions” (the new optional `dataGrid.bulkActions` message), with
   the selection count beside the toolbar. The transfer list's six buttons run top to bottom,
-  named “Move items” (the new optional `transferList.actions` message), so Tab goes source
-  list, buttons, target list. A move button with nothing to do is now `aria-disabled` and
+  named “Move items” (the new optional `transferList.actions` message), one tab stop between
+  the two panels. A move button with nothing to do is now `aria-disabled` and
   stays focusable (CuiButton's `focusableWhenDisabled`) rather than natively `disabled`, so
   the toolbar keeps its tab stop and a button keeps focus when its own move disables it; a
-  disabled transfer list still disables them natively.
+  disabled transfer list still disables them natively. "Nothing to do" now matches what each
+  move does: Move all is disabled when only disabled items are left, Move selected when the
+  marked items are filtered out of sight, and Move up / Move down on the first / last item.
+  Clearing the selection from the bulk bar hands focus to the grid's select-all checkbox,
+  rather than dropping it with the bar.
 
 ## [1.7.0] - 2026-11-02
 
