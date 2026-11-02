@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CuiDataGrid exposes `processedRows`, `page`, `lastPage` and `setPage`** (#372).
+  `processedRows` is the rows after search, filters and sort, before paging (server-side,
+  the current page's rows); `setPage(page)` moves the grid to a page, clamped to
+  `1..lastPage`, and does what a pagination click does, server-side `navigate` included.
+  `page` and `lastPage` are readonly. `useDataGrid` returns `processedRows` and a
+  `paginated` flag, takes a `paginate` option (default `true`), and its `setPage` now
+  clamps to `1..last page` (no upper bound for a server-side grid fed a plain array) and
+  returns whether the page changed. A client-side page left past the end — the data shrank,
+  or `hydrateFromUrl` read `?page=99` — now reads as the last page instead of an empty one.
 - **`initial` and `scrollTo()` on `useScrollSpy()`** (#423). `initial` is the id `activeId`
   reports while no section has reached the band: on first paint, during SSR, and above the
   first section (a ref or getter is followed). `scrollTo(id)` scrolls a section into view
@@ -60,6 +69,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`virtualize` windowed only one page of a client-side grid** (#317). The grid paged
+  before the table virtualized, so a 10,000-row grid scrolled through 15 rows and needed
+  the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the
+  table is shown: the table windows every searched, filtered and sorted row and the
+  pagination bar is hidden (`page` and `lastPage` read 1). Card view, which is not
+  virtualized, and server-side grids still page. With paging off, the header's select-all
+  selects every searched and filtered row, not 15.
+- **A server-side CuiDataGrid emitted `navigate` twice for one pagination click** (#372):
+  once from the pagination bar and once from the grid's own watcher on the page. It now
+  emits once.
 - **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
   icon is decorative; the title and message carry the meaning.
 
