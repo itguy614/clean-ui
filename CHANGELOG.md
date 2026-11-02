@@ -19,6 +19,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dialogs render as before. The primary icon is a sealed question mark rather than the plain
   `?`, which is CuiIcon's glyph for an unknown icon name.
 
+### Changed
+
+- **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
+  `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
+  out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
+  100%; a fully opaque colour is still `#rrggbb`. **Check before upgrading** if you store
+  the picker's hex value in a 7-character column, validate it with a 6-digit pattern, or
+  compare it as a string: translucent colours now have two more digits. The change comes from
+  `formatColor(r, g, b, a, "hex")`, which now appends the alpha byte when `a < 1` (an alpha
+  that rounds to `ff` stays six digits). `parseColor` now reads the alpha of `#rrggbbaa` and
+  `#rgba` instead of ignoring it, so the picker, its text field and an 8-digit `v-model` value
+  round-trip; a colour passed in with an alpha keeps it even without `show-alpha`, as an
+  `rgba()` value already did. Also:
+  - `parseColor` and `hexToRgb` return `null` for hex containing a non-hex character
+    (`#12345z` used to read as `#123405`). `hexToRgb` also accepts 4 digits, and still
+    returns the colour without its alpha.
+  - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
+    so they no longer emit `rgba(…, 1.00)`.
+  - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+
 ### Fixed
 
 - **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
