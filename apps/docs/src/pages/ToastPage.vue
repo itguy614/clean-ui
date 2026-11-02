@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiToastProvider, useToast } from "@itguy614/clean-ui";
+import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, useToast } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import meta from "../meta/toast";
 import Example from "../components/Example.vue";

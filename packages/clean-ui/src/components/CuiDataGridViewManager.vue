@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
-import { useDataGridViews, type UseDataGridViewsOptions } from "../composables/useDataGridViews";
+import { useDataGridViews } from "../composables/useDataGridViews";
 import type { DataGridViewAdapter } from "../types/data-grid";
 import CuiDropdown from "./CuiDropdown.vue";
 import CuiDropdownTrigger from "./CuiDropdownTrigger.vue";

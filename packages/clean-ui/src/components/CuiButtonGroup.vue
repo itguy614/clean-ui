@@ -110,7 +110,6 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
 }
 
 .cui-button-group > :deep(.cui-button[aria-pressed="true"]),
-.cui-button-group > :deep(.cui-button.cui-button--active),
 .cui-button-group > :deep(.cui-radio-button--active),
 .cui-button-group > :deep([aria-checked="true"]) {
   z-index: 2;

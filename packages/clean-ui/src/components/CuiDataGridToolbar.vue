@@ -14,7 +14,7 @@ import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();
 
-const props = defineProps<{
+defineProps<{
   hideSearch?: boolean;
   searchDebounce?: number;
   searchLabel?: string;

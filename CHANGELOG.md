@@ -134,6 +134,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     so they no longer emit `rgba(…, 1.00)`.
   - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
 
+### Removed
+
+- **Dead code the compiler now finds** (#214). `noUnusedLocals` and `noUnusedParameters` are
+  on in the shared `tsconfig.json`, so every package and docs app is checked and a new unused
+  import or local fails `vue-tsc` (and so `pnpm -r build`). The sweep removed unused imports
+  and `props` bindings across the components, and the abandoned paths: CuiTimePicker's
+  unwired `mask`, `inputRaw`, `togglePeriod` and `onApply`, CuiDatePicker's `onDayHover`,
+  CuiTooltip's always-truthy `hasContent` and CuiMaskedInput's `prevEditablePos`. The unused
+  `CuiMaskedInput`, `CuiIcon` and `CuiBadge` imports of CuiTimePicker, CuiColorPicker,
+  CuiDataGridActiveFilters and CuiFileUpload went too. No behaviour changes. Also dropped:
+  the `.cui-button--active` entry in CuiButtonGroup's stacking rule (nothing sets that
+  class), and the private custom properties CuiInput, CuiTextarea, CuiSelect, CuiRadio and
+  CuiTabs emitted inline that no stylesheet reads.
+- **CuiDropdownCheckItem's unused `DropdownContextKey` injection** (#214). A check item has
+  never closed the menu on click and still doesn't; the docs now say so.
+
 ### Fixed
 
 - **Teleported panels lost a scoped theme and a scoped `dark` class** (#418). CuiModal,

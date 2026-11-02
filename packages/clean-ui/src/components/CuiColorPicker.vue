@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef, type CSSProperties, type Ref } from "vue";
-import type { CuiSize, HideableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";

@@ -91,7 +91,7 @@ const meta: ComponentMeta = {
         menuItemDisabled,
       ],
       slots: [{ name: "default", description: "Item label" }],
-      events: [{ name: "update:modelValue", payload: "boolean", description: "Toggled — what v-model binds to" }],
+      events: [{ name: "update:modelValue", payload: "boolean", description: "Toggled — what v-model binds to. The menu stays open on click, so several items can be toggled in one visit" }],
     },
     {
       name: "CuiDropdownRadioGroup",

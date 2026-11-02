@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import CuiIcon from "./CuiIcon.vue";
-import { DropdownContextKey } from "./dropdown-context";
 import type { DisableableProps } from "../types/common";
 
 export interface CuiDropdownCheckItemProps extends DisableableProps {
@@ -17,8 +15,6 @@ const props = withDefaults(defineProps<CuiDropdownCheckItemProps>(), {
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
 }>();
-
-const ctx = inject(DropdownContextKey);
 
 function toggle() {
   if (props.disabled) return;

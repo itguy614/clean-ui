@@ -278,7 +278,6 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
         '--_sel-min-height': dims.minHeight,
         '--_sel-px': dims.px,
         '--_sel-font-size': dims.fontSize,
-        '--_sel-color': `var(--cui-${color})`,
         '--_sel-focus-ring': `var(--cui-${color}-focus-ring)`,
         '--_sel-border': error ? 'var(--cui-error)' : `var(--cui-border-strong)`,
         '--_sel-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,

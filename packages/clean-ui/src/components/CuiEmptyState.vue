@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, TitleAsProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, TitleAsProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useHeadingLevel } from "../utils/configure";

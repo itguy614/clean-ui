@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";

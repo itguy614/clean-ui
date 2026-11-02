@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
+import { computed, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
@@ -145,7 +145,6 @@ const floatingLabel = useFloatingLabel(
         '--_ta-py': dims.py,
         '--_ta-float-offset': floatingLabel().float?.offset,
         '--_ta-font-size': dims.fontSize,
-        '--_ta-color': `var(--cui-${color})`,
         '--_ta-focus-ring': `var(--cui-${color}-focus-ring)`,
         '--_ta-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-border-strong)`,
         '--_ta-focus-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-${color})`,
