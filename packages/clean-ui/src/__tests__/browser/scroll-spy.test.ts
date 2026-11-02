@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, h, ref } from "vue";
+import { defineComponent, h, ref, watch } from "vue";
 import { useScrollSpy } from "../../composables/useScrollSpy";
 import { frames, mountHosts, settleScroll } from "../../../../../config/test/browser-helpers";
 
@@ -81,5 +81,25 @@ describe("useScrollSpy (real browser)", () => {
     // Settled: a scroll of the reader's own is tracked again.
     root.scrollTop = 50;
     await expect.poll(() => api.activeId.value).toBe("b");
+  });
+
+  it("scrollTo goes straight to the target, which lands just below the header (#423)", async () => {
+    const { api, root } = mountSpy(60);
+    await expect.poll(() => api.activeId.value).toBe("a");
+
+    // Watch every change, not a per-frame sample: a flicker through b–d would show here.
+    const seen: (string | null)[] = [];
+    const stop = watch(api.activeId, (id) => seen.push(id), { flush: "sync" });
+    api.scrollTo("e");
+    for (let i = 0; i < 60 && root.scrollTop < 360; i++) await frames(1);
+    await settleScroll(root);
+    await frames(3);
+    stop();
+
+    expect(seen).toEqual(["e"]);
+    // e's heading sits at 60 + 90·4 = 420: scrolled to 420 − the 60px header.
+    expect(root.scrollTop).toBe(360);
+    const heading = document.getElementById("e")!;
+    expect(heading.getBoundingClientRect().top - root.getBoundingClientRect().top).toBe(60);
   });
 });

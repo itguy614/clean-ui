@@ -183,7 +183,7 @@ export type { CuiTooltipProps, TooltipTrigger } from "./components/CuiTooltip.vu
 export { usePopover, type PopoverPlacement, type UsePopoverOptions } from "./composables/usePopover";
 export type { CuiToastProps } from "./components/CuiToast.vue";
 export type { CuiToastProviderProps } from "./components/CuiToastProvider.vue";
-export type { ToastOptions, ToastPosition, ToastStackMode } from "./components/toast-context";
+export type { ToastAction, ToastOptions, ToastPosition, ToastStackMode } from "./components/toast-context";
 export { ToastContextKey } from "./components/toast-context";
 export { useToast } from "./composables/useToast";
 export { useMessages } from "./composables/useMessages";

@@ -70,9 +70,11 @@ const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 // Computed RGB from HSV
 const currentRgb = computed(() => hsvToRgb(hue.value, sat.value, val.value));
 const currentHex = computed(() => rgbToHex(currentRgb.value.r, currentRgb.value.g, currentRgb.value.b));
+// The colour with its alpha, as #rrggbb or #rrggbbaa: the preview's paint, and what a swatch
+// has to equal to read as selected.
 const displayColor = computed(() => {
   const { r, g, b } = currentRgb.value;
-  return alpha.value < 1 ? `rgba(${r}, ${g}, ${b}, ${alpha.value.toFixed(2)})` : currentHex.value;
+  return formatColor(r, g, b, alpha.value, "hex");
 });
 const outputValue = computed(() => {
   const { r, g, b } = currentRgb.value;
@@ -313,16 +315,16 @@ function onSwatchClick(color: string) {
 // A radiogroup with one tab stop. The arrows move and select, as radios do; focus alone (a
 // Tab into the group, a click's focus) selects nothing.
 const swatchesRef = useTemplateRef<HTMLElement>("swatchesRef");
-// Each swatch as the hex currentHex is written in, so "#f00" or "rgb(…)" in a palette
-// still reads as selected.
+// Each swatch in displayColor's form, so "#f00" or "rgb(…)" in a palette still reads as
+// selected, and a swatch whose alpha differs from the picker's does not.
 const paletteHex = computed(() =>
   resolvedPalette.value.map((c) => {
     const p = parseColor(c);
-    return p ? rgbToHex(p.r, p.g, p.b) : c.toLowerCase();
+    return p ? formatColor(p.r, p.g, p.b, p.a, "hex") : c.toLowerCase();
   }),
 );
-const isSelected = (i: number) => paletteHex.value[i] === currentHex.value;
-const selectedSwatch = computed(() => paletteHex.value.indexOf(currentHex.value));
+const isSelected = (i: number) => paletteHex.value[i] === displayColor.value;
+const selectedSwatch = computed(() => paletteHex.value.indexOf(displayColor.value));
 const swatchIndex = ref(0);
 // The tab stop follows the selection — unless it is already on a swatch of that colour (a
 // palette can repeat one), which would move it out from under focus.
