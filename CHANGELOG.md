@@ -63,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **CuiButtonGroup merges corners only where two painted buttons meet** (found reviewing
+  #417). A ghost button draws no edge, so a painted button beside one keeps its corners: a
+  lone pressed toggle in a row of ghost ones stays whole, and a run of pressed ones merges
+  into one shape, rounded at its ends. A group of painted buttons, the radio "buttons"
+  variant and dropdowns merge as before. CuiButton now carries `cui-button--ghost`.
 - **CuiDataGrid's toolbar and the markdown editor's toolbar are both CuiToolbars** (#190).
   The grid's toolbar is now `role="toolbar"`, named "Table controls" (the new optional
   `dataGrid.toolbar` message), and its buttons (filter, columns, view toggle, saved views
