@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
+  routine, non-destructive confirm no longer has to look like an error, a warning or an info
+  notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
+  takes `false` to render no icon tile, with the title flush left and no gap where the tile
+  was, and now also accepts an icon component as well as a registered name. `confirmColor`
+  overrides only the confirm button's colour role, for any variant; the tile and the
+  type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
+  dialogs render as before.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

@@ -1,8 +1,11 @@
 import { describe, it, expect, afterEach } from "vitest";
+import { toRaw } from "vue";
 import { mount, flushPromises } from "@vue/test-utils";
 import CuiConfirmDialog from "../CuiConfirmDialog.vue";
 import CuiButton from "../CuiButton.vue";
 import CuiInput from "../CuiInput.vue";
+import CuiIcon from "../CuiIcon.vue";
+import { PhInfo, PhQuestion, PhRocket, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
 
 // CuiConfirmDialog wraps CuiModal, which teleports content into <body> and opens
 // on mount via an onMounted/nextTick flush — so await flushPromises() before
@@ -73,5 +76,97 @@ describe("CuiConfirmDialog", () => {
     await flushPromises();
     expect(wrapper.findAllComponents(CuiButton).length).toBeGreaterThan(0);
     wrapper.unmount();
+  });
+
+  describe("variant, icon and confirmColor (#375)", () => {
+    const VARIANTS = ["danger", "warning", "info", "primary"] as const;
+
+    async function open(props: Record<string, unknown>) {
+      const wrapper = mount(CuiConfirmDialog, {
+        props: { visible: true, confirmText: "Go", ...props },
+      });
+      await flushPromises();
+      return wrapper;
+    }
+
+    // The modal teleports into <body>: query the DOM for elements, the wrapper for components.
+    function tile() {
+      return document.querySelector<HTMLElement>(".cui-confirm-dialog__icon");
+    }
+
+    function tileIcon(wrapper: ReturnType<typeof mount>) {
+      const icon = wrapper.findAllComponents(CuiIcon).find((i) => i.props("size") === "1.25rem");
+      if (!icon) throw new Error("No tile icon");
+      return icon;
+    }
+
+    // The default (no variant) and the three pre-#375 variants must render as before.
+    it.each([
+      [undefined, "error", PhWarningCircle],
+      ["danger", "error", PhWarningCircle],
+      ["warning", "warning", PhWarning],
+      ["info", "info", PhInfo],
+      ["primary", "primary", PhQuestion],
+    ] as const)("variant %s sets the tile and confirm button colour and the icon", async (variant, color, icon) => {
+      const wrapper = await open(variant ? { variant } : {});
+      expect(tile()).not.toBeNull();
+      expect(tileIcon(wrapper).props("icon")).toBe(icon);
+      expect(tile()!.getAttribute("style")).toContain(`var(--cui-${color}-bg)`);
+      expect(findButtonByText(wrapper, "Go").props("color")).toBe(color);
+      wrapper.unmount();
+    });
+
+    it.each(VARIANTS)(":icon=\"false\" renders no tile (%s)", async (variant) => {
+      const wrapper = await open({ variant, icon: false });
+      expect(tile()).toBeNull();
+      // The header row holds only the text column and the close button, so the
+      // flex gap opens no empty space before the title.
+      const title = document.querySelector(".cui-confirm-dialog__title")!;
+      const header = title.parentElement!.parentElement!;
+      expect(header.children).toHaveLength(2);
+      expect(header.firstElementChild).toBe(title.parentElement);
+      wrapper.unmount();
+    });
+
+    it("accepts an icon name or an icon component", async () => {
+      const named = await open({ icon: "info" });
+      expect(tileIcon(named).props("name")).toBe("info");
+      named.unmount();
+
+      const component = await open({ icon: PhRocket });
+      // mount() props are reactive, so the component arrives proxied.
+      expect(toRaw(tileIcon(component).props("icon"))).toBe(PhRocket);
+      expect(tileIcon(component).props("name")).toBeUndefined();
+      component.unmount();
+    });
+
+    it.each(VARIANTS)("confirmColor overrides only the confirm button's colour (%s)", async (variant) => {
+      const wrapper = await open({ variant, confirmColor: "success" });
+      expect(findButtonByText(wrapper, "Go").props("color")).toBe("success");
+      // The tile keeps the variant's colour.
+      expect(tile()!.getAttribute("style")).not.toContain("--cui-success");
+      wrapper.unmount();
+    });
+
+    it("keeps the type-to-confirm gate and the accessible name with the new options", async () => {
+      const wrapper = await open({
+        variant: "primary",
+        icon: false,
+        confirmColor: "success",
+        confirmWord: "apply",
+        title: "Apply profile?",
+      });
+      const dialog = document.querySelector('[role="dialog"]')!;
+      const labelledBy = dialog.getAttribute("aria-labelledby")!;
+      expect(document.getElementById(labelledBy)?.textContent?.trim()).toBe("Apply profile?");
+
+      const confirmBtn = findButtonByText(wrapper, "Go");
+      expect(confirmBtn.attributes("disabled")).toBeDefined();
+      await wrapper.findComponent(CuiInput).setValue("apply");
+      expect(confirmBtn.attributes("disabled")).toBeUndefined();
+      await confirmBtn.trigger("click");
+      expect(wrapper.emitted("confirm")).toHaveLength(1);
+      wrapper.unmount();
+    });
   });
 });
