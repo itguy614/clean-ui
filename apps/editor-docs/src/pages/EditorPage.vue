@@ -396,8 +396,9 @@ const themeCode = computed(() => {
               The dialogs also take the theme around the editor: the nearest
               <code class="cui-code">cui-theme-*</code> class, and a <code class="cui-code">dark</code>
               class set on a container rather than on <code class="cui-code">&lt;html&gt;</code>.
-              They read it when they open, so a theme changed while one is open shows the next
-              time. Press <code class="cui-code">Mod-K</code> here: the dialog's Insert button
+              They follow it live, so a theme changed while one is open repaints it, and so do
+              a plugin's own dialogs that hand on <code class="cui-code">context.cleanUI</code>.
+              Press <code class="cui-code">Mod-K</code> here: the dialog's Insert button
               and the URL field's focus ring are violet, whatever theme the site is in.
             </p>
             <div class="cui-theme-violet">

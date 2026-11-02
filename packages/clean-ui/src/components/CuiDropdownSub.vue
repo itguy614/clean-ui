@@ -5,6 +5,7 @@ import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
 import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { afterAnimations, panelTransition } from "../utils/motion";
 import type { DisableableProps } from "../types/common";
 
@@ -24,6 +25,8 @@ const isOpen = ref(false);
 // Shown while the parent menu is open too, so the whole stack leaves together (#263).
 const shown = () => isOpen.value && !!parentCtx?.isOpen.value;
 const { present, onAfterLeave } = usePresence(shown);
+// The theme scope around the item, inside the parent menu's copy of it (#418).
+const themeScope = useScopedTheme(() => present.value);
 const triggerRef = ref<HTMLElement>();
 const panelRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
@@ -149,6 +152,7 @@ function onPanelKeydown(e: KeyboardEvent) {
       v-show="shown()"
       ref="panelRef"
       class="cui-dropdown-sub__menu"
+      :class="themeScope"
       :data-cui-menu-owner="parentCtx?.ownerId"
       :style="menuStyle"
       role="menu"

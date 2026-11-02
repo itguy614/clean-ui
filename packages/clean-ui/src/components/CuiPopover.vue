@@ -9,6 +9,7 @@ import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { RADIUS_SCALE } from "../utils/sizing";
 
@@ -59,6 +60,8 @@ const slots = useSlots();
 
 const isVisible = ref(false);
 const { present, onAfterLeave } = usePresence(() => isVisible.value);
+// The theme scope around the trigger, on the teleported panel (#418).
+const themeScope = useScopedTheme(() => present.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -220,6 +223,7 @@ const messages = useMessages();
         v-show="isVisible"
         ref="floatingRef"
         class="cui-popover__panel"
+        :class="themeScope"
         :style="{ ...floatingStyles, ...panelStyle, ...hiddenUntilPositioned }"
         role="dialog"
         :aria-labelledby="hasHeader() ? headerId : undefined"

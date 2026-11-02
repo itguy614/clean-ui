@@ -136,6 +136,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Teleported panels lost a scoped theme and a scoped `dark` class** (#418). CuiModal,
+  CuiSlideover, CuiPopover, CuiTooltip, CuiDropdownMenu, CuiDropdownSub, CuiContextMenu,
+  the option panel of CuiSelect, CuiCombobox and CuiTagInput, and CuiToastProvider's stack
+  render at the end of `<body>`, so a `<div class="cui-theme-violet">` or a `<div class="dark">`
+  around them stopped at the panel, which took the page's theme. Each now puts the nearest
+  `cui-theme-*` class and a scoped `dark` class on the root it teleports, and follows them
+  while open: changing the theme or toggling `dark` on the container repaints an open panel.
+  A theme or `dark` on `<html>` or `<body>` already reached the panel, and nothing is copied
+  for it. A panel opened inside another (a select in a modal) keeps the scope too.
+  `useCleanUIContext().provideTo(app)` now also hands on the scope around the calling
+  component, so an app mounted with `createApp()` follows it; the markdown editor's link and
+  image dialogs, and a plugin's own dialogs given `context.cleanUI`, take the editor's scope
+  that way, live, in place of the snapshot taken at mount (#399). **Only these classes carry:**
+  a token overridden on a container (`.brand { --cui-primary: … }`) and a scoped density
+  setting don't reach a teleported panel, which isn't inside that container.
 - **`virtualize` windowed only one page of a client-side grid** (#317). The grid paged
   before the table virtualized, so a 10,000-row grid scrolled through 15 rows and needed
   the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the

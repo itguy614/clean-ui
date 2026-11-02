@@ -1,11 +1,12 @@
-import { inject, type App } from "vue";
+import { getCurrentInstance, inject, onBeforeUnmount, type App } from "vue";
 import { CuiConfigKey, CuiDefaultsKey } from "../components/config-context";
 import { useCleanUIDefaults } from "../utils/configure";
+import { ThemeScopeKey, componentScopeChain } from "./useScopedTheme";
 
 /**
  * What clean-ui has provided above a component: the app's defaults (`createCleanUI()`
- * options and any `CuiConfigProvider` layers) and the message catalog. Opaque: it only
- * hands itself on.
+ * options and any `CuiConfigProvider` layers), the message catalog, and the scoped theme
+ * around the component. Opaque: it only hands itself on.
  */
 export interface CleanUIContext {
   /** Provide this context to another Vue app, so clean-ui components there behave as here. */
@@ -27,16 +28,26 @@ export interface CleanUIContext {
  * ```
  *
  * What it hands on is live: a change to the host's provider reaches the other app too.
+ *
+ * It also hands on the scoped theme around the calling component (#418): a panel the other
+ * app teleports — its dialog, a select in it — takes the nearest `cui-theme-*` class and any
+ * `dark` class around the host component, and follows them if they change while it is open.
  */
 export function useCleanUIContext(): CleanUIContext {
   const defaults = useCleanUIDefaults();
   // Not useMessages(): that falls back to the English catalog, and a fallback must not be
   // provided to the other app as if the host had chosen it.
   const messages = inject(CuiConfigKey, null);
+  // Released on unmount, so an app that outlives the host doesn't keep its tree alive.
+  let host = getCurrentInstance();
+  if (host) onBeforeUnmount(() => (host = null));
+  const outerScope = inject(ThemeScopeKey, null);
   return {
     provideTo(app) {
       if (defaults) app.provide(CuiDefaultsKey, defaults);
       if (messages) app.provide(CuiConfigKey, messages);
+      // Read when the other app's panel opens, by then the host component is mounted.
+      if (host) app.provide(ThemeScopeKey, () => componentScopeChain(host, outerScope));
     },
   };
 }

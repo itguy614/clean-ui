@@ -3,6 +3,7 @@ import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -127,6 +128,8 @@ const panelVars = computed(() => ({
 
 // Generate id for aria-labelledby
 const titleId = useCuiId("modal-title");
+// The theme scope around the modal, on the teleported overlay (#418).
+const themeScope = useScopedTheme(() => mounted.value);
 </script>
 
 <template>
@@ -139,7 +142,7 @@ const titleId = useCuiId("modal-title");
       v-show="isVisible && !hidden"
       ref="overlayEl"
       class="cui-modal-overlay"
-      :class="{ 'cui-modal-overlay--visible': isAnimating }"
+      :class="[{ 'cui-modal-overlay--visible': isAnimating }, themeScope]"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->

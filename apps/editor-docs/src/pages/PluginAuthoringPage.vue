@@ -235,8 +235,10 @@ export const strikePlugin = definePlugin({
         host provides, so hand it on: <code class="cui-code">context.messages</code> carries this
         package's strings, and <code class="cui-code">context.cleanUI.provideTo(app)</code> gives the
         app the host's clean-ui defaults and catalog, so a CuiModal in it renders its title at the
-        host's heading level and names its close button in the host's language. The built-in link
-        and image commands do exactly this.
+        host's heading level and names its close button in the host's language. It also carries
+        the theme scope around the editor: a <code class="cui-code">cui-theme-*</code> or
+        <code class="cui-code">dark</code> class on a container reaches the dialog, live. The
+        built-in link and image commands do exactly this.
       </p>
       <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
         Return a function that closes the dialog. If the editor unmounts while it is open (a route

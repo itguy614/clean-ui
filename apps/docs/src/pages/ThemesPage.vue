@@ -7,21 +7,27 @@ import {
   CuiCardBody,
   CuiCardHeader,
   CuiCheckbox,
+  CuiDropdown,
+  CuiDropdownItem,
+  CuiDropdownMenu,
+  CuiDropdownTrigger,
   CuiFlex,
   CuiFormField,
   CuiGrid,
   CuiIcon,
   CuiInput,
+  CuiModal,
   CuiRadio,
   CuiRadioGroup,
   CuiSelect,
   CuiStack,
   CuiToggle,
+  CuiTooltip,
   useTheme,
 } from "@itguy614/clean-ui";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 const { theme, presets, setTheme } = useTheme();
 const demoRadio = ref("option1");
@@ -38,6 +44,20 @@ const backToNavyCode = `<div class="cui-theme-forest">
   <div class="cui-theme-default">
     <CuiButton variant="solid">Navy again</CuiButton>
   </div>
+</div>`;
+
+// Panels in a scoped theme (#418): teleported, yet they keep the scope they open from.
+const panelTheme = ref<(typeof scopedThemes)[number]>("ruby");
+const panelDark = ref(false);
+const panelModal = ref(false);
+const panelSelect = ref<string | null>(null);
+const panelScopeClass = computed(() => [`cui-theme-${panelTheme.value}`, { dark: panelDark.value }]);
+const panelsCode = `<div class="cui-theme-ruby dark">
+  <CuiButton @click="open = true">Modal</CuiButton>
+  <CuiModal v-model:visible="open" title="Ruby, dark">…</CuiModal>
+  <CuiDropdown>…</CuiDropdown>
+  <CuiSelect :options="options" />
+  <CuiTooltip text="Ruby too"><CuiButton>Tooltip</CuiButton></CuiTooltip>
 </div>`;
 </script>
 
@@ -258,6 +278,81 @@ setTheme('teal')
               </div>
             </CuiFlex>
           </div>
+        </CuiStack>
+      </Example>
+      <Example title="Panels opened from a scoped theme" :code="panelsCode" class="mt-6">
+        <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            A modal, menu, select or tooltip renders at the end of
+            <code class="cui-code">&lt;body&gt;</code>, outside the box it opens from, yet it
+            keeps that box's theme and a scoped <code class="cui-code">dark</code> class. Change
+            either while a panel is open and it follows.
+          </p>
+          <CuiFlex gap="4" align="center" class="flex-wrap">
+            <CuiRadioGroup v-model="panelTheme" variant="buttons" label="Box theme">
+              <CuiRadio v-for="t in scopedThemes" :key="t" :value="t" :label="t" />
+            </CuiRadioGroup>
+            <CuiToggle v-model="panelDark" label="Dark inside the box" />
+          </CuiFlex>
+          <div :class="panelScopeClass">
+            <CuiCard>
+              <CuiCardBody>
+                <CuiFlex gap="3" align="center" class="flex-wrap">
+                  <CuiButton variant="solid" @click="panelModal = true">Open modal</CuiButton>
+                  <CuiDropdown>
+                    <CuiDropdownTrigger>
+                      <CuiButton>Dropdown</CuiButton>
+                    </CuiDropdownTrigger>
+                    <CuiDropdownMenu>
+                      <CuiDropdownItem>Rename</CuiDropdownItem>
+                      <CuiDropdownItem>Duplicate</CuiDropdownItem>
+                      <CuiDropdownItem>Archive</CuiDropdownItem>
+                    </CuiDropdownMenu>
+                  </CuiDropdown>
+                  <div class="w-48">
+                    <CuiSelect
+                      v-model="panelSelect"
+                      :options="['Option A', 'Option B', 'Option C']"
+                      placeholder="Select..."
+                    />
+                  </div>
+                  <CuiTooltip :text="`The ${panelTheme} theme, here too`">
+                    <CuiButton variant="ghost">Tooltip</CuiButton>
+                  </CuiTooltip>
+                </CuiFlex>
+              </CuiCardBody>
+            </CuiCard>
+            <CuiModal v-model:visible="panelModal" :title="`Opened from the ${panelTheme} box`">
+              <CuiStack spacing="4">
+                <p>The modal and the select inside it both keep the box's scope.</p>
+                <CuiSelect
+                  v-model="panelSelect"
+                  :options="['Option A', 'Option B', 'Option C']"
+                  placeholder="Select..."
+                />
+                <CuiToggle v-model="panelDark" label="Dark inside the box" />
+              </CuiStack>
+            </CuiModal>
+          </div>
+          <CuiCard>
+            <CuiCardBody>
+              <p class="text-sm">
+                <strong>Only the theme and <code class="cui-code">dark</code> classes
+                carry.</strong> A teleported panel takes the nearest
+                <code class="cui-code">cui-theme-*</code> class and a scoped
+                <code class="cui-code">dark</code> class around the component that opened it. A
+                token you override on a container
+                (<code class="cui-code">.brand { --cui-primary: … }</code>) and a scoped density
+                setting stay behind: the panel isn't inside that container. Set those on
+                <code class="cui-code">:root</code>, or put the same class on the panel itself (a
+                CuiModal or CuiSlideover forwards its <code class="cui-code">class</code> to its
+                panel). An app mounted with <code class="cui-code">createApp()</code> gets the
+                scope of the component that called
+                <code class="cui-code">useCleanUIContext()</code>, once it calls
+                <code class="cui-code">provideTo(app)</code>.
+              </p>
+            </CuiCardBody>
+          </CuiCard>
         </CuiStack>
       </Example>
     </div>
