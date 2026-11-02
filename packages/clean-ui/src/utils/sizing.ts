@@ -116,6 +116,32 @@ export const TEXTAREA_SIZE_SCALE: Record<string, { px: string; py: string; fontS
   xl: { px: d("1.5rem"), py: d("0.75rem"), fontSize: "1.125rem" },
 };
 
+/** The sizes a floating label fits inside (#191): xs and sm are too short for two lines. */
+export type FloatingLabelSize = "md" | "lg" | "xl";
+
+/**
+ * A control inside a `labelPosition="floating"` CuiFormField (#191) holds the label inside
+ * its border, above the value, so it is one size step taller than its own size and keeps
+ * its own font size: md 48px, lg 56px, xl 64px.
+ *
+ * - `height` — the control's outer height, density-scaled like every control height.
+ * - `offset` — the floated label's line box (its 12px, 13px at xl, × line-height 1.25): the
+ *   control's `padding-top` above its value, so label and value sit centred as a pair. Type,
+ *   so it is not density-scaled. The label is the value's size at rest and CuiFormField
+ *   scales it down to that.
+ *
+ * CuiFormField restates these in its stylesheet; form-field-float-sync.test.ts holds the
+ * two copies together.
+ */
+export const FLOATING_LABEL_SCALE: Readonly<
+  Record<FloatingLabelSize, { height: string; offset: string }>
+> = {
+  md: { height: dh("3rem"), offset: "0.9375rem" },
+  lg: { height: dh("3.5rem"), offset: "0.9375rem" },
+  xl: { height: dh("4rem"), offset: "1.015625rem" },
+};
+
+
 /**
  * The shared `rounded` scale (#201): the `rounded` prop's lookup over the `--cui-radius-*`
  * tokens. `md` still reads `--cui-button-radius` first — the cross-reference main.css's

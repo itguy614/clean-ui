@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onMounted, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
+import { useFloatingLabel } from "./form-field-context";
 
 export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
   /** v-model binding */
@@ -121,6 +122,13 @@ function blur() {
 defineExpose({ el: textareaRef, focus, blur });
 
 const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
+
+// Inside a `labelPosition="floating"` CuiFormField the label rests on the first line and
+// floats into room reserved above it (#191).
+const floatingLabel = useFloatingLabel(
+  () => props,
+  () => ({ kind: "multiline", size: props.size }),
+);
 </script>
 
 <template>
@@ -135,6 +143,7 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         borderRadius: RADIUS_SCALE[rounded],
         '--_ta-px': dims.px,
         '--_ta-py': dims.py,
+        '--_ta-float-offset': floatingLabel().float?.offset,
         '--_ta-font-size': dims.fontSize,
         '--_ta-color': `var(--cui-${color})`,
         '--_ta-focus-ring': `var(--cui-${color}-focus-ring)`,
@@ -151,7 +160,8 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="ariaLabelledby"
         :value="modelValue"
-        :placeholder="placeholder"
+        :placeholder="floatingLabel().placeholder"
+        :data-cui-float-label="floatingLabel().marker"
         :disabled="disabled"
         :readonly="readonly"
         :rows="rows"
@@ -231,6 +241,17 @@ const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
 
 .cui-textarea__native::placeholder {
   color: var(--cui-text-tertiary);
+}
+
+/* Under a floating label (#191), room for it is reserved all the time, so the text never
+   jumps: 6px, the floated label's line box, 2px. And the placeholder shows only once the
+   label has floated. */
+.cui-textarea__native[data-cui-float-label] {
+  padding-top: calc(var(--_ta-float-offset) + 0.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-textarea__native[data-cui-float-label]:not(:focus)::placeholder {
+  color: transparent;
 }
 
 .cui-textarea__native:disabled {

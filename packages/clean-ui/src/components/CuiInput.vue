@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { Text, computed, onBeforeUpdate, ref, useSlots, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
+import { useFloatingLabel } from "./form-field-context";
+import { slotNodes } from "../utils/vnodes";
 
 export type InputType =
   | "text"
@@ -101,6 +103,41 @@ defineExpose({ el: inputRef, focus, blur });
 const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
 
+// Inside a `labelPosition="floating"` CuiFormField (#191). A leading icon keeps the label
+// resting, after it. Prefix text (`https://`) is part of the value and an inline suffix sits
+// where a resting label would run, so either keeps it floated; a suffix, the clear button
+// and the password toggle are kept clear of with end room. An attached button is as tall as
+// the box and of unknown width, so there is no room inside for the label: the field falls
+// back to a top label.
+const slots = useSlots();
+const floatingLabel = useFloatingLabel(
+  () => ({ id: slots["prefix-button"] || slots["suffix-button"] ? undefined : props.id, placeholder: props.placeholder }),
+  () => {
+    const lead = !!slots.prefix && prefixIsIcon();
+    return {
+      kind: slots.suffix || (slots.prefix && !lead) ? "pinned" : "inline",
+      lead,
+      end: Number(!!slots.suffix) + Number(props.clearable) + Number(isPassword.value),
+      size: props.size,
+    };
+  },
+);
+
+/**
+ * Whether the prefix is a lone default-size CuiIcon, whose width the field's CSS knows
+ * (CuiIcon's `md`, 1.25rem). Anything else, text or another icon size, keeps the label up.
+ * Cached for the render: the getter above runs once per binding that reads it.
+ */
+let prefixIcon: boolean | undefined;
+onBeforeUpdate(() => (prefixIcon = undefined));
+function prefixIsIcon(): boolean {
+  if (prefixIcon === undefined) {
+    const nodes = slotNodes(slots.prefix?.() ?? []).filter((n) => !(n.type === Text && !String(n.children).trim()));
+    prefixIcon = nodes.length === 1 && nodes[0].type === CuiIcon && (nodes[0].props?.size ?? "md") === "md";
+  }
+  return prefixIcon;
+}
+
 </script>
 
 <template>
@@ -113,10 +150,12 @@ const messages = useMessages();
         'cui-input--focused': false,
         'cui-input--has-prefix-button': $slots['prefix-button'],
         'cui-input--has-suffix-button': $slots['suffix-button'],
+        'cui-input--floating': floatingLabel().float,
       }"
       :style="{
         borderRadius: RADIUS_SCALE[rounded],
-        '--_input-height': dims.height,
+        '--_input-height': floatingLabel().float?.height ?? dims.height,
+        '--_input-float-offset': floatingLabel().float?.offset,
         '--_input-font-size': dims.fontSize,
         '--_input-px': dims.px,
         '--_input-color': `var(--cui-${color})`,
@@ -148,7 +187,8 @@ const messages = useMessages();
           :aria-labelledby="ariaLabelledby"
           :type="resolvedType"
           :value="modelValue"
-          :placeholder="placeholder"
+          :placeholder="floatingLabel().placeholder"
+          :data-cui-float-label="floatingLabel().marker"
           :disabled="disabled"
           :readonly="readonly"
           :aria-invalid="error || undefined"
@@ -255,6 +295,23 @@ const messages = useMessages();
 
 .cui-input__native::placeholder {
   color: var(--cui-text-tertiary);
+}
+
+/* --- Floating label (#191) ---
+   The field's label sits inside the box, above the value: the value (and prefix or suffix
+   text beside it, so their baselines match) is pushed down by the floated label's line
+   box, and stays centred in what is left. An icon, like the clear and password buttons,
+   stays centred on the full height. */
+:where(.cui-input--floating .cui-input__native, .cui-input--floating :is(.cui-input__prefix, .cui-input__suffix):not(:has(> .cui-icon:only-child))) {
+  align-self: stretch;
+  padding-top: var(--_input-float-offset);
+}
+
+/* A resting label stands where the placeholder would, so it shows only once the label has
+   floated: on focus. A pinned label never rests, so its control's placeholder always shows.
+   Behaviour rather than paint, so at normal specificity, above the placeholder colour. */
+.cui-input__native[data-cui-float-label]:not([data-cui-float-label~="pinned"]):not(:focus)::placeholder {
+  color: transparent;
 }
 
 /* Hide native browser password reveal buttons */
