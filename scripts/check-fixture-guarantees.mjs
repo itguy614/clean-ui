@@ -3,22 +3,27 @@
  * Assertions over fixtures/consumer-app's build output and installed
  * node_modules — the package guarantees this repo advertises, expressed
  * mechanically instead of asserted in a changelog. Run after
- * scripts/verify-fixture.mjs has installed and built the fixture.
+ * scripts/verify-fixture.mjs has installed the fixture.
+ *
+ * A guarantee about the build output runs on every fixture page: this script
+ * builds each scenario in scripts/fixture-scenarios.mjs (the table the bundle
+ * budget uses) and checks its output, so a regression only one page triggers
+ * (a data grid pulling in the icon barrel, say) still fails, naming that page
+ * (#384). A scenario opts out of a guarantee only in that table, with the
+ * reason. A guarantee about the install (`scope: "install"`) runs once.
  *
  * Extensible by design: add an entry to GUARANTEES to cover a new package or
- * regression; nothing else about this script or its CI step needs to change.
+ * regression, or to SCENARIOS to cover a new page; nothing else about this
+ * script or its CI step needs to change.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const FIXTURE_DIR = resolve(ROOT, "fixtures/consumer-app");
-const FIXTURE_DIST = join(FIXTURE_DIR, "dist");
 const FIXTURE_NODE_MODULES = join(FIXTURE_DIR, "node_modules");
 
-function readBuiltAssets(extensions) {
-  const assetsDir = join(FIXTURE_DIST, "assets");
+function readBuiltAssets(distDir, extensions) {
+  const assetsDir = join(distDir, "assets");
   if (!existsSync(assetsDir)) return "";
   return readdirSync(assetsDir)
     .filter((file) => extensions.some((ext) => file.endsWith(ext)))
@@ -66,9 +71,10 @@ function findInstalledCopies(root, packageName) {
 
 const GUARANTEES = [
   {
+    id: "icon-barrel",
     name: "@itguy614/clean-ui: no full icon-package barrel in the built bundle (#42)",
-    check() {
-      const js = readBuiltAssets([".js"]);
+    check(distDir) {
+      const js = readBuiltAssets(distDir, [".js"]);
       const distinctIcons = new Set(js.match(/Ph[A-Z][A-Za-z0-9]*/g) ?? []);
       // The curated built-in set (src/icons/builtin.ts) is ~50 icons today and
       // grows slowly; the regression this guards is the *entire*
@@ -85,9 +91,10 @@ const GUARANTEES = [
     },
   },
   {
+    id: "no-tailwind-utilities",
     name: "@itguy614/clean-ui: no base Tailwind utilities layer in the built stylesheet (#62)",
-    check() {
-      const css = readBuiltAssets([".css"]);
+    check(distDir) {
+      const css = readBuiltAssets(distDir, [".css"]);
       const utilityMarkers = [".flex{", ".grid{", ".hidden{", ".block{", ".container{", ".sr-only{", ".inline-flex{"];
       const found = utilityMarkers.filter((marker) => css.includes(marker));
       if (found.length > 0) {
@@ -97,9 +104,10 @@ const GUARANTEES = [
     },
   },
   {
+    id: "no-global-reset",
     name: "@itguy614/clean-ui: no global reset in the built stylesheet (#72)",
-    check() {
-      const css = readBuiltAssets([".css"]);
+    check(distDir) {
+      const css = readBuiltAssets(distDir, [".css"]);
 
       // The fixture uses no Tailwind of its own, so anything resembling
       // preflight in here came from the library. These two only ever appear in
@@ -130,6 +138,8 @@ const GUARANTEES = [
     },
   },
   {
+    id: "single-vue",
+    scope: "install",
     name: "vue: exactly one installed copy (single-instance dependency)",
     check() {
       const copies = findInstalledCopies(FIXTURE_NODE_MODULES, "vue");
@@ -141,25 +151,66 @@ const GUARANTEES = [
   },
 ];
 
-if (!existsSync(FIXTURE_DIST)) {
-  console.error(`\n✗ check-fixture-guarantees: ${FIXTURE_DIST} does not exist — run scripts/verify-fixture.mjs first.\n`);
+function fail(message) {
+  console.error(`\n✗ check-fixture-guarantees: ${message}\n`);
   process.exit(1);
 }
 
+// A skip naming a guarantee that doesn't exist (renamed, or a typo) would silently
+// stop skipping nothing — or, worse, outlive the guarantee it excused.
+for (const [scenario, { skipGuarantees }] of Object.entries(SCENARIOS)) {
+  for (const id of Object.keys(skipGuarantees)) {
+    if (!GUARANTEES.some((g) => g.id === id && g.scope !== "install")) {
+      fail(`scenario "${scenario}" skips "${id}", which is not a build-output guarantee.`);
+    }
+  }
+}
+
+if (!existsSync(join(FIXTURE_NODE_MODULES, ".bin", "vite"))) {
+  fail("fixtures/consumer-app is not installed — run scripts/verify-fixture.mjs first.");
+}
+
+// Every page is rebuilt, not read from whatever an earlier run left behind: only the
+// basic page is built by verify-fixture.mjs, and a stale dist-* would check old output.
+const builds = {};
+for (const scenario of Object.keys(SCENARIOS)) {
+  console.log(`[check-fixture-guarantees] building the ${scenario} page...`);
+  try {
+    builds[scenario] = buildScenario(scenario);
+  } catch {
+    fail(`the ${scenario} page failed to build — see the vite output above.`);
+  }
+}
+
+let checked = 0;
 let failed = 0;
-for (const { name, check } of GUARANTEES) {
-  const failure = check();
+function report(label, failure) {
+  checked++;
   if (failure) {
     failed++;
-    console.error(`✗ ${name}\n  ${failure}`);
+    console.error(`✗ ${label}\n  ${failure}`);
   } else {
-    console.log(`✓ ${name}`);
+    console.log(`✓ ${label}`);
+  }
+}
+
+for (const { id, name, scope, check } of GUARANTEES) {
+  if (scope === "install") {
+    report(name, check());
+    continue;
+  }
+  for (const [scenario, { skipGuarantees }] of Object.entries(SCENARIOS)) {
+    if (id in skipGuarantees) {
+      console.log(`- ${name} [${scenario}]: skipped (${skipGuarantees[id]})`);
+      continue;
+    }
+    report(`${name} [${scenario}]`, check(builds[scenario]));
   }
 }
 
 if (failed > 0) {
-  console.error(`\n${failed}/${GUARANTEES.length} guarantee(s) broken.\n`);
+  console.error(`\n${failed}/${checked} guarantee check(s) broken.\n`);
   process.exit(1);
 }
 
-console.log(`\nAll ${GUARANTEES.length} guarantee(s) held.`);
+console.log(`\nAll ${checked} guarantee check(s) held.`);
