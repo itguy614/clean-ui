@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CuiModal and CuiSlideover width and radius are themeable tokens** (#407). Since #228
+  a class passed to either lands on its panel, but the panel's width and radius were inline
+  declarations, so that class could not change them without `!important`. They are now
+  zero-specificity rules reading `--cui-modal-width` / `--cui-modal-radius` and
+  `--cui-slideover-width` (left/right) / `--cui-slideover-height` (top/bottom) /
+  `--cui-slideover-radius`, set on `:root`, `body` or the overlay itself; a plain class
+  rule wins too. A token beats the `size`/`rounded` props of every overlay beneath it, so
+  restyle a single one with a class. The modal's size is still a `max-width` on a
+  full-width panel, so an existing `max-width` override keeps working. The slideover's
+  position, slide and paint moved from its style binding into its stylesheet; nothing
+  changes visually.
+
 ## [1.6.0] - 2026-11-01
 
 ### Added

@@ -104,6 +104,16 @@ const meta: ComponentMeta = {
       slots: [{ name: "default", description: "Footer content, usually actions" }],
     },
   ],
+
+  tokens: [
+    {
+      name: "--cui-modal-width",
+      default: "per size",
+      description:
+        "Panel max-width (sm 24rem … xl 64rem). Overrides every modal's size prop beneath where it is set, CuiConfirmDialog's included",
+    },
+    { name: "--cui-modal-radius", default: "per rounded", description: "Panel corner radius" },
+  ],
 };
 
 export default meta;
