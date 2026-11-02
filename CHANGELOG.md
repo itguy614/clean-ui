@@ -19,6 +19,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   support it. A prefix, suffix or attached button keeps the label floated, clear of them.
   Any other control (CuiSelect, the date and time pickers) falls back to a top label and
   logs one console warning.
+- **`CuiList` / `CuiListItem`** (#195). A presentational list: a real `<ul>`/`<li>` (or `ol`,
+  or `div` rows), each row a link (`href`/`to`), a `<button>` (a `click` listener), any
+  element (`as`) or plain content, with a leading icon, a one-line title and subtitle, and a
+  trailing chevron or `#trailing` content. Dividers are pseudo-elements, so a screen reader's
+  item count is the row count. Themeable through `--cui-list-*` tokens.
+- **`CuiList variant="inset"`** (#234), the settings-app grouped list: each row paints the
+  card fill and border (defaulting to the `--cui-card-*` values), the first and last round
+  their outer corners, the hover fill follows the row's shape, and the dividers are inset to
+  the row padding. The subtitle holds WCAG AAA (7:1) on the fill and under hover, in both
+  modes and every theme.
+- **`CuiStatusDot`** (#234). An 8px status dot with a `tone` (`success`, `info`, `warning`,
+  `error`, `neutral`). `aria-hidden` unless given a `label`.
+- **`CuiPinInput`** (#196), for a one-time code or PIN drawn as a row of boxes. One real
+  input underneath is the control: a screen reader meets a single text field named by the
+  label, and `autocomplete="one-time-code"` lets a phone offer the code from a text message.
+  The boxes only draw each character and the caret. Takes `length`, `type` (`digits` or
+  `alphanumeric`, with optional `uppercase`), `mask` (dots, on a password input), `size` and
+  `color`, extends the shared form-control props, and emits `complete` when the last
+  character is filled. A pasted code is cleaned of spaces and dashes before it is cut to
+  length. Themeable through `--cui-pin-input-*` tokens.
+- **`useScrollSpy()`** (#192). Tracks which section of a page the reader is in, for an
+  on-page nav: `useScrollSpy(targets, { rootMargin, offset, root })` returns
+  `{ activeId, setActive, refresh }`. An IntersectionObserver, never a scroll listener; of
+  the sections in the band the topmost is current, and between two headings the last one
+  scrolled past stays current. `offset` keeps a sticky header out of the band. `setActive`
+  marks a clicked entry at once and holds it while the smooth scroll passes the sections in
+  between. `targets` (ids or elements) can be a ref or getter. SSR-safe. The docs site's
+  "On this page" rail is rebuilt on it, and is now labelled by its title, marks the current
+  entry with `aria-current="location"` and a heavier bar and weight rather than colour alone,
+  and lets a modified click open an entry in a new tab.
+- **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
+  It returns `{ status: "inside", range }`, `{ status: "outside" }` or
+  `{ status: "unknown" }` (the `ConstructLookup` type). "Unknown" means the cursor's block
+  isn't parsed far enough to say, on a document the parser can't settle within its time cap.
+  A plugin's toggle can now do nothing there, as the built-in ones already did, instead of
+  wrapping markers inside the construct. `findConstructRange` is unchanged and deprecated;
+  it goes in 2.0. The editor always supplies `lookupConstruct`, but it is optional in the
+  type until 2.0, so a `CommandContext` built by hand in a test keeps compiling, and the
+  built-in commands still run on one.
+
+### Changed
+
+- **CuiModal and CuiSlideover width and radius are themeable tokens** (#407). Since #228
+  a class passed to either lands on its panel, but the panel's width and radius were inline
+  declarations, so that class could not change them without `!important`. They are now
+  zero-specificity rules reading `--cui-modal-width` / `--cui-modal-radius` and
+  `--cui-slideover-width` (left/right) / `--cui-slideover-height` (top/bottom) /
+  `--cui-slideover-radius`, set on `:root`, `body` or the overlay itself; a plain class
+  rule wins too. A token beats the `size`/`rounded` props of every overlay beneath it, so
+  restyle a single one with a class. The modal's size is still a `max-width` on a
+  full-width panel, so an existing `max-width` override keeps working. The slideover's
+  position, slide and paint moved from its style binding into its stylesheet; nothing
+  changes visually.
+
+### Fixed
+
+- **The markdown editor's link and image dialogs follow a scoped theme** (#399). They mount
+  on `document.body`, so a `cui-theme-*` class or a `dark` class on a container around the
+  editor didn't reach them, and they rendered in the page's theme. They now take the
+  editor's nearest theme class and a scoped `dark` class when they open. A theme on
+  `<html>` already reached them and is not copied.
+- **An overlay no longer takes focus back from a field its content focused** (found reviewing
+  #420). CuiModal, CuiSlideover and CuiConfirmDialog focus their panel on the frame after
+  opening, which came after content that focused its own field on mount, so the markdown
+  editor's link dialog opened with focus on the panel instead of the URL field. The panel
+  now takes focus only when nothing inside it already has it.
 
 ## [1.6.0] - 2026-11-01
 

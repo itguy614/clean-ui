@@ -116,6 +116,11 @@ const router = createRouter({
       component: () => import('../pages/RovingFocusPage.vue'),
     },
     {
+      path: '/composables/scroll-spy',
+      name: 'scroll-spy',
+      component: () => import('../pages/ScrollSpyPage.vue'),
+    },
+    {
       path: '/composables/overlay',
       name: 'overlay',
       component: () => import('../pages/OverlayPage.vue'),
@@ -241,6 +246,11 @@ const router = createRouter({
       component: () => import('../pages/MaskedInputPage.vue'),
     },
     {
+      path: '/components/pin-input',
+      name: 'pin-input',
+      component: () => import('../pages/PinInputPage.vue'),
+    },
+    {
       path: '/components/input',
       name: 'input',
       component: () => import('../pages/InputPage.vue'),
@@ -319,6 +329,16 @@ const router = createRouter({
       path: '/components/kbd',
       name: 'kbd',
       component: () => import('../pages/KbdPage.vue'),
+    },
+    {
+      path: '/components/list',
+      name: 'list',
+      component: () => import('../pages/ListPage.vue'),
+    },
+    {
+      path: '/components/status-dot',
+      name: 'status-dot',
+      component: () => import('../pages/StatusDotPage.vue'),
     },
     {
       path: '/components/timeline',

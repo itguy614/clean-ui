@@ -31,6 +31,7 @@ const FORM_CONTROLS = [
   "CuiTagInput.vue",
   "CuiInputStepper.vue",
   "CuiMaskedInput.vue",
+  "CuiPinInput.vue",
   "CuiDatePicker.vue",
   "CuiDateRangePicker.vue",
 ];

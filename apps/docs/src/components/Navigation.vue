@@ -47,6 +47,7 @@ const sections = [
   { id: "input", label: "Input", path: "/components/input", group: "Form Controls" },
   { id: "input-stepper", label: "Input Stepper", path: "/components/input-stepper", group: "Form Controls" },
   { id: "masked-input", label: "Masked Input", path: "/components/masked-input", group: "Form Controls" },
+  { id: "pin-input", label: "Pin Input", path: "/components/pin-input", group: "Form Controls" },
   { id: "radio", label: "Radio", path: "/components/radio", group: "Form Controls" },
   { id: "rating", label: "Rating", path: "/components/rating", group: "Form Controls" },
   { id: "select", label: "Select", path: "/components/select", group: "Form Controls" },
@@ -68,6 +69,7 @@ const sections = [
   { id: "empty-state", label: "Empty State", path: "/components/empty-state", group: "Feedback" },
   { id: "skeleton", label: "Skeleton", path: "/components/skeleton", group: "Feedback" },
   { id: "spinner", label: "Spinner", path: "/components/spinner", group: "Feedback" },
+  { id: "status-dot", label: "Status Dot", path: "/components/status-dot", group: "Feedback" },
   { id: "toast", label: "Toast", path: "/components/toast", group: "Feedback" },
 
   // Data Display (alphabetical)
@@ -78,6 +80,7 @@ const sections = [
   { id: "code-block", label: "Code Block", path: "/components/code-block", group: "Data Display" },
   { id: "data-grid", label: "Data Grid", path: "/components/data-grid", group: "Data Display" },
   { id: "kbd", label: "Kbd", path: "/components/kbd", group: "Data Display" },
+  { id: "list", label: "List", path: "/components/list", group: "Data Display" },
   { id: "progress", label: "Progress", path: "/components/progress", group: "Data Display" },
   { id: "table", label: "Table", path: "/components/table", group: "Data Display" },
   { id: "timeline", label: "Timeline", path: "/components/timeline", group: "Data Display" },
@@ -104,6 +107,7 @@ const sections = [
   { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
   { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
   { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },
+  { id: "scroll-spy", label: "Scroll Spy", path: "/composables/scroll-spy", group: "Composables" },
   { id: "breakpoint", label: "Breakpoint & Layout Context", path: "/composables/breakpoint", group: "Composables" },
   { id: "color-scheme", label: "Color Scheme", path: "/composables/color-scheme", group: "Composables" },
   { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
