@@ -37,13 +37,12 @@ const tagPanel = ref(false);
 const lastTag = ref(0);
 const tagLog = ref<string[]>([]);
 const logEvent = (name: string) => (tagLog.value = [...tagLog.value, name].slice(-4));
-const tagEls = ref<InstanceType<typeof CuiButton>[]>([]);
 function openTag(i: number) {
   lastTag.value = i;
   tagPanel.value = true;
 }
 // Called when the panel has closed, so it sees the tag last shown, not the one that opened it.
-const lastTagRow = () => tagEls.value[lastTag.value]?.el ?? null;
+const lastTagRow = () => document.querySelector<HTMLElement>(`[data-docs-tag="${lastTag.value}"]`);
 
 // Form data
 const formName = ref("");
@@ -332,23 +331,24 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Focus on open and close -->
-        <Example title="Focus on open and close (initialFocus, returnFocus)" :code="`<button v-for=&quot;(tag, i) in tags&quot; ref=&quot;tagEls&quot; @click=&quot;openTag(i)&quot;>{{ tag }}</button>
+        <Example title="Focus on open and close (initialFocus, returnFocus)" :code="`<button v-for=&quot;(tag, i) in tags&quot; :data-tag=&quot;i&quot; @click=&quot;openTag(i)&quot;>{{ tag }}</button>
 
 <CuiSlideover
   v-model:visible=&quot;show&quot;
   :title=&quot;tags[lastTag]&quot;
   initial-focus=&quot;.tag-heading&quot;
-  :return-focus=&quot;() => tagEls[lastTag]&quot;
+  :return-focus=&quot;lastTagRow&quot;
   @after-enter=&quot;log('after-enter')&quot;
   @after-leave=&quot;log('after-leave')&quot;
 >
+  <!-- const lastTagRow = () => document.querySelector('[data-tag=&quot;' + lastTag + '&quot;]') -->
   <h3 class=&quot;tag-heading&quot; tabindex=&quot;-1&quot;>Details</h3>
   <CuiButton @click=&quot;lastTag--&quot;>Previous</CuiButton>
   <CuiButton @click=&quot;lastTag++&quot;>Next</CuiButton>
 </CuiSlideover>`">
           <CuiStack spacing="2">
             <CuiFlex gap="2" wrap="wrap">
-              <CuiButton v-for="(tag, i) in tags" :key="tag" ref="tagEls" variant="outline" size="sm" @click="openTag(i)">
+              <CuiButton v-for="(tag, i) in tags" :key="tag" :data-docs-tag="i" variant="outline" size="sm" @click="openTag(i)">
                 {{ tag }}
               </CuiButton>
             </CuiFlex>

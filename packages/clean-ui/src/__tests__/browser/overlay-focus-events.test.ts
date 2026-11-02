@@ -59,14 +59,18 @@ function setup(
   {
     onClose,
     focusFieldOnMount = false,
+    initialFocusHeadingEl = false,
     ...props
   }: OverlayFocusProps & {
     onClose?: () => void;
     /** Content that focuses its own field a tick after mounting, as the editor's URL dialog does (#420). */
     focusFieldOnMount?: boolean;
+    /** Pass the content's heading element itself as initialFocus, once it has rendered. */
+    initialFocusHeadingEl?: boolean;
   } = {},
 ) {
   const visible = ref(false);
+  const headingEl = ref<HTMLElement>();
   const events: Recorded[] = [];
   const root = () => document.querySelector(".cui-modal-overlay, .cui-slideover-overlay");
   const record = (name: string) => () =>
@@ -82,6 +86,7 @@ function setup(
             visible: visible.value,
             title: "Panel",
             ...props,
+            ...(initialFocusHeadingEl ? { initialFocus: headingEl.value } : {}),
             "onUpdate:visible": (v: boolean) => (visible.value = v),
             onClose: () => {
               record("close")();
@@ -91,7 +96,8 @@ function setup(
             onAfterLeave: record("after-leave"),
           },
           () => [
-            h("h3", { "data-t": "heading", tabindex: -1 }, "Heading"),
+            h("h3", { "data-t": "heading", tabindex: -1, ref: headingEl }, "Heading"),
+            h("h4", { "data-t": "plain" }, "Not focusable"),
             h("input", {
               "data-t": "field",
               onVnodeMounted: focusFieldOnMount
@@ -177,13 +183,38 @@ describe.each(OVERLAYS)("%s focus and lifecycle events (real browser)", (_, Over
     expect(t.events[0].focus).toBe(t.byT("field"));
   });
 
-  it("focuses initialFocus given as an element", async () => {
+  it("focuses initialFocus given as an element in the panel", async () => {
+    const t = setup(Overlay, panelSelector, { initialFocusHeadingEl: true });
+    await t.open();
+    await settle();
+    expect(t.events[0].focus).toBe(t.byT("heading"));
+  });
+
+  it("ignores an initialFocus outside the panel, or one that can't take focus", async () => {
     const outside = document.createElement("button");
     document.body.append(outside);
     const t = setup(Overlay, panelSelector, { initialFocus: outside });
     await t.open();
     await settle();
-    expect(t.events[0].focus).toBe(outside);
+    expect(t.events[0].focus, "focus stays in the aria-modal dialog").toBe(t.panel());
+    wrapper!.unmount();
+
+    // A heading without tabindex ignores focus(): the panel, not the opener behind it.
+    const u = setup(Overlay, panelSelector, { initialFocus: "[data-t='plain']" });
+    await u.open();
+    await settle();
+    expect(u.events[0].focus).toBe(u.panel());
+  });
+
+  it("treats an invalid initialFocus or returnFocus selector as naming nothing", async () => {
+    const t = setup(Overlay, panelSelector, { initialFocus: "#1-bad", returnFocus: "[data-x=1 2]" });
+    await t.open();
+    await settle();
+    expect(t.events[0].focus).toBe(t.panel());
+    t.visible.value = false;
+    await settle();
+    expect(t.names()).toEqual(["after-enter", "close", "after-leave"]);
+    expect(document.activeElement).toBe(t.byT("opener"));
   });
 
   it("falls back to the panel when initialFocus names nothing in it", async () => {
@@ -249,6 +280,27 @@ describe.each(OVERLAYS)("%s focus and lifecycle events (real browser)", (_, Over
     expect(calls).toBe(1);
     expect(created).not.toBeNull();
     expect(document.activeElement).toBe(created);
+  });
+
+  it("falls back to the opener when returnFocus names an element that is gone by close time", async () => {
+    const gone = document.createElement("button");
+    document.body.append(gone);
+    const t = setup(Overlay, panelSelector, { returnFocus: () => gone });
+    await t.open();
+    await settle();
+    gone.remove(); // the row was deleted while the overlay was open
+    t.visible.value = false;
+    await settle();
+    expect(document.activeElement).toBe(t.byT("opener"));
+  });
+
+  it("doesn't return focus into the closing panel itself", async () => {
+    const t = setup(Overlay, panelSelector, { returnFocus: "[data-t='field']" });
+    await t.open();
+    await settle();
+    t.visible.value = false;
+    await settle();
+    expect(document.activeElement).toBe(t.byT("opener"));
   });
 
   it("leaves focus alone with returnFocus false: a close handler's move stands", async () => {

@@ -1,5 +1,5 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
-import { resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
+import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { usePresence } from "./usePresence";
@@ -51,14 +51,15 @@ export interface UseOverlayOptions {
   rootRef?: Ref<HTMLElement | undefined> | ShallowRef<HTMLElement | null> | Readonly<ShallowRef<HTMLElement | null>>;
   /**
    * Element focused on open, in place of the dialog (#374). A selector is scoped to the
-   * dialog. It wins over a field the content focused on mount; resolving to nothing, the
-   * default applies.
+   * dialog, and an element outside it is ignored. It wins over a field the content focused
+   * on mount; naming nothing it can focus, the default applies.
    */
   initialFocus?: () => CuiFocusTarget | undefined;
   /**
    * Element focused once closed, in place of the opener (#374): a selector is looked up in
-   * the document, a function is called then. `false` leaves focus alone; resolving to
-   * nothing, focus returns to the opener.
+   * the document, a function is called then. `false` leaves focus alone; naming nothing it
+   * can focus (gone, hidden, disabled, or inside the closing dialog), focus returns to the
+   * opener.
    */
   returnFocus?: () => CuiFocusTarget | false | undefined;
   /** Called once the entry has finished and focus is in place (`after-enter`). */
@@ -118,8 +119,8 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   let enterFrame: number | null = null;
-  // Bumped by every open, close and unmount, so an entry's end reports only if nothing has
-  // happened since it began: closed mid-entry, it never "opened".
+  // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
+  // only if nothing has happened since it began: closed mid-entry, it never "opened".
   let entry = 0;
   /** `exit: "timer"`'s pending close, cancelled by a re-open mid-exit (#339). */
   let exitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -168,13 +169,13 @@ export function useOverlay(options: UseOverlayOptions) {
    * Focus on open: an explicit `initialFocus` wins — the consumer named it. Otherwise
    * content that focused its own field on mount (a URL dialog's input, #420) keeps it: this
    * frame comes after the content's own nextTick, and would otherwise steal focus back.
-   * Failing both, the dialog itself.
+   * Failing both, the dialog itself. Focus never leaves the dialog for an element outside it.
    */
   function focusInitial() {
     const dialog = dialogRef.value;
     const target = resolveFocusTarget(getInitialFocus?.(), dialog);
-    if (target) target.focus();
-    else if (!dialog?.contains(document.activeElement)) dialog?.focus();
+    if (target && dialog?.contains(target) && focusTook(target)) return;
+    if (!dialog?.contains(document.activeElement)) dialog?.focus();
   }
 
   /** The exit has played: report the close, give the page back, return focus. */
@@ -184,14 +185,13 @@ export function useOverlay(options: UseOverlayOptions) {
 
     releaseScrollLock();
 
-    // Return focus — to `returnFocus` if it names an element (resolved now, after the
-    // `close` handlers, so it can pick one they rendered); else to the opener or, if it has
-    // unmounted, through its restore key. `false` leaves it where it is.
+    // Return focus — to `returnFocus` if it names an element that takes it (resolved now,
+    // after the `close` handlers, so it can pick one they rendered; the closing dialog is
+    // hidden by now, so nothing in it can); else to the opener or, if it has unmounted,
+    // through its restore key. `false` leaves it where it is.
     const option = getReturnFocus?.();
-    if (option !== false) {
-      const target = resolveFocusTarget(option, document);
-      if (target) target.focus();
-      else returnFocus(previousFocus.value, previousFocusKey);
+    if (option !== false && !focusTook(resolveFocusTarget(option, document))) {
+      returnFocus(previousFocus.value, previousFocusKey);
     }
     onClosed?.();
   }

@@ -16,13 +16,13 @@ export const overlayFocusProps: PropRow[] = [
     name: "initialFocus",
     type: "string | HTMLElement | (() => HTMLElement | null)",
     description:
-      "Element focused on open — a selector (scoped to the panel), an element, or a function returning one. Wins over a field the content focused itself on mount. Unset, or naming nothing, the panel is focused",
+      "Element focused on open, inside the panel — a selector (scoped to the panel), an element, or a function returning one. Wins over a field the content focused itself on mount. Unset, or naming nothing it can focus, the panel is focused. A heading needs tabindex=\"-1\" to take focus",
   },
   {
     name: "returnFocus",
     type: "string | HTMLElement | (() => HTMLElement | null) | false",
     description:
-      "Element focused once closed, in place of the opener. A function is called at close time, so it can name an element that did not exist at open. false leaves focus where it is. Unset, or naming nothing, focus returns to the opener",
+      "Element focused once closed, in place of the opener. A function is called at close time, so it can name an element that did not exist at open. false leaves focus where it is. Unset, or naming nothing it can focus (gone, hidden or disabled by then), focus returns to the opener",
   },
 ];
 

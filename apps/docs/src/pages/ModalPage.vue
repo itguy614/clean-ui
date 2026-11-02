@@ -54,13 +54,12 @@ const logEvent = (name: string) => (focusLog.value = [...focusLog.value, name].s
 const rows = ["Invoice 1001", "Invoice 1002", "Invoice 1003", "Invoice 1004"];
 const rowDetails = ref(false);
 const lastViewed = ref(0);
-const rowEls = ref<InstanceType<typeof CuiButton>[]>([]);
 function openRow(i: number) {
   lastViewed.value = i;
   rowDetails.value = true;
 }
 // Called when the modal has closed, so it sees the row last shown, not the one that opened it.
-const lastViewedRow = () => rowEls.value[lastViewed.value]?.el ?? null;
+const lastViewedRow = () => document.querySelector<HTMLElement>(`[data-docs-row="${lastViewed.value}"]`);
 
 // SVG backdrop images as data URIs (built in script to avoid template encoding issues)
 const gridSvg = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="none"/><path d="M40 0H0v40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/></svg>')}`;
@@ -252,18 +251,19 @@ const formAgree = ref(false);
         </Example>
 
         <!-- Return focus elsewhere -->
-        <Example title="Return focus elsewhere (returnFocus)" :code="`<button v-for=&quot;(row, i) in rows&quot; ref=&quot;rowEls&quot; @click=&quot;openRow(i)&quot;>{{ row }}</button>
+        <Example title="Return focus elsewhere (returnFocus)" :code="`<button v-for=&quot;(row, i) in rows&quot; :data-row=&quot;i&quot; @click=&quot;openRow(i)&quot;>{{ row }}</button>
 
 <CuiModal
   v-model:visible=&quot;show&quot;
   :title=&quot;rows[lastViewed]&quot;
-  :return-focus=&quot;() => rowEls[lastViewed]&quot;
+  :return-focus=&quot;lastViewedRow&quot;
 >
+  <!-- const lastViewedRow = () => document.querySelector('[data-row=&quot;' + lastViewed + '&quot;]') -->
   <CuiButton @click=&quot;lastViewed--&quot;>Previous</CuiButton>
   <CuiButton @click=&quot;lastViewed++&quot;>Next</CuiButton>
 </CuiModal>`">
           <CuiFlex gap="2" wrap="wrap">
-            <CuiButton v-for="(row, i) in rows" :key="row" ref="rowEls" variant="outline" size="sm" @click="openRow(i)">
+            <CuiButton v-for="(row, i) in rows" :key="row" :data-docs-row="i" variant="outline" size="sm" @click="openRow(i)">
               {{ row }}
             </CuiButton>
           </CuiFlex>

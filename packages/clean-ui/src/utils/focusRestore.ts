@@ -36,13 +36,28 @@ export function returnFocus(el: HTMLElement | null, key: string | null) {
 
 /**
  * The element a `CuiFocusTarget` names (#374): a selector looked up in `scope`, an element
- * as given, or a function's result. Null if it names nothing.
+ * as given, or a function's result. Null if it names nothing — an invalid selector
+ * included, which would otherwise throw out of the overlay's open or close.
  */
 export function resolveFocusTarget(
   target: CuiFocusTarget | undefined,
   scope: ParentNode | null | undefined,
 ): HTMLElement | null {
-  if (typeof target === "string") return scope?.querySelector<HTMLElement>(target) ?? null;
   if (typeof target === "function") return target();
-  return target ?? null;
+  if (typeof target !== "string") return target ?? null;
+  try {
+    return scope?.querySelector<HTMLElement>(target) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Focus `el` and report whether it took: a disabled, hidden, detached or unfocusable
+ * element ignores `focus()`, and the caller then falls back rather than leaving focus
+ * where it was.
+ */
+export function focusTook(el: HTMLElement | null): boolean {
+  el?.focus();
+  return !!el && document.activeElement === el;
 }
