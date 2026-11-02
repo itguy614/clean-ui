@@ -27,15 +27,13 @@ const entries = ref<Entry[]>([]);
 // when reading. A plain "is it visible" test picks the lowest visible heading, which reads
 // as the nav running ahead of the reader.
 //
-// The offset is read off the headings' own `scroll-margin-top` (main.css: the 56px header
-// plus some air), so a click lands a heading exactly where a #hash link does, and the two
-// can't drift apart. 72px (4.5rem at the default font size) until the first read.
-const offset = ref(72);
+// The offset is the 56px header. A click still lands a heading where a #hash link does,
+// since scrollTo honours the headings' larger `scroll-margin-top` (main.css) on its own.
 const { activeId, scrollTo } = useScrollSpy(
   () => entries.value.map((e) => e.id),
   {
     rootMargin: "0px 0px -80% 0px",
-    offset,
+    offset: 56,
     // Above the first heading nothing has reached the band yet: the first entry is current.
     initial: () => entries.value[0]?.id,
   },
@@ -67,18 +65,15 @@ function collect() {
     seen.add(el.id);
     return { id: el.id, text, level: el.tagName === "H2" ? 2 : 3 };
   });
-  // Read after the ids are assigned: the scroll-margin rule matches only headings with one.
-  if (nodes[0]) offset.value = parseFloat(getComputedStyle(nodes[0]).scrollMarginTop) || offset.value;
 }
 
 function go(e: MouseEvent, id: string) {
-  // A real link: a modified or middle click still opens it in a new tab or window.
-  if (!isPlainClick(e)) return;
-  const el = document.getElementById(id);
-  if (!el) return;
-  e.preventDefault();
+  // A real link: a modified or middle click still opens it in a new tab or window, and a
+  // heading that has gone keeps the native #hash navigation.
   // Current at once, and held while the smooth scroll passes the sections in between.
-  scrollTo(id);
+  if (!isPlainClick(e) || !scrollTo(id)) return;
+  e.preventDefault();
+  const el = document.getElementById(id)!;
   // Move keyboard focus to the section too, or the nav is a mouse-only affordance.
   el.setAttribute("tabindex", "-1");
   el.focus({ preventScroll: true });

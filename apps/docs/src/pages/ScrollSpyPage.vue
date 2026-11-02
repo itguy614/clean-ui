@@ -20,13 +20,11 @@ const scroller = useTemplateRef<HTMLElement>("scroller");
 const { activeId: current, scrollTo } = useScrollSpy(() => sections.value.map((s) => s.id), {
   root: scroller,
   offset: () => (withOffset.value ? HEADER : 0),
-  initial: () => sections.value[0].id,
+  initial: () => sections.value[0]?.id,
 });
 
 function go(e: MouseEvent, id: string) {
-  if (!isPlainClick(e)) return;
-  e.preventDefault();
-  scrollTo(id);
+  if (isPlainClick(e) && scrollTo(id)) e.preventDefault();
 }
 
 let added = 0;
@@ -44,13 +42,14 @@ const { activeId, scrollTo } = useScrollSpy(
   {
     root: scroller,
     offset: 48,                             // 48px sticky header inside the scroller
-    initial: () => sections.value[0].id,    // marked on first paint, and above the first heading
+    initial: () => sections.value[0]?.id,   // marked on first paint, and above the first heading
   },
 );
 
 function go(e, id) {
-  e.preventDefault();
-  scrollTo(id);   // current now, held while the scroll runs; lands 48px down, below the header
+  // Current now, held while the scroll runs; lands 48px down, below the header. False when
+  // there is nothing to scroll to, so the link's own #hash navigation is left alone.
+  if (scrollTo(id)) e.preventDefault();
 }
 <\/script>
 
@@ -66,10 +65,11 @@ function go(e, id) {
   </div>
 </template>`;
 
-const pageCode = `// The whole page scrolls: leave root out. 72px clears the 56px header with some air.
+const pageCode = `// The whole page scrolls: leave root out. The docs header is 56px tall; the headings' own
+// scroll-margin-top (4.5rem, for #hash links) is larger, and scrollTo honours it.
 const { activeId, scrollTo } = useScrollSpy(
   () => headings.value.map((h) => h.id),
-  { rootMargin: "0px 0px -80% 0px", offset: 72, initial: () => headings.value[0]?.id },
+  { rootMargin: "0px 0px -80% 0px", offset: 56, initial: () => headings.value[0]?.id },
 );`;
 
 const params = [
@@ -90,7 +90,7 @@ const params = [
     type: "MaybeRefOrGetter<number>",
     default: "0",
     description:
-      "Pixels taken off the top of the band, for a sticky header: a heading hidden under it is not in view. Added to rootMargin's top inset when that is in pixels; replaces it when that is a percentage. scrollTo() lands a section this far below the scroller's top.",
+      "Pixels taken off the top of the band, for a sticky header: a heading hidden under it is not in view. Added to rootMargin's top inset when that is in pixels; replaces it when that is a percentage. scrollTo() lands a section this far below the scroller's top, or at its own scroll-margin-top if that is larger.",
   },
   {
     name: "options.root",
@@ -115,9 +115,9 @@ const returns = [
   },
   {
     name: "scrollTo",
-    type: "(id: string) => void",
+    type: "(id: string) => boolean",
     description:
-      "Scrolls section id into view, offset pixels below the scroller's top, and makes it current at once, held like setActive so the highlight doesn't pass through the sections in between. Smooth, or instant under prefers-reduced-motion. Does nothing if no element has that id. Moving focus to the section is up to you.",
+      "Scrolls section id into view, offset pixels below the scroller's top (or the section's own scroll-margin-top, if larger, so it lands where a #hash link would), and makes it current at once, held like setActive so the highlight doesn't pass through the sections in between. Smooth, or instant under prefers-reduced-motion. Returns false, doing nothing, if no element has that id or a root ref hasn't resolved yet: call preventDefault() only when it returns true, and the link still works. Moving focus to the section is up to you.",
   },
   {
     name: "setActive",
@@ -203,7 +203,7 @@ const returns = [
               Sticky header ({{ HEADER }}px)
             </div>
             <section v-for="s in sections" :key="s.id" style="padding: 0.75rem 1rem 1.5rem">
-              <h3 :id="s.id" style="margin: 0 0 0.5rem">{{ s.title }}</h3>
+              <h3 :id="s.id" style="margin: 0 0 0.5rem; scroll-margin-top: 0">{{ s.title }}</h3>
               <p style="margin: 0">
                 Scroll slowly and watch the nav follow the heading that reaches the top half of the
                 box. With the toggle on, the band starts below the sticky header.
@@ -237,7 +237,7 @@ const returns = [
           </li>
           <li>
             Turn the toggle off and click <em>Usage</em>: the heading now stops under the header,
-            since <code class="cui-code">scrollTo</code> uses the same offset as the spy.
+            since <code class="cui-code">scrollTo</code> uses the same offset as the spy (these demo headings set no <code class="cui-code">scroll-margin-top</code> of their own).
           </li>
           <li>With your system set to reduce motion, the clicks jump instead of gliding.</li>
           <li>Press <em>Add a section</em>: the new heading joins the nav and is tracked straight away.</li>

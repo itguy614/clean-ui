@@ -1,4 +1,4 @@
-import { computed, onMounted, onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { computed, isRef, onMounted, onScopeDispose, ref, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import { useEventListener } from "./useEventListener";
 import { prefersReducedMotion } from "../utils/motion";
 
@@ -39,11 +39,13 @@ export interface UseScrollSpyReturn {
   setActive: (id: string) => void;
   /**
    * Scroll section `id` into view and make it current at once: `setActive(id)` plus a scroll
-   * that puts the section's top `offset` pixels below the scroller's top, so a sticky header
-   * does not cover it. Smooth, or instant under `prefers-reduced-motion: reduce`. Does nothing
-   * when no element has that id, or on the server.
+   * that puts the section's top `offset` pixels below the scroller's top (or its own
+   * `scroll-margin-top`, if larger), so a sticky header does not cover it. Smooth, or instant
+   * under `prefers-reduced-motion: reduce`. Returns false, doing nothing, when no element has
+   * that id, when a `root` ref has not resolved yet, or on the server, so a link's click
+   * handler can keep its native #hash navigation: `if (scrollTo(id)) e.preventDefault()`.
    */
-  scrollTo: (id: string) => void;
+  scrollTo: (id: string) => boolean;
   /** Look the targets up again — after the ids in a static list appear in the DOM. */
   refresh: () => void;
 }
@@ -202,22 +204,36 @@ export function useScrollSpy(
     locked.value = true;
   }
 
-  function scrollTo(id: string) {
-    if (typeof document === "undefined") return;
+  function scrollTo(id: string): boolean {
+    if (typeof document === "undefined") return false;
     const el = document.getElementById(id);
-    if (!el) return;
-    setActive(id);
-    const root = toValue(options.root) ?? null;
-    const offset = toValue(options.offset) ?? 0;
-    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
-    const top = el.getBoundingClientRect().top - offset;
-    if (!root || isViewport(root)) {
-      window.scrollTo({ top: window.scrollY + top, behavior });
-    } else {
-      // Measured from the scroller's padding box, which is where its scrollTop counts from.
-      const origin = root.getBoundingClientRect().top + root.clientTop;
-      root.scrollTo({ top: root.scrollTop + top - origin, behavior });
+    const given = toValue(options.root) ?? null;
+    // A root ref or getter that has not resolved yet: don't scroll the page in its place.
+    const pending = !given && (isRef(options.root) || typeof options.root === "function");
+    if (!el || pending) return false;
+
+    const viewport = isViewport(given);
+    const scroller = viewport ? ((document.scrollingElement ?? document.documentElement) as HTMLElement) : given!;
+    // Measured from the scroller's padding box, which is where its scrollTop counts from.
+    const origin = viewport ? 0 : scroller.getBoundingClientRect().top + scroller.clientTop;
+    // Clear the sticky header, or the section's own scroll-margin-top when that is larger, so
+    // a click lands where a #hash link to the same section does.
+    const margin = Math.max(toValue(options.offset) ?? 0, parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+    const max = scroller.scrollHeight - scroller.clientHeight;
+    const top = Math.max(0, Math.min(max, scroller.scrollTop + el.getBoundingClientRect().top - origin - margin));
+
+    if (Math.abs(top - scroller.scrollTop) < 1) {
+      // Already there (or as far as the page goes): no scrollend will come to release a
+      // hold, so mark it without one.
+      picked.value = id;
+      locked.value = false;
+      return true;
     }
+    setActive(id);
+    // "instant", not "auto": auto still follows a page's CSS `scroll-behavior: smooth`.
+    const behavior: ScrollBehavior = prefersReducedMotion() ? "instant" : "smooth";
+    (viewport ? window : scroller).scrollTo({ top, behavior });
+    return true;
   }
 
   return {
