@@ -21,14 +21,14 @@ function save(which: keyof typeof saving) {
   setTimeout(() => (saving[which] = false), 2000);
 }
 
-// pressed: one toggle per variant.
-const variants = ["solid", "outline", "dash", "ghost"] as const;
-const pressedVariants = ref<string[]>(["outline", "ghost"]);
-function toggleVariant(v: string) {
-  pressedVariants.value = pressedVariants.value.includes(v)
-    ? pressedVariants.value.filter((p) => p !== v)
-    : [...pressedVariants.value, v];
+/** Flip one toggle in a set of pressed ones. */
+function toggle(set: Set<string>, id: string) {
+  if (!set.delete(id)) set.add(id);
 }
+
+// pressed: one toggle per variant, in two colours.
+const variants = ["solid", "outline", "dash", "ghost"] as const;
+const pressedVariants = reactive(new Set(["primary-outline", "primary-ghost", "success-outline", "success-ghost"]));
 
 // A toggle-button bar: one pressed button, and every button busy while a switch is in flight.
 const buckets = ["Design", "Review", "Meetings", "Admin"];
@@ -48,10 +48,7 @@ const marks = [
   { id: "italic", label: "Italic", icon: "text-italic" },
   { id: "underline", label: "Underline", icon: "text-underline" },
 ];
-const marksOn = ref<string[]>(["bold", "italic"]);
-function toggleMark(id: string) {
-  marksOn.value = marksOn.value.includes(id) ? marksOn.value.filter((m) => m !== id) : [...marksOn.value, id];
-}
+const marksOn = reactive(new Set(["bold", "italic"]));
 
 const focusableCode = `<CuiButton variant="solid" focusableWhenDisabled :loading="saving" @click="save">
   Save
@@ -81,9 +78,9 @@ const toolbarCode = `<CuiToolbar label="Quick switch">
       icon
       size="sm"
       variant="ghost"
-      :pressed="marksOn.includes(mark.id)"
+      :pressed="marksOn.has(mark.id)"
       :aria-label="mark.label"
-      @click="toggleMark(mark.id)"
+      @click="toggle(marksOn, mark.id)"
     >
       <CuiIcon :name="mark.icon" size="sm" />
     </CuiButton>
@@ -315,25 +312,14 @@ const toolbarCode = `<CuiToolbar label="Quick switch">
         <!-- Pressed -->
         <Example title="Toggle Buttons (pressed)" :code="pressedCode">
           <CuiStack spacing="3">
-            <CuiFlex gap="3" class="items-center flex-wrap">
+            <CuiFlex v-for="color in ['primary', 'success'] as const" :key="color" gap="3" class="items-center flex-wrap">
               <CuiButton
                 v-for="v in variants"
                 :key="v"
                 :variant="v"
-                :pressed="pressedVariants.includes(v)"
-                @click="toggleVariant(v)"
-              >
-                {{ v }}
-              </CuiButton>
-            </CuiFlex>
-            <CuiFlex gap="3" class="items-center flex-wrap">
-              <CuiButton
-                v-for="v in variants"
-                :key="v"
-                :variant="v"
-                color="success"
-                :pressed="pressedVariants.includes(v)"
-                @click="toggleVariant(v)"
+                :color="color"
+                :pressed="pressedVariants.has(`${color}-${v}`)"
+                @click="toggle(pressedVariants, `${color}-${v}`)"
               >
                 {{ v }}
               </CuiButton>
@@ -370,9 +356,9 @@ const toolbarCode = `<CuiToolbar label="Quick switch">
                   icon
                   size="sm"
                   variant="ghost"
-                  :pressed="marksOn.includes(mark.id)"
+                  :pressed="marksOn.has(mark.id)"
                   :aria-label="mark.label"
-                  @click="toggleMark(mark.id)"
+                  @click="toggle(marksOn, mark.id)"
                 >
                   <CuiIcon :name="mark.icon" size="sm" />
                 </CuiButton>

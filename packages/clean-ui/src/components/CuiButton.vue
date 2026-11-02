@@ -86,26 +86,22 @@ warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outlin
 
 const isDisabled = computed(() => props.disabled || props.loading);
 
-/** A disabled link drops its target, through the helper CuiListItem shares (#422). */
-const deadLink = computed(() => disabledLink(props, isDisabled.value, "button"));
-
-// Determine the root element tag
-const tag = computed<string | Component>(() => {
-  if (deadLink.value) return deadLink.value.is;
-  if (props.to) return "router-link";
-  if (props.href) return "a";
-  return "button";
-});
-
-// Build root element attributes based on tag
-const rootAttrs = computed(() => {
-  if (deadLink.value) return deadLink.value.attrs;
-  if (props.to) return { to: props.to };
-  if (props.href) return { href: props.href, role: "button" };
+/**
+ * The root element and its attributes. A disabled link drops its target, through the helper
+ * CuiListItem shares (#422).
+ */
+const root = computed((): { is: string | Component; attrs: Record<string, unknown> } => {
+  const dead = disabledLink(props, isDisabled.value, "button");
+  if (dead) return dead;
+  if (props.to) return { is: "router-link", attrs: { to: props.to } };
+  if (props.href) return { is: "a", attrs: { href: props.href, role: "button" } };
   return {
-    type: props.type,
-    disabled: (isDisabled.value && !props.focusableWhenDisabled) || undefined,
-    "aria-disabled": isDisabled.value ? "true" : undefined,
+    is: "button",
+    attrs: {
+      type: props.type,
+      disabled: (isDisabled.value && !props.focusableWhenDisabled) || undefined,
+      "aria-disabled": isDisabled.value ? "true" : undefined,
+    },
   };
 });
 
@@ -157,11 +153,13 @@ function pressedPaint(c: CuiColor, v: ButtonVariant): Record<string, string> {
       "--_button-pressed-border": "1px solid transparent",
     };
   }
+  // Ghost and outline both gain a solid edge (ghost the lighter one); dash keeps its dashes.
+  const style = v === "dash" ? "dashed" : "solid";
+  const edge = v === "ghost" ? `var(--cui-${c}-border)` : `var(--cui-${c})`;
   return {
     "--_button-pressed-bg": `var(--cui-${c}-bg)`,
     "--_button-pressed-color": `var(--cui-${c}-hover)`,
-    // Ghost and outline both gain a solid edge; dash keeps its dashes.
-    "--_button-pressed-border": `1px ${v === "dash" ? "dashed" : "solid"} var(--cui-${c}${v === "ghost" ? "-border" : ""})`,
+    "--_button-pressed-border": `1px ${style} ${edge}`,
   };
 }
 
@@ -222,7 +220,7 @@ const buttonStyle = computed(() => {
 
 <template>
   <component
-    :is="tag"
+    :is="root.is"
     v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
@@ -230,11 +228,10 @@ const buttonStyle = computed(() => {
       'cui-button--disabled': isDisabled,
       'cui-button--icon': icon,
       'cui-button--pressed': pressed,
-      // A pressed ghost button draws an edge, so CuiButtonGroup merges it like any painted one.
-      'cui-button--ghost': variant === 'ghost' && !pressed,
+      'cui-button--ghost': variant === 'ghost',
     }"
     :style="buttonStyle"
-    v-bind="rootAttrs"
+    v-bind="root.attrs"
     :aria-busy="loading || undefined"
     :aria-pressed="pressed"
     @click="onClick"

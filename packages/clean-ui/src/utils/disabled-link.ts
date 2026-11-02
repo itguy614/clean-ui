@@ -1,15 +1,8 @@
 /**
- * The element for a disabled link, shared by every component that can render as one
- * (CuiButton, CuiListItem — #422).
- *
- * The target is dropped: an `<a>` without `href` is neither focusable nor followable, so
- * nothing reaches it by Tab, a click, a middle-click or "open in new tab", whatever the CSS
- * does. Keeping the `href` under `aria-disabled` instead leaves a live link that only the
- * stylesheet stands in front of. `role` keeps the element announced as what it was: without
- * `href` an `<a>` has no role of its own.
- *
- * Returns `undefined` unless this is a link (`href` or `to`) and disabled, so a caller can
- * write `disabledLink(…) ?? <its usual element>`.
+ * The element for a disabled link (#422): an `<a>` with its `href`/`to` dropped, so it can't
+ * be focused or followed whatever the CSS does, and `role` to keep it announced as what it
+ * was. `undefined` unless this is a link and disabled. The caller still holds back `click`,
+ * which an `<a>` without `href` fires. CuiButton and CuiListItem share it.
  */
 export function disabledLink(
   target: { href?: string; to?: unknown },

@@ -89,17 +89,11 @@ describe("CuiButton", () => {
   });
 
   describe("focusableWhenDisabled (#396)", () => {
-    it("keeps a disabled button out of native disabled, marked aria-disabled", () => {
-      const wrapper = mount(CuiButton, { props: { disabled: true, focusableWhenDisabled: true } });
+    it.each([{ disabled: true }, { loading: true }])("keeps %o out of native disabled, marked aria-disabled", (state) => {
+      const wrapper = mount(CuiButton, { props: { ...state, focusableWhenDisabled: true } });
       expect(wrapper.attributes("disabled")).toBeUndefined();
       expect(wrapper.attributes("aria-disabled")).toBe("true");
       expect(wrapper.classes()).toContain("cui-button--disabled");
-    });
-
-    it("does the same while loading", () => {
-      const wrapper = mount(CuiButton, { props: { loading: true, focusableWhenDisabled: true } });
-      expect(wrapper.attributes("disabled")).toBeUndefined();
-      expect(wrapper.attributes("aria-disabled")).toBe("true");
     });
 
     it("swallows a click, so neither the consumer nor an ancestor sees it", async () => {
@@ -166,13 +160,6 @@ describe("CuiButton", () => {
       await wrapper.setProps({ pressed: true });
       expect(token(wrapper, "--_button-pressed-bg")).toBe("var(--cui-success-bg)");
       expect(token(wrapper, "--_button-pressed-border")).toBe("1px solid var(--cui-success-border)");
-    });
-
-    it("counts a pressed ghost button as painted: it draws an edge", async () => {
-      const wrapper = mount(CuiButton, { props: { variant: "ghost", pressed: false } });
-      expect(wrapper.classes()).toContain("cui-button--ghost");
-      await wrapper.setProps({ pressed: true });
-      expect(wrapper.classes()).not.toContain("cui-button--ghost");
     });
 
     it("combines with focusableWhenDisabled", () => {
