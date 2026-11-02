@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
+  routine, non-destructive confirm no longer has to look like an error, a warning or an info
+  notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
+  takes `false` to render no icon tile, with the title flush left and no gap where the tile
+  was, and now also accepts an icon component as well as a registered name. `confirmColor`
+  overrides only the confirm button's colour role, for any variant; the tile and the
+  type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
+  dialogs render as before. The primary icon is a sealed question mark rather than the plain
+  `?`, which is CuiIcon's glyph for an unknown icon name.
+
 ### Changed
 
 - **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
@@ -26,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
     so they no longer emit `rgba(…, 1.00)`.
   - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+
+### Fixed
+
+- **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
+  icon is decorative; the title and message carry the meaning.
 
 ## [1.7.0] - 2026-11-02
 
