@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`initial` and `scrollTo()` on `useScrollSpy()`** (#423). `initial` is the id `activeId`
+  reports while no section has reached the band: on first paint, during SSR, and above the
+  first section (a ref or getter is followed). `scrollTo(id)` scrolls a section into view
+  `offset` pixels below the scroller's top (or at the section's own `scroll-margin-top`, if
+  larger, so it lands where a #hash link does) and marks it current at once, holding it until
+  the scroll settles so the highlight doesn't pass through the sections in between; it jumps
+  instead of gliding under `prefers-reduced-motion`. It returns `false` when there is nothing
+  to scroll to, so a link can keep its native navigation. The docs site's "On this page" rail
+  uses both.
 - **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
   routine, non-destructive confirm no longer has to look like an error, a warning or an info
   notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
