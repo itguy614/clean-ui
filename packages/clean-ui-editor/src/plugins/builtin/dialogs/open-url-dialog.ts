@@ -1,5 +1,4 @@
 import { mountStandaloneDialog } from "./mount-standalone";
-import { editorElementOf } from "../../command-context";
 import UrlDialog from "./UrlDialog.vue";
 import type { UrlDialogKind } from "../../../messages";
 import type { CommandContext } from "../../types";
@@ -37,7 +36,6 @@ export function openUrlDialog(
         },
       },
       context.cleanUI,
-      editorElementOf(context),
     );
     // The editor closes it if it unmounts first (#409).
     return unmount;

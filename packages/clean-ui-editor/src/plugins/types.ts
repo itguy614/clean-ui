@@ -103,7 +103,8 @@ export interface CommandContext {
    * command that mounts its own Vue app for a dialog calls
    * `context.cleanUI.provideTo(app)` before mounting, so the clean-ui
    * components in it (a CuiModal's heading level, its close label) match the
-   * host's rather than the library's defaults.
+   * host's rather than the library's defaults, and their teleported panels take
+   * the theme scope around the editor (#418).
    */
   readonly cleanUI: CleanUIContext;
 }

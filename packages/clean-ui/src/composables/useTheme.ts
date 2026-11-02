@@ -19,7 +19,7 @@ export const THEME_PRESETS: ThemePreset[] = [
 ];
 
 const STORAGE_KEY = "cui-theme";
-const CLASS_PREFIX = "cui-theme-";
+export const CLASS_PREFIX = "cui-theme-";
 
 // Only the classes clean-ui itself may add. `applyTheme` strips these and no
 // others, so a consuming app's own `cui-theme-<brand>` class on <html> — a

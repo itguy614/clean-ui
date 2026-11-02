@@ -3,6 +3,7 @@ import { provide, toRef, computed } from "vue";
 import CuiToast from "./CuiToast.vue";
 import CuiButton from "./CuiButton.vue";
 import { POPOVER_Z_INDEX } from "../utils/position";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import {
   ToastContextKey,
   createToastState,
@@ -149,6 +150,10 @@ const visibleToasts = computed(() => {
   }
   return state.toasts.value.map((t) => ({ ...t, _collapsed: false, _stackIndex: 0 }));
 });
+
+// The theme scope around the provider, on the teleported stack (#418). A provider usually
+// wraps the whole app, where there is none; one placed inside a scope carries it.
+const themeScope = useScopedTheme(() => state.toasts.value.length > 0);
 </script>
 
 <template>
@@ -159,7 +164,7 @@ const visibleToasts = computed(() => {
   <Teleport to="body">
     <!-- Arrivals slide in from the screen edge, leavers fade out, and the rest move into
          place (#263): a TransitionGroup, so a removed toast no longer jumps the stack. -->
-    <TransitionGroup tag="div" name="cui-toast" :style="containerStyle" class="cui-toast-container" @before-leave="pinLeaving" @focusin="onStackFocusin">
+    <TransitionGroup tag="div" name="cui-toast" :style="containerStyle" class="cui-toast-container" :class="themeScope" @before-leave="pinLeaving" @focusin="onStackFocusin">
       <div
         v-for="(toast, index) in visibleToasts"
         :key="toast.id"

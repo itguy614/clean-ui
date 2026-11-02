@@ -60,6 +60,24 @@ export function installTokens(css: string): () => void {
     }`);
 }
 
+/** `--cui-primary` and `--cui-surface-base` as the cascade resolves them on `el`: what tells
+ * one theme scope from another (#399, #418). */
+export function themeTokensOn(el: Element): { primary: string; surface: string } {
+  const s = getComputedStyle(el);
+  return { primary: s.getPropertyValue("--cui-primary").trim(), surface: s.getPropertyValue("--cui-surface-base").trim() };
+}
+
+/** `themeTokensOn` a probe carrying `className` directly under `<body>`, where nothing but the
+ * page itself sits above it. */
+export function themeTokensUnder(className: string): { primary: string; surface: string } {
+  const probe = document.createElement("div");
+  probe.className = className;
+  document.body.append(probe);
+  const tokens = themeTokensOn(probe);
+  probe.remove();
+  return tokens;
+}
+
 /** Append a `<style>` with `css` to the document. Returns a teardown for `afterAll`. */
 export function injectStyle(css: string): () => void {
   const style = document.createElement("style");

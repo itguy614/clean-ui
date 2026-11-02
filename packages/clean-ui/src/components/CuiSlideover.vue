@@ -3,6 +3,7 @@ import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -142,6 +143,8 @@ const panelClass = computed(() => [
 
 // Generate id for aria-labelledby
 const titleId = useCuiId("slideover-title");
+// The theme scope around the slideover, on the teleported overlay (#418).
+const themeScope = useScopedTheme(() => mounted.value);
 </script>
 
 <template>
@@ -154,6 +157,7 @@ const titleId = useCuiId("slideover-title");
       v-show="isVisible && !hidden"
       ref="overlayEl"
       class="cui-slideover-overlay"
+      :class="themeScope"
       :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
       @keydown="onKeydown"
     >

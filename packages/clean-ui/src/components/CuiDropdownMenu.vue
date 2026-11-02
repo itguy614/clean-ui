@@ -2,6 +2,7 @@
 import { inject, ref, watch, onUnmounted } from "vue";
 import { useEventListener } from "../composables/useEventListener";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { DropdownContextKey } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
@@ -18,6 +19,8 @@ const props = withDefaults(defineProps<CuiDropdownMenuProps>(), {
 
 const ctx = inject(DropdownContextKey);
 const { present, onAfterLeave } = usePresence(() => !!ctx?.isOpen.value);
+// The theme scope around the dropdown, on the teleported menu (#418).
+const themeScope = useScopedTheme(() => present.value);
 const menuRef = ref<HTMLElement>();
 const menuStyle = ref<Record<string, string>>({});
 
@@ -74,6 +77,7 @@ function onKeydown(e: KeyboardEvent) {
       :id="ctx?.ownerId && `${ctx.ownerId}-menu`"
       ref="menuRef"
       class="cui-dropdown-menu"
+      :class="themeScope"
       :data-cui-menu-owner="ctx?.ownerId"
       :style="{ ...menuStyle, minWidth }"
       role="menu"

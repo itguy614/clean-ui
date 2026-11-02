@@ -14,8 +14,6 @@ const UNKNOWN: ConstructLookup = Object.freeze({ status: "unknown" });
 /** Internal to the package: state the editor drives that commands never see.
  * Kept off the object so it adds nothing to the public type. */
 interface ContextInternals {
-  /** The editor's own element, for a dialog copying a scoped theme (#399). */
-  element(): HTMLElement | null;
   /** Inside an `isActive` query: answer from what is parsed, never parse. */
   peeking: boolean;
   peekedState: EditorState | null;
@@ -36,12 +34,6 @@ export function lookupConstructIn(context: CommandContext, nodeName: string): Co
   if (context.lookupConstruct) return context.lookupConstruct(nodeName);
   const range = context.findConstructRange(nodeName);
   return range ? { status: "inside", range } : OUTSIDE;
-}
-
-/** The element of the editor a context belongs to, while its view is mounted.
- * `null` for a context this package didn't build. */
-export function editorElementOf(context: CommandContext): HTMLElement | null {
-  return internals.get(context)?.element() ?? null;
 }
 
 /** Runs an `isActive` query in peek mode: lookups parse for a few
@@ -117,7 +109,6 @@ export function createCommandContext(
   }
 
   const own: ContextInternals = {
-    element: () => getView()?.dom ?? null,
     peeking: false,
     peekedState: null,
     peekUnsettled: false,
