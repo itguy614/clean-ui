@@ -237,6 +237,8 @@ export interface CuiCoreMessages {
      * trailing ellipsis, so a translated placeholder names it in the same language.
      */
     searchLabel?: string;
+    /** The toolbar's accessible name (#190). Optional, so an existing catalogue type-checks. */
+    toolbar?: string;
     /** Placeholder for a per-column filter input. */
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
@@ -379,6 +381,7 @@ export const defaultMessages: CuiCoreMessages = {
     filters: "Filters",
     all: "All",
     search: "Search…",
+    toolbar: "Table controls",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
     columns: "Columns",

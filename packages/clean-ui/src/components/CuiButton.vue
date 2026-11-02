@@ -167,7 +167,7 @@ const buttonStyle = computed(() => {
     v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
-    :class="{ 'cui-button--disabled': isDisabled, 'cui-button--icon': icon }"
+    :class="{ 'cui-button--disabled': isDisabled, 'cui-button--icon': icon, 'cui-button--ghost': variant === 'ghost' }"
     :style="buttonStyle"
     v-bind="rootAttrs"
     :aria-busy="loading || undefined"

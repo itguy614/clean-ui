@@ -58,6 +58,8 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiProgress.vue", issue: "#211" },
   { file: "CuiBackdrop.vue", issue: "#211" },
   { file: "CuiAvatarGroup.vue", issue: "#211" },
+  { file: "CuiToolbar.vue", issue: "#190" },
+  { file: "CuiToolbarSeparator.vue", issue: "#190" },
   { file: "CuiList.vue", issue: "#195" },
   { file: "CuiListItem.vue", issue: "#195" },
   { file: "CuiStatusDot.vue", issue: "#234" },

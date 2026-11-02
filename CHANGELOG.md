@@ -64,6 +64,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it goes in 2.0. The editor always supplies `lookupConstruct`, but it is optional in the
   type until 2.0, so a `CommandContext` built by hand in a test keeps compiling, and the
   built-in commands still run on one.
+- **`CuiToolbar` and `CuiToolbarSeparator`** (#190). The ARIA toolbar pattern: one tab stop
+  however many controls it holds, with the arrow keys (by `orientation`), Home and End moving
+  between them and a disabled control skipped. It renders none of its controls: CuiButton,
+  CuiButtonGroup and CuiSelect go in its slot, and the separator stands across its axis on
+  its own. A text input keeps its own tab stop and its caret keys, and an open select keeps
+  its arrows. `overflow="scroll"` keeps one line in a CuiScrollArea with edge fades, padded
+  so a focus ring isn't clipped. It needs an accessible name (`label`, `aria-label` or
+  `aria-labelledby`) and warns without one. Themeable through `--cui-toolbar-gap`, `-px`,
+  `-py`, `-bg`, `-border`, `-radius` and `--cui-toolbar-separator-bg`.
+- **`useRovingFocus({ manageTabindex: true })`** writes the tab stop onto the items itself
+  and follows them coming and going, for items the host doesn't render (slot content).
+  CuiToolbar is built on it. `itemSelector` also takes a ref or getter.
 
 ### Changed
 
@@ -78,6 +90,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full-width panel, so an existing `max-width` override keeps working. The slideover's
   position, slide and paint moved from its style binding into its stylesheet; nothing
   changes visually.
+- **CuiButtonGroup merges corners only where two painted buttons meet** (found reviewing
+  #417). A ghost button draws no edge, so a painted button beside one keeps its corners: a
+  lone pressed toggle in a row of ghost ones stays whole, and a run of pressed ones merges
+  into one shape, rounded at its ends. A group of painted buttons, the radio "buttons"
+  variant and dropdowns merge as before. CuiButton now carries `cui-button--ghost`.
+- **CuiDataGrid's toolbar and the markdown editor's toolbar are both CuiToolbars** (#190).
+  The grid's toolbar is now `role="toolbar"`, named "Table controls" (the new optional
+  `dataGrid.toolbar` message), and its buttons (filter, columns, view toggle, saved views
+  and anything in `#toolbar-start` / `#toolbar-end`) share one tab stop. The search box
+  keeps its own. The editor's toolbar drops its own keyboard handling and behaves as before.
+  The editor needs clean-ui 1.7.0 for this.
 
 ### Fixed
 
@@ -91,6 +114,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   opening, which came after content that focused its own field on mount, so the markdown
   editor's link dialog opened with focus on the panel instead of the URL field. The panel
   now takes focus only when nothing inside it already has it.
+- **`useRovingFocus` skips a hidden item** (`hidden`, or `v-show`'s `display: none`), as it
+  already skipped a disabled one (#190). The arrow keys used to stall on it, and it could
+  hold the group's only tab stop while unfocusable.
 
 ## [1.6.0] - 2026-11-01
 
