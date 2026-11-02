@@ -3,7 +3,9 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { history, undo } from "@codemirror/commands";
 import { createCommandContext, disposeCommandContext } from "../command-context";
-import type { CollectSettle } from "../types";
+import type { CollectSettle, CommandContext } from "../types";
+import { boldPlugin } from "../builtin/bold";
+import { defaultMarkdownEditorMessages } from "../../messages";
 import { cuiMarkdownLanguage } from "../../language/markdown-language";
 
 function makeView(doc: string): EditorView {
@@ -288,6 +290,54 @@ describe("createCommandContext", () => {
       const emphasis = context.findConstructRange("Emphasis");
       const strong = context.findConstructRange("StrongEmphasis");
       expect(emphasis !== null || strong !== null).toBe(true);
+    });
+  });
+
+  // "unknown" needs a document the parser can't settle in time: background-parse.test.ts.
+  describe("lookupConstruct (#405)", () => {
+    it("reports outside when the cursor isn't in the construct", () => {
+      view = makeMarkdownView("plain text **bold** more text");
+      view.dispatch({ selection: { anchor: 3 } });
+      const context = createCommandContext(() => view!);
+
+      expect(context.lookupConstruct!("StrongEmphasis")).toEqual({ status: "outside" });
+    });
+
+    it("reports inside, with the enclosing range, when it is", () => {
+      const doc = "plain text **bold** more text";
+      view = makeMarkdownView(doc);
+      view.dispatch({ selection: { anchor: doc.indexOf("bold") + 2 } });
+      const context = createCommandContext(() => view!);
+
+      const found = context.lookupConstruct!("StrongEmphasis");
+      expect(found.status).toBe("inside");
+      if (found.status !== "inside") return;
+      expect(doc.slice(found.range.from, found.range.to)).toBe("**bold**");
+      expect(context.findConstructRange("StrongEmphasis")).toEqual(found.range);
+    });
+
+    it("leaves a built-in working on a context built by hand without it, as in 1.6", () => {
+      // A plugin author's test double: createCommandContext isn't exported from the package.
+      const doc = "**bold**";
+      const replaced: string[] = [];
+      const unused = () => {
+        throw new Error("not called");
+      };
+      const context: CommandContext = {
+        doc,
+        selection: { from: 3, to: 3, empty: true },
+        insertAtCursor: unused,
+        wrapSelection: unused,
+        replaceRange: (_from, _to, text) => void replaced.push(text),
+        replaceRanges: unused,
+        collect: unused,
+        findConstructRange: () => ({ from: 0, to: doc.length }),
+        messages: defaultMarkdownEditorMessages,
+        cleanUI: { provideTo() {} },
+      };
+      expect(boldPlugin.commands.bold.isActive!(context)).toBe(true);
+      expect(boldPlugin.commands.bold.run(context)).toBe(true);
+      expect(replaced).toEqual(["bold"]);
     });
   });
 });

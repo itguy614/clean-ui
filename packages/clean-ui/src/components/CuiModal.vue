@@ -104,7 +104,12 @@ const sizeMap: Record<string, string> = {
   full: "calc(100vw - 2rem)",
 };
 
-const maxWidth = computed(() => sizeMap[props.size] ?? props.size);
+// Emitted as private properties and read back through the public tokens, so a class
+// forwarded onto the panel, or a container-level --cui-modal-*, can restyle them (#407).
+const panelVars = computed(() => ({
+  "--_modal-width": sizeMap[props.size] ?? props.size,
+  "--_modal-radius": RADIUS_SCALE[props.rounded],
+}));
 
 // Generate id for aria-labelledby
 const titleId = useCuiId("modal-title");
@@ -141,7 +146,7 @@ const titleId = useCuiId("modal-title");
           data-cui-exit
           class="cui-modal"
           :class="{ 'cui-modal--visible': isAnimating }"
-          :style="{ maxWidth, borderRadius: RADIUS_SCALE[rounded] }"
+          :style="panelVars"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="ariaLabelledby ?? (title ? titleId : undefined)"
@@ -198,13 +203,21 @@ const titleId = useCuiId("modal-title");
 }
 
 /* --- Modal panel --- */
+/* Themeable — zero specificity, so a class forwarded onto the panel (`<CuiModal class>`)
+   or a consumer's own `.cui-modal { … }` wins without `!important` (#407). The size preset
+   caps a full-width panel, so a consumer's `max-width` still widens or narrows it. */
+:where(.cui-modal) {
+  width: 100%;
+  max-width: var(--cui-modal-width, var(--_modal-width));
+  border-radius: var(--cui-modal-radius, var(--_modal-radius));
+  background: var(--cui-surface-base);
+  box-shadow: var(--cui-shadow-lg);
+}
+
 .cui-modal {
   display: flex;
   flex-direction: column;
-  width: 100%;
   max-height: calc(100vh - 8rem);
-  background: var(--cui-surface-base);
-  box-shadow: var(--cui-shadow-lg);
   outline: none;
   overflow: hidden;
 

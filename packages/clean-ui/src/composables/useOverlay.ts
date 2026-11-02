@@ -121,7 +121,9 @@ export function useOverlay(options: UseOverlayOptions) {
       enterFrame = requestAnimationFrame(() => {
         enterFrame = null;
         isAnimating.value = true;
-        dialogRef.value?.focus();
+        // Content that focused its own field on mount (a URL dialog's input) keeps it: this
+        // frame comes after the content's own nextTick, and would otherwise steal focus back.
+        if (!dialogRef.value?.contains(document.activeElement)) dialogRef.value?.focus();
       });
     });
   }
