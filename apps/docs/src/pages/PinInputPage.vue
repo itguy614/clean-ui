@@ -128,14 +128,19 @@ function verify(values: Record<string, unknown>) {
 
       <Example
         title="Sizes and colors"
-        :code="`<CuiPinInput size=&quot;sm&quot; :length=&quot;4&quot; />
+        :code="`<CuiPinInput size=&quot;xs&quot; :length=&quot;4&quot; />
+<CuiPinInput size=&quot;sm&quot; :length=&quot;4&quot; />
 <CuiPinInput size=&quot;md&quot; :length=&quot;4&quot; color=&quot;success&quot; />
-<CuiPinInput size=&quot;lg&quot; :length=&quot;4&quot; color=&quot;secondary&quot; />`"
+<CuiPinInput size=&quot;lg&quot; :length=&quot;4&quot; color=&quot;secondary&quot; />
+<CuiPinInput size=&quot;xl&quot; :length=&quot;4&quot; color=&quot;info&quot; />`"
       >
         <CuiStack spacing="4">
+          <p style="margin: 0">All five sizes, <code class="cui-code">xs</code> to <code class="cui-code">xl</code>, are distinct; none is clamped. Each box is a square, sized from the same scale as an input.</p>
+          <CuiPinInput v-model="sizes" size="xs" :length="4" label="Extra small" />
           <CuiPinInput v-model="sizes" size="sm" :length="4" label="Small" />
           <CuiPinInput v-model="sizes" size="md" :length="4" color="success" label="Medium" />
           <CuiPinInput v-model="sizes" size="lg" :length="4" color="secondary" label="Large" />
+          <CuiPinInput v-model="sizes" size="xl" :length="4" color="info" label="Extra large" />
         </CuiStack>
       </Example>
 

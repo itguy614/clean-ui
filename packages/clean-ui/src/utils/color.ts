@@ -83,28 +83,28 @@ export function rgbToHsv(r: number, g: number, b: number): HSV {
   };
 }
 
+/** One channel as two lowercase hex digits. */
+const hexByte = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+
 export function rgbToHex(r: number, g: number, b: number): string {
-  const hex = (n: number) => Math.round(n).toString(16).padStart(2, "0");
-  return `#${hex(r)}${hex(g)}${hex(b)}`;
+  return `#${hexByte(r)}${hexByte(g)}${hexByte(b)}`;
 }
 
 export function hexToRgb(hex: string): RGB | null {
-  const m = hex.replace("#", "");
-  if (m.length === 3) {
-    return {
-      r: parseInt(m[0] + m[0], 16),
-      g: parseInt(m[1] + m[1], 16),
-      b: parseInt(m[2] + m[2], 16),
-    };
-  }
-  if (m.length === 6 || m.length === 8) {
-    return {
-      r: parseInt(m.slice(0, 2), 16),
-      g: parseInt(m.slice(2, 4), 16),
-      b: parseInt(m.slice(4, 6), 16),
-    };
-  }
-  return null;
+  const rgba = hexToRgba(hex);
+  return rgba && { r: rgba.r, g: rgba.g, b: rgba.b };
+}
+
+/**
+ * Hex with its alpha: 3 or 6 digits are opaque, 4 (`#rgba`) or 8 (`#rrggbbaa`) carry an
+ * alpha digit or byte, read as 0–1 unrounded so `formatColor` writes the same byte back.
+ */
+function hexToRgba(hex: string): RGBA | null {
+  let m = hex.replace("#", "");
+  if (m.length === 3 || m.length === 4) m = m.replace(/./g, "$&$&");
+  if ((m.length !== 6 && m.length !== 8) || !/^[0-9a-f]+$/i.test(m)) return null;
+  const byte = (i: number) => parseInt(m.slice(i, i + 2), 16);
+  return { r: byte(0), g: byte(2), b: byte(4), a: m.length === 8 ? byte(6) / 255 : 1 };
 }
 
 export function rgbToHsl(r: number, g: number, b: number): HSL {
@@ -153,9 +153,7 @@ export function parseColor(input: string): RGBA | null {
 
   // HEX
   if (input.startsWith("#")) {
-    const rgb = hexToRgb(input);
-    if (rgb) return { ...rgb, a: 1 };
-    return null;
+    return hexToRgba(input);
   }
 
   // rgb(r, g, b) or rgba(r, g, b, a)
@@ -183,15 +181,20 @@ export type ColorFormat = "hex" | "rgb" | "hsl";
 
 export function formatColor(r: number, g: number, b: number, a: number, format: ColorFormat): string {
   if (format === "hex") {
-    return rgbToHex(r, g, b);
+    // #rrggbbaa only when the alpha byte is below ff: an opaque colour keeps six digits.
+    const alpha = Math.round(Math.max(0, Math.min(1, a)) * 255);
+    return rgbToHex(r, g, b) + (alpha < 255 ? hexByte(alpha) : "");
   }
+  // Two decimals, and opaque when that rounds to 1: never "rgba(…, 1.00)".
+  const alpha = Math.max(0, Math.min(1, a)).toFixed(2);
+  const translucent = alpha !== "1.00";
   if (format === "rgb") {
-    return a < 1 ? `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})` : `rgb(${r}, ${g}, ${b})`;
+    return translucent ? `rgba(${r}, ${g}, ${b}, ${alpha})` : `rgb(${r}, ${g}, ${b})`;
   }
   if (format === "hsl") {
     const hsl = rgbToHsl(r, g, b);
-    return a < 1
-      ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${a.toFixed(2)})`
+    return translucent
+      ? `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${alpha})`
       : `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
   }
   return rgbToHex(r, g, b);
