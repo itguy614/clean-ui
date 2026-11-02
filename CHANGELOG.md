@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
+  CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
+  select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
+  markup and styles are gone, and with them that class as a styling hook: CuiBadge paints
+  its colours inline, so chip colour now follows the select's `color` prop, as it does in
+  the other two. A long label is cut short with an ellipsis instead of wrapping. Removing a
+  chip still leaves the panel closed. Enter or Space on a chip's remove button now removes
+  it (it used to open the panel), and focus returns to the trigger. Backspace on the
+  trigger removes the last chip, as in CuiCombobox. A disabled or readonly select shows its
+  chips with no remove button.
 - **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
   `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
   out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
