@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiDataGrid exposes `processedRows`, `page`, `lastPage` and `setPage`** (#372).
+  `processedRows` is the rows after search, filters and sort, before paging (server-side,
+  the current page's rows); `setPage(page)` moves the grid to a page, clamped to
+  `1..lastPage`, and does what a pagination click does, server-side `navigate` included.
+  `page` and `lastPage` are readonly. `useDataGrid` returns `processedRows` and a
+  `paginated` flag, takes a `paginate` option (default `true`), and its `setPage` now
+  clamps to `1..last page` and returns whether the page changed.
+
+### Fixed
+
+- **`virtualize` windowed only one page of a client-side grid** (#317). The grid paged
+  before the table virtualized, so a 10,000-row grid scrolled through 15 rows and needed
+  the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the
+  table is shown: the table windows every searched, filtered and sorted row and the
+  pagination bar is hidden (`page` and `lastPage` read 1). Card view, which is not
+  virtualized, and server-side grids still page.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

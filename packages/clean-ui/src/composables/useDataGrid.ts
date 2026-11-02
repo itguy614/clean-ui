@@ -21,6 +21,12 @@ export interface UseDataGridOptions {
   defaultPerPage?: number;
   initialView?: DataGridViewConfig;
   hydrateFromUrl?: boolean;
+  /**
+   * Split client-side rows into pages (default true). False makes `displayData` the whole
+   * searched, filtered and sorted set, for a view that windows rows itself — CuiDataGrid's
+   * `virtualize` (#317). A server-side grid is always paged: the server does it.
+   */
+  paginate?: MaybeRefOrGetter<boolean>;
 }
 
 /** How long CuiDataGrid's search box waits after the last keystroke, by default (ms). */
@@ -207,8 +213,16 @@ export function useDataGrid(options: UseDataGridOptions) {
   const page = ref(1);
   const perPage = ref(initialView?.perPage ?? defaultPerPage);
 
-  function setPage(n: number) {
-    page.value = n;
+  /**
+   * Go to page `n`, truncated and clamped to 1..last page (#372). Returns whether the page
+   * shown changed; NaN and the page already shown change nothing.
+   */
+  function setPage(n: number): boolean {
+    const { current_page, last_page } = paginationMeta.value;
+    const target = Math.min(Math.max(1, Math.trunc(n)), last_page);
+    if (Number.isNaN(target) || target === current_page) return false;
+    page.value = target;
+    return true;
   }
 
   function setPerPage(n: number) {
@@ -385,8 +399,11 @@ export function useDataGrid(options: UseDataGridOptions) {
     });
   });
 
+  const paginated = computed(() => isServerSide.value || toValue(options.paginate ?? true));
+
   const displayData = computed<DataGridRow[]>(() => {
     if (isServerSide.value) return rawData.value;
+    if (!paginated.value) return sortedData.value;
     const start = (page.value - 1) * perPage.value;
     return sortedData.value.slice(start, start + perPage.value);
   });
@@ -408,6 +425,10 @@ export function useDataGrid(options: UseDataGridOptions) {
     }
 
     const total = sortedData.value.length;
+    // Unpaged, every row is on the one page, whatever `page` was left at.
+    if (!paginated.value) {
+      return { current_page: 1, last_page: 1, per_page: perPage.value, total, from: total ? 1 : null, to: total || null };
+    }
     const lastPage = Math.max(1, Math.ceil(total / perPage.value));
     const from = total > 0 ? (page.value - 1) * perPage.value + 1 : null;
     const to = total > 0 ? Math.min(page.value * perPage.value, total) : null;
@@ -564,6 +585,8 @@ export function useDataGrid(options: UseDataGridOptions) {
     toggleFilterPanel,
     toggleFilterPanelPin,
     displayData,
+    processedRows: sortedData,
+    paginated,
     paginationMeta,
     getConfig,
     loadConfig,
