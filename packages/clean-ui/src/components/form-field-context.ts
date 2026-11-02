@@ -47,8 +47,8 @@ export interface FloatingLabelState {
   size: CuiSize;
   /** A leading icon sits before the text, so the resting label starts after it. */
   lead?: boolean;
-  /** A trailing button (clear, password toggle) the label must stay clear of. */
-  end?: boolean;
+  /** How many trailing items (a suffix, the clear button, the password toggle) the label must stay clear of. */
+  end?: number;
   /** Size the field to the control rather than the row (a stepper's compact box). */
   fit?: boolean;
 }
@@ -78,7 +78,7 @@ const isFloatingSize = (size: CuiSize): size is FloatingLabelSize => size in FLO
  * or sm control is too short for both. A smaller one stays unmarked, so the field falls
  * back to a top label and warns.
  *
- * The marker is the kind, the size, and `lead` / `end` / `fit` when they apply, space separated,
+ * The marker is the kind, the size, and `lead` / `end` / `end2` / `fit` when they apply, space separated,
  * for the field's `~=` selectors. The single-space placeholder is only added when the
  * control has none of its own, because `:placeholder-shown` needs *some* placeholder to
  * match. A control's own placeholder is transparent until focus, so it only ever shows
@@ -94,9 +94,9 @@ export function useFloatingLabel(
     // The id first, so a control nowhere near a floating field never builds its state (a
     // CuiInput would otherwise walk its prefix slot on every render).
     if (!floatingId?.value || id !== floatingId.value) return { placeholder, marker: undefined, float: null };
-    const { kind, size, lead, end, fit } = state();
+    const { kind, size, lead, end = 0, fit } = state();
     if (!isFloatingSize(size)) return { placeholder, marker: undefined, float: null };
-    const marker = [kind, size, kind === "inline" && lead && "lead", end && "end", fit && "fit"].filter(Boolean).join(" ");
+    const marker = [kind, size, lead && "lead", end && "end", end > 1 && "end2", fit && "fit"].filter(Boolean).join(" ");
     // A pinned label never rests, so it has no use for the empty test.
     return { placeholder: kind === "pinned" ? placeholder : placeholder || " ", marker, float: FLOATING_LABEL_SCALE[size] };
   };

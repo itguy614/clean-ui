@@ -20,10 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at rest and `--cui-text-tertiary` floated (4.5:1 in every theme), `--cui-error` on error,
   and is not recoloured by focus. It moves by transform on the motion tokens, and snaps
   under reduced motion. A control's own placeholder stays hidden until focus. A leading icon
-  keeps the resting label after it; prefix text, an attached button or a suffix keeps it
-  floated. CuiInput (number included), CuiTextarea (whose label's room is always reserved),
-  CuiMaskedInput and a horizontal CuiInputStepper support it. Any other control (CuiSelect,
-  the date and time pickers) falls back to a top label and logs one console warning.
+  keeps the resting label after it; prefix text or a suffix keeps it floated. CuiInput
+  (number included), CuiTextarea (whose label's room is always reserved), CuiMaskedInput and
+  a horizontal CuiInputStepper support it. Any other control (CuiSelect, the date and time
+  pickers, a CuiInput with an attached button) falls back to a top label and logs one
+  console warning.
 - **`CuiList` / `CuiListItem`** (#195). A presentational list: a real `<ul>`/`<li>` (or `ol`,
   or `div` rows), each row a link (`href`/`to`), a `<button>` (a `click` listener), any
   element (`as`) or plain content, with a leading icon, a one-line title and subtitle, and a

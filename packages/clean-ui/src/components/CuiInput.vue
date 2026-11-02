@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Text, computed, ref, useSlots, useTemplateRef } from "vue";
+import { Text, computed, onBeforeUpdate, ref, useSlots, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
@@ -104,26 +104,38 @@ const dims = computed(() => INPUT_SIZE_SCALE[props.size]);
 const messages = useMessages();
 
 // Inside a `labelPosition="floating"` CuiFormField (#191). A leading icon keeps the label
-// resting, after it. Prefix text (`https://`) is part of the value, and an attached button
-// or an inline suffix sits where the label would run, so any of those keeps it floated.
+// resting, after it. Prefix text (`https://`) is part of the value and an inline suffix sits
+// where a resting label would run, so either keeps it floated; a suffix, the clear button
+// and the password toggle are kept clear of with end room. An attached button is as tall as
+// the box and of unknown width, so there is no room inside for the label: the field falls
+// back to a top label.
 const slots = useSlots();
 const floatingLabel = useFloatingLabel(
-  () => props,
-  () => ({
-    kind: slots.suffix || slots["prefix-button"] || slots["suffix-button"] || (slots.prefix && !prefixIsIcon()) ? "pinned" : "inline",
-    lead: !!slots.prefix,
-    end: props.clearable || isPassword.value,
-    size: props.size,
-  }),
+  () => ({ id: slots["prefix-button"] || slots["suffix-button"] ? undefined : props.id, placeholder: props.placeholder }),
+  () => {
+    const lead = !!slots.prefix && prefixIsIcon();
+    return {
+      kind: slots.suffix || (slots.prefix && !lead) ? "pinned" : "inline",
+      lead,
+      end: Number(!!slots.suffix) + Number(props.clearable) + Number(isPassword.value),
+      size: props.size,
+    };
+  },
 );
 
 /**
  * Whether the prefix is a lone default-size CuiIcon, whose width the field's CSS knows
  * (CuiIcon's `md`, 1.25rem). Anything else, text or another icon size, keeps the label up.
+ * Cached for the render: the getter above runs once per binding that reads it.
  */
+let prefixIcon: boolean | undefined;
+onBeforeUpdate(() => (prefixIcon = undefined));
 function prefixIsIcon(): boolean {
-  const nodes = slotNodes(slots.prefix?.() ?? []).filter((n) => !(n.type === Text && !String(n.children).trim()));
-  return nodes.length === 1 && nodes[0].type === CuiIcon && (nodes[0].props?.size ?? "md") === "md";
+  if (prefixIcon === undefined) {
+    const nodes = slotNodes(slots.prefix?.() ?? []).filter((n) => !(n.type === Text && !String(n.children).trim()));
+    prefixIcon = nodes.length === 1 && nodes[0].type === CuiIcon && (nodes[0].props?.size ?? "md") === "md";
+  }
+  return prefixIcon;
 }
 
 </script>

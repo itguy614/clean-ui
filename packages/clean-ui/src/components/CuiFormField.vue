@@ -134,10 +134,10 @@ function checkFloatingSupport() {
   if (rootEl.value.querySelector("[data-cui-float-label]")) return;
   warnOnce(
     `[clean-ui] CuiFormField: labelPosition="floating" needs a control with a native <input> or ` +
-      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, a horizontal CuiInputStepper), of ` +
-      `size md, lg or xl, given the field's id (v-bind the slot props). An xs or sm control is ` +
-      `too short to hold the label inside it. The control in "${props.label}" isn't one, so ` +
-      `its label is shown on top instead.`,
+      `<textarea> (CuiInput without an attached button, CuiTextarea, CuiMaskedInput, a ` +
+      `horizontal CuiInputStepper), of size md, lg or xl, given the field's id (v-bind the slot ` +
+      `props). An xs or sm control is too short to hold the label inside it. The control in ` +
+      `"${props.label}" isn't one, so its label is shown on top instead.`,
   );
 }
 onMounted(checkFloatingSupport);
@@ -302,8 +302,9 @@ onBeforeUnmount(() => {
   --_form-field-float-px: 0.75rem;
   /* A leading icon's width plus the gap after it (CuiIcon md, 1.25rem), when there is one. */
   --_form-field-float-lead: 0px;
-  /* Room kept clear at the end, beside the control's padding, for its clear button or
-     password toggle. */
+  /* Room kept clear at the end, beside the control's padding, for a suffix, clear button or
+     password toggle: one of them, or two (a clear button, 1.25rem, a toggle, 1.5rem, and
+     their gaps). */
   --_form-field-float-end: 0px;
   --_form-field-float-color: var(--cui-text-tertiary);
   --_form-field-float-rest-color: var(--cui-text-secondary);
@@ -337,6 +338,9 @@ onBeforeUnmount(() => {
 }
 .cui-form-field--floating:has([data-cui-float-label~="end"]) {
   --_form-field-float-end: 2rem;
+}
+.cui-form-field--floating:has([data-cui-float-label~="end2"]) {
+  --_form-field-float-end: 3.75rem;
 }
 .cui-form-field--floating.cui-form-field--error:has([data-cui-float-label]) {
   --_form-field-float-color: var(--cui-error);
@@ -390,6 +394,8 @@ onBeforeUnmount(() => {
 .cui-form-field--floating:has([data-cui-float-label~="fit"]) > .cui-form-field__label {
   justify-self: stretch;
   contain: inline-size;
+  /* Its line box reaches a few pixels over the stepper's buttons: let their clicks through. */
+  pointer-events: none;
 }
 
 /* A textarea's label rests on its first line, below the room the textarea reserves (6px, the

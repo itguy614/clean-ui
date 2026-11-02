@@ -287,9 +287,11 @@ const rowPlan = ref<string | null>(null);
             Floating needs an md, lg or xl control whose focus surface is a native
             <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code>: CuiInput (any type,
             number included), CuiTextarea, CuiMaskedInput and a horizontal CuiInputStepper. An
-            xs or sm control is too short to hold the label inside it. CuiSelect, the date and
-            time pickers, a vertical stepper, every other control, and any xs or sm one fall
-            back to a top label and log one console warning.
+            xs or sm control is too short to hold the label inside it, and an attached button
+            (<code>#prefix-button</code>, <code>#suffix-button</code>) fills the box's height,
+            leaving it no room. CuiSelect, the date and time pickers, a vertical stepper, an
+            input with an attached button, every other control, and any xs or sm one fall back
+            to a top label and log one console warning.
           </p>
           <CuiFormField label="Plan" label-position="floating" v-slot="f">
             <CuiSelect v-bind="f" v-model="floatPlan" :options="['Free', 'Pro', 'Enterprise']" placeholder="Choose..." />

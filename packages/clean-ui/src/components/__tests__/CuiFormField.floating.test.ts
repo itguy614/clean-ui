@@ -81,11 +81,14 @@ describe("CuiFormField labelPosition=floating", () => {
     // Something sits where the label would rest, or is part of the value, so it stays up.
     expect(marker(CuiInput, {}, { prefix: () => "https://" })).toBe("pinned md");
     expect(marker(CuiInput, {}, { prefix: () => h(CuiIcon, { name: "x", size: "lg" }) })).toBe("pinned md");
-    expect(marker(CuiInput, {}, { "suffix-button": () => h("button", "Go") })).toBe("pinned md");
+    // A suffix keeps it up and is kept clear of; so are the clear and password buttons.
+    expect(marker(CuiInput, {}, { suffix: () => "kg" })).toBe("pinned md end");
+    expect(marker(CuiInput, {}, { prefix: () => h(CuiIcon, { name: "x" }), suffix: () => "kg" })).toBe("pinned md lead end");
     expect(marker(CuiInputStepper)).toBe("pinned md fit");
     // A trailing button the resting label must stay clear of.
     expect(marker(CuiInput, { clearable: true })).toBe("inline md end");
     expect(marker(CuiInput, { type: "password" })).toBe("inline md end");
+    expect(marker(CuiInput, { type: "password", clearable: true })).toBe("inline md end end2");
     expect(floatWarnings()).toEqual([]);
   });
 
@@ -108,12 +111,13 @@ describe("CuiFormField labelPosition=floating", () => {
   });
 
   it.each([
-    ["an xs CuiInput", CuiInput, { size: "xs" }],
-    ["a sm CuiInput", CuiInput, { size: "sm" }],
-    ["a sm CuiTextarea", CuiTextarea, { size: "sm" }],
-    ["a vertical CuiInputStepper", CuiInputStepper, { orientation: "vertical" }],
-  ])("falls back to top on %s, with a warning that names the size", (_, control, props) => {
-    const w = mountField(control as Component, {}, props);
+    ["an xs CuiInput", CuiInput, { size: "xs" }, {}],
+    ["a sm CuiInput", CuiInput, { size: "sm" }, {}],
+    ["a sm CuiTextarea", CuiTextarea, { size: "sm" }, {}],
+    ["a vertical CuiInputStepper", CuiInputStepper, { orientation: "vertical" }, {}],
+    ["a CuiInput with an attached button", CuiInput, {}, { "suffix-button": () => h("button", "Go") }],
+  ])("falls back to top on %s, with a warning that names the size", (_, control, props, slots) => {
+    const w = mountField(control as Component, {}, props, slots as Record<string, () => unknown>);
     expect(w.find("[data-cui-float-label]").exists()).toBe(false);
     // Its own height and placeholder, as outside a floating field.
     expect(w.find("input, textarea").attributes("placeholder")).toBeUndefined();

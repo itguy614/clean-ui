@@ -203,6 +203,43 @@ describe("CuiFormField floating label (real browser)", () => {
     expect(overlaps(rect(label), rect(toggle))).toBe(false);
   });
 
+  it("keeps a long floated label clear of a clear button and a password toggle together", async () => {
+    const long = "Preferred contact email address for receipts and invoices";
+    const { root, label } = field(CuiInput, { label: long }, { type: "password", clearable: true, modelValue: "secret" });
+    await frames(2);
+    for (const button of root.querySelectorAll(".cui-input__clear, .cui-input__password-toggle")) {
+      expect(overlaps(rect(label), rect(button))).toBe(false);
+    }
+  });
+
+  it("keeps a floated label off a leading icon beside a suffix", async () => {
+    const { root, label, box } = field(CuiInput, {}, { modelValue: "12" }, {
+      prefix: () => h(CuiIcon, { name: "x" }),
+      suffix: () => "kg",
+    });
+    await frames(2);
+    expect(inside(label, box)).toBe(true);
+    expect(overlaps(rect(label), rect(root.querySelector(".cui-input__prefix")!))).toBe(false);
+  });
+
+  it("falls back to a top label beside an attached button, which it could not clear", async () => {
+    const { root, labelEl, box } = field(CuiInput, {}, {}, { "suffix-button": () => h("button", "Go") });
+    await frames(2);
+    expect(root.querySelector("[data-cui-float-label]")).toBeNull();
+    expect(rect(labelEl).bottom).toBeLessThanOrEqual(rect(box).top);
+  });
+
+  it("lets a stepper's minus button take a click under its floated label", async () => {
+    const { root, label } = field(CuiInputStepper, { label: "Quantity in stock" }, { modelValue: 3 });
+    await frames(2);
+    const minus = root.querySelector(".cui-input-stepper__button")!;
+    const m = rect(minus), l = rect(label);
+    // A point inside both the label's box and the button's.
+    const y = (Math.max(m.top, l.top) + Math.min(m.bottom, l.bottom)) / 2;
+    expect(y).toBeGreaterThan(m.top);
+    expect(document.elementFromPoint((m.left + m.right) / 2, y)?.closest(".cui-input-stepper__button")).toBe(minus);
+  });
+
   it("does not collide with the error or help text, which stay below", async () => {
     for (const props of [{ error: true, errorMessage: "Enter an email" }, { helpText: "We never share it" }]) {
       const { root, label, box, native } = field(CuiInput, props);
