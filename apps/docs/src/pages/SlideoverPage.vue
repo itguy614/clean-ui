@@ -31,6 +31,19 @@ const blurred = ref(false);
 const formPanel = ref(false);
 const settingsPanel = ref(false);
 
+// Focus on open and close (#374)
+const tags = ["Tag A1", "Tag B2", "Tag C3", "Tag D4"];
+const tagPanel = ref(false);
+const lastTag = ref(0);
+const tagLog = ref<string[]>([]);
+const logEvent = (name: string) => (tagLog.value = [...tagLog.value, name].slice(-4));
+function openTag(i: number) {
+  lastTag.value = i;
+  tagPanel.value = true;
+}
+// Called when the panel has closed, so it sees the tag last shown, not the one that opened it.
+const lastTagRow = () => document.querySelector<HTMLElement>(`[data-docs-tag="${lastTag.value}"]`);
+
 // Form data
 const formName = ref("");
 const formEmail = ref("");
@@ -314,6 +327,56 @@ const formAgree = ref(false);
               <CuiButton variant="ghost" color="secondary" @click="formPanel = false">Cancel</CuiButton>
               <CuiButton variant="solid" color="success" @click="formPanel = false">Create User</CuiButton>
             </CuiModalFooter>
+          </CuiSlideover>
+        </Example>
+
+        <!-- Focus on open and close -->
+        <Example title="Focus on open and close (initialFocus, returnFocus)" :code="`<button v-for=&quot;(tag, i) in tags&quot; :data-tag=&quot;i&quot; @click=&quot;openTag(i)&quot;>{{ tag }}</button>
+
+<CuiSlideover
+  v-model:visible=&quot;show&quot;
+  :title=&quot;tags[lastTag]&quot;
+  initial-focus=&quot;.tag-heading&quot;
+  :return-focus=&quot;lastTagRow&quot;
+  @after-enter=&quot;log('after-enter')&quot;
+  @after-leave=&quot;log('after-leave')&quot;
+>
+  <!-- const lastTagRow = () => document.querySelector('[data-tag=&quot;' + lastTag + '&quot;]') -->
+  <h3 class=&quot;tag-heading&quot; tabindex=&quot;-1&quot;>Details</h3>
+  <CuiButton @click=&quot;lastTag--&quot;>Previous</CuiButton>
+  <CuiButton @click=&quot;lastTag++&quot;>Next</CuiButton>
+</CuiSlideover>`">
+          <CuiStack spacing="2">
+            <CuiFlex gap="2" wrap="wrap">
+              <CuiButton v-for="(tag, i) in tags" :key="tag" :data-docs-tag="i" variant="outline" size="sm" @click="openTag(i)">
+                {{ tag }}
+              </CuiButton>
+            </CuiFlex>
+            <span class="text-sm" style="color: var(--cui-text-secondary)">
+              Events: {{ tagLog.length ? tagLog.join(" → ") : "none yet" }}
+            </span>
+          </CuiStack>
+          <CuiSlideover
+            v-model:visible="tagPanel"
+            :title="tags[lastTag]"
+            initial-focus=".docs-tag-heading"
+            :return-focus="lastTagRow"
+            @after-enter="logEvent('after-enter')"
+            @after-leave="logEvent('after-leave')"
+          >
+            <CuiStack spacing="4">
+              <h3 class="docs-tag-heading" tabindex="-1">Details</h3>
+              <p>
+                Focus starts on the heading above (<code class="cui-code">initialFocus</code>, a selector
+                scoped to the panel). Step with Previous / Next, then close: focus goes to the tag last
+                shown, not the one that opened the panel (<code class="cui-code">returnFocus</code>,
+                called once the panel has closed).
+              </p>
+              <CuiFlex gap="2">
+                <CuiButton size="sm" :disabled="lastTag === 0" @click="lastTag--">Previous</CuiButton>
+                <CuiButton size="sm" :disabled="lastTag === tags.length - 1" @click="lastTag++">Next</CuiButton>
+              </CuiFlex>
+            </CuiStack>
           </CuiSlideover>
         </Example>
 

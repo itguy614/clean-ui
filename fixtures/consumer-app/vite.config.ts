@@ -28,8 +28,9 @@ if (baselinePackage && !baseline) {
     `CUI_BUNDLE_BASELINE="${baselinePackage}" has no stub; known: ${Object.keys(BASELINE_ALIASES).join(", ")}.`,
   );
 }
-// The page to build and where, set by scripts/check-bundle-budget.mjs for its scenarios
-// (#377): its SCENARIOS table is the one place they're named. Unset, the basic page to dist/.
+// The page to build and where, set per scenario by scripts/check-bundle-budget.mjs and
+// scripts/check-fixture-guarantees.mjs (#377, #384): the SCENARIOS table in
+// scripts/fixture-scenarios.mjs is the one place they're named. Unset, the basic page to dist/.
 const outDir = process.env.CUI_BUNDLE_OUTDIR || (baseline ? "dist-baseline" : "dist");
 const input = process.env.CUI_BUNDLE_INPUT;
 

@@ -1,10 +1,11 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
-import { restoreKeyOf, returnFocus } from "../utils/focusRestore";
+import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { usePresence } from "./usePresence";
 import { warnOnce } from "../utils/devWarn";
-import { motionDuration, type MotionDuration } from "../utils/motion";
+import { afterAnimations, motionDuration, type MotionDuration } from "../utils/motion";
+import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
 
 export interface UseOverlayOptions {
@@ -42,6 +43,29 @@ export interface UseOverlayOptions {
   onUpdateOpen: (value: boolean) => void;
   /** Called to emit close */
   onClose: () => void;
+  /**
+   * The element whose animations, with those of its `[data-cui-exit]` descendants, make up
+   * the entry `onOpened` waits for — the overlay root holding the backdrop and the panel.
+   * Defaults to `dialogRef`.
+   */
+  rootRef?: Ref<HTMLElement | undefined> | ShallowRef<HTMLElement | null> | Readonly<ShallowRef<HTMLElement | null>>;
+  /**
+   * Element focused on open, in place of the dialog (#374). A selector is scoped to the
+   * dialog, and an element outside it is ignored. It wins over a field the content focused
+   * on mount; naming nothing it can focus, the default applies.
+   */
+  initialFocus?: () => CuiFocusTarget | undefined;
+  /**
+   * Element focused once closed, in place of the opener (#374): a selector is looked up in
+   * the document, a function is called then. `false` leaves focus alone; naming nothing it
+   * can focus (gone, hidden, disabled, or inside the closing dialog), focus returns to the
+   * opener.
+   */
+  returnFocus?: () => CuiFocusTarget | false | undefined;
+  /** Called once the entry has finished and focus is in place (`after-enter`). */
+  onOpened?: () => void;
+  /** Called once the exit has finished and focus has been returned (`after-leave`). */
+  onClosed?: () => void;
 }
 
 export function useOverlay(options: UseOverlayOptions) {
@@ -53,6 +77,11 @@ export function useOverlay(options: UseOverlayOptions) {
     exit = "timer",
     onUpdateOpen,
     onClose,
+    rootRef = dialogRef,
+    initialFocus: getInitialFocus,
+    returnFocus: getReturnFocus,
+    onOpened,
+    onClosed,
   } = options;
 
   if (options.allowNested !== undefined) {
@@ -90,6 +119,9 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   let enterFrame: number | null = null;
+  // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
+  // only if nothing has happened since it began: closed mid-entry, it never "opened".
+  let entry = 0;
   /** `exit: "timer"`'s pending close, cancelled by a re-open mid-exit (#339). */
   let exitTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -121,11 +153,29 @@ export function useOverlay(options: UseOverlayOptions) {
       enterFrame = requestAnimationFrame(() => {
         enterFrame = null;
         isAnimating.value = true;
-        // Content that focused its own field on mount (a URL dialog's input) keeps it: this
-        // frame comes after the content's own nextTick, and would otherwise steal focus back.
-        if (!dialogRef.value?.contains(document.activeElement)) dialogRef.value?.focus();
+        focusInitial();
+        // The flip renders on the next tick; its transitions exist from then.
+        const current = ++entry;
+        nextTick(() => {
+          const done = () => current === entry && onOpened?.();
+          if (rootRef.value) afterAnimations(rootRef.value, done);
+          else done();
+        });
       });
     });
+  }
+
+  /**
+   * Focus on open: an explicit `initialFocus` wins — the consumer named it. Otherwise
+   * content that focused its own field on mount (a URL dialog's input, #420) keeps it: this
+   * frame comes after the content's own nextTick, and would otherwise steal focus back.
+   * Failing both, the dialog itself. Focus never leaves the dialog for an element outside it.
+   */
+  function focusInitial() {
+    const dialog = dialogRef.value;
+    const target = resolveFocusTarget(getInitialFocus?.(), dialog);
+    if (target && dialog?.contains(target) && focusTook(target)) return;
+    if (!dialog?.contains(document.activeElement)) dialog?.focus();
   }
 
   /** The exit has played: report the close, give the page back, return focus. */
@@ -135,8 +185,15 @@ export function useOverlay(options: UseOverlayOptions) {
 
     releaseScrollLock();
 
-    // Return focus — to the opener, or, if it has unmounted, through its restore key.
-    returnFocus(previousFocus.value, previousFocusKey);
+    // Return focus — to `returnFocus` if it names an element that takes it (resolved now,
+    // after the `close` handlers, so it can pick one they rendered; the closing dialog is
+    // hidden by now, so nothing in it can); else to the opener or, if it has unmounted,
+    // through its restore key. `false` leaves it where it is.
+    const option = getReturnFocus?.();
+    if (option !== false && !focusTook(resolveFocusTarget(option, document))) {
+      returnFocus(previousFocus.value, previousFocusKey);
+    }
+    onClosed?.();
   }
 
   function closeOverlay() {
@@ -150,6 +207,7 @@ export function useOverlay(options: UseOverlayOptions) {
     }
     isAnimating.value = false;
     isOpen.value = false;
+    entry++;
 
     if (exit === "transition") {
       // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
@@ -229,6 +287,7 @@ export function useOverlay(options: UseOverlayOptions) {
   });
 
   onUnmounted(() => {
+    entry++;
     releaseScrollLock();
   });
 
