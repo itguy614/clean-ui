@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
+import { useScrollSpy } from "@itguy614/clean-ui";
 import { slug } from "../utils/slug";
+import { isPlainClick, scrollBehavior } from "../utils/link";
 
 /**
  * Sticky on-page nav, right rail.
@@ -19,9 +21,17 @@ interface Entry {
 
 const route = useRoute();
 const entries = ref<Entry[]>([]);
-const activeId = ref<string>("");
 
-let observer: IntersectionObserver | null = null;
+// The current entry is the topmost heading in the top fifth of the viewport, below the
+// 56px sticky header, or else the last heading to have scrolled above that band: "where am
+// I" when reading. A plain "is it visible" test picks the lowest visible heading, which
+// reads as the nav running ahead of the reader.
+const { activeId: spied, setActive } = useScrollSpy(
+  () => entries.value.map((e) => e.id),
+  { rootMargin: "0px 0px -80% 0px", offset: 56 },
+);
+// Above the first heading nothing has reached the band yet: the first entry is current.
+const activeId = computed(() => spied.value ?? entries.value[0]?.id ?? null);
 
 function collect() {
   // Every h2/h3, not only those already carrying an id: `DocPage` and `Example` assign
@@ -49,44 +59,30 @@ function collect() {
     seen.add(el.id);
     return { id: el.id, text, level: el.tagName === "H2" ? 2 : 3 };
   });
-
-  observer?.disconnect();
-  if (nodes.length === 0) return;
-
-  // The active entry is the last heading to have crossed the top of the viewport, which is
-  // what "where am I" means when scrolling. A plain "is it visible" test picks the
-  // *lowest* visible heading, which reads as the nav running ahead of the reader.
-  observer = new IntersectionObserver(
-    (records) => {
-      for (const r of records) {
-        if (r.isIntersecting) activeId.value = r.target.id;
-      }
-    },
-    { rootMargin: "0px 0px -80% 0px", threshold: 0 },
-  );
-  nodes.forEach((el) => observer!.observe(el));
-  activeId.value = nodes[0].id;
 }
 
-function go(id: string) {
+function go(e: MouseEvent, id: string) {
+  // A real link: a modified or middle click still opens it in a new tab or window.
+  if (!isPlainClick(e)) return;
   const el = document.getElementById(id);
   if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  activeId.value = id;
+  e.preventDefault();
+  // Current at once, and held while the smooth scroll passes the sections in between.
+  setActive(id);
+  el.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   // Move keyboard focus to the section too, or the nav is a mouse-only affordance.
   el.setAttribute("tabindex", "-1");
   el.focus({ preventScroll: true });
 }
 
 onMounted(() => nextTick(collect));
-onBeforeUnmount(() => observer?.disconnect());
 // Headings change wholesale on navigation, and the new page's DOM is a tick away.
 watch(() => route.fullPath, () => nextTick(collect));
 </script>
 
 <template>
-  <nav v-if="entries.length > 1" class="cui-page-nav hidden lg:block" aria-label="On this page">
-    <p class="cui-page-nav__title">On this page</p>
+  <nav v-if="entries.length > 1" class="cui-page-nav hidden lg:block" aria-labelledby="cui-page-nav-title">
+    <p id="cui-page-nav-title" class="cui-page-nav__title">On this page</p>
     <ul class="cui-page-nav__list">
       <li v-for="e in entries" :key="e.id">
         <a
@@ -96,8 +92,8 @@ watch(() => route.fullPath, () => nextTick(collect));
             'cui-page-nav__link--sub': e.level === 3,
             'cui-page-nav__link--active': e.id === activeId,
           }"
-          :aria-current="e.id === activeId ? 'true' : undefined"
-          @click.prevent="go(e.id)"
+          :aria-current="e.id === activeId ? 'location' : undefined"
+          @click="go($event, e.id)"
         >
           {{ e.text }}
         </a>
@@ -143,7 +139,7 @@ watch(() => route.fullPath, () => nextTick(collect));
   color: var(--cui-text-secondary);
   text-decoration: none;
   line-height: 1.4;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
 }
 
 .cui-page-nav__link:hover {
@@ -155,10 +151,18 @@ watch(() => route.fullPath, () => nextTick(collect));
   font-size: 0.78125rem;
 }
 
+/* Not colour alone (WCAG 1.4.1): a bar four times the rail's width and a heavier weight
+   mark the current entry too, so it still reads in greyscale. */
 .cui-page-nav__link--active {
   color: var(--cui-primary);
+  border-left-width: 4px;
   border-left-color: var(--cui-primary);
-  font-weight: 500;
+  padding-left: calc(0.75rem - 2px);
+  font-weight: 600;
+}
+
+.cui-page-nav__link--sub.cui-page-nav__link--active {
+  padding-left: calc(1.5rem - 2px);
 }
 
 .cui-page-nav__link:focus-visible {

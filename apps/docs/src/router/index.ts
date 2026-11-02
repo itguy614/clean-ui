@@ -116,6 +116,11 @@ const router = createRouter({
       component: () => import('../pages/RovingFocusPage.vue'),
     },
     {
+      path: '/composables/scroll-spy',
+      name: 'scroll-spy',
+      component: () => import('../pages/ScrollSpyPage.vue'),
+    },
+    {
       path: '/composables/overlay',
       name: 'overlay',
       component: () => import('../pages/OverlayPage.vue'),
@@ -239,6 +244,11 @@ const router = createRouter({
       path: '/components/masked-input',
       name: 'masked-input',
       component: () => import('../pages/MaskedInputPage.vue'),
+    },
+    {
+      path: '/components/pin-input',
+      name: 'pin-input',
+      component: () => import('../pages/PinInputPage.vue'),
     },
     {
       path: '/components/input',
