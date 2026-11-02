@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-02
+
 ### Added
 
 - **CuiConfirmDialog forwards `initialFocus`, `returnFocus`, `after-enter` and `after-leave`**
@@ -136,6 +138,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
     so they no longer emit `rgba(…, 1.00)`.
   - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+- **The markdown editor's peer floor is `@itguy614/clean-ui@^1.8.0`**, since its toolbar's
+  formatting buttons use CuiButton's `pressed` (#396) and its dialogs take a scoped theme
+  through the host's clean-ui context (#418).
 
 ### Removed
 
