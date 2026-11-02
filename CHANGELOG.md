@@ -40,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   editor didn't reach them, and they rendered in the page's theme. They now take the
   editor's nearest theme class and a scoped `dark` class when they open. A theme on
   `<html>` already reached them and is not copied.
+- **An overlay no longer takes focus back from a field its content focused** (found reviewing
+  #420). CuiModal, CuiSlideover and CuiConfirmDialog focus their panel on the frame after
+  opening, which came after content that focused its own field on mount, so the markdown
+  editor's link dialog opened with focus on the panel instead of the URL field. The panel
+  now takes focus only when nothing inside it already has it.
 
 ## [1.6.0] - 2026-11-01
 
