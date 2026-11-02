@@ -74,6 +74,52 @@ describe("useOverlay re-opened mid-exit", () => {
   });
 });
 
+/**
+ * #374 — `onOpened` / `onClosed` and `initialFocus` / `returnFocus`, on the deprecated
+ * `exit: "timer"` path that CuiModal and CuiSlideover no longer take (their real-transition
+ * cases are in the browser suite, overlay-focus-events.test.ts).
+ */
+describe("useOverlay lifecycle and focus targets (timer exit)", () => {
+  it("focuses initialFocus, then reports opened; returns focus to returnFocus, then reports closed", async () => {
+    vi.useFakeTimers();
+    const opener = document.createElement("button");
+    const target = document.createElement("button");
+    document.body.append(opener, target);
+    opener.focus();
+    const open = ref(false);
+    const log: string[] = [];
+    const Dialog = defineComponent({
+      setup() {
+        const dialogRef = shallowRef<HTMLElement | null>(null);
+        const overlay = useOverlay({
+          open: () => open.value,
+          dialogRef,
+          persistent: () => false,
+          animationDuration: 10,
+          initialFocus: () => ".second",
+          returnFocus: () => target,
+          onUpdateOpen: (v) => (open.value = v),
+          onClose: () => log.push("close"),
+          onOpened: () => log.push(`opened:${(document.activeElement as HTMLElement).className}`),
+          onClosed: () => log.push(`closed:${document.activeElement === target}`),
+        });
+        return () =>
+          overlay.isVisible.value
+            ? h("div", { ref: dialogRef, tabindex: -1 }, [h("button", { class: "first" }), h("button", { class: "second" })])
+            : null;
+      },
+    });
+    w = mount(Dialog, { attachTo: document.body });
+    open.value = true;
+    await vi.advanceTimersByTimeAsync(50);
+    open.value = false;
+    await vi.advanceTimersByTimeAsync(50);
+    expect(log).toEqual(["opened:second", "close", "closed:true"]);
+    opener.remove();
+    target.remove();
+  });
+});
+
 describe("useOverlay focus trap", () => {
   it("sends Shift+Tab from the dialog itself, where it opens, to the last control", async () => {
     const { dialog } = await mountDialog();

@@ -8,12 +8,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, TitleAsProps } from "../types/common";
+import type { HideableProps, TitleAsProps, OverlayFocusProps } from "../types/common";
 
 export type SlideoverSide = "right" | "left" | "top" | "bottom";
 export type SlideoverSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiSlideoverProps extends HideableProps, TitleAsProps {
+export interface CuiSlideoverProps extends HideableProps, TitleAsProps, OverlayFocusProps {
   /** Controls slideover visibility (v-model:visible) */
   visible?: boolean;
   /** Which edge the panel slides from */
@@ -60,14 +60,23 @@ const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
+  // `undefined`, not Vue's boolean `false`: `returnFocus` accepts `false`, and Vue would
+  // otherwise cast an absent prop to it and stop returning focus at all.
+  initialFocus: undefined,
+  returnFocus: undefined,
   hidden: false,
 });
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
   close: [];
+  /** The entry has finished and focus is in place (#374). */
+  "after-enter": [];
+  /** The exit has finished and focus has been returned (#374). */
+  "after-leave": [];
 }>();
 
+const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
 const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
@@ -81,6 +90,11 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
+  rootRef: overlayRef,
+  initialFocus: () => props.initialFocus,
+  returnFocus: () => props.returnFocus,
+  onOpened: () => emit("after-enter"),
+  onClosed: () => emit("after-leave"),
 });
 
 // Closed while `hidden`: v-show is already off, so no leave runs to report the close.
@@ -138,6 +152,7 @@ const titleId = useCuiId("slideover-title");
     <div
       v-if="mounted"
       v-show="isVisible && !hidden"
+      ref="overlayEl"
       class="cui-slideover-overlay"
       :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
       @keydown="onKeydown"
