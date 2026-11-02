@@ -9,6 +9,8 @@ import CuiInputStepper from "../CuiInputStepper.vue";
 import CuiSelect from "../CuiSelect.vue";
 import CuiDatePicker from "../CuiDatePicker.vue";
 import CuiTimePicker from "../CuiTimePicker.vue";
+import CuiIcon from "../CuiIcon.vue";
+import { FLOATING_LABEL_SCALE, INPUT_SIZE_SCALE } from "../../utils/sizing";
 import { __clearWarned } from "../../utils/devWarn";
 
 /**
@@ -72,13 +74,51 @@ describe("CuiFormField labelPosition=floating", () => {
       mountField(control, {}, props, slots).find("[data-cui-float-label]").attributes("data-cui-float-label");
     expect(marker(CuiInput)).toBe("inline md");
     expect(marker(CuiInput, { size: "lg", type: "number" })).toBe("inline lg");
-    expect(marker(CuiTextarea, { size: "sm" })).toBe("multiline sm");
+    expect(marker(CuiTextarea, { size: "xl" })).toBe("multiline xl");
     expect(marker(CuiMaskedInput, { mask: "(999) 999-9999" })).toBe("inline md");
-    // Something sits where the label would rest, so it stays up.
-    expect(marker(CuiInput, {}, { prefix: () => "$" })).toBe("pinned");
-    expect(marker(CuiInput, {}, { "suffix-button": () => h("button", "Go") })).toBe("pinned");
-    expect(marker(CuiInputStepper)).toBe("pinned");
+    // A leading icon: the label rests after it.
+    expect(marker(CuiInput, {}, { prefix: () => h(CuiIcon, { name: "x" }) })).toBe("inline md lead");
+    // Something sits where the label would rest, or is part of the value, so it stays up.
+    expect(marker(CuiInput, {}, { prefix: () => "https://" })).toBe("pinned md");
+    expect(marker(CuiInput, {}, { prefix: () => h(CuiIcon, { name: "x", size: "lg" }) })).toBe("pinned md");
+    expect(marker(CuiInput, {}, { "suffix-button": () => h("button", "Go") })).toBe("pinned md");
+    expect(marker(CuiInputStepper)).toBe("pinned md fit");
+    // A trailing button the resting label must stay clear of.
+    expect(marker(CuiInput, { clearable: true })).toBe("inline md end");
+    expect(marker(CuiInput, { type: "password" })).toBe("inline md end");
     expect(floatWarnings()).toEqual([]);
+  });
+
+  it("grows the control one size step through its private height", () => {
+    const style = (control: Component, props = {}, selector = ".cui-input") =>
+      (mountField(control, {}, props).find(selector).element as HTMLElement).style;
+    expect(style(CuiInput).getPropertyValue("--_input-height")).toBe(FLOATING_LABEL_SCALE.md.height);
+    expect(style(CuiInput).getPropertyValue("--_input-float-offset")).toBe(FLOATING_LABEL_SCALE.md.offset);
+    expect(style(CuiInput, { size: "xl" }).getPropertyValue("--_input-height")).toBe(FLOATING_LABEL_SCALE.xl.height);
+    expect(style(CuiTextarea, {}, ".cui-textarea").getPropertyValue("--_ta-float-offset")).toBe(
+      FLOATING_LABEL_SCALE.md.offset,
+    );
+    expect(style(CuiInputStepper, {}, ".cui-input-stepper").getPropertyValue("--_input-stepper-height")).toBe(
+      FLOATING_LABEL_SCALE.md.height,
+    );
+    // Not floating: the size's own height, and no offset.
+    const top = mountField(CuiInput, { labelPosition: "top" }).find(".cui-input").element as HTMLElement;
+    expect(top.style.getPropertyValue("--_input-height")).toBe(INPUT_SIZE_SCALE.md.height);
+    expect(top.style.getPropertyValue("--_input-float-offset")).toBe("");
+  });
+
+  it.each([
+    ["an xs CuiInput", CuiInput, { size: "xs" }],
+    ["a sm CuiInput", CuiInput, { size: "sm" }],
+    ["a sm CuiTextarea", CuiTextarea, { size: "sm" }],
+    ["a vertical CuiInputStepper", CuiInputStepper, { orientation: "vertical" }],
+  ])("falls back to top on %s, with a warning that names the size", (_, control, props) => {
+    const w = mountField(control as Component, {}, props);
+    expect(w.find("[data-cui-float-label]").exists()).toBe(false);
+    // Its own height and placeholder, as outside a floating field.
+    expect(w.find("input, textarea").attributes("placeholder")).toBeUndefined();
+    expect(floatWarnings()).toHaveLength(1);
+    expect(String(floatWarnings()[0][0])).toContain("md, lg or xl");
   });
 
   it("keeps a control's own placeholder", () => {

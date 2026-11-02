@@ -39,8 +39,13 @@ const props = withDefaults(defineProps<CuiInputStepperProps>(), {
 });
 
 // Inside a `labelPosition="floating"` CuiFormField (#191). The input always shows a number
-// and the minus button sits where a resting label would, so the label stays floated.
-const floatingLabel = useFloatingLabel(() => ({ kind: "pinned", size: props.size, id: props.id }));
+// and the minus button sits where a resting label would, so the label stays floated, at the
+// top of a box one size taller; the field fits itself to the box. A vertical stepper is a
+// narrow column with no room for a label inside it, so it falls back to a top label.
+const floatingLabel = useFloatingLabel(
+  () => ({ id: isVertical.value ? undefined : props.id }),
+  () => ({ kind: "pinned", fit: true, size: props.size }),
+);
 
 const emit = defineEmits<{
   "update:modelValue": [value: number];
@@ -162,7 +167,8 @@ const cfg = computed(() => {
     buttonSize: nestedSize(props.size),
     iconSize: s.fontSize,
     style: {
-      "--_input-stepper-height": s.height,
+      "--_input-stepper-height": floatingLabel().float?.height ?? s.height,
+      "--_input-stepper-float-offset": floatingLabel().float?.offset,
       "--_input-stepper-font-size": s.fontSize,
       // The field holds a handful of digits, so it scales with the digits rather than
       // with the control's padding.
@@ -337,6 +343,17 @@ defineExpose({ el: rootEl, focus, blur });
 .cui-input-stepper--vertical .cui-input-stepper__control {
   flex-direction: column;
   height: auto;
+}
+
+/* Floating label (#191): the label sits in the top of the box, the buttons and number below
+   it (the offset is only set then), centred in what is left. The number's dividers would
+   run up through the label. */
+:where(.cui-input-stepper__control) {
+  padding-top: var(--_input-stepper-float-offset, 0);
+}
+
+.cui-input-stepper__field[data-cui-float-label] {
+  border-inline: none;
 }
 
 .cui-input-stepper--disabled .cui-input-stepper__control {

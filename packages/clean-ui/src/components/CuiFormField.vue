@@ -8,9 +8,11 @@ import { FormContextKey } from "./form-context";
 import { useFloatingLabelProvider } from "./form-field-context";
 
 /**
- * `floating` (#191) rests the label inside an empty control and floats it above on focus
- * or a value. It needs a control whose focus surface is a native `<input>`/`<textarea>`
- * (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper); with any other it is `top`.
+ * `floating` (#191) puts the label inside the control: resting over an empty one, and
+ * floated into the top of the box, above the value, on focus or a value. The control grows
+ * one size step taller to hold it. It needs a md, lg or xl control whose focus surface is a
+ * native `<input>`/`<textarea>` (CuiInput, CuiTextarea, CuiMaskedInput, a horizontal
+ * CuiInputStepper); with any other, or an xs or sm one, it is `top`.
  */
 export type LabelPosition = "top" | "left" | "floating";
 
@@ -132,9 +134,10 @@ function checkFloatingSupport() {
   if (rootEl.value.querySelector("[data-cui-float-label]")) return;
   warnOnce(
     `[clean-ui] CuiFormField: labelPosition="floating" needs a control with a native <input> or ` +
-      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, CuiInputStepper) given the field's id ` +
-      `(v-bind the slot props). The control in "${props.label}" isn't one, so its label is ` +
-      `shown on top instead.`,
+      `<textarea> (CuiInput, CuiTextarea, CuiMaskedInput, a horizontal CuiInputStepper), of ` +
+      `size md, lg or xl, given the field's id (v-bind the slot props). An xs or sm control is ` +
+      `too short to hold the label inside it. The control in "${props.label}" isn't one, so ` +
+      `its label is shown on top instead.`,
   );
 }
 onMounted(checkFloatingSupport);
@@ -281,41 +284,70 @@ onBeforeUnmount(() => {
 }
 
 /* --- Floating label (#191) --- see form-field-context.ts for the mechanism.
-   The label shares the control's grid cell, so it rests centred in an input. Floating is
-   transform only: into the room `padding-top` reserves above the control, where a top label
-   sits, so it needs no masking chip and never meets the help or error text. */
+   An inset label: it shares the control's grid cell, and the control, one size step taller
+   (its own private height, from the marker), keeps room for it. Resting, it is the value's
+   size, centred where the text starts. Floated, it scales down and moves up into the top
+   of the box, the value sitting below it (the control's own `padding-top`): the two centred
+   as a pair. Transform only, so nothing reflows, and the help or error text stays in row 2.
+
+   Resting centre: half the box. Floated centre: half the box less half the value's line
+   box (V), so translateY(-V/2) whatever the height, density included. */
 .cui-form-field--floating:has([data-cui-float-label]) {
-  /* 14px → 12px floated. */
-  --_form-field-float-scale: 0.8571;
-  --_form-field-float-gap: calc(0.25rem * var(--cui-density-scale, 1));
-  /* The floated label's line box: 0.875rem × line-height 1.4 × the scale. */
-  --_form-field-float-line: calc(0.875rem * 1.4 * var(--_form-field-float-scale));
-  /* The control's horizontal padding and font size, from the marker's size (md by default).
-     form-field-float-sync.test.ts holds these to utils/sizing.ts. */
-  --_form-field-float-px: 0.75rem;
+  /* The value's font size, and the floated label's as a ratio of it (12px; 13px at xl), per
+     size (md by default). Type is not density-scaled. form-field-float-sync.test.ts holds
+     these to utils/sizing.ts. */
   --_form-field-float-fs: 1rem;
+  --_form-field-float-scale: 0.75;
+  /* The control's horizontal padding. */
+  --_form-field-float-px: 0.75rem;
+  /* A leading icon's width plus the gap after it (CuiIcon md, 1.25rem), when there is one. */
+  --_form-field-float-lead: 0px;
+  /* Room kept clear at the end, beside the control's padding, for its clear button or
+     password toggle. */
+  --_form-field-float-end: 0px;
+  --_form-field-float-color: var(--cui-text-tertiary);
+  --_form-field-float-rest-color: var(--cui-text-secondary);
   /* Where the control's text starts: its padding plus its 1px border. */
   --_form-field-float-inset: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1px);
-  /* A textarea's resting box: its first line plus top and bottom padding and borders, so
-     the label's centre lands on that line. Its py is half its px at every size, so
-     2 × py = px. */
-  --_form-field-float-rest: calc(var(--_form-field-float-px) * var(--cui-density-scale, 1) + 1.6 * var(--_form-field-float-fs) + 2px);
+  /* The width a label may take: the cell, less the text's inset on both sides, a leading
+     icon and the end room. */
+  --_form-field-float-room: calc(100% - 2 * var(--_form-field-float-inset) - var(--_form-field-float-lead) - var(--_form-field-float-end));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   row-gap: calc(0.375rem * var(--cui-density-scale, 1));
-  padding-top: calc(var(--_form-field-float-line) + var(--_form-field-float-gap));
 }
 
-.cui-form-field--floating:has([data-cui-float-label~="xs"]) { --_form-field-float-px: 0.5rem; --_form-field-float-fs: 0.75rem; }
-.cui-form-field--floating:has([data-cui-float-label~="sm"]) { --_form-field-float-px: 0.625rem; --_form-field-float-fs: 0.8125rem; }
-.cui-form-field--floating:has([data-cui-float-label~="lg"]) { --_form-field-float-px: 0.875rem; --_form-field-float-fs: 1.0625rem; }
-.cui-form-field--floating:has([data-cui-float-label~="xl"]) { --_form-field-float-px: 1rem; --_form-field-float-fs: 1.125rem; }
+.cui-form-field--floating:has([data-cui-float-label~="lg"]) {
+  --_form-field-float-fs: 1.0625rem;
+  --_form-field-float-scale: 0.7059;
+  --_form-field-float-px: 0.875rem;
+}
+.cui-form-field--floating:has([data-cui-float-label~="xl"]) {
+  --_form-field-float-fs: 1.125rem;
+  --_form-field-float-scale: 0.7222;
+  --_form-field-float-px: 1rem;
+}
 /* TEXTAREA_SIZE_SCALE's px differs from the input's. */
-.cui-form-field--floating:has([data-cui-float-label="multiline xs"]) { --_form-field-float-px: 0.5rem; }
-.cui-form-field--floating:has([data-cui-float-label="multiline sm"]) { --_form-field-float-px: 0.75rem; }
-.cui-form-field--floating:has([data-cui-float-label="multiline md"]) { --_form-field-float-px: 1rem; }
-.cui-form-field--floating:has([data-cui-float-label="multiline lg"]) { --_form-field-float-px: 1.25rem; }
-.cui-form-field--floating:has([data-cui-float-label="multiline xl"]) { --_form-field-float-px: 1.5rem; }
+.cui-form-field--floating:has([data-cui-float-label~="multiline"][data-cui-float-label~="md"]) { --_form-field-float-px: 1rem; }
+.cui-form-field--floating:has([data-cui-float-label~="multiline"][data-cui-float-label~="lg"]) { --_form-field-float-px: 1.25rem; }
+.cui-form-field--floating:has([data-cui-float-label~="multiline"][data-cui-float-label~="xl"]) { --_form-field-float-px: 1.5rem; }
+
+.cui-form-field--floating:has([data-cui-float-label~="lead"]) {
+  --_form-field-float-lead: calc(1.25rem + 0.5rem * var(--cui-density-scale, 1));
+}
+.cui-form-field--floating:has([data-cui-float-label~="end"]) {
+  --_form-field-float-end: 2rem;
+}
+.cui-form-field--floating.cui-form-field--error:has([data-cui-float-label]) {
+  --_form-field-float-color: var(--cui-error);
+  --_form-field-float-rest-color: var(--cui-error);
+}
+
+/* A stepper is a compact box rather than a row-wide control: the column fits it, and the
+   label, which then does not size the column, takes the column's width. */
+.cui-form-field--floating:has([data-cui-float-label~="fit"]) {
+  grid-template-columns: fit-content(100%);
+}
 
 /* The body's children join the field's grid: the control in row 1 beside the label, the
    help or error text in row 2. */
@@ -331,37 +363,45 @@ onBeforeUnmount(() => {
   grid-area: 2 / 1;
 }
 
+/* Floated is the label's own state; resting (below) undoes the transform. */
 .cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label {
-  /* 1 left to right, -1 right to left: the side the label floats back to. */
-  --_form-field-float-dir: 1;
+  --_form-field-label-color: var(--_form-field-float-color);
   grid-area: 1 / 1;
   /* Above the control's background. */
   z-index: 1;
   justify-self: start;
-  align-self: stretch;
+  align-self: center;
   min-width: 0;
-  /* Floated it may use the field's whole width, at its smaller scale. */
-  max-width: calc(100% / var(--_form-field-float-scale));
-  margin-inline-start: var(--_form-field-float-inset);
-  transform-origin: left center;
-  /* Floated: back to the field's start edge, above the control. */
-  transform:
-    translateX(calc(-1 * var(--_form-field-float-dir) * var(--_form-field-float-inset)))
-    translateY(calc(-50% - var(--_form-field-float-gap) - var(--_form-field-float-line) / 2))
-    scale(var(--_form-field-float-scale));
+  max-width: calc(var(--_form-field-float-room) / var(--_form-field-float-scale));
+  margin-inline-start: calc(var(--_form-field-float-inset) + var(--_form-field-float-lead));
+  font-size: var(--_form-field-float-fs);
+  line-height: 1.25;
+  transform-origin: left var(--_form-field-float-origin-y, center);
+  transform: translateY(calc(-0.625 * var(--_form-field-float-fs))) scale(var(--_form-field-float-scale));
   transition:
     transform var(--cui-duration-fast) var(--cui-ease-in-out),
     color var(--cui-duration-fast) ease;
 }
 
 .cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label:dir(rtl) {
-  --_form-field-float-dir: -1;
-  transform-origin: right center;
+  transform-origin: right var(--_form-field-float-origin-y, center);
 }
 
+.cui-form-field--floating:has([data-cui-float-label~="fit"]) > .cui-form-field__label {
+  justify-self: stretch;
+  contain: inline-size;
+}
+
+/* A textarea's label rests on its first line, below the room the textarea reserves (6px, the
+   floated line box, 2px), and floats from the top edge to 6px below the border. Its line box
+   is 1.25 × the font against the textarea's 1.6, so it sits 0.175em down the line: `drop`
+   is that plus the floated line box, and the 2px, between the two positions. */
 .cui-form-field--floating:has([data-cui-float-label~="multiline"]) > .cui-form-field__label {
+  --_form-field-float-origin-y: top;
+  --_form-field-float-drop: calc(0.125rem * var(--cui-density-scale, 1) + var(--_form-field-float-fs) * (1.25 * var(--_form-field-float-scale) + 0.175));
   align-self: start;
-  height: var(--_form-field-float-rest);
+  margin-top: calc(1px + 0.375rem * var(--cui-density-scale, 1) + var(--_form-field-float-drop));
+  transform: translateY(calc(-1 * var(--_form-field-float-drop))) scale(var(--_form-field-float-scale));
 }
 
 .cui-form-field--floating:has([data-cui-float-label]) > .cui-form-field__label > .cui-form-field__label-text {
@@ -370,17 +410,22 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-/* Resting: nothing focused in the field, and the control empty — its single-space
-   placeholder showing. A control's own placeholder is not `" "`, so it never rests over
-   one; nor while the browser has autofilled it, which can show a value before the page can
-   read it. A browser without `:autofill` drops this rule, and the label just stays up. */
-.cui-form-field--floating:not(:focus-within):has([data-cui-float-label][placeholder=" "]:placeholder-shown:not(:autofill)) > .cui-form-field__label {
-  --_form-field-label-color: var(--cui-text-secondary);
+/* Disabled: the control dims itself, and the label, which is drawn over it, with it. */
+.cui-form-field--floating:has([data-cui-float-label]:disabled) > .cui-form-field__label {
+  opacity: 0.5;
+}
+
+/* Resting: nothing focused in the field, and the control empty — its placeholder, its own
+   or the single space, showing (its own is transparent until focus). Never while the
+   browser has autofilled it, which can show a value before the page can read it; nor a
+   pinned label. A browser without `:autofill` drops this rule, and the label just stays
+   up. Focus does not recolour the label: primary at 12px fails 4.5:1 in some themes. */
+.cui-form-field--floating:not(:focus-within):has([data-cui-float-label]:not([data-cui-float-label~="pinned"]):placeholder-shown:not(:autofill)) > .cui-form-field__label {
+  --_form-field-label-color: var(--_form-field-float-rest-color);
   transform: none;
-  /* Over the control: out of the way of its clicks and caret, and clear of a trailing clear
-     button or password toggle. */
+  /* Over the control: out of the way of its clicks and caret. */
   pointer-events: none;
-  max-width: calc(100% - var(--_form-field-float-inset) - 2rem);
+  max-width: var(--_form-field-float-room);
 }
 
 /* --- Help text --- */

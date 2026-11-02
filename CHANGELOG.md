@@ -9,16 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`labelPosition="floating"` on CuiFormField** (#191). The label rests inside an empty
-  control and floats above it on focus or once there is a value. It is CSS only
-  (`:placeholder-shown` and `:focus-within`), so a value the browser autofills floats it
+- **`labelPosition="floating"` on CuiFormField** (#191). An inset label: it sits inside the
+  control, resting at the value's size over an empty one and, on focus or once there is a
+  value, shrinking into the top of the box with the value below it. To hold both, a
+  floating control is one size step taller and keeps its own font size: md 48px, lg 56px,
+  xl 64px, density-scaled; xs and sm are too short and fall back to a top label. It is CSS
+  only (`:placeholder-shown` and `:focus-within`), so a value the browser autofills floats it
   too, with no event to listen for. The label stays the same `<label>` throughout, with its
-  association, required marker, help and error text unchanged. Floated it is 12px text that
-  keeps 4.5:1 contrast. It moves by transform on the motion tokens, and snaps under reduced
-  motion. CuiInput (number included), CuiTextarea, CuiMaskedInput and CuiInputStepper
-  support it. A prefix, suffix or attached button keeps the label floated, clear of them.
-  Any other control (CuiSelect, the date and time pickers) falls back to a top label and
-  logs one console warning.
+  association, required marker, help and error text unchanged. It is `--cui-text-secondary`
+  at rest and `--cui-text-tertiary` floated (4.5:1 in every theme), `--cui-error` on error,
+  and is not recoloured by focus. It moves by transform on the motion tokens, and snaps
+  under reduced motion. A control's own placeholder stays hidden until focus. A leading icon
+  keeps the resting label after it; prefix text, an attached button or a suffix keeps it
+  floated. CuiInput (number included), CuiTextarea (whose label's room is always reserved),
+  CuiMaskedInput and a horizontal CuiInputStepper support it. Any other control (CuiSelect,
+  the date and time pickers) falls back to a top label and logs one console warning.
 - **`CuiList` / `CuiListItem`** (#195). A presentational list: a real `<ul>`/`<li>` (or `ol`,
   or `div` rows), each row a link (`href`/`to`), a `<button>` (a `click` listener), any
   element (`as`) or plain content, with a leading icon, a one-line title and subtitle, and a

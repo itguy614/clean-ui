@@ -123,13 +123,12 @@ defineExpose({ el: textareaRef, focus, blur });
 
 const dims = computed(() => TEXTAREA_SIZE_SCALE[props.size]);
 
-// Inside a `labelPosition="floating"` CuiFormField the label rests on the first line (#191).
-const floatingLabel = useFloatingLabel(() => ({
-  kind: "multiline",
-  size: props.size,
-  id: props.id,
-  placeholder: props.placeholder,
-}));
+// Inside a `labelPosition="floating"` CuiFormField the label rests on the first line and
+// floats into room reserved above it (#191).
+const floatingLabel = useFloatingLabel(
+  () => props,
+  () => ({ kind: "multiline", size: props.size }),
+);
 </script>
 
 <template>
@@ -144,6 +143,7 @@ const floatingLabel = useFloatingLabel(() => ({
         borderRadius: RADIUS_SCALE[rounded],
         '--_ta-px': dims.px,
         '--_ta-py': dims.py,
+        '--_ta-float-offset': floatingLabel().float?.offset,
         '--_ta-font-size': dims.fontSize,
         '--_ta-color': `var(--cui-${color})`,
         '--_ta-focus-ring': `var(--cui-${color}-focus-ring)`,
@@ -241,6 +241,17 @@ const floatingLabel = useFloatingLabel(() => ({
 
 .cui-textarea__native::placeholder {
   color: var(--cui-text-tertiary);
+}
+
+/* Under a floating label (#191), room for it is reserved all the time, so the text never
+   jumps: 6px, the floated label's line box, 2px. And the placeholder shows only once the
+   label has floated. */
+.cui-textarea__native[data-cui-float-label] {
+  padding-top: calc(var(--_ta-float-offset) + 0.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-textarea__native[data-cui-float-label]:not(:focus)::placeholder {
+  color: transparent;
 }
 
 .cui-textarea__native:disabled {

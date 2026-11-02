@@ -1,20 +1,6 @@
-import { Comment, Fragment, Text, computed, useSlots, type VNode } from "vue";
+import { Text, computed, useSlots } from "vue";
+import { slotNodes } from "../utils/vnodes";
 import type { CuiAutoOrientation } from "../types/common";
-
-/** The options in a slot's vnodes: fragments (`v-for`, `<template>`) unwrapped at any depth, and
-    the comment a false `v-if` leaves behind, and bare text, not counted. */
-function countOptions(vnodes: VNode[]): number {
-  let count = 0;
-  for (const vnode of vnodes) {
-    if (vnode.type === Comment || vnode.type === Text) continue;
-    if (vnode.type === Fragment) {
-      if (Array.isArray(vnode.children)) count += countOptions(vnode.children as VNode[]);
-      continue;
-    }
-    count += 1;
-  }
-  return count;
-}
 
 /**
  * A form-control group's `orientation="auto"` (#206): horizontal for two options or fewer,
@@ -23,7 +9,8 @@ function countOptions(vnodes: VNode[]): number {
  */
 export function useAutoOrientation(orientation: () => CuiAutoOrientation) {
   const slots = useSlots();
-  const childCount = computed(() => countOptions(slots.default?.() ?? []));
+  // Bare text is not an option.
+  const childCount = computed(() => slotNodes(slots.default?.() ?? []).filter((n) => n.type !== Text).length);
 
   return computed<"horizontal" | "vertical">(() => {
     const value = orientation();
