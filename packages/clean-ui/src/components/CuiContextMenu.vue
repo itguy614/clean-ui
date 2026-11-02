@@ -9,6 +9,7 @@ import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownP
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 
 /**
@@ -64,6 +65,8 @@ const emit = defineEmits<{
 
 const isOpen = ref(false);
 const { present, onAfterLeave } = usePresence(() => isOpen.value);
+// The theme scope around the target area, on the teleported menu (#418).
+const themeScope = useScopedTheme(() => present.value);
 const wrapperRef = ref<HTMLElement | null>(null);
 const menuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
@@ -424,6 +427,7 @@ defineExpose({ open, openAt, close, isOpen });
         v-show="isOpen"
         ref="menuRef"
         class="cui-context-menu__panel"
+        :class="themeScope"
         :data-cui-menu-owner="contextMenuId"
         :style="{ ...menuStyle, minWidth }"
         role="menu"

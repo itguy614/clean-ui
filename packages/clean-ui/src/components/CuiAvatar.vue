@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import type { CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import { scaleDensity } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";

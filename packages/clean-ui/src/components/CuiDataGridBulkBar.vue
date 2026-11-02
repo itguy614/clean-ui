@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, useTemplateRef, watch } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import type { DataGridBulkAction, DataGridRow } from "../types/data-grid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiToolbar from "./CuiToolbar.vue";
 import { useMessages } from "../composables/useMessages";
 import { usePresence } from "../composables/usePresence";
 import { panelTransition } from "../utils/motion";
 
 const messages = useMessages();
 
-const props = defineProps<{
+defineProps<{
   actions: DataGridBulkAction[];
 }>();
 
@@ -40,38 +41,51 @@ function getSelectedRows(): DataGridRow[] {
 function onAction(action: DataGridBulkAction) {
   emit("bulk-action", { action, rows: getSelectedRows() });
 }
+
+const barEl = useTemplateRef<HTMLElement>("barEl");
+
+/**
+ * Clearing hides the bar, focused control and all: hand focus to the grid's first selection
+ * checkbox (select-all, else the first row's), so a keyboard user isn't dropped on <body>.
+ */
+function onClear() {
+  const bar = barEl.value;
+  const hadFocus = !!bar?.contains(document.activeElement);
+  grid.clearSelection();
+  if (!hadFocus) return;
+  bar!.closest(".cui-data-grid")?.querySelector<HTMLElement>('.cui-data-grid__content table [role="checkbox"]')?.focus();
+}
 </script>
 
 <template>
   <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
-    <div v-if="present" v-show="isVisible" class="cui-data-grid-bulk-bar">
+    <div v-if="present" ref="barEl" v-show="isVisible" class="cui-data-grid-bulk-bar">
       <div class="cui-data-grid-bulk-bar__inner">
         <span class="cui-data-grid-bulk-bar__count">
           {{ messages.dataGrid.selected(shownCount) }}
         </span>
 
-        <div class="cui-data-grid-bulk-bar__actions">
-          <CuiButton
-            v-for="action in actions"
-            :key="action.key"
-            size="xs"
-            :variant="action.variant === 'destructive' ? 'solid' : 'outline'"
-            :color="action.variant === 'destructive' ? 'error' : 'primary'"
-            @click="onAction(action)"
-          >
-            {{ action.label }}
-          </CuiButton>
-        </div>
+        <!-- The actions and the clear button are one tab stop, arrows between them (#421);
+             the count is text beside the toolbar, not one of its controls. -->
+        <CuiToolbar class="cui-data-grid-bulk-bar__toolbar" :label="messages.dataGrid.bulkActions">
+          <div class="cui-data-grid-bulk-bar__actions">
+            <CuiButton
+              v-for="action in actions"
+              :key="action.key"
+              size="xs"
+              :variant="action.variant === 'destructive' ? 'solid' : 'outline'"
+              :color="action.variant === 'destructive' ? 'error' : 'primary'"
+              @click="onAction(action)"
+            >
+              {{ action.label }}
+            </CuiButton>
+          </div>
 
-        <CuiButton
-          variant="ghost"
-          size="xs"
-          @click="grid.clearSelection()"
-          style="margin-left: auto;"
-        >
-          <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
-          {{ messages.clear }}
-        </CuiButton>
+          <CuiButton class="cui-data-grid-bulk-bar__clear" variant="ghost" size="xs" @click="onClear">
+            <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
+            {{ messages.clear }}
+          </CuiButton>
+        </CuiToolbar>
       </div>
     </div>
   </Transition>
@@ -108,8 +122,21 @@ function onAction(action: DataGridBulkAction) {
   white-space: nowrap;
 }
 
+/* The toolbar takes the rest of the row, so the clear button can sit at its end. */
+.cui-data-grid-bulk-bar__toolbar {
+  --_toolbar-gap: calc(0.75rem * var(--cui-density-scale, 1));
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-data-grid-bulk-bar__clear {
+  margin-left: auto;
+}
+
 .cui-data-grid-bulk-bar__actions {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
 }
 

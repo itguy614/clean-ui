@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiConfirmDialog } from "@itguy614/clean-ui";
+import { CuiButton, CuiConfirmDialog, CuiFlex } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/confirm-dialog";
@@ -12,9 +12,16 @@ const showTyped = ref(false);
 const showCustom = ref(false);
 const showHeading = ref(false);
 const showLoading = ref(false);
+const showPrimary = ref(false);
+const showNoIcon = ref(false);
+const showConfirmColor = ref(false);
 const loadingState = ref(false);
 
 const lastAction = ref("(no action yet)");
+
+// Focus on close (#437)
+const showReturn = ref(false);
+const returnLeaves = ref(0);
 
 function onUsageConfirm() {
   lastAction.value = "Basic: confirmed";
@@ -44,6 +51,21 @@ function onCustomConfirm() {
 function onHeadingConfirm() {
   lastAction.value = "Heading level: confirmed";
   showHeading.value = false;
+}
+
+function onPrimaryConfirm() {
+  lastAction.value = "Primary: region changed";
+  showPrimary.value = false;
+}
+
+function onNoIconConfirm() {
+  lastAction.value = "No icon: profile applied";
+  showNoIcon.value = false;
+}
+
+function onConfirmColorConfirm() {
+  lastAction.value = "Confirm color: changes published";
+  showConfirmColor.value = false;
 }
 
 function onLoadingConfirm() {
@@ -106,7 +128,8 @@ function onLoadingConfirm() {
         <li>
           The variant icon is decorative and marked <code>aria-hidden</code>, so the meaning has
           to be carried by the words. Write a title and message that still read correctly with
-          no icon: “Delete account?”, not “Warning”.
+          no icon: “Delete account?”, not “Warning”. <code>:icon="false"</code> drops it
+          altogether.
         </li>
         <li>
           The type-to-confirm input is not focused on open — focus lands on the panel, and Tab
@@ -114,9 +137,8 @@ function onLoadingConfirm() {
           <code>confirmPrompt</code> appears literally.
         </li>
         <li>
-          The dialog carries no accessible name today: the inner modal is used in
-          sub-component mode, so no <code>aria-labelledby</code> is emitted and the title is not
-          associated with the dialog.
+          The title names the dialog: the panel's <code>aria-labelledby</code> points at it, in
+          every variant and with or without the icon.
         </li>
       </ul>
     </template>
@@ -161,6 +183,72 @@ function onLoadingConfirm() {
             variant="warning"
             confirm-text="Reset"
             @confirm="onWarningConfirm"
+          />
+        </Example>
+
+        <!-- Primary -->
+        <Example title="Primary — routine confirm" :code="`<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Change region?&quot;
+  message=&quot;The reader restarts with the new region's frequency plan.&quot;
+  variant=&quot;primary&quot;
+  confirm-text=&quot;Change Region&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
+          <CuiButton variant="outline" @click="showPrimary = true">Change Region</CuiButton>
+          <CuiConfirmDialog
+            v-model:visible="showPrimary"
+            title="Change region?"
+            message="The reader restarts with the new region's frequency plan."
+            variant="primary"
+            confirm-text="Change Region"
+            @confirm="onPrimaryConfirm"
+          />
+        </Example>
+
+        <!-- No icon -->
+        <Example title="Without the icon" :code="`<!-- no tile, and the title sits flush left -->
+<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Apply profile?&quot;
+  message=&quot;The current settings are replaced by the profile's.&quot;
+  variant=&quot;primary&quot;
+  :icon=&quot;false&quot;
+  confirm-text=&quot;Apply&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
+          <CuiButton variant="outline" @click="showNoIcon = true">Apply Profile</CuiButton>
+          <CuiConfirmDialog
+            v-model:visible="showNoIcon"
+            title="Apply profile?"
+            message="The current settings are replaced by the profile's."
+            variant="primary"
+            :icon="false"
+            confirm-text="Apply"
+            @confirm="onNoIconConfirm"
+          />
+        </Example>
+
+        <!-- Confirm color -->
+        <Example title="Confirm button colour (confirmColor)" :code="`<!-- the tile keeps the variant's colour; only the button changes -->
+<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Publish changes?&quot;
+  message=&quot;Everyone with access will see the new version.&quot;
+  variant=&quot;info&quot;
+  confirm-color=&quot;success&quot;
+  confirm-text=&quot;Publish&quot;
+  @confirm=&quot;onConfirm&quot;
+/>`">
+          <CuiButton variant="outline" @click="showConfirmColor = true">Publish Changes</CuiButton>
+          <CuiConfirmDialog
+            v-model:visible="showConfirmColor"
+            title="Publish changes?"
+            message="Everyone with access will see the new version."
+            variant="info"
+            confirm-color="success"
+            confirm-text="Publish"
+            @confirm="onConfirmColorConfirm"
           />
         </Example>
 
@@ -251,6 +339,32 @@ function onLoadingConfirm() {
             confirm-text="Delete"
             :loading="loadingState"
             @confirm="onLoadingConfirm"
+          />
+        </Example>
+
+        <!-- Return focus elsewhere -->
+        <Example title="Return focus elsewhere (returnFocus, after-leave)" :code="`<CuiConfirmDialog
+  v-model:visible=&quot;show&quot;
+  title=&quot;Archive project?&quot;
+  variant=&quot;primary&quot;
+  return-focus=&quot;#next-step&quot;
+  @confirm=&quot;show = false&quot;
+  @after-leave=&quot;leaves++&quot;
+/>
+<CuiButton id=&quot;next-step&quot;>Next step</CuiButton>`">
+          <CuiFlex gap="2" align="center" wrap="wrap">
+            <CuiButton variant="outline" @click="showReturn = true">Archive project</CuiButton>
+            <CuiButton id="docs-confirm-next-step" variant="ghost">Next step</CuiButton>
+            <span class="text-sm" style="color: var(--cui-text-secondary);">after-leave fired: {{ returnLeaves }}</span>
+          </CuiFlex>
+          <CuiConfirmDialog
+            v-model:visible="showReturn"
+            title="Archive project?"
+            message="Confirm or cancel, then watch where focus lands: on the Next step button, not the opener. after-leave fires once focus has been returned."
+            variant="primary"
+            return-focus="#docs-confirm-next-step"
+            @confirm="showReturn = false"
+            @after-leave="returnLeaves++"
           />
         </Example>
     </template>

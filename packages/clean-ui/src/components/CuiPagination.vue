@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiSelect from "./CuiSelect.vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";

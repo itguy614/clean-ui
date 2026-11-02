@@ -9,7 +9,6 @@ const show1 = ref(true);
 const show2 = ref(true);
 const show3 = ref(true);
 const show4 = ref(true);
-const show5 = ref(true);
 </script>
 
 <template>

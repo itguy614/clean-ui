@@ -93,7 +93,10 @@ app.use(createCleanUI({
         component inside your tree, captures the app's options, any
         <code>CuiConfigProvider</code> above it and the message catalog;
         <code>provideTo(app)</code> hands them to the other app before it mounts. They stay
-        live, so a later change to the provider reaches the dialog too.
+        live, so a later change to the provider reaches the dialog too. It also hands on the
+        scoped theme around that component: the dialog's modal, and any select or menu in it,
+        take the nearest <code>cui-theme-*</code> class and a scoped <code>dark</code> class
+        (see <router-link to="/foundations/themes">Themes</router-link>).
       </p>
       <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { createApp } from 'vue'
 import { useCleanUIContext } from '@itguy614/clean-ui'

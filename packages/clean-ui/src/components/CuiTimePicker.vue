@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, useTemplateRef } from "vue";
-import CuiMaskedInput from "./CuiMaskedInput.vue";
 import CuiPopover from "./CuiPopover.vue";
 import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
@@ -114,22 +113,10 @@ const displayText = computed(() => {
   return formatOutput();
 });
 
-// Mask for input
-const mask = computed(() => props.format === "24" ? "##:##" : "##:## AA");
-
 // Input placeholder
 const inputPlaceholder = computed(() =>
   props.placeholder ?? (props.format === "24" ? "hh:mm" : "hh:mm AM"),
 );
-
-// Raw value for masked input
-const inputRaw = computed(() => {
-  if (!props.modelValue) return "";
-  if (props.format === "24") {
-    return `${String(hours.value).padStart(2, "0")}${String(minutes.value).padStart(2, "0")}`;
-  }
-  return `${String(hours.value).padStart(2, "0")}${String(minutes.value).padStart(2, "0")}${period.value}`;
-});
 
 // Hour/minute limits
 const hourMin = computed(() => props.format === "12" ? 1 : 0);
@@ -143,17 +130,6 @@ function onHourChange(val: number) {
 function onMinuteChange(val: number) {
   minutes.value = val;
   emitValue();
-}
-
-function togglePeriod() {
-  period.value = period.value === "AM" ? "PM" : "AM";
-  emitValue();
-}
-
-// Apply and close
-function onApply() {
-  emitValue();
-  popoverVisible.value = false;
 }
 
 // Open popover syncs from current value

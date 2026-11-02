@@ -3,7 +3,6 @@ import { computed } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import CuiBadge from "./CuiBadge.vue";
 import CuiButton from "./CuiButton.vue";
-import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();

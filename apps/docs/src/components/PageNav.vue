@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, onMounted, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import { useScrollSpy } from "@itguy614/clean-ui";
 import { slug } from "../utils/slug";
-import { isPlainClick, scrollBehavior } from "../utils/link";
+import { isPlainClick } from "../utils/link";
 
 /**
  * Sticky on-page nav, right rail.
@@ -23,15 +23,21 @@ const route = useRoute();
 const entries = ref<Entry[]>([]);
 
 // The current entry is the topmost heading in the top fifth of the viewport, below the
-// 56px sticky header, or else the last heading to have scrolled above that band: "where am
-// I" when reading. A plain "is it visible" test picks the lowest visible heading, which
-// reads as the nav running ahead of the reader.
-const { activeId: spied, setActive } = useScrollSpy(
+// sticky header, or else the last heading to have scrolled above that band: "where am I"
+// when reading. A plain "is it visible" test picks the lowest visible heading, which reads
+// as the nav running ahead of the reader.
+//
+// The offset is the 56px header. A click still lands a heading where a #hash link does,
+// since scrollTo honours the headings' larger `scroll-margin-top` (main.css) on its own.
+const { activeId, scrollTo } = useScrollSpy(
   () => entries.value.map((e) => e.id),
-  { rootMargin: "0px 0px -80% 0px", offset: 56 },
+  {
+    rootMargin: "0px 0px -80% 0px",
+    offset: 56,
+    // Above the first heading nothing has reached the band yet: the first entry is current.
+    initial: () => entries.value[0]?.id,
+  },
 );
-// Above the first heading nothing has reached the band yet: the first entry is current.
-const activeId = computed(() => spied.value ?? entries.value[0]?.id ?? null);
 
 function collect() {
   // Every h2/h3, not only those already carrying an id: `DocPage` and `Example` assign
@@ -62,14 +68,12 @@ function collect() {
 }
 
 function go(e: MouseEvent, id: string) {
-  // A real link: a modified or middle click still opens it in a new tab or window.
-  if (!isPlainClick(e)) return;
-  const el = document.getElementById(id);
-  if (!el) return;
-  e.preventDefault();
+  // A real link: a modified or middle click still opens it in a new tab or window, and a
+  // heading that has gone keeps the native #hash navigation.
   // Current at once, and held while the smooth scroll passes the sections in between.
-  setActive(id);
-  el.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  if (!isPlainClick(e) || !scrollTo(id)) return;
+  e.preventDefault();
+  const el = document.getElementById(id)!;
   // Move keyboard focus to the section too, or the nav is a mouse-only affordance.
   el.setAttribute("tabindex", "-1");
   el.focus({ preventScroll: true });

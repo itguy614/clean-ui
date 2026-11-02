@@ -9,6 +9,8 @@ import CuiButton from "../../components/CuiButton.vue";
  * with the pressed ones outlined. The group squared every inner corner by position, so a lone
  * pressed Bold lost its right corners against a ghost Italic that draws no edge. Now corners
  * merge only where two painted buttons meet. Real browser: `:has()` and the cascade.
+ *
+ * A pressed ghost toggle (`pressed`, #396) draws an edge, so it counts as painted.
  */
 describe("CuiButtonGroup corners (real browser)", () => {
   let wrapper: VueWrapper | undefined;
@@ -17,11 +19,15 @@ describe("CuiButtonGroup corners (real browser)", () => {
     wrapper = undefined;
   });
 
-  type Variant = "outline" | "ghost";
+  /** `pressed` is a ghost button with `pressed` set: a toolbar toggle that is on (#396). */
+  type Variant = "outline" | "ghost" | "pressed";
+
+  const buttonProps = (variant: Variant, key: number) =>
+    variant === "pressed" ? { key, variant: "ghost" as const, pressed: true } : { key, variant };
 
   function group(variants: Variant[], orientation: "horizontal" | "vertical" = "horizontal") {
     wrapper = mount(
-      () => h(CuiButtonGroup, { label: "Text style", orientation }, () => variants.map((variant, i) => h(CuiButton, { key: i, variant }, () => `B${i}`))),
+      () => h(CuiButtonGroup, { label: "Text style", orientation }, () => variants.map((variant, i) => h(CuiButton, buttonProps(variant, i), () => `B${i}`))),
       { attachTo: document.body },
     );
     return [...wrapper.element.querySelectorAll<HTMLElement>(".cui-button")];
@@ -62,5 +68,20 @@ describe("CuiButtonGroup corners (real browser)", () => {
     expect(rounded(top)).toEqual([true, true, false, false]);
     expect(rounded(bottom)).toEqual([false, false, true, true]);
     expect(rounded(lone)).toEqual(ALL);
+  });
+
+  describe("pressed ghost toggles (#396)", () => {
+    it("keeps every corner of a lone pressed toggle", () => {
+      const [bold] = group(["pressed", "ghost", "ghost", "ghost"]);
+      expect(rounded(bold)).toEqual(ALL);
+    });
+
+    it("merges a run of pressed toggles into one shape, rounded at its outer ends", () => {
+      const [bold, italic, underline, strike] = group(["pressed", "pressed", "pressed", "ghost"]);
+      expect(rounded(bold)).toEqual(START);
+      expect(rounded(italic)).toEqual(NONE);
+      expect(rounded(underline)).toEqual(END);
+      expect(rounded(strike)).toEqual(ALL);
+    });
   });
 });

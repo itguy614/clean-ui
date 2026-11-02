@@ -28,7 +28,7 @@ import meta from "../meta/color-picker";
 const color1 = ref("#3b82f6");
 const color2 = ref("#22c55e");
 const color3 = ref("#ef4444");
-const color4 = ref("rgba(99, 102, 241, 0.75)");
+const color4 = ref("#6366f1bf");
 const color5 = ref("#8b5cf6");
 const color6 = ref("#f97316");
 
@@ -46,10 +46,10 @@ const utilFormats = computed(() => {
 });
 
 const conversions = [
-  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha byte is ignored. Anything else — named colours, space-separated syntax — is null." },
-  { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". Hex drops alpha; rgb and hsl switch to rgba()/hsla() when a < 1, alpha to two decimals." },
+  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha digit or byte is read as 0–1, unrounded (#…80 is 128/255). Hex with a non-hex character is null, and so is anything else — named colours, space-separated syntax." },
+  { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". When a < 1, hex appends the alpha byte (#rrggbbaa; an alpha that rounds to ff stays #rrggbb), and rgb and hsl switch to rgba()/hsla() with alpha to two decimals, unless it rounds to 1.00." },
   { fn: "rgbToHex(r, g, b)", returns: "string", notes: "Lowercase #rrggbb; channels are rounded." },
-  { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 6 or 8 digits, leading # optional; an 8-digit alpha is discarded. Any other length is null." },
+  { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 4, 6 or 8 hex digits, leading # optional; the alpha of a 4- or 8-digit value is discarded (parseColor keeps it). Any other length or character is null." },
   { fn: "rgbToHsl(r, g, b)", returns: "HSL", notes: "h 0–360, s and l 0–100 (percent), all rounded to integers." },
   { fn: "hslToRgb(h, s, l)", returns: "RGB", notes: "s and l are percentages (0–100), not fractions." },
   { fn: "rgbToHsv(r, g, b)", returns: "HSV", notes: "h 0–360, s and v 0–1, unrounded — the picker's gradient coordinates." },
@@ -74,7 +74,7 @@ function onPickerChange(val: string) {
 function onHexInput(val: string | number) {
   let hex = String(val).replace(/[^#a-fA-F0-9]/g, "");
   if (!hex.startsWith("#")) hex = "#" + hex;
-  if (/^#[a-fA-F0-9]{6}$/i.test(hex)) {
+  if (/^#(?:[a-f0-9]{3,4}|(?:[a-f0-9]{2}){3,4})$/i.test(hex)) {
     inputColor.value = hex;
   }
 }
@@ -158,6 +158,7 @@ function onHexInput(val: string | number) {
 
 const c = parseColor("rgba(59, 130, 246, 0.5)");  // { r: 59, g: 130, b: 246, a: 0.5 }
 formatColor(c!.r, c!.g, c!.b, c!.a, "hsl");       // "hsla(217, 91%, 60%, 0.50)"
+formatColor(c!.r, c!.g, c!.b, c!.a, "hex");       // "#3b82f680"
 
 rgbToHex(59, 130, 246);                            // "#3b82f6"
 hexToRgb("#3b82f6");                               // { r: 59, g: 130, b: 246 }
@@ -256,11 +257,15 @@ const themed = getThemePalette();  // e.g. ["#eef2ff", "#a5b4fc", "#4f46e5", ...
       <!-- With alpha -->
       <Example title="With Alpha Slider" :code="`<CuiColorPicker v-model=&quot;color&quot; show-alpha />`">
         <CuiFlex gap="4" class="items-start">
-          <CuiColorPicker v-model="color4" show-alpha format="rgb" />
+          <CuiColorPicker v-model="color4" show-alpha />
           <div>
             <div class="text-sm font-medium" style="margin-bottom: 0.5rem;">Selected:</div>
             <div :style="{ width: '4rem', height: '4rem', borderRadius: '0.5rem', background: color4, border: '1px solid var(--cui-border)' }" />
             <code class="text-xs" style="display: block; margin-top: 0.375rem; color: var(--cui-text-secondary); max-width: 12rem; word-break: break-all;">{{ color4 }}</code>
+            <p class="text-xs" style="margin-top: 0.5rem; max-width: 12rem; color: var(--cui-text-secondary);">
+              In hex, opacity below 100% adds a fourth byte (<code>#rrggbbaa</code>); at 100% the
+              value is plain <code>#rrggbb</code>.
+            </p>
           </div>
         </CuiFlex>
       </Example>

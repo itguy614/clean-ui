@@ -2,13 +2,20 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import CuiMarkdownEditor from "../../components/CuiMarkdownEditor.vue";
 import { linkPlugin } from "../../plugins/builtin/link";
-import { frames, mountHosts } from "../../../../../config/test/browser-helpers";
+import {
+  frames,
+  mountHosts,
+  themeTokensOn as tokensOn,
+  themeTokensUnder as tokensUnder,
+} from "../../../../../config/test/browser-helpers";
 
 /**
  * #399 — the link and image dialogs mount as their own app on `document.body`, and their
  * CuiModal teleports there too, so a scoped theme around the editor never reached them:
  * `<div class="cui-theme-violet">` gave a violet editor and a navy dialog. The dialog now
- * takes the editor's nearest `cui-theme-*` class, and a scoped `dark`.
+ * takes the editor's nearest `cui-theme-*` class, and a scoped `dark`: since #418 through
+ * clean-ui's own teleport scope, which `context.cleanUI` hands on to the dialog's app, and
+ * live rather than as a snapshot taken at mount.
  *
  * Real browser: what is measured is the token the cascade resolves on the dialog panel.
  */
@@ -19,18 +26,6 @@ describe("a plugin dialog in a scoped theme (real browser)", () => {
     fixtures.cleanup();
     cleanups.splice(0).forEach((c) => c());
   });
-
-  /** `--cui-primary` and `--cui-surface-base` as resolved on an element with `className`,
-   * where nothing but the page itself sits above it. */
-  function tokensUnder(className: string) {
-    const probe = document.createElement("div");
-    probe.className = className;
-    document.body.append(probe);
-    const s = getComputedStyle(probe);
-    const tokens = { primary: s.getPropertyValue("--cui-primary"), surface: s.getPropertyValue("--cui-surface-base") };
-    probe.remove();
-    return tokens;
-  }
 
   /** Opens the link dialog of an editor nested in one element per class, outermost first,
    * and returns the dialog panel. */
@@ -53,11 +48,6 @@ describe("a plugin dialog in a scoped theme (real browser)", () => {
     // It belongs to no host, so it must be closed with the editor.
     expect(host.contains(panel)).toBe(false);
     return panel;
-  }
-
-  function tokensOn(el: HTMLElement) {
-    const s = getComputedStyle(el);
-    return { primary: s.getPropertyValue("--cui-primary"), surface: s.getPropertyValue("--cui-surface-base") };
   }
 
   it("draws the dialog in the violet theme around the editor", async () => {
@@ -91,7 +81,17 @@ describe("a plugin dialog in a scoped theme (real browser)", () => {
     const violet = tokensUnder("");
 
     const panel = await openLinkDialog();
-    expect(panel.className).not.toMatch(/cui-theme-/);
+    expect(panel.closest(".cui-modal-overlay")!.className).not.toMatch(/cui-theme-/);
     expect(tokensOn(panel).primary).toBe(violet.primary);
+  });
+
+  it("follows a theme changed around the editor while the dialog is open", async () => {
+    const panel = await openLinkDialog("cui-theme-violet");
+    const scope = document.querySelector(".cui-theme-violet")!;
+    scope.classList.replace("cui-theme-violet", "cui-theme-forest");
+    await frames(1);
+    const forest = tokensUnder("cui-theme-forest");
+    expect(forest.primary).not.toBe(tokensUnder("cui-theme-violet").primary);
+    expect(tokensOn(panel).primary).toBe(forest.primary);
   });
 });

@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
 

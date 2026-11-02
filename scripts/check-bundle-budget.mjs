@@ -9,7 +9,8 @@
  * Usage: `node scripts/check-bundle-budget.mjs [package ...]` — checks the budget
  * entries for the named packages, or every entry when none is named.
  *
- * Method: for each budget entry (a package and one fixture page, see SCENARIOS),
+ * Method: for each budget entry (a package and one fixture page, see SCENARIOS in
+ * scripts/fixture-scenarios.mjs),
  * build fixtures/consumer-app twice from the *same* source — once against the
  * real package, once with that package swapped for a same-shaped stub
  * (CUI_BUNDLE_BASELINE=<package>, see fixtures/consumer-app/vite.config.ts) —
@@ -17,14 +18,13 @@
  * which is committed and hand-updated; this script never rewrites it, so a
  * regression fails loudly instead of quietly raising its own ceiling.
  */
-import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const FIXTURE_DIR = resolve(ROOT, "fixtures/consumer-app");
 const BUDGET_FILE = resolve(ROOT, "fixtures/size-budget.json");
 
 function fail(message) {
@@ -38,34 +38,6 @@ function gzipTotal(distDir) {
   return readdirSync(assetsDir)
     .filter((file) => file.endsWith(".js") || file.endsWith(".css"))
     .reduce((total, file) => total + gzipSync(readFileSync(join(assetsDir, file))).length, 0);
-}
-
-/**
- * The fixture's pages, one per budget scenario. `basic` is the minimal app; `grid`
- * is a data grid with a modal, a slideover and toasts, where 1.5.0 grew ~12 kB that the
- * minimal page never saw (#377). `editor` is the editor barrel and `render` its `/render`
- * subpath alone, budgeted separately so `/render` pulling CodeMirror back in fails (#226).
- */
-const SCENARIOS = {
-  basic: { input: "index.html", outDir: "dist" },
-  grid: { input: "grid.html", outDir: "dist-grid" },
-  editor: { input: "editor.html", outDir: "dist-editor" },
-  render: { input: "render.html", outDir: "dist-render" },
-};
-
-/** Build one scenario's page, with or without `pkg`, and return its gzip total. */
-function build(scenario, pkg, baseline) {
-  const { input, outDir: base } = SCENARIOS[scenario];
-  const outDir = baseline ? `${base}-baseline` : base;
-  rmSync(join(FIXTURE_DIR, outDir), { recursive: true, force: true });
-  // `vite build` alone, not the fixture's `npm run build`: its vue-tsc pass doesn't depend on
-  // the baseline aliases (they are Vite-only) and verify-fixture.mjs has already run it.
-  execFileSync(join(FIXTURE_DIR, "node_modules", ".bin", "vite"), ["build"], {
-    cwd: FIXTURE_DIR,
-    stdio: "inherit",
-    env: { ...process.env, CUI_BUNDLE_BASELINE: baseline ? pkg : "", CUI_BUNDLE_INPUT: input, CUI_BUNDLE_OUTDIR: outDir },
-  });
-  return gzipTotal(join(FIXTURE_DIR, outDir));
 }
 
 if (!existsSync(BUDGET_FILE)) fail(`${BUDGET_FILE} does not exist.`);
@@ -97,9 +69,9 @@ for (const entry of entries) {
   }
   const label = `${pkg} ${scenario}`;
   console.log(`[check-bundle-budget] ${label}: building with the real package...`);
-  const withPackage = build(scenario, pkg, false);
+  const withPackage = gzipTotal(buildScenario(scenario));
   console.log(`[check-bundle-budget] ${label}: building with the baseline stub...`);
-  const baseline = build(scenario, pkg, true);
+  const baseline = gzipTotal(buildScenario(scenario, { baseline: pkg }));
   const delta = withPackage - baseline;
   console.log(
     `[check-bundle-budget] ${label}: with-package: ${format(withPackage)}, baseline: ${format(baseline)}, ` +

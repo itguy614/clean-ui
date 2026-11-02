@@ -6,9 +6,9 @@ const TRIGGER = "cui-accordion-item__trigger";
 </script>
 
 <script setup lang="ts">
-import { ref, provide, toRef, watch, computed } from "vue";
+import { ref, provide, toRef, watch } from "vue";
 import { AccordionContextKey } from "./accordion-context";
-import type { CuiColor, HideableProps, ColorableProps } from "../types/common";
+import type { HideableProps, ColorableProps } from "../types/common";
 
 export interface CuiAccordionProps extends HideableProps, ColorableProps {
   /** Array of open item values (v-model) */

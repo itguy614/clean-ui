@@ -8,7 +8,7 @@ export interface CuiAvatarGroupProps extends HideableProps {
   max?: number;
 }
 
-const props = withDefaults(defineProps<CuiAvatarGroupProps>(), {
+withDefaults(defineProps<CuiAvatarGroupProps>(), {
   spacing: "-0.5rem",
   hidden: false,
 });

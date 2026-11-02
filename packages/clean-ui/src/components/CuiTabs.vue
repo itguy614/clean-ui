@@ -251,8 +251,6 @@ const messages = useMessages();
           }"
           :style="{
             '--_tab-color': `var(--cui-${color})`,
-            '--_tab-hover': `var(--cui-${color}-hover)`,
-            '--_tab-bg': `var(--cui-${color}-bg)`,
           }"
           role="tab"
           :id="tabId(tab.value)"

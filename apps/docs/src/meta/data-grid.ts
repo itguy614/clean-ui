@@ -47,7 +47,8 @@ const meta: ComponentMeta = {
       name: "virtualize",
       type: "boolean",
       default: "false",
-      description: "Render only the visible rows plus overscan. Needs maxHeight; worth it from roughly 500 client-side rows",
+      description:
+        "Render only the visible rows plus overscan. Needs maxHeight; worth it from roughly 500 client-side rows. Client-side it turns paging off while the table is shown: the table windows every searched, filtered and sorted row and the pagination bar is hidden, so select-all selects all of them. Card view and server-side grids still page",
     },
     { name: "virtualRowHeight", type: "number", default: "auto", description: "Fixed row height in px for the virtualizer. Omit and the first rendered row is measured" },
     { name: "perPageOptions", type: "number[]", default: "[15, 25, 50, 100]", description: "Options in the per-page selector. The first is the initial page size" },
@@ -98,6 +99,28 @@ const meta: ComponentMeta = {
     { name: "row-action", payload: "{ action, row }", description: "A row's action was chosen — from its actions button, or from its context menu: a right-click on a row with actions, or Shift+F10 / the Menu key from a control inside it" },
     { name: "bulk-action", payload: "{ action, rows }", description: "A bulk action was run over the selected rows" },
     { name: "selection-change", payload: "string[]", description: "The set of selected row ids changed" },
+  ],
+
+  methods: [
+    {
+      name: "processedRows",
+      signature: "DataGridRow[] (readonly ref)",
+      description:
+        "The rows after search, filters and sort, before paging — what Previous/Next over the grid's order or an export of what the user sees should read. Server-side, the current page's rows",
+    },
+    { name: "page", signature: "number (readonly ref)", description: "The page shown. 1 while unpaged (client-side with virtualize). Exposed refs arrive unwrapped on a template ref" },
+    { name: "lastPage", signature: "number (readonly ref)", description: "The last page. 1 while unpaged" },
+    {
+      name: "setPage",
+      signature: "(page: number) => void",
+      description:
+        "Go to a page, clamped to 1..lastPage. Does what a pagination click does, server-side navigate included; the page already shown is a no-op",
+    },
+    { name: "clearSelection", signature: "() => void", description: "Deselect every row" },
+    { name: "getQueryParams", signature: "() => DataGridQueryParams", description: "The current page, page size, sort, filters and search, as navigate would send them" },
+    { name: "getConfig", signature: "() => DataGridViewConfig", description: "The current view: column state, sort, filters, page size, view mode, filter panel pin" },
+    { name: "loadConfig", signature: "(config: DataGridViewConfig) => void", description: "Apply a view, return to page 1 and mark it clean" },
+    { name: "resetToDefaults", signature: "() => void", description: "Return to the default view and clear search and selection" },
   ],
 };
 

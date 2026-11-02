@@ -25,7 +25,6 @@ const employees = [
   { name: "Eva Martinez", role: "Sales", email: "eva@example.com", status: "Inactive", salary: "$88,000" },
 ];
 
-const stickyStyle = { position: 'sticky' as const, top: '0', zIndex: 10, background: 'var(--color-surface-50)' };
 
 const overflowWidth = ref(343);
 

@@ -116,6 +116,10 @@ export interface CuiCoreMessages {
     moveDown: string;
     /** The filter field's name, given its panel's title. */
     filter: (title: string) => string;
+    /**
+     * The move buttons' toolbar name (#421). Optional, so an existing catalogue type-checks.
+     */
+    actions?: string;
   };
   datePicker: {
     today: string;
@@ -243,6 +247,10 @@ export interface CuiCoreMessages {
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
     selected: (count: number) => string;
+    /**
+     * The bulk-action bar's toolbar name (#421). Optional, so an existing catalogue type-checks.
+     */
+    bulkActions?: string;
     /** The column manager's trigger and title. */
     columns: string;
     /** The view manager. */
@@ -330,6 +338,7 @@ export const defaultMessages: CuiCoreMessages = {
     moveUp: "Move up",
     moveDown: "Move down",
     filter: (title) => `Filter ${title}`,
+    actions: "Move items",
   },
   datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
@@ -384,6 +393,7 @@ export const defaultMessages: CuiCoreMessages = {
     toolbar: "Table controls",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
+    bulkActions: "Bulk actions",
     columns: "Columns",
     views: "Views",
     savedViews: "Saved Views",

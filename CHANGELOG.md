@@ -7,6 +7,196 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-02
+
+### Added
+
+- **CuiConfirmDialog forwards `initialFocus`, `returnFocus`, `after-enter` and `after-leave`**
+  (#437) to its CuiModal, with CuiModal's types and defaults (#374).
+
+- **`focusableWhenDisabled` and `pressed` on CuiButton** (#396), for toggle buttons in a
+  toolbar or button bar. `focusableWhenDisabled` keeps a disabled or loading `<button>` in
+  the tab order: it gets `aria-disabled="true"` and the disabled look instead of native
+  `disabled`, so it keeps focus when it becomes disabled under the keyboard. A click, Enter
+  or Space does nothing (a submit button's form isn't submitted), but `contextmenu` and
+  long-press still reach a wrapping CuiContextMenu. It keeps its place in a CuiToolbar's
+  arrow-key order, as the WAI-ARIA toolbar pattern asks, and a CuiDropdownTrigger around it
+  doesn't open from the keyboard while it is disabled. `pressed` renders `aria-pressed` and a
+  selected look for every variant and colour (the tinted fill, a coloured edge and stronger
+  text; solid takes its darker shade). A toggle's hover is a
+  neutral fill, pressed or not, so a toggle switched on under the pointer reads as pressed
+  at once. The look is themeable through the new `--cui-button-pressed-bg`,
+  `--cui-button-pressed-color` and `--cui-button-pressed-border` tokens. Left unset, the
+  button isn't a toggle and renders no `aria-pressed`. CuiButtonGroup merges a pressed ghost
+  button like any painted one. The markdown editor's toolbar and the CuiToolbar docs use it,
+  in place of swapping variants.
+- **`after-enter` / `after-leave` events and `initialFocus` / `returnFocus` props on
+  CuiModal and CuiSlideover** (#374). `after-enter` fires once the entry animation has
+  finished and focus is in place; `after-leave` once the exit has finished and focus has been
+  returned, after `close`. Each fires once per open or close, and not at all for an open
+  closed before its entry ends. `initialFocus` names the element focused on open — a selector
+  scoped to the panel, an element, or a function returning one — and wins over a field the
+  content focused itself on mount; `returnFocus` names the element focused once closed, in
+  place of the opener, and a function there is called at close time, so it can pick an
+  element that did not exist at open (the row last shown in a details panel with Previous /
+  Next). `returnFocus: false` leaves focus alone. Either one naming nothing falls back to the
+  default: the panel, and the opener (or its restore key). `useOverlay` takes them as
+  `initialFocus`, `returnFocus`, `onOpened`, `onClosed` and `rootRef`. The shared prop type
+  is exported as `CuiFocusTarget`.
+- **Toast actions and pause opt-outs through `useToast()`** (#345). `ToastOptions` (and the
+  `toast.success/error/warning/info` helpers) take `action: { label, onClick, dismissOnClick? }`,
+  which `CuiToastProvider` renders as a small ghost `CuiButton` in the toast's colour (on a
+  `variant: "solid"` toast, a solid button matching its fill, so the label stays legible), a real
+  `<button>` inside its live region (`role="status"`/`"alert"` unchanged). The toast is
+  dismissed after `onClick` unless `dismissOnClick: false`. In `stackMode="collapsed"` a click
+  on the action is no longer taken as the collapsed toast's dismiss click, and a collapsed
+  toast drops its clipped peek while keyboard focus (`:focus-visible`) is inside it, so its
+  action is never focused out of sight. Three new options, all default `true`, turn off the countdown's pauses:
+  `pauseOnHover`, `pauseOnFocus` and `pauseWhenInactive` (waiting while another toast is on
+  top); with all three `false`, `autoDismiss` is a wall-clock deadline, for a time limit
+  that is genuinely essential such as a server-side undo window. `CuiToast` takes the same
+  three as props. The countdown is now one timeout for the time that is left on a
+  monotonic clock, instead of a 50ms interval counting ticks: a pause no longer loses time,
+  a late interval no longer stretches it, a change to `autoDismiss` is picked up, and a
+  toast waiting behind another no longer polls. `ToastAction` is exported.
+- **CuiDataGrid exposes `processedRows`, `page`, `lastPage` and `setPage`** (#372).
+  `processedRows` is the rows after search, filters and sort, before paging (server-side,
+  the current page's rows); `setPage(page)` moves the grid to a page, clamped to
+  `1..lastPage`, and does what a pagination click does, server-side `navigate` included.
+  `page` and `lastPage` are readonly. `useDataGrid` returns `processedRows` and a
+  `paginated` flag, takes a `paginate` option (default `true`), and its `setPage` now
+  clamps to `1..last page` (no upper bound for a server-side grid fed a plain array) and
+  returns whether the page changed. A client-side page left past the end — the data shrank,
+  or `hydrateFromUrl` read `?page=99` — now reads as the last page instead of an empty one.
+- **`initial` and `scrollTo()` on `useScrollSpy()`** (#423). `initial` is the id `activeId`
+  reports while no section has reached the band: on first paint, during SSR, and above the
+  first section (a ref or getter is followed). `scrollTo(id)` scrolls a section into view
+  `offset` pixels below the scroller's top (or at the section's own `scroll-margin-top`, if
+  larger, so it lands where a #hash link does) and marks it current at once, holding it until
+  the scroll settles so the highlight doesn't pass through the sections in between; it jumps
+  instead of gliding under `prefers-reduced-motion`. It returns `false` when there is nothing
+  to scroll to, so a link can keep its native navigation. The docs site's "On this page" rail
+  uses both.
+- **CuiConfirmDialog: `variant="primary"`, `:icon="false"` and `confirmColor`** (#375). A
+  routine, non-destructive confirm no longer has to look like an error, a warning or an info
+  notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
+  takes `false` to render no icon tile, with the title flush left and no gap where the tile
+  was, and now also accepts an icon component as well as a registered name. `confirmColor`
+  overrides only the confirm button's colour role, for any variant; the tile and the
+  type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
+  dialogs render as before. The primary icon is a sealed question mark rather than the plain
+  `?`, which is CuiIcon's glyph for an unknown icon name.
+
+### Changed
+
+- **A disabled CuiButton link drops its `to`, as well as its `href`** (#422). It renders an
+  `<a>` with no target and `aria-disabled="true"`, keeping the role it has when enabled
+  (`button` for `href`, `link` for `to`) — no longer a live `<router-link>` held back by
+  `pointer-events: none`, and no longer `tabindex="-1"`, which left it focusable by script
+  and by a click. CuiListItem renders a disabled link the same way, through the same internal
+  helper. A disabled CuiButton's clicks are held back by a capture-phase listener instead of
+  `pointer-events: none`, which also blocked right-click and long-press, and that covers
+  every click listener on it, `@click.capture` included.
+- **The data grid's bulk-action bar and the transfer list's move buttons are toolbars** (#421).
+  Each row is a `CuiToolbar`, so it is one tab stop with the arrow keys, Home and End moving
+  between its buttons, instead of a tab stop per button. The bulk bar's actions and Clear run
+  left to right, named “Bulk actions” (the new optional `dataGrid.bulkActions` message), with
+  the selection count beside the toolbar. The transfer list's six buttons run top to bottom,
+  named “Move items” (the new optional `transferList.actions` message), one tab stop between
+  the two panels. A move button with nothing to do is now `aria-disabled` and
+  stays focusable (CuiButton's `focusableWhenDisabled`) rather than natively `disabled`, so
+  the toolbar keeps its tab stop and a button keeps focus when its own move disables it; a
+  disabled transfer list still disables them natively. "Nothing to do" now matches what each
+  move does: Move all is disabled when only disabled items are left, Move selected when the
+  marked items are filtered out of sight, and Move up / Move down on the first / last item.
+  Clearing the selection from the bulk bar hands focus to the grid's select-all checkbox,
+  rather than dropping it with the bar.
+- **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
+  CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
+  select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
+  markup and styles are gone, and with them that class as a styling hook: CuiBadge paints
+  its colours inline, so chip colour now follows the select's `color` prop, as it does in
+  the other two. A long label is cut short with an ellipsis instead of wrapping. Removing a
+  chip still leaves the panel closed. Enter or Space on a chip's remove button now removes
+  it (it used to open the panel), and focus returns to the trigger. Backspace on the
+  trigger removes the last chip, as in CuiCombobox. A disabled or readonly select shows its
+  chips with no remove button.
+- **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
+  `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
+  out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
+  100%; a fully opaque colour is still `#rrggbb`. **Check before upgrading** if you store
+  the picker's hex value in a 7-character column, validate it with a 6-digit pattern, or
+  compare it as a string: translucent colours now have two more digits. The change comes from
+  `formatColor(r, g, b, a, "hex")`, which now appends the alpha byte when `a < 1` (an alpha
+  that rounds to `ff` stays six digits). `parseColor` now reads the alpha of `#rrggbbaa` and
+  `#rgba` instead of ignoring it, so the picker, its text field and an 8-digit `v-model` value
+  round-trip; a colour passed in with an alpha keeps it even without `show-alpha`, as an
+  `rgba()` value already did. Also:
+  - `parseColor` and `hexToRgb` return `null` for hex containing a non-hex character
+    (`#12345z` used to read as `#123405`). `hexToRgb` also accepts 4 digits, and still
+    returns the colour without its alpha.
+  - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
+    so they no longer emit `rgba(…, 1.00)`.
+  - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+- **The markdown editor's peer floor is `@itguy614/clean-ui@^1.8.0`**, since its toolbar's
+  formatting buttons use CuiButton's `pressed` (#396) and its dialogs take a scoped theme
+  through the host's clean-ui context (#418).
+
+### Removed
+
+- **Dead code the compiler now finds** (#214). `noUnusedLocals` and `noUnusedParameters` are
+  on in the shared `tsconfig.json`, so every package and docs app is checked and a new unused
+  import or local fails `vue-tsc` (and so `pnpm -r build`). The sweep removed unused imports
+  and `props` bindings across the components, and the abandoned paths: CuiTimePicker's
+  unwired `mask`, `inputRaw`, `togglePeriod` and `onApply`, CuiDatePicker's `onDayHover`,
+  CuiTooltip's always-truthy `hasContent` and CuiMaskedInput's `prevEditablePos`. The unused
+  `CuiMaskedInput`, `CuiIcon` and `CuiBadge` imports of CuiTimePicker, CuiColorPicker,
+  CuiDataGridActiveFilters and CuiFileUpload went too. No behaviour changes. Also dropped:
+  the `.cui-button--active` entry in CuiButtonGroup's stacking rule (nothing sets that
+  class), and the private custom properties CuiInput, CuiTextarea, CuiSelect, CuiRadio and
+  CuiTabs emitted inline that no stylesheet reads.
+- **CuiDropdownCheckItem's unused `DropdownContextKey` injection** (#214). A check item has
+  never closed the menu on click and still doesn't; the docs now say so.
+
+### Fixed
+
+- **Teleported panels lost a scoped theme and a scoped `dark` class** (#418). CuiModal,
+  CuiSlideover, CuiPopover, CuiTooltip, CuiDropdownMenu, CuiDropdownSub, CuiContextMenu,
+  the option panel of CuiSelect, CuiCombobox and CuiTagInput, and CuiToastProvider's stack
+  render at the end of `<body>`, so a `<div class="cui-theme-violet">` or a `<div class="dark">`
+  around them stopped at the panel, which took the page's theme. Each now puts the nearest
+  `cui-theme-*` class and a scoped `dark` class on the root it teleports, and follows them
+  while open: changing the theme or toggling `dark` on the container repaints an open panel.
+  A theme or `dark` on `<html>` or `<body>` already reached the panel, and nothing is copied
+  for it. A panel opened inside another (a select in a modal) keeps the scope too.
+  `useCleanUIContext().provideTo(app)` now also hands on the scope around the calling
+  component, so an app mounted with `createApp()` follows it; the markdown editor's link and
+  image dialogs, and a plugin's own dialogs given `context.cleanUI`, take the editor's scope
+  that way, live, in place of the snapshot taken at mount (#399). **Only these classes carry:**
+  a token overridden on a container (`.brand { --cui-primary: … }`) and a scoped density
+  setting don't reach a teleported panel, which isn't inside that container.
+- **`virtualize` windowed only one page of a client-side grid** (#317). The grid paged
+  before the table virtualized, so a 10,000-row grid scrolled through 15 rows and needed
+  the pagination bar for the rest. Client-side, `virtualize` now turns paging off while the
+  table is shown: the table windows every searched, filtered and sorted row and the
+  pagination bar is hidden (`page` and `lastPage` read 1). Card view, which is not
+  virtualized, and server-side grids still page. With paging off, the header's select-all
+  selects every searched and filtered row, not 15.
+- **A server-side CuiDataGrid emitted `navigate` twice for one pagination click** (#372):
+  once from the pagination bar and once from the grid's own watcher on the page. It now
+  emits once.
+- **CuiConfirmDialog's icon tile is now `aria-hidden`** (#375), as its docs already said. The
+  icon is decorative; the title and message carry the meaning.
+
+### Tooling
+
+- **The fixture guarantees check every fixture page** (#384). The icon-barrel, Tailwind
+  utilities and global-reset checks read only the basic page; they now build and check the
+  grid, editor and `/render` pages too, and a failure names the page. The pages are listed
+  once, in `scripts/fixture-scenarios.mjs`, which the bundle budget reads as well, so a new
+  page is budgeted and guarded together. A page can opt out of a check only there, with
+  the reason.
+
 ## [1.7.0] - 2026-11-02
 
 ### Added

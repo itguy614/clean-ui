@@ -19,11 +19,11 @@ jobs:
         # globals (e.g. Node >= 22's built-in localStorage shadowing jsdom's).
         node-version: [20, 24]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -92,7 +92,9 @@ jobs:
 
       # The package guarantees (no icon barrel, no Tailwind utilities layer,
       # single-instance dependencies), expressed as assertions over that
-      # fixture's build output rather than asserted in a changelog.
+      # fixture's build output rather than asserted in a changelog. Needs the
+      # fixture installed (above); it builds every page in
+      # scripts/fixture-scenarios.mjs itself and checks each one.
       - name: Check fixture guarantees
         run: node scripts/check-fixture-guarantees.mjs
 

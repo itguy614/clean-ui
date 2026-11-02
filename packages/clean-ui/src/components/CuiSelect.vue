@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
+import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
 import CuiFormValues from "./CuiFormValues.vue";
 import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
-import { INPUT_SIZE_SCALE, RADIUS_SCALE, scaleDensity } from "../utils/sizing";
+import { INPUT_SIZE_SCALE, RADIUS_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 
@@ -188,11 +189,17 @@ function selectOption(opt: SelectOption) {
   }
 }
 
+// Chips are CuiBadge, as CuiCombobox's and CuiTagInput's are (#301); they are removable
+// only while the select is editable, and onKeydown returns early otherwise. If focus was
+// in the select (on the trigger, or the chip's own button) and the removal took it away,
+// hand it back to the trigger rather than leaving it on <body>.
 function removeChip(value: string | number) {
-  if (props.disabled || props.readonly) return;
-  if (props.multiple && Array.isArray(props.modelValue)) {
-    emit("update:modelValue", props.modelValue.filter((v) => v !== value));
-  }
+  if (!props.multiple || !Array.isArray(props.modelValue)) return;
+  const hadFocus = !!triggerRef.value?.contains(document.activeElement);
+  emit("update:modelValue", props.modelValue.filter((v) => v !== value));
+  nextTick(() => {
+    if (hadFocus && !triggerRef.value?.contains(document.activeElement)) triggerRef.value?.focus();
+  });
 }
 
 function clear() {
@@ -221,7 +228,16 @@ const listbox = useListbox({
 });
 
 function onKeydown(e: KeyboardEvent) {
-  if (props.disabled || props.readonly) return;
+  // A key pressed on a chip's remove button belongs to that button: Enter or Space there
+  // must click it, not open the panel.
+  if (props.disabled || props.readonly || e.target !== triggerRef.value) return;
+  // Backspace drops the last chip, as it does in CuiCombobox with an empty query.
+  const modified = e.ctrlKey || e.metaKey || e.altKey;
+  if (e.key === "Backspace" && !modified && props.multiple && hasValue.value) {
+    e.preventDefault();
+    removeChip((props.modelValue as Array<string | number>).at(-1)!);
+    return;
+  }
   listbox.onKeydown(e);
 }
 
@@ -241,6 +257,8 @@ const dims = computed(() => {
   const s = INPUT_SIZE_SCALE[props.size];
   return { minHeight: s.height, px: s.px, fontSize: s.fontSize, itemPadding: `${scaleDensity("0.5rem")} ${s.px}` };
 });
+// One step below the control, as CuiCombobox's and CuiTagInput's chips are.
+const chipSize = computed(() => nestedSize(props.size));
 const messages = useMessages();
 // The prose props default to the message catalogue, so a localised app localises them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.select.placeholder);
@@ -260,7 +278,6 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
         '--_sel-min-height': dims.minHeight,
         '--_sel-px': dims.px,
         '--_sel-font-size': dims.fontSize,
-        '--_sel-color': `var(--cui-${color})`,
         '--_sel-focus-ring': `var(--cui-${color}-focus-ring)`,
         '--_sel-border': error ? 'var(--cui-error)' : `var(--cui-border-strong)`,
         '--_sel-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
@@ -286,21 +303,16 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
         <div class="cui-select__value">
           <!-- Multi: chips -->
           <template v-if="multiple && Array.isArray(modelValue) && modelValue.length > 0">
-            <span
-              v-for="val in modelValue"
+            <CuiBadge
+              v-for="(val, i) in modelValue"
               :key="String(val)"
-              class="cui-select__chip"
+              :color="color"
+              :size="chipSize"
+              :removable="!disabled && !readonly"
+              @remove="removeChip(val)"
             >
-              {{ normalizedOptions.find((o) => o.value === val)?.label ?? val }}
-              <button
-                type="button"
-                class="cui-select__chip-remove"
-                :aria-label="messages.remove"
-                @click.stop="removeChip(val)"
-              >
-                <CuiIcon name="x" size="0.75rem" />
-              </button>
-            </span>
+              <span class="cui-select__chip-label">{{ selectedLabels[i] }}</span>
+            </CuiBadge>
           </template>
           <!-- Single: label (with #selected slot) -->
           <template v-else-if="!multiple && hasValue">
@@ -483,36 +495,22 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   color: var(--cui-text-tertiary);
 }
 
-/* --- Chips (multi-select) --- */
-.cui-select__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(0.25rem * var(--cui-density-scale, 1));
-  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
-  border-radius: 0.25rem;
-  background: var(--cui-surface-bg);
-  color: var(--cui-text-body);
-  font-size: 0.8125em;
-  line-height: 1.4;
+/* --- Chips (multi-select): CuiBadge never wraps, so a long label is cut short with an
+   ellipsis rather than spilling out of the trigger. --- */
+.cui-select__value :deep(.cui-badge) {
+  max-width: 100%;
 }
 
-.cui-select__chip-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--cui-text-tertiary);
-  padding: 0;
-  border-radius: 50%;
-  width: 0.875rem;
-  height: 0.875rem;
-  transition: color var(--cui-duration-fast) ease;
+.cui-select__value :deep(.cui-badge__content) {
+  min-width: 0;
 }
 
-.cui-select__chip-remove:hover {
-  color: var(--cui-text-body);
+.cui-select__chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* The badge's line-height of 1; the scoped base sets 1.5 on a classed span (#351). */
+  line-height: inherit;
 }
 
 /* --- Actions (clear + chevron) --- */

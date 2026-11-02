@@ -10,6 +10,8 @@ const PACKAGES_DIR = resolve(ROOT, "packages");
  * The single source of truth for "which packages does this repo publish" —
  * used by the publish workflow's matrix discovery and by
  * scripts/verify-fixture.mjs, so the two can never independently drift.
+ * A new package found here still fails to publish until it is registered as
+ * an npm Trusted Publisher (CONTRIBUTING.md → "Publishing credentials").
  */
 export function listPublishablePackages() {
   return readdirSync(PACKAGES_DIR, { withFileTypes: true })

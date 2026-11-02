@@ -12,6 +12,8 @@
  * overlay open still loses focus. The event type below lands in the published types too, so
  * `cui-restore-focus` is typed in consumers' DocumentEventMap.
  */
+import type { CuiFocusTarget } from "../types/common";
+
 export const RESTORE_FOCUS_EVENT = "cui-restore-focus";
 export const RESTORE_FOCUS_ATTR = "data-cui-restore-focus";
 
@@ -30,4 +32,32 @@ export function restoreKeyOf(el: Element | null): string | null {
 export function returnFocus(el: HTMLElement | null, key: string | null) {
   if (el?.isConnected) el.focus();
   else if (key) document.dispatchEvent(new CustomEvent(RESTORE_FOCUS_EVENT, { detail: key }));
+}
+
+/**
+ * The element a `CuiFocusTarget` names (#374): a selector looked up in `scope`, an element
+ * as given, or a function's result. Null if it names nothing — an invalid selector
+ * included, which would otherwise throw out of the overlay's open or close.
+ */
+export function resolveFocusTarget(
+  target: CuiFocusTarget | undefined,
+  scope: ParentNode | null | undefined,
+): HTMLElement | null {
+  if (typeof target === "function") return target();
+  if (typeof target !== "string") return target ?? null;
+  try {
+    return scope?.querySelector<HTMLElement>(target) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Focus `el` and report whether it took: a disabled, hidden, detached or unfocusable
+ * element ignores `focus()`, and the caller then falls back rather than leaving focus
+ * where it was.
+ */
+export function focusTook(el: HTMLElement | null): boolean {
+  el?.focus();
+  return !!el && document.activeElement === el;
 }

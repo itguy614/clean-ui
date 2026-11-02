@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiCard, CuiCardHeader, CuiCardBody, CuiStack, CuiButton, CuiFlex } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardHeader, CuiCardBody, CuiStack, CuiFlex } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor } from "@itguy614/clean-ui-editor";
 import Example from "../components/Example.vue";
 

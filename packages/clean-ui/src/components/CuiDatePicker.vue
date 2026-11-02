@@ -217,13 +217,6 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   return s;
 }
 
-function onDayHover(e: MouseEvent) {
-  const el = e.target as HTMLElement;
-  if (el.dataset.disabled !== "true") {
-    el.style.background = el.style.background || "var(--cui-primary-bg)";
-  }
-}
-
 // Expose imperative handle
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
 function focus(opts?: FocusOptions) {

@@ -26,7 +26,7 @@ import PropTable from "../components/PropTable.vue";
       <PropTable
         :props="[
           { name: 'vue', type: '^3.5.0', description: 'Vue 3.5+ — the editor uses reactive props destructure and useTemplateRef.' },
-          { name: '@itguy614/clean-ui', type: '^1.7.0', description: 'The design system this package composes: CuiButton, CuiModal, CuiInput, CuiToolbar, the message catalog, and useColorScheme. 1.7.0 is the floor — the editor\'s toolbar is a CuiToolbar, added in 1.7.0. (1.6.0 added useCleanUIContext, which hands your app\'s clean-ui defaults and messages on to the editor\'s link and image dialogs.)' },
+          { name: '@itguy614/clean-ui', type: '^1.8.0', description: 'The design system this package composes: CuiButton, CuiModal, CuiInput, CuiToolbar, the message catalog, and useColorScheme. 1.8.0 is the floor — the editor\'s toolbar is a CuiToolbar (added in 1.7.0) whose formatting buttons use CuiButton\'s `pressed` (added in 1.8.0), and its dialogs follow a scoped theme through `useCleanUIContext`. (1.6.0 added useCleanUIContext, which hands your app\'s clean-ui defaults and messages on to the editor\'s link and image dialogs.)' },
         ]"
       />
       <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">

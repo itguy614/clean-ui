@@ -6,7 +6,7 @@ export interface CuiModalFooterProps extends HideableProps {
   align?: "left" | "right" | "center" | "between";
 }
 
-const props = withDefaults(defineProps<CuiModalFooterProps>(), {
+withDefaults(defineProps<CuiModalFooterProps>(), {
   align: "right",
   hidden: false,
 });

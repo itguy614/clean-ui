@@ -1,4 +1,4 @@
-import type { ComponentMeta, PropRow } from "./types";
+import type { ComponentMeta, EventRow, PropRow } from "./types";
 import { hiddenProp, roundedProp, titleAsProp, visibleProp } from "./shared";
 
 /** Shared by CuiModal and CuiSlideover — both drive the same CuiBackdrop. */
@@ -8,6 +8,43 @@ export const backdropProps: PropRow[] = [
   { name: "backdropColor", type: "string", default: "black", description: "Backdrop color — any CSS color" },
   { name: "backdropImage", type: "string", description: "Backdrop image URL, layered over the color" },
   { name: "backdropGradient", type: "string", description: "Backdrop CSS gradient, layered over the color" },
+];
+
+/** Where focus goes on open and close — shared by CuiModal and CuiSlideover (#374). */
+export const overlayFocusProps: PropRow[] = [
+  {
+    name: "initialFocus",
+    type: "string | HTMLElement | (() => HTMLElement | null)",
+    description:
+      "Element focused on open, inside the panel — a selector (scoped to the panel), an element, or a function returning one. Wins over a field the content focused itself on mount. Unset, or naming nothing it can focus, the panel is focused. A heading needs tabindex=\"-1\" to take focus",
+  },
+  {
+    name: "returnFocus",
+    type: "string | HTMLElement | (() => HTMLElement | null) | false",
+    description:
+      "Element focused once closed, in place of the opener. A function is called at close time, so it can name an element that did not exist at open. false leaves focus where it is. Unset, or naming nothing it can focus (gone, hidden or disabled by then), focus returns to the opener",
+  },
+];
+
+/** after-enter / after-leave — also forwarded by CuiConfirmDialog, which wraps CuiModal. */
+export const overlayLifecycleEvents: EventRow[] = [
+  {
+    name: "after-enter",
+    payload: "—",
+    description: "The entry animation has finished and focus is in place. Once per open; not at all if it closes first",
+  },
+  {
+    name: "after-leave",
+    payload: "—",
+    description: "The exit has finished and focus has been returned — after close. Once per close",
+  },
+];
+
+/** The events that report an overlay's entry and exit, shared by CuiModal and CuiSlideover. */
+export const overlayEvents: EventRow[] = [
+  { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
+  { name: "close", payload: "—", description: "Fires once the exit animation has finished" },
+  ...overlayLifecycleEvents,
 ];
 
 /** The header/body/footer trio, reused verbatim by CuiSlideover. */
@@ -69,6 +106,7 @@ const meta: ComponentMeta = {
           type: "boolean",
           description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0",
         },
+        ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,
       ],
@@ -79,10 +117,7 @@ const meta: ComponentMeta = {
             "With title set, the body content. Without it, the whole panel — supply CuiModalHeader / CuiModalBody / CuiModalFooter yourself",
         },
       ],
-      events: [
-        { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
-        { name: "close", payload: "—", description: "Fires once the exit animation has finished" },
-      ],
+      events: overlayEvents,
     },
     {
       name: "CuiModalHeader",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, CuiToastProvider, useToast } from "@itguy614/clean-ui";
+import { CuiButton, CuiCard, CuiCardBody, CuiFlex, CuiStack, useToast } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import meta from "../meta/toast";
 import Example from "../components/Example.vue";
@@ -26,7 +26,7 @@ function clearCollapsedToasts() {
   collapsedToasts.value = [];
 }
 
-const { toast, dismissAll } = useToast();
+const { toast, dismiss, dismissAll } = useToast();
 
 function basicToast() {
   toast({ title: "Hello!", description: "This is a basic toast notification.", color: "primary" });
@@ -66,6 +66,52 @@ function glowToast() {
 
 function shakeToast() {
   toast({ title: "Urgent!", description: "Requires immediate attention.", color: "error", animation: "shake" });
+}
+
+const theme = ref<"Design" | "Code">("Code");
+let undoId: string | undefined;
+function undoToast() {
+  const previous = theme.value;
+  theme.value = previous === "Code" ? "Design" : "Code";
+  // Only the latest switch can be undone: drop the older toast, whose Undo would be stale.
+  if (undoId) dismiss(undoId);
+  undoId = toast.success(`Switched to ${theme.value}`, {
+    autoDismiss: 10000,
+    action: { label: "Undo", onClick: () => (theme.value = previous) },
+  });
+}
+
+function hardDeadlineToast() {
+  toast({
+    title: "Message deleted",
+    description: "Undo is available for 8 seconds.",
+    autoDismiss: 8000,
+    pauseOnHover: false,
+    pauseOnFocus: false,
+    pauseWhenInactive: false,
+    action: { label: "Undo", onClick: () => toast.info("Message restored") },
+  });
+}
+
+function retryToast() {
+  let attempts = 0; // per toast
+  const id = toast.error("Upload failed", {
+    description: "The server didn't respond.",
+    autoDismiss: 0,
+    action: {
+      label: "Retry",
+      dismissOnClick: false,
+      onClick: () => {
+        attempts++;
+        if (attempts >= 2) {
+          dismiss(id);
+          toast.success("Uploaded", { description: `Succeeded on attempt ${attempts + 1}.` });
+        } else {
+          toast.warning("Still failing", { description: "Try once more." });
+        }
+      },
+    },
+  });
 }
 
 function customIconToast() {
@@ -118,7 +164,7 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          Only the topmost toast counts down, and hovering or focusing it pauses the
+          By default only the topmost toast counts down, and hovering or focusing it pauses the
           countdown, so a toast can't expire while it's being read or while a keyboard user
           is on its dismiss button.
         </li>
@@ -135,6 +181,16 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
         <li>
           <code>autoDismiss: 0</code> keeps a toast until dismissed, for anything a reader
           must act on.
+        </li>
+        <li>
+          An <code>action</code> is a real <code>&lt;button&gt;</code> inside the toast's live
+          region, reached with Tab like the dismiss button. In a collapsed stack, a toast
+          unclips while keyboard focus is inside it, so its action is never focused out of sight.
+        </li>
+        <li>
+          <code>pauseOnHover</code>, <code>pauseOnFocus</code> and
+          <code>pauseWhenInactive</code> turn the pauses off. Do that only where the time limit
+          is essential, such as a server-side undo window (WCAG 2.2.1's exception).
         </li>
       </ul>
     </template>
@@ -185,6 +241,54 @@ toast.info('Update available')`">
           <CuiButton variant="solid" color="warning" size="sm" @click="warningToast">Warning</CuiButton>
           <CuiButton variant="solid" color="info" size="sm" @click="infoToast">Info</CuiButton>
         </CuiFlex>
+      </Example>
+
+      <!-- Actions -->
+      <Example title="Undo Action" :code="`const previous = theme.value
+theme.value = 'Design'
+
+// Only the latest switch can be undone
+if (undoId) dismiss(undoId)
+undoId = toast.success('Switched to Design', {
+  autoDismiss: 10000,
+  action: { label: 'Undo', onClick: () => (theme.value = previous) },
+})`">
+        <CuiFlex gap="3" align="center" class="flex-wrap">
+          <CuiButton variant="outline" size="sm" color="success" @click="undoToast">Switch theme</CuiButton>
+          <span class="text-sm text-surface-600 dark:text-surface-400">Current: {{ theme }}</span>
+        </CuiFlex>
+      </Example>
+
+      <Example title="Retry Action" :code="`const id = toast.error('Upload failed', {
+  autoDismiss: 0,
+  action: {
+    label: 'Retry',
+    dismissOnClick: false, // stays open until the retry succeeds
+    onClick: async () => {
+      if (await upload()) dismiss(id)
+    },
+  },
+})`">
+        <CuiButton variant="outline" size="sm" color="error" @click="retryToast">Fail an upload</CuiButton>
+      </Example>
+
+      <Example title="Hard Deadline" :code="`// A server-side undo window: no pause may stretch it
+toast({
+  title: 'Message deleted',
+  autoDismiss: 8000,
+  pauseOnHover: false,
+  pauseOnFocus: false,
+  pauseWhenInactive: false,
+  action: { label: 'Undo', onClick: restore },
+})`">
+        <CuiStack spacing="3">
+          <CuiButton variant="outline" size="sm" @click="hardDeadlineToast">Delete a message</CuiButton>
+          <p class="text-sm text-surface-600 dark:text-surface-400">
+            With all three pause options off, <code>autoDismiss</code> is a wall-clock
+            deadline: hovering, focusing the Undo button or raising another toast on top
+            doesn't hold it open. Keep the pauses on unless the limit is genuinely essential.
+          </p>
+        </CuiStack>
       </Example>
 
       <!-- Custom Icon -->

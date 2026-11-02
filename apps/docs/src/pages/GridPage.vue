@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, computed } from "vue";
 import { ShowDebugKey } from "../keys";
-import { CuiCard, CuiCardBody, CuiGrid, CuiStack } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardBody, CuiGrid } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/grid";

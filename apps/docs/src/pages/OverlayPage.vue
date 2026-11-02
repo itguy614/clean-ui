@@ -103,6 +103,35 @@ const options = [
     type: "() => void",
     description: "Called when the exit finishes, right after onUpdateOpen(false). Known issue: when you write open back, it currently runs a second time (#339).",
   },
+  {
+    name: "initialFocus",
+    type: "() => string | HTMLElement | (() => HTMLElement | null) | undefined",
+    description:
+      "Getter for the element focused on open, in place of the dialog: a selector scoped to the dialog, an element inside it, or a function returning one. Wins over a field the content focused on mount; naming nothing it can focus, the dialog is focused.",
+  },
+  {
+    name: "returnFocus",
+    type: "() => string | HTMLElement | (() => HTMLElement | null) | false | undefined",
+    description:
+      "Getter for the element focused once closed, in place of the opener: a selector looked up in the document, an element, or a function, called at close time. false leaves focus alone; naming nothing it can focus, focus returns to the opener.",
+  },
+  {
+    name: "onOpened",
+    type: "() => void",
+    description: "Called once the entry has finished and focus is in place — what CuiModal's after-enter reports. Not called for an open closed before its entry ends.",
+  },
+  {
+    name: "onClosed",
+    type: "() => void",
+    description: "Called once the exit has finished and focus has been returned, after onClose — what CuiModal's after-leave reports.",
+  },
+  {
+    name: "rootRef",
+    type: "Ref<HTMLElement | undefined> | ShallowRef<HTMLElement | null>",
+    default: "dialogRef",
+    description:
+      "The element whose animations, with those of its [data-cui-exit] descendants, make up the entry onOpened waits for. Pass the overlay root when a backdrop animates beside the dialog.",
+  },
 ];
 
 const returns = [
@@ -265,7 +294,7 @@ const panelStyle = {
       <h2>API</h2>
       <pre class="cui-pre"><code class="cui-code">useOverlay(options: UseOverlayOptions)</code></pre>
       <h3>Options</h3>
-      <p>All options are required except <code class="cui-code">animationDuration</code>. The booleans are getters, not refs.</p>
+      <p><code class="cui-code">open</code>, <code class="cui-code">dialogRef</code>, <code class="cui-code">persistent</code>, <code class="cui-code">onUpdateOpen</code> and <code class="cui-code">onClose</code> are required; the rest are optional. The booleans are getters, not refs.</p>
     </div>
 
     <CuiCard variant="outline">

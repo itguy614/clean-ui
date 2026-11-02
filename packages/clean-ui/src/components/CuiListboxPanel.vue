@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { computeDropdownPosition } from "../utils/position";
@@ -53,6 +54,8 @@ const props = defineProps<{
   itemPadding: string;
 }>();
 const { present, onAfterLeave } = usePresence(() => props.open);
+// The theme scope around the field, on the teleported panel (#418).
+const themeScope = useScopedTheme(() => present.value);
 
 const el = ref<HTMLElement | null>(null);
 const position = ref<Record<string, string>>({});
@@ -186,7 +189,7 @@ defineExpose({ el });
   <Teleport to="body">
     <!-- Enters and leaves like the other anchored panels (#263), out of its field (#262). -->
     <Transition v-bind="panelTransition" @after-leave="onAfterLeave">
-      <div v-if="present" v-show="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :style="style">
+      <div v-if="present" v-show="open" ref="el" role="listbox" v-bind="$attrs" class="cui-listbox-panel" :class="themeScope" :style="style">
         <slot />
       </div>
     </Transition>

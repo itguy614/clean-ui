@@ -11,6 +11,7 @@ import CuiDropdownRadioItem from "../CuiDropdownRadioItem.vue";
 import CuiDropdownSub from "../CuiDropdownSub.vue";
 import CuiDropdownDivider from "../CuiDropdownDivider.vue";
 import CuiDropdownHeader from "../CuiDropdownHeader.vue";
+import CuiButton from "../CuiButton.vue";
 
 // The menu teleports to document.body and renders only while open (or closing).
 const menuInBody = () => document.body.querySelector(".cui-dropdown-menu");
@@ -154,6 +155,8 @@ describe("CuiDropdownCheckItem", () => {
     expect(
       document.body.querySelector('[role="menuitemcheckbox"]')!.getAttribute("aria-checked"),
     ).toBe("true");
+    // A check item keeps the menu open, so several can be toggled in one visit.
+    expect(menuInBody()).not.toBeNull();
 
     wrapper.unmount();
   });
@@ -378,5 +381,25 @@ describe("CuiDropdown closing with a sub-menu open", () => {
     expect(document.querySelector(".cui-dropdown-menu")).toBeNull();
     expect(sub()).toBeNull();
     w.unmount();
+  });
+});
+
+describe("CuiDropdownTrigger with a focusable disabled button (#396)", () => {
+  it("doesn't open on a click, ArrowDown or Enter while the button is disabled", async () => {
+    const wrapper = mount(CuiDropdown, {
+      attachTo: document.body,
+      slots: {
+        default: () => [
+          h(CuiDropdownTrigger, () => h(CuiButton, { focusableWhenDisabled: true, disabled: true }, () => "Actions")),
+          h(CuiDropdownMenu, () => [h(CuiDropdownItem, () => "Item One")]),
+        ],
+      },
+    });
+    const button = wrapper.find("button");
+    (button.element as HTMLElement).click();
+    await button.trigger("keydown", { key: "ArrowDown" });
+    await button.trigger("keydown", { key: "Enter" });
+    expect(menuInBody()).toBeNull();
+    wrapper.unmount();
   });
 });

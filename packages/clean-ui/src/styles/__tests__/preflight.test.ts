@@ -106,7 +106,7 @@ describe("teleported roots stay inside the scope", () => {
 
     for (const file of COMPONENTS) {
       const source = readFileSync(file, "utf8");
-      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?=<[a-zA-Z])/g)) {
+      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?:<!--[\s\S]*?-->\s*)*(?=<[a-zA-Z])/g)) {
         let at = match.index + match[0].length;
         let rootTag = readTag(source, at);
         // A <Transition> around the teleported element (#263) isn't an element: look through it.
@@ -118,6 +118,29 @@ describe("teleported roots stay inside the scope", () => {
         if (!/class="[^"]*\bcui-/.test(rootTag) && !/:class="[^"]*cui-/.test(rootTag)) {
           offenders.push(`${where(file)}: ${rootTag.split("\n")[0].trim()}`);
         }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  // #418 — a teleported root leaves the theme scope around the component too: each one binds
+  // the classes useScopedTheme reads there. (A <TransitionGroup tag="div"> is the root itself.)
+  it("carries the theme scope onto every <Teleport> root", () => {
+    const offenders: string[] = [];
+
+    for (const file of COMPONENTS) {
+      const source = readFileSync(file, "utf8");
+      for (const match of source.matchAll(/<Teleport\b[^>]*>\s*(?:<!--[\s\S]*?-->\s*)*(?=<[a-zA-Z])/g)) {
+        let at = match.index + match[0].length;
+        const tags = [readTag(source, at)];
+        while (/^<Transition(Group)?\b/.test(tags.at(-1)!)) {
+          at += tags.at(-1)!.length;
+          at += /^\s*/.exec(source.slice(at))![0].length;
+          tags.push(readTag(source, at));
+        }
+        const bound = tags.some((tag) => /:class="[^"]*\bthemeScope\b/.test(tag));
+        if (!bound || !/\buseScopedTheme\(/.test(source)) offenders.push(`${where(file)}: ${tags.at(-1)!.split("\n")[0].trim()}`);
       }
     }
 

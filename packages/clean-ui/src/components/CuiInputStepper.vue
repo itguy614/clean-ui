@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
 import { useFloatingLabel } from "./form-field-context";
 import CuiButton from "./CuiButton.vue";

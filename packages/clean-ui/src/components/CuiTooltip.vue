@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted, toRef } from "vue";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useLayerStack } from "../composables/useLayerStack";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { useTooltipGroup } from "../composables/useTooltipGroup";
 import type { HideableProps, ColorableProps, DisableableProps } from "../types/common";
@@ -63,6 +64,8 @@ watch(
   { flush: "sync" },
 );
 const { present, onAfterLeave } = usePresence(() => isVisible.value);
+// The theme scope around the trigger, on the teleported tooltip (#418).
+const themeScope = useScopedTheme(() => present.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -225,7 +228,6 @@ const tooltipStyle = computed(() => ({
     : {}),
 }));
 
-const hasContent = computed(() => props.text || true); // #content slot checked in template
 </script>
 
 <template>
@@ -256,6 +258,7 @@ const hasContent = computed(() => props.text || true); // #content slot checked 
           { 'cui-panel--cut': replaced },
           props.color ? `cui-tooltip--colored` : 'cui-tooltip--default',
           `cui-tooltip--${currentSide}`,
+          themeScope,
         ]"
         :style="{ ...floatingStyles, ...tooltipStyle, ...hiddenUntilPositioned }"
         role="tooltip"

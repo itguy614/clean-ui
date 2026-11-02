@@ -18,13 +18,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      # The Node that builds the site — a tooling choice, not a support
+      # floor (CI's 20/24 matrix covers consumers).
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -59,7 +61,8 @@ jobs:
           VITE_BASE: /clean-ui/
         run: node scripts/build-docs-sites.mjs combined-dist
 
-      - uses: actions/upload-pages-artifact@v3
+      # Leaves dotfiles out of the artifact (since v4).
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: combined-dist
 
@@ -71,4 +74,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

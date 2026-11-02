@@ -4,6 +4,7 @@ import { PhCaretRight } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { DisableableProps, HideableProps } from "../types/common";
 import { useListContext } from "./list-context";
+import { disabledLink } from "../utils/disabled-link";
 
 export interface CuiListItemProps extends HideableProps, DisableableProps {
   /** Primary line. Kept to one line, cut off with "…". */
@@ -45,14 +46,13 @@ const list = useListContext();
 const attrs = useAttrs();
 
 /**
- * The row's element. A disabled link drops its target and renders an `<a>` without `href`
- * — not focusable, not followable — rather than a link that still navigates under an
+ * The row's element. A disabled link drops its target (`disabledLink`, shared with
+ * CuiButton — #422) rather than staying a link that still navigates under an
  * `aria-disabled` it ignores.
  */
 const row = computed((): { is: string; interactive: boolean; attrs: Record<string, unknown> } => {
-  if ((props.to || props.href) && props.disabled) {
-    return { is: "a", interactive: false, attrs: { role: "link", "aria-disabled": "true" } };
-  }
+  const link = disabledLink(props, props.disabled);
+  if (link) return { ...link, interactive: false };
   if (props.to) return { is: "router-link", interactive: true, attrs: { to: props.to } };
   if (props.href) return { is: "a", interactive: true, attrs: { href: props.href } };
   // A button row, whether chosen by a click listener or asked for with `as="button"`: never a

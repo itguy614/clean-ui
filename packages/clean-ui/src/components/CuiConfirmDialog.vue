@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, type Component } from "vue";
+import { PhInfo, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
 import { useCuiId } from "../composables/useCuiId";
-import type { CuiColor, HideableProps, TitleAsProps } from "../types/common";
+import type { CuiColor, HideableProps, OverlayFocusProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import CuiModalFooter from "./CuiModalFooter.vue";
@@ -11,17 +12,22 @@ import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 import { useHeadingLevel } from "../utils/configure";
 
-export type ConfirmDialogVariant = "danger" | "warning" | "info";
+export type ConfirmDialogVariant = "danger" | "warning" | "info" | "primary";
 
-export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps {
+export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps, OverlayFocusProps {
   /** Control visibility (v-model:visible) */
   visible?: boolean;
   /** Dialog title */
   title?: string;
   /** Confirmation message */
   message?: string;
-  /** Variant — affects icon and confirm button color */
+  /**
+   * Variant — picks the icon and the confirm button's colour. `primary` is for a routine,
+   * non-destructive confirm.
+   */
   variant?: ConfirmDialogVariant;
+  /** Confirm button colour, overriding the variant's. The icon tile keeps the variant's colour. */
+  confirmColor?: CuiColor;
   /** Confirm button text */
   confirmText?: string;
   /** Cancel button text */
@@ -30,8 +36,11 @@ export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps {
   confirmWord?: string;
   /** Prompt text shown above the confirmation input */
   confirmPrompt?: string;
-  /** Icon name (auto-selected by variant if omitted) */
-  icon?: string;
+  /**
+   * Icon — a registered name or an icon component (auto-selected by variant if omitted).
+   * `false` renders no icon tile; the title then sits flush left.
+   */
+  icon?: string | Component | false;
   /** Loading state on confirm button */
   loading?: boolean;
 }
@@ -41,6 +50,13 @@ const props = withDefaults(defineProps<CuiConfirmDialogProps>(), {
   variant: "danger",
   loading: false,
   hidden: false,
+  // `icon` accepts `false`, so Vue's Boolean casting would turn an absent prop into `false`
+  // and hide the tile by default. An explicit default keeps "absent" meaning "the variant's".
+  icon: undefined,
+  // Same reason as CuiModal: `returnFocus` accepts `false`, which Vue would otherwise cast an
+  // absent prop to, and stop returning focus at all.
+  initialFocus: undefined,
+  returnFocus: undefined,
 });
 
 // Its own `titleAs`, else the app's default (#149), else the library's.
@@ -61,6 +77,10 @@ const emit = defineEmits<{
   "update:visible": [value: boolean];
   confirm: [];
   cancel: [];
+  /** The entry has finished and focus is in place (#437). */
+  "after-enter": [];
+  /** The exit has finished and focus has been returned (#437). */
+  "after-leave": [];
 }>();
 
 const typedWord = ref("");
@@ -72,13 +92,26 @@ watch(
   },
 );
 
-const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: string }> = {
-  danger: { color: "error", icon: "warning-circle" },
-  warning: { color: "warning", icon: "warning" },
-  info: { color: "info", icon: "info" },
+const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: Component }> = {
+  danger: { color: "error", icon: PhWarningCircle },
+  warning: { color: "warning", icon: PhWarning },
+  info: { color: "info", icon: PhInfo },
+  // Not PhQuestion: that is CuiIcon's fallback glyph for an unknown name, so a routine
+  // confirm would look like a broken icon and an `icon` typo would go unnoticed.
+  primary: { color: "primary", icon: PhSealQuestion },
 };
 
 const cfg = computed(() => variantConfig[props.variant]);
+
+const resolvedConfirmColor = computed(() => props.confirmColor ?? cfg.value.color);
+
+// `false` hides the tile; anything else falsy (unset, "") falls back to the variant's icon.
+// CuiIcon takes a name and a component as separate props, so forward by type.
+const tileIcon = computed(() => {
+  if (props.icon === false) return null;
+  const icon = props.icon || cfg.value.icon;
+  return typeof icon === "string" ? { name: icon } : { icon };
+});
 
 const confirmDisabled = computed(() => {
   if (!props.confirmWord) return false;
@@ -105,7 +138,7 @@ function onCancel() {
 </script>
 
 <template>
-  <CuiModal class="cui-confirm-dialog" :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" @update:visible="emit('update:visible', $event)">
+  <CuiModal class="cui-confirm-dialog" :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" :initial-focus="initialFocus" :return-focus="returnFocus" @update:visible="emit('update:visible', $event)" @after-enter="emit('after-enter')" @after-leave="emit('after-leave')">
     <!-- Custom header with icon badge -->
     <div
       :style="{
@@ -117,6 +150,9 @@ function onCancel() {
     >
       <!-- Icon badge -->
       <div
+        v-if="tileIcon"
+        class="cui-confirm-dialog__icon"
+        aria-hidden="true"
         :style="{
           width: '2.5rem',
           height: '2.5rem',
@@ -130,7 +166,7 @@ function onCancel() {
           border: `1px solid var(--cui-${cfg.color}-border)`,
         }"
       >
-        <CuiIcon :name="icon || cfg.icon" size="1.25rem" />
+        <CuiIcon v-bind="tileIcon" size="1.25rem" />
       </div>
 
       <div style="flex: 1; min-width: 0;">
@@ -223,7 +259,7 @@ function onCancel() {
         <CuiButton
           variant="solid"
           size="sm"
-          :color="cfg.color"
+          :color="resolvedConfirmColor"
           :disabled="confirmDisabled || loading"
           @click="onConfirm"
         >

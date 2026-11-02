@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted, type Ref } from "vue";
 
-const DARK_CLASS = "dark";
+export const DARK_CLASS = "dark";
 
 function resolveIsDark(el: Element | null): boolean {
   let node: Element | null = el;

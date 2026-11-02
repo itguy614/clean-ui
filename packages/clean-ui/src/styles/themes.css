@@ -7,6 +7,11 @@
    Scale is smooth and monotonic: 50 (lightest) → 950 (darkest).
 
    Success, error, warning, info stay consistent across themes.
+
+   A theme and `dark` on one element is written `.cui-theme-x.dark.dark`, one class heavier
+   than the `.cui-theme-y .dark` of an outer theme: a teleported panel carries both classes
+   on its root (#418) and sits under the page's theme, which would otherwise win the tie by
+   coming later in this file.
    ============================================================ */
 
 /* --- Navy (default — indigo, hue 270) --- */
@@ -71,10 +76,10 @@
 }
 
 .dark .cui-theme-default,
-.cui-theme-default.dark,
+.cui-theme-default.dark.dark,
 .cui-theme-default .dark,
 .dark .cui-theme-navy,
-.cui-theme-navy.dark,
+.cui-theme-navy.dark.dark,
 .cui-theme-navy .dark {
   --color-surface-50:  oklch(0.983 0.008 270);
   --color-surface-100: oklch(0.960 0.008 270);
@@ -118,7 +123,7 @@
 }
 
 .dark .cui-theme-forest,
-.cui-theme-forest.dark,
+.cui-theme-forest.dark.dark,
 .cui-theme-forest .dark {
   --color-surface-50:  oklch(0.983 0.006 150);
   --color-surface-100: oklch(0.960 0.006 150);
@@ -162,7 +167,7 @@
 }
 
 .dark .cui-theme-amber,
-.cui-theme-amber.dark,
+.cui-theme-amber.dark.dark,
 .cui-theme-amber .dark {
   --color-surface-50:  oklch(0.983 0.006 60);
   --color-surface-100: oklch(0.960 0.006 60);
@@ -206,7 +211,7 @@
 }
 
 .dark .cui-theme-azure,
-.cui-theme-azure.dark,
+.cui-theme-azure.dark.dark,
 .cui-theme-azure .dark {
   --color-surface-50:  oklch(0.983 0.006 250);
   --color-surface-100: oklch(0.960 0.006 250);
@@ -250,7 +255,7 @@
 }
 
 .dark .cui-theme-teal,
-.cui-theme-teal.dark,
+.cui-theme-teal.dark.dark,
 .cui-theme-teal .dark {
   --color-surface-50:  oklch(0.983 0.006 210);
   --color-surface-100: oklch(0.960 0.006 210);
@@ -294,7 +299,7 @@
 }
 
 .dark .cui-theme-violet,
-.cui-theme-violet.dark,
+.cui-theme-violet.dark.dark,
 .cui-theme-violet .dark {
   --color-surface-50:  oklch(0.983 0.008 285);
   --color-surface-100: oklch(0.960 0.008 285);
@@ -339,7 +344,7 @@
 }
 
 .dark .cui-theme-ruby,
-.cui-theme-ruby.dark,
+.cui-theme-ruby.dark.dark,
 .cui-theme-ruby .dark {
   --color-surface-50:  oklch(0.983 0.006 25);
   --color-surface-100: oklch(0.960 0.006 25);
@@ -383,7 +388,7 @@
 }
 
 .dark .cui-theme-mono,
-.cui-theme-mono.dark,
+.cui-theme-mono.dark.dark,
 .cui-theme-mono .dark {
   --color-surface-50:  oklch(0.983 0.003 270);
   --color-surface-100: oklch(0.960 0.003 270);

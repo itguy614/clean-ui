@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, useTemplateRef } from "vue";
 import CuiInput from "./CuiInput.vue";
-import type { CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
 
 export interface MaskToken {
   pattern: RegExp;
@@ -170,15 +170,6 @@ function nextEditablePos(displayIdx: number): number {
     if (slot.isToken && slot.index >= displayIdx) return slot.index;
   }
   return maskSlots.value.length;
-}
-
-// Find the previous editable position before a display index
-function prevEditablePos(displayIdx: number): number {
-  let last = 0;
-  for (const slot of maskSlots.value) {
-    if (slot.isToken && slot.index < displayIdx) last = slot.index;
-  }
-  return last;
 }
 
 // Reference to the inner CuiInput

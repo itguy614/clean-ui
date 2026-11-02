@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed, useSlots, onMounted, ref } from "vue";
+import { inject, computed, onMounted, ref } from "vue";
 import { BreadcrumbContextKey } from "./breadcrumb-context";
 import type { HideableProps } from "../types/common";
 
