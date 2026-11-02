@@ -331,6 +331,16 @@ const router = createRouter({
       component: () => import('../pages/KbdPage.vue'),
     },
     {
+      path: '/components/list',
+      name: 'list',
+      component: () => import('../pages/ListPage.vue'),
+    },
+    {
+      path: '/components/status-dot',
+      name: 'status-dot',
+      component: () => import('../pages/StatusDotPage.vue'),
+    },
+    {
       path: '/components/timeline',
       name: 'timeline',
       component: () => import('../pages/TimelinePage.vue'),

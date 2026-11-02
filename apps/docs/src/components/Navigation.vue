@@ -69,6 +69,7 @@ const sections = [
   { id: "empty-state", label: "Empty State", path: "/components/empty-state", group: "Feedback" },
   { id: "skeleton", label: "Skeleton", path: "/components/skeleton", group: "Feedback" },
   { id: "spinner", label: "Spinner", path: "/components/spinner", group: "Feedback" },
+  { id: "status-dot", label: "Status Dot", path: "/components/status-dot", group: "Feedback" },
   { id: "toast", label: "Toast", path: "/components/toast", group: "Feedback" },
 
   // Data Display (alphabetical)
@@ -79,6 +80,7 @@ const sections = [
   { id: "code-block", label: "Code Block", path: "/components/code-block", group: "Data Display" },
   { id: "data-grid", label: "Data Grid", path: "/components/data-grid", group: "Data Display" },
   { id: "kbd", label: "Kbd", path: "/components/kbd", group: "Data Display" },
+  { id: "list", label: "List", path: "/components/list", group: "Data Display" },
   { id: "progress", label: "Progress", path: "/components/progress", group: "Data Display" },
   { id: "table", label: "Table", path: "/components/table", group: "Data Display" },
   { id: "timeline", label: "Timeline", path: "/components/timeline", group: "Data Display" },

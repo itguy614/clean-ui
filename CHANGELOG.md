@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CuiList` / `CuiListItem`** (#195). A presentational list: a real `<ul>`/`<li>` (or `ol`,
+  or `div` rows), each row a link (`href`/`to`), a `<button>` (a `click` listener), any
+  element (`as`) or plain content, with a leading icon, a one-line title and subtitle, and a
+  trailing chevron or `#trailing` content. Dividers are pseudo-elements, so a screen reader's
+  item count is the row count. Themeable through `--cui-list-*` tokens.
+- **`CuiList variant="inset"`** (#234), the settings-app grouped list: each row paints the
+  card fill and border (defaulting to the `--cui-card-*` values), the first and last round
+  their outer corners, the hover fill follows the row's shape, and the dividers are inset to
+  the row padding. The subtitle holds WCAG AAA (7:1) on the fill and under hover, in both
+  modes and every theme.
+- **`CuiStatusDot`** (#234). An 8px status dot with a `tone` (`success`, `info`, `warning`,
+  `error`, `neutral`). `aria-hidden` unless given a `label`.
 - **`CuiPinInput`** (#196), for a one-time code or PIN drawn as a row of boxes. One real
   input underneath is the control: a screen reader meets a single text field named by the
   label, and `autocomplete="one-time-code"` lets a phone offer the code from a text message.
