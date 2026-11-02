@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { provide, toRef, computed } from "vue";
 import CuiToast from "./CuiToast.vue";
+import CuiButton from "./CuiButton.vue";
 import { POPOVER_Z_INDEX } from "../utils/position";
 import {
   ToastContextKey,
   createToastState,
+  type ToastAction,
   type ToastPosition,
   type ToastStackMode,
 } from "./toast-context";
@@ -116,6 +118,17 @@ function moveFocusOutOf(leaving: HTMLElement) {
   if (back?.isConnected) tryFocus(back);
 }
 
+function runAction(id: string, action: ToastAction) {
+  action.onClick();
+  if (action.dismissOnClick !== false) state.dismiss(id);
+}
+
+// A click anywhere on a collapsed toast dismisses it, except on one of its buttons: those
+// do their own thing, and an action with `dismissOnClick: false` must leave it open (#345).
+function onWrapperClick(e: MouseEvent, toast: { id: string; _collapsed: boolean }) {
+  if (toast._collapsed && !(e.target as Element).closest("button, a[href]")) state.dismiss(toast.id);
+}
+
 // Slide direction based on position
 const slideFrom = computed(() => {
   const p = props.position;
@@ -153,18 +166,18 @@ const visibleToasts = computed(() => {
         class="cui-toast-wrapper"
         :class="[`cui-toast-wrapper--slide-${slideFrom}`, { 'cui-toast-wrapper--collapsed': toast._collapsed }]"
         :style="{ pointerEvents: 'auto' }"
-        @click="toast._collapsed ? state.dismiss(toast.id) : undefined"
+        @click="onWrapperClick($event, toast)"
       >
         <!-- The collapsed stack's peek, on an inner element: the wrapper's transform and
              opacity belong to the TransitionGroup, whose move and leave would overwrite or
-             lose to them (#263). -->
+             lose to them (#263). Emitted as private properties and applied by the stylesheet,
+             which drops the peek while focus is inside, so a keyboard user's action or dismiss
+             button is never clipped out of sight (#345). -->
         <div
           class="cui-toast-wrapper__peek"
           :style="toast._collapsed ? {
-            transform: `scale(${1 - toast._stackIndex * 0.05}) translateY(${toast._stackIndex * -8}px)`,
-            opacity: String(Math.max(0.4, 1 - toast._stackIndex * 0.2)),
-            maxHeight: '3rem',
-            overflow: 'hidden',
+            '--_toast-peek-transform': `scale(${1 - toast._stackIndex * 0.05}) translateY(${toast._stackIndex * -8}px)`,
+            '--_toast-peek-opacity': String(Math.max(0.4, 1 - toast._stackIndex * 0.2)),
           } : undefined"
         >
         <CuiToast
@@ -181,8 +194,28 @@ const visibleToasts = computed(() => {
           :no-icon="toast.noIcon"
           :live="toast.live"
           :active="index === visibleToasts.length - 1"
+          :pause-on-hover="toast.pauseOnHover"
+          :pause-on-focus="toast.pauseOnFocus"
+          :pause-when-inactive="toast.pauseWhenInactive"
           @dismiss="state.dismiss(toast.id)"
-        />
+        >
+          <!-- A real <button> inside the toast's live region, so role="status"/"alert" is
+               unchanged (#345). Ghost: subtle-first, the toast already carries the colour.
+               On a solid toast a ghost's role-coloured text would vanish into the fill; a
+               solid button there is the same fill and text colour, so it still reads as
+               a ghost at rest, and darkens through the role's -solid-hover slot. -->
+          <template v-if="toast.action" #actions>
+            <CuiButton
+              class="cui-toast-action"
+              size="sm"
+              :variant="toast.variant === 'solid' ? 'solid' : 'ghost'"
+              :color="toast.color"
+              @click="runAction(toast.id, toast.action)"
+            >
+              {{ toast.action.label }}
+            </CuiButton>
+          </template>
+        </CuiToast>
         </div>
       </div>
     </TransitionGroup>
@@ -199,6 +232,13 @@ const visibleToasts = computed(() => {
 
 .cui-toast-wrapper--collapsed {
   cursor: pointer;
+}
+
+.cui-toast-wrapper--collapsed:not(:focus-within) > .cui-toast-wrapper__peek {
+  transform: var(--_toast-peek-transform);
+  opacity: var(--_toast-peek-opacity);
+  max-height: 3rem;
+  overflow: hidden;
 }
 
 /* --- Enter, leave and move (#263) ---
