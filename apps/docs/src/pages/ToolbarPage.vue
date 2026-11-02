@@ -47,8 +47,8 @@ const usageCode = `<CuiToolbar label="Formatting">
       :key="mark.id"
       icon
       size="sm"
-      :variant="isPressed(mark.id) ? 'outline' : 'ghost'"
-      :aria-pressed="isPressed(mark.id)"
+      variant="ghost"
+      :pressed="isPressed(mark.id)"
       :aria-label="mark.label"
       @click="toggle(mark.id)"
     >
@@ -84,8 +84,8 @@ const usageCode = `<CuiToolbar label="Formatting">
               :key="mark.id"
               icon
               size="sm"
-              :variant="isPressed(mark.id) ? 'outline' : 'ghost'"
-              :aria-pressed="isPressed(mark.id)"
+              variant="ghost"
+              :pressed="isPressed(mark.id)"
               :aria-label="mark.label"
               @click="toggle(mark.id)"
             >
@@ -129,7 +129,8 @@ const usageCode = `<CuiToolbar label="Formatting">
         <kbd class="cui-kbd">←</kbd>/<kbd class="cui-kbd">→</kbd> (or
         <kbd class="cui-kbd">↑</kbd>/<kbd class="cui-kbd">↓</kbd> when vertical) move between its
         controls, <kbd class="cui-kbd">Home</kbd> and <kbd class="cui-kbd">End</kbd> reach the ends,
-        and a disabled control is skipped. Right-to-left pages swap the meaning of the left and
+        and a disabled control is skipped, unless it is a CuiButton with
+        <code>focusableWhenDisabled</code>, which keeps its place. Right-to-left pages swap the meaning of the left and
         right arrows. Clicking a control moves the tab stop to it, so the next Tab-in returns there.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
@@ -147,7 +148,8 @@ const usageCode = `<CuiToolbar label="Formatting">
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         Icon-only controls need their own <code>aria-label</code>, and a toggle should say whether
-        it is on with <code>aria-pressed</code>.
+        it is on: CuiButton's <code>pressed</code> prop sets <code>aria-pressed</code> and the
+        selected look together.
       </p>
     </template>
 

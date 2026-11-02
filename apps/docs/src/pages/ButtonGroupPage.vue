@@ -56,7 +56,9 @@ import meta from "../meta/button-group";
         A pressed or selected member — <code>aria-pressed="true"</code> or
         <code>aria-checked="true"</code> — is lifted above its siblings so its border and
         focus ring draw complete rather than being clipped by the next button. Hover and
-        <code>:focus-visible</code> do the same.
+        <code>:focus-visible</code> do the same. A ghost button with <code>pressed</code> draws an edge, so a
+        run of pressed toggles merges into one shape, rounded at its outer ends, while a lone
+        one among unpressed ghost buttons keeps all four corners.
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         Icon-only members need their own accessible name: pass <code>aria-label</code> to the

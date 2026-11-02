@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`focusableWhenDisabled` and `pressed` on CuiButton** (#396), for toggle buttons in a
+  toolbar or button bar. `focusableWhenDisabled` keeps a disabled or loading `<button>` in
+  the tab order: it gets `aria-disabled="true"` and the disabled look instead of native
+  `disabled`, so it keeps focus when it becomes disabled under the keyboard. A click, Enter
+  or Space does nothing (a submit button's form isn't submitted), but `contextmenu` and
+  long-press still reach a wrapping CuiContextMenu. It keeps its place in a CuiToolbar's
+  arrow-key order, as the WAI-ARIA toolbar pattern asks, and a CuiDropdownTrigger around it
+  doesn't open from the keyboard while it is disabled. `pressed` renders `aria-pressed` and a
+  selected look for every variant and colour (the tinted fill, a coloured edge and stronger
+  text; solid takes its darker shade). A toggle's hover is a
+  neutral fill, pressed or not, so a toggle switched on under the pointer reads as pressed
+  at once. The look is themeable through the new `--cui-button-pressed-bg`,
+  `--cui-button-pressed-color` and `--cui-button-pressed-border` tokens. Left unset, the
+  button isn't a toggle and renders no `aria-pressed`. CuiButtonGroup merges a pressed ghost
+  button like any painted one. The markdown editor's toolbar and the CuiToolbar docs use it,
+  in place of swapping variants.
 - **`after-enter` / `after-leave` events and `initialFocus` / `returnFocus` props on
   CuiModal and CuiSlideover** (#374). `after-enter` fires once the entry animation has
   finished and focus is in place; `after-leave` once the exit has finished and focus has been
@@ -68,6 +84,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A disabled CuiButton link drops its `to`, as well as its `href`** (#422). It renders an
+  `<a>` with no target and `aria-disabled="true"`, keeping the role it has when enabled
+  (`button` for `href`, `link` for `to`) — no longer a live `<router-link>` held back by
+  `pointer-events: none`, and no longer `tabindex="-1"`, which left it focusable by script
+  and by a click. CuiListItem renders a disabled link the same way, through the same internal
+  helper. A disabled CuiButton's clicks are held back by a capture-phase listener instead of
+  `pointer-events: none`, which also blocked right-click and long-press, and that covers
+  every click listener on it, `@click.capture` included.
 - **CuiSelect's multi-select chips are removable `CuiBadge`s** (#301), as CuiCombobox's and
   CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
   select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`

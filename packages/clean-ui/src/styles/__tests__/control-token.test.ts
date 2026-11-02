@@ -163,6 +163,7 @@ const SLOTS = new Set([
   ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
   "width", // an overlay panel's width preset, which is not CuiSize (#407)
+  ...["pressed-bg", "pressed-color", "pressed-border"], // a toggle's on state (#396)
 ]);
 
 /** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */
