@@ -43,8 +43,7 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
-    { name: "--cui-progress-height", default: "per size", description: "Height of the bar track, and of the circle" },
-    { name: "--cui-progress-width", default: "per size", description: "Width of the circle" },
+    { name: "--cui-progress-height", default: "per size", description: "Height of the bar track" },
     { name: "--cui-progress-font-size", default: "per size", description: "Font size of the circle's label" },
   ],
 };

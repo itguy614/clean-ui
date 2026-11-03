@@ -136,7 +136,7 @@ describe("converted components emit themeable properties as tokens (#114)", () =
       const path = COMPONENTS.get(file);
       if (!path) return; // reported by the test above
       const bindings = templateStyleBindings(readFileSync(path, "utf-8"));
-      const offenders = THEMEABLE.filter((prop) => new RegExp(`(^|[{,\\s])${prop}\\s*:`, "m").test(bindings));
+      const offenders = THEMEABLE.filter((prop) => new RegExp(`(^|[{,\\s])['"]?${prop}['"]?\\s*:`, "m").test(bindings));
       expect(
         offenders,
         `${file} (${issue}) must move these to its stylesheet, or emit --_${kebab(file.replace(/^Cui|\.vue$/g, ""))}-* custom properties`,

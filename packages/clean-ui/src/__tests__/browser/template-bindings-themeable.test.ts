@@ -27,16 +27,25 @@ describe("template bindings are themeable (real browser)", () => {
 
   const wrappers: VueWrapper[] = [];
   const rules: HTMLStyleElement[] = [];
+  const hosts: HTMLElement[] = [];
+  /** A host div carrying `hostStyle`, so ancestor overrides are testable. */
+  function newHost(hostStyle: string) {
+    const host = document.createElement("div");
+    host.setAttribute("style", hostStyle);
+    document.body.append(host);
+    hosts.push(host);
+    return host;
+  }
+
   afterEach(() => {
+    hosts.splice(0).forEach((h) => h.remove());
     wrappers.splice(0).forEach((w) => w.unmount());
     rules.splice(0).forEach((r) => r.remove());
   });
 
   /** Mount `component` inside a host carrying `hostStyle`, return the element matching `selector`. */
   async function render(component: Component, props: Record<string, unknown>, selector: string, hostStyle = "") {
-    const host = document.createElement("div");
-    host.setAttribute("style", hostStyle);
-    document.body.append(host);
+    const host = newHost(hostStyle);
     const wrapper = mount(component, { props, attachTo: host });
     wrappers.push(wrapper);
     await nextTick();
@@ -77,15 +86,6 @@ describe("template bindings are themeable (real browser)", () => {
     });
   });
 
-  it("CuiToggle's track height takes the public token and a plain rule", async () => {
-    const dflt = await render(CuiToggle, { modelValue: false }, ".cui-toggle__track");
-    const height = px(dflt, "height");
-    expect(height).toBeGreaterThan(0);
-    expect(px(await render(CuiToggle, { modelValue: false }, ".cui-toggle__track", "--cui-toggle-height: 40px"), "height")).toBe(40);
-    consumerRule(".cui-toggle__track { height: 50px; }");
-    expect(px(await render(CuiToggle, { modelValue: false }, ".cui-toggle__track"), "height")).toBe(50);
-  });
-
   it("CuiToggle's knob still follows the size preset", async () => {
     const md = await render(CuiToggle, { modelValue: false, size: "md" }, ".cui-toggle__knob");
     const lg = await render(CuiToggle, { modelValue: false, size: "lg" }, ".cui-toggle__knob");
@@ -94,21 +94,19 @@ describe("template bindings are themeable (real browser)", () => {
     expect(px(lg, "width")).toBeGreaterThan(px(md, "width"));
   });
 
-  it("CuiProgress takes --cui-progress-height on the bar and the circle", async () => {
+  it("CuiProgress's bar track takes --cui-progress-height and a plain rule; the circle stays square", async () => {
     expect(px(await render(CuiProgress, { value: 5 }, ".cui-progress-bar__track"), "height")).toBeGreaterThan(0);
     expect(px(await render(CuiProgress, { value: 5 }, ".cui-progress-bar__track", "--cui-progress-height: 21px"), "height")).toBe(21);
-    const circle = await render(CuiProgress, { value: 5, variant: "circle" }, ".cui-progress-circle");
+    const circle = await render(CuiProgress, { value: 5, variant: "circle" }, ".cui-progress-circle", "--cui-progress-height: 4px");
     expect(px(circle, "width")).toBe(px(circle, "height"));
-    expect(px(await render(CuiProgress, { value: 5, variant: "circle" }, ".cui-progress-circle", "--cui-progress-height: 77px"), "height")).toBe(77);
+    expect(px(circle, "height")).toBeGreaterThan(4);
     consumerRule(".cui-progress-bar__track { height: 9px; }");
     expect(px(await render(CuiProgress, { value: 5 }, ".cui-progress-bar__track"), "height")).toBe(9);
   });
 
   it("a button-variant CuiRadio takes --cui-radio-height / -px and a plain rule", async () => {
     const mountRadio = async (hostStyle = "") => {
-      const host = document.createElement("div");
-      host.setAttribute("style", hostStyle);
-      document.body.append(host);
+      const host = newHost(hostStyle);
       const wrapper = mount(
         () => h(CuiRadioGroup, { variant: "buttons", modelValue: "a" }, () => [h(CuiRadio, { value: "a", label: "a" })]),
         { attachTo: host },

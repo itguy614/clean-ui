@@ -213,10 +213,10 @@ const choice = useChoiceLabelling(props);
   margin-top: 0.125rem;
 }
 
-/* Themeable (#333): zero specificity, so `--cui-toggle-height` or a plain `.cui-toggle__track`
-   rule from a consumer wins. */
+/* The track's height is tied to the knob and the track width, which follow the size preset, so
+   it is private only (#333). */
 :where(.cui-toggle__track) {
-  height: var(--cui-toggle-height, var(--_toggle-height));
+  height: var(--_toggle-height);
 }
 
 .cui-toggle--checked .cui-toggle__track {
@@ -241,9 +241,6 @@ const choice = useChoiceLabelling(props);
 .cui-toggle__knob {
   width: var(--_toggle-knob-size);
   height: var(--_toggle-knob-size);
-}
-
-.cui-toggle__knob {
   border-radius: 50%;
   background: var(--_toggle-color);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
@@ -259,9 +256,12 @@ const choice = useChoiceLabelling(props);
   align-items: center;
   justify-content: space-between;
   padding: 0 0.375rem;
-  font-size: var(--cui-toggle-font-size, var(--_toggle-font-size));
   font-weight: 600;
   pointer-events: none;
+}
+
+:where(.cui-toggle__labels) {
+  font-size: var(--cui-toggle-font-size, var(--_toggle-font-size));
 }
 
 .cui-toggle__on-label {

@@ -199,9 +199,9 @@ const wrapperStyle = computed(() => {
   display: inline-block;
 }
 
-:where(.cui-icon__placeholder) {
-  width: var(--cui-icon-width, var(--_icon-width));
-  height: var(--cui-icon-height, var(--_icon-height));
+.cui-icon__placeholder {
+  width: var(--_icon-width);
+  height: var(--_icon-height);
 }
 
 /* Duotone overrides — target the secondary layer rendered by Phosphor */

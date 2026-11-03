@@ -303,12 +303,10 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
    CIRCLE VARIANT
    ============================================================ */
 
-:where(.cui-progress-circle) {
-  width: var(--cui-progress-width, var(--_progress-width));
-  height: var(--cui-progress-height, var(--_progress-height));
-}
-
+/* The circle's box is tied to its SVG, so its size is private only. */
 .cui-progress-circle {
+  width: var(--_progress-width);
+  height: var(--_progress-height);
   position: relative;
   display: inline-flex;
   align-items: center;

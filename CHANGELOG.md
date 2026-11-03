@@ -13,8 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
   `--cui-textarea-radius` and `--cui-select-radius`; a button-variant CuiRadio its height,
   padding and font size from `--cui-radio-height`, `--cui-radio-px` and
-  `--cui-radio-font-size`; CuiToggle `--cui-toggle-height` and `--cui-toggle-font-size`;
-  CuiProgress `--cui-progress-height`, `--cui-progress-width` and `--cui-progress-font-size`.
+  `--cui-radio-font-size`; CuiToggle `--cui-toggle-font-size`;
+  CuiProgress `--cui-progress-height` (the bar) and `--cui-progress-font-size` (the circle's label). A
+  size that is tied to other geometry (a toggle's track and knob, a progress circle, an icon
+  placeholder) stays on a private token.
   CuiCombobox's label, avatars, affix, chevron and option parts are styled from its
   stylesheet, at zero specificity where they paint, so a plain consumer rule wins. Rendering
   is unchanged. The private properties were renamed to match their component: `--_ta-*` to
