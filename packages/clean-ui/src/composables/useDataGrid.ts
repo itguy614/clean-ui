@@ -16,8 +16,10 @@ import { isDataGridColumnGroup } from "../types/data-grid";
 import { DataGridContextKey, type DataGridContext } from "../components/data-grid-context";
 
 export interface UseDataGridOptions {
-  /** A plain array is read once; pass a ref or getter to follow later changes. */
-  /** Leaf columns, or groups of them (a two-row header). Groups are flattened to their leaves. */
+  /**
+   * A plain array is read once; pass a ref or getter to follow later changes. Entries are
+   * leaf columns, or groups of them (a two-row header) — groups are flattened to their leaves.
+   */
   columns: MaybeRefOrGetter<DataGridColumnDef[]>;
   data: Ref<DataGridRow[] | PaginatedData>;
   serverSide?: boolean;
@@ -66,6 +68,13 @@ export function useDataGrid(options: UseDataGridOptions) {
   });
   const columnGroupOf = (key: string) => columnGroupByKey.value.get(key);
 
+  // A leaf re-created with identical fields (an inline literal) is the same column.
+  const sameColumn = (a: DataGridColumn, b: DataGridColumn) => {
+    if (a === b) return true;
+    const keys = Object.keys(a) as (keyof DataGridColumn)[];
+    return keys.length === Object.keys(b).length && keys.every((k) => a[k] === b[k]);
+  };
+
   // Same definitions, ignoring a fresh array or group object re-created on each parent render.
   const sameDefinitions = (a: DataGridColumnDef[], b: DataGridColumnDef[]) =>
     a.length === b.length &&
@@ -77,7 +86,7 @@ export function useDataGrid(options: UseDataGridOptions) {
         isDataGridColumnGroup(e) &&
         d.label === e.label &&
         d.children.length === e.children.length &&
-        d.children.every((c, j) => c === e.children[j])
+        d.children.every((c, j) => sameColumn(c, e.children[j]))
       );
     });
 

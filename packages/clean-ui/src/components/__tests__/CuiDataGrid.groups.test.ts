@@ -176,6 +176,16 @@ describe("CuiDataGrid column groups", () => {
     expect(th("Renamed", 0).attributes("colspan")).toBe("1");
   });
 
+  it("does not rebuild columns when a parent re-creates identical groups inline", async () => {
+    const make = (): DataGridColumnDef[] => [{ label: "G", children: [{ key: "a", label: "A" }] }];
+    const defs = ref(make());
+    const grid = useDataGrid({ columns: defs, data: ref(data) });
+    const first = grid.columns[0];
+    defs.value = make();
+    await nextTick();
+    expect(grid.columns[0]).toBe(first);
+  });
+
   it("offsets aria-rowindex by both header rows when virtualized", () => {
     mountGrid({ virtualize: true, maxHeight: "300px" });
     expect(w!.find("table").attributes("aria-rowcount")).toBe(String(data.length + 2));

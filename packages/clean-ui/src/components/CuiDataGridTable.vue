@@ -334,7 +334,7 @@ onBeforeUnmount(() => headObserver?.disconnect());
 
 function leafHeaderStyle(cell: Extract<HeadCell, { kind: "leaf" }>) {
   const style = headerCellStyle(cell.col);
-  return cell.groupId ? { ...style, "--_data-grid-head-top": `${headRow1Height.value}px` } : style;
+  return cell.groupId && props.stickyHeader ? { ...style, "--_data-grid-head-top": `${headRow1Height.value}px` } : style;
 }
 
 // The non-column header cells (bulk-select checkbox, row actions) aren't in
@@ -663,7 +663,8 @@ const totalCols = computed(() => {
 /* A second header row pins under the first (see headRow1Height); the table's own sticky
    rule is `top: 0 !important`, which only a higher-specificity !important beats. */
 .cui-data-grid-table__head-leaf {
-  top: var(--_data-grid-head-top, 0) !important;
+  /* Only set while the header is sticky: without it a frozen leaf must not pin vertically. */
+  top: var(--_data-grid-head-top, auto) !important;
 }
 
 /* --- Structural --- */
