@@ -247,3 +247,98 @@ describe("CuiCombobox highlight when the list changes", () => {
     expect(highlighted()).toBeUndefined();
   });
 });
+
+// A row action's keyboard route (#347).
+describe("CuiCombobox option-keydown", () => {
+  async function openCombobox(extra: Record<string, unknown> = {}, slots = {}) {
+    const w = mount(CuiCombobox, { props: { options: OPTIONS, ...extra }, slots, attachTo: document.body });
+    const input = w.find("input");
+    await input.trigger("focus");
+    await nextTick();
+    return { w, input };
+  }
+  const calls = (w: ReturnType<typeof mount>) => (w.emitted("option-keydown") ?? []) as [KeyboardEvent, ComboboxOption][];
+
+  it("is not emitted while nothing is highlighted", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "a" });
+    expect(calls(w)).toHaveLength(0);
+    expect((w.vm as unknown as { highlightedOption: unknown }).highlightedOption).toBeNull();
+  });
+
+  it("is not emitted when the list is closed", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Escape" });
+    await input.trigger("keydown", { key: "a" });
+    expect(calls(w).map(([, o]) => o.value)).toEqual(["apple"]); // the Escape, while still open
+    expect((w.vm as unknown as { highlightedOption: unknown }).highlightedOption).toBeNull();
+  });
+
+  it("carries the highlighted option, following ArrowDown", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" }); // nothing highlighted yet: no emit
+    await input.trigger("keydown", { key: "ArrowDown" }); // on Apple when pressed
+    await input.trigger("keydown", { key: "x" }); // on Banana
+    expect(calls(w).map(([e, o]) => [e.key, o.value])).toEqual([
+      ["ArrowDown", "apple"],
+      ["x", "banana"],
+    ]);
+  });
+
+  it("exposes the highlighted option", async () => {
+    const { w, input } = await openCombobox();
+    const vm = w.vm as unknown as { highlightedOption: ComboboxOption | null };
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(vm.highlightedOption?.value).toBe("banana");
+  });
+
+  it("passes `highlighted` to the option slot, true on the highlighted row only", async () => {
+    const { input } = await openCombobox(
+      {},
+      { option: `<template #option="{ option, highlighted }"><i :data-hl="highlighted">{{ option.label }}</i></template>` },
+    );
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    const marks = [...document.body.querySelectorAll("[data-hl]")].map((el) => el.getAttribute("data-hl"));
+    expect(marks).toEqual(["false", "true", "false"]);
+  });
+
+  it("is emitted before the built-in handling, so preventDefault() stops Enter selecting", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await w.setProps({ "onOption-keydown": (e: KeyboardEvent) => e.preventDefault() } as never);
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("still selects on Enter when the consumer leaves the event alone", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")?.[0]).toEqual(["banana"]);
+  });
+
+  it("lets a consumer wire an Alt+F favorite shortcut", async () => {
+    const favorites = new Set<string | number>();
+    const { w, input } = await openCombobox({
+      "onOption-keydown": (e: KeyboardEvent, o: ComboboxOption) => {
+        if (e.altKey && e.key.toLowerCase() === "f") {
+          e.preventDefault();
+          if (!favorites.delete(o.value)) favorites.add(o.value);
+        }
+      },
+    });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "f", altKey: true });
+    expect([...favorites]).toEqual(["banana"]);
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "F", altKey: true });
+    expect([...favorites]).toEqual(["banana", "cherry"]);
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+  });
+});

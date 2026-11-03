@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, readonly } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
@@ -85,6 +85,8 @@ const { errorId, describedBy } = useFieldDescribedBy(props);
 const emit = defineEmits<{
   "update:modelValue": [value: string | number | (string | number)[] | null];
   search: [query: string];
+  /** A key was pressed in the input while an option is highlighted (see `onKeydown`). */
+  "option-keydown": [event: KeyboardEvent, option: ComboboxOption];
 }>();
 
 // State
@@ -242,6 +244,14 @@ function removeTag(value: string | number) {
 
 // Keyboard
 function onKeydown(e: KeyboardEvent) {
+  // A row action's shortcut (#347): tell the consumer which option the key is for, before the
+  // built-in handling, so their preventDefault() stops it (Enter then doesn't select). Only
+  // with an option highlighted and the list showing, and never mid-IME composition.
+  const highlighted = highlightedOption.value;
+  if (highlighted && !e.isComposing) {
+    emit("option-keydown", e, highlighted);
+    if (e.defaultPrevented) return;
+  }
   if (listbox.onKeydown(e)) return;
   if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
     removeTag(selectedOptions.value[selectedOptions.value.length - 1].value);
@@ -277,6 +287,11 @@ const listbox = useListbox({
     return showNoResults.value ? noResultsLabel.value : "";
   },
 });
+
+// The option the highlight is on, or null: nothing highlighted, or the list isn't showing.
+const highlightedOption = computed<ComboboxOption | null>(
+  () => (panelOpen.value ? filteredOptions.value[focusedIndex.value] : undefined) ?? null,
+);
 
 // The highlight is an index into the list as it is now, and so is the option id the input
 // names: when the list changes under it (a section added above, the query clearing after a
@@ -326,7 +341,7 @@ function blur() {
   inputRef.value?.blur();
 }
 
-defineExpose({ el: wrapperRef, focus, blur });
+defineExpose({ el: wrapperRef, focus, blur, highlightedOption: readonly(highlightedOption) });
 
 // Option styling
 function optionClass(index: number, option: ComboboxOption) {
@@ -452,7 +467,7 @@ function optionClass(index: number, option: ComboboxOption) {
         @select="selectOption(option)"
         @hover="focusedIndex = i"
       >
-        <slot name="option" :option="option" :selected="selectedSet.has(option.value)">
+        <slot name="option" :option="option" :selected="selectedSet.has(option.value)" :highlighted="focusedIndex === i">
           <img
             v-if="option.image"
             :src="option.image as string"
