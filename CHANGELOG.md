@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
+  CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
+  `--cui-textarea-radius` and `--cui-select-radius`; a button-variant CuiRadio its height,
+  padding and font size from `--cui-radio-height`, `--cui-radio-px` and
+  `--cui-radio-font-size`; CuiToggle `--cui-toggle-height` and `--cui-toggle-font-size`;
+  CuiProgress `--cui-progress-height`, `--cui-progress-width` and `--cui-progress-font-size`.
+  CuiCombobox's label, avatars, affix, chevron and option parts are styled from its
+  stylesheet, at zero specificity where they paint, so a plain consumer rule wins. Rendering
+  is unchanged. The private properties were renamed to match their component: `--_ta-*` to
+  `--_textarea-*`, `--_rb-*` to `--_radio-*`, `--_check-*` to `--_checkbox-*`, `--_sel-*` to
+  `--_select-*`. They were never public, but a consumer reading them will break.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

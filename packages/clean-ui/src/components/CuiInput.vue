@@ -154,7 +154,7 @@ function prefixIsIcon(): boolean {
         'cui-input--floating': floatingLabel().float,
       }"
       :style="{
-        borderRadius: RADIUS_SCALE[rounded],
+        '--_input-radius': RADIUS_SCALE[rounded],
         '--_input-height': floatingLabel().float?.height ?? dims.height,
         '--_input-float-offset': floatingLabel().float?.offset,
         '--_input-font-size': dims.fontSize,
@@ -244,6 +244,12 @@ function prefixIsIcon(): boolean {
 .cui-input-wrapper {
   display: flex;
   flex-direction: column;
+}
+
+/* Themeable (#333): zero specificity, so a consumer's plain `.cui-input { border-radius }`
+   or `--cui-input-radius` on a container wins. */
+:where(.cui-input) {
+  border-radius: var(--cui-input-radius, var(--_input-radius));
 }
 
 .cui-input {

@@ -41,6 +41,12 @@ const meta: ComponentMeta = {
         "Replaces the percentage label — \"3 of 10 files\", a size, a countdown. Rendering it also turns the label on, so showLabel is not needed",
     },
   ],
+
+  tokens: [
+    { name: "--cui-progress-height", default: "per size", description: "Height of the bar track, and of the circle" },
+    { name: "--cui-progress-width", default: "per size", description: "Width of the circle" },
+    { name: "--cui-progress-font-size", default: "per size", description: "Font size of the circle's label" },
+  ],
 };
 
 export default meta;

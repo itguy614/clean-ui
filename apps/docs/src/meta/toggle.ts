@@ -117,6 +117,11 @@ const meta: ComponentMeta = {
       ],
     },
   ],
+
+  tokens: [
+    { name: "--cui-toggle-height", default: "per size", description: "Height of the track" },
+    { name: "--cui-toggle-font-size", default: "per size", description: "Font size of the ON label inside the track" },
+  ],
 };
 
 export default meta;

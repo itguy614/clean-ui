@@ -346,7 +346,7 @@ function optionClass(index: number, option: ComboboxOption) {
     <label
       v-if="label"
       :id="listbox.labelId"
-      :style="{ display: 'block', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))', fontSize: '0.875rem', fontWeight: '500', color: 'var(--cui-text-secondary)' }"
+      class="cui-combobox__label"
     >{{ label }}</label>
 
     <!-- Input area -->
@@ -371,7 +371,7 @@ function optionClass(index: number, option: ComboboxOption) {
         removable
         @remove="removeTag(opt.value)"
       >
-        <img v-if="opt.image" :src="opt.image as string" :style="{ width: '1rem', height: '1rem', borderRadius: '50%', objectFit: 'cover', marginRight: 'calc(0.125rem * var(--cui-density-scale, 1))' }" />
+        <img v-if="opt.image" :src="opt.image as string" class="cui-combobox__tag-image" />
         {{ opt.label }}
       </CuiBadge>
 
@@ -393,9 +393,9 @@ function optionClass(index: number, option: ComboboxOption) {
       />
 
       <!-- Right icons -->
-      <div :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.25rem * var(--cui-density-scale, 1))', flexShrink: '0' }">
+      <div class="cui-combobox__affix">
         <CuiSpinner v-if="isLoading" size="xs" />
-        <CuiIcon v-else name="caret-down" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--cui-duration-base) var(--cui-ease-in-out)' }" />
+        <CuiIcon v-else name="caret-down" size="0.875rem" class="cui-combobox__chevron" :class="{ 'cui-combobox__chevron--open': isOpen }" />
       </div>
     </div>
 
@@ -456,23 +456,15 @@ function optionClass(index: number, option: ComboboxOption) {
           <img
             v-if="option.image"
             :src="option.image as string"
-            :style="{ width: '1.75rem', height: '1.75rem', borderRadius: '50%', objectFit: 'cover', flexShrink: '0' }"
+            class="cui-combobox__option-image"
           />
-          <CuiIcon
-            v-else-if="option.icon"
-            :name="option.icon"
-            size="1rem"
-            :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }"
-          />
+          <CuiIcon v-else-if="option.icon" :name="option.icon" size="1rem" class="cui-combobox__option-icon" />
 
-          <div :style="{ flex: '1', minWidth: '0' }">
-            <div :style="{ lineHeight: '1.3', fontWeight: selectedSet.has(option.value) ? '600' : '400' }">
+          <div class="cui-combobox__option-text">
+            <div class="cui-combobox__option-label" :class="{ 'cui-combobox__option-label--selected': selectedSet.has(option.value) }">
               {{ option.label }}
             </div>
-            <div
-              v-if="option.description"
-              :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3', marginTop: 'calc(0.0625rem * var(--cui-density-scale, 1))' }"
-            >
+            <div v-if="option.description" class="cui-combobox__option-description">
               {{ option.description }}
             </div>
           </div>
@@ -481,7 +473,8 @@ function optionClass(index: number, option: ComboboxOption) {
             v-if="selectedSet.has(option.value)"
             name="check"
             size="0.875rem"
-            :style="{ color: `var(--cui-${color})`, flexShrink: '0' }"
+            :color="color"
+            class="cui-combobox__option-check"
           />
         </slot>
       </CuiListboxOption>
@@ -558,5 +551,97 @@ function optionClass(index: number, option: ComboboxOption) {
 
 .cui-combobox__error {
   margin-top: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+/* --- Parts (#333) ---
+   These were inline `:style` bindings, which outrank any consumer rule. They are static, so
+   they live here, and the paint is zero-specificity so a plain `.cui-combobox__label { … }`
+   from a consumer wins. */
+:where(.cui-combobox__label) {
+  font-size: 0.875rem;
+  color: var(--cui-text-secondary);
+}
+
+.cui-combobox__label {
+  display: block;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-weight: 500;
+}
+
+/* The tag's avatar and the option row's avatar differ in size and nothing else. */
+.cui-combobox__tag-image,
+.cui-combobox__option-image {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+:where(.cui-combobox__tag-image) {
+  width: 1rem;
+  height: 1rem;
+}
+
+:where(.cui-combobox__option-image) {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.cui-combobox__tag-image {
+  margin-right: calc(0.125rem * var(--cui-density-scale, 1));
+}
+
+.cui-combobox__option-image,
+.cui-combobox__option-icon,
+.cui-combobox__option-check {
+  flex-shrink: 0;
+}
+
+.cui-combobox__affix {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+:where(.cui-combobox__affix) {
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-combobox__chevron) {
+  color: var(--cui-text-tertiary);
+}
+
+.cui-combobox__chevron {
+  transition: transform var(--cui-duration-base) var(--cui-ease-in-out);
+}
+
+.cui-combobox__chevron--open {
+  transform: rotate(180deg);
+}
+
+:where(.cui-combobox__option-icon) {
+  color: var(--cui-text-secondary);
+}
+
+.cui-combobox__option-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-combobox__option-label {
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.cui-combobox__option-label--selected {
+  font-weight: 600;
+}
+
+:where(.cui-combobox__option-description) {
+  font-size: 0.75rem;
+  color: var(--cui-text-tertiary);
+}
+
+.cui-combobox__option-description {
+  line-height: 1.3;
+  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 </style>

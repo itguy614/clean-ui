@@ -101,15 +101,14 @@ const choice = useChoiceLabelling(props);
       'cui-radio-button--disabled': isDisabled,
     }]"
     :style="{
-      '--_rb-color': `var(--cui-${resolvedColor})`,
-      '--_rb-bg': `var(--cui-${resolvedColor}-bg)`,
-      '--_rb-text': `var(--cui-${resolvedColor}-text)`,
-      '--_rb-solid': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
-      '--_rb-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`,
-      height: buttonSizeStyles.height,
-      paddingLeft: buttonSizeStyles.px,
-      paddingRight: buttonSizeStyles.px,
-      fontSize: buttonSizeStyles.fontSize,
+      '--_radio-color': `var(--cui-${resolvedColor})`,
+      '--_radio-bg': `var(--cui-${resolvedColor}-bg)`,
+      '--_radio-text': `var(--cui-${resolvedColor}-text)`,
+      '--_radio-solid': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
+      '--_radio-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`,
+      '--_radio-height': buttonSizeStyles.height,
+      '--_radio-px': buttonSizeStyles.px,
+      '--_radio-font-size': buttonSizeStyles.fontSize,
     }"
     :disabled="isDisabled"
     :id="id"
@@ -292,35 +291,39 @@ const choice = useChoiceLabelling(props);
   user-select: none;
   border: 1px solid var(--cui-border-strong);
   background: transparent;
-  color: var(--_rb-color);
+  color: var(--_radio-color);
   transition: background var(--cui-duration-fast) ease, color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
 }
 
 /* Zero specificity, so a group's square corners (`.cui-button--flat-*`) win over it. */
 :where(.cui-radio-button) {
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  height: var(--cui-radio-height, var(--_radio-height));
+  padding-left: var(--cui-radio-px, var(--_radio-px));
+  padding-right: var(--cui-radio-px, var(--_radio-px));
+  font-size: var(--cui-radio-font-size, var(--_radio-font-size));
 }
 
 .cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active) {
-  background: var(--_rb-bg);
-  border-color: var(--_rb-color);
+  background: var(--_radio-bg);
+  border-color: var(--_radio-color);
 }
 
 .cui-radio-button--active {
-  background: var(--_rb-bg);
-  color: var(--_rb-color);
+  background: var(--_radio-bg);
+  color: var(--_radio-color);
   /* Keep the neutral border on the active segment (both light and dark) so the
      group stays visually connected — only the fill and text change. */
   border-color: var(--cui-border-strong);
 }
 
 .cui-radio-button--active:hover:not(:disabled) {
-  background: var(--_rb-solid);
-  color: var(--_rb-text);
+  background: var(--_radio-solid);
+  color: var(--_radio-text);
 }
 
 .cui-radio-button:focus-visible {
-  outline: 2px solid var(--_rb-focus-ring);
+  outline: 2px solid var(--_radio-focus-ring);
   outline-offset: 2px;
 }
 

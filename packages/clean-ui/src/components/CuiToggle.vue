@@ -138,7 +138,7 @@ const choice = useChoiceLabelling(props);
       class="cui-toggle__track"
       :style="{
         width: dims.w,
-        height: dims.h,
+        '--_toggle-height': dims.h,
         '--_toggle-color': `var(--cui-${resolvedColor})`,
         '--_toggle-bg': `var(--cui-${resolvedColor}-bg)`,
         '--_toggle-hover': `var(--cui-${resolvedColor}-hover)`,
@@ -146,7 +146,7 @@ const choice = useChoiceLabelling(props);
       }"
     >
       <!-- ON label inside track (md and lg only) -->
-      <span v-if="showLabels && clampedSize !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ fontSize: dims.labelSize }">
+      <span v-if="showLabels && clampedSize !== 'sm' && isChecked" class="cui-toggle__labels" :style="{ '--_toggle-font-size': dims.labelSize }">
         <span class="cui-toggle__on-label">{{ messages.toggle.on }}</span>
       </span>
 
@@ -154,8 +154,7 @@ const choice = useChoiceLabelling(props);
       <span
         class="cui-toggle__knob"
         :style="{
-          width: dims.knob,
-          height: dims.knob,
+          '--_toggle-knob-size': dims.knob,
           transform: isChecked ? `translateX(${dims.travel})` : 'translateX(0)',
         }"
       />
@@ -214,6 +213,12 @@ const choice = useChoiceLabelling(props);
   margin-top: 0.125rem;
 }
 
+/* Themeable (#333): zero specificity, so `--cui-toggle-height` or a plain `.cui-toggle__track`
+   rule from a consumer wins. */
+:where(.cui-toggle__track) {
+  height: var(--cui-toggle-height, var(--_toggle-height));
+}
+
 .cui-toggle--checked .cui-toggle__track {
   background: var(--_toggle-bg);
   border-color: var(--_toggle-color);
@@ -232,6 +237,12 @@ const choice = useChoiceLabelling(props);
 }
 
 /* --- Knob (primary "dot" in both states) --- */
+/* The knob's box follows the track's size preset; it is geometry, so private only. */
+.cui-toggle__knob {
+  width: var(--_toggle-knob-size);
+  height: var(--_toggle-knob-size);
+}
+
 .cui-toggle__knob {
   border-radius: 50%;
   background: var(--_toggle-color);
@@ -248,6 +259,7 @@ const choice = useChoiceLabelling(props);
   align-items: center;
   justify-content: space-between;
   padding: 0 0.375rem;
+  font-size: var(--cui-toggle-font-size, var(--_toggle-font-size));
   font-weight: 600;
   pointer-events: none;
 }

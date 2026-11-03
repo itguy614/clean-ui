@@ -27,7 +27,8 @@ const COMPONENTS = new Map(COMPONENT_FILES.map((f) => [basename(f), f]));
  * #211 measured the drift: 22 components emitted a private token but only 10 were listed,
  * so 14 — CuiInput and CuiSelect among them — could quietly regain a bare declaration. All
  * 22 are listed now (CuiTooltip had to finish its colours first). The check reads the
- * `<script>` only; template `:style` bindings are still unguarded, which is its own issue.
+ * `<script>` and the template's `:style` bindings (#333): a bare key in a binding outranks
+ * the stylesheet exactly as one in a computed style does.
  */
 const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiButton.vue", issue: "#114" },
@@ -107,6 +108,19 @@ function styleSource(source: string): string {
     .replace(/\/\/[^\n]*/g, "");
 }
 
+/**
+ * The text of every `:style` / `v-bind:style` binding in the template, comments removed.
+ * A static `style="…"` attribute is not scanned: it has no keys, only CSS.
+ */
+function templateStyleBindings(source: string): string {
+  const start = source.indexOf("<template");
+  const end = source.lastIndexOf("</template>");
+  if (start === -1 || end === -1) return "";
+  const template = source.slice(start, end).replace(/<!--[\s\S]*?-->/g, "");
+  const bindings = [...template.matchAll(/(?:v-bind)?:style\s*=\s*(?:"([^"]*)"|'([^']*)')/g)];
+  return bindings.map((m) => m[1] ?? m[2]).join("\n");
+}
+
 /** `MarkdownEditor` → `markdown-editor`, the private prefix's spelling. */
 const kebab = (name: string) => name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 
@@ -118,6 +132,17 @@ describe("converted components emit themeable properties as tokens (#114)", () =
   });
 
   for (const { file, issue } of CONVERTED) {
+    it(`${file} writes no bare themeable declaration in a template :style binding`, () => {
+      const path = COMPONENTS.get(file);
+      if (!path) return; // reported by the test above
+      const bindings = templateStyleBindings(readFileSync(path, "utf-8"));
+      const offenders = THEMEABLE.filter((prop) => new RegExp(`(^|[{,\\s])${prop}\\s*:`, "m").test(bindings));
+      expect(
+        offenders,
+        `${file} (${issue}) must move these to its stylesheet, or emit --_${kebab(file.replace(/^Cui|\.vue$/g, ""))}-* custom properties`,
+      ).toEqual([]);
+    });
+
     it(`${file} writes no bare themeable declaration in its style binding`, () => {
       const path = COMPONENTS.get(file);
       if (!path) return; // reported by the test above

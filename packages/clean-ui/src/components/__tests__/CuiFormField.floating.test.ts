@@ -98,7 +98,7 @@ describe("CuiFormField labelPosition=floating", () => {
     expect(style(CuiInput).getPropertyValue("--_input-height")).toBe(FLOATING_LABEL_SCALE.md.height);
     expect(style(CuiInput).getPropertyValue("--_input-float-offset")).toBe(FLOATING_LABEL_SCALE.md.offset);
     expect(style(CuiInput, { size: "xl" }).getPropertyValue("--_input-height")).toBe(FLOATING_LABEL_SCALE.xl.height);
-    expect(style(CuiTextarea, {}, ".cui-textarea").getPropertyValue("--_ta-float-offset")).toBe(
+    expect(style(CuiTextarea, {}, ".cui-textarea").getPropertyValue("--_textarea-float-offset")).toBe(
       FLOATING_LABEL_SCALE.md.offset,
     );
     expect(style(CuiInputStepper, {}, ".cui-input-stepper").getPropertyValue("--_input-stepper-height")).toBe(
