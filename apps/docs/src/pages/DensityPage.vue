@@ -56,13 +56,22 @@ const selectOptions = [
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
           Or drive it reactively (persists to <code class="cui-code">localStorage</code>, mirrors
           <code class="cui-code">useTheme</code>). Importing the library changes nothing on its
-          own: a density class you put on <code class="cui-code">&lt;html&gt;</code> yourself is
-          left alone, and only a choice made with <code class="cui-code">setDensity</code> is
-          stored and restored:
+          own: it reads no storage and leaves a density class you put on
+          <code class="cui-code">&lt;html&gt;</code> yourself alone. The stored choice is restored
+          the first time <code class="cui-code">useDensity()</code> is called, and only a choice
+          made with <code class="cui-code">setDensity</code> is stored:
         </p>
         <pre class="cui-pre" style="margin-top: 0.5rem;"><code class="cui-code">import { useDensity } from "@itguy614/clean-ui";
 const { density, setDensity, presets } = useDensity();
 setDensity("compact");</code></pre>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
+          If the stored density has to apply before any component calls
+          <code class="cui-code">useDensity()</code> (to avoid a flash of the default), call
+          <code class="cui-code">restoreDensity()</code> at startup. It is safe to call more than once. An app
+          that never uses density doesn't bundle any of it.
+        </p>
+        <pre class="cui-pre" style="margin-top: 0.5rem;"><code class="cui-code">import { restoreDensity } from "@itguy614/clean-ui";
+restoreDensity(); // before app.mount()</code></pre>
         <p class="text-sm" style="margin-top: 0.75rem;">
           <strong>Density moves whitespace, not type.</strong> Padding, gaps, and control heights
           scale; <strong>font sizes never do</strong> (text stays equally readable). Interactive
@@ -116,6 +125,7 @@ setDensity("compact");</code></pre>
       <h2 class="mb-4 text-2xl font-semibold">useDensity()</h2>
       <PropTable
         :props="[
+          { name: 'restoreDensity', type: '() => void', default: '—', description: 'Apply the stored density to <html>, once. useDensity() calls it on first use; call it yourself at startup to apply the density before anything renders.' },
           { name: 'density', type: 'Ref<DensityId>', default: '\'default\'', description: 'Current density (reactive). DensityId = compact | default | comfortable.' },
           { name: 'setDensity', type: '(id: DensityId) => void', default: '—', description: 'Set the active density; applies the class to <html> and persists to localStorage.' },
           { name: 'getDensity', type: '() => DensityId', default: '—', description: 'Read the current density.' },

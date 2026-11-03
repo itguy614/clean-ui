@@ -142,6 +142,20 @@ const GUARANTEES = [
     },
   },
   {
+    id: "density-tree-shakes",
+    name: "an app that never uses density bundles none of it (#209)",
+    check(distDir) {
+      // useDensity's storage key and class prefix as string literals, which only that module
+      // has (components mention `--cui-density-scale` inside CSS strings, never as a bare
+      // literal). No fixture page uses density, so a hit means the module was kept: a
+      // sideEffects entry for it, or work at import time, is back.
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-density-?["'`]/.test(js)
+        ? "found useDensity's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
     id: "single-vue",
     scope: "install",
     name: "vue: exactly one installed copy (single-instance dependency)",

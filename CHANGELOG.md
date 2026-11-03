@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.9
+
+- **Density is restored when first used, not when the library is imported** (#209).
+  `useDensity` no longer reads or writes `localStorage`, or touches `<html>`'s classes, at
+  import, and is no longer listed in `sideEffects`, so an app that never uses it bundles none
+  of it. A density saved by an earlier `setDensity` is applied on the first `useDensity()`
+  call. If you relied on it being applied at import and don't call `useDensity()` before first
+  paint, call the new `restoreDensity()` at startup (before `app.mount()`).
+
 ## [1.8.0] - 2026-11-02
 
 ### Added
