@@ -15,12 +15,12 @@ interface Member {
 }
 
 /** The corner and seam classes for one button, styled in `styles/components-shared.css`. */
-function classesFor(orientation: ButtonGroupOrientation, position: ButtonGroupPosition, flatStart: boolean, flatEnd: boolean) {
+function classesFor(orientation: ButtonGroupOrientation, flatStart: boolean, flatEnd: boolean) {
   const [start, end] = orientation === "horizontal" ? ["left", "right"] : ["top", "bottom"];
+  // `--grouped` hands the corners over from the stylesheet's pre-mount adjacency rules.
   const classes = ["cui-button--grouped"];
   if (flatStart) classes.push(`cui-button--flat-${start}`);
   if (flatEnd) classes.push(`cui-button--flat-${end}`);
-  if (position === "middle" || position === "last") classes.push(`cui-button--seam-${orientation === "horizontal" ? "h" : "v"}`);
   return classes;
 }
 
@@ -86,7 +86,7 @@ export function useButtonGroupProvider(options: {
       const flatStart = computed(() => index.value > 0 && merges(members.value[index.value - 1]));
       const flatEnd = computed(() => index.value >= 0 && merges(members.value[index.value + 1]));
       const classes = computed(() =>
-        self.value ? classesFor(toValue(options.orientation) ?? "horizontal", position.value, flatStart.value, flatEnd.value) : [],
+        self.value ? classesFor(toValue(options.orientation) ?? "horizontal", flatStart.value, flatEnd.value) : [],
       );
 
       return {

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { h, nextTick } from "vue";
+import { createSSRApp, h, nextTick } from "vue";
+import { renderToString } from "@vue/server-renderer";
 import CuiButtonGroup from "../../components/CuiButtonGroup.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiInput from "../../components/CuiInput.vue";
@@ -82,6 +83,52 @@ describe("button group context (real browser)", () => {
     const [first, second] = await mounted(() => h(CuiButtonGroup, { label: "g" }, buttons(2)));
     expect(getComputedStyle(first).marginLeft).toBe("0px");
     expect(getComputedStyle(second).marginLeft).toBe("-1px");
+  });
+
+  describe("server-rendered markup, before any button has mounted", () => {
+    let host: HTMLElement | undefined;
+    afterEach(() => host?.remove());
+
+    /** The HTML a server sends, set as static markup: no hydration, so no context. */
+    async function serverRendered(render: () => ReturnType<typeof h>) {
+      const html = await renderToString(createSSRApp({ render }));
+      host = document.createElement("div");
+      host.innerHTML = html;
+      document.body.appendChild(host);
+      return { html, items: [...host.querySelectorAll<HTMLElement>(".cui-button")] };
+    }
+
+    it("merges corners, from adjacency alone", async () => {
+      const { html, items } = await serverRendered(() => h(CuiButtonGroup, { label: "g" }, buttons(3)));
+      expect(html).not.toContain("cui-button--grouped");
+      expect(radii(items[0]!)).toEqual([R, 0, 0, R]);
+      expect(radii(items[1]!)).toEqual([0, 0, 0, 0]);
+      expect(radii(items[2]!)).toEqual([0, R, R, 0]);
+    });
+
+    it("merges a vertical group, and leaves a button beside a ghost one whole", async () => {
+      const { items } = await serverRendered(() =>
+        h(CuiButtonGroup, { label: "g", orientation: "vertical" }, () => [
+          h(CuiButton, null, () => "a"),
+          h(CuiButton, null, () => "b"),
+          h(CuiButton, { variant: "ghost" }, () => "c"),
+        ]),
+      );
+      expect(radii(items[0]!)).toEqual([R, R, 0, 0]);
+      expect(radii(items[1]!)).toEqual([0, 0, R, R]);
+    });
+
+    it("overlaps the shared border", async () => {
+      const { items } = await serverRendered(() => h(CuiButtonGroup, { label: "g" }, buttons(2)));
+      expect(getComputedStyle(items[1]!).marginLeft).toBe("-1px");
+    });
+
+    it("hands over to the context once the buttons mount", async () => {
+      wrapper = mount(() => h(CuiButtonGroup, { label: "g" }, buttons(3)), { attachTo: document.body });
+      await nextTick();
+      const items = [...wrapper.element.querySelectorAll<HTMLElement>(".cui-button")];
+      expect(items.every((b) => b.classList.contains("cui-button--grouped"))).toBe(true);
+    });
   });
 
   it("merges the radio buttons of a button-variant RadioGroup", async () => {

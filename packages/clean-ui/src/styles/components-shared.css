@@ -93,12 +93,18 @@
   border-bottom-right-radius: 0;
 }
 
+/* Everything below is plain adjacency, so it holds in server-rendered markup and before a
+   button has mounted (#444). The corner rules above are the mounted state, from the context;
+   the `:not(.cui-button--grouped)` ones further down cover the time before it. */
+
 /* Shared borders: each button after the first overlaps its neighbour's edge by one pixel. */
-.cui-button--seam-h {
+.cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-button,
+.cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-dropdown .cui-button {
   margin-left: -1px;
 }
 
-.cui-button--seam-v {
+.cui-button-group--vertical > :is(.cui-button, .cui-dropdown) + .cui-button,
+.cui-button-group--vertical > :is(.cui-button, .cui-dropdown) + .cui-dropdown .cui-button {
   margin-top: -1px;
 }
 
@@ -106,19 +112,48 @@
    hovered button, then a selected one, then a focused one. A hovered neighbour must stay
    below a selected button, or its hover fill paints over the selected border it overlaps.
    Zero specificity, so the order here is the ranking. */
-:where(.cui-button--grouped:hover) {
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):hover) {
   z-index: 1;
   position: relative;
 }
 
-:where(.cui-button--grouped:is([aria-pressed="true"], .cui-radio-button--active, [aria-checked="true"])) {
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):is([aria-pressed="true"], .cui-radio-button--active, [aria-checked="true"])) {
   z-index: 2;
   position: relative;
 }
 
-:where(.cui-button--grouped:focus-visible) {
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):focus-visible) {
   z-index: 3;
   position: relative;
+}
+
+/* Corners before the button has joined the group's context (server-rendered markup, the
+   moment before mount). Only painted buttons meet: a ghost button (`--edgeless`) draws no
+   edge, so beside one a painted button keeps its corners; a dropdown merges by position. A
+   button that has mounted wears `--grouped` and takes its corners from the context, which
+   also covers what these can't (a lone pressed toggle among ghost ones, a reordered list). */
+.cui-button-group--horizontal > .cui-button:not(.cui-button--grouped, .cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown)),
+.cui-button-group--horizontal > .cui-dropdown:not(:last-child) .cui-button:not(.cui-button--grouped) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cui-button-group--horizontal > :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--grouped, .cui-button--edgeless),
+.cui-button-group--horizontal > .cui-dropdown:not(:first-child) .cui-button:not(.cui-button--grouped) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cui-button-group--vertical > .cui-button:not(.cui-button--grouped, .cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown)),
+.cui-button-group--vertical > .cui-dropdown:not(:last-child) .cui-button:not(.cui-button--grouped) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cui-button-group--vertical > :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--grouped, .cui-button--edgeless),
+.cui-button-group--vertical > .cui-dropdown:not(:first-child) .cui-button:not(.cui-button--grouped) {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 /* Floating panels' enter and exit (#263): a panel rendered `v-if="present" v-show="open"`
