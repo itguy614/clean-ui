@@ -50,13 +50,13 @@ let restored = false;
  * yourself at startup only if density must apply before anything renders it (a stored
  * "default", or a value that isn't a density, leaves the page as it is).
  *
- * Importing the library does none of this (#209, #389): no localStorage read or write, and
+ * Needs a DOM: on the server it only reads the default. Importing the library does none of
+ * this (#209, #389): no density localStorage read or write, and
  * no change to `<html>`'s classes, which may be the consumer's own. The persisting watcher
  * is created here too, so only a real change after this writes to storage.
  */
 export function restoreDensity(): void {
   if (restored) return;
-  restored = true;
   activeDensity.value = loadDensity();
   if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
   // Detached: the first caller is usually a component, whose unmount must not stop it.
@@ -66,12 +66,15 @@ export function restoreDensity(): void {
       safeSetItem(STORAGE_KEY, id);
     });
   });
+  // Last, so a failure above leaves the next call free to try again.
+  restored = true;
 }
 
 /**
  * Density management composable. Shared singleton, mirrors `useTheme`.
- * Restores the stored density on first use. Sets the active UI density once for the whole app (or a scoped subtree, if
- * you apply a `cui-density-*` class to a container yourself).
+ * Restores the stored density on first use (browser only; see `restoreDensity`).
+ * Sets the active UI density once for the whole app (or a scoped subtree, if you apply a
+ * `cui-density-*` class to a container yourself).
  */
 export function useDensity() {
   restoreDensity();

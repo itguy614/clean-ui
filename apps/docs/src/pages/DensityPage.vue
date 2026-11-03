@@ -56,7 +56,7 @@ const selectOptions = [
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
           Or drive it reactively (persists to <code class="cui-code">localStorage</code>, mirrors
           <code class="cui-code">useTheme</code>). Importing the library changes nothing on its
-          own: it reads no storage and leaves a density class you put on
+          own: it reads and writes no density setting and leaves a density class you put on
           <code class="cui-code">&lt;html&gt;</code> yourself alone. The stored choice is restored
           the first time <code class="cui-code">useDensity()</code> is called, and only a choice
           made with <code class="cui-code">setDensity</code> is stored:

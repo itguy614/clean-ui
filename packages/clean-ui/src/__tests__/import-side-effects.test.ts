@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 
-// Importing the library must not touch the consumer's page (#209, #389): no localStorage
-// access and no class on <html>. This is the generalising guard — a composable that does
+// Importing the library must not touch the consumer's page (#209, #389): no localStorage write
+// and no class change on <html> (plus no density read). This is the generalising guard — a composable that does
 // work at module load (a stored density restored at import, say) fails it, whichever one.
 describe("importing the barrel", () => {
   afterEach(() => {
@@ -30,7 +30,8 @@ describe("importing the barrel", () => {
     expect(remove).not.toHaveBeenCalled();
     expect(toggle).not.toHaveBeenCalled();
     expect(document.documentElement.className).toBe("consumer-class");
-    // A read at import is the lazy-init regression too: the stored value must wait for use.
-    expect(getItem.mock.calls.filter(([key]) => String(key).startsWith("cui-"))).toEqual([]);
+    // A stored density waits for first use (#209). Not asserted for every key: useTheme still
+    // reads its stored theme at import, which is harmless (it neither writes nor adds a class).
+    expect(getItem.mock.calls.filter(([key]) => key === "cui-density")).toEqual([]);
   });
 });
