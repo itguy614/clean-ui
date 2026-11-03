@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
+  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
+  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
+  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
+  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
+  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
+  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
+  `hh:mm AM/PM`. English output is unchanged except `KB` is now `kB` (Intl's form) and the
+  day label above. `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
+  locale. The picker's input mask now accepts letters of any script. The unexported
+  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

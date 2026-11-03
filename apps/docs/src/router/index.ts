@@ -116,6 +116,11 @@ const router = createRouter({
       component: () => import('../pages/ClickOutsidePage.vue'),
     },
     {
+      path: '/composables/locale',
+      name: 'locale',
+      component: () => import('../pages/LocalePage.vue'),
+    },
+    {
       path: '/composables/roving-focus',
       name: 'roving-focus',
       component: () => import('../pages/RovingFocusPage.vue'),

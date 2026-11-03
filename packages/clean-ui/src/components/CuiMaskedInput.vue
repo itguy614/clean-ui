@@ -48,8 +48,9 @@ const emit = defineEmits<{
 // Built-in tokens
 const builtinTokens: Record<string, MaskToken> = {
   "#": { pattern: /[0-9]/ },
-  A: { pattern: /[a-zA-Z]/ },
-  "*": { pattern: /[a-zA-Z0-9]/ },
+  // Any script's letters, not just ASCII, so a localised month name ("Mär", "février") fits (#337).
+  A: { pattern: /\p{L}/u },
+  "*": { pattern: /[\p{L}\p{N}]/u },
 };
 
 const allTokens = computed(() => ({ ...builtinTokens, ...props.tokens }));

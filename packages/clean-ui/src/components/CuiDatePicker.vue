@@ -6,18 +6,23 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
-  MONTH_NAMES, MONTH_NAMES_SHORT, DAY_NAMES_SHORT,
-  daysInMonth, isSameDay, isToday,
+    daysInMonth, isSameDay, isToday,
   formatDate, parseFormattedDate, formatToMask, formatToRaw, maskedFormat,
   toDateValue, dateToIso,
   type DisabledDateRange,
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useLocale } from "../composables/useLocale";
+import { fullDateLabel, monthNames, monthYearLabel, weekdayLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
 
 const messages = useMessages();
+const locale = useLocale();
+// The month and weekday text the calendar draws and announces (#337), in the library's locale.
+const monthsShort = computed(() => monthNames(locale.value, "short"));
+const weekdays = computed(() => weekdayLabels(locale.value));
 // The label prop names the control (#391): a <label> with no `for` names nothing, and the
 // control's aria-labelledby took only the consumer's own id. Both now, label first.
 const labelId = useCuiId("date-picker-label");
@@ -121,14 +126,14 @@ watch(() => props.modelValue, syncFromProp);
 onMounted(syncFromProp);
 
 // Input mask from format
-const mask = computed(() => formatToMask(props.format));
+const mask = computed(() => formatToMask(props.format, locale.value));
 const inputPlaceholder = computed(() => props.placeholder ?? props.format.toLowerCase());
 
 // Raw digits for CuiMaskedInput (strips separators from formatted date)
 const inputRaw = computed(() => {
   if (!selectedDate.value) return "";
   // Padded as the mask is: a single M or D still takes two digits there.
-  return formatToRaw(formatDate(selectedDate.value, maskedFormat(props.format)));
+  return formatToRaw(formatDate(selectedDate.value, maskedFormat(props.format), locale.value));
 });
 
 // Emit the value
@@ -168,13 +173,13 @@ function onInputChange(rawVal: string | number) {
   let rawIdx = 0;
   let formatted = "";
   for (const ch of slots) {
-    if (ch === "#" || ch === "A") {
+    if (ch === "#" || ch === "A" || ch === "*") {
       formatted += rawIdx < raw.length ? raw[rawIdx++] : "";
     } else {
       formatted += ch;
     }
   }
-  const parsed = parseFormattedDate(formatted, props.format);
+  const parsed = parseFormattedDate(formatted, props.format, locale.value);
   if (parsed && !isNaN(parsed.getTime()) && !isDisabled(parsed)) {
     emitValue(parsed);
     showDate(parsed);
@@ -290,7 +295,7 @@ defineExpose({ el: rootEl, focus, blur });
               </CuiButton>
               <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
-                  {{ MONTH_NAMES_SHORT[viewMonth] }}
+                  {{ monthsShort[viewMonth] }}
                 </CuiButton>
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
                   {{ viewYear }}
@@ -304,8 +309,8 @@ defineExpose({ el: rootEl, focus, blur });
             <!-- Day names -->
             <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
               <div
-                v-for="name in DAY_NAMES_SHORT"
-                :key="name"
+                v-for="(name, i) in weekdays"
+                :key="i"
                 :style="{
                   textAlign: 'center',
                   fontSize: '0.6875rem',
@@ -323,7 +328,7 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="MONTH_NAMES[viewMonth] + ' ' + viewYear"
+              :aria-label="monthYearLabel(new Date(viewYear, viewMonth, 1), locale)"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(2px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
@@ -335,7 +340,7 @@ defineExpose({ el: rootEl, focus, blur });
                 :tabindex="cellTabIndex(day.key)"
                 :aria-selected="selectedDate ? day.date.toDateString() === selectedDate.toDateString() : false"
                 :aria-disabled="day.disabled || undefined"
-                :aria-label="day.date.toDateString()"
+                :aria-label="fullDateLabel(day.date, locale)"
                 :style="dayStyle(day)"
                 :data-disabled="day.disabled"
                 @click="selectDay(day)"
@@ -374,12 +379,12 @@ defineExpose({ el: rootEl, focus, blur });
               @keydown="onGridKeydown"
             >
               <div
-                v-for="(name, i) in MONTH_NAMES_SHORT"
+                v-for="(name, i) in monthsShort"
                 :key="i"
                 role="gridcell"
                 :data-cui-cell="monthKeys[i]"
                 :tabindex="cellTabIndex(monthKeys[i])"
-                :aria-label="MONTH_NAMES[i] + ' ' + viewYear"
+                :aria-label="monthYearLabel(new Date(viewYear, i, 1), locale)"
                 :style="{
                   padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
                   textAlign: 'center',
