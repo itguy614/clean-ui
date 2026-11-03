@@ -10,7 +10,9 @@ export interface CuiAvatarGroupProps extends HideableProps {
   spacing?: string;
   /**
    * Most avatars to show; the rest collapse into one "+N" avatar. Unset shows them all. Zero
-   * or less shows only the "+N" avatar. It takes its size and shape from the first avatar.
+   * or less shows only the "+N" avatar (shown as "99+" past 99). It takes its size and shape
+   * from the `size` and `shape` props of the first child, so a wrapped avatar gets the defaults.
+   * Counts every child, `hidden` ones included.
    */
   max?: number;
 }
@@ -38,7 +40,8 @@ const Avatars = () => {
     ...children.slice(0, limit),
     h(CuiAvatar, {
       class: "cui-avatar-group__overflow",
-      initials: `+${hiddenCount}`,
+      // Three characters is all an avatar's initials font fits; the label keeps the exact count.
+      initials: hiddenCount > 99 ? "99+" : `+${hiddenCount}`,
       color: OVERFLOW_COLOR,
       size: first.size,
       shape: first.shape,

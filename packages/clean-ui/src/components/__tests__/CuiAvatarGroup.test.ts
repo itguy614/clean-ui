@@ -75,6 +75,18 @@ describe("CuiAvatarGroup max", () => {
     }
   });
 
+  it("caps the visible count at 99+ and keeps the exact count in the label", () => {
+    const w = mount(
+      defineComponent({
+        components: { CuiAvatarGroup, CuiAvatar },
+        setup: () => ({ names: Array.from({ length: 150 }, (_, i) => `N${i}`) }),
+        template: `<CuiAvatarGroup :max="2"><CuiAvatar v-for="n in names" :key="n" :name="n" /></CuiAvatarGroup>`,
+      }),
+    );
+    expect(overflow(w).text()).toBe("99+");
+    expect(overflow(w).attributes("aria-label")).toBe("148 more");
+  });
+
   it("truncates a fractional max", () => {
     const w = mountGroup(1.9);
     expect(w.findAll(".cui-avatar")).toHaveLength(2);
