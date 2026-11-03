@@ -38,17 +38,17 @@ function classesFor(orientation: ButtonGroupOrientation, position: ButtonGroupPo
 export function useButtonGroupProvider(options: {
   orientation?: MaybeRefOrGetter<ButtonGroupOrientation>;
   el?: Ref<HTMLElement | null>;
-  attached?: "start" | "end";
+  attached?: MaybeRefOrGetter<"start" | "end">;
 }): void {
   if (options.attached) {
     // The prefix button's inner (trailing) side is flat; the suffix button's is its leading one.
-    const prefix = options.attached === "start";
-    const classes = computed(() => ["cui-button--inset", prefix ? "cui-button--flat-right" : "cui-button--flat-left"]);
+    const prefix = computed(() => toValue(options.attached) === "start");
+    const classes = computed(() => ["cui-button--inset", prefix.value ? "cui-button--flat-right" : "cui-button--flat-left"]);
     provide<ButtonGroupContext>(ButtonGroupContextKey, {
       join: () => ({
-        position: computed(() => (prefix ? "first" : "last")),
-        flatStart: computed(() => !prefix),
-        flatEnd: computed(() => prefix),
+        position: computed(() => (prefix.value ? "first" : "last")),
+        flatStart: computed(() => !prefix.value),
+        flatEnd: prefix,
         classes,
         attach() {},
         detach() {},
@@ -61,16 +61,15 @@ export function useButtonGroupProvider(options: {
 
   /** DOM order, so a group that reorders or inserts its buttons keeps each one's position. */
   const sorted = (list: Member[]) =>
-    [...list].sort((a, b) => {
-      const [x, y] = [a.el(), b.el()];
-      if (!x || !y) return 0;
-      return x.compareDocumentPosition(y) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
-    });
+    // A member whose element is gone (its button re-rendered into something else) drops out.
+    list
+      .filter((m) => m.el())
+      .sort((a, b) => (a.el()!.compareDocumentPosition(b.el()!) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 
   // The group re-renders when its slot content changes, which is when buttons move.
   onUpdated(() => {
     const next = sorted(members.value);
-    if (next.some((m, i) => m !== members.value[i])) members.value = next;
+    if (next.length !== members.value.length || next.some((m, i) => m !== members.value[i])) members.value = next;
   });
 
   provide<ButtonGroupContext>(ButtonGroupContextKey, {

@@ -126,7 +126,8 @@ const groupEl = () => {
 };
 // Where this button sits in a CuiButtonGroup sets its own corners (#444). A ghost button
 // draws no edge, so it takes no part in the merge; a pressed one has an edge (#396).
-const groupClasses = useButtonGroupMember(groupEl, () => !(props.variant === "ghost" && !props.pressed));
+const edgeless = computed(() => props.variant === "ghost" && !props.pressed);
+const groupClasses = useButtonGroupMember(groupEl, () => !edgeless.value);
 
 function focus(opts?: FocusOptions) {
   elRef.value?.focus(opts);
@@ -257,9 +258,9 @@ const buttonStyle = computed(() => {
       'cui-button--icon': icon,
       'cui-button--pressed': pressed,
       'cui-button--ghost': variant === 'ghost',
-      // Draws no edge, so CuiButtonGroup doesn't merge corners against it. A pressed ghost
+      // Draws no edge, so a group doesn't merge corners against it. A pressed ghost
       // button has one (#396).
-      'cui-button--edgeless': variant === 'ghost' && !pressed,
+      'cui-button--edgeless': edgeless,
     }]"
     :style="buttonStyle"
     v-bind="root.attrs"

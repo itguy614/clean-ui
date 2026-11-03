@@ -67,6 +67,8 @@
    where two buttons meet, and a consumer's own `.cui-button { border-radius }` shouldn't
    reopen the seam. `.cui-button` doubles each corner selector, to beat a button's own
    radius whatever order the stylesheets load in. */
+/* A button attached to a field: corners follow the button-radius token, less the field's
+   border; the inner side is squared by a `--flat-*` rule below. */
 .cui-button.cui-button--inset {
   border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
 }

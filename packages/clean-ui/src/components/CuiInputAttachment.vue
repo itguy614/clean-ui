@@ -8,7 +8,7 @@ const props = defineProps<{
 
 // The button inside takes its corners from this: outer ones follow the field, inner ones are
 // square (#444).
-useButtonGroupProvider({ attached: props.side });
+useButtonGroupProvider({ attached: () => props.side });
 </script>
 
 <template>
