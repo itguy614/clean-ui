@@ -56,7 +56,7 @@
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node scripts/check-dist-imports.mjs .",
+    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
