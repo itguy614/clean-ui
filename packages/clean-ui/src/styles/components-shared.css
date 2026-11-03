@@ -145,6 +145,12 @@
 ) {
   transform: translate(var(--_transition-x, 0px), var(--_transition-y, var(--cui-transition-distance, 0.5rem)));
 }
+/* The default side, set on every element so a nested transition doesn't inherit its
+   parent's custom properties; the side rules below come after and win. */
+:where([data-cui-transition], .cui-transition-fade-slide-enter-from, .cui-transition-fade-slide-leave-to) {
+  --_transition-x: 0px;
+  --_transition-y: var(--cui-transition-distance, 0.5rem);
+}
 :where([data-cui-transition-side="top"], .cui-transition-side-top) {
   --_transition-y: calc(var(--cui-transition-distance, 0.5rem) * -1);
 }
@@ -203,11 +209,23 @@
     transition-property: opacity !important;
   }
   :where(
-    [data-cui-transition-state="hidden"],
-    [class*="cui-transition-"][class*="-enter-from"],
-    [class*="cui-transition-"][class*="-leave-to"]
+    [data-cui-transition="fade-slide"][data-cui-transition-state="hidden"],
+    [data-cui-transition="grow"][data-cui-transition-state="hidden"],
+    [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+    .cui-transition-fade-slide-enter-from,
+    .cui-transition-fade-slide-leave-to,
+    .cui-transition-grow-enter-from,
+    .cui-transition-grow-leave-to,
+    .cui-transition-collapse-enter-from,
+    .cui-transition-collapse-leave-to
   ) {
     transform: none !important;
+  }
+  :where(
+    [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+    .cui-transition-collapse-enter-from,
+    .cui-transition-collapse-leave-to
+  ) {
     grid-template-rows: 1fr !important;
   }
 }

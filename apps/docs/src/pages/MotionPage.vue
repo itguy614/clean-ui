@@ -155,10 +155,10 @@ const addRow = () => rows.value.unshift({ id: nextRow++, label: `New task ${next
 const removeRow = (id: number) => (rows.value = rows.value.filter((r) => r.id !== id));
 
 const TRANSITION_PROPS: PropRow[] = [
-  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "The motion. fade-slide moves 0.5rem, grow scales from 0.95, collapse animates the height with grid-template-rows" },
+  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "The motion. fade-slide moves 0.5rem, grow scales from 0.95, collapse animates the height with grid-template-rows, which makes the element a grid and clips its one child (a focus ring or shadow at its edge is cut off; give it padding). Content rendered open at mount takes its preset styling at its first toggle: add appear to have it from the start" },
   { name: "side", type: '"top" | "bottom" | "start" | "end"', default: '"bottom"', description: "fade-slide only: the edge the content slides in from. start and end follow the writing direction" },
-  { name: "duration", type: '"fast" | "base" | "slow"', default: "base", description: "The enter's duration token. The exit always runs over fast" },
-  { name: "mode", type: '"in-out" | "out-in"', description: "Passed to Vue's <Transition>: how swapped content takes turns" },
+  { name: "duration", type: '"fast" | "base" | "slow"', default: '"base"', description: "The enter's duration token. The exit always runs over fast" },
+  { name: "mode", type: '"in-out" | "out-in" | "default"', description: "Passed to Vue's <Transition>: how swapped content takes turns" },
   { name: "appear", type: "boolean", default: "false", description: "Also play the enter on first render" },
   { name: "@before-enter, @after-enter, @before-leave, @after-leave …", type: "Vue transition events", description: "Passed through to <Transition>" },
 ];

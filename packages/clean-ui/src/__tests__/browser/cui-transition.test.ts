@@ -126,6 +126,43 @@ describe("CuiTransition (real browser)", () => {
     expect(Number(style.opacity)).toBeLessThan(1);
   });
 
+  it("doesn't let a nested transition inherit its parent's side", async () => {
+    const open = ref(true);
+    const w = mount(
+      () =>
+        h("div", { class: "cui-transition-side-start" }, [
+          h(CuiTransition, { preset: "fade-slide" }, () => (open.value ? h("div", { class: "target" }, "Inner") : null)),
+        ]),
+      { attachTo: host() },
+    );
+    mounted.push(w);
+    await settled();
+    open.value = false;
+    await w.vm.$nextTick();
+    await wait(motionDuration("fast") / 2);
+    const t = new DOMMatrix(getComputedStyle(target()!).transform);
+    expect(t.m42, "rises from the bottom").toBeGreaterThan(0);
+    expect(t.m41).toBe(0);
+  });
+
+  it("keeps a fade's own transform under reduced motion", async () => {
+    await setReduced(true);
+    const open = ref(true);
+    const w = mount(
+      () =>
+        h(CuiTransition, { preset: "fade" }, () =>
+          open.value ? h("div", { class: "target", style: "transform: translateX(10px)" }, "x") : null,
+        ),
+      { attachTo: host() },
+    );
+    mounted.push(w);
+    await settled();
+    open.value = false;
+    await w.vm.$nextTick();
+    await wait(motionDuration("fast") / 2);
+    expect(new DOMMatrix(getComputedStyle(target()!).transform).m41).toBe(10);
+  });
+
   it("collapses the grid's row, not the element's height, and its child clips", async () => {
     const w = demo({ preset: "collapse", kind: "if" });
     await settled();
