@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
   `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
   a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
-  `hh:mm AM/PM`. English output is unchanged except `KB` is now `kB` (Intl's form) and the
+  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except `KB` is now `kB` (Intl's form) and the
   day label above. `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
   locale. The picker's input mask now accepts letters of any script. The unexported
   `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.

@@ -6,7 +6,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
-    daysInMonth, isSameDay, isToday,
+  daysInMonth, isSameDay, isToday,
   formatDate, parseFormattedDate, formatToMask, formatToRaw, maskedFormat,
   toDateValue, dateToIso,
   type DisabledDateRange,
@@ -127,6 +127,9 @@ onMounted(syncFromProp);
 
 // Input mask from format
 const mask = computed(() => formatToMask(props.format, locale.value));
+// A month name in the mask takes a letter of any script (and digits, for "10月"), not just
+// ASCII: the masked input's own `A` and `*` are ASCII-only (#337).
+const maskTokens = { A: { pattern: /\p{L}/u }, "*": { pattern: /[\p{L}\p{N}]/u } };
 const inputPlaceholder = computed(() => props.placeholder ?? props.format.toLowerCase());
 
 // Raw digits for CuiMaskedInput (strips separators from formatted date)
@@ -272,6 +275,7 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-labelledby="labelledBy"
         :model-value="inputRaw"
         :mask="mask"
+        :tokens="maskTokens"
         :placeholder="inputPlaceholder"
         :size="size"
         :disabled="disabled"

@@ -148,6 +148,11 @@ describe("locale formatting (#337)", () => {
       expect(resolved("ja")()).toBe("ja");
     });
 
+    it("falls through a rejected provider locale to the next valid one", () => {
+      configureCleanUI({ locale: "fr" });
+      expect(resolved("de_DE")()).toBe("fr");
+    });
+
     it("takes the global locale, and ignores a tag Intl rejects", () => {
       document.documentElement.lang = "fr";
       configureCleanUI({ locale: "ja" });

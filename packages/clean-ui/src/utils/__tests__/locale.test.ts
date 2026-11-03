@@ -20,6 +20,12 @@ describe("locale formatting", () => {
     expect(weekdayLabels("ja")).toEqual(["日", "月", "火", "水", "木", "金", "土"]);
   });
 
+  it("keeps weekday labels distinct where two letters collide", () => {
+    const labels = weekdayLabels("pt");
+    expect(new Set(labels).size).toBe(7);
+    expect(labels[1]).toBe("seg");
+  });
+
   it("writes a full date for a screen reader", () => {
     const date = new Date(2026, 9, 20);
     expect(fullDateLabel(date, "en")).toBe("Tuesday, October 20, 2026");
@@ -43,6 +49,11 @@ describe("locale formatting", () => {
     it("uses the locale's decimal separator", () => {
       expect(formatBytes(1.5 * 1024 * 1024, "de")).toBe("1,5 MB");
       expect(formatBytes(1.5 * 1024 * 1024, "fr")).toMatch(/^1,5\sMo$/);
+    });
+
+    it("writes the word byte as B and keeps a locale's own symbol", () => {
+      expect(formatBytes(512, "de")).toBe("512 B");
+      expect(formatBytes(512, "fr")).toMatch(/^512\so$/);
     });
 
     it("steps up to gigabytes", () => {

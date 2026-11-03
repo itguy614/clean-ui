@@ -25,8 +25,9 @@ export function documentLocale(): string | undefined {
 }
 
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
-function dateFormat(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = locale + JSON.stringify(options);
+/** A formatter for `locale`, cached under `kind` (a name for `options`, which is not looked at). */
+function dateFormat(locale: string, kind: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}|${kind}`;
   let format = dateFormats.get(key);
   if (!format) dateFormats.set(key, (format = new Intl.DateTimeFormat(locale, options)));
   return format;
@@ -34,36 +35,37 @@ function dateFormat(locale: string, options: Intl.DateTimeFormatOptions): Intl.D
 
 /** The twelve month names, January first: `long` ("October") or `short` ("Oct"). */
 export function monthNames(locale: string, style: "long" | "short"): string[] {
-  const format = dateFormat(locale, { month: style });
+  const format = dateFormat(locale, `month-${style}`, { month: style });
   return Array.from({ length: 12 }, (_, month) => format.format(new Date(2023, month, 1)));
 }
 
 /**
  * The seven weekday labels, Sunday first (the pickers' grids start on Sunday). Two letters
  * where the locale's short name is longer ("Su", "Mo"; German "So", Japanese "日"): `narrow`
- * is a single letter, which makes Tuesday and Thursday the same.
+ * is a single letter, which makes Tuesday and Thursday the same. Where two letters still
+ * collide (Portuguese "seg" and "sex" are both "se"), the whole short names.
  */
 export function weekdayLabels(locale: string): string[] {
-  const format = dateFormat(locale, { weekday: "short" });
-  return Array.from({ length: 7 }, (_, day) =>
-    Array.from(format.format(new Date(2023, 0, 1 + day)).replace(/\.$/, "")).slice(0, 2).join(""),
-  );
+  const format = dateFormat(locale, "weekday-short", { weekday: "short" });
+  const names = Array.from({ length: 7 }, (_, day) => format.format(new Date(2023, 0, 1 + day)).replace(/\.$/, ""));
+  const twoLetters = names.map((name) => Array.from(name).slice(0, 2).join(""));
+  return new Set(twoLetters).size === 7 ? twoLetters : names;
 }
 
 /** A day written out for a screen reader: "Monday, October 20, 2026". */
 export function fullDateLabel(date: Date, locale: string): string {
-  return dateFormat(locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(date);
+  return dateFormat(locale, "full", { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(date);
 }
 
 /** A month and year: "October 2026". */
 export function monthYearLabel(date: Date, locale: string): string {
-  return dateFormat(locale, { month: "long", year: "numeric" }).format(date);
+  return dateFormat(locale, "month-year", { month: "long", year: "numeric" }).format(date);
 }
 
 /** The locale's labels for the two halves of a 12-hour day ("AM"/"PM"; Japanese "午前"/"午後"). */
 export function dayPeriodLabels(locale: string): { AM: string; PM: string } {
   const label = (hour: number, fallback: string) =>
-    dateFormat(locale, { hour: "numeric", hourCycle: "h12" })
+    dateFormat(locale, "day-period", { hour: "numeric", hourCycle: "h12" })
       .formatToParts(new Date(2023, 0, 1, hour))
       .find((part) => part.type === "dayPeriod")?.value ?? fallback;
   return { AM: label(9, "AM"), PM: label(15, "PM") };
@@ -90,7 +92,8 @@ function sizeFormat(locale: string, unit: string, digits: number): Intl.NumberFo
 /**
  * A byte count as a short size, 1024 to the step: "512 B", "1.5 MB", and "1,5 MB" in German.
  * Numbers and unit names come from `Intl.NumberFormat`; one decimal above a kilobyte, as it
- * always was. `byte` stays "B" where Intl's short form is the word "byte".
+ * always was. The word "byte" (Intl's short English and German form) stays "B"; where the
+ * locale has its own symbol, such as French "o", that is used.
  */
 export function formatBytes(bytes: number, locale: string): string {
   let unit = "byte";
@@ -107,5 +110,5 @@ export function formatBytes(bytes: number, locale: string): string {
     const number = new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     return `${number.format(value)} ${symbol}`;
   }
-  return format.formatToParts(value).map((part) => (part.type === "unit" && part.value === "byte" ? "B" : part.value)).join("");
+  return format.formatToParts(value).map((part) => (part.type === "unit" && /^bytes?$/i.test(part.value) ? "B" : part.value)).join("");
 }

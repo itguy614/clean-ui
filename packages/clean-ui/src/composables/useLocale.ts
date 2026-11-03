@@ -10,12 +10,17 @@ import { DEFAULT_LOCALE, documentLocale, validLocale } from "../utils/locale";
  * document, so it is the configured locale or `"en"`.
  *
  * The document's `lang` is read when a component sets up, not watched: set `lang` before the
- * app mounts, or give the locale explicitly, which is reactive.
+ * app mounts, or give the locale explicitly, which is reactive. And it exists only in the
+ * browser, so a server-rendered page that relies on `lang` renders English and then hydrates
+ * to the document's language, a text mismatch: give the locale explicitly when rendering on
+ * the server.
  */
 export function useLocale(): ComputedRef<string> {
   const defaults = useCleanUIDefaults();
   const fromDocument = documentLocale();
+  // The first configured tag Intl accepts: a bad one on a provider falls through to the next.
   return computed(
-    () => validLocale(defaults?.value.locale ?? globalLocale.value, "") || fromDocument || DEFAULT_LOCALE,
+    () =>
+      validLocale(defaults?.value.locale, "") || validLocale(globalLocale.value, "") || fromDocument || DEFAULT_LOCALE,
   );
 }
