@@ -2,6 +2,7 @@
 import { Text, computed, onBeforeUpdate, ref, useSlots, useTemplateRef } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
+import CuiInputAttachment from "./CuiInputAttachment.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
@@ -164,9 +165,9 @@ function prefixIsIcon(): boolean {
       }"
     >
       <!-- Prefix button slot (merged into border) -->
-      <div v-if="$slots['prefix-button']" class="cui-input__prefix-button">
+      <CuiInputAttachment v-if="$slots['prefix-button']" side="start" class="cui-input__prefix-button">
         <slot name="prefix-button" />
-      </div>
+      </CuiInputAttachment>
 
       <!-- Inner input area -->
       <div class="cui-input__inner">
@@ -227,9 +228,9 @@ function prefixIsIcon(): boolean {
       </div>
 
       <!-- Suffix button slot (merged into border) -->
-      <div v-if="$slots['suffix-button']" class="cui-input__suffix-button">
+      <CuiInputAttachment v-if="$slots['suffix-button']" side="end" class="cui-input__suffix-button">
         <slot name="suffix-button" />
-      </div>
+      </CuiInputAttachment>
     </div>
 
     <!-- Error message -->
@@ -410,15 +411,8 @@ function prefixIsIcon(): boolean {
   box-shadow: none;
 }
 
-/* Prefix button: outer left matches input radius, inner right is flat */
-.cui-input__prefix-button :deep(.cui-button) {
-  border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px);
-}
-
-/* Suffix button: inner left is flat, outer right matches input radius */
-.cui-input__suffix-button :deep(.cui-button) {
-  border-radius: 0 calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 1px) 0;
-}
+/* The corners come from the button itself: CuiInputAttachment provides the group context
+   (outer corners follow the input's radius, the inner side is flat — #444). */
 
 /* Suppress button's own focus ring inside input — the input's focus-within handles it */
 .cui-input__prefix-button :deep(.cui-button:focus-visible),
