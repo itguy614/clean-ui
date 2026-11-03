@@ -11,6 +11,14 @@ const __DEV__ = (() => {
   }
 })();
 
+/**
+ * A plugin-registry warning, with no de-duplication. The caller passes a prebuilt message, so
+ * only the `console.warn` is stripped from production, not the text.
+ */
+export function warnDev(message: string): void {
+  if (__DEV__ && process.env.NODE_ENV !== "production") console.warn(message);
+}
+
 const warned = new Set<string>();
 function warnOnce(message: string): void {
   if (warned.has(message)) return;

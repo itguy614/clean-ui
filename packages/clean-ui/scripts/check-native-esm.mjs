@@ -35,7 +35,7 @@ try {
   for (const entry of ENTRIES) {
     await import(pathToFileURL(resolve(dist, entry)).href);
   }
-  // A second, different version stamped first makes duplicate-guard's warning path run on import.
+  // Drive duplicate-guard's warning path explicitly: a different version is already stamped.
   globalThis.__CUI_INSTANCE__ = "0.0.0-other";
   const { registerInstance } = await import(pathToFileURL(resolve(dist, "duplicate-guard.js")).href);
   registerInstance("9.9.9");
