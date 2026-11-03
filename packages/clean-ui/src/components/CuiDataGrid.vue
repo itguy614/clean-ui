@@ -3,6 +3,7 @@ import { computed, toRef, watch, useSlots, type Ref } from "vue";
 import { useDataGrid, provideDataGrid, DEFAULT_SEARCH_DEBOUNCE } from "../composables/useDataGrid";
 import type {
   DataGridColumn,
+  DataGridColumnDef,
   DataGridRow,
   DataGridBulkAction,
   DataGridRowAction,
@@ -25,7 +26,7 @@ import { useMessages } from "../composables/useMessages";
 
 export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps, SizeableProps {
   /** Column definitions */
-  columns: DataGridColumn[];
+  columns: DataGridColumnDef[];
   /** Data source — array for client-side, PaginatedData for server-side. Generic over the row type so cell slots, emits, and data are typed. */
   data: T[] | PaginatedData<T>;
   /** Server-side mode — emits navigate events instead of processing locally */
@@ -154,6 +155,10 @@ defineSlots<
     "toolbar-end"?: () => unknown;
     empty?: () => unknown;
     card?: (props: { row: T }) => unknown;
+    /** Every column's header content; `#header-<key>` takes precedence. Falls back to `label`. */
+    header?: (props: { column: DataGridColumn }) => unknown;
+  } & {
+    [K in `header-${string}`]?: (props: { column: DataGridColumn }) => unknown;
   } & {
     // Per-column cell slots: `cell-<columnKey>`, payload typed over the row type.
     [K in `cell-${string}`]?: (props: { value: unknown; row: T }) => unknown;
@@ -316,6 +321,13 @@ const messages = useMessages();
             @row-click="emit('row-click', $event as RowClickPayload)"
             @row-action="emit('row-action', $event as RowActionPayload)"
           >
+            <!-- Header content: the per-column slot, else the generic one, else the label -->
+            <template #header="{ column }">
+              <slot :name="`header-${column.key}`" :column="column">
+                <slot name="header" :column="column">{{ column.label }}</slot>
+              </slot>
+            </template>
+
             <!-- Forward cell slots -->
             <template
               v-for="col in grid.visibleColumns.value"

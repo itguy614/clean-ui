@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CuiDataGrid column groups and header slots** (#376): `{ label, children }` entries in
+  `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
+  sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
+  column's header content, falling back to `label`.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

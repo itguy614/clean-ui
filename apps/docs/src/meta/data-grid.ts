@@ -8,7 +8,13 @@ const meta: ComponentMeta = {
   interactive: true,
 
   props: [
-    { name: "columns", type: "DataGridColumn[]", default: "— (required)", description: "Column definitions: key, label, and the per-column sortable / filterable / align / width / sticky flags" },
+    {
+      name: "columns",
+      type: "(DataGridColumn | DataGridColumnGroup)[]",
+      default: "— (required)",
+      description:
+        "Column definitions: key, label, and the per-column sortable / filterable / align / width / sticky flags. A { label, children } group (no key) renders a spanning header over its leaf columns, in a two-row header; flat arrays work unchanged",
+    },
     {
       name: "data",
       type: "T[] | PaginatedData<T>",
@@ -82,6 +88,13 @@ const meta: ComponentMeta = {
     { name: "toolbar-end", description: "Content at the trailing end of the toolbar, before the filter and column controls" },
     { name: "empty", description: "Replaces the built-in empty state shown when nothing matches" },
     { name: "card", payload: "{ row }", description: "One card in card view. Providing it is what makes the card/table toggle appear" },
+    {
+      name: "header-{columnKey}",
+      payload: "{ column }",
+      description:
+        "One column's header content, in place of its label — inside the sort button when sortable. The label still names the column in the column manager, filter panel and card view",
+    },
+    { name: "header", payload: "{ column }", description: "Every column's header content; a header-{columnKey} slot takes precedence. Group headers are text" },
     {
       name: "cell-{columnKey}",
       payload: "{ value, row }",

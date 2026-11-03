@@ -1,6 +1,7 @@
 import type { InjectionKey, Ref, ComputedRef } from "vue";
 import type {
   DataGridColumn,
+  DataGridColumnGroup,
   DataGridColumnState,
   DataGridSort,
   DataGridFilter,
@@ -13,6 +14,8 @@ import type {
 export interface DataGridContext {
   // Column state
   columns: DataGridColumn[];
+  /** The group a leaf column sits under (a spanning header), if any. */
+  columnGroupOf: (key: string) => DataGridColumnGroup | undefined;
   columnState: Ref<DataGridColumnState[]>;
   visibleColumns: ComputedRef<DataGridColumn[]>;
   filterableColumns: ComputedRef<DataGridColumn[]>;

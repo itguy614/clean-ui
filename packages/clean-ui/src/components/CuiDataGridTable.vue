@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
 import { useEventListener } from "../composables/useEventListener";
@@ -7,7 +7,7 @@ import { useListNavigation } from "../composables/useListNavigation";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { RESTORE_FOCUS_ATTR } from "../utils/focusRestore";
-import type { DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
+import type { DataGridColumn, DataGridColumnGroup, DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
 import CuiTableBody from "./CuiTableBody.vue";
@@ -279,6 +279,64 @@ function headerCellStyle(col: { key: string }) {
   return headerPinStyle(stickyColumnOffsets.value.get(col.key), col.key === lastStickyKey.value);
 }
 
+// --- Column groups ---
+// A group is a spanning cell over its visible leaves, so a grid with any visible grouped
+// leaf has a two-row header: ungrouped columns (and the bulk-select and actions cells)
+// span both rows, and grouped leaves sit in the second. Consecutive leaves of one group
+// share a cell; a group whose leaves were reordered apart gets one cell per run, and one
+// with every leaf hidden gets none.
+type HeadCell =
+  | { kind: "leaf"; key: string; col: DataGridColumn; rowspan?: number; groupId?: string }
+  | { kind: "group"; key: string; group: DataGridColumnGroup; span: number };
+
+const headerRows = computed<HeadCell[][]>(() => {
+  const top: HeadCell[] = [];
+  const second: HeadCell[] = [];
+  for (const col of grid.visibleColumns.value) {
+    const group = grid.columnGroupOf(col.key);
+    if (!group) {
+      top.push({ kind: "leaf", key: col.key, col });
+      continue;
+    }
+    const last = top[top.length - 1];
+    let cell: Extract<HeadCell, { kind: "group" }>;
+    if (last?.kind === "group" && last.group === group) {
+      cell = last;
+      cell.span += 1;
+    } else {
+      cell = { kind: "group", key: `${gridId}-group-${top.length}`, group, span: 1 };
+      top.push(cell);
+    }
+    second.push({ kind: "leaf", key: col.key, col, groupId: cell.key });
+  }
+  if (second.length === 0) return [top];
+  for (const cell of top) if (cell.kind === "leaf") cell.rowspan = 2;
+  return [top, second];
+});
+
+/** `rowspan` for the bulk-select and actions cells, which stand alone in a two-row header. */
+const auxRowspan = computed(() => (headerRows.value.length > 1 ? 2 : undefined));
+
+// A sticky second row pins just below the first, whose height is whatever its content
+// makes it — so it is measured. The table's own sticky rule is `top: 0 !important`; the
+// scoped class below beats it with this variable.
+const headRow1 = ref<HTMLElement | null>(null);
+const headRow1Height = ref(0);
+let headObserver: ResizeObserver | undefined;
+onMounted(() => {
+  const el = headRow1.value;
+  if (!el || typeof ResizeObserver === "undefined") return;
+  headRow1Height.value = el.offsetHeight;
+  headObserver = new ResizeObserver(() => (headRow1Height.value = el.offsetHeight));
+  headObserver.observe(el);
+});
+onBeforeUnmount(() => headObserver?.disconnect());
+
+function leafHeaderStyle(cell: Extract<HeadCell, { kind: "leaf" }>) {
+  const style = headerCellStyle(cell.col);
+  return cell.groupId ? { ...style, "--_data-grid-head-top": `${headRow1Height.value}px` } : style;
+}
+
 // The non-column header cells (bulk-select checkbox, row actions) aren't in
 // visibleColumns so they don't get headerCellStyle, but they still need to ride
 // the sticky header rather than scroll away — and the checkbox cell is also
@@ -420,13 +478,19 @@ const totalCols = computed(() => {
       :sticky-header="stickyHeader"
       :max-height="maxHeight"
       :min-width="tableMinWidth"
-      :aria-rowcount="virtualize ? grid.displayData.value.length + 1 : undefined"
+      :aria-rowcount="virtualize ? grid.displayData.value.length + headerRows.length : undefined"
     >
       <CuiTableHead>
-        <!-- aria-rowindex is 1-based incl. the header row; only meaningful when windowed -->
-        <CuiTableRow :aria-rowindex="virtualize ? 1 : undefined">
+        <!-- One row, or two when a column group is showing. aria-rowindex is 1-based incl.
+             the header rows; only meaningful when windowed -->
+        <CuiTableRow
+          v-for="(cells, r) in headerRows"
+          :key="r"
+          :ref="(instance: any) => { if (r === 0) headRow1 = instance?.$el ?? null }"
+          :aria-rowindex="virtualize ? r + 1 : undefined"
+        >
           <!-- Bulk selection checkbox -->
-          <CuiTableCell v-if="hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :style="selectHeaderCellStyle">
+          <CuiTableCell v-if="r === 0 && hasBulkActions" :width="SELECT_COLUMN_WIDTH" align="center" :rowspan="auxRowspan" :style="selectHeaderCellStyle">
             <CuiCheckbox
               v-if="showSelectAll"
               :aria-label="messages.dataGrid.selectAll"
@@ -436,38 +500,53 @@ const totalCols = computed(() => {
             />
           </CuiTableCell>
 
-          <!-- Column headers -->
-          <CuiTableCell
-            v-for="col in grid.visibleColumns.value"
-            :key="col.key"
-            :align="col.align"
-            :width="col.width"
-            :nowrap="col.nowrap"
-            :style="headerCellStyle(col)"
-            :aria-sort="col.sortable ? ariaSort(col) : undefined"
-          >
-            <!-- A sortable header's label is a button, so the sort is reachable by keyboard;
-                 the <th> says which way it's sorted (aria-sort). -->
-            <button
-              v-if="col.sortable"
-              type="button"
-              class="cui-data-grid-table__sort"
-              :style="{ justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start' }"
-              @click="grid.applySort(col.key)"
+          <!-- Column headers: a group's spanning cell, or a leaf column's header -->
+          <template v-for="cell in cells" :key="cell.key">
+            <CuiTableCell
+              v-if="cell.kind === 'group'"
+              :id="cell.key"
+              class="cui-data-grid-table__group"
+              align="center"
+              :colspan="cell.span"
+              scope="colgroup"
+              :style="headerPinStyle(undefined)"
             >
-              {{ col.label }}
-              <CuiIcon
-                :name="sortIcon(col)"
-                size="0.875rem"
-                aria-hidden="true"
-                :style="{ opacity: sortDirection(col) ? '1' : '0.3' }"
-              />
-            </button>
-            <template v-else>{{ col.label }}</template>
-          </CuiTableCell>
+              {{ cell.group.label }}
+            </CuiTableCell>
+            <CuiTableCell
+              v-else
+              :class="{ 'cui-data-grid-table__head-leaf': cell.groupId }"
+              :headers="cell.groupId"
+              :align="cell.col.align"
+              :width="cell.col.width"
+              :nowrap="cell.col.nowrap"
+              :rowspan="cell.rowspan"
+              :style="leafHeaderStyle(cell)"
+              :aria-sort="cell.col.sortable ? ariaSort(cell.col) : undefined"
+            >
+              <!-- A sortable header's label is a button, so the sort is reachable by keyboard;
+                   the <th> says which way it's sorted (aria-sort). -->
+              <button
+                v-if="cell.col.sortable"
+                type="button"
+                class="cui-data-grid-table__sort"
+                :style="{ justifyContent: cell.col.align === 'right' ? 'flex-end' : cell.col.align === 'center' ? 'center' : 'flex-start' }"
+                @click="grid.applySort(cell.col.key)"
+              >
+                <slot name="header" :column="cell.col">{{ cell.col.label }}</slot>
+                <CuiIcon
+                  :name="sortIcon(cell.col)"
+                  size="0.875rem"
+                  aria-hidden="true"
+                  :style="{ opacity: sortDirection(cell.col) ? '1' : '0.3' }"
+                />
+              </button>
+              <slot v-else name="header" :column="cell.col">{{ cell.col.label }}</slot>
+            </CuiTableCell>
+          </template>
 
           <!-- Row actions column -->
-          <CuiTableCell v-if="hasRowActions" :width="ROW_ACTIONS_COLUMN_WIDTH" :style="auxHeaderCellStyle" />
+          <CuiTableCell v-if="r === 0 && hasRowActions" :width="ROW_ACTIONS_COLUMN_WIDTH" :rowspan="auxRowspan" :style="auxHeaderCellStyle" />
         </CuiTableRow>
       </CuiTableHead>
 
@@ -491,7 +570,7 @@ const totalCols = computed(() => {
           :data-cui-grid-row="`${gridId}:${idx}`"
           :ref="(instance: any) => { if (virtualize && idx === 0) vScroll.measureRow(instance?.rowEl ?? null) }"
           :selected="isSelected(row)"
-          :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + 2 : undefined"
+          :aria-rowindex="virtualize ? vScroll.firstVisibleIndex.value + idx + headerRows.length + 1 : undefined"
           :class="{ 'cui-data-grid-table__row--interactive': rowsInteractive }"
           :tabindex="rowsInteractive ? (getRowId(row) === stopKey ? 0 : -1) : undefined"
           :data-cui-restore-focus="rowsInteractive ? rowFocusKey(row) : undefined"
@@ -579,6 +658,12 @@ const totalCols = computed(() => {
 :where(.cui-data-grid-table__row--interactive:focus-visible) {
   outline: 2px solid var(--cui-data-grid-focus-ring, var(--cui-primary-focus-ring));
   outline-offset: -2px;
+}
+
+/* A second header row pins under the first (see headRow1Height); the table's own sticky
+   rule is `top: 0 !important`, which only a higher-specificity !important beats. */
+.cui-data-grid-table__head-leaf {
+  top: var(--_data-grid-head-top, 0) !important;
 }
 
 /* --- Structural --- */

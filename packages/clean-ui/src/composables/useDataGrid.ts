@@ -1,6 +1,8 @@
-import { ref, computed, inject, provide, shallowReactive, toRaw, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { ref, computed, inject, provide, shallowReactive, shallowRef, toRaw, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import type {
   DataGridColumn,
+  DataGridColumnDef,
+  DataGridColumnGroup,
   DataGridColumnState,
   DataGridSort,
   DataGridFilter,
@@ -10,11 +12,13 @@ import type {
   DataGridViewMode,
   PaginatedData,
 } from "../types/data-grid";
+import { isDataGridColumnGroup } from "../types/data-grid";
 import { DataGridContextKey, type DataGridContext } from "../components/data-grid-context";
 
 export interface UseDataGridOptions {
   /** A plain array is read once; pass a ref or getter to follow later changes. */
-  columns: MaybeRefOrGetter<DataGridColumn[]>;
+  /** Leaf columns, or groups of them (a two-row header). Groups are flattened to their leaves. */
+  columns: MaybeRefOrGetter<DataGridColumnDef[]>;
   data: Ref<DataGridRow[] | PaginatedData>;
   serverSide?: boolean;
   rowKey?: string;
@@ -45,7 +49,37 @@ export function useDataGrid(options: UseDataGridOptions) {
   // Shallow-reactive and updated in place, so `context.columns` stays the same plain
   // array consumers already hold while still re-rendering when the definitions change
   // (#258). Shallow: the definitions themselves are the caller's objects, not proxied.
-  const columns = shallowReactive<DataGridColumn[]>([...toValue(options.columns)]);
+  // A group's leaves are the columns — state, sort, filters and views all see only those.
+  // The groups stay in `definitions`, for the header's spanning row.
+  const flattenColumns = (defs: DataGridColumnDef[]) =>
+    defs.flatMap((d) => (isDataGridColumnGroup(d) ? d.children : [d]));
+  const definitions = shallowRef(toValue(options.columns));
+  const columns = shallowReactive<DataGridColumn[]>(flattenColumns(definitions.value));
+
+  /** The group a column sits under, by key. Computed from `definitions`, so it follows them. */
+  const columnGroupByKey = computed(() => {
+    const map = new Map<string, DataGridColumnGroup>();
+    for (const d of definitions.value) {
+      if (isDataGridColumnGroup(d)) for (const c of d.children) map.set(c.key, d);
+    }
+    return map;
+  });
+  const columnGroupOf = (key: string) => columnGroupByKey.value.get(key);
+
+  // Same definitions, ignoring a fresh array or group object re-created on each parent render.
+  const sameDefinitions = (a: DataGridColumnDef[], b: DataGridColumnDef[]) =>
+    a.length === b.length &&
+    a.every((d, i) => {
+      const e = b[i];
+      if (d === e) return true;
+      return (
+        isDataGridColumnGroup(d) &&
+        isDataGridColumnGroup(e) &&
+        d.label === e.label &&
+        d.children.length === e.children.length &&
+        d.children.every((c, j) => c === e.children[j])
+      );
+    });
 
   const defaultStateOf = (col: DataGridColumn): DataGridColumnState => ({
     key: col.key,
@@ -105,12 +139,17 @@ export function useDataGrid(options: UseDataGridOptions) {
       // A fresh array holding the same definitions (an inline literal re-created on each
       // parent render) is not a change; splicing anyway would re-run every computed that
       // reads `columns`, including the client-side sort and filter passes.
-      if (next.length === columns.length && next.every((c, i) => c === columns[i])) return;
+      if (sameDefinitions(next, definitions.value)) return;
 
       const previous = [...columns];
-      columns.splice(0, columns.length, ...next);
+      const leaves = flattenColumns(next);
+      definitions.value = next;
+      // Leaves unchanged (only a group label moved): nothing for the leaf-keyed passes to redo.
+      if (leaves.length !== columns.length || leaves.some((c, i) => c !== columns[i])) {
+        columns.splice(0, columns.length, ...leaves);
+      }
 
-      const state = reconcileColumnState(columnState.value, next, previous);
+      const state = reconcileColumnState(columnState.value, leaves, previous);
       const changed =
         state.length !== columnState.value.length ||
         state.some((cs, i) => cs !== columnState.value[i]);
@@ -120,7 +159,7 @@ export function useDataGrid(options: UseDataGridOptions) {
       // so a clean grid stays clean and a dirty one becomes clean again once the user
       // reverts their own edits, instead of staying dirty against a stale column list.
       const saved = JSON.parse(savedConfigSnapshot.value) as DataGridViewConfig;
-      saved.columns = reconcileColumnState(saved.columns, next, previous);
+      saved.columns = reconcileColumnState(saved.columns, leaves, previous);
       savedConfigSnapshot.value = JSON.stringify(saved);
     },
     { deep: 1 },
@@ -565,6 +604,7 @@ export function useDataGrid(options: UseDataGridOptions) {
   // --- Build context ---
   const context: DataGridContext = {
     columns,
+    columnGroupOf,
     columnState,
     visibleColumns,
     filterableColumns,
