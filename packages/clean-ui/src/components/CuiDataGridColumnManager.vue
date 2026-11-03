@@ -14,11 +14,11 @@ const grid = useDataGridState();
 const dragIndex = ref<number | null>(null);
 const dropIndex = ref<number | null>(null);
 
-// A grouped leaf is named with its group — "Reads · A1" — since "A1" alone repeats per group.
+// A grouped leaf is named with its group ("Reads · A1"), since "A1" alone repeats per group.
 function getLabel(key: string): string {
   const label = grid.columns.find((c) => c.key === key)?.label ?? key;
   const group = grid.columnGroupOf(key);
-  return group ? `${group.label} · ${label}` : label;
+  return group ? messages.value.dataGrid.groupedColumn(group.label, label) : label;
 }
 
 function onDragStart(e: DragEvent, index: number) {

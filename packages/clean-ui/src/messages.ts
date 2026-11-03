@@ -274,6 +274,8 @@ export interface CuiCoreMessages {
     rowActions: (rowLabel: string) => string;
     /** A row's label when nothing better names it: its position, 1-based. */
     rowNumber: (position: number) => string;
+    /** A column inside a column group, in the column manager: "Reads · A1" — the leaf alone repeats per group. */
+    groupedColumn: (groupLabel: string, columnLabel: string) => string;
     tableView: string;
     cardView: string;
   };
@@ -409,6 +411,7 @@ export const defaultMessages: CuiCoreMessages = {
     selectRow: (rowLabel) => `Select ${rowLabel}`,
     rowActions: (rowLabel) => `Actions for ${rowLabel}`,
     rowNumber: (position) => `row ${position}`,
+    groupedColumn: (groupLabel, columnLabel) => `${groupLabel} · ${columnLabel}`,
     tableView: "Table view",
     cardView: "Card view",
   },

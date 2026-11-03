@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { nextTick, ref } from "vue";
+import { h, nextTick, ref } from "vue";
 import CuiDataGrid from "../CuiDataGrid.vue";
+import CuiConfigProvider from "../CuiConfigProvider.vue";
 import { useDataGrid } from "../../composables/useDataGrid";
 import type { DataGridColumnDef, DataGridRow } from "../../types/data-grid";
 
@@ -142,6 +143,19 @@ describe("CuiDataGrid column groups", () => {
     [...document.body.querySelectorAll("label")].find((l) => l.textContent?.trim() === "Reads · A3")!.click();
     await nextTick();
     expect(th("Reads", 0).attributes("colspan")).toBe("2");
+  });
+
+  it("takes the group/leaf format in the column manager from the message catalogue", async () => {
+    w = mount(CuiConfigProvider, {
+      props: { messages: { dataGrid: { groupedColumn: (g: string, c: string) => `${c} (${g})` } } },
+      slots: { default: () => h(CuiDataGrid, { columns, data, hideToolbar: false }) },
+      attachTo: document.body,
+    });
+    await w.find(".cui-data-grid-column-manager button").trigger("click");
+    await nextTick();
+    const labels = [...document.body.querySelectorAll("label")].map((l) => l.textContent?.trim());
+    expect(labels).toContain("A1 (Reads)");
+    expect(labels).not.toContain("Reads · A1");
   });
 
   it("starts a new group cell when the manager reorders a leaf away from its siblings", () => {
