@@ -32,6 +32,12 @@ const meta: ComponentMeta = {
           default: "-0.5rem",
           description: "Overlap between avatars, as a negative margin. A CSS length",
         },
+        {
+          name: "max",
+          type: "number",
+          description:
+            "Most avatars to show; the rest collapse into one \"+N\" avatar, sized like the first. Unset shows them all; zero or less shows only the \"+N\". Its label is messages.avatar.overflow",
+        },
         hiddenProp,
       ],
       slots: [{ name: "default", description: "The avatars. They are laid out reversed, so the first one sits on top" }],

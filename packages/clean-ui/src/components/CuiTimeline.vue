@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import type { HideableProps } from "../types/common";
 
-export interface CuiTimelineProps extends HideableProps {
-  /** Compact mode — less spacing */
-  compact?: boolean;
-}
+export type CuiTimelineProps = HideableProps;
 
 withDefaults(defineProps<CuiTimelineProps>(), {
-  compact: false,
   hidden: false,
 });
 </script>

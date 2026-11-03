@@ -16,9 +16,6 @@ const COMPONENTS = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Known dead props, each with the issue that fixes or removes it. A stale entry fails too.
 const EXEMPT: Record<string, string> = {
-  "CuiAvatarGroup.vue:max": "#164",
-  "CuiTimeline.vue:compact": "#164",
-  "CuiToast.vue:toastId": "#164",
   "CuiTimePicker.vue:minTime": "#178",
   "CuiTimePicker.vue:maxTime": "#178",
 };

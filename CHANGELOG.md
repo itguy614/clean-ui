@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`max` on CuiAvatarGroup** now works (#164): the group shows the first `max` avatars and
+  collapses the rest into one "+N" avatar, sized and shaped like the first. Unset shows them
+  all; zero or less shows only the "+N". The overflow avatar is named for assistive technology
+  by the new `messages.avatar.overflow(count)` ("3 more"). Before, `max` was declared and ignored.
+
+### Removed
+
+- **BREAKING:** `CuiTimeline`'s `compact` and `CuiToast`'s `toastId` props are removed (#164).
+  Both were declared and never read, so removing them changes nothing at runtime; a consumer
+  passing one now sees it fall through as a plain HTML attribute, and a typed template fails
+  its check. Upgrade by deleting `compact` from `<CuiTimeline>` and `toast-id` from any
+  `<CuiToast>` you render by hand (`useToast()` and `CuiToastProvider` need no change).
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

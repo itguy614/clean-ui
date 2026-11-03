@@ -144,8 +144,11 @@ export interface CuiCoreMessages {
     /** Default `copiedTooltip`, also announced. */
     copiedTooltip: string;
   };
-  /** An avatar image's `alt` when it has neither `alt` nor `name`. */
-  avatar: { label: string };
+  /**
+   * An avatar image's `alt` when it has neither `alt` nor `name` (`label`), and the accessible
+   * name of CuiAvatarGroup's "+N" overflow avatar (`overflow`, given the hidden count).
+   */
+  avatar: { label: string; overflow: (count: number) => string };
   /** CuiSpinner's default `label`. */
   spinner: { label: string };
   /** The label inside a checked toggle's track. */
@@ -344,7 +347,7 @@ export const defaultMessages: CuiCoreMessages = {
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
   timePicker: { hours: "Hours", minutes: "Minutes" },
   copyButton: { copy: "Copy", copied: "Copied", copiedTooltip: "Copied!" },
-  avatar: { label: "Avatar" },
+  avatar: { label: "Avatar", overflow: (count) => `${count} more` },
   spinner: { label: "Loading" },
   toggle: { on: "ON" },
   listbox: {
