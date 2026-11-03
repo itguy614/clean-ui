@@ -168,6 +168,7 @@ describe("every component root is inside the scope", () => {
     // <Transition> is not an element either; the bar it wraps carries the class.
     "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
     "CuiAlert.vue": "wraps .cui-alert in a <Transition>, for its exit (#263)",
+    "CuiTransition.vue": "wraps the consumer's own element in a <Transition>; the element carries their classes (#397)",
   };
 
   /**

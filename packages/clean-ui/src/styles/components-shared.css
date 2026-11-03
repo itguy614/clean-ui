@@ -87,3 +87,127 @@
 [data-cui-panel].cui-panel--cut {
   transition-property: none !important;
 }
+
+/* CuiTransition's presets (#397): fade, fade-slide, grow and collapse, for content a
+   consumer shows and hides. Two ways in, one look:
+   - CuiTransition marks the element `data-cui-transition="<preset>"` and runs one CSS
+     transition on `data-cui-transition-state` (utils/motion), so a re-open mid-exit
+     reverses from where it is;
+   - a raw `<Transition name="cui-transition-<preset>">` (or `<TransitionGroup>`) gets the
+     same look from the `-enter-from` / `-leave-to` / `-active` classes, which restart
+     from the hidden state on a re-open instead of reversing.
+   Enter runs over `--cui-duration-base` (`data-cui-transition-duration` picks another),
+   leave over `--cui-duration-fast`. Movement is transform and opacity; collapse takes the
+   sanctioned `grid-template-rows: 0fr -> 1fr`, and wants one child element to clip.
+   Zero specificity throughout, so a consumer's own rule on the element wins. */
+:where([data-cui-transition], [class*="cui-transition-"][class*="-enter-active"]) {
+  --_transition-enter: var(--cui-duration-base);
+  transition-property: opacity, transform;
+  transition-duration: var(--_transition-enter);
+  transition-timing-function: var(--cui-ease-out);
+}
+:where([data-cui-transition-duration="fast"]) {
+  --_transition-enter: var(--cui-duration-fast);
+}
+:where([data-cui-transition-duration="slow"]) {
+  --_transition-enter: var(--cui-duration-slow);
+}
+
+:where([data-cui-transition-state="hidden"], [class*="cui-transition-"][class*="-leave-active"]) {
+  transition-property: opacity, transform;
+  transition-duration: var(--cui-duration-fast);
+  transition-timing-function: var(--cui-ease-out);
+}
+
+:where(
+  [data-cui-transition-state="hidden"],
+  .cui-transition-fade-enter-from,
+  .cui-transition-fade-leave-to,
+  .cui-transition-fade-slide-enter-from,
+  .cui-transition-fade-slide-leave-to,
+  .cui-transition-grow-enter-from,
+  .cui-transition-grow-leave-to,
+  .cui-transition-collapse-enter-from,
+  .cui-transition-collapse-leave-to
+) {
+  opacity: 0;
+}
+:where([data-cui-transition-state="hidden"]) {
+  pointer-events: none;
+}
+
+/* The hidden positions. A side is the edge the element slides in from: the default,
+   bottom, rises into place. `.cui-transition-side-*` sets it for a raw <Transition>. */
+:where(
+  [data-cui-transition="fade-slide"][data-cui-transition-state="hidden"],
+  .cui-transition-fade-slide-enter-from,
+  .cui-transition-fade-slide-leave-to
+) {
+  transform: translate(var(--_transition-x, 0px), var(--_transition-y, var(--cui-transition-distance, 0.5rem)));
+}
+:where([data-cui-transition-side="top"], .cui-transition-side-top) {
+  --_transition-y: calc(var(--cui-transition-distance, 0.5rem) * -1);
+}
+:where([data-cui-transition-side="start"], .cui-transition-side-start) {
+  --_transition-x: calc(var(--cui-transition-distance, 0.5rem) * -1);
+  --_transition-y: 0px;
+}
+:where([data-cui-transition-side="end"], .cui-transition-side-end) {
+  --_transition-x: var(--cui-transition-distance, 0.5rem);
+  --_transition-y: 0px;
+}
+:where([data-cui-transition-side="start"]:dir(rtl), .cui-transition-side-start:dir(rtl)) {
+  --_transition-x: var(--cui-transition-distance, 0.5rem);
+}
+:where([data-cui-transition-side="end"]:dir(rtl), .cui-transition-side-end:dir(rtl)) {
+  --_transition-x: calc(var(--cui-transition-distance, 0.5rem) * -1);
+}
+
+:where(
+  [data-cui-transition="grow"][data-cui-transition-state="hidden"],
+  .cui-transition-grow-enter-from,
+  .cui-transition-grow-leave-to
+) {
+  transform: scale(0.95);
+}
+
+/* Collapse: the element is a one-row grid and its child clips, so the row's size is the
+   only thing that moves. `.cui-transition-collapse` is the raw form's static class. */
+:where([data-cui-transition="collapse"], .cui-transition-collapse) {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+:where([data-cui-transition="collapse"], .cui-transition-collapse) > :where(*) {
+  min-height: 0;
+  overflow: hidden;
+}
+:where(
+  [data-cui-transition="collapse"],
+  [class*="cui-transition-collapse-enter-active"],
+  [class*="cui-transition-collapse-leave-active"]
+) {
+  transition-property: grid-template-rows, opacity;
+}
+:where(
+  [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+  .cui-transition-collapse-enter-from,
+  .cui-transition-collapse-leave-to
+) {
+  grid-template-rows: 0fr;
+}
+
+/* Reduced motion removes the movement and keeps the fade: every preset fades in place.
+   Important, to beat a consumer's own transform. */
+@media (prefers-reduced-motion: reduce) {
+  :where([data-cui-transition], [class*="cui-transition-"]) {
+    transition-property: opacity !important;
+  }
+  :where(
+    [data-cui-transition-state="hidden"],
+    [class*="cui-transition-"][class*="-enter-from"],
+    [class*="cui-transition-"][class*="-leave-to"]
+  ) {
+    transform: none !important;
+    grid-template-rows: 1fr !important;
+  }
+}

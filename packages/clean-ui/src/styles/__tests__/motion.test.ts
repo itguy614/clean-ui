@@ -157,6 +157,8 @@ describe("motion rules catch what they describe", () => {
     ["noTransformOrigin", ".panel { animation: pop var(--cui-duration-base) var(--cui-ease-out); transform-origin: center; }"],
     ["keyframeFromZero", "@keyframes pop { 0%, 40% { transform: scaleX(0); } }"],
     ["keyframeFromZero", ".cui-x-enter-from { opacity: 0; transform: scale(0); }"],
+    ["keyframeFromZero", ":where([data-cui-transition-state=\"hidden\"],\n.cui-transition-grow-enter-from,\n.cui-transition-grow-leave-to) { transform: scale(0); }"],
+    ["layoutTransition", ".cui-transition-x-enter-active { transition: height var(--cui-duration-base) var(--cui-ease-out); }"],
     ["easeIn", ".x {\n  transition:\n    color var(--cui-duration-fast) ease,\n    border-color var(--cui-duration-fast) ease-in;\n}"],
     ["transitionAll", "@media (prefers-reduced-motion: no-preference) { .x { transition: all var(--cui-duration-fast); } }"],
     ["layoutTransition", ".x { transition: max-height var(--cui-duration-slow) var(--cui-ease-out); }"],
@@ -228,6 +230,18 @@ describe("motion in both packages", () => {
   it("transitions no layout property", () => check("layoutTransition", LAYOUT_EXEMPT));
 
   it("gates hover-only motion to a fine pointer", () => check("ungatedHoverMotion"));
+
+  it("scans CuiTransition's presets (#397): their stylesheet and their component", () => {
+    // Their motion is in components-shared.css and utils/motion.ts, scanned with the rest;
+    // this fails if either stops being, so the rules above keep guarding the presets.
+    const names = sources.map((s) => s.name);
+    expect(names).toEqual(expect.arrayContaining(["clean-ui/src/styles/components-shared.css", `${C}CuiTransition.vue`, "clean-ui/src/utils/motion.ts"]));
+    const css = sources.find((s) => s.name.endsWith("components-shared.css"))!.motion;
+    // Every preset's hidden state is in the guarded source, not hidden behind a reduced-motion block.
+    for (const preset of ["fade", "fade-slide", "grow", "collapse"]) expect(css).toContain(`cui-transition-${preset}-enter-from`);
+    expect(css).toMatch(/transition-duration:\s*var\(--cui-duration-fast\)/);
+    expect(css).toMatch(/transition-timing-function:\s*var\(--cui-ease-out\)/);
+  });
 
   it("scales every floating panel from its trigger", () => {
     // The elements that render an anchored panel. CuiSelect, CuiCombobox and CuiTagInput
