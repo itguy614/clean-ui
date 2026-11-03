@@ -47,7 +47,7 @@ watch(
 );
 
 function toggle() {
-  if (!props.collapsible) return;
+  if (!props.collapsible || props.disabled) return;
   isExpanded.value = !isExpanded.value;
   emit("update:expanded", isExpanded.value);
 }
@@ -111,6 +111,7 @@ const rootStyle = computed(() => {
         class="cui-fieldset__toggle"
         :aria-expanded="isExpanded"
         :aria-controls="contentId"
+        :disabled="disabled || undefined"
         @click="toggle"
       >
         <CuiIcon
@@ -214,6 +215,14 @@ const rootStyle = computed(() => {
 
 .cui-fieldset__toggle:hover {
   background: var(--cui-surface-bg);
+}
+
+.cui-fieldset__toggle:disabled {
+  cursor: default;
+}
+
+.cui-fieldset__toggle:disabled:hover {
+  background: none;
 }
 
 .cui-fieldset__toggle:focus-visible {

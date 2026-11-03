@@ -47,7 +47,7 @@ watch(isExpanded, async (expanded) => {
     await nextTick();
     void group.value?.offsetHeight;
   }
-  groupOpen.value = expanded;
+  groupOpen.value = isExpanded.value;
 });
 const { panel: group, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(
   () => isExpanded.value,

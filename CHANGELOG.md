@@ -45,7 +45,8 @@ Two breaking changes, both from the collapse rework (#270, #176, #162).
 - **CuiFieldset's collapse animation runs** (#138, #176): it never animated.
 - **CuiFieldset's collapsible legend is a real button** (#176) with `aria-expanded` and
   `aria-controls`: it can be focused and operated from the keyboard, and its state is
-  announced. Its hover fill is `--cui-surface-bg`.
+  announced. Its hover fill is `--cui-surface-bg`. A `disabled` collapsible fieldset no
+  longer toggles (its button is disabled).
 
 ### Removed
 
