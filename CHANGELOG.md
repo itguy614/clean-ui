@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--_textarea-*`, `--_rb-*` to `--_radio-*`, `--_check-*` to `--_checkbox-*`, `--_sel-*` to
   `--_select-*`. They were never public, but a consumer reading them will break.
 
+- **A CuiInput's attached buttons follow the field's radius** (#333): the `rounded` prop or
+  `--cui-input-radius`, less the border. They followed `--cui-button-radius` before, so
+  `rounded="lg"` left them at the default.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

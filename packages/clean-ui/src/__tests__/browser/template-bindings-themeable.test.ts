@@ -9,6 +9,7 @@ import CuiToggle from "../../components/CuiToggle.vue";
 import CuiProgress from "../../components/CuiProgress.vue";
 import CuiRadio from "../../components/CuiRadio.vue";
 import CuiRadioGroup from "../../components/CuiRadioGroup.vue";
+import CuiButton from "../../components/CuiButton.vue";
 
 /**
  * #333 — these properties used to be bare keys in a template `:style` binding, which outranks
@@ -83,6 +84,46 @@ describe("template bindings are themeable (real browser)", () => {
     it("loses to a consumer's plain class rule, with no !important", async () => {
       consumerRule(`${selector} { border-radius: 3px; }`);
       expect(px(await render(component, props, selector), "border-top-left-radius")).toBe(3);
+    });
+  });
+
+  describe("CuiInput attached buttons follow the field's radius", () => {
+    const attached = (props: Record<string, unknown> = {}, hostStyle = "") => {
+      const host = newHost(hostStyle);
+      const wrapper = mount(
+        () => h(CuiInput, { modelValue: "", ...props }, { "prefix-button": () => h(CuiButton, () => "P"), "suffix-button": () => h(CuiButton, () => "S") }),
+        { attachTo: host },
+      );
+      wrappers.push(wrapper);
+      return {
+        field: host.querySelector<HTMLElement>(".cui-input")!,
+        prefix: host.querySelector<HTMLElement>(".cui-input__prefix-button .cui-button")!,
+        suffix: host.querySelector<HTMLElement>(".cui-input__suffix-button .cui-button")!,
+      };
+    };
+
+    it("takes --cui-input-radius from a container", async () => {
+      const { field, prefix, suffix } = attached({}, "--cui-input-radius: 12px");
+      expect(px(field, "border-top-left-radius")).toBe(12);
+      expect(px(prefix, "border-top-left-radius")).toBe(11);
+      expect(px(prefix, "border-top-right-radius")).toBe(0);
+      expect(px(suffix, "border-top-right-radius")).toBe(11);
+      expect(px(suffix, "border-top-left-radius")).toBe(0);
+    });
+
+    it("takes --cui-input-radius set on the field itself", async () => {
+      consumerRule(".cui-input { --cui-input-radius: 14px; }");
+      const { field, prefix, suffix } = attached();
+      expect(px(field, "border-top-left-radius")).toBe(14);
+      expect(px(prefix, "border-bottom-left-radius")).toBe(13);
+      expect(px(suffix, "border-bottom-right-radius")).toBe(13);
+    });
+
+    it("follows the rounded prop", async () => {
+      const { field, prefix, suffix } = attached({ rounded: "lg" });
+      expect(px(field, "border-top-left-radius")).toBe(8);
+      expect(px(prefix, "border-top-left-radius")).toBe(7);
+      expect(px(suffix, "border-top-right-radius")).toBe(7);
     });
   });
 
