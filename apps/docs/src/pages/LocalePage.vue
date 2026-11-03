@@ -42,7 +42,9 @@ const locale = useLocale(); // ComputedRef<string>`;
         The locale is the nearest <code>CuiConfigProvider</code>'s <code>locale</code>, else the
         <code>locale</code> given to <code>createCleanUI()</code>, else <code>configureCleanUI({ locale })</code>,
         else the document's <code>lang</code> (read when a component is set up), else <code>en</code>.
-        A tag <code>Intl</code> rejects is skipped. On the server there is no document, so the
+        The <code>lang</code> is read once, when a component is set up, and is not watched: an app
+        that switches language at runtime should pass <code>locale</code> through
+        <code>CuiConfigProvider</code>, which is reactive. A tag <code>Intl</code> rejects is skipped. On the server there is no document, so the
         configured locale or <code>en</code> applies: when rendering on the server, set the locale
         explicitly rather than relying on <code>lang</code>, or the page hydrates to a different
         language than it was rendered in. The words around the numbers

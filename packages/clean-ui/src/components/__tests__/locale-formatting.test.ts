@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, ref } from "vue";
 import CuiConfigProvider from "../CuiConfigProvider.vue";
 import CuiDatePicker from "../CuiDatePicker.vue";
 import CuiDateRangePicker from "../CuiDateRangePicker.vue";
@@ -124,6 +124,18 @@ describe("locale formatting (#337)", () => {
       wrapper = await settled(within(undefined, CuiTimePicker, { modelValue: "09:30 AM", format: "12" }));
       expect(wrapper.text()).toContain("09:30 AM");
     });
+  });
+
+  it("follows a provider's locale as it changes", async () => {
+    const current = ref("de");
+    wrapper = mount(
+      defineComponent({ render: () => h(CuiConfigProvider, { locale: current.value }, () => h(CuiFileUpload, { maxFileSize: 1572864 })) }),
+      { attachTo: document.body },
+    );
+    expect(wrapper.text()).toContain("Max 1,5 MB");
+    current.value = "en";
+    await wrapper.vm.$nextTick();
+    expect(wrapper.text()).toContain("Max 1.5 MB");
   });
 
   describe("useLocale", () => {
