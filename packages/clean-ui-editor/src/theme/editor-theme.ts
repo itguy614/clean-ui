@@ -17,6 +17,42 @@ import { EditorView } from "@codemirror/view";
  * ancestor `.dark` class — see docs/plans/markdown-editor-phase-1 phase-02
  * task 2.2.2.
  */
+/**
+ * Slash-menu palette (`@codemirror/autocomplete`'s own tooltip) — matched to
+ * `CuiDropdownMenu`/`CuiDropdownItem`'s look so it reads as a clean-ui control
+ * rather than CodeMirror's generic, monospace, hardcoded-blue default.
+ *
+ * CodeMirror renders tooltips outside the editor's DOM subtree, but into a
+ * container that carries this view's theme classes, so a rule here is scoped
+ * to this instance's tooltips and no other CodeMirror on the page (#227). The
+ * tooltip itself carries `cui-markdown-editor-slash-menu` (see
+ * `plugins/slash-menu.ts`) so preflight's scoped base reaches it.
+ */
+function slashMenuSpec() {
+  const tip = ".cm-tooltip.cm-tooltip-autocomplete";
+  return {
+    [tip]: {
+      border: "1px solid var(--cui-border)",
+      borderRadius: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+      background: "var(--cui-surface-base)",
+      boxShadow: "var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1))", // fallback: a clean-ui before 1.4
+      overflow: "hidden",
+    },
+    [`${tip} > ul`]: { fontFamily: "var(--cui-font-sans)", padding: "0.25rem" },
+    [`${tip} > ul > li`]: {
+      padding: "0.5rem 0.625rem",
+      borderRadius: "0.25rem",
+      fontSize: "0.8125rem",
+      color: "var(--cui-text-body)",
+    },
+    // The active option: CuiDropdownItem's hover/focus treatment, not the default's solid blue.
+    [`${tip} > ul > li[aria-selected]`]: { background: "var(--cui-surface-bg)", color: "var(--cui-text-body)" },
+    // Every command shares one generic "keyword" type, so the default would repeat the same key icon on every row.
+    [`${tip} .cm-completionIcon`]: { display: "none" },
+    [`${tip} .cm-completionMatchedText`]: { textDecoration: "none", fontWeight: "600", color: "var(--cui-primary)" },
+  };
+}
+
 function chromeThemeSpec() {
   return {
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--cui-primary)" },
@@ -25,6 +61,7 @@ function chromeThemeSpec() {
       backgroundColor: "var(--cui-primary-bg)",
     },
     "&.cm-focused": { outline: "none" },
+    ...slashMenuSpec(),
   };
 }
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The markdown editor no longer restyles other CodeMirror instances on the page** (#227).
+  The editor's stylesheet (`dist/clean-ui-editor.css`) shipped page-wide rules on `.cm-tooltip.cm-tooltip-autocomplete`,
+  `.cm-completionIcon` and `.cm-completionMatchedText`, six of them `!important`, so any other
+  CodeMirror on the page was restyled with no way to undo it. The slash menu's palette now lives
+  in the editor's per-instance theme, and its tooltip carries a `cui-markdown-editor-slash-menu`
+  class so clean-ui's scoped base reaches it. It also uses `--cui-surface-bg` in place of raw
+  `--color-surface-*` steps.
+
+### Upgrading to 1.9
+
+- **Slash-menu styles are scoped to the editor's own instances.** If your own CSS styled the
+  markdown editor's slash menu through `.cm-tooltip-autocomplete` and relied on the editor's
+  `!important` rules being there (or on them also applying to your own CodeMirror), that no
+  longer holds: target `.cui-markdown-editor-slash-menu` instead. A second CodeMirror on the
+  page now keeps CodeMirror's default autocomplete look.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added
