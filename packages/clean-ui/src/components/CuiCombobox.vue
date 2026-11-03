@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, readonly } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
@@ -249,8 +249,10 @@ function onKeydown(e: KeyboardEvent) {
   // with an option highlighted and the list showing, and never mid-IME composition.
   const highlighted = highlightedOption.value;
   if (highlighted && !e.isComposing) {
+    // Only a prevent made by the handler counts: one made upstream isn't a consumer's veto.
+    const prevented = e.defaultPrevented;
     emit("option-keydown", e, highlighted);
-    if (e.defaultPrevented) return;
+    if (!prevented && e.defaultPrevented) return;
   }
   if (listbox.onKeydown(e)) return;
   if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
@@ -341,7 +343,7 @@ function blur() {
   inputRef.value?.blur();
 }
 
-defineExpose({ el: wrapperRef, focus, blur, highlightedOption: readonly(highlightedOption) });
+defineExpose({ el: wrapperRef, focus, blur, highlightedOption });
 
 // Option styling
 function optionClass(index: number, option: ComboboxOption) {

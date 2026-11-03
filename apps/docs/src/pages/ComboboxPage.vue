@@ -86,7 +86,7 @@ function toggleFavorite(value: string | number) {
   favorites.value = next;
 }
 function onFavoriteKeydown(e: KeyboardEvent, option: ComboboxOption) {
-  if (e.altKey && e.key.toLowerCase() === "f") {
+  if (e.altKey && e.code === "KeyF") {
     e.preventDefault();
     toggleFavorite(option.value);
   }
@@ -146,7 +146,11 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           Focus stays in the input, so a control inside an option can't be tabbed to. Offer a
           keyboard equivalent with <code>@option-keydown</code> (see Row Action Shortcut) and
           announce the shortcut in a hint the input points at with <code>aria-describedby</code>.
-          The event fires before the built-in handling; <code>preventDefault()</code> stops it.
+          The event fires for every key while an option is highlighted (Enter, Escape, Tab
+          included), before the built-in handling; <code>preventDefault()</code> stops it, so
+          only call it for keys you handle. Match shortcuts on <code>event.code</code>, since
+          Option+F types a different character on macOS. A shortcut needs a physical keyboard,
+          so keep the pointer route for touch.
         </li>
       </ul>
     </template>
@@ -278,7 +282,7 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
 <p id=&quot;fav-hint&quot;>Alt+F toggles the favorite on the highlighted option.</p>
 
 function onOptionKeydown(e, option) {
-  if (e.altKey &amp;&amp; e.key.toLowerCase() === 'f') {
+  if (e.altKey &amp;&amp; e.code === 'KeyF') {
     e.preventDefault()
     toggleFavorite(option.value)
   }

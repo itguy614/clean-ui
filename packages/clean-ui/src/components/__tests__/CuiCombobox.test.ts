@@ -314,6 +314,23 @@ describe("CuiCombobox option-keydown", () => {
     expect(w.emitted("update:modelValue")).toBeUndefined();
   });
 
+  it("is not emitted during IME composition", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Process", isComposing: true });
+    expect(calls(w)).toHaveLength(0);
+  });
+
+  it("does not treat an event already default-prevented upstream as the consumer's veto", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    const e = new KeyboardEvent("keydown", { key: "ArrowDown", cancelable: true, bubbles: true });
+    e.preventDefault();
+    input.element.dispatchEvent(e);
+    await nextTick();
+    expect((w.vm as unknown as { highlightedOption: ComboboxOption }).highlightedOption.value).toBe("banana");
+  });
+
   it("still selects on Enter when the consumer leaves the event alone", async () => {
     const { w, input } = await openCombobox();
     await input.trigger("keydown", { key: "ArrowDown" });
@@ -326,7 +343,7 @@ describe("CuiCombobox option-keydown", () => {
     const favorites = new Set<string | number>();
     const { w, input } = await openCombobox({
       "onOption-keydown": (e: KeyboardEvent, o: ComboboxOption) => {
-        if (e.altKey && e.key.toLowerCase() === "f") {
+        if (e.altKey && e.code === "KeyF") {
           e.preventDefault();
           if (!favorites.delete(o.value)) favorites.add(o.value);
         }
@@ -334,10 +351,10 @@ describe("CuiCombobox option-keydown", () => {
     });
     await input.trigger("keydown", { key: "ArrowDown" });
     await input.trigger("keydown", { key: "ArrowDown" });
-    await input.trigger("keydown", { key: "f", altKey: true });
+    await input.trigger("keydown", { key: "ƒ", code: "KeyF", altKey: true });
     expect([...favorites]).toEqual(["banana"]);
     await input.trigger("keydown", { key: "ArrowDown" });
-    await input.trigger("keydown", { key: "F", altKey: true });
+    await input.trigger("keydown", { key: "ƒ", code: "KeyF", altKey: true });
     expect([...favorites]).toEqual(["banana", "cherry"]);
     expect(w.emitted("update:modelValue")).toBeUndefined();
   });
