@@ -12,7 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`max` on CuiAvatarGroup** now works (#164): the group shows the first `max` avatars and
   collapses the rest into one "+N" avatar, sized and shaped like the first. Unset shows them
   all; zero or less shows only the "+N". The overflow avatar is named for assistive technology
-  by the new `messages.avatar.overflow(count)` ("3 more"). Before, `max` was declared and ignored.
+  by the new `messages.avatar.overflow(count)` ("3 more"). Before, `max` was declared and
+  ignored. Avatars with `hidden` don't count toward `max` or the "+N". The "+N" sits at the
+  visual right end of the stack. **Upgrading:** `avatar.overflow` is a new required key in
+  `CuiCoreMessages`, so a hand-built full catalogue object (one typed `CuiCoreMessages`) now
+  fails type-checking until it adds `avatar: { label, overflow }`. Runtime is unaffected:
+  `mergeMessages` fills the key from the defaults.
 
 ### Removed
 

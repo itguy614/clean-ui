@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Text, h, useSlots } from "vue";
+import { Text, h, useSlots, type VNode } from "vue";
 import type { HideableProps } from "../types/common";
 import { slotNodes } from "../utils/vnodes";
 import CuiAvatar from "./CuiAvatar.vue";
@@ -12,7 +12,7 @@ export interface CuiAvatarGroupProps extends HideableProps {
    * Most avatars to show; the rest collapse into one "+N" avatar. Unset shows them all. Zero
    * or less shows only the "+N" avatar (shown as "99+" past 99). It takes its size and shape
    * from the `size` and `shape` props of the first child, so a wrapped avatar gets the defaults.
-   * Counts every child, `hidden` ones included.
+   * Children with `hidden` are left out, and don't count toward `max` or the "+N".
    */
   max?: number;
 }
@@ -28,16 +28,25 @@ const OVERFLOW_COLOR = "surface";
 const slots = useSlots();
 const messages = useMessages();
 
+/** An avatar with `hidden` (or a bare `hidden` attribute) is not on screen, so it is not counted. */
+const isHidden = (n: VNode) => {
+  const v = n.props?.hidden;
+  return v === "" || (v !== undefined && v !== false && v !== "false");
+};
+
 // A functional component, so the slot and `max` are read in a render of their own and a
 // dynamic list (`v-if`, `v-for`) is counted again on every change.
 const Avatars = () => {
-  const children = slotNodes(slots.default?.() ?? []).filter((n) => n.type !== Text || String(n.children).trim());
+  const children = slotNodes(slots.default?.() ?? []).filter(
+    (n) => (n.type !== Text || String(n.children).trim()) && !isHidden(n),
+  );
   const limit = props.max == null || Number.isNaN(props.max) ? children.length : Math.max(0, Math.floor(props.max));
   if (children.length <= limit) return children;
   const hiddenCount = children.length - limit;
   const first = children[0].props ?? {};
+  // First in the DOM: the group is `row-reverse`, so that is its visual right end, and it
+  // overlaps and paints beneath its neighbour exactly as every other avatar does.
   return [
-    ...children.slice(0, limit),
     h(CuiAvatar, {
       class: "cui-avatar-group__overflow",
       // Three characters is all an avatar's initials font fits; the label keeps the exact count.
@@ -48,6 +57,7 @@ const Avatars = () => {
       role: "img",
       "aria-label": messages.value.avatar.overflow(hiddenCount),
     }),
+    ...children.slice(0, limit),
   ];
 };
 </script>

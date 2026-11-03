@@ -36,7 +36,7 @@ const meta: ComponentMeta = {
           name: "max",
           type: "number",
           description:
-            "Most avatars to show; the rest collapse into one \"+N\" avatar, sized like the first. Unset shows them all; zero or less shows only the \"+N\" (\"99+\" past 99). Size and shape come from the first child's props. Its label is messages.avatar.overflow",
+            "Most avatars to show; the rest collapse into one \"+N\" avatar, sized like the first. Unset shows them all; zero or less shows only the \"+N\" (\"99+\" past 99). Size and shape come from the first child's props. Avatars with hidden are left out and don't count. The \"+N\" sits at the visual right end. Its label is messages.avatar.overflow",
         },
         hiddenProp,
       ],

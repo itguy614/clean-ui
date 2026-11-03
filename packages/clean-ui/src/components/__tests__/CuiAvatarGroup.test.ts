@@ -32,7 +32,8 @@ describe("CuiAvatarGroup max", () => {
     const w = mountGroup(2);
     const avatars = w.findAll(".cui-avatar");
     expect(avatars).toHaveLength(3);
-    expect(avatars.slice(0, 2).map((a) => a.text())).toEqual(["A", "B"]);
+    // The overflow avatar comes first in the DOM (the group is row-reverse), then the shown ones.
+    expect(avatars.slice(1).map((a) => a.text())).toEqual(["A", "B"]);
     expect(overflow(w).text()).toBe("+3");
   });
 
@@ -55,8 +56,8 @@ describe("CuiAvatarGroup max", () => {
 
   it("matches the size of the avatars it follows", () => {
     const w = mountGroup(1, 'size="lg"');
-    const [first] = w.findAll(".cui-avatar");
-    expect(overflow(w).attributes("style")).toContain(first.element.style.width);
+    const shown = w.findAll(".cui-avatar")[1];
+    expect(overflow(w).attributes("style")).toContain(shown.element.style.width);
   });
 
   it("adds no overflow when max equals or exceeds the count", () => {
@@ -85,6 +86,30 @@ describe("CuiAvatarGroup max", () => {
     );
     expect(overflow(w).text()).toBe("99+");
     expect(overflow(w).attributes("aria-label")).toBe("148 more");
+  });
+
+  it("does not count hidden avatars, or give them a max slot", () => {
+    const w = mount(
+      defineComponent({
+        components: { CuiAvatarGroup, CuiAvatar },
+        template: `<CuiAvatarGroup :max="2"><CuiAvatar name="A" hidden /><CuiAvatar name="B" /><CuiAvatar name="C" /><CuiAvatar name="D" /></CuiAvatarGroup>`,
+      }),
+    );
+    // A is hidden: B and C fill the two slots, and only D overflows.
+    expect(w.findAll(".cui-avatar").slice(1).map((a) => a.text())).toEqual(["B", "C"]);
+    expect(overflow(w).text()).toBe("+1");
+  });
+
+  it("skips several hidden avatars but counts hidden=false", () => {
+    const w = mount(
+      defineComponent({
+        components: { CuiAvatarGroup, CuiAvatar },
+        template: `<CuiAvatarGroup :max="2"><CuiAvatar name="A" /><CuiAvatar name="B" /><CuiAvatar name="X" hidden /><CuiAvatar name="Y" :hidden="true" /><CuiAvatar name="Z" :hidden="false" /></CuiAvatarGroup>`,
+      }),
+    );
+    // X and Y are hidden; Z (hidden=false) counts, so it is the one overflow.
+    expect(overflow(w).text()).toBe("+1");
+    expect(w.findAll(".cui-avatar")).toHaveLength(3);
   });
 
   it("truncates a fractional max", () => {
