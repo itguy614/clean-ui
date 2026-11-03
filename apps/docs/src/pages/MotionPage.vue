@@ -380,6 +380,12 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           </CuiTransition>
         </div>
         <PropTable :props="TRANSITION_PROPS" />
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          How far <code class="cui-code">fade-slide</code> travels is a motion token,
+          <code class="cui-code">--cui-transition-distance</code> (default
+          <code class="cui-code">0.5rem</code>). Like the duration and easing tokens, set it on
+          <code class="cui-code">:root</code> or on any container.
+        </p>
       </CuiStack>
     </Example>
 

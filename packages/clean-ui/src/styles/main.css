@@ -403,6 +403,9 @@
 
   /* A pressed button shrinks to this (#261). 1 turns it off. */
   --cui-press-scale: 0.97;
+
+  /* How far a CuiTransition fade-slide travels (#397). */
+  --cui-transition-distance: 0.5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

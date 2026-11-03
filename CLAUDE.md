@@ -189,6 +189,19 @@ jarring appear/disappear. "It looks nice" is not one.
   under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
   buttons), since a shrinking button opens a seam against its neighbour. Set the token on
   the container.
+- **`CuiTransition`** (#397) is the one component for consumer content that appears and
+  disappears: presets `fade`, `fade-slide`, `grow`, `collapse`, also exported as the classes
+  `cui-transition-<preset>-*` for a raw `<Transition>`/`<TransitionGroup>`. It runs one CSS
+  transition on `data-cui-transition-state` (`presetTransition` in `utils/motion.ts`, built on
+  the same `stateTransition` as `panelTransition`), so a re-open mid-exit reverses, but only on
+  the same element (`v-show`). Its motion lives in `components-shared.css`; a new preset joins
+  the reduced-motion block there.
+- **`--cui-transition-distance`** (default `0.5rem`, on `:root` in `main.css`) is how far a
+  `fade-slide` travels. It is a motion token, like `--cui-press-scale` and the duration and
+  easing tokens, not a themeable slot: it is deliberately outside the closed
+  `--cui-<component>-<slot>` vocabulary, because distance is something a consumer tunes for a
+  whole app or container rather than a property of one component's paint. Set it on `:root`
+  or a container; the private `--_transition-*` properties behind it have no public twin.
 - **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`, in CSS. Don't write a transform from a mouseenter handler, which no media query can gate.
 - `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
   - no `transition: all`

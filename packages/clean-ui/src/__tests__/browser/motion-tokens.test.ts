@@ -38,6 +38,10 @@ describe("motion tokens (real browser)", () => {
     expect(motionDuration("base")).toBe(200);
   });
 
+  it("declares --cui-transition-distance on :root (#397)", () => {
+    expect(getComputedStyle(document.documentElement).getPropertyValue("--cui-transition-distance").trim()).toBe("0.5rem");
+  });
+
   it("transitions a button's transform for the press, and a group turns the press off", () => {
     const host = dom.host();
     dom.track(mount({ render: () => [h(CuiButton, () => "Alone"), h(CuiButtonGroup, () => [h(CuiButton, () => "In"), h(CuiButton, () => "Group")])] }, { attachTo: host }));
