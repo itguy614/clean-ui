@@ -45,7 +45,18 @@ describe("the slash menu is styled per editor instance (real browser)", () => {
     expect(getComputedStyle(mine.querySelector("ul > li")!).paddingTop).toBe("8px");
     expect(getComputedStyle(mine.querySelector("ul")!).fontFamily).not.toMatch(/^monospace/);
     expect(getComputedStyle(mine).overflow).toBe("hidden");
-    // The tooltip sits outside every `cui-*` subtree; its own class lets preflight reach it.
+    // The rules that used to need `!important`: the active row, the matched text, the icon.
+    const row = mine.querySelector<HTMLElement>("li[aria-selected]")!;
+    expect(row).toBeTruthy();
+    expect(getComputedStyle(row).backgroundColor).not.toBe("rgb(17, 119, 204)"); // CodeMirror's `#17c`
+    expect(getComputedStyle(row).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    const matched = mine.querySelector(".cm-completionMatchedText");
+    if (matched) expect(getComputedStyle(matched).fontWeight).toBe("600");
+    expect(mine.querySelector(".cm-completionIcon")).toSatisfy(
+      (icon: Element | null) => !icon || getComputedStyle(icon).display === "none",
+    );
+    // The class is a stable hook for consumers (the tooltip sits inside the editor today, so
+    // preflight reaches it either way).
     expect(getComputedStyle(mine).boxSizing).toBe("border-box");
 
     const other = await plainEditor();

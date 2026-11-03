@@ -17,16 +17,27 @@ import { EditorView } from "@codemirror/view";
  * ancestor `.dark` class — see docs/plans/markdown-editor-phase-1 phase-02
  * task 2.2.2.
  */
+function chromeThemeSpec() {
+  return {
+    ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--cui-primary)" },
+    ".cm-selectionBackground": { backgroundColor: "var(--cui-primary-bg)" },
+    "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
+      backgroundColor: "var(--cui-primary-bg)",
+    },
+    "&.cm-focused": { outline: "none" },
+    ...slashMenuSpec(),
+  };
+}
+
 /**
  * Slash-menu palette (`@codemirror/autocomplete`'s own tooltip) — matched to
  * `CuiDropdownMenu`/`CuiDropdownItem`'s look so it reads as a clean-ui control
  * rather than CodeMirror's generic, monospace, hardcoded-blue default.
  *
- * CodeMirror renders tooltips outside the editor's DOM subtree, but into a
- * container that carries this view's theme classes, so a rule here is scoped
- * to this instance's tooltips and no other CodeMirror on the page (#227). The
- * tooltip itself carries `cui-markdown-editor-slash-menu` (see
- * `plugins/slash-menu.ts`) so preflight's scoped base reaches it.
+ * Part of the per-instance theme, so it reaches this view's tooltips and no other
+ * CodeMirror on the page (#227) — unlike a global stylesheet rule, which restyled
+ * every one. The tooltip also carries `cui-markdown-editor-slash-menu` (see
+ * `plugins/slash-menu.ts`), a stable hook for consumers.
  */
 function slashMenuSpec() {
   const tip = ".cm-tooltip.cm-tooltip-autocomplete";
@@ -50,18 +61,6 @@ function slashMenuSpec() {
     // Every command shares one generic "keyword" type, so the default would repeat the same key icon on every row.
     [`${tip} .cm-completionIcon`]: { display: "none" },
     [`${tip} .cm-completionMatchedText`]: { textDecoration: "none", fontWeight: "600", color: "var(--cui-primary)" },
-  };
-}
-
-function chromeThemeSpec() {
-  return {
-    ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--cui-primary)" },
-    ".cm-selectionBackground": { backgroundColor: "var(--cui-primary-bg)" },
-    "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
-      backgroundColor: "var(--cui-primary-bg)",
-    },
-    "&.cm-focused": { outline: "none" },
-    ...slashMenuSpec(),
   };
 }
 
