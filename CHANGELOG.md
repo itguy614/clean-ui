@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.9
+
+Two breaking changes, both from the collapse rework (#270, #176, #162).
+
+- **Collapsible content has an extra wrapper element, and a shut branch is now hidden
+  instead of clipped.** `CuiAccordionItem`'s panel, `CuiFieldset`'s content and a
+  `CuiTreeNode`'s `role="group"` are now a `display: grid` element (`cui-accordion-item__panel`,
+  `cui-fieldset__body`, `cui-tree-node__group`) around a new clipping child
+  (`cui-accordion-item__clip`; `cui-tree-node__clip`; `cui-fieldset__content` is the
+  existing element, now inside `cui-fieldset__body`). A selector that targeted the old
+  panel or content directly, such as `.cui-fieldset > .cui-fieldset__content` or
+  `.cui-accordion-item__panel > .cui-accordion-item__content`, no longer matches. The
+  panel is no longer given an inline `max-height`, and there is no `--hidden` / max-height
+  state to override; a shut section gets `hidden="until-found"` (or `inert` where that is
+  unsupported) once its collapse has finished. `CuiTreeNode` keeps a branch's children
+  mounted after its first open, where it used to unmount them on collapse, so code that
+  counts `[role="treeitem"]` in the DOM sees shut branches too (they are `hidden`/`inert`).
+- **`CuiAccordion` no longer has a `color` prop.** It was never read. Remove it from your
+  templates (it now falls through as a plain `color` attribute on the root element).
+  `AccordionContext` no longer carries `color`.
+
+### Changed
+
+- **CuiAccordion, CuiFieldset and CuiTreeView collapse with `grid-template-rows: 0fr → 1fr`**
+  (#270), not a measured `max-height`. No height is measured in JavaScript. Reduced motion
+  snaps the height (Fieldset still fades). A collapse that is reversed mid-flight reverses
+  cleanly. The `max-height` exemptions in the motion test are gone.
+- **Shut collapsible content is hidden once its collapse ends** (#162, #176), with
+  `hidden="until-found"` so find-in-page still finds text in it and opens the section
+  (`beforematch`), and `inert` plus `visibility: hidden` where that is unsupported. Content
+  of a collapsed section is out of the tab order and the accessibility tree, in all three
+  components. A `defaultOpen` accordion item no longer replays the open animation on mount.
+
+### Fixed
+
+- **CuiFieldset's collapse animation runs** (#138, #176): it never animated.
+- **CuiFieldset's collapsible legend is a real button** (#176) with `aria-expanded` and
+  `aria-controls`: it can be focused and operated from the keyboard, and its state is
+  announced. Its hover fill is `--cui-surface-bg`.
+
+### Removed
+
+- **`CuiAccordion`'s `color` prop** (#162). See Upgrading.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

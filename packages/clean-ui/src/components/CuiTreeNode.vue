@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from "vue";
+import { useCollapsible } from "../composables/useCollapsible";
 import CuiIcon from "./CuiIcon.vue";
-import { motionDuration } from "../utils/motion";
 import type { TreeNode } from "./CuiTreeView.vue";
 
 const props = defineProps<{
@@ -32,36 +32,27 @@ const isActive = computed(() => props.activeId === props.node.id);
 const isExpanded = computed(() => props.expanded.has(props.node.id));
 const isSelected = computed(() => props.selectedSet.has(props.node.id));
 
-// Animation
-const childrenRef = ref<HTMLElement | null>(null);
-const animHeight = ref<string | undefined>(undefined);
-const showChildren = ref(isExpanded.value);
-
-watch(isExpanded, (expanded) => {
-  if (!props.animated) {
-    showChildren.value = expanded;
-    return;
+// Children are mounted the first time the node opens, and kept: a collapse is a grid row
+// going 1fr -> 0fr and then the group is hidden (until-found, else inert), so nothing in a
+// shut branch is focusable or in the accessibility tree, and the rows animate both ways.
+// A branch never opened isn't rendered at all, which keeps a large tree cheap, and means
+// find-in-page only reaches branches that have been opened.
+const mounted = ref(isExpanded.value);
+// What the group's open class follows. It trails the first mount by a drawn frame: an
+// element created already open has nothing to transition from.
+const groupOpen = ref(isExpanded.value);
+watch(isExpanded, async (expanded) => {
+  if (expanded && !mounted.value) {
+    mounted.value = true;
+    await nextTick();
+    void group.value?.offsetHeight;
   }
-
-  if (expanded) {
-    showChildren.value = true;
-    animHeight.value = "0px";
-    nextTick(() => {
-      if (childrenRef.value) {
-        animHeight.value = childrenRef.value.scrollHeight + "px";
-        setTimeout(() => { animHeight.value = undefined; }, motionDuration("slow", childrenRef.value));
-      }
-    });
-  } else {
-    if (childrenRef.value) {
-      animHeight.value = childrenRef.value.scrollHeight + "px";
-      requestAnimationFrame(() => {
-        animHeight.value = "0px";
-        setTimeout(() => { showChildren.value = false; animHeight.value = undefined; }, motionDuration("slow", childrenRef.value));
-      });
-    }
-  }
+  groupOpen.value = expanded;
 });
+const { panel: group, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(
+  () => isExpanded.value,
+  () => emit("toggle-expand", props.node),
+);
 
 function onChevronClick(e: Event) {
   e.stopPropagation();
@@ -211,39 +202,43 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
 
     <!-- Children (recursive) -->
     <div
-      v-if="hasChildren && showChildren"
-      ref="childrenRef"
-      role="group"
-      :style="{
-        position: 'relative',
-        overflow: animated ? 'hidden' : undefined,
-        maxHeight: animHeight,
-        transition: animated ? 'max-height var(--cui-duration-slow) var(--cui-ease-out)' : undefined,
+      v-if="hasChildren && mounted"
+      ref="group"
+      class="cui-tree-node__group"
+      :class="{
+        'cui-tree-node__group--open': groupOpen,
+        'cui-tree-node__group--animated': animated,
       }"
+      role="group"
+      :hidden.attr="hiddenAttr"
+      :inert.attr="inertAttr"
+      @beforematch="onBeforeMatch"
     >
-      <CuiTreeNode
-        v-for="(child, idx) in node.children"
-        :key="String(child.id)"
-        :node="child"
-        :depth="depth + 1"
-        :is-last="idx === (node.children!.length - 1)"
-        :expanded="expanded"
-        :selected-set="selectedSet"
-        :selectable="selectable"
-        :show-lines="showLines"
-        :animated="animated"
-        :cfg="cfg"
-        :active-id="activeId"
-        :size-of-set="node.children!.length"
-        :position-in-set="idx + 1"
-        @toggle-expand="emit('toggle-expand', $event)"
-        @select-node="emit('select-node', $event)"
-        @node-focused="emit('node-focused', $event)"
-      >
-        <template #node="slotProps: any">
-          <slot name="node" v-bind="slotProps" />
-        </template>
-      </CuiTreeNode>
+      <div class="cui-tree-node__clip">
+        <CuiTreeNode
+          v-for="(child, idx) in node.children"
+          :key="String(child.id)"
+          :node="child"
+          :depth="depth + 1"
+          :is-last="idx === (node.children!.length - 1)"
+          :expanded="expanded"
+          :selected-set="selectedSet"
+          :selectable="selectable"
+          :show-lines="showLines"
+          :animated="animated"
+          :cfg="cfg"
+          :active-id="activeId"
+          :size-of-set="node.children!.length"
+          :position-in-set="idx + 1"
+          @toggle-expand="emit('toggle-expand', $event)"
+          @select-node="emit('select-node', $event)"
+          @node-focused="emit('node-focused', $event)"
+        >
+          <template #node="slotProps: any">
+            <slot name="node" v-bind="slotProps" />
+          </template>
+        </CuiTreeNode>
+      </div>
     </div>
   </div>
 </template>
@@ -260,5 +255,30 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
   outline: 2px solid var(--cui-primary-focus-ring);
   outline-offset: -2px;
   border-radius: 0.25rem;
+}
+
+/* The collapse: one grid row, 0fr -> 1fr, with the clip shrinking inside it. The row
+   transitions only when the tree is `animated`. */
+.cui-tree-node__group {
+  position: relative;
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.cui-tree-node__group--open {
+  grid-template-rows: 1fr;
+}
+
+.cui-tree-node__group--animated {
+  transition: grid-template-rows var(--cui-duration-slow) var(--cui-ease-out);
+}
+
+.cui-tree-node__group[inert] {
+  visibility: hidden;
+}
+
+.cui-tree-node__clip {
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

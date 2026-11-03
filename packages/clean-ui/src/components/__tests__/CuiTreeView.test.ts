@@ -264,7 +264,8 @@ describe("CuiTreeView expansion API", () => {
 
       tree.collapse("fruits");
       await wrapper.vm.$nextTick();
-      expect(wrapper.text()).not.toContain("Apple");
+      // A shut branch stays mounted (so it can animate and be found), but is hidden.
+      expect(wrapper.find('[role="group"]').element.matches("[hidden], [inert]")).toBe(true);
 
       tree.toggleExpand("fruits");
       await wrapper.vm.$nextTick();
@@ -298,7 +299,7 @@ describe("CuiTreeView expansion API", () => {
       (wrapper.vm as unknown as { collapseAll: () => void }).collapseAll();
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.text()).not.toContain("Apple");
+      expect(wrapper.find('[role="group"]').element.matches("[hidden], [inert]")).toBe(true);
       expect(wrapper.emitted("update:expanded")![0]).toEqual([[]]);
     });
 
@@ -649,7 +650,7 @@ describe("CuiTreeView keyboard", () => {
     expect(focusedId()).toBe("a");
 
     await press(wrapper, "ArrowLeft"); // collapses "a", hiding a1/a2
-    expect(document.querySelector('[data-cui-tree-id="a1"]')).toBeNull();
+    expect(document.querySelector('[data-cui-tree-id="a1"]')!.closest("[hidden], [inert]")).not.toBeNull();
     // the roving tab stop is still a real, visible node
     expect(tabStops()).toHaveLength(1);
   });

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { inject, computed, ref, watch, nextTick, onMounted } from "vue";
+import { inject, computed, ref, nextTick, onMounted } from "vue";
+import { useCollapsible } from "../composables/useCollapsible";
 import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
@@ -25,62 +26,25 @@ const ctx = inject(AccordionContextKey);
 const isOpen = computed(() => ctx?.isOpen(props.value) ?? false);
 const noAnimation = computed(() => ctx?.noAnimation.value ?? false);
 
-// Smooth height animation
-const contentRef = ref<HTMLElement>();
-let initialized = false;
+// Collapsed panels are hidden once the collapse ends (hidden="until-found", else inert) so
+// they leave the tab order and the accessibility tree; a find-in-page match opens one (#162).
+const { panel, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(
+  () => isOpen.value,
+  () => ctx?.toggle(props.value),
+);
 
-// Register default open on mount + set initial height for pre-opened items
-onMounted(() => {
+// A `defaultOpen` item opens at mount with the transition off: it starts open, it isn't
+// opening. The reflow makes the open state count as drawn before the transition returns.
+const instant = ref(false);
+onMounted(async () => {
   if (props.defaultOpen && ctx && !ctx.isOpen(props.value)) {
+    instant.value = true;
     ctx.toggle(props.value);
+    await nextTick();
+    void panel.value?.offsetHeight;
+    instant.value = false;
   }
-
-  // Set initial height without animation
-  nextTick(() => {
-    if (ctx?.isOpen(props.value) && contentRef.value) {
-      contentRef.value.style.maxHeight = "none";
-    }
-    // Mark as initialized so the watcher starts animating
-    initialized = true;
-  });
 });
-
-watch(isOpen, (open) => {
-  if (!initialized) return;
-  if (noAnimation.value) {
-    if (contentRef.value) {
-      contentRef.value.style.maxHeight = open ? "none" : "0px";
-    }
-    return;
-  }
-
-  const el = contentRef.value;
-  if (!el) return;
-
-  if (open) {
-    // Expand: set to 0 first, then animate to measured height
-    el.style.maxHeight = "0px";
-    el.offsetHeight;
-    el.style.maxHeight = `${el.scrollHeight}px`;
-    // Nothing to wait for if no transition started — a zero duration (#261), reduced motion,
-    // where height doesn't transition (#265), a consumer's `transition: none` — and then no
-    // transitionend comes: release the height at once, or content that grows later is clipped.
-    if (!el.getAnimations?.().length) {
-      el.style.maxHeight = "none";
-      return;
-    }
-    const onEnd = () => {
-      el.style.maxHeight = "none";
-      el.removeEventListener("transitionend", onEnd);
-    };
-    el.addEventListener("transitionend", onEnd);
-  } else {
-    // Collapse: snap from none to explicit height, then animate to 0
-    el.style.maxHeight = `${el.scrollHeight}px`;
-    el.offsetHeight;
-    el.style.maxHeight = "0px";
-  }
-}, { flush: "post" });
 
 function toggle() {
   if (props.disabled) return;
@@ -133,17 +97,22 @@ const triggerId = `${itemId}-trigger`;
     <!-- Panel -->
     <div
       :id="panelId"
-      ref="contentRef"
+      ref="panel"
       class="cui-accordion-item__panel"
       :class="{
         'cui-accordion-item__panel--open': isOpen,
-        'cui-accordion-item__panel--no-animation': noAnimation,
+        'cui-accordion-item__panel--no-animation': noAnimation || instant,
       }"
       role="region"
       :aria-labelledby="triggerId"
+      :hidden.attr="hiddenAttr"
+      :inert.attr="inertAttr"
+      @beforematch="onBeforeMatch"
     >
-      <div class="cui-accordion-item__content">
-        <slot />
+      <div class="cui-accordion-item__clip">
+        <div class="cui-accordion-item__content">
+          <slot />
+        </div>
       </div>
     </div>
   </div>
@@ -202,19 +171,31 @@ const triggerId = `${itemId}-trigger`;
   transform: rotate(180deg);
 }
 
-/* --- Panel --- */
+/* --- Panel ---
+   Collapsed by grid-template-rows (0fr -> 1fr), so no height is measured: the clip shrinks
+   (min-height: 0) and hides the overflow. Once shut, the panel is hidden (until-found) or
+   inert (see useCollapsible), so nothing inside stays focusable. */
 .cui-accordion-item__panel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height var(--cui-duration-slow) var(--cui-ease-out);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--cui-duration-slow) var(--cui-ease-out);
+}
+
+.cui-accordion-item__panel--open {
+  grid-template-rows: 1fr;
 }
 
 .cui-accordion-item__panel--no-animation {
   transition: none;
 }
 
-.cui-accordion-item__panel--no-animation.cui-accordion-item__panel--open {
-  max-height: none;
+.cui-accordion-item__panel[inert] {
+  visibility: hidden;
+}
+
+.cui-accordion-item__clip {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .cui-accordion-item__content {
