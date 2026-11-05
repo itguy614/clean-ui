@@ -64,7 +64,7 @@ describe("floating label geometry matches the size scales", () => {
 
   it("the field's textarea maths uses the textarea's room: 6px, the line box, 2px", () => {
     const textarea = readFileSync(resolve(__dirname, "../../components/CuiTextarea.vue"), "utf-8");
-    expect(textarea).toContain("padding-top: calc(var(--_ta-float-offset) + 0.5rem * var(--cui-density-scale, 1));");
+    expect(textarea).toContain("padding-top: calc(var(--_textarea-float-offset) + 0.5rem * var(--cui-density-scale, 1));");
     expect(sfc).toContain("--_form-field-float-drop: calc(0.125rem * var(--cui-density-scale, 1) + var(--_form-field-float-fs) * (1.25 * var(--_form-field-float-scale) + 0.175));");
     expect(sfc).toContain("margin-top: calc(1px + 0.375rem * var(--cui-density-scale, 1) + var(--_form-field-float-drop));");
   });

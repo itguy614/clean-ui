@@ -18,6 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
+  CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
+  `--cui-textarea-radius` and `--cui-select-radius`; a button-variant CuiRadio its height,
+  padding and font size from `--cui-radio-height`, `--cui-radio-px` and
+  `--cui-radio-font-size`; CuiToggle `--cui-toggle-font-size`;
+  CuiProgress `--cui-progress-height` (the bar) and `--cui-progress-font-size` (the circle's label). A
+  size that is tied to other geometry (a toggle's track and knob, a progress circle, an icon
+  placeholder) stays on a private token.
+  CuiCombobox's label, avatars, affix, chevron and option parts are styled from its
+  stylesheet, at zero specificity where they paint, so a plain consumer rule wins. Rendering
+  is unchanged. The private properties were renamed to match their component: `--_ta-*` to
+  `--_textarea-*`, `--_rb-*` to `--_radio-*`, `--_check-*` to `--_checkbox-*`, `--_sel-*` to
+  `--_select-*`. They were never public, but a consumer reading them will break.
+
+- **A CuiInput's attached buttons follow the field's radius** (#333): the `rounded` prop or
+  `--cui-input-radius`, less the border. They followed `--cui-button-radius` before, so
+  `rounded="lg"` left them at the default.
+
 - **Development warnings are stripped from production builds** (#369). `warnOnce`,
   `warnVariantColor`, the component misuse warnings and the duplicate-load warning now sit
   behind `process.env.NODE_ENV !== "production"` (read inside a try/catch, so a

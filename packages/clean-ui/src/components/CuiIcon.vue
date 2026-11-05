@@ -180,7 +180,7 @@ const wrapperStyle = computed(() => {
     <span
       v-else
       class="cui-icon__placeholder"
-      :style="{ width: resolvedSize, height: resolvedSize }"
+      :style="{ '--_icon-width': resolvedSize, '--_icon-height': resolvedSize }"
       aria-hidden="true"
     />
   </span>
@@ -198,6 +198,11 @@ const wrapperStyle = computed(() => {
 /* Sized blank box so the icon's footprint is reserved before it resolves. */
 .cui-icon__placeholder {
   display: inline-block;
+}
+
+.cui-icon__placeholder {
+  width: var(--_icon-width);
+  height: var(--_icon-height);
 }
 
 /* Duotone overrides — target the secondary layer rendered by Phosphor */

@@ -109,7 +109,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   top/bottom slideover's preset is `height` — #407), and `pressed-bg`, `pressed-color`,
   `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396). Private prefix matches the
   public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
-  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
+  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`, `--_rb-`, `--_check-`) when you convert it.
   The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)
   read their consumer's public tokens by `tokenPrefix` and map them onto `--_listbox-*`.
 - **Wrap themeable rules in `:where()`.** Vue's scoped compiler puts the `[data-v-…]`
@@ -126,7 +126,10 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   only binds at `xs` + compact density.
 - `src/styles/__tests__/control-token.test.ts` enforces this, via an **opt-in** `CONVERTED`
   list — "once converted, stays converted". ~50 of the ~106 components still write paint
-  inline; add yours to the list when its PR converts it.
+  inline; add yours to the list when its PR converts it. It scans the `<script>` and the
+  template's `:style` bindings (#333): a static value belongs in the stylesheet, a dynamic one
+  on a private token. Many listed components still read a private token straight
+  (`var(--_input-height)`) rather than through the public layer; a new token goes through it.
 
 ## Motion
 

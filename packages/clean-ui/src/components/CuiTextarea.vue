@@ -140,14 +140,14 @@ const floatingLabel = useFloatingLabel(
         'cui-textarea--disabled': disabled,
       }"
       :style="{
-        borderRadius: RADIUS_SCALE[rounded],
-        '--_ta-px': dims.px,
-        '--_ta-py': dims.py,
-        '--_ta-float-offset': floatingLabel().float?.offset,
-        '--_ta-font-size': dims.fontSize,
-        '--_ta-focus-ring': `var(--cui-${color}-focus-ring)`,
-        '--_ta-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-border-strong)`,
-        '--_ta-focus-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-${color})`,
+        '--_textarea-radius': RADIUS_SCALE[rounded],
+        '--_textarea-px': dims.px,
+        '--_textarea-py': dims.py,
+        '--_textarea-float-offset': floatingLabel().float?.offset,
+        '--_textarea-font-size': dims.fontSize,
+        '--_textarea-focus-ring': `var(--cui-${color}-focus-ring)`,
+        '--_textarea-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-border-strong)`,
+        '--_textarea-focus-border': error || isOverLimit ? 'var(--cui-error)' : `var(--cui-${color})`,
       }"
     >
       <textarea
@@ -196,17 +196,23 @@ const floatingLabel = useFloatingLabel(
   flex-direction: column;
 }
 
+/* Themeable (#333): zero specificity, so a consumer's `.cui-textarea { border-radius }`
+   or `--cui-textarea-radius` on a container wins. */
+:where(.cui-textarea) {
+  border-radius: var(--cui-textarea-radius, var(--_textarea-radius));
+}
+
 .cui-textarea {
   display: flex;
-  border: 1px solid var(--_ta-border);
+  border: 1px solid var(--_textarea-border);
   background: var(--cui-surface-base);
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   overflow: hidden;
 }
 
 .cui-textarea:focus-within:not(.cui-textarea--disabled) {
-  border-color: var(--_ta-focus-border);
-  box-shadow: 0 0 0 2px var(--_ta-focus-ring);
+  border-color: var(--_textarea-focus-border);
+  box-shadow: 0 0 0 2px var(--_textarea-focus-ring);
 }
 
 .cui-textarea--disabled {
@@ -230,10 +236,10 @@ const floatingLabel = useFloatingLabel(
   border: none;
   outline: none;
   background: transparent;
-  font-size: var(--_ta-font-size);
+  font-size: var(--_textarea-font-size);
   font-family: inherit;
   color: var(--cui-text-body);
-  padding: var(--_ta-py) var(--_ta-px);
+  padding: var(--_textarea-py) var(--_textarea-px);
   line-height: 1.6;
   resize: vertical;
 }
@@ -246,7 +252,7 @@ const floatingLabel = useFloatingLabel(
    jumps: 6px, the floated label's line box, 2px. And the placeholder shows only once the
    label has floated. */
 .cui-textarea__native[data-cui-float-label] {
-  padding-top: calc(var(--_ta-float-offset) + 0.5rem * var(--cui-density-scale, 1));
+  padding-top: calc(var(--_textarea-float-offset) + 0.5rem * var(--cui-density-scale, 1));
 }
 
 .cui-textarea__native[data-cui-float-label]:not(:focus)::placeholder {
