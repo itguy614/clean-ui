@@ -12,7 +12,9 @@ export const MOTION_DURATIONS = {
 
 export type MotionDuration = keyof typeof MOTION_DURATIONS;
 
-import { warnOnce } from "./devWarn";
+import { __DEV__, warnOnce } from "./devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 /**
  * Whether the user asked for reduced motion (#265). Read when it matters, not cached: the
@@ -46,7 +48,7 @@ export function motionDuration(name: MotionDuration, el?: Element | null): numbe
   if (ms === null) {
     // A custom property's computed value keeps `calc()` and `var()` unresolved, so JS can't
     // read one; the CSS still animates over it, and the wait would no longer match.
-    warnOnce(`[clean-ui] --cui-duration-${name} is "${raw}": set it to a plain time (150ms, 0.2s) so JavaScript waits can match it. Using ${fallback}ms.`);
+    if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(`[clean-ui] --cui-duration-${name} is "${raw}": set it to a plain time (150ms, 0.2s) so JavaScript waits can match it. Using ${fallback}ms.`);
     return fallback;
   }
   return ms;

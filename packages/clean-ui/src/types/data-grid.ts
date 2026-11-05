@@ -2,7 +2,10 @@
 export interface DataGridColumn {
   /** Unique column identifier — must match a key on the data row */
   key: string;
-  /** Display label for the column header */
+  /**
+   * Display label. Always required: the header when no header slot is given, and the text
+   * the column manager, filter panel and card view use.
+   */
   label: string;
   /** Enable sorting on this column */
   sortable?: boolean;
@@ -27,6 +30,31 @@ export interface DataGridColumn {
   /** Pin column to the left edge during horizontal scroll (requires width) */
   sticky?: boolean;
 }
+
+/**
+ * A spanning header over related leaf columns (two-row header). It has no `key`, so it is
+ * never in column state, sort, filters or saved views — those all work on its `children`.
+ * Only one level of grouping is supported.
+ */
+export interface DataGridColumnGroup {
+  /** Text of the spanning header cell */
+  label: string;
+  /** The leaf columns under this header, in order */
+  children: DataGridColumn[];
+}
+
+/** What `columns` takes: a leaf column, or a group of them. Flat arrays keep working. */
+export type DataGridColumnDef = DataGridColumn | DataGridColumnGroup;
+
+/** Whether a column definition is a group (it has `children`). */
+export function isDataGridColumnGroup(def: DataGridColumnDef): def is DataGridColumnGroup {
+  return "children" in def && Array.isArray(def.children);
+}
+
+/** One entry of the column order as the column manager moves it: a group, or a loose column. */
+export type DataGridColumnUnit =
+  | { type: "group"; group: DataGridColumnGroup; keys: string[] }
+  | { type: "column"; key: string };
 
 export type DataGridFilterType = "text" | "select" | "multi-select" | "date-range";
 

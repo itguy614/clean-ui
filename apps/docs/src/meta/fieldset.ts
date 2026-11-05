@@ -12,7 +12,7 @@ const meta: ComponentMeta = {
     { name: "variant", type: "outline | subtle | ghost", default: "outline", description: "outline is a border only, subtle adds the colour's tinted fill, ghost drops both and the padding with them" },
     colorProp("Border colour, and the fill under variant=subtle. surface is the neutral default; surface-light/dark are its other two intensities", "surface"),
     roundedProp,
-    { name: "collapsible", type: "boolean", default: "false", description: "Make the legend a toggle and show a chevron. Off, the legend is inert text" },
+    { name: "collapsible", type: "boolean", default: "false", description: "Put a toggle button (aria-expanded, aria-controls) in the legend, with a chevron. Off, the legend is plain text" },
     { name: "v-model:expanded", type: "boolean", default: "true", description: "Whether the content is showing. Only meaningful with collapsible" },
     { name: "disabled", type: "boolean", default: "false", description: "Sets the native disabled attribute on the <fieldset>, which disables every form control inside it — no per-field prop needed" },
     hiddenProp,
@@ -23,7 +23,7 @@ const meta: ComponentMeta = {
   ],
 
   events: [
-    { name: "update:expanded", payload: "boolean", description: "Fires when the legend is clicked" },
+    { name: "update:expanded", payload: "boolean", description: "Fires when the legend's toggle is pressed, or find-in-page opens the section" },
   ],
 };
 

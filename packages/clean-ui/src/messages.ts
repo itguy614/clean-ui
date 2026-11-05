@@ -274,6 +274,13 @@ export interface CuiCoreMessages {
     rowActions: (rowLabel: string) => string;
     /** A row's label when nothing better names it: its position, 1-based. */
     rowNumber: (position: number) => string;
+    /** A column inside a column group, in the column manager: "Reads · A1" — the leaf alone repeats per group. */
+    groupedColumn: (groupLabel: string, columnLabel: string) => string;
+    /** Column manager: move a column (or a whole group) one place, for the keyboard. */
+    moveUp: (name: string) => string;
+    moveDown: (name: string) => string;
+    /** Announced after a move: where it landed, 1-based, among its siblings. */
+    moved: (name: string, position: number, total: number) => string;
     tableView: string;
     cardView: string;
   };
@@ -409,6 +416,10 @@ export const defaultMessages: CuiCoreMessages = {
     selectRow: (rowLabel) => `Select ${rowLabel}`,
     rowActions: (rowLabel) => `Actions for ${rowLabel}`,
     rowNumber: (position) => `row ${position}`,
+    groupedColumn: (groupLabel, columnLabel) => `${groupLabel} · ${columnLabel}`,
+    moveUp: (name) => `Move ${name} up`,
+    moveDown: (name) => `Move ${name} down`,
+    moved: (name, position, total) => `${name} moved to position ${position} of ${total}`,
     tableView: "Table view",
     cardView: "Card view",
   },

@@ -68,6 +68,8 @@ const meta: ComponentMeta = {
     },
     { name: "blur", signature: "() => void", description: "Blur the native input" },
   ],
+
+  tokens: [{ name: "--cui-input-radius", default: "per rounded", description: "Corner radius of the field" }],
 };
 
 export default meta;

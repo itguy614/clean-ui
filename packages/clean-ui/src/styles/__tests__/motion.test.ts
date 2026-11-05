@@ -204,9 +204,8 @@ function check(rule: keyof typeof rules, exempt: Record<string, Exemption> = {},
 const C = "clean-ui/src/components/";
 // Layout-property transitions still in the library, each with the issue that removes it.
 const LAYOUT_EXEMPT: Record<string, Exemption> = {
-  [`${C}CuiAccordionItem.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
-  [`${C}CuiFieldset.vue`]: { count: 3, why: "max-height and padding collapse; grid-template-rows in #270 (2.0)" },
-  [`${C}CuiTreeNode.vue`]: { count: 1, why: "max-height collapse; grid-template-rows in #270 (2.0)" },
+  // grid-template-rows, the collapse animation (#270), isn't a layout property here: no exemption.
+  [`${C}CuiFieldset.vue`]: { count: 1, why: "the root's padding shrinks to a slim bar as it collapses, in step with the grid-template-rows collapse" },
 };
 
 describe("motion in both packages", () => {

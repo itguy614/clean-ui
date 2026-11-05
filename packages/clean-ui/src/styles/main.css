@@ -956,8 +956,8 @@
    changed. Only opacity transitions; colour changes are instant (still no motion), and no
    transition the author didn't declare is added. Durations are untouched, so JS waits
    (motionDuration, afterAnimations) still match the CSS. (Narrowing the property list
-   re-pairs a multi-property transition's durations by index: Fieldset's opacity takes its
-   max-height's. Invisible, and the exits JS waits on list opacity first.) Scoped to the
+   re-pairs a multi-property transition's durations by index, so a transition that has an
+   opacity part lists it first: Fieldset's body, whose opacity keeps the first duration.) Scoped to the
    library's components and what they contain, slot content included. The utility classes a
    consumer puts around their own content — typography, themes, density, scrollbars, lists,
    table wrappers — don't count.

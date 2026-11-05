@@ -5,6 +5,7 @@ import {
   CuiBadge,
   CuiCombobox,
   CuiFlex,
+  CuiIcon,
   CuiStack,
   CuiToggle,
   type ComboboxOption,
@@ -76,6 +77,21 @@ const users: ComboboxOption[] = [
 const selectedUser = ref<string | null>(null);
 const selectedUsers = ref<string[]>([]);
 
+// Row action with a keyboard shortcut (#347): Alt+F favorites the highlighted option.
+const favoriteValue = ref<string | null>(null);
+const favorites = ref(new Set<string | number>(["cherry"]));
+function toggleFavorite(value: string | number) {
+  const next = new Set(favorites.value);
+  if (!next.delete(value)) next.add(value);
+  favorites.value = next;
+}
+function onFavoriteKeydown(e: KeyboardEvent, option: ComboboxOption) {
+  if (e.altKey && e.code === "KeyF") {
+    e.preventDefault();
+    toggleFavorite(option.value);
+  }
+}
+
 // Simulated async search
 const asyncResult = ref<string | null>(null);
 async function fetchCountries(query: string): Promise<ComboboxOption[]> {
@@ -125,6 +141,16 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
         <li>
           Pass <code>label</code>, or point <code>aria-labelledby</code> at your own —
           <code>CuiFormField</code> wires both up automatically.
+        </li>
+        <li>
+          Focus stays in the input, so a control inside an option can't be tabbed to. Offer a
+          keyboard equivalent with <code>@option-keydown</code> (see Row Action Shortcut) and
+          announce the shortcut in a hint the input points at with <code>aria-describedby</code>.
+          The event fires for every key while an option is highlighted (Enter, Escape, Tab
+          included), before the built-in handling; <code>preventDefault()</code> stops it, so
+          only call it for keys you handle. Match shortcuts on <code>event.code</code>, since
+          Option+F types a different character on macOS. A shortcut needs a physical keyboard,
+          so keep the pointer route for touch.
         </li>
       </ul>
     </template>
@@ -236,6 +262,59 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
                 <CuiBadge v-if="selected" color="success" size="sm">Selected</CuiBadge>
               </template>
             </CuiCombobox>
+          </div>
+        </Example>
+
+        <!-- Row action with a keyboard shortcut (#347) -->
+        <Example title="Row Action Shortcut" :code="`<!-- Focus stays in the input, so a control inside a row can't be tabbed to.
+     option-keydown hands you the key and the highlighted option instead. -->
+<CuiCombobox
+  v-model=&quot;value&quot;
+  :options=&quot;fruits&quot;
+  aria-describedby=&quot;fav-hint&quot;
+  @option-keydown=&quot;onOptionKeydown&quot;
+>
+  <template #option=&quot;{ option }&quot;>
+    <span>{{ option.label }}</span>
+    <CuiIcon name=&quot;star&quot; :weight=&quot;favorites.has(option.value) ? 'fill' : 'regular'&quot; />
+  </template>
+</CuiCombobox>
+<p id=&quot;fav-hint&quot;>Alt+F toggles the favorite on the highlighted option.</p>
+
+function onOptionKeydown(e, option) {
+  if (e.altKey &amp;&amp; e.code === 'KeyF') {
+    e.preventDefault()
+    toggleFavorite(option.value)
+  }
+}`">
+          <div style="width: 22rem;">
+            <CuiCombobox
+              v-model="favoriteValue"
+              :options="fruits"
+              label="Fruit"
+              aria-describedby="combobox-fav-hint"
+              @option-keydown="onFavoriteKeydown"
+            >
+              <template #option="{ option }">
+                <span :style="{ flex: '1' }">{{ option.label }}</span>
+                <!-- Mouse only: the keyboard route is Alt+F, announced in the hint below. The
+                     mousedown keeps focus in the input. -->
+                <CuiIcon
+                  name="star"
+                  size="1rem"
+                  aria-hidden="true"
+                  :weight="favorites.has(option.value) ? 'fill' : 'regular'"
+                  :color="favorites.has(option.value) ? 'warning' : 'surface'"
+                  :style="{ cursor: 'pointer' }"
+                  @mousedown.prevent.stop="toggleFavorite(option.value)"
+                  @click.stop
+                />
+                <span v-if="favorites.has(option.value)" class="cui-sr-only">Favorite</span>
+              </template>
+            </CuiCombobox>
+            <p id="combobox-fav-hint" :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: '0.25rem' }">
+              Press Alt+F to favorite or unfavorite the highlighted option.
+            </p>
           </div>
         </Example>
 

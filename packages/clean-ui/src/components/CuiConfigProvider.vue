@@ -10,6 +10,8 @@ export interface CuiConfigProviderProps {
   headingLevels?: Partial<CuiHeadingLevels>;
   /** Role icons for the feedback components inside (#149), over the app's. */
   roleIcons?: Partial<Record<CuiColor, string>>;
+  /** The locale for dates, month and weekday names, file sizes and AM/PM labels inside (#337), over the app's. */
+  locale?: string;
   /**
    * Partial overrides for the default (English) message catalog. Only the keys
    * you supply are replaced; everything else falls back to the defaults (or a
@@ -29,7 +31,7 @@ const merged = computed<CuiMessages>(() =>
 provide(CuiConfigKey, merged);
 
 // The app-wide defaults, the same way: this subtree's over the app's (or an outer provider's).
-useCleanUIDefaultsProvider(() => ({ headingLevels: props.headingLevels, roleIcons: props.roleIcons }));
+useCleanUIDefaultsProvider(() => ({ headingLevels: props.headingLevels, roleIcons: props.roleIcons, locale: props.locale }));
 </script>
 
 <template>

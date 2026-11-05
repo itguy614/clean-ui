@@ -3,7 +3,9 @@ import { computed, onMounted, toRef, useTemplateRef } from "vue";
 import CuiScrollArea from "./CuiScrollArea.vue";
 import { useRovingFocus } from "../composables/useRovingFocus";
 import { useToolbarProvider } from "./toolbar-context";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import type { CuiOrientation, HideableProps } from "../types/common";
 
 export type ToolbarOverflow = "wrap" | "scroll";
@@ -63,7 +65,7 @@ const roving = useRovingFocus({
 });
 
 onMounted(() => {
-  if (!props.label && !props.ariaLabel && !props.ariaLabelledby) {
+  if (__DEV__ && process.env.NODE_ENV !== "production" && !props.label && !props.ariaLabel && !props.ariaLabelledby) {
     warnOnce("[clean-ui] CuiToolbar: a toolbar needs an accessible name. Pass label, aria-label or aria-labelledby.");
   }
 });
