@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick, reactive } from "vue";
 import CuiCombobox from "../CuiCombobox.vue";
 import type { ComboboxOption } from "../CuiCombobox.vue";
@@ -17,7 +17,18 @@ function dropdownOptionTexts(): string[] {
   );
 }
 
+// Wrappers mounted onto document.body that a test leaves behind. Unmounted before the body is
+// wiped: wiping it under a live component lets a later re-render hit a detached parent
+// ("Cannot read properties of null (reading 'insertBefore')", an unhandled rejection).
+const attached: VueWrapper[] = [];
+function mountAttached(props: Record<string, unknown>, slots: Record<string, string> = {}) {
+  const w = mount(CuiCombobox, { props, slots, attachTo: document.body });
+  attached.push(w as unknown as VueWrapper);
+  return w;
+}
+
 afterEach(() => {
+  for (const w of attached.splice(0)) w.unmount();
   document.body.innerHTML = "";
 });
 
@@ -202,7 +213,7 @@ describe("CuiCombobox highlight when the list changes", () => {
   };
 
   async function openOnBanana() {
-    const w = mount(CuiCombobox, { props: { options: OPTIONS }, attachTo: document.body });
+    const w = mountAttached({ options: OPTIONS });
     const input = w.find("input");
     await input.trigger("focus");
     await input.trigger("keydown", { key: "ArrowDown" });
@@ -222,7 +233,7 @@ describe("CuiCombobox highlight when the list changes", () => {
 
   it("stays on the same option when the list is changed in place", async () => {
     const options = reactive([...OPTIONS]);
-    const w = mount(CuiCombobox, { props: { options }, attachTo: document.body });
+    const w = mountAttached({ options });
     const input = w.find("input");
     await input.trigger("focus");
     await input.trigger("keydown", { key: "ArrowDown" });
@@ -250,8 +261,8 @@ describe("CuiCombobox highlight when the list changes", () => {
 
 // A row action's keyboard route (#347).
 describe("CuiCombobox option-keydown", () => {
-  async function openCombobox(extra: Record<string, unknown> = {}, slots = {}) {
-    const w = mount(CuiCombobox, { props: { options: OPTIONS, ...extra }, slots, attachTo: document.body });
+  async function openCombobox(extra: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
+    const w = mountAttached({ options: OPTIONS, ...extra }, slots);
     const input = w.find("input");
     await input.trigger("focus");
     await nextTick();
