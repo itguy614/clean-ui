@@ -275,6 +275,9 @@ export { TableContextKey, TableSectionContextKey } from "./components/table-cont
 export type { CuiDataGridProps } from "./components/CuiDataGrid.vue";
 export type {
   DataGridColumn,
+  DataGridColumnGroup,
+  DataGridColumnDef,
+  DataGridColumnUnit,
   DataGridSort,
   DataGridFilter,
   DataGridFilterType,
