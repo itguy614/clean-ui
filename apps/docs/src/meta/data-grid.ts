@@ -85,7 +85,6 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-data-grid-group-border", default: "var(--cui-border)", description: "The rule on the left of each column group's first leaf (all but the first group), through the header and body" },
-    { name: "--cui-data-grid-group-bracket", default: "var(--cui-border-strong)", description: "The bracket under a column group's label, spanning exactly its leaves" },
   ],
 
   slots: [

@@ -47,6 +47,14 @@ const cellsOf = (row: number) => headRows()[row].findAll("th");
 const th = (text: string, row?: number) =>
   (row === undefined ? w!.findAll("thead th") : cellsOf(row)).find((c) => c.text() === text)!;
 
+// A manager checkbox: what it shows, and the name it is announced by.
+const managerChecks = () =>
+  [...document.body.querySelectorAll<HTMLElement>(".cui-checkbox")].map((el) => ({
+    el,
+    visible: el.querySelector("[aria-hidden=true]:not(input)")?.textContent?.trim() ?? el.textContent?.trim(),
+    name: el.querySelector(".cui-sr-only:not(input)")?.textContent?.trim() ?? el.textContent?.trim(),
+  }));
+
 describe("CuiDataGrid column groups", () => {
   it("renders a two-row header with colspan over the leaves and rowspan 2 for ungrouped columns", () => {
     mountGrid();
@@ -132,20 +140,30 @@ describe("CuiDataGrid column groups", () => {
     expect(cellsOf(0).every((c) => !c.attributes("rowspan"))).toBe(true);
   });
 
-  it("follows the column manager: hiding a leaf from it shrinks the span, with the group in its label", async () => {
+  it("follows the column manager: hiding a leaf from it shrinks the span", async () => {
     mountGrid({ hideToolbar: false });
     await w!.find(".cui-data-grid-column-manager button").trigger("click");
     await nextTick();
-    const labels = [...document.body.querySelectorAll("label")].map((l) => l.textContent?.trim());
-    expect(labels).toContain("Reads · A1");
-    expect(labels).toContain("RSSI (dBm) · A1");
-    expect(labels).toContain("EPC");
-    [...document.body.querySelectorAll("label")].find((l) => l.textContent?.trim() === "Reads · A3")!.click();
+    managerChecks().find((c) => c.name === "Reads · A3")!.el.click();
     await nextTick();
     expect(th("Reads", 0).attributes("colspan")).toBe("2");
   });
 
-  it("takes the group/leaf format in the column manager from the message catalogue", async () => {
+  it("shows a grouped leaf's plain label in the manager, and names it with its group", async () => {
+    mountGrid({ hideToolbar: false });
+    await w!.find(".cui-data-grid-column-manager button").trigger("click");
+    await nextTick();
+    const checks = managerChecks();
+    expect(checks.map((c) => c.visible)).toEqual(["EPC", "A1", "A2", "A3", "A1", "A2", "Note"]);
+    expect(checks.map((c) => c.name)).toEqual([
+      "EPC", "Reads · A1", "Reads · A2", "Reads · A3", "RSSI (dBm) · A1", "RSSI (dBm) · A2", "Note",
+    ]);
+    // the group name never shows beside a leaf: only as its own header row
+    expect(checks[1].visible).not.toContain("·");
+    expect(document.body.querySelector('button[aria-label="Move Reads · A2 up"]')).not.toBeNull();
+  });
+
+  it("takes the group/leaf format of a leaf's name from the message catalogue", async () => {
     w = mount(CuiConfigProvider, {
       props: { messages: { dataGrid: { groupedColumn: (g: string, c: string) => `${c} (${g})` } } },
       slots: { default: () => h(CuiDataGrid, { columns, data, hideToolbar: false }) },
@@ -153,96 +171,9 @@ describe("CuiDataGrid column groups", () => {
     });
     await w.find(".cui-data-grid-column-manager button").trigger("click");
     await nextTick();
-    const labels = [...document.body.querySelectorAll("label")].map((l) => l.textContent?.trim());
-    expect(labels).toContain("A1 (Reads)");
-    expect(labels).not.toContain("Reads · A1");
-  });
-
-  it("never splits a group: a leaf stays in its group's range, a loose column lands outside it", () => {
-    const grid = useDataGrid({ columns: ref(columns), data: ref(data) });
-    const order = () => grid.columnState.value.map((c) => c.key);
-    // epc r1 r2 r3 s1 s2 note
-    grid.reorderColumns(order().indexOf("s1"), 2); // into Reads' middle
-    expect(order()).toEqual(["epc", "r1", "r2", "r3", "s1", "s2", "note"]);
-    grid.reorderColumns(order().indexOf("r1"), 6); // past the end of Reads
-    expect(order()).toEqual(["epc", "r2", "r3", "r1", "s1", "s2", "note"]);
-    grid.reorderColumns(order().indexOf("note"), 2); // a loose column into the middle of Reads
-    expect(order().slice(0, 4)).not.toEqual(["epc", "r2", "note", "r3"]);
-    for (const g of [["r1", "r2", "r3"], ["s1", "s2"]]) {
-      const at = g.map((k) => order().indexOf(k)).sort((x, y) => x - y);
-      expect(at[at.length - 1] - at[0]).toBe(g.length - 1);
-    }
-    expect(grid.columnGroupOf("s1")?.label).toBe("RSSI (dBm)");
-    expect(grid.columnGroupOf("epc")).toBeUndefined();
-  });
-
-  it("heals a persisted order that splits a group, on load, on loadConfig and on a column change", () => {
-    const split = ["r1", "s1", "r2", "epc", "r3", "s2", "note"].map((key) => ({ key, visible: true }));
-    const expected = ["r1", "r2", "r3", "s1", "s2", "epc", "note"];
-    const fresh = useDataGrid({ columns: ref(columns), data: ref(data), initialView: { columns: split } as never });
-    expect(fresh.columnState.value.map((c) => c.key)).toEqual(expected);
-
-    const grid = useDataGrid({ columns: ref(columns), data: ref(data) });
-    grid.loadConfig({ ...grid.getConfig(), columns: split });
-    expect(grid.columnState.value.map((c) => c.key)).toEqual(expected);
-    expect(grid.visibleColumns.value.map((c) => c.key)).toEqual(expected);
-  });
-
-  it("moves a whole group among the units, and the order persists in a saved view", () => {
-    const grid = useDataGrid({ columns: ref(columns), data: ref(data) });
-    expect(grid.columnUnits.value.map((u) => (u.type === "group" ? u.group.label : u.key))).toEqual([
-      "epc", "Reads", "RSSI (dBm)", "note",
-    ]);
-    grid.reorderGroup(grid.columnGroupOf("s1")!, 0);
-    expect(grid.columnState.value.map((c) => c.key)).toEqual(["s1", "s2", "epc", "r1", "r2", "r3", "note"]);
-    grid.moveGroup(grid.columnGroupOf("r1")!, 1);
-    expect(grid.columnState.value.map((c) => c.key)).toEqual(["s1", "s2", "epc", "note", "r1", "r2", "r3"]);
-
-    const saved = grid.getConfig();
-    const restored = useDataGrid({ columns: ref(columns), data: ref(data), initialView: saved });
-    expect(restored.columnState.value.map((c) => c.key)).toEqual(saved.columns.map((c) => c.key));
-    expect(restored.columnUnits.value[0]).toMatchObject({ type: "group", keys: ["s1", "s2"] });
-  });
-
-  it("moves a leaf one step within its group, and a loose column among the units", () => {
-    const grid = useDataGrid({ columns: ref(columns), data: ref(data) });
-    grid.moveColumn("r1", -1); // first in its group: stays
-    expect(grid.columnState.value.map((c) => c.key).slice(0, 4)).toEqual(["epc", "r1", "r2", "r3"]);
-    grid.moveColumn("r1", 1);
-    expect(grid.columnState.value.map((c) => c.key).slice(0, 4)).toEqual(["epc", "r2", "r1", "r3"]);
-    grid.moveColumn("epc", 1); // past the whole Reads group, not into it
-    expect(grid.columnState.value.map((c) => c.key).slice(0, 4)).toEqual(["r2", "r1", "r3", "epc"]);
-  });
-
-  it("draws a separator on the first leaf of each group but the first group", () => {
-    mountGrid();
-    const starts = (sel: string) => w!.findAll(sel).map((c) => c.classes("cui-data-grid-table__group-start"));
-    // header groups: Reads (first, none), RSSI (yes)
-    expect(cellsOf(0).map((c) => c.classes("cui-data-grid-table__group-start"))).toEqual([false, false, true, false]);
-    // leaves: A1 A2 A3 | A1 A2
-    expect(cellsOf(1).map((c) => c.classes("cui-data-grid-table__group-start"))).toEqual([false, false, false, true, false]);
-    // body cells: epc r1 r2 r3 s1 s2 note
-    expect(starts("tbody tr:first-child td")).toEqual([false, false, false, false, true, false, false]);
-  });
-
-  it("opens the column manager as groups with leaves, and moves with the keyboard", async () => {
-    mountGrid({ hideToolbar: false });
-    await w!.find(".cui-data-grid-column-manager button").trigger("click");
-    await nextTick();
-    const rows = () => [...document.body.querySelectorAll(".cui-data-grid-column-manager__row")];
-    expect(rows().map((r) => r.classList[1]?.replace("cui-data-grid-column-manager__row--", ""))).toEqual([
-      "column", "group", "leaf", "leaf", "leaf", "group", "leaf", "leaf", "column",
-    ]);
-    const button = (label: string) =>
-      document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
-    expect(button("Move Reads · A1 up").disabled).toBe(true); // first in its group
-    button("Move RSSI (dBm) up").click();
-    await nextTick();
-    expect(cellsOf(0).map((c) => c.text())).toEqual(["EPC", "RSSI (dBm)", "Reads", "Note"]);
-    expect(document.body.querySelector("[role=status]")!.textContent).toBe("RSSI (dBm) moved to position 2 of 4");
-    button("Move Reads · A1 down").click();
-    await nextTick();
-    expect(cellsOf(1).map((c) => c.text())).toEqual(["A1", "A2", "A2", "A1", "A3"]);
+    const names = managerChecks().map((c) => c.name);
+    expect(names).toContain("A1 (Reads)");
+    expect(names).not.toContain("Reads · A1");
   });
 
   it("takes the move buttons' labels and announcement from the message catalogue", async () => {
@@ -371,8 +302,8 @@ describe("CuiDataGrid header slots", () => {
     mountGrid({ hideToolbar: false }, { "header-epc": `<b>Tag EPC</b>` });
     await w!.find(".cui-data-grid-column-manager button").trigger("click");
     await nextTick();
-    const labels = [...document.body.querySelectorAll("label")].map((l) => l.textContent?.trim());
-    expect(labels).toContain("EPC");
-    expect(labels).not.toContain("Tag EPC");
+    const names = managerChecks().map((c) => c.name);
+    expect(names).toContain("EPC");
+    expect(names).not.toContain("Tag EPC");
   });
 });

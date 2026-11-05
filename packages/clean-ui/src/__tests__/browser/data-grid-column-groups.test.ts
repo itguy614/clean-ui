@@ -115,7 +115,6 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
     async function grid(extra: Record<string, unknown> = {}) {
       const el = host({ width: "400px" });
       el.style.setProperty("--cui-data-grid-group-border", RULE);
-      el.style.setProperty("--cui-border-strong", "rgb(0, 0, 255)");
       const wrapper = track(
         mount(CuiDataGrid, {
           attachTo: el,
@@ -154,14 +153,6 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
       expect(getComputedStyle(b1).position).toBe("sticky");
       expect(rule(b1).backgroundColor).toBe(RULE);
       expect(rule(bodyB1).backgroundColor).toBe(RULE);
-    });
-
-    it("keeps a gap between neighbouring group brackets", async () => {
-      const { table } = await grid();
-      const north = cell(table, "North").querySelector(".cui-data-grid-table__group-label")!;
-      const south = cell(table, "South").querySelector(".cui-data-grid-table__group-label")!;
-      expect(rect(south).left - rect(north).right).toBeGreaterThan(2);
-      expect(getComputedStyle(north).borderBottomWidth).toBe("2px");
     });
   });
 

@@ -537,8 +537,7 @@ const totalCols = computed(() => {
               scope="colgroup"
               :style="headerPinStyle(undefined)"
             >
-              <!-- A bracket under the label, over exactly the group's leaves -->
-              <span class="cui-data-grid-table__group-label">{{ cell.group.label }}</span>
+              {{ cell.group.label }}
             </CuiTableCell>
             <CuiTableCell
               v-else
@@ -702,10 +701,6 @@ const totalCols = computed(() => {
 :where(.cui-data-grid-table__group-start)::before {
   background: var(--cui-data-grid-group-border, var(--cui-border));
 }
-:where(.cui-data-grid-table__group-label) {
-  border-color: var(--cui-data-grid-group-bracket, var(--cui-border-strong));
-  border-radius: 0 0 var(--cui-radius-sm, 0.25rem) var(--cui-radius-sm, 0.25rem);
-}
 
 /* --- Structural --- */
 /* The rule is a line inside the cell, at its start edge. It travels with a frozen cell,
@@ -720,14 +715,6 @@ const totalCols = computed(() => {
   inset-inline-start: 0;
   width: 1px;
   pointer-events: none;
-}
-/* Spans the group's leaves, less a gap at each end that separates it from the next group. */
-.cui-data-grid-table__group-label {
-  display: block;
-  border-style: solid;
-  border-width: 0 2px 2px;
-  margin-inline: calc(0.25rem * var(--cui-density-scale, 1));
-  padding-bottom: calc(0.25rem * var(--cui-density-scale, 1));
 }
 .cui-data-grid-table__row--interactive {
   cursor: pointer;

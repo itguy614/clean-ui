@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, shallowRef } from "vue";
 import { useDataGridState } from "../composables/useDataGrid";
 import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
@@ -30,21 +30,27 @@ const rows = computed<Row[]>(() =>
   ),
 );
 
-// A grouped leaf is named with its group ("Reads · A1"), since "A1" alone repeats per group.
+// What a row shows: a leaf is indented under its group's header row, so just its own label.
 function getLabel(key: string): string {
-  const label = grid.columns.find((c) => c.key === key)?.label ?? key;
-  const group = grid.columnGroupOf(key);
-  return group ? messages.value.dataGrid.groupedColumn(group.label, label) : label;
+  return grid.columns.find((c) => c.key === key)?.label ?? key;
 }
 
-const nameOf = (row: Row) => (row.kind === "group" ? row.group.label : getLabel(row.key));
+// What it is called out of context ("Reads · A1"): "A1" alone repeats per group, and a screen
+// reader user hears a leaf's checkbox and buttons without the header row.
+function nameOf(row: Row): string {
+  if (row.kind === "group") return row.group.label;
+  const label = getLabel(row.key);
+  return row.kind === "leaf" ? messages.value.dataGrid.groupedColumn(row.group.label, label) : label;
+}
 const indexOfKey = (key: string) => grid.columnState.value.findIndex((cs) => cs.key === key);
 
 // --- Drag ---
 // A leaf moves only among its own group's leaves; a group or a loose column moves among the
 // groups and loose columns. Anything else is refused here too (no indicator, dropEffect none),
 // though the grid's own state refuses it regardless.
-const dragging = ref<Row | null>(null);
+// shallowRef: a deep ref would hand back a reactive proxy of a row's group, which is never
+// `===` the group the rows computed holds, so no leaf would ever accept a drop.
+const dragging = shallowRef<Row | null>(null);
 const dropId = ref<string | null>(null);
 
 function canDrop(target: Row): boolean {
@@ -154,9 +160,12 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
             v-else
             style="flex: 1;"
             :model-value="grid.columnState.value[indexOfKey(row.key)].visible"
-            :label="getLabel(row.key)"
             @update:model-value="grid.toggleColumnVisibility(row.key)"
-          />
+          >
+            <!-- The plain label is what shows; the checkbox is named with its group -->
+            <span aria-hidden="true">{{ getLabel(row.key) }}</span>
+            <span class="cui-sr-only">{{ nameOf(row) }}</span>
+          </CuiCheckbox>
           <span style="display: flex; flex-shrink: 0;">
             <CuiButton
               variant="ghost"

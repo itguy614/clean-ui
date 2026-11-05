@@ -138,7 +138,7 @@ const groupedColumns: DataGridColumnDef[] = [
     label: "RSSI (dBm)",
     children: antennas.map((a, i) => ({ key: `s${i + 1}`, label: a, sortable: true, align: "right", width: "80px" })),
   },
-  // Leaf labels that don't restart per group: only the rule and bracket say where this one begins
+  // Leaf labels that don't restart per group: only the rule says where this one begins
   {
     label: "Gain (dB)",
     children: [
@@ -471,8 +471,8 @@ function step(by: number) {
           <p class="text-sm text-surface-500">
             A group has a <code>label</code> and <code>children</code> but no <code>key</code>:
             its cell spans the leaves that are showing, and ungrouped columns span both rows.
-            A rule marks where each group after the first begins, through the header and body,
-            and a bracket under the label spans exactly its leaves. Sorting, filtering and saved
+            A rule marks where each group after the first begins, through the header and body.
+            Sorting, filtering and saved
             views work on the leaves. Open <strong>Columns</strong>: groups list with their leaves
             indented; drag a leaf within its group, drag a group header to move the whole block,
             or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the

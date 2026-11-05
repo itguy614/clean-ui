@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
   sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
   column's header content, falling back to `label`. A rule marks each group after the first
-  (`--cui-data-grid-group-border`) and a bracket spans its label (`--cui-data-grid-group-bracket`).
+  (`--cui-data-grid-group-border`).
   A group's leaves can never be split: `reorderColumns` keeps them together and a stored order
   that splits one is healed on load. The column manager lists groups with their leaves, moves
   a whole group (`reorderGroup`, `moveGroup`, `moveColumn`), and has up/down buttons.
