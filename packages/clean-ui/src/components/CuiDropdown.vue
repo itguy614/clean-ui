@@ -5,7 +5,9 @@ import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../utils/menu";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
@@ -54,7 +56,7 @@ const reveal = () => show(null);
 /** Where focus goes back to on close: the trigger's own focusable element (#160). */
 function triggerTarget() {
   const target = triggerEl.value?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if (!target) warnOnce("[clean-ui] CuiDropdownTrigger: nothing in the trigger can take focus, so focus cannot return to it when the menu closes. Use a CuiButton or <button>.");
+  if (__DEV__ && process.env.NODE_ENV !== "production" && !target) warnOnce("[clean-ui] CuiDropdownTrigger: nothing in the trigger can take focus, so focus cannot return to it when the menu closes. Use a CuiButton or <button>.");
   return target;
 }
 

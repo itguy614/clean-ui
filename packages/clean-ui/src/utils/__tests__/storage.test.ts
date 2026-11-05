@@ -65,9 +65,9 @@ describe("safe storage helpers", () => {
 describe("module-scope storage access", () => {
   it("imports useDensity without throwing when storage is inert", async () => {
     stubStorage({});
-    // Force re-execution so the module-scope `loadDensity()` runs under the
-    // inert stub. That call is the regression: an unguarded read there took
-    // down every import of the library barrel, not just useDensity.
+    // Force re-execution so the module runs under the inert stub, then use it: the first
+    // use reads storage (#209), and an unguarded read took down every import of the
+    // library barrel, not just useDensity.
     vi.resetModules();
     const mod = await import("../../composables/useDensity");
     expect(mod.useDensity).toBeTypeOf("function");

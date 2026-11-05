@@ -1,4 +1,6 @@
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { getCurrentScope, onScopeDispose, toValue, watch, type MaybeRefOrGetter } from "vue";
 
 export interface UseEventListenerOptions {
@@ -40,7 +42,7 @@ export function useEventListener(
   // Outside a component or effect scope (a store, after an await) nothing could ever
   // remove the listener, so none is added.
   if (!getCurrentScope()) {
-    warnOnce(`[clean-ui] useEventListener("${target}", …) was called outside a component setup, so no listener was added.`);
+    if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(`[clean-ui] useEventListener("${target}", …) was called outside a component setup, so no listener was added.`);
     return;
   }
   const el: EventTarget = target === "window" ? window : document;
