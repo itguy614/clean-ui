@@ -3,7 +3,9 @@ import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../uti
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { usePresence } from "./usePresence";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { afterAnimations, motionDuration, type MotionDuration } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
@@ -84,7 +86,7 @@ export function useOverlay(options: UseOverlayOptions) {
     onClosed,
   } = options;
 
-  if (options.allowNested !== undefined) {
+  if (__DEV__ && process.env.NODE_ENV !== "production" && options.allowNested !== undefined) {
     warnOnce(
       `[clean-ui] ${options.name ?? "useOverlay"}: \`allowNested\` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.`,
     );

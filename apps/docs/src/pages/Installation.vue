@@ -68,10 +68,15 @@ app.use(createCleanUI({
           <code>roleIcons</code>: the icon each colour role shows in CuiAlert, CuiToast and
           CuiBanner.
         </li>
+        <li>
+          <code>locale</code>: the language tag dates, file sizes and AM/PM labels are
+          formatted in, such as <code>"de"</code>. It follows the document's <code>lang</code>
+          when unset. See <router-link to="/composables/locale">Locale</router-link>.
+        </li>
       </ul>
       <p class="mt-3 text-surface-600 dark:text-surface-400">
         For part of a page, <code>CuiConfigProvider</code> takes the same
-        <code>headingLevels</code> and <code>roleIcons</code> props and applies them to what
+        <code>headingLevels</code>, <code>roleIcons</code> and <code>locale</code> props and applies them to what
         it wraps, over the app's. And <code>configureCleanUI()</code> sets them
         <em>globally</em>, as the fallback beneath every app: for code with no app to hand,
         such as a test setup. On a server it is shared by every request, so prefer the app's

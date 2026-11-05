@@ -79,16 +79,17 @@ identity on a shared global) must be listed, in both directions:
 
 - The `dist` path, so a **consumer's** bundler (webpack in particular reads this field directly)
   doesn't drop the module from their app when nothing in their own code imports a binding from it
-  — `useTheme`/`useDensity` apply a persisted class to `<html>` and register a permanent watcher
-  purely by being loaded, regardless of whether the consumer ever calls `useTheme()`/`useDensity()`
-  themselves.
+  — a module that, say, registers a permanent listener purely by being loaded. (`useDensity` used
+  to apply a persisted class at load and was listed for that; since #209 it does nothing until
+  first use and is deliberately **not** listed, so it tree-shakes. A module that does work at
+  load belongs on the list; better, make it lazy.)
 - The **source** path too, if the module is reached only via a bare, binding-less side-effect
   import within this repository's own build (`import "./duplicate-guard"`, with no export used
   anywhere, not even in the barrel's own re-export list). clean-ui's own Vite/Rollup build resolves
   `sideEffects` matches against the *source* file being bundled, not the eventual `dist` path — a
   module reachable only that way, with only its `dist` path listed, is silently tree-shaken out of
   clean-ui's own build, not just a hypothetical consumer's. A module whose export bindings are
-  re-exported by the entry barrel (`useTheme`, `useDensity`) doesn't need this: the barrel's own
+  re-exported by the entry barrel (`useTheme`) doesn't need this: the barrel's own
   re-export keeps it reachable regardless of the `sideEffects` array.
 
 Getting this wrong fails silently, the same way the guarantees below do: the built package looks
