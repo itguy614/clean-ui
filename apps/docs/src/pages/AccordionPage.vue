@@ -77,11 +77,16 @@ const faq = ref<string[]>([]);
           instead of vanishing. Arrow navigation skips it.
         </li>
         <li>
-          <code>value</code> becomes the trigger's and panel's DOM ids
-          (<code>cui-accordion-trigger-{value}</code> and
-          <code>cui-accordion-panel-{value}</code>). Two accordions on one page using the
-          same values produce duplicate ids and the <code>aria-controls</code> wiring points
-          at the wrong panel — keep values unique per page, not per accordion.
+          A closed panel is hidden once its collapse has finished, with
+          <code>hidden="until-found"</code> (<code>inert</code> where that is unsupported):
+          nothing inside it is tabbable or in the accessibility tree, yet find-in-page still
+          finds text inside and opens the panel. The panel animates its
+          <code>grid-template-rows</code>, and snaps under
+          <code>prefers-reduced-motion</code>.
+        </li>
+        <li>
+          The trigger's and panel's DOM ids are generated per instance, so two accordions
+          on one page can use the same <code>value</code>s.
         </li>
         <li>
           The header button's label comes from <code>label</code> or the
