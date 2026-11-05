@@ -157,6 +157,14 @@ defineExpose({ scrollWrapper, measure });
 <style>
 /* Unscoped — BEM prefix `.cui-table` provides isolation */
 
+/* Its own stacking context: a sticky header cell's z-index (10, or 11 where it is also a
+   frozen column) is only meant to rank against the table's own cells. Left to leak, it
+   competes in the page's context and paints over a sticky page header of z-index 10 that
+   comes earlier in the document. */
+.cui-table-container {
+  isolation: isolate;
+}
+
 .cui-table-wrapper {
   position: relative;
 }

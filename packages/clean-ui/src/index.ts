@@ -277,6 +277,7 @@ export type {
   DataGridColumn,
   DataGridColumnGroup,
   DataGridColumnDef,
+  DataGridColumnUnit,
   DataGridSort,
   DataGridFilter,
   DataGridFilterType,

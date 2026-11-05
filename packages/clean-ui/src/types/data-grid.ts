@@ -51,6 +51,11 @@ export function isDataGridColumnGroup(def: DataGridColumnDef): def is DataGridCo
   return "children" in def && Array.isArray(def.children);
 }
 
+/** One entry of the column order as the column manager moves it: a group, or a loose column. */
+export type DataGridColumnUnit =
+  | { type: "group"; group: DataGridColumnGroup; keys: string[] }
+  | { type: "column"; key: string };
+
 export type DataGridFilterType = "text" | "select" | "multi-select" | "date-range";
 
 export interface DataGridSort {

@@ -314,6 +314,31 @@ const headerRows = computed<HeadCell[][]>(() => {
   return [top, second];
 });
 
+// A rule on the left of each group's first leaf, header and body alike, except before the
+// first group (nothing to divide it from). A cell-level class, not a border: a border on a
+// frozen cell would not travel with it, but the line drawn inside the cell does.
+const groupStarts = computed(() => {
+  const keys = new Set<string>();
+  const ids = new Set<string>();
+  const [top, second] = headerRows.value;
+  let first = true;
+  let previous: string | undefined;
+  for (const cell of top) {
+    if (cell.kind !== "group") continue;
+    if (!first) ids.add(cell.key);
+    first = false;
+  }
+  first = true;
+  for (const cell of second ?? []) {
+    if (cell.kind === "leaf" && cell.groupId !== previous) {
+      if (!first) keys.add(cell.col.key);
+      first = false;
+    }
+    previous = cell.kind === "leaf" ? cell.groupId : undefined;
+  }
+  return { keys, ids };
+});
+
 /** `rowspan` for the bulk-select and actions cells, which stand alone in a two-row header. */
 const auxRowspan = computed(() => (headerRows.value.length > 1 ? 2 : undefined));
 
@@ -506,16 +531,21 @@ const totalCols = computed(() => {
               v-if="cell.kind === 'group'"
               :id="cell.key"
               class="cui-data-grid-table__group"
+              :class="{ 'cui-data-grid-table__group-start': groupStarts.ids.has(cell.key) }"
               align="center"
               :colspan="cell.span"
               scope="colgroup"
               :style="headerPinStyle(undefined)"
             >
-              {{ cell.group.label }}
+              <!-- A bracket under the label, over exactly the group's leaves -->
+              <span class="cui-data-grid-table__group-label">{{ cell.group.label }}</span>
             </CuiTableCell>
             <CuiTableCell
               v-else
-              :class="{ 'cui-data-grid-table__head-leaf': cell.groupId }"
+              :class="{
+                'cui-data-grid-table__head-leaf': cell.groupId,
+                'cui-data-grid-table__group-start': groupStarts.keys.has(cell.key),
+              }"
               :headers="cell.groupId"
               :align="cell.col.align"
               :width="cell.col.width"
@@ -594,6 +624,7 @@ const totalCols = computed(() => {
             :key="col.key"
             :align="col.align"
             :nowrap="col.nowrap"
+            :class="{ 'cui-data-grid-table__group-start': groupStarts.keys.has(col.key) }"
             :style="stickyBodyColStyle(col.key)"
           >
             <slot :name="`cell-${col.key}`" :value="row[col.key]" :row="row">
@@ -667,7 +698,37 @@ const totalCols = computed(() => {
   top: var(--_data-grid-head-top, auto) !important;
 }
 
+/* --- Column groups: themeable (zero specificity) --- */
+:where(.cui-data-grid-table__group-start)::before {
+  background: var(--cui-data-grid-group-border, var(--cui-border));
+}
+:where(.cui-data-grid-table__group-label) {
+  border-color: var(--cui-data-grid-group-bracket, var(--cui-border-strong));
+  border-radius: 0 0 var(--cui-radius-sm, 0.25rem) var(--cui-radius-sm, 0.25rem);
+}
+
 /* --- Structural --- */
+/* The rule is a line inside the cell, at its start edge. It travels with a frozen cell,
+   where a border would not, and a cell that isn't pinned only needs a positioned box. */
+.cui-data-grid-table__group-start {
+  position: relative;
+}
+.cui-data-grid-table__group-start::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 1px;
+  pointer-events: none;
+}
+/* Spans the group's leaves, less a gap at each end that separates it from the next group. */
+.cui-data-grid-table__group-label {
+  display: block;
+  border-style: solid;
+  border-width: 0 2px 2px;
+  margin-inline: calc(0.25rem * var(--cui-density-scale, 1));
+  padding-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+}
 .cui-data-grid-table__row--interactive {
   cursor: pointer;
 }

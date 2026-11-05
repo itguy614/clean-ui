@@ -2,6 +2,7 @@ import type { InjectionKey, Ref, ComputedRef } from "vue";
 import type {
   DataGridColumn,
   DataGridColumnGroup,
+  DataGridColumnUnit,
   DataGridColumnState,
   DataGridSort,
   DataGridFilter,
@@ -16,6 +17,8 @@ export interface DataGridContext {
   columns: DataGridColumn[];
   /** The group a leaf column sits under (a spanning header), if any. */
   columnGroupOf: (key: string) => DataGridColumnGroup | undefined;
+  /** The column order as units: each group once (with its leaf keys), each ungrouped column. */
+  columnUnits: ComputedRef<DataGridColumnUnit[]>;
   columnState: Ref<DataGridColumnState[]>;
   visibleColumns: ComputedRef<DataGridColumn[]>;
   filterableColumns: ComputedRef<DataGridColumn[]>;
@@ -51,7 +54,14 @@ export interface DataGridContext {
 
   // Column management
   toggleColumnVisibility: (key: string) => void;
+  /** A grouped leaf stays within its group; nothing ever splits a group. */
   reorderColumns: (fromIndex: number, toIndex: number) => void;
+  /** Move a group, or an ungrouped column, to another place in `columnUnits`. */
+  reorderUnit: (fromUnit: number, toUnit: number) => void;
+  reorderGroup: (group: DataGridColumnGroup, toUnit: number) => void;
+  /** One step up or down — a leaf within its group, an ungrouped column among the units. */
+  moveColumn: (key: string, delta: -1 | 1) => void;
+  moveGroup: (group: DataGridColumnGroup, delta: -1 | 1) => void;
 
   // View mode
   viewMode: Ref<DataGridViewMode>;

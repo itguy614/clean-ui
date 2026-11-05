@@ -49,7 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CuiDataGrid column groups and header slots** (#376): `{ label, children }` entries in
   `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
   sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
-  column's header content, falling back to `label`.
+  column's header content, falling back to `label`. A rule marks each group after the first
+  (`--cui-data-grid-group-border`) and a bracket spans its label (`--cui-data-grid-group-bracket`).
+  A group's leaves can never be split: `reorderColumns` keeps them together and a stored order
+  that splits one is healed on load. The column manager lists groups with their leaves, moves
+  a whole group (`reorderGroup`, `moveGroup`, `moveColumn`), and has up/down buttons.
+  CuiTable now isolates its stacking context, so a sticky header cell no longer paints over a
+  sticky page header.
 
 - **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
   `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows

@@ -101,4 +101,101 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
     expect(rect(leaf).left).toBeCloseTo(rect(scroller).left, 0);
     expect(rect(leaf).top).toBeCloseTo(rect(group).bottom, 0);
   });
+
+  describe("group separators", () => {
+    const RULE = "rgb(255, 0, 0)";
+    const sepColumns: DataGridColumnDef[] = [
+      { key: "name", label: "Name", width: "100px" },
+      { label: "North", children: [{ key: "a1", label: "A1", sticky: true, width: "100px" }, { key: "a2", label: "A2", width: "200px" }] },
+      { label: "South", children: [{ key: "b1", label: "B1", sticky: true, width: "100px" }, { key: "b2", label: "B2", width: "300px" }] },
+    ];
+    const sepData = data.map((r) => ({ ...r, name: r.epc, a1: 1, a2: 2, b1: 3, b2: 4 }));
+    const rule = (el: Element) => getComputedStyle(el, "::before");
+
+    async function grid(extra: Record<string, unknown> = {}) {
+      const el = host({ width: "400px" });
+      el.style.setProperty("--cui-data-grid-group-border", RULE);
+      el.style.setProperty("--cui-border-strong", "rgb(0, 0, 255)");
+      const wrapper = track(
+        mount(CuiDataGrid, {
+          attachTo: el,
+          props: { columns: sepColumns, data: sepData, maxHeight: "200px", hideToolbar: true, hidePagination: true, ...extra },
+        }),
+      );
+      await frames(3);
+      const table = wrapper.element.querySelector("table")!;
+      return { table, scroller: table.parentElement! };
+    }
+
+    it("draws a themeable rule on the second group's first leaf, in the header and the body, not the first group's", async () => {
+      const { table } = await grid();
+      const b1Head = cell(table, "B1");
+      const b1Body = table.querySelector("tbody tr")!.children[3];
+      for (const el of [b1Head, cell(table, "South"), b1Body]) {
+        expect(rule(el).content).not.toBe("none");
+        expect(rule(el).width).toBe("1px");
+        expect(rule(el).backgroundColor).toBe(RULE);
+      }
+      expect(rule(cell(table, "A1")).content).toBe("none");
+      expect(rule(cell(table, "North")).content).toBe("none");
+      expect(rule(table.querySelector("tbody tr")!.children[1]).content).toBe("none");
+    });
+
+    it("keeps the rule with a frozen group-start leaf on horizontal scroll", async () => {
+      const { table, scroller } = await grid();
+      scroller.scrollLeft = 340;
+      scroller.scrollTop = 40;
+      await frames(2);
+      const b1 = cell(table, "B1");
+      const bodyB1 = table.querySelector("tbody tr")!.children[3];
+      // pinned beside A1, still carrying its rule
+      expect(rect(b1).left).toBeCloseTo(rect(scroller).left + 100, 0);
+      expect(rect(bodyB1).left).toBeCloseTo(rect(b1).left, 0);
+      expect(getComputedStyle(b1).position).toBe("sticky");
+      expect(rule(b1).backgroundColor).toBe(RULE);
+      expect(rule(bodyB1).backgroundColor).toBe(RULE);
+    });
+
+    it("keeps a gap between neighbouring group brackets", async () => {
+      const { table } = await grid();
+      const north = cell(table, "North").querySelector(".cui-data-grid-table__group-label")!;
+      const south = cell(table, "South").querySelector(".cui-data-grid-table__group-label")!;
+      expect(rect(south).left - rect(north).right).toBeGreaterThan(2);
+      expect(getComputedStyle(north).borderBottomWidth).toBe("2px");
+    });
+  });
+
+  describe("stacking against a sticky page header", () => {
+    // The docs site's header is sticky, z-index 10 (the docs site had one), and earlier
+    // in the document than the grid. A grid header cell that meets it must pass under it.
+    it.each([
+      ["a flat grid", [{ key: "a", label: "A", sticky: true, width: "100px" }, { key: "b", label: "B", width: "100px" }] as DataGridColumnDef[]],
+      ["a grouped grid", columns],
+    ])("keeps %s's header cells under a page header above them", async (_name, cols) => {
+      const bar = document.createElement("div");
+      bar.style.cssText =
+        "position: fixed; top: 0; left: 0; right: 0; height: 120px; background: rgb(0, 128, 0); z-index: 10;";
+      document.body.prepend(bar);
+      try {
+        const { table, scroller } = await scrolledGrid({
+          columns: cols,
+          data: data.map((r) => ({ ...r, a: 1, b: 2 })),
+          maxHeight: "300px",
+        });
+        scroller.scrollTop = 40;
+        await frames(2);
+        let checked = 0;
+        for (const th of table.querySelectorAll("thead th")) {
+          const r = th.getBoundingClientRect();
+          if (r.width === 0 || r.top > 110 || r.left > 360) continue;
+          const hit = document.elementFromPoint(r.left + Math.min(r.width / 2, 30), Math.max(r.top, 0) + 1);
+          expect(hit === bar, `${th.textContent?.trim()} is covered by the page header`).toBe(true);
+          checked++;
+        }
+        expect(checked).toBeGreaterThan(0);
+      } finally {
+        bar.remove();
+      }
+    });
+  });
 });

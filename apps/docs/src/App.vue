@@ -68,11 +68,11 @@ function toggleDark() {
       <!-- Main column -->
       <div :style="{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column' }">
 
-        <!-- Header -->
+        <!-- Header: just under the library's overlays (modals, panels), above page content -->
         <header :style="{
           position: 'sticky',
           top: '0',
-          zIndex: '10',
+          zIndex: 'calc(var(--cui-z-overlay, 9990) - 1)',
           background: isDark ? 'color-mix(in srgb, var(--color-surface-950) 80%, transparent)' : 'color-mix(in srgb, white 80%, transparent)',
           backdropFilter: 'blur(8px)',
         }">

@@ -83,6 +83,11 @@ const meta: ComponentMeta = {
     hiddenProp,
   ],
 
+  tokens: [
+    { name: "--cui-data-grid-group-border", default: "var(--cui-border)", description: "The rule on the left of each column group's first leaf (all but the first group), through the header and body" },
+    { name: "--cui-data-grid-group-bracket", default: "var(--cui-border-strong)", description: "The bracket under a column group's label, spanning exactly its leaves" },
+  ],
+
   slots: [
     { name: "toolbar-start", description: "Content at the leading end of the toolbar, before the search field" },
     { name: "toolbar-end", description: "Content at the trailing end of the toolbar, before the filter and column controls" },

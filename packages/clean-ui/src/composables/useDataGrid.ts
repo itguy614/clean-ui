@@ -4,6 +4,7 @@ import type {
   DataGridColumnDef,
   DataGridColumnGroup,
   DataGridColumnState,
+  DataGridColumnUnit,
   DataGridSort,
   DataGridFilter,
   DataGridQueryParams,
@@ -96,6 +97,45 @@ export function useDataGrid(options: UseDataGridOptions) {
   });
 
   /**
+   * Make each group's leaves contiguous: a group sits where its first leaf in `state` is, the
+   * leaves keep their relative order, and anything ungrouped stays out of the middle. So a
+   * stored order that splits a group ("Reads A1, RSSI A1, Reads A2") heals on load. Entries
+   * are returned as the same objects.
+   */
+  function keepGroupsTogether(state: DataGridColumnState[]): DataGridColumnState[] {
+    const groups = columnGroupByKey.value;
+    if (groups.size === 0) return state;
+    const placed = new Set<DataGridColumnGroup>();
+    const result: DataGridColumnState[] = [];
+    for (const cs of state) {
+      const group = groups.get(cs.key);
+      if (!group) result.push(cs);
+      else if (!placed.has(group)) {
+        placed.add(group);
+        result.push(...state.filter((other) => groups.get(other.key) === group));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * The order as the column manager shows it: each group once, with its leaves, and each
+   * ungrouped column on its own. Moving a unit moves a whole group.
+   */
+  const columnUnits = computed(() => {
+    const groups = columnGroupByKey.value;
+    const units: DataGridColumnUnit[] = [];
+    for (const cs of columnState.value) {
+      const group = groups.get(cs.key);
+      const last = units[units.length - 1];
+      if (group && last?.type === "group" && last.group === group) last.keys.push(cs.key);
+      else if (group) units.push({ type: "group", group, keys: [cs.key] });
+      else units.push({ type: "column", key: cs.key });
+    }
+    return units;
+  });
+
+  /**
    * Fit a column state to a set of definitions. Entries for definitions that remain
    * keep their visibility and order — unless `previous` is given and the definition's
    * own `visible` changed, which is an intentional update; entries for removed
@@ -131,7 +171,7 @@ export function useDataGrid(options: UseDataGridOptions) {
       }
       result.splice(at, 0, defaultStateOf(col));
     });
-    return result;
+    return keepGroupsTogether(result);
   }
 
   // --- Column state ---
@@ -190,11 +230,58 @@ export function useDataGrid(options: UseDataGridOptions) {
     if (entry) entry.visible = !entry.visible;
   }
 
+  /**
+   * Move a column. A grouped leaf stays inside its group's range (`toIndex` is clamped to
+   * it); an ungrouped column dropped into the middle of a group lands after the group
+   * instead. A group is never split, whoever calls this.
+   */
   function reorderColumns(fromIndex: number, toIndex: number) {
     const arr = [...columnState.value];
-    const [moved] = arr.splice(fromIndex, 1);
+    const moved = arr[fromIndex];
+    if (!moved) return;
+    const group = columnGroupByKey.value.get(moved.key);
+    if (group) {
+      const members = arr.flatMap((cs, i) => (columnGroupByKey.value.get(cs.key) === group ? [i] : []));
+      toIndex = Math.min(Math.max(toIndex, members[0]), members[members.length - 1]);
+    }
+    arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, moved);
-    columnState.value = arr;
+    columnState.value = keepGroupsTogether(arr);
+  }
+
+  /** Move a unit (a whole group, or an ungrouped column) to another place in `columnUnits`. */
+  function reorderUnit(fromUnit: number, toUnit: number) {
+    const units = [...columnUnits.value];
+    const [moved] = units.splice(fromUnit, 1);
+    if (!moved) return;
+    units.splice(Math.min(Math.max(toUnit, 0), units.length), 0, moved);
+    const byKey = new Map(columnState.value.map((cs) => [cs.key, cs]));
+    columnState.value = units
+      .flatMap((u) => (u.type === "group" ? u.keys : [u.key]))
+      .map((key) => byKey.get(key)!);
+  }
+
+  /** Move a whole group to a place among the units (groups and ungrouped columns). */
+  function reorderGroup(group: DataGridColumnGroup, toUnit: number) {
+    const from = columnUnits.value.findIndex((u) => u.type === "group" && u.group === group);
+    if (from !== -1) reorderUnit(from, toUnit);
+  }
+
+  /** One step, for the keyboard: a leaf within its group, an ungrouped column among the units. */
+  function moveColumn(key: string, delta: -1 | 1) {
+    if (columnGroupByKey.value.has(key)) {
+      const i = columnState.value.findIndex((cs) => cs.key === key);
+      if (i !== -1) reorderColumns(i, i + delta);
+      return;
+    }
+    const unit = columnUnits.value.findIndex((u) => u.type === "column" && u.key === key);
+    if (unit !== -1) reorderUnit(unit, unit + delta);
+  }
+
+  /** One step for a whole group. */
+  function moveGroup(group: DataGridColumnGroup, delta: -1 | 1) {
+    const unit = columnUnits.value.findIndex((u) => u.type === "group" && u.group === group);
+    if (unit !== -1) reorderUnit(unit, unit + delta);
   }
 
   // --- Sort ---
@@ -614,6 +701,7 @@ export function useDataGrid(options: UseDataGridOptions) {
   const context: DataGridContext = {
     columns,
     columnGroupOf,
+    columnUnits,
     columnState,
     visibleColumns,
     filterableColumns,
@@ -637,6 +725,10 @@ export function useDataGrid(options: UseDataGridOptions) {
     clearSelection,
     toggleColumnVisibility,
     reorderColumns,
+    reorderUnit,
+    reorderGroup,
+    moveColumn,
+    moveGroup,
     viewMode,
     setViewMode,
     filterPanelOpen,

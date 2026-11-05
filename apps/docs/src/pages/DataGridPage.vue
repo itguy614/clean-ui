@@ -138,12 +138,21 @@ const groupedColumns: DataGridColumnDef[] = [
     label: "RSSI (dBm)",
     children: antennas.map((a, i) => ({ key: `s${i + 1}`, label: a, sortable: true, align: "right", width: "80px" })),
   },
+  // Leaf labels that don't restart per group: only the rule and bracket say where this one begins
+  {
+    label: "Gain (dB)",
+    children: [
+      { key: "g1", label: "Antenna 1", align: "right", width: "110px" },
+      { key: "g2", label: "Antenna 2", align: "right", width: "110px" },
+    ],
+  },
 ];
 const tagData: DataGridRow[] = Array.from({ length: 12 }, (_, i) => ({
   id: String(i + 1),
   epc: `E280 6894 0000 ${String(4000 + i * 37).padStart(4, "0")}`,
   r1: (i * 7) % 23, r2: (i * 5) % 17, r3: (i * 3) % 11, r4: (i * 11) % 29,
   s1: -40 - ((i * 3) % 25), s2: -45 - ((i * 5) % 25), s3: -50 - ((i * 7) % 25), s4: -55 - ((i * 2) % 25),
+  g1: 6 + (i % 4), g2: 7 + (i % 3),
 }));
 
 // Header slot: richer header content than the label; the label still names the column
@@ -462,9 +471,12 @@ function step(by: number) {
           <p class="text-sm text-surface-500">
             A group has a <code>label</code> and <code>children</code> but no <code>key</code>:
             its cell spans the leaves that are showing, and ungrouped columns span both rows.
-            Sorting, filtering, the column manager and saved views all work on the leaves. Hide
-            a leaf in the column manager and its group narrows; hide them all and the group
-            goes. Screen readers announce a leaf with its group (&ldquo;Reads, A1&rdquo;).
+            A rule marks where each group after the first begins, through the header and body,
+            and a bracket under the label spans exactly its leaves. Sorting, filtering and saved
+            views work on the leaves. Open <strong>Columns</strong>: groups list with their leaves
+            indented; drag a leaf within its group, drag a group header to move the whole block,
+            or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
+            group goes. Screen readers announce a leaf with its group (&ldquo;Reads, A1&rdquo;).
           </p>
           <CuiDataGrid :columns="groupedColumns" :data="tagData" max-height="320px" size="sm" />
         </CuiStack>
