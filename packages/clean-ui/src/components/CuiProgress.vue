@@ -100,7 +100,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   >
     <div
       class="cui-progress-bar__track"
-      :style="{ height: barHeight[clampedSize] }"
+      :style="{ '--_progress-height': barHeight[clampedSize] }"
     >
       <div
         class="cui-progress-bar__fill"
@@ -127,8 +127,8 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
     v-show="!hidden"
     class="cui-progress-circle"
     :style="{
-      width: `${circleDims.size}px`,
-      height: `${circleDims.size}px`,
+      '--_progress-width': `${circleDims.size}px`,
+      '--_progress-height': `${circleDims.size}px`,
       '--_progress-color': `var(--cui-${color})`,
       '--_progress-bg': `var(--cui-${color}-bg)`,
     }"
@@ -172,7 +172,7 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
       v-if="$slots.label || (showLabel && !indeterminate)"
       :id="labelId"
       class="cui-progress-circle__label"
-      :style="{ fontSize: circleLabelSize[clampedSize] }"
+      :style="{ '--_progress-font-size': circleLabelSize[clampedSize] }"
     >
       <slot name="label" :value="value" :max="max" :percent="percent">
         {{ percentLabel }}
@@ -190,6 +190,12 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   display: flex;
   align-items: center;
   gap: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+/* Themeable (#333): zero specificity, so `--cui-progress-height` or a plain rule from a
+   consumer wins. */
+:where(.cui-progress-bar__track) {
+  height: var(--cui-progress-height, var(--_progress-height));
 }
 
 .cui-progress-bar__track {
@@ -297,7 +303,10 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
    CIRCLE VARIANT
    ============================================================ */
 
+/* The circle's box is tied to its SVG, so its size is private only. */
 .cui-progress-circle {
+  width: var(--_progress-width);
+  height: var(--_progress-height);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -324,6 +333,10 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 
 .cui-progress-circle__fill--indeterminate {
   transition: none;
+}
+
+:where(.cui-progress-circle__label) {
+  font-size: var(--cui-progress-font-size, var(--_progress-font-size));
 }
 
 .cui-progress-circle__label {

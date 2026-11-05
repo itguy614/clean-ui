@@ -3,7 +3,9 @@ import { useMessages } from "../composables/useMessages";
 import { computed, inject, onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { HideableProps, DisableableProps } from "../types/common";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { FormContextKey } from "./form-context";
 import { useFloatingLabelProvider } from "./form-field-context";
 
@@ -132,7 +134,7 @@ const rootEl = useTemplateRef<HTMLElement>("rootEl");
 function checkFloatingSupport() {
   if (props.labelPosition !== "floating" || !props.label || !rootEl.value) return;
   if (rootEl.value.querySelector("[data-cui-float-label]")) return;
-  warnOnce(
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[clean-ui] CuiFormField: labelPosition="floating" needs a control with a native <input> or ` +
       `<textarea> (CuiInput without an attached button, CuiTextarea, CuiMaskedInput, a ` +
       `horizontal CuiInputStepper), of size md, lg or xl, given the field's id (v-bind the slot ` +

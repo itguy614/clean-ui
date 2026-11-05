@@ -50,6 +50,8 @@ const meta: ComponentMeta = {
     },
     { name: "blur", signature: "() => void", description: "Blur the native textarea" },
   ],
+
+  tokens: [{ name: "--cui-textarea-radius", default: "per rounded", description: "Corner radius of the field" }],
 };
 
 export default meta;

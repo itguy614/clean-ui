@@ -61,6 +61,102 @@
   color: var(--cui-error);
 }
 
+/* Buttons merged into a group or a field (#444). Each button takes these from its place in
+   the group, through `useButtonGroupMember`, instead of the group reaching into it with
+   `:deep()` selectors. Structural, so at normal specificity: they square off the corners
+   where two buttons meet, and a consumer's own `.cui-button { border-radius }` shouldn't
+   reopen the seam. `.cui-button` doubles each corner selector, to beat a button's own
+   radius whatever order the stylesheets load in. */
+/* A button attached to a field: corners follow the field's radius, less its border (#333) --
+   the `rounded` prop or `--cui-input-radius`, both inherited from the field, since the button
+   sits inside it; the inner side is squared by a `--flat-*` rule below. */
+.cui-button.cui-button--inset {
+  border-radius: calc(var(--cui-input-radius, var(--_input-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)))) - 1px);
+}
+
+.cui-button.cui-button--flat-right {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cui-button.cui-button--flat-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cui-button.cui-button--flat-top {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.cui-button.cui-button--flat-bottom {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Everything below is plain adjacency, so it holds in server-rendered markup and before a
+   button has mounted (#444). The corner rules above are the mounted state, from the context;
+   the `:not(.cui-button--grouped)` ones further down cover the time before it. */
+
+/* Shared borders: each button after the first overlaps its neighbour's edge by one pixel. */
+.cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-button,
+.cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-dropdown .cui-button {
+  margin-left: -1px;
+}
+
+.cui-button-group--vertical > :is(.cui-button, .cui-dropdown) + .cui-button,
+.cui-button-group--vertical > :is(.cui-button, .cui-dropdown) + .cui-dropdown .cui-button {
+  margin-top: -1px;
+}
+
+/* Lift a button above its siblings so the shared border shows its edge, in three tiers: a
+   hovered button, then a selected one, then a focused one. A hovered neighbour must stay
+   below a selected button, or its hover fill paints over the selected border it overlaps.
+   Zero specificity, so the order here is the ranking. */
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):hover) {
+  z-index: 1;
+  position: relative;
+}
+
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):is([aria-pressed="true"], .cui-radio-button--active, [aria-checked="true"])) {
+  z-index: 2;
+  position: relative;
+}
+
+:where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):focus-visible) {
+  z-index: 3;
+  position: relative;
+}
+
+/* Corners before the button has joined the group's context (server-rendered markup, the
+   moment before mount). Only painted buttons meet: a ghost button (`--edgeless`) draws no
+   edge, so beside one a painted button keeps its corners; a dropdown merges by position. A
+   button that has mounted wears `--grouped` and takes its corners from the context, which
+   also covers what these can't (a lone pressed toggle among ghost ones, a reordered list). */
+.cui-button-group--horizontal > .cui-button:not(.cui-button--grouped, .cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown)),
+.cui-button-group--horizontal > .cui-dropdown:not(:last-child) .cui-button:not(.cui-button--grouped) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cui-button-group--horizontal > :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--grouped, .cui-button--edgeless),
+.cui-button-group--horizontal > .cui-dropdown:not(:first-child) .cui-button:not(.cui-button--grouped) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cui-button-group--vertical > .cui-button:not(.cui-button--grouped, .cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown)),
+.cui-button-group--vertical > .cui-dropdown:not(:last-child) .cui-button:not(.cui-button--grouped) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cui-button-group--vertical > :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--grouped, .cui-button--edgeless),
+.cui-button-group--vertical > .cui-dropdown:not(:first-child) .cui-button:not(.cui-button--grouped) {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 /* Floating panels' enter and exit (#263): a panel rendered `v-if="present" v-show="open"`
    (composables/usePresence) inside a `<Transition v-bind="panelTransition">` (utils/motion).
    One CSS transition on a state attribute (`data-cui-panel`), not keyframes, so a re-open
@@ -86,4 +182,146 @@
    opacity-only rule. */
 [data-cui-panel].cui-panel--cut {
   transition-property: none !important;
+}
+
+/* CuiTransition's presets (#397): fade, fade-slide, grow and collapse, for content a
+   consumer shows and hides. Two ways in, one look:
+   - CuiTransition marks the element `data-cui-transition="<preset>"` and runs one CSS
+     transition on `data-cui-transition-state` (utils/motion), so a re-open mid-exit
+     reverses from where it is;
+   - a raw `<Transition name="cui-transition-<preset>">` (or `<TransitionGroup>`) gets the
+     same look from the `-enter-from` / `-leave-to` / `-active` classes, which restart
+     from the hidden state on a re-open instead of reversing.
+   Enter runs over `--cui-duration-base` (`data-cui-transition-duration` picks another),
+   leave over `--cui-duration-fast`. Movement is transform and opacity; collapse takes the
+   sanctioned `grid-template-rows: 0fr -> 1fr`, and wants one child element to clip.
+   Zero specificity throughout, so a consumer's own rule on the element wins. */
+:where([data-cui-transition], [class*="cui-transition-"][class*="-enter-active"]) {
+  --_transition-enter: var(--cui-duration-base);
+  transition-property: opacity, transform;
+  transition-duration: var(--_transition-enter);
+  transition-timing-function: var(--cui-ease-out);
+}
+:where([data-cui-transition-duration="fast"]) {
+  --_transition-enter: var(--cui-duration-fast);
+}
+:where([data-cui-transition-duration="slow"]) {
+  --_transition-enter: var(--cui-duration-slow);
+}
+
+:where([data-cui-transition-state="hidden"], [class*="cui-transition-"][class*="-leave-active"]) {
+  transition-property: opacity, transform;
+  transition-duration: var(--cui-duration-fast);
+  transition-timing-function: var(--cui-ease-out);
+}
+
+:where(
+  [data-cui-transition-state="hidden"],
+  .cui-transition-fade-enter-from,
+  .cui-transition-fade-leave-to,
+  .cui-transition-fade-slide-enter-from,
+  .cui-transition-fade-slide-leave-to,
+  .cui-transition-grow-enter-from,
+  .cui-transition-grow-leave-to,
+  .cui-transition-collapse-enter-from,
+  .cui-transition-collapse-leave-to
+) {
+  opacity: 0;
+}
+:where([data-cui-transition-state="hidden"]) {
+  pointer-events: none;
+}
+
+/* The hidden positions. A side is the edge the element slides in from: the default,
+   bottom, rises into place. `.cui-transition-side-*` sets it for a raw <Transition>. */
+:where(
+  [data-cui-transition="fade-slide"][data-cui-transition-state="hidden"],
+  .cui-transition-fade-slide-enter-from,
+  .cui-transition-fade-slide-leave-to
+) {
+  transform: translate(var(--_transition-x, 0px), var(--_transition-y, var(--cui-transition-distance, 0.5rem)));
+}
+/* The default side, set on every element so a nested transition doesn't inherit its
+   parent's custom properties; the side rules below come after and win. */
+:where([data-cui-transition], .cui-transition-fade-slide-enter-from, .cui-transition-fade-slide-leave-to) {
+  --_transition-x: 0px;
+  --_transition-y: var(--cui-transition-distance, 0.5rem);
+}
+:where([data-cui-transition-side="top"], .cui-transition-side-top) {
+  --_transition-y: calc(var(--cui-transition-distance, 0.5rem) * -1);
+}
+:where([data-cui-transition-side="start"], .cui-transition-side-start) {
+  --_transition-x: calc(var(--cui-transition-distance, 0.5rem) * -1);
+  --_transition-y: 0px;
+}
+:where([data-cui-transition-side="end"], .cui-transition-side-end) {
+  --_transition-x: var(--cui-transition-distance, 0.5rem);
+  --_transition-y: 0px;
+}
+:where([data-cui-transition-side="start"]:dir(rtl), .cui-transition-side-start:dir(rtl)) {
+  --_transition-x: var(--cui-transition-distance, 0.5rem);
+}
+:where([data-cui-transition-side="end"]:dir(rtl), .cui-transition-side-end:dir(rtl)) {
+  --_transition-x: calc(var(--cui-transition-distance, 0.5rem) * -1);
+}
+
+:where(
+  [data-cui-transition="grow"][data-cui-transition-state="hidden"],
+  .cui-transition-grow-enter-from,
+  .cui-transition-grow-leave-to
+) {
+  transform: scale(0.95);
+}
+
+/* Collapse: the element is a one-row grid and its child clips, so the row's size is the
+   only thing that moves. `.cui-transition-collapse` is the raw form's static class. */
+:where([data-cui-transition="collapse"], .cui-transition-collapse) {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+:where([data-cui-transition="collapse"], .cui-transition-collapse) > :where(*) {
+  min-height: 0;
+  overflow: hidden;
+}
+:where(
+  [data-cui-transition="collapse"],
+  [class*="cui-transition-collapse-enter-active"],
+  [class*="cui-transition-collapse-leave-active"]
+) {
+  transition-property: grid-template-rows, opacity;
+}
+:where(
+  [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+  .cui-transition-collapse-enter-from,
+  .cui-transition-collapse-leave-to
+) {
+  grid-template-rows: 0fr;
+}
+
+/* Reduced motion removes the movement and keeps the fade: every preset fades in place.
+   Important, to beat a consumer's own transform. */
+@media (prefers-reduced-motion: reduce) {
+  :where([data-cui-transition], [class*="cui-transition-"]) {
+    transition-property: opacity !important;
+  }
+  :where(
+    [data-cui-transition="fade-slide"][data-cui-transition-state="hidden"],
+    [data-cui-transition="grow"][data-cui-transition-state="hidden"],
+    [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+    .cui-transition-fade-slide-enter-from,
+    .cui-transition-fade-slide-leave-to,
+    .cui-transition-grow-enter-from,
+    .cui-transition-grow-leave-to,
+    .cui-transition-collapse-enter-from,
+    .cui-transition-collapse-leave-to
+  ) {
+    transform: none !important;
+  }
+  :where(
+    [data-cui-transition="collapse"][data-cui-transition-state="hidden"],
+    .cui-transition-collapse-enter-from,
+    .cui-transition-collapse-leave-to
+  ) {
+    grid-template-rows: 1fr !important;
+  }
 }

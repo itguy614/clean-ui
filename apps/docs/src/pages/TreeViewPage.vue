@@ -251,6 +251,16 @@ function revealMatch() {
         onto <code>&lt;body&gt;</code>.
       </p>
 
+      <p class="text-surface-700 dark:text-surface-300">
+        A branch renders its children the first time it opens and keeps them: closing one
+        animates its <code>grid-template-rows</code> to zero and then hides the group with
+        <code>hidden="until-found"</code> (<code>inert</code> where that is unsupported), so
+        nodes inside a shut branch are out of the tab order and the accessibility tree.
+        Find-in-page finds text in any branch that has been opened, and opens it. A branch
+        that has never been opened is not rendered. Each branch's group is wrapped in a
+        <code>cui-tree-node__group</code> element.
+      </p>
+
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           The focus ring draws on the <em>row</em>, not on the <code>treeitem</code> element.

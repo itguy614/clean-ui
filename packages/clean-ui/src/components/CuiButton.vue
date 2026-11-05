@@ -3,7 +3,10 @@ import { computed, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
-import { warnVariantColor } from "../utils/devWarn";
+import { useButtonGroupMember } from "../composables/useButtonGroup";
+import { __DEV__, warnVariantColor } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { disabledLink } from "../utils/disabled-link";
 import type {
   CuiColor,
@@ -74,7 +77,7 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   pressed: undefined,
 });
 
-warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
+if (__DEV__ && process.env.NODE_ENV !== "production") warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
 
 const isDisabled = computed(() => props.disabled || props.loading);
 
@@ -117,6 +120,16 @@ function onClickCapture(event: MouseEvent) {
 
 // Expose element ref and focus method
 const elRef = useTemplateRef<HTMLElement>("buttonRef");
+
+// A `to` button's ref is the router-link instance, not an element.
+const groupEl = () => {
+  const target = elRef.value as unknown as { $el?: HTMLElement } | HTMLElement | null;
+  return target && "$el" in target ? target.$el : (target as HTMLElement | null);
+};
+// Where this button sits in a CuiButtonGroup sets its own corners (#444). A ghost button
+// draws no edge, so it takes no part in the merge; a pressed one has an edge (#396).
+const edgeless = computed(() => props.variant === "ghost" && !props.pressed);
+const groupClasses = useButtonGroupMember(groupEl, () => !edgeless.value);
 
 function focus(opts?: FocusOptions) {
   elRef.value?.focus(opts);
@@ -242,15 +255,15 @@ const buttonStyle = computed(() => {
     v-show="!hidden"
     ref="buttonRef"
     class="cui-button"
-    :class="{
+    :class="[groupClasses, {
       'cui-button--disabled': isDisabled,
       'cui-button--icon': icon,
       'cui-button--pressed': pressed,
       'cui-button--ghost': variant === 'ghost',
-      // Draws no edge, so CuiButtonGroup doesn't merge corners against it. A pressed ghost
+      // Draws no edge, so a group doesn't merge corners against it. A pressed ghost
       // button has one (#396).
-      'cui-button--edgeless': variant === 'ghost' && !pressed,
-    }"
+      'cui-button--edgeless': edgeless,
+    }]"
     :style="buttonStyle"
     v-bind="root.attrs"
     :aria-busy="loading || undefined"

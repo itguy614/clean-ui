@@ -18,8 +18,6 @@ import { parse } from "vue/compiler-sfc";
  * those now fall back to the catalogue too.
  */
 const ALLOWED: Record<string, string> = {
-  "clean-ui/src/components/CuiTimePicker.vue:AM": "part of the 12-hour time format, which the field, its mask and the emitted value use too — localising the buttons alone would show two words",
-  "clean-ui/src/components/CuiTimePicker.vue:PM": "as AM",
   "clean-ui/src/components/CuiFlex.vue:Flex (depth:": "the debug overlay, a developer aid",
   "clean-ui/src/components/CuiGrid.vue:Grid (depth:": "the debug overlay, a developer aid",
 };

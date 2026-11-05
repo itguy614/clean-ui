@@ -5,8 +5,6 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useDatePickerCalendar } from "../composables/useDatePickerCalendar";
 import {
-  MONTH_NAMES,
-  MONTH_NAMES_SHORT, DAY_NAMES_SHORT,
   isSameDay, isToday,
   formatDate,
   toDateValue, dateToIso, addDays,
@@ -14,6 +12,8 @@ import {
 } from "../utils/date";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useLocale } from "../composables/useLocale";
+import { fullDateLabel, monthNames, monthYearLabel, weekdayLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 
@@ -87,6 +87,10 @@ const fieldStyle = computed(() => ({
 }));
 
 const messages = useMessages();
+const locale = useLocale();
+// The month and weekday text the calendar draws and announces (#337), in the library's locale.
+const monthsShort = computed(() => monthNames(locale.value, "short"));
+const weekdays = computed(() => weekdayLabels(locale.value));
 // The label prop names the control (#391): a <label> with no `for` names nothing, and the
 // control's aria-labelledby took only the consumer's own id. Both now, label first.
 // Each input adds which half it is, so the two read "Stay Start date" and "Stay End date".
@@ -164,8 +168,8 @@ function syncFromProp() {
 watch(() => props.modelValue, syncFromProp, { deep: true });
 onMounted(syncFromProp);
 
-const startDisplay = computed(() => startDate.value ? formatDate(startDate.value, props.format) : "");
-const endDisplay = computed(() => endDate.value ? formatDate(endDate.value, props.format) : "");
+const startDisplay = computed(() => startDate.value ? formatDate(startDate.value, props.format, locale.value) : "");
+const endDisplay = computed(() => endDate.value ? formatDate(endDate.value, props.format, locale.value) : "");
 
 // Check if a range would span a blackout date
 function rangeSpansBlackout(start: Date, end: Date): boolean {
@@ -390,7 +394,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
               </CuiButton>
               <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
-                  {{ MONTH_NAMES_SHORT[viewMonth] }}
+                  {{ monthsShort[viewMonth] }}
                 </CuiButton>
                 <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
                   {{ viewYear }}
@@ -403,8 +407,8 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
             <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
               <div
-                v-for="name in DAY_NAMES_SHORT"
-                :key="name"
+                v-for="(name, i) in weekdays"
+                :key="i"
                 :style="{ textAlign: 'center', fontSize: '0.6875rem', fontWeight: '600', color: 'var(--cui-text-tertiary)', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', textTransform: 'uppercase' }"
               >{{ name }}</div>
             </div>
@@ -412,7 +416,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
             <div
               ref="gridRef"
               role="grid"
-              :aria-label="MONTH_NAMES[viewMonth] + ' ' + viewYear"
+              :aria-label="monthYearLabel(new Date(viewYear, viewMonth, 1), locale)"
               :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(1px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
@@ -423,7 +427,7 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
                 :data-cui-cell="day.key"
                 :tabindex="cellTabIndex(day.key)"
                 :aria-disabled="day.disabled || undefined"
-                :aria-label="day.date.toDateString()"
+                :aria-label="fullDateLabel(day.date, locale)"
                 :style="dayStyle(day)"
                 @click="selectDay(day)"
                 @mouseenter="onDayHover(day.date)"
@@ -448,11 +452,11 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
               @keydown="onGridKeydown"
             >
               <div
-                v-for="(name, i) in MONTH_NAMES_SHORT" :key="i"
+                v-for="(name, i) in monthsShort" :key="i"
                 role="gridcell"
                 :data-cui-cell="monthKeys[i]"
                 :tabindex="cellTabIndex(monthKeys[i])"
-                :aria-label="MONTH_NAMES[i] + ' ' + viewYear"
+                :aria-label="monthYearLabel(new Date(viewYear, i, 1), locale)"
                 :style="{ padding: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', color: viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
                 @click="selectMonth(i)"
               >{{ name }}</div>

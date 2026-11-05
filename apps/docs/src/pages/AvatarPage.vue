@@ -188,6 +188,11 @@ import meta from "../meta/avatar";
   <CuiAvatar name=&quot;Alice&quot; />
   <CuiAvatar name=&quot;Bob&quot; />
   ...
+</CuiAvatarGroup>
+
+<!-- Show the first 3, then a +N avatar for the rest -->
+<CuiAvatarGroup :max=&quot;3&quot;>
+  <CuiAvatar v-for=&quot;u in users&quot; :key=&quot;u.id&quot; :name=&quot;u.name&quot; />
 </CuiAvatarGroup>`">
         <CuiStack spacing="4">
           <div>
@@ -217,7 +222,17 @@ import meta from "../meta/avatar";
               <CuiAvatar src="https://i.pravatar.cc/100?u=g3" name="Carol" />
               <CuiAvatar src="https://i.pravatar.cc/100?u=g4" name="David" />
               <CuiAvatar src="https://i.pravatar.cc/100?u=g5" name="Eva" />
-              <CuiAvatar initials="+3" color="secondary" />
+            </CuiAvatarGroup>
+          </div>
+          <div>
+            <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Limited with <code>max</code> (+N overflow):</div>
+            <CuiAvatarGroup :max="3">
+              <CuiAvatar name="Alice Johnson" />
+              <CuiAvatar name="Bob Smith" color="success" />
+              <CuiAvatar name="Carol Williams" color="warning" />
+              <CuiAvatar name="David Brown" color="error" />
+              <CuiAvatar name="Eva Martinez" color="info" />
+              <CuiAvatar name="Frank Lee" color="secondary" />
             </CuiAvatarGroup>
           </div>
           <div>

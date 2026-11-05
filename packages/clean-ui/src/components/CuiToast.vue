@@ -9,8 +9,6 @@ import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
 
 export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
-  /** Internal toast id */
-  toastId?: string;
   /** Title text */
   title?: string;
   /** Description text */

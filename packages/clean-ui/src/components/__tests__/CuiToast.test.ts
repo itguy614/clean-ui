@@ -19,7 +19,7 @@ afterEach(() => {
 describe("CuiToast countdown", () => {
   it("pauses while focus is in the toast, and resumes when it leaves", async () => {
     vi.useFakeTimers();
-    w = mount(CuiToast, { props: { toastId: "t", title: "Saved", autoDismiss: 1000, active: true }, attachTo: document.body });
+    w = mount(CuiToast, { props: { title: "Saved", autoDismiss: 1000, active: true }, attachTo: document.body });
     const dismiss = w.find(".cui-toast__dismiss");
     await w.find(".cui-toast").trigger("focusin");
     vi.advanceTimersByTime(3000);
@@ -32,7 +32,7 @@ describe("CuiToast countdown", () => {
 
   it("stays paused while focus moves between the toast's own buttons", async () => {
     vi.useFakeTimers();
-    w = mount(CuiToast, { props: { toastId: "t", title: "Saved", autoDismiss: 1000, active: true }, attachTo: document.body });
+    w = mount(CuiToast, { props: { title: "Saved", autoDismiss: 1000, active: true }, attachTo: document.body });
     const root = w.find(".cui-toast");
     await root.trigger("focusin");
     await root.trigger("focusout", { relatedTarget: w.find(".cui-toast__dismiss").element });
@@ -46,7 +46,7 @@ describe("CuiToast countdown", () => {
  * server-side undo window) can't outlive it; with all three off, autoDismiss is a deadline.
  */
 describe("CuiToast pause opt-outs", () => {
-  const base = { toastId: "t", title: "Undo?", autoDismiss: 1000 };
+  const base = { title: "Undo?", autoDismiss: 1000 };
 
   it("pauses on hover by default, and not with pauseOnHover: false", async () => {
     vi.useFakeTimers();

@@ -1,7 +1,10 @@
-import { ref, computed, inject, provide, shallowReactive, toRaw, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
+import { ref, computed, inject, provide, shallowReactive, shallowRef, toRaw, toValue, watch, type MaybeRefOrGetter, type Ref } from "vue";
 import type {
   DataGridColumn,
+  DataGridColumnDef,
+  DataGridColumnGroup,
   DataGridColumnState,
+  DataGridColumnUnit,
   DataGridSort,
   DataGridFilter,
   DataGridQueryParams,
@@ -10,11 +13,15 @@ import type {
   DataGridViewMode,
   PaginatedData,
 } from "../types/data-grid";
+import { isDataGridColumnGroup } from "../types/data-grid";
 import { DataGridContextKey, type DataGridContext } from "../components/data-grid-context";
 
 export interface UseDataGridOptions {
-  /** A plain array is read once; pass a ref or getter to follow later changes. */
-  columns: MaybeRefOrGetter<DataGridColumn[]>;
+  /**
+   * A plain array is read once; pass a ref or getter to follow later changes. Entries are
+   * leaf columns, or groups of them (a two-row header) — groups are flattened to their leaves.
+   */
+  columns: MaybeRefOrGetter<DataGridColumnDef[]>;
   data: Ref<DataGridRow[] | PaginatedData>;
   serverSide?: boolean;
   rowKey?: string;
@@ -45,11 +52,87 @@ export function useDataGrid(options: UseDataGridOptions) {
   // Shallow-reactive and updated in place, so `context.columns` stays the same plain
   // array consumers already hold while still re-rendering when the definitions change
   // (#258). Shallow: the definitions themselves are the caller's objects, not proxied.
-  const columns = shallowReactive<DataGridColumn[]>([...toValue(options.columns)]);
+  // A group's leaves are the columns — state, sort, filters and views all see only those.
+  // The groups stay in `definitions`, for the header's spanning row.
+  const flattenColumns = (defs: DataGridColumnDef[]) =>
+    defs.flatMap((d) => (isDataGridColumnGroup(d) ? d.children : [d]));
+  const definitions = shallowRef(toValue(options.columns));
+  const columns = shallowReactive<DataGridColumn[]>(flattenColumns(definitions.value));
+
+  /** The group a column sits under, by key. Computed from `definitions`, so it follows them. */
+  const columnGroupByKey = computed(() => {
+    const map = new Map<string, DataGridColumnGroup>();
+    for (const d of definitions.value) {
+      if (isDataGridColumnGroup(d)) for (const c of d.children) map.set(c.key, d);
+    }
+    return map;
+  });
+  const columnGroupOf = (key: string) => columnGroupByKey.value.get(key);
+
+  // A leaf re-created with identical fields (an inline literal) is the same column.
+  const sameColumn = (a: DataGridColumn, b: DataGridColumn) => {
+    if (a === b) return true;
+    const keys = Object.keys(a) as (keyof DataGridColumn)[];
+    return keys.length === Object.keys(b).length && keys.every((k) => a[k] === b[k]);
+  };
+
+  // Same definitions, ignoring a fresh array or group object re-created on each parent render.
+  const sameDefinitions = (a: DataGridColumnDef[], b: DataGridColumnDef[]) =>
+    a.length === b.length &&
+    a.every((d, i) => {
+      const e = b[i];
+      if (d === e) return true;
+      return (
+        isDataGridColumnGroup(d) &&
+        isDataGridColumnGroup(e) &&
+        d.label === e.label &&
+        d.children.length === e.children.length &&
+        d.children.every((c, j) => sameColumn(c, e.children[j]))
+      );
+    });
 
   const defaultStateOf = (col: DataGridColumn): DataGridColumnState => ({
     key: col.key,
     visible: col.visible !== false,
+  });
+
+  /**
+   * Make each group's leaves contiguous: a group sits where its first leaf in `state` is, the
+   * leaves keep their relative order, and anything ungrouped stays out of the middle. So a
+   * stored order that splits a group ("Reads A1, RSSI A1, Reads A2") heals on load. Entries
+   * are returned as the same objects.
+   */
+  function keepGroupsTogether(state: DataGridColumnState[]): DataGridColumnState[] {
+    const groups = columnGroupByKey.value;
+    if (groups.size === 0) return state;
+    const placed = new Set<DataGridColumnGroup>();
+    const result: DataGridColumnState[] = [];
+    for (const cs of state) {
+      const group = groups.get(cs.key);
+      if (!group) result.push(cs);
+      else if (!placed.has(group)) {
+        placed.add(group);
+        result.push(...state.filter((other) => groups.get(other.key) === group));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * The order as the column manager shows it: each group once, with its leaves, and each
+   * ungrouped column on its own. Moving a unit moves a whole group.
+   */
+  const columnUnits = computed(() => {
+    const groups = columnGroupByKey.value;
+    const units: DataGridColumnUnit[] = [];
+    for (const cs of columnState.value) {
+      const group = groups.get(cs.key);
+      const last = units[units.length - 1];
+      if (group && last?.type === "group" && last.group === group) last.keys.push(cs.key);
+      else if (group) units.push({ type: "group", group, keys: [cs.key] });
+      else units.push({ type: "column", key: cs.key });
+    }
+    return units;
   });
 
   /**
@@ -88,7 +171,7 @@ export function useDataGrid(options: UseDataGridOptions) {
       }
       result.splice(at, 0, defaultStateOf(col));
     });
-    return result;
+    return keepGroupsTogether(result);
   }
 
   // --- Column state ---
@@ -105,12 +188,17 @@ export function useDataGrid(options: UseDataGridOptions) {
       // A fresh array holding the same definitions (an inline literal re-created on each
       // parent render) is not a change; splicing anyway would re-run every computed that
       // reads `columns`, including the client-side sort and filter passes.
-      if (next.length === columns.length && next.every((c, i) => c === columns[i])) return;
+      if (sameDefinitions(next, definitions.value)) return;
 
       const previous = [...columns];
-      columns.splice(0, columns.length, ...next);
+      const leaves = flattenColumns(next);
+      definitions.value = next;
+      // Leaves unchanged (only a group label moved): nothing for the leaf-keyed passes to redo.
+      if (leaves.length !== columns.length || leaves.some((c, i) => c !== columns[i])) {
+        columns.splice(0, columns.length, ...leaves);
+      }
 
-      const state = reconcileColumnState(columnState.value, next, previous);
+      const state = reconcileColumnState(columnState.value, leaves, previous);
       const changed =
         state.length !== columnState.value.length ||
         state.some((cs, i) => cs !== columnState.value[i]);
@@ -120,7 +208,7 @@ export function useDataGrid(options: UseDataGridOptions) {
       // so a clean grid stays clean and a dirty one becomes clean again once the user
       // reverts their own edits, instead of staying dirty against a stale column list.
       const saved = JSON.parse(savedConfigSnapshot.value) as DataGridViewConfig;
-      saved.columns = reconcileColumnState(saved.columns, next, previous);
+      saved.columns = reconcileColumnState(saved.columns, leaves, previous);
       savedConfigSnapshot.value = JSON.stringify(saved);
     },
     { deep: 1 },
@@ -142,11 +230,58 @@ export function useDataGrid(options: UseDataGridOptions) {
     if (entry) entry.visible = !entry.visible;
   }
 
+  /**
+   * Move a column. A grouped leaf stays inside its group's range (`toIndex` is clamped to
+   * it); an ungrouped column dropped into the middle of a group lands after the group
+   * instead. A group is never split, whoever calls this.
+   */
   function reorderColumns(fromIndex: number, toIndex: number) {
     const arr = [...columnState.value];
-    const [moved] = arr.splice(fromIndex, 1);
+    const moved = arr[fromIndex];
+    if (!moved) return;
+    const group = columnGroupByKey.value.get(moved.key);
+    if (group) {
+      const members = arr.flatMap((cs, i) => (columnGroupByKey.value.get(cs.key) === group ? [i] : []));
+      toIndex = Math.min(Math.max(toIndex, members[0]), members[members.length - 1]);
+    }
+    arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, moved);
-    columnState.value = arr;
+    columnState.value = keepGroupsTogether(arr);
+  }
+
+  /** Move a unit (a whole group, or an ungrouped column) to another place in `columnUnits`. */
+  function reorderUnit(fromUnit: number, toUnit: number) {
+    const units = [...columnUnits.value];
+    const [moved] = units.splice(fromUnit, 1);
+    if (!moved) return;
+    units.splice(Math.min(Math.max(toUnit, 0), units.length), 0, moved);
+    const byKey = new Map(columnState.value.map((cs) => [cs.key, cs]));
+    columnState.value = units
+      .flatMap((u) => (u.type === "group" ? u.keys : [u.key]))
+      .map((key) => byKey.get(key)!);
+  }
+
+  /** Move a whole group to a place among the units (groups and ungrouped columns). */
+  function reorderGroup(group: DataGridColumnGroup, toUnit: number) {
+    const from = columnUnits.value.findIndex((u) => u.type === "group" && u.group === group);
+    if (from !== -1) reorderUnit(from, toUnit);
+  }
+
+  /** One step, for the keyboard: a leaf within its group, an ungrouped column among the units. */
+  function moveColumn(key: string, delta: -1 | 1) {
+    if (columnGroupByKey.value.has(key)) {
+      const i = columnState.value.findIndex((cs) => cs.key === key);
+      if (i !== -1) reorderColumns(i, i + delta);
+      return;
+    }
+    const unit = columnUnits.value.findIndex((u) => u.type === "column" && u.key === key);
+    if (unit !== -1) reorderUnit(unit, unit + delta);
+  }
+
+  /** One step for a whole group. */
+  function moveGroup(group: DataGridColumnGroup, delta: -1 | 1) {
+    const unit = columnUnits.value.findIndex((u) => u.type === "group" && u.group === group);
+    if (unit !== -1) reorderUnit(unit, unit + delta);
   }
 
   // --- Sort ---
@@ -565,6 +700,8 @@ export function useDataGrid(options: UseDataGridOptions) {
   // --- Build context ---
   const context: DataGridContext = {
     columns,
+    columnGroupOf,
+    columnUnits,
     columnState,
     visibleColumns,
     filterableColumns,
@@ -588,6 +725,10 @@ export function useDataGrid(options: UseDataGridOptions) {
     clearSelection,
     toggleColumnVisibility,
     reorderColumns,
+    reorderUnit,
+    reorderGroup,
+    moveColumn,
+    moveGroup,
     viewMode,
     setViewMode,
     filterPanelOpen,

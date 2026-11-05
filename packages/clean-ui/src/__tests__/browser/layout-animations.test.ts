@@ -75,7 +75,7 @@ describe("value displays move by transform (real browser)", () => {
   });
 
   it("runs a toast's countdown as one transform animation, paused on hover", async () => {
-    const w = mount(CuiToast, { props: { toastId: "t", title: "Saved", autoDismiss: 4000, showProgress: true, active: true }, attachTo: host() });
+    const w = mount(CuiToast, { props: { title: "Saved", autoDismiss: 4000, showProgress: true, active: true }, attachTo: host() });
     mounted.push(w);
     await wait(200);
     const bar = (w.element as HTMLElement).querySelector<HTMLElement>(".cui-toast__progress-bar")!;
@@ -88,7 +88,7 @@ describe("value displays move by transform (real browser)", () => {
   });
 
   it("glows by fading a still shadow, not by animating box-shadow", () => {
-    const w = mount(CuiToast, { props: { toastId: "g", title: "Glow", animation: "glow", autoDismiss: 0 }, attachTo: host() });
+    const w = mount(CuiToast, { props: { title: "Glow", animation: "glow", autoDismiss: 0 }, attachTo: host() });
     mounted.push(w);
     const toast = (w.element as HTMLElement).classList.contains("cui-toast") ? (w.element as HTMLElement) : (w.element as HTMLElement).querySelector<HTMLElement>(".cui-toast")!;
     expect(getComputedStyle(toast).animationName).toBe("none");
