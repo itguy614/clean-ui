@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiFileUpload } from "@itguy614/clean-ui";
+import { CuiFileUpload, CuiConfigProvider, CuiSelect, CuiCard, CuiCardBody } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/file-upload";
 
 const lastUpload = ref<string>("(no upload yet)");
 const lastReject = ref<string>("");
+// Locale demo (#337)
+const demoLocales = [
+  { value: "en", label: "English (en)" },
+  { value: "de", label: "Deutsch (de)" },
+  { value: "fr", label: "Francais (fr)" },
+  { value: "ja", label: "Japanese (ja)" },
+];
+const demoLocale = ref("de");
 
 function onUpload(files: File[]) {
   lastUpload.value = files.map((f) => f.name).join(", ");
@@ -81,6 +89,29 @@ function onReject(payload: { file: File; reason: string }) {
           attachment tray a user works through — put your own count somewhere polite.
         </li>
       </ul>
+    </template>
+
+    <template #extra>
+      <div>
+        <h2 id="locale" class="mb-4 text-2xl font-semibold">Locale</h2>
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="mb-3 text-surface-600 dark:text-surface-400">
+              Sizes (&ldquo;Max 1.5 MB&rdquo;, each file's size, the rejection message) are written
+              with <code>Intl.NumberFormat</code> in the library's
+              <router-link to="/composables/locale">locale</router-link>, so the decimal separator and
+              unit names follow it: 1,5 MB in German, 1,5 Mo in French. The words around them are the
+              message catalogue's.
+            </p>
+            <CuiSelect v-model="demoLocale" :options="demoLocales" label="Locale" style="max-width: 16rem" class="mb-4" />
+            <CuiConfigProvider :locale="demoLocale">
+              <div style="max-width: 28rem">
+                <CuiFileUpload label="Upload" :max-file-size="1572864" />
+              </div>
+            </CuiConfigProvider>
+          </CuiCardBody>
+        </CuiCard>
+      </div>
     </template>
 
     <template #examples>

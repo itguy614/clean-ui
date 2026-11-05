@@ -5,7 +5,9 @@ import CuiIcon from "./CuiIcon.vue";
 import { resolveRoleIcon } from "../utils/colorIconMap";
 import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
-import { warnVariantColor } from "../utils/devWarn";
+import { __DEV__, warnVariantColor } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { useMessages } from "../composables/useMessages";
 import { RADIUS_SCALE } from "../utils/sizing";
 import { subtreeTransition } from "../utils/motion";
@@ -42,7 +44,7 @@ const props = withDefaults(defineProps<CuiAlertProps>(), {
   rounded: "md",
 });
 
-warnVariantColor("CuiAlert", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
+if (__DEV__ && process.env.NODE_ENV !== "production") warnVariantColor("CuiAlert", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
 
 const emit = defineEmits<{
   dismiss: [];

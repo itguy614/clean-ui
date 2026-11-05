@@ -26,7 +26,7 @@ import {
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { exitListWithBlankLine } from "../language/exit-list-blank-line";
-import { registerEditorInstance, translateCodeMirrorError } from "../duplicate-guard";
+import { registerEditorInstance, warnDev, translateCodeMirrorError } from "../duplicate-guard";
 import { throttle } from "../utils/throttle";
 import { revealExtension, setActiveConstructsEffect } from "../reveal";
 import { codeBackgroundPlugin } from "../theme/code-decorations";
@@ -309,7 +309,7 @@ function parseAdvanced(update: ViewUpdate): boolean {
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
   for (const warning of warnings) {
-    console.warn(`[CuiMarkdownEditor] ${warning.message}`);
+    warnDev(`[CuiMarkdownEditor] ${warning.message}`);
   }
 }
 

@@ -8,7 +8,9 @@ import {
   type IconFallbackResolver,
 } from "../icons/registry";
 import { FALLBACK_ICON } from "../icons/builtin";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export type IconWeight = "thin" | "light" | "regular" | "bold" | "fill" | "duotone";
 export type IconSize = CuiSize | (string & {});
@@ -93,7 +95,7 @@ const staticIcon = computed<Component | null>(() => {
 const iconComponent = computed<Component | null>(() => staticIcon.value ?? asyncResolved.value);
 
 function warnUnknown(name: string) {
-  warnOnce(
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[CuiIcon] unknown icon "${name}". Register it so it ships with your bundle:\n` +
       `  import { registerIcons } from "@itguy614/clean-ui";\n` +
       `  import { ${toPascalCase(name)} } from "@phosphor-icons/vue";\n` +
@@ -107,12 +109,12 @@ async function resolveViaFallback(name: string, resolver: IconFallbackResolver) 
   try {
     const resolved = await resolver(name);
     if (!resolved) {
-      warnOnce(`[CuiIcon] Icon "${name}" (${toPascalCase(name)}) not found in @phosphor-icons/vue`);
+      if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(`[CuiIcon] Icon "${name}" (${toPascalCase(name)}) not found in @phosphor-icons/vue`);
     }
     // Ignore a stale resolution if `name` changed while we were resolving.
     if (props.name === name) asyncResolved.value = resolved ?? FALLBACK_ICON;
   } catch {
-    warnOnce(`[CuiIcon] Failed to load icon "${name}"`);
+    if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(`[CuiIcon] Failed to load icon "${name}"`);
     if (props.name === name) asyncResolved.value = FALLBACK_ICON;
   }
 }
@@ -137,10 +139,9 @@ watchEffect(() => {
   resolveViaFallback(props.name, resolver);
 });
 
-// Unconditional, matching the rest of utils/devWarn: only genuine misuse
-// reaches it, and dev detection in a published ESM library is unreliable.
+// Only genuine misuse reaches it, and only outside production (#369).
 watchEffect(() => {
-  if (!props.name && !props.icon) {
+  if (__DEV__ && process.env.NODE_ENV !== "production" && !props.name && !props.icon) {
     warnOnce("[CuiIcon] requires either a `name` or an `icon` prop.");
   }
 });

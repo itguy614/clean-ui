@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.9
+
+- **Density is restored when first used, not when the library is imported** (#209).
+  `useDensity` no longer reads or writes `localStorage`, or touches `<html>`'s classes, at
+  import, and is no longer listed in `sideEffects`, so an app that never uses it bundles none
+  of it. A density saved by an earlier `setDensity` is applied on the first `useDensity()`
+  call. If you relied on it being applied at import and don't call `useDensity()` before first
+  paint, call the new `restoreDensity()` at startup (before `app.mount()`).
+
 ### Changed
+
 
 - **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
   CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
@@ -26,6 +36,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A CuiInput's attached buttons follow the field's radius** (#333): the `rounded` prop or
   `--cui-input-radius`, less the border. They followed `--cui-button-radius` before, so
   `rounded="lg"` left them at the default.
+
+- **Development warnings are stripped from production builds** (#369). `warnOnce`,
+  `warnVariantColor`, the component misuse warnings and the duplicate-load warning now sit
+  behind `process.env.NODE_ENV !== "production"` (read inside a try/catch, so a
+  no-bundler native-ESM import still loads, with warnings off), as Vue's own bundler builds
+  do. Your bundler replaces the expression, so the messages are dead code and drop out.
+  Development builds warn exactly as before.
+
+### Added
+
+- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
+  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
+  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
+  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
+  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
+  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
+  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
+  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except for two strings, so consumers
+  asserting on the old ones (tests, snapshots) will need to update: file sizes read `kB`, not
+  `KB` (Intl's form), and a day cell's `aria-label` is a full date ("Tuesday, October 20,
+  2026") instead of `toDateString()` ("Tue Oct 20 2026"). `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
+  locale. The picker's input mask now accepts letters of any script. The unexported
+  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
 
 ## [1.8.0] - 2026-11-02
 
