@@ -76,5 +76,5 @@ export function slashMenuExtension(
     return { from: match.from + 1, options, validFor: /^\w*$/ };
   }
 
-  return autocompletion({ override: [source] });
+  return autocompletion({ override: [source], tooltipClass: () => "cui-markdown-editor-slash-menu" });
 }

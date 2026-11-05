@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   call. If you relied on it being applied at import and don't call `useDensity()` before first
   paint, call the new `restoreDensity()` at startup (before `app.mount()`).
 
+- **Slash-menu styles are scoped to the editor's own instances.** If your own CSS styled the
+  markdown editor's slash menu through `.cm-tooltip-autocomplete` and relied on the editor's
+  `!important` rules being there (or on them also applying to your own CodeMirror), that no
+  longer holds: target `.cui-markdown-editor-slash-menu` instead. A second CodeMirror on the
+  page now keeps CodeMirror's default autocomplete look.
+
 ### Added
 
 - **CuiCombobox `option-keydown`** (#347): fires `(event, option)` for a keydown in the input
@@ -121,6 +127,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `aria-controls`: it can be focused and operated from the keyboard, and its state is
   announced. Its hover fill is `--cui-surface-bg`. A `disabled` collapsible fieldset no
   longer toggles (its button is disabled).
+
+- **The markdown editor no longer restyles other CodeMirror instances on the page** (#227).
+  The editor's stylesheet (`dist/clean-ui-editor.css`) shipped page-wide rules on `.cm-tooltip.cm-tooltip-autocomplete`,
+  `.cm-completionIcon` and `.cm-completionMatchedText`, six of them `!important`, so any other
+  CodeMirror on the page was restyled with no way to undo it. The slash menu's palette now lives
+  in the editor's per-instance theme instead, so it no longer needs `!important`, and its tooltip
+  carries a `cui-markdown-editor-slash-menu` class you can target.
 
 ### Removed
 

@@ -25,6 +25,42 @@ function chromeThemeSpec() {
       backgroundColor: "var(--cui-primary-bg)",
     },
     "&.cm-focused": { outline: "none" },
+    ...slashMenuSpec(),
+  };
+}
+
+/**
+ * Slash-menu palette (`@codemirror/autocomplete`'s own tooltip) — matched to
+ * `CuiDropdownMenu`/`CuiDropdownItem`'s look so it reads as a clean-ui control
+ * rather than CodeMirror's generic, monospace, hardcoded-blue default.
+ *
+ * Part of the per-instance theme, so it reaches this view's tooltips and no other
+ * CodeMirror on the page (#227) — unlike a global stylesheet rule, which restyled
+ * every one. The tooltip also carries `cui-markdown-editor-slash-menu` (see
+ * `plugins/slash-menu.ts`), a stable hook for consumers.
+ */
+function slashMenuSpec() {
+  const tip = ".cm-tooltip.cm-tooltip-autocomplete";
+  return {
+    [tip]: {
+      border: "1px solid var(--cui-border)",
+      borderRadius: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+      background: "var(--cui-surface-base)",
+      boxShadow: "var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1))", // fallback: a clean-ui before 1.4
+      overflow: "hidden",
+    },
+    [`${tip} > ul`]: { fontFamily: "var(--cui-font-sans)", padding: "0.25rem" },
+    [`${tip} > ul > li`]: {
+      padding: "0.5rem 0.625rem",
+      borderRadius: "0.25rem",
+      fontSize: "0.8125rem",
+      color: "var(--cui-text-body)",
+    },
+    // The active option: CuiDropdownItem's hover/focus treatment, not the default's solid blue.
+    [`${tip} > ul > li[aria-selected]`]: { background: "var(--cui-surface-bg)", color: "var(--cui-text-body)" },
+    // Every command shares one generic "keyword" type, so the default would repeat the same key icon on every row.
+    [`${tip} .cm-completionIcon`]: { display: "none" },
+    [`${tip} .cm-completionMatchedText`]: { textDecoration: "none", fontWeight: "600", color: "var(--cui-primary)" },
   };
 }
 
