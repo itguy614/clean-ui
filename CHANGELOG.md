@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-05
+
 ### Upgrading to 1.9
 
 - **Collapsible content has an extra wrapper element, and a shut branch is now hidden
@@ -56,6 +58,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fails type-checking until it adds `avatar: { label, overflow }`. Runtime is unaffected:
   `mergeMessages` fills the key from the defaults.
 
+- **CuiDataGrid column groups and header slots** (#376): `{ label, children }` entries in
+  `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
+  sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
+  column's header content, falling back to `label`. A rule marks each group after the first
+  (`--cui-data-grid-group-border`).
+  A group's leaves can never be split: `reorderColumns` keeps them together and a stored order
+  that splits one is healed on load. The column manager lists groups with their leaves, moves
+  a whole group (`reorderGroup`, `moveGroup`, `moveColumn`), and has up/down buttons.
+  CuiTable now isolates its stacking context, so a sticky header cell no longer paints over a
+  sticky page header.
+
+- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
+  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
+  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
+  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
+  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
+  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
+  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
+  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except for two strings, so consumers
+  asserting on the old ones (tests, snapshots) will need to update: file sizes read `kB`, not
+  `KB` (Intl's form), and a day cell's `aria-label` is a full date ("Tuesday, October 20,
+  2026") instead of `toDateString()` ("Tue Oct 20 2026"). `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
+  locale. The picker's input mask now accepts letters of any script. The unexported
+  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
+
+- **`CuiTransition`** (#397): motion presets for your own content, built on the library's
+  motion tokens: `preset` (`fade`, `fade-slide`, `grow`, `collapse`), `side` for `fade-slide`,
+  and `duration` (`fast`, `base`, `slow`) for the enter. Enter runs over `--cui-duration-base`
+  and leave over `--cui-duration-fast`, on `--cui-ease-out`; only `transform` and `opacity`
+  move (`collapse` uses `grid-template-rows`). Under reduced motion every preset fades in place.
+  Toggling an element mid-leave (a `v-show`) reverses from where it is. The preset classes
+  (`cui-transition-fade-slide-enter-from` and so on) are exported for use on a raw
+  `<Transition>`. The slide distance is `--cui-transition-distance` (`0.5rem`), a motion token
+  like `--cui-press-scale`, outside the `--cui-<component>-<slot>` vocabulary on purpose. The
+  `start`/`end` sides flip in RTL through `:dir()`, so they need Chrome 120 or later.
+
 ### Changed
 
 - **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
@@ -93,32 +131,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of a collapsed section is out of the tab order and the accessibility tree, in all three
   components. A `defaultOpen` accordion item no longer replays the open animation on mount.
 
-### Added
-
-- **CuiDataGrid column groups and header slots** (#376): `{ label, children }` entries in
-  `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
-  sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
-  column's header content, falling back to `label`. A rule marks each group after the first
-  (`--cui-data-grid-group-border`).
-  A group's leaves can never be split: `reorderColumns` keeps them together and a stored order
-  that splits one is healed on load. The column manager lists groups with their leaves, moves
-  a whole group (`reorderGroup`, `moveGroup`, `moveColumn`), and has up/down buttons.
-  CuiTable now isolates its stacking context, so a sticky header cell no longer paints over a
-  sticky page header.
-
-- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
-  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
-  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
-  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
-  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
-  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
-  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
-  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except for two strings, so consumers
-  asserting on the old ones (tests, snapshots) will need to update: file sizes read `kB`, not
-  `KB` (Intl's form), and a day cell's `aria-label` is a full date ("Tuesday, October 20,
-  2026") instead of `toDateString()` ("Tue Oct 20 2026"). `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
-  locale. The picker's input mask now accepts letters of any script. The unexported
-  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
+- **CuiButtonGroup positions its buttons through a context, not 28 `:deep()` selectors**
+  (#444). Each `CuiButton` in a group takes its corners from `first | middle | last | only`,
+  and a `CuiInput`'s prefix and suffix buttons from an attached context, so nothing in the
+  group's stylesheet reaches into its children. Seams and the hover/pressed/focus z-order are
+  CSS adjacency in `components-shared.css`, so a server-rendered group looks right before
+  hydration. Rendering is unchanged. A button wrapped in anything but a direct child (or a
+  `.cui-dropdown` trigger) of the group gets no corners, as before.
+- **CuiTable isolates its stacking context** (#376): a sticky header cell's `z-index` now
+  ranks only within the table, so it no longer paints over a sticky page header.
 
 ### Fixed
 
@@ -143,6 +164,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passing one now sees it fall through as a plain HTML attribute, and a typed template fails
   its check. Upgrade by deleting `compact` from `<CuiTimeline>` and `toast-id` from any
   `<CuiToast>` you render by hand (`useToast()` and `CuiToastProvider` need no change).
+
+### Tooling
+
+- **The editor-docs demo-only pages load `CuiMarkdownEditor` on demand** (#446), through
+  `defineAsyncComponent`, so the CodeMirror bundle is no longer in the first paint of the
+  landing page.
+- **Bundle budgets:** the editor scenario's is 160 kB (was 158 kB) and the grid scenario's is
+  123 kB (was 120 kB), gzip, in `fixtures/size-budget.json`.
 
 ## [1.8.0] - 2026-11-02
 
