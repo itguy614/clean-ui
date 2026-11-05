@@ -1,5 +1,24 @@
 import { version } from "./version";
 
+// clean-ui's `__DEV__` pair (utils/devWarn.ts, #369), repeated rather than imported so this
+// file takes no runtime dependency on a clean-ui internal. See there for why both halves.
+declare const process: { env: { NODE_ENV?: string } };
+const __DEV__ = (() => {
+  try {
+    return process.env.NODE_ENV !== "production";
+  } catch {
+    return false;
+  }
+})();
+
+/**
+ * A plugin-registry warning, with no de-duplication. The caller passes a prebuilt message, so
+ * only the `console.warn` is stripped from production, not the text.
+ */
+export function warnDev(message: string): void {
+  if (__DEV__ && process.env.NODE_ENV !== "production") console.warn(message);
+}
+
 const warned = new Set<string>();
 function warnOnce(message: string): void {
   if (warned.has(message)) return;
@@ -35,7 +54,7 @@ export function registerEditorInstance(
   }
   if (existing === current) return;
 
-  warnOnce(
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[clean-ui-editor] Detected two copies of @itguy614/clean-ui-editor: v${existing} and ` +
       `v${current}. Each likely resolves its own copy of @codemirror/state, which breaks ` +
       `CodeMirror's instanceof-based extension checks and surfaces as "Unrecognized extension ` +

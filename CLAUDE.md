@@ -109,7 +109,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   top/bottom slideover's preset is `height` — #407), and `pressed-bg`, `pressed-color`,
   `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396). Private prefix matches the
   public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
-  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`) when you convert it.
+  (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`, `--_rb-`, `--_check-`) when you convert it.
   The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)
   read their consumer's public tokens by `tokenPrefix` and map them onto `--_listbox-*`.
 - **Wrap themeable rules in `:where()`.** Vue's scoped compiler puts the `[data-v-…]`
@@ -126,7 +126,10 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   only binds at `xs` + compact density.
 - `src/styles/__tests__/control-token.test.ts` enforces this, via an **opt-in** `CONVERTED`
   list — "once converted, stays converted". ~50 of the ~106 components still write paint
-  inline; add yours to the list when its PR converts it.
+  inline; add yours to the list when its PR converts it. It scans the `<script>` and the
+  template's `:style` bindings (#333): a static value belongs in the stylesheet, a dynamic one
+  on a private token. Many listed components still read a private token straight
+  (`var(--_input-height)`) rather than through the public layer; a new token goes through it.
 
 ## Motion
 
@@ -189,6 +192,19 @@ jarring appear/disappear. "It looks nice" is not one.
   under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
   buttons), since a shrinking button opens a seam against its neighbour. Set the token on
   the container.
+- **`CuiTransition`** (#397) is the one component for consumer content that appears and
+  disappears: presets `fade`, `fade-slide`, `grow`, `collapse`, also exported as the classes
+  `cui-transition-<preset>-*` for a raw `<Transition>`/`<TransitionGroup>`. It runs one CSS
+  transition on `data-cui-transition-state` (`presetTransition` in `utils/motion.ts`, built on
+  the same `stateTransition` as `panelTransition`), so a re-open mid-exit reverses, but only on
+  the same element (`v-show`). Its motion lives in `components-shared.css`; a new preset joins
+  the reduced-motion block there.
+- **`--cui-transition-distance`** (default `0.5rem`, on `:root` in `main.css`) is how far a
+  `fade-slide` travels. It is a motion token, like `--cui-press-scale` and the duration and
+  easing tokens, not a themeable slot: it is deliberately outside the closed
+  `--cui-<component>-<slot>` vocabulary, because distance is something a consumer tunes for a
+  whole app or container rather than a property of one component's paint. Set it on `:root`
+  or a container; the private `--_transition-*` properties behind it have no public twin.
 - **Hover-only motion** (scale, lift) sits behind `@media (hover: hover) and (pointer: fine)`, in CSS. Don't write a transform from a mouseenter handler, which no media query can gate.
 - `src/styles/__tests__/motion.test.ts` enforces the mechanical rules across both packages:
   - no `transition: all`
@@ -207,6 +223,7 @@ jarring appear/disappear. "It looks nice" is not one.
 
 ## Shared Utilities
 - `utils/sizing.ts` — `INPUT_SIZE_SCALE`, `BUTTON_SIZE_SCALE`, `TEXTAREA_SIZE_SCALE`, `RADIUS_SCALE`, `SIZE_ORDER`, `clampSize()`. All components import from here. Never define local size maps or size types.
+- `utils/devWarn.ts` — `__DEV__` (a try/catch read of `process.env.NODE_ENV`: false where there is no `process`; never a `typeof process` check, which would silence Vite/webpack dev builds), #369; `warnOnce`, `warnVariantColor`. Every dev-only warning is wrapped at the call, `if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(…)` (`process` declared module-scoped; the literal half is what the consumer's bundler folds, and `dist` leaves it as written), so its message string is dead code in production; a bare `console.warn` is a finding (`src/__tests__/dev-warnings.test.ts`), and `check-fixture-guarantees.mjs` asserts the built fixture holds none of the warning text (read from the source's `warnOnce` calls).
 - `utils/color.ts` — color conversions + `resolveColor()` / `isColorRole()` for the role-or-CSS hybrid (Icon/Divider/Backdrop).
 - `types/common.ts` — shared cross-component prop types + base mixin interfaces (see "Shared Prop Types & Mixins"). Compose component props from these.
 - `utils/responsive.ts` — `resolveResponsive()`, `spacingToCss()`, `CONTAINER_WIDTHS`

@@ -6,6 +6,8 @@ import {
   CuiDatePicker,
   CuiFlex,
   CuiGrid,
+  CuiConfigProvider,
+  CuiSelect,
   dateToIso,
   formatDate,
   isoToDate,
@@ -22,6 +24,15 @@ const date4 = ref("");
 const date5 = ref("2025-04-01");
 const date6 = ref("2025-07-31");
 const dateObj = ref<Date | null>(new Date());
+// Locale demo (#337)
+const demoLocales = [
+  { value: "en", label: "English (en)" },
+  { value: "de", label: "Deutsch (de)" },
+  { value: "fr", label: "Francais (fr)" },
+  { value: "ja", label: "Japanese (ja)" },
+];
+const demoLocale = ref("de");
+const localeDate = ref("2026-10-20");
 
 // Date utilities demo
 const utilDate = ref("2025-01-15");
@@ -115,6 +126,27 @@ const utilRoundTrip = computed(() => {
     </template>
 
     <template #extra>
+      <div>
+        <h2 id="locale" class="mb-4 text-2xl font-semibold">Locale</h2>
+        <CuiCard variant="outline">
+          <CuiCardBody>
+            <p class="mb-3 text-surface-600 dark:text-surface-400">
+              Month and weekday names, the header, each day's spoken label and the
+              <code>MMM</code>/<code>MMMM</code> tokens of <code>format</code> follow the library's
+              <router-link to="/composables/locale">locale</router-link>
+              (<code>CuiConfigProvider locale</code>, <code>createCleanUI({ locale })</code>, else the
+              document's <code>lang</code>). Weeks still start on Sunday, and the value never changes.
+            </p>
+            <CuiSelect v-model="demoLocale" :options="demoLocales" label="Locale" style="max-width: 16rem" class="mb-4" />
+            <CuiConfigProvider :locale="demoLocale">
+              <div style="max-width: 20rem">
+                <CuiDatePicker v-model="localeDate" format="D MMMM YYYY" label="Date" />
+              </div>
+            </CuiConfigProvider>
+          </CuiCardBody>
+        </CuiCard>
+      </div>
+
       <div>
         <h2 id="date-utilities" class="mb-4 text-2xl font-semibold">Date utilities</h2>
         <CuiCard variant="outline">

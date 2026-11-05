@@ -87,15 +87,15 @@ const prefsExpanded = ref(false);
         </li>
       </ul>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gaps — read before using <code>collapsible</code>.</strong> The
-        legend toggles on click but is not a button: it has no <code>tabindex</code>, no
-        key handler and no <code>aria-expanded</code>, so the collapse cannot be operated
-        from the keyboard and its state is not announced. Collapsed content is hidden with
-        <code>max-height: 0</code> rather than removed, so the fields inside it are still
-        focusable and <code>Tab</code> walks into a section nobody can see. Use the
-        component without <code>collapsible</code>, or reach for
-        <code>CuiAccordion</code>, where the header is a real button and the panel is
-        properly hidden.
+        <strong>Collapsible.</strong> With <code>collapsible</code> the legend holds a real
+        <code>&lt;button&gt;</code> carrying <code>aria-expanded</code> and
+        <code>aria-controls</code>, so the section opens from the keyboard
+        (<kbd>Enter</kbd> / <kbd>Space</kbd>) and its state is announced. The content
+        collapses over a <code>grid-template-rows</code> transition, and once it has closed
+        it is hidden with <code>hidden="until-found"</code> (<code>inert</code> where that is
+        unsupported): its fields are out of the tab order and the accessibility tree, yet
+        find-in-page still finds text inside and opens the section. The content sits in an
+        extra wrapper element, <code>cui-fieldset__body</code>.
       </p>
     </template>
 

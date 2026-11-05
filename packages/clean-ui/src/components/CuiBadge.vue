@@ -2,7 +2,9 @@
 import { computed } from "vue";
 import type { ColorableProps, SizeableProps, HideableProps, CuiRounded } from "../types/common";
 import { clampSize, RADIUS_SCALE } from "../utils/sizing";
-import { warnVariantColor } from "../utils/devWarn";
+import { __DEV__, warnVariantColor } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 
@@ -35,7 +37,7 @@ const props = withDefaults(defineProps<CuiBadgeProps>(), {
   hidden: false,
 });
 
-warnVariantColor("CuiBadge", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
+if (__DEV__ && process.env.NODE_ENV !== "production") warnVariantColor("CuiBadge", { value: props.variant, allowed: ["solid", "subtle", "outline"] }, props.color);
 
 const emit = defineEmits<{
   remove: [];

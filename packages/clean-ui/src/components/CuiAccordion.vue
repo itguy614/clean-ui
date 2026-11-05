@@ -8,9 +8,9 @@ const TRIGGER = "cui-accordion-item__trigger";
 <script setup lang="ts">
 import { ref, provide, toRef, watch } from "vue";
 import { AccordionContextKey } from "./accordion-context";
-import type { HideableProps, ColorableProps } from "../types/common";
+import type { HideableProps } from "../types/common";
 
-export interface CuiAccordionProps extends HideableProps, ColorableProps {
+export interface CuiAccordionProps extends HideableProps {
   /** Array of open item values (v-model) */
   modelValue?: string[];
   /** Allow multiple items open at once */
@@ -22,7 +22,6 @@ export interface CuiAccordionProps extends HideableProps, ColorableProps {
 const props = withDefaults(defineProps<CuiAccordionProps>(), {
   modelValue: () => [],
   multiple: false,
-  color: "primary",
   noAnimation: false,
   hidden: false,
 });
@@ -64,7 +63,6 @@ function isOpen(value: string): boolean {
 provide(AccordionContextKey, {
   openItems,
   multiple: toRef(props, "multiple"),
-  color: toRef(props, "color"),
   noAnimation: toRef(props, "noAnimation"),
   toggle,
   isOpen,

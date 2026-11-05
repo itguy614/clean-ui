@@ -17,7 +17,8 @@
  * script or its CI step needs to change.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
 
 const FIXTURE_NODE_MODULES = join(FIXTURE_DIR, "node_modules");
@@ -71,6 +72,70 @@ function findInstalledCopies(root, packageName) {
   }
   walk(root, 0);
   return found;
+}
+
+const PACKAGES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../packages");
+
+/** Every non-test source file of every workspace package. */
+function packageSources() {
+  const files = [];
+  function walk(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "__tests__" || entry.name === "node_modules" || entry.name === "dist") continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(ts|vue)$/.test(entry.name) && !/\.test(-d)?\.ts$/.test(entry.name)) files.push(full);
+    }
+  }
+  for (const pkg of readdirSync(PACKAGES_DIR)) {
+    const src = join(PACKAGES_DIR, pkg, "src");
+    if (existsSync(src)) walk(src);
+  }
+  return files;
+}
+
+/**
+ * The text of every dev warning, read from the source (#369): the static fragments of every
+ * string passed to `warnOnce(` or `warnVariantColor(`, plus the fragments of devWarn.ts itself
+ * (where warnVariantColor builds its messages). A new warning is covered without anyone listing
+ * it. Fragments are split at `${…}` holes, escapes and quotes, since a minifier re-spells those,
+ * and only the long ones kept, so one can't match by chance.
+ */
+function devWarningStrings() {
+  const MIN = 30;
+  const out = new Set();
+  const fragments = (literalSource) => {
+    for (const m of literalSource.matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)) {
+      for (const part of (m[1] ?? m[2] ?? m[3]).split(/\$\{[^}]*\}|\\.|["'`]/)) {
+        // Prose, not an identifier or import path that the bundle may legitimately hold.
+        if (part.trim().length >= MIN && /\S\s+\S/.test(part)) out.add(part);
+      }
+    }
+  };
+  for (const file of packageSources()) {
+    const code = readFileSync(file, "utf-8");
+    if (file.endsWith("utils/devWarn.ts")) {
+      fragments(code.replace(/^import .*$/gm, "").replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ""));
+      continue;
+    }
+    for (const call of code.matchAll(/(?<![.\w]|function )(?:warnOnce|warnVariantColor)\s*\(/g)) {
+      const start = call.index + call[0].length;
+      let depth = 1;
+      let i = start;
+      let quote = null;
+      for (; i < code.length && depth > 0; i++) {
+        const c = code[i];
+        if (quote) {
+          if (c === "\\") i++;
+          else if (c === quote) quote = null;
+        } else if (c === '"' || c === "'" || c === "`") quote = c;
+        else if (c === "(") depth++;
+        else if (c === ")") depth--;
+      }
+      fragments(code.slice(start, i));
+    }
+  }
+  return [...out];
 }
 
 const GUARANTEES = [
@@ -138,6 +203,35 @@ const GUARANTEES = [
         return `found box-sizing applied outside a cui-* scope: ${unscoped.join(" | ")}.`;
       }
 
+      return null;
+    },
+  },
+  {
+    id: "density-tree-shakes",
+    name: "an app that never uses density bundles none of it (#209)",
+    check(distDir) {
+      // useDensity's storage key and class prefix as string literals, which only that module
+      // has (components mention `--cui-density-scale` inside CSS strings, never as a bare
+      // literal). No fixture page uses density, so a hit means the module was kept: a
+      // sideEffects entry for it, or work at import time, is back.
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-density-?["'`]/.test(js)
+        ? "found useDensity's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
+    id: "no-dev-warnings",
+    name: "no development warning text in the production bundle (#369)",
+    check(distDir) {
+      const js = readBuiltAssets(distDir, [".js"]);
+      const strings = devWarningStrings();
+      // Non-vacuity: a scan that found next to nothing would pass on any bundle.
+      if (strings.length < 20) return `only found ${strings.length} warning fragments in the source; the scan is broken.`;
+      const present = strings.filter((text) => js.includes(text));
+      if (present.length > 0) {
+        return `found ${present.length} development warning fragment(s) in the production bundle, e.g. "${present[0]}".`;
+      }
       return null;
     },
   },

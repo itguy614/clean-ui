@@ -111,6 +111,7 @@ const meta: ComponentMeta = {
   // The dropdown is the shared listbox panel (#216), so it takes the same token set as
   // CuiCombobox and CuiTagInput, under the select prefix.
   tokens: [
+    { name: "--cui-select-radius", default: "per rounded", description: "Corner radius of the trigger" },
     { name: "--cui-select-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
     { name: "--cui-select-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
     { name: "--cui-select-panel-radius", default: "0.5rem", description: "Dropdown corner radius" },

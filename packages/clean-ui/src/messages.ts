@@ -144,8 +144,11 @@ export interface CuiCoreMessages {
     /** Default `copiedTooltip`, also announced. */
     copiedTooltip: string;
   };
-  /** An avatar image's `alt` when it has neither `alt` nor `name`. */
-  avatar: { label: string };
+  /**
+   * An avatar image's `alt` when it has neither `alt` nor `name` (`label`), and the accessible
+   * name of CuiAvatarGroup's "+N" overflow avatar (`overflow`, given the hidden count).
+   */
+  avatar: { label: string; overflow: (count: number) => string };
   /** CuiSpinner's default `label`. */
   spinner: { label: string };
   /** The label inside a checked toggle's track. */
@@ -274,6 +277,13 @@ export interface CuiCoreMessages {
     rowActions: (rowLabel: string) => string;
     /** A row's label when nothing better names it: its position, 1-based. */
     rowNumber: (position: number) => string;
+    /** A column inside a column group, in the column manager: "Reads · A1" — the leaf alone repeats per group. */
+    groupedColumn: (groupLabel: string, columnLabel: string) => string;
+    /** Column manager: move a column (or a whole group) one place, for the keyboard. */
+    moveUp: (name: string) => string;
+    moveDown: (name: string) => string;
+    /** Announced after a move: where it landed, 1-based, among its siblings. */
+    moved: (name: string, position: number, total: number) => string;
     tableView: string;
     cardView: string;
   };
@@ -344,7 +354,7 @@ export const defaultMessages: CuiCoreMessages = {
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
   timePicker: { hours: "Hours", minutes: "Minutes" },
   copyButton: { copy: "Copy", copied: "Copied", copiedTooltip: "Copied!" },
-  avatar: { label: "Avatar" },
+  avatar: { label: "Avatar", overflow: (count) => `${count} more` },
   spinner: { label: "Loading" },
   toggle: { on: "ON" },
   listbox: {
@@ -409,6 +419,10 @@ export const defaultMessages: CuiCoreMessages = {
     selectRow: (rowLabel) => `Select ${rowLabel}`,
     rowActions: (rowLabel) => `Actions for ${rowLabel}`,
     rowNumber: (position) => `row ${position}`,
+    groupedColumn: (groupLabel, columnLabel) => `${groupLabel} · ${columnLabel}`,
+    moveUp: (name) => `Move ${name} up`,
+    moveDown: (name) => `Move ${name} down`,
+    moved: (name, position, total) => `${name} moved to position ${position} of ${total}`,
     tableView: "Table view",
     cardView: "Card view",
   },

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, type VueWrapper } from "@vue/test-utils";
 import { nextTick, reactive } from "vue";
 import CuiCombobox from "../CuiCombobox.vue";
 import type { ComboboxOption } from "../CuiCombobox.vue";
@@ -17,7 +17,18 @@ function dropdownOptionTexts(): string[] {
   );
 }
 
+// Wrappers mounted onto document.body that a test leaves behind. Unmounted before the body is
+// wiped: wiping it under a live component lets a later re-render hit a detached parent
+// ("Cannot read properties of null (reading 'insertBefore')", an unhandled rejection).
+const attached: VueWrapper[] = [];
+function mountAttached(props: Record<string, unknown>, slots: Record<string, string> = {}) {
+  const w = mount(CuiCombobox, { props, slots, attachTo: document.body });
+  attached.push(w as unknown as VueWrapper);
+  return w;
+}
+
 afterEach(() => {
+  for (const w of attached.splice(0)) w.unmount();
   document.body.innerHTML = "";
 });
 
@@ -202,7 +213,7 @@ describe("CuiCombobox highlight when the list changes", () => {
   };
 
   async function openOnBanana() {
-    const w = mount(CuiCombobox, { props: { options: OPTIONS }, attachTo: document.body });
+    const w = mountAttached({ options: OPTIONS });
     const input = w.find("input");
     await input.trigger("focus");
     await input.trigger("keydown", { key: "ArrowDown" });
@@ -222,7 +233,7 @@ describe("CuiCombobox highlight when the list changes", () => {
 
   it("stays on the same option when the list is changed in place", async () => {
     const options = reactive([...OPTIONS]);
-    const w = mount(CuiCombobox, { props: { options }, attachTo: document.body });
+    const w = mountAttached({ options });
     const input = w.find("input");
     await input.trigger("focus");
     await input.trigger("keydown", { key: "ArrowDown" });
@@ -245,5 +256,117 @@ describe("CuiCombobox highlight when the list changes", () => {
     await w.setProps({ options: OPTIONS.map((o) => (o.value === "banana" ? { ...o, disabled: true } : o)) });
     await nextTick();
     expect(highlighted()).toBeUndefined();
+  });
+});
+
+// A row action's keyboard route (#347).
+describe("CuiCombobox option-keydown", () => {
+  async function openCombobox(extra: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
+    const w = mountAttached({ options: OPTIONS, ...extra }, slots);
+    const input = w.find("input");
+    await input.trigger("focus");
+    await nextTick();
+    return { w, input };
+  }
+  const calls = (w: ReturnType<typeof mount>) => (w.emitted("option-keydown") ?? []) as [KeyboardEvent, ComboboxOption][];
+
+  it("is not emitted while nothing is highlighted", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "a" });
+    expect(calls(w)).toHaveLength(0);
+    expect((w.vm as unknown as { highlightedOption: unknown }).highlightedOption).toBeNull();
+  });
+
+  it("is not emitted when the list is closed", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Escape" });
+    await input.trigger("keydown", { key: "a" });
+    expect(calls(w).map(([, o]) => o.value)).toEqual(["apple"]); // the Escape, while still open
+    expect((w.vm as unknown as { highlightedOption: unknown }).highlightedOption).toBeNull();
+  });
+
+  it("carries the highlighted option, following ArrowDown", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" }); // nothing highlighted yet: no emit
+    await input.trigger("keydown", { key: "ArrowDown" }); // on Apple when pressed
+    await input.trigger("keydown", { key: "x" }); // on Banana
+    expect(calls(w).map(([e, o]) => [e.key, o.value])).toEqual([
+      ["ArrowDown", "apple"],
+      ["x", "banana"],
+    ]);
+  });
+
+  it("exposes the highlighted option", async () => {
+    const { w, input } = await openCombobox();
+    const vm = w.vm as unknown as { highlightedOption: ComboboxOption | null };
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(vm.highlightedOption?.value).toBe("banana");
+  });
+
+  it("passes `highlighted` to the option slot, true on the highlighted row only", async () => {
+    const { input } = await openCombobox(
+      {},
+      { option: `<template #option="{ option, highlighted }"><i :data-hl="highlighted">{{ option.label }}</i></template>` },
+    );
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    const marks = [...document.body.querySelectorAll("[data-hl]")].map((el) => el.getAttribute("data-hl"));
+    expect(marks).toEqual(["false", "true", "false"]);
+  });
+
+  it("is emitted before the built-in handling, so preventDefault() stops Enter selecting", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await w.setProps({ "onOption-keydown": (e: KeyboardEvent) => e.preventDefault() } as never);
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("is not emitted during IME composition", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Process", isComposing: true });
+    expect(calls(w)).toHaveLength(0);
+  });
+
+  it("does not treat an event already default-prevented upstream as the consumer's veto", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    const e = new KeyboardEvent("keydown", { key: "ArrowDown", cancelable: true, bubbles: true });
+    e.preventDefault();
+    input.element.dispatchEvent(e);
+    await nextTick();
+    expect((w.vm as unknown as { highlightedOption: ComboboxOption }).highlightedOption.value).toBe("banana");
+  });
+
+  it("still selects on Enter when the consumer leaves the event alone", async () => {
+    const { w, input } = await openCombobox();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")?.[0]).toEqual(["banana"]);
+  });
+
+  it("lets a consumer wire an Alt+F favorite shortcut", async () => {
+    const favorites = new Set<string | number>();
+    const { w, input } = await openCombobox({
+      "onOption-keydown": (e: KeyboardEvent, o: ComboboxOption) => {
+        if (e.altKey && e.code === "KeyF") {
+          e.preventDefault();
+          if (!favorites.delete(o.value)) favorites.add(o.value);
+        }
+      },
+    });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ƒ", code: "KeyF", altKey: true });
+    expect([...favorites]).toEqual(["banana"]);
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ƒ", code: "KeyF", altKey: true });
+    expect([...favorites]).toEqual(["banana", "cherry"]);
+    expect(w.emitted("update:modelValue")).toBeUndefined();
   });
 });

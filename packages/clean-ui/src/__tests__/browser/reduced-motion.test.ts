@@ -124,7 +124,12 @@ describe("reduced motion (real browser)", () => {
     mounted.push(w);
     await w.find("button").trigger("click");
     await wait(50);
-    expect(document.querySelector<HTMLElement>(".cui-accordion-item__panel")!.style.maxHeight).toBe("none");
+    const panel = document.querySelector<HTMLElement>(".cui-accordion-item__panel")!;
+    // Open at once: the row is 1fr, nothing is still animating there, and the clip has the
+    // content's whole height.
+    expect(getComputedStyle(panel).gridTemplateRows).not.toBe("0px");
+    expect(panel.getAnimations()).toHaveLength(0);
+    expect(panel.getBoundingClientRect().height).toBeGreaterThan(0);
   });
 
   it("stops a shimmer, which loops on a pseudo-element", () => {

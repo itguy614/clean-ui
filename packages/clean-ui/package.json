@@ -1,6 +1,6 @@
 {
   "name": "@itguy614/clean-ui",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "type": "module",
   "description": "A clean, dark-mode-ready Vue 3 component library — 100+ token-driven, themeable, accessible components.",
   "license": "MIT",
@@ -50,13 +50,12 @@
     "**/*.css",
     "./dist/icons/lazy.js",
     "./dist/duplicate-guard.js",
-    "./src/duplicate-guard.ts",
-    "./dist/composables/useDensity.js"
+    "./src/duplicate-guard.ts"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node scripts/check-dist-imports.mjs .",
+    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
     "test:watch": "vitest"

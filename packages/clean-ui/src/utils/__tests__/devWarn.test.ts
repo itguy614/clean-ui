@@ -52,3 +52,43 @@ describe("warnVariantColor", () => {
     expect(warn).toHaveBeenCalledOnce();
   });
 });
+
+// #369 — `__DEV__` is read once at load, so each case loads a fresh copy of the module.
+describe("production builds", () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.resetModules();
+  });
+  afterEach(() => {
+    warn.mockRestore();
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  it("warns outside production (NODE_ENV=test here)", async () => {
+    const { __DEV__, warnOnce } = await import("../devWarn");
+    warnOnce("dev only");
+    expect(__DEV__).toBe(true);
+    expect(warn).toHaveBeenCalledWith("dev only");
+  });
+
+  it("is silent with NODE_ENV=production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const { __DEV__, warnOnce, warnVariantColor } = await import("../devWarn");
+    warnOnce("prod message");
+    warnVariantColor("CuiBadge", { value: "info", allowed: BADGE_VARIANTS }, "danger");
+    expect(__DEV__).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("loads without `process` (native ESM, no bundler) and stays silent", async () => {
+    vi.stubGlobal("process", undefined);
+    const { __DEV__, warnOnce } = await import("../devWarn");
+    warnOnce("no process");
+    expect(__DEV__).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+  });
+});

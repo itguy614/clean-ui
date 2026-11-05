@@ -93,7 +93,7 @@ describe("CuiSelect panel review fixes", () => {
     await press(trigger, "ArrowDown");
     const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
     expect(panel.style.getPropertyValue("--_listbox-item-focus-bg")).toBe("var(--cui-select-item-focus-bg, var(--cui-success-bg))");
-    expect(document.querySelector<HTMLElement>(".cui-select__check .cui-icon, .cui-select__check svg, .cui-select__check > *")?.getAttribute("style")).toContain("--cui-success");
+    expect(document.querySelector(".cui-select__check svg")?.getAttribute("fill")).toBe("var(--cui-success)");
   });
 
   it("while loading, the keyboard names no option that isn't shown", async () => {

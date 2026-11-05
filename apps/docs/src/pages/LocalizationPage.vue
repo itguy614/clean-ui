@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import {
+  CuiAlert,
   CuiConfigProvider,
   CuiStack,
   CuiCard,
@@ -51,6 +52,12 @@ const selectOptions = [
         instead of overriding props on every instance.
       </p>
     </div>
+
+    <CuiAlert color="info" title="Text and formatting are set separately">
+      <code>messages</code> translates text. Month and weekday names, day labels, file sizes and
+      AM/PM come from the <code>locale</code> setting, described on the
+      <router-link to="/composables/locale">Locale</router-link> page. Set both.
+    </CuiAlert>
 
     <CuiCard variant="outline">
       <CuiCardHeader title="How it works" />

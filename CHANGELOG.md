@@ -7,6 +7,172 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-05
+
+### Upgrading to 1.9
+
+- **Collapsible content has an extra wrapper element, and a shut branch is now hidden
+  instead of clipped.** `CuiAccordionItem`'s panel, `CuiFieldset`'s content and a
+  `CuiTreeNode`'s `role="group"` are now a `display: grid` element (`cui-accordion-item__panel`,
+  `cui-fieldset__body`, `cui-tree-node__group`) around a new clipping child
+  (`cui-accordion-item__clip`; `cui-tree-node__clip`; `cui-fieldset__content` is the
+  existing element, now inside `cui-fieldset__body`). A selector that targeted the old
+  panel or content directly, such as `.cui-fieldset > .cui-fieldset__content` or
+  `.cui-accordion-item__panel > .cui-accordion-item__content`, no longer matches. The
+  panel is no longer given an inline `max-height`, and there is no `--hidden` / max-height
+  state to override; a shut section gets `hidden="until-found"` (or `inert` where that is
+  unsupported) once its collapse has finished. `CuiTreeNode` keeps a branch's children
+  mounted after its first open, where it used to unmount them on collapse, so code that
+  counts `[role="treeitem"]` in the DOM sees shut branches too (they are `hidden`/`inert`).
+- **`CuiAccordion` no longer has a `color` prop.** It was never read. Remove it from your
+  templates (it now falls through as a plain `color` attribute on the root element).
+  `AccordionContext` no longer carries `color`.
+
+- **Density is restored when first used, not when the library is imported** (#209).
+  `useDensity` no longer reads or writes `localStorage`, or touches `<html>`'s classes, at
+  import, and is no longer listed in `sideEffects`, so an app that never uses it bundles none
+  of it. A density saved by an earlier `setDensity` is applied on the first `useDensity()`
+  call. If you relied on it being applied at import and don't call `useDensity()` before first
+  paint, call the new `restoreDensity()` at startup (before `app.mount()`).
+
+- **Slash-menu styles are scoped to the editor's own instances.** If your own CSS styled the
+  markdown editor's slash menu through `.cm-tooltip-autocomplete` and relied on the editor's
+  `!important` rules being there (or on them also applying to your own CodeMirror), that no
+  longer holds: target `.cui-markdown-editor-slash-menu` instead. A second CodeMirror on the
+  page now keeps CodeMirror's default autocomplete look.
+
+### Added
+
+- **CuiCombobox `option-keydown`** (#347): fires `(event, option)` for a keydown in the input
+  while an option is highlighted, before the built-in handling (`preventDefault()` stops it), so
+  a row action (a favorite star) can have a keyboard shortcut. The highlighted option is also
+  the option slot's `highlighted` prop and the exposed `highlightedOption`.
+
+- **`max` on CuiAvatarGroup** now works (#164): the group shows the first `max` avatars and
+  collapses the rest into one "+N" avatar, sized and shaped like the first. Unset shows them
+  all; zero or less shows only the "+N". The overflow avatar is named for assistive technology
+  by the new `messages.avatar.overflow(count)` ("3 more"). Before, `max` was declared and
+  ignored. Avatars with `hidden` don't count toward `max` or the "+N". The "+N" sits at the
+  visual right end of the stack. **Upgrading:** `avatar.overflow` is a new required key in
+  `CuiCoreMessages`, so a hand-built full catalogue object (one typed `CuiCoreMessages`) now
+  fails type-checking until it adds `avatar: { label, overflow }`. Runtime is unaffected:
+  `mergeMessages` fills the key from the defaults.
+
+- **CuiDataGrid column groups and header slots** (#376): `{ label, children }` entries in
+  `columns` render a two-row header with a spanning cell over the visible leaves; leaves keep
+  sort, filters, the column manager and saved views. `#header-<key>` / `#header` render a
+  column's header content, falling back to `label`. A rule marks each group after the first
+  (`--cui-data-grid-group-border`).
+  A group's leaves can never be split: `reorderColumns` keeps them together and a stored order
+  that splits one is healed on load. The column manager lists groups with their leaves, moves
+  a whole group (`reorderGroup`, `moveGroup`, `moveColumn`), and has up/down buttons.
+  CuiTable now isolates its stacking context, so a sticky header cell no longer paints over a
+  sticky page header.
+
+- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
+  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
+  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
+  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
+  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
+  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
+  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
+  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except for two strings, so consumers
+  asserting on the old ones (tests, snapshots) will need to update: file sizes read `kB`, not
+  `KB` (Intl's form), and a day cell's `aria-label` is a full date ("Tuesday, October 20,
+  2026") instead of `toDateString()` ("Tue Oct 20 2026"). `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
+  locale. The picker's input mask now accepts letters of any script. The unexported
+  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
+
+- **`CuiTransition`** (#397): motion presets for your own content, built on the library's
+  motion tokens: `preset` (`fade`, `fade-slide`, `grow`, `collapse`), `side` for `fade-slide`,
+  and `duration` (`fast`, `base`, `slow`) for the enter. Enter runs over `--cui-duration-base`
+  and leave over `--cui-duration-fast`, on `--cui-ease-out`; only `transform` and `opacity`
+  move (`collapse` uses `grid-template-rows`). Under reduced motion every preset fades in place.
+  Toggling an element mid-leave (a `v-show`) reverses from where it is. The preset classes
+  (`cui-transition-fade-slide-enter-from` and so on) are exported for use on a raw
+  `<Transition>`. The slide distance is `--cui-transition-distance` (`0.5rem`), a motion token
+  like `--cui-press-scale`, outside the `--cui-<component>-<slot>` vocabulary on purpose. The
+  `start`/`end` sides flip in RTL through `:dir()`, so they need Chrome 120 or later.
+
+### Changed
+
+- **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
+  CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
+  `--cui-textarea-radius` and `--cui-select-radius`; a button-variant CuiRadio its height,
+  padding and font size from `--cui-radio-height`, `--cui-radio-px` and
+  `--cui-radio-font-size`; CuiToggle `--cui-toggle-font-size`;
+  CuiProgress `--cui-progress-height` (the bar) and `--cui-progress-font-size` (the circle's label). A
+  size that is tied to other geometry (a toggle's track and knob, a progress circle, an icon
+  placeholder) stays on a private token.
+  CuiCombobox's label, avatars, affix, chevron and option parts are styled from its
+  stylesheet, at zero specificity where they paint, so a plain consumer rule wins. Rendering
+  is unchanged. The private properties were renamed to match their component: `--_ta-*` to
+  `--_textarea-*`, `--_rb-*` to `--_radio-*`, `--_check-*` to `--_checkbox-*`, `--_sel-*` to
+  `--_select-*`. They were never public, but a consumer reading them will break.
+
+- **A CuiInput's attached buttons follow the field's radius** (#333): the `rounded` prop or
+  `--cui-input-radius`, less the border. They followed `--cui-button-radius` before, so
+  `rounded="lg"` left them at the default.
+
+- **Development warnings are stripped from production builds** (#369). `warnOnce`,
+  `warnVariantColor`, the component misuse warnings and the duplicate-load warning now sit
+  behind `process.env.NODE_ENV !== "production"` (read inside a try/catch, so a
+  no-bundler native-ESM import still loads, with warnings off), as Vue's own bundler builds
+  do. Your bundler replaces the expression, so the messages are dead code and drop out.
+  Development builds warn exactly as before.
+
+- **CuiAccordion, CuiFieldset and CuiTreeView collapse with `grid-template-rows: 0fr → 1fr`**
+  (#270), not a measured `max-height`. No height is measured in JavaScript. Reduced motion
+  snaps the height (Fieldset still fades). A collapse that is reversed mid-flight reverses
+  cleanly. The `max-height` exemptions in the motion test are gone.
+- **Shut collapsible content is hidden once its collapse ends** (#162, #176), with
+  `hidden="until-found"` so find-in-page still finds text in it and opens the section
+  (`beforematch`), and `inert` plus `visibility: hidden` where that is unsupported. Content
+  of a collapsed section is out of the tab order and the accessibility tree, in all three
+  components. A `defaultOpen` accordion item no longer replays the open animation on mount.
+
+- **CuiButtonGroup positions its buttons through a context, not 28 `:deep()` selectors**
+  (#444). Each `CuiButton` in a group takes its corners from `first | middle | last | only`,
+  and a `CuiInput`'s prefix and suffix buttons from an attached context, so nothing in the
+  group's stylesheet reaches into its children. Seams and the hover/pressed/focus z-order are
+  CSS adjacency in `components-shared.css`, so a server-rendered group looks right before
+  hydration. Rendering is unchanged. A button wrapped in anything but a direct child (or a
+  `.cui-dropdown` trigger) of the group gets no corners, as before.
+- **CuiTable isolates its stacking context** (#376): a sticky header cell's `z-index` now
+  ranks only within the table, so it no longer paints over a sticky page header.
+
+### Fixed
+
+- **CuiFieldset's collapse animation runs** (#138, #176): it never animated.
+- **CuiFieldset's collapsible legend is a real button** (#176) with `aria-expanded` and
+  `aria-controls`: it can be focused and operated from the keyboard, and its state is
+  announced. Its hover fill is `--cui-surface-bg`. A `disabled` collapsible fieldset no
+  longer toggles (its button is disabled).
+
+- **The markdown editor no longer restyles other CodeMirror instances on the page** (#227).
+  The editor's stylesheet (`dist/clean-ui-editor.css`) shipped page-wide rules on `.cm-tooltip.cm-tooltip-autocomplete`,
+  `.cm-completionIcon` and `.cm-completionMatchedText`, six of them `!important`, so any other
+  CodeMirror on the page was restyled with no way to undo it. The slash menu's palette now lives
+  in the editor's per-instance theme instead, so it no longer needs `!important`, and its tooltip
+  carries a `cui-markdown-editor-slash-menu` class you can target.
+
+### Removed
+
+- **`CuiAccordion`'s `color` prop** (#162). See Upgrading.
+- **BREAKING:** `CuiTimeline`'s `compact` and `CuiToast`'s `toastId` props are removed (#164).
+  Both were declared and never read, so removing them changes nothing at runtime; a consumer
+  passing one now sees it fall through as a plain HTML attribute, and a typed template fails
+  its check. Upgrade by deleting `compact` from `<CuiTimeline>` and `toast-id` from any
+  `<CuiToast>` you render by hand (`useToast()` and `CuiToastProvider` need no change).
+
+### Tooling
+
+- **The editor-docs demo-only pages load `CuiMarkdownEditor` on demand** (#446), through
+  `defineAsyncComponent`, so the CodeMirror bundle is no longer in the first paint of the
+  landing page.
+- **Bundle budgets:** the editor scenario's is 160 kB (was 158 kB) and the grid scenario's is
+  123 kB (was 120 kB), gzip, in `fixtures/size-budget.json`.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

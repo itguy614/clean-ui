@@ -7,6 +7,8 @@ import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { useLocale } from "../composables/useLocale";
+import { dayPeriodLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
 
@@ -42,6 +44,10 @@ const props = withDefaults(defineProps<CuiTimePickerProps>(), {
 useFloatingLabelProvider(() => null);
 
 const messages = useMessages();
+const locale = useLocale();
+// What AM and PM are called here (#337): display only. The model value, and what is parsed
+// from it, keep the literal "AM"/"PM", so a value means the same in every locale.
+const periodLabels = computed(() => dayPeriodLabels(locale.value));
 // The label prop names the trigger (#391): a <label> with no `for` names nothing, and the
 // trigger is a div[role=combobox], which a `for` couldn't reach anyway. And the hour and
 // minute steppers announced as "spinbutton, 12", with nothing to say which was which.
@@ -96,11 +102,11 @@ watch(() => props.modelValue, parseTime);
 onMounted(() => parseTime(props.modelValue));
 
 // Format output
-function formatOutput(): string {
+function formatOutput(labels?: { AM: string; PM: string }): string {
   if (props.format === "24") {
     return `${String(hours.value).padStart(2, "0")}:${String(minutes.value).padStart(2, "0")}`;
   }
-  return `${String(hours.value).padStart(2, "0")}:${String(minutes.value).padStart(2, "0")} ${period.value}`;
+  return `${String(hours.value).padStart(2, "0")}:${String(minutes.value).padStart(2, "0")} ${labels ? labels[period.value] : period.value}`;
 }
 
 function emitValue() {
@@ -110,12 +116,12 @@ function emitValue() {
 // Display text for input
 const displayText = computed(() => {
   if (!props.modelValue) return "";
-  return formatOutput();
+  return formatOutput(periodLabels.value);
 });
 
 // Input placeholder
 const inputPlaceholder = computed(() =>
-  props.placeholder ?? (props.format === "24" ? "hh:mm" : "hh:mm AM"),
+  props.placeholder ?? (props.format === "24" ? "hh:mm" : `hh:mm ${periodLabels.value.AM}`),
 );
 
 // Hour/minute limits
@@ -380,7 +386,7 @@ defineExpose({ el: rootEl, focus, blur });
               }"
               class="cui-time-picker__period"
               @click="period = 'AM'; emitValue()"
-            >AM</CuiButton>
+            >{{ periodLabels.AM }}</CuiButton>
             <CuiButton
               variant="ghost"
               size="xs"
@@ -393,7 +399,7 @@ defineExpose({ el: rootEl, focus, blur });
               }"
               class="cui-time-picker__period"
               @click="period = 'PM'; emitValue()"
-            >PM</CuiButton>
+            >{{ periodLabels.PM }}</CuiButton>
           </div>
         </div>
       </template>
