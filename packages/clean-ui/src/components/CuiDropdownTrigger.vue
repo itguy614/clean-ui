@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Comment, Fragment, cloneVNode, computed, inject, onMounted, ref, useSlots, type VNode } from "vue";
 import { DropdownContextKey } from "./dropdown-context";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 /**
  * The menu button (#160). The wrapper is not the button and is not focusable: the slotted
@@ -38,7 +40,7 @@ const Child = () => {
   const only = nodes.length === 1 ? nodes[0] : undefined;
   // An element or a component; a bare text node has nowhere to take the attributes.
   if (only && typeof only.type !== "symbol") return cloneVNode(only, forwarded.value, true);
-  warnOnce(
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     "[clean-ui] CuiDropdownTrigger: the default slot should be one element or component — " +
       "a CuiButton or <button> — so it can carry the menu-button attributes and keyboard focus.",
   );

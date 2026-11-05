@@ -105,6 +105,7 @@ const sections = [
   // Composables (#296) — interaction, positioning, responsive, forms
   { id: "click-outside", label: "Click Outside", path: "/composables/click-outside", group: "Composables" },
   { id: "roving-focus", label: "Roving Focus", path: "/composables/roving-focus", group: "Composables" },
+  { id: "locale", label: "Locale", path: "/composables/locale", group: "Composables" },
   { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
   { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
   { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },

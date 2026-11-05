@@ -4,6 +4,8 @@ import type { HideableProps, ColorableProps, DisableableProps, NativeControlProp
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { useLocale } from "../composables/useLocale";
+import { formatBytes } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 
 export interface FileEntry {
@@ -63,11 +65,9 @@ function generateId(): string {
   return `file-${++idCounter}-${Date.now()}`;
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+const locale = useLocale();
+// Sizes in the library's locale (#337): "1.5 MB", "1,5 MB" in German.
+const formatSize = (bytes: number) => formatBytes(bytes, locale.value);
 
 function fileIcon(type: string): string {
   if (type.startsWith("image/")) return "image";

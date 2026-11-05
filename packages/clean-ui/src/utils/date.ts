@@ -1,15 +1,4 @@
-/** Month names */
-export const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-export const MONTH_NAMES_SHORT = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-export const DAY_NAMES_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+import { DEFAULT_LOCALE, monthNames } from "./locale";
 
 /** Get number of days in a month */
 export function daysInMonth(year: number, month: number): number {
@@ -89,24 +78,60 @@ interface Parsed {
   day: number;
 }
 const monthIndex = (names: string[], text: string) => names.findIndex((n) => n.toLowerCase() === text.toLowerCase());
-const TOKENS: Record<string, { write: (d: Date) => string; pattern: string; mask: string; read: (text: string, into: Parsed) => void }> = {
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+type TokenSpec = { write: (d: Date) => string; pattern: string; mask: string; read: (text: string, into: Parsed) => void };
+
+/**
+ * A month-name token's spec: the names come from the locale. The mask takes letters while
+ * every name is made of them, else letters and digits ("10月"); it is long enough for the
+ * longest name and never shorter than English needed (10 and 3), so the default is as it was.
+ */
+function monthNameToken(names: string[], floor: number): TokenSpec {
+  const letters = names.every((n) => /^\p{L}+$/u.test(n));
+  return {
+    write: (d) => names[d.getMonth()],
+    pattern: [...names].sort((a, b) => b.length - a.length).map(escapeRegExp).join("|"),
+    mask: (letters ? "A" : "*").repeat(Math.max(floor, ...names.map((n) => n.length))),
+    read: (t, p) => (p.month = monthIndex(names, t)),
+  };
+}
+
+/** Everything but the month names, which depend on the locale: see `tokensFor`. */
+const TOKENS: Record<string, TokenSpec> = {
   YYYY: { write: (d) => String(d.getFullYear()), pattern: "\\d{4}", mask: "####", read: (t, p) => (p.year = parseInt(t, 10)) },
   YY: { write: (d) => String(d.getFullYear()).slice(-2), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.year = 2000 + parseInt(t, 10)) },
-  MMMM: { write: (d) => MONTH_NAMES[d.getMonth()], pattern: MONTH_NAMES.join("|"), mask: "AAAAAAAAAA", read: (t, p) => (p.month = monthIndex(MONTH_NAMES, t)) },
-  MMM: { write: (d) => MONTH_NAMES_SHORT[d.getMonth()], pattern: MONTH_NAMES_SHORT.join("|"), mask: "AAA", read: (t, p) => (p.month = monthIndex(MONTH_NAMES_SHORT, t)) },
   MM: { write: (d) => String(d.getMonth() + 1).padStart(2, "0"), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.month = parseInt(t, 10) - 1) },
   M: { write: (d) => String(d.getMonth() + 1), pattern: "\\d{1,2}", mask: "##", read: (t, p) => (p.month = parseInt(t, 10) - 1) },
   DD: { write: (d) => String(d.getDate()).padStart(2, "0"), pattern: "\\d{2}", mask: "##", read: (t, p) => (p.day = parseInt(t, 10)) },
   D: { write: (d) => String(d.getDate()), pattern: "\\d{1,2}", mask: "##", read: (t, p) => (p.day = parseInt(t, 10)) },
 };
-const TOKEN = new RegExp(Object.keys(TOKENS).join("|"), "g");
+// Longest first, so the one alternation matches `MMMM` before `MMM`, `MM` and `M`.
+const TOKEN = /YYYY|YY|MMMM|MMM|MM|M|DD|D/g;
+
+/** The tokens for a locale, built once: only the two month-name tokens differ between locales. */
+const tokenSets = new Map<string, Record<string, TokenSpec>>();
+function tokensFor(locale: string): Record<string, TokenSpec> {
+  let tokens = tokenSets.get(locale);
+  if (!tokens) {
+    tokens = {
+      ...TOKENS,
+      MMMM: monthNameToken(monthNames(locale, "long"), 10),
+      MMM: monthNameToken(monthNames(locale, "short"), 3),
+    };
+    tokenSets.set(locale, tokens);
+  }
+  return tokens;
+}
 
 /**
  * Format a Date using a format string pattern. One pass (#340): a replacement is never
- * scanned again, so the "M" in "March" or the "D" in "Dec" stays a letter.
+ * scanned again, so the "M" in "March" or the "D" in "Dec" stays a letter. `MMMM` and `MMM`
+ * are written in `locale` (#337), English unless given; the numeric tokens never change.
  */
-export function formatDate(date: Date, format: string): string {
-  return format.replace(TOKEN, (token) => TOKENS[token].write(date));
+export function formatDate(date: Date, format: string, locale: string = DEFAULT_LOCALE): string {
+  const tokens = tokensFor(locale);
+  return format.replace(TOKEN, (token) => tokens[token].write(date));
 }
 
 /**
@@ -118,24 +143,24 @@ export function maskedFormat(format: string): string {
   return format.replace(TOKEN, (token) => (token === "M" ? "MM" : token === "D" ? "DD" : token));
 }
 
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-/** A format's full-match pattern and the tokens its groups hold, built once per format. */
+/** A format's full-match pattern and the tokens its groups hold, built once per format and locale. */
 const parsers = new Map<string, { pattern: RegExp; tokens: string[] }>();
-function parserFor(format: string) {
-  let parser = parsers.get(format);
+function parserFor(format: string, locale: string) {
+  const key = `${locale}\n${format}`;
+  let parser = parsers.get(key);
   if (!parser) {
+    const specs = tokensFor(locale);
     const tokens: string[] = [];
     let source = "";
     let last = 0;
     for (const match of format.matchAll(TOKEN)) {
-      source += escapeRegExp(format.slice(last, match.index)) + `(${TOKENS[match[0]].pattern})`;
+      source += escapeRegExp(format.slice(last, match.index)) + `(${specs[match[0]].pattern})`;
       tokens.push(match[0]);
       last = match.index + match[0].length;
     }
     source += escapeRegExp(format.slice(last));
     parser = { pattern: new RegExp(`^${source}$`, "i"), tokens };
-    parsers.set(format, parser);
+    parsers.set(key, parser);
   }
   return parser;
 }
@@ -146,14 +171,15 @@ function parserFor(format: string) {
  * a half-typed date is `null`; so does a date that doesn't exist, such as 31 February.
  * Without a day in the format, the 1st.
  */
-export function parseFormattedDate(value: string, format: string): Date | null {
+export function parseFormattedDate(value: string, format: string, locale: string = DEFAULT_LOCALE): Date | null {
   if (!value || !format) return null;
-  const { pattern, tokens } = parserFor(format);
+  const { pattern, tokens } = parserFor(format, locale);
   const parts = pattern.exec(value);
   if (!parts) return null;
 
   const parsed: Parsed = { year: -1, month: -1, day: 1 };
-  tokens.forEach((token, i) => TOKENS[token].read(parts[i + 1], parsed));
+  const specs = tokensFor(locale);
+  tokens.forEach((token, i) => specs[token].read(parts[i + 1], parsed));
   const { year, month, day } = parsed;
   if (year < 0 || month < 0 || month > 11 || day < 1) return null;
   const date = new Date(year, month, day);
@@ -161,14 +187,15 @@ export function parseFormattedDate(value: string, format: string): Date | null {
 }
 
 /** Convert a format pattern to a mask pattern for CuiMaskedInput (uses # for digits) */
-export function formatToMask(format: string): string {
+export function formatToMask(format: string, locale: string = DEFAULT_LOCALE): string {
   // One pass, like formatDate (#340).
-  return format.replace(TOKEN, (token) => TOKENS[token].mask);
+  const tokens = tokensFor(locale);
+  return format.replace(TOKEN, (token) => tokens[token].mask);
 }
 
 /** Extract raw digits from a formatted date string (strips separators) */
 export function formatToRaw(formatted: string): string {
-  return formatted.replace(/[^0-9a-zA-Z]/g, "");
+  return formatted.replace(/[^\p{L}\p{N}]/gu, "");
 }
 
 /** A picker's value as a Date: a Date as it is, an ISO string parsed, nothing as null. */

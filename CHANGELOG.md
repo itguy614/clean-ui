@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading to 1.9
 
-Two breaking changes, both from the collapse rework (#270, #176, #162).
-
 - **Collapsible content has an extra wrapper element, and a shut branch is now hidden
   instead of clipped.** `CuiAccordionItem`'s panel, `CuiFieldset`'s content and a
   `CuiTreeNode`'s `role="group"` are now a `display: grid` element (`cui-accordion-item__panel`,
@@ -28,7 +26,39 @@ Two breaking changes, both from the collapse rework (#270, #176, #162).
   templates (it now falls through as a plain `color` attribute on the root element).
   `AccordionContext` no longer carries `color`.
 
+- **Density is restored when first used, not when the library is imported** (#209).
+  `useDensity` no longer reads or writes `localStorage`, or touches `<html>`'s classes, at
+  import, and is no longer listed in `sideEffects`, so an app that never uses it bundles none
+  of it. A density saved by an earlier `setDensity` is applied on the first `useDensity()`
+  call. If you relied on it being applied at import and don't call `useDensity()` before first
+  paint, call the new `restoreDensity()` at startup (before `app.mount()`).
+
 ### Changed
+
+- **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
+  CuiTextarea and CuiSelect take their corner radius from `--cui-input-radius`,
+  `--cui-textarea-radius` and `--cui-select-radius`; a button-variant CuiRadio its height,
+  padding and font size from `--cui-radio-height`, `--cui-radio-px` and
+  `--cui-radio-font-size`; CuiToggle `--cui-toggle-font-size`;
+  CuiProgress `--cui-progress-height` (the bar) and `--cui-progress-font-size` (the circle's label). A
+  size that is tied to other geometry (a toggle's track and knob, a progress circle, an icon
+  placeholder) stays on a private token.
+  CuiCombobox's label, avatars, affix, chevron and option parts are styled from its
+  stylesheet, at zero specificity where they paint, so a plain consumer rule wins. Rendering
+  is unchanged. The private properties were renamed to match their component: `--_ta-*` to
+  `--_textarea-*`, `--_rb-*` to `--_radio-*`, `--_check-*` to `--_checkbox-*`, `--_sel-*` to
+  `--_select-*`. They were never public, but a consumer reading them will break.
+
+- **A CuiInput's attached buttons follow the field's radius** (#333): the `rounded` prop or
+  `--cui-input-radius`, less the border. They followed `--cui-button-radius` before, so
+  `rounded="lg"` left them at the default.
+
+- **Development warnings are stripped from production builds** (#369). `warnOnce`,
+  `warnVariantColor`, the component misuse warnings and the duplicate-load warning now sit
+  behind `process.env.NODE_ENV !== "production"` (read inside a try/catch, so a
+  no-bundler native-ESM import still loads, with warnings off), as Vue's own bundler builds
+  do. Your bundler replaces the expression, so the messages are dead code and drop out.
+  Development builds warn exactly as before.
 
 - **CuiAccordion, CuiFieldset and CuiTreeView collapse with `grid-template-rows: 0fr → 1fr`**
   (#270), not a measured `max-height`. No height is measured in JavaScript. Reduced motion
@@ -39,6 +69,22 @@ Two breaking changes, both from the collapse rework (#270, #176, #162).
   (`beforematch`), and `inert` plus `visibility: hidden` where that is unsupported. Content
   of a collapsed section is out of the tab order and the accessibility tree, in all three
   components. A `defaultOpen` accordion item no longer replays the open animation on mount.
+
+### Added
+
+- **A library-wide `locale`** (#337), through `createCleanUI({ locale })`, `CuiConfigProvider`'s
+  `locale`, `configureCleanUI({ locale })` and the new public `useLocale()`; unset, it follows
+  the document's `lang`, then `en`. CuiDatePicker and CuiDateRangePicker write month and
+  weekday names, the header, each day's `aria-label` (now a full date, "Tuesday, October 20,
+  2026", in place of `toDateString()`) and the `MMM`/`MMMM` format tokens through
+  `Intl.DateTimeFormat`; CuiFileUpload's sizes use `Intl.NumberFormat` ("1,5 MB" in German, and
+  a gigabyte step), and CuiTimePicker labels AM/PM in the locale, its emitted value staying
+  `hh:mm AM/PM`. Typed month names in a picker's `format` fit a fixed-width mask, so in a locale whose names differ in length (as English `MMMM` always did) prefer numeric tokens for typing. English output is unchanged except for two strings, so consumers
+  asserting on the old ones (tests, snapshots) will need to update: file sizes read `kB`, not
+  `KB` (Intl's form), and a day cell's `aria-label` is a full date ("Tuesday, October 20,
+  2026") instead of `toDateString()` ("Tue Oct 20 2026"). `formatDate`, `parseFormattedDate` and `formatToMask` take an optional
+  locale. The picker's input mask now accepts letters of any script. The unexported
+  `MONTH_NAMES`, `MONTH_NAMES_SHORT` and `DAY_NAMES_SHORT` constants are gone.
 
 ### Fixed
 
