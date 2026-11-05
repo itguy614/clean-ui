@@ -77,49 +77,84 @@ export function afterAnimations(el: Element, done: () => void): void {
 }
 
 /**
- * The panel's motion state, `data-cui-panel="shown" | "hidden"`. An attribute, not a
- * class: Vue rewrites `className` whenever a panel's own `:class` binding changes (a
- * tooltip flipping sides as it opens), which would strip a class added here and, with it,
- * the transition mid-flight. An attribute the template doesn't bind is left alone.
+ * `<Transition>` hooks that run one CSS transition on a state attribute, `"shown"` or
+ * `"hidden"` (`data-cui-panel` for floating panels, `data-cui-transition-state` for
+ * CuiTransition): entering sets it shown, leaving sets it hidden, and the stylesheet
+ * animates the change. An attribute, not a class: Vue rewrites `className` whenever an
+ * element's own `:class` binding changes (a tooltip flipping sides as it opens), which
+ * would strip a class added here and, with it, the transition mid-flight. An attribute the
+ * template doesn't bind is left alone. Being one transition, a re-open mid-exit just sets
+ * it shown again and it reverses from wherever the element is. (Vue's CSS mode re-applies
+ * `enter-from` there, dipping the element towards invisible for a frame before it turns
+ * back.) The element has to be the same one: a `v-show`, or a `v-if` kept mounted by
+ * usePresence; a `v-if` that re-creates it crossfades instead.
+ *
+ * `prepare` runs before each enter and leave, to put whatever else the stylesheet reads on
+ * the element (CuiTransition's preset).
  */
-const PANEL_STATE = "data-cui-panel";
-const isHidden = (el: Element) => el.getAttribute(PANEL_STATE) === "hidden";
-/** Panels whose leave is under way, so an enter can tell a re-open from a fresh show. */
-const leaving = new WeakSet<Element>();
+function stateTransition(attr: string, prepare?: (el: Element) => void) {
+  /** Elements whose leave is under way, so an enter can tell a re-open from a fresh show. */
+  const leaving = new WeakSet<Element>();
+  return {
+    css: false,
+    onBeforeEnter(el: Element) {
+      prepare?.(el);
+      // Re-opened mid-exit: it is still on screen, mid-transition, and reverses from there.
+      // Nothing here may read its style: cancelling the leave sets `display: none` for an
+      // instant, and a style read then would stop the transition it is to reverse.
+      if (leaving.delete(el)) return;
+      el.setAttribute(attr, "hidden");
+    },
+    onEnter(el: Element, done: () => void) {
+      // Style the hidden state before it is lifted, or there is nothing to transition from.
+      if (el.getAttribute(attr) === "hidden") void (el as HTMLElement).offsetWidth;
+      el.setAttribute(attr, "shown");
+      afterAnimations(el, done);
+    },
+    onLeave(el: Element, done: () => void) {
+      prepare?.(el);
+      // Rendered open at mount, so never entered through here: style the shown state first,
+      // or there is nothing to transition from.
+      if (!el.hasAttribute(attr)) {
+        el.setAttribute(attr, "shown");
+        void (el as HTMLElement).offsetWidth;
+      }
+      leaving.add(el);
+      el.setAttribute(attr, "hidden");
+      afterAnimations(el, () => {
+        leaving.delete(el);
+        done();
+      });
+    },
+  };
+}
 
 /**
  * The `<Transition>` hooks every floating panel shares (#263): `v-bind` them, with the
- * panel rendered `v-if="present" v-show="open"` (composables/usePresence). The panel's
- * motion is one CSS transition on a state attribute (PANEL_STATE): entering sets it shown,
- * leaving sets it hidden, and `components-shared.css` animates the change. So a re-open
- * mid-exit just sets it shown again and the transition reverses from wherever the
- * panel is. (Vue's CSS mode re-applies `enter-from` there, dipping the panel towards
- * invisible for a frame before it turns back.)
+ * panel rendered `v-if="present" v-show="open"` (composables/usePresence). Its motion is
+ * in `components-shared.css`, on `data-cui-panel`.
  */
-export const panelTransition = {
-  css: false,
-  onBeforeEnter(el: Element) {
-    // Re-opened mid-exit: it is still on screen, mid-transition, and reverses from there.
-    // Nothing here may read its style: cancelling the leave sets `display: none` for an
-    // instant, and a style read then would stop the transition it is to reverse.
-    if (leaving.delete(el)) return;
-    el.setAttribute(PANEL_STATE, "hidden");
-  },
-  onEnter(el: Element, done: () => void) {
-    // Style the hidden state before it is lifted, or there is nothing to transition from.
-    if (isHidden(el)) void (el as HTMLElement).offsetWidth;
-    el.setAttribute(PANEL_STATE, "shown");
-    afterAnimations(el, done);
-  },
-  onLeave(el: Element, done: () => void) {
-    leaving.add(el);
-    el.setAttribute(PANEL_STATE, "hidden");
-    afterAnimations(el, () => {
-      leaving.delete(el);
-      done();
-    });
-  },
-};
+export const panelTransition = stateTransition("data-cui-panel");
+
+export type TransitionPreset = "fade" | "fade-slide" | "grow" | "collapse";
+export type TransitionSide = "top" | "bottom" | "start" | "end";
+export type TransitionDuration = "fast" | "base" | "slow";
+
+/**
+ * The hooks behind CuiTransition (#397): a preset's motion, on `data-cui-transition-state`.
+ * `read` gives the current options, so a change of preset between renders is seen.
+ */
+export function presetTransition(
+  read: () => { preset: TransitionPreset; side: TransitionSide; duration?: TransitionDuration },
+) {
+  return stateTransition("data-cui-transition-state", (el) => {
+    const { preset, side, duration } = read();
+    el.setAttribute("data-cui-transition", preset);
+    el.setAttribute("data-cui-transition-side", side);
+    if (duration) el.setAttribute("data-cui-transition-duration", duration);
+    else el.removeAttribute("data-cui-transition-duration");
+  });
+}
 
 /**
  * The `<Transition>` for an element whose exit runs on its own state classes and those of

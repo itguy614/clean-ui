@@ -22,6 +22,8 @@ import {
   CuiAlert,
   CuiSlider,
   CuiProgress,
+  CuiTransition,
+  CuiInput,
   useToast,
   motionDuration,
   MOTION_DURATIONS,
@@ -29,6 +31,7 @@ import {
 } from "@itguy614/clean-ui";
 import Example from "../components/Example.vue";
 import TokenTable from "../components/TokenTable.vue";
+import PropTable, { type PropRow } from "../components/PropTable.vue";
 import type { TokenRow } from "../meta/types";
 
 const DURATION_USE: Record<MotionDuration, string> = {
@@ -131,6 +134,71 @@ dismiss(id);
 
 <!-- An alert emits dismiss once its exit has played -->
 <CuiAlert dismissible title="Saved" @dismiss="…" />`;
+
+// CuiTransition (#397): the presets, an inline editor swap, and a raw-class list.
+type Preset = "fade" | "fade-slide" | "grow" | "collapse";
+type Side = "top" | "bottom" | "start" | "end";
+const preset = ref<Preset>("fade-slide");
+const side = ref<Side>("bottom");
+const presetShown = ref(true);
+
+const editing = ref(false);
+const name = ref("Quarterly report");
+
+let nextRow = 4;
+const rows = ref([
+  { id: 1, label: "Design review" },
+  { id: 2, label: "Ship the beta" },
+  { id: 3, label: "Write the changelog" },
+]);
+const addRow = () => rows.value.unshift({ id: nextRow++, label: `New task ${nextRow - 1}` });
+const removeRow = (id: number) => (rows.value = rows.value.filter((r) => r.id !== id));
+
+const TRANSITION_PROPS: PropRow[] = [
+  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "The motion. fade-slide moves 0.5rem, grow scales from 0.95, collapse animates the height with grid-template-rows, which makes the element a grid and clips its one child (a focus ring or shadow at its edge is cut off; give it padding). Content rendered open at mount takes its preset styling at its first toggle: add appear to have it from the start" },
+  { name: "side", type: '"top" | "bottom" | "start" | "end"', default: '"bottom"', description: "fade-slide only: the edge the content slides in from. start and end follow the writing direction" },
+  { name: "duration", type: '"fast" | "base" | "slow"', default: '"base"', description: "The enter's duration token. The exit always runs over fast" },
+  { name: "mode", type: '"in-out" | "out-in" | "default"', description: "Passed to Vue's <Transition>: how swapped content takes turns" },
+  { name: "appear", type: "boolean", default: "false", description: "Also play the enter on first render" },
+  { name: "@before-enter, @after-enter, @before-leave, @after-leave …", type: "Vue transition events", description: "Passed through to <Transition>" },
+];
+
+const transitionCode = `<!-- One child, shown with v-if or v-show -->
+<CuiTransition preset="fade-slide" side="top">
+  <div v-if="open">Panel</div>
+</CuiTransition>
+
+<!-- Swapping two blocks: give each a key, and take turns -->
+<CuiTransition mode="out-in">
+  <CuiInput v-if="editing" key="edit" v-model="name" />
+  <span v-else key="view">{{ name }}</span>
+</CuiTransition>
+
+<!-- collapse: the element becomes a grid and needs one child to clip -->
+<CuiTransition preset="collapse">
+  <div v-show="open"><div>Anything, of any height</div></div>
+</CuiTransition>`;
+
+const rawCode = `<!-- Without the component: the preset classes, on a raw <Transition>
+     or <TransitionGroup>. name is cui-transition-<preset> -->
+<!-- A list: collapse takes the row's space with it, so the others glide.
+     The row carries .cui-transition-collapse and wraps its content in one child. -->
+<TransitionGroup name="cui-transition-collapse" tag="ul">
+  <li v-for="row in rows" :key="row.id" class="cui-transition-collapse">
+    <div>{{ row.label }}</div>
+  </li>
+</TransitionGroup>
+
+<!-- Side: .cui-transition-side-top | -bottom | -start | -end on the element -->
+<Transition name="cui-transition-fade-slide">
+  <p v-if="open" class="cui-transition-side-top">…</p>
+</Transition>
+
+/* Tune from CSS */
+.panel {
+  --cui-duration-base: 300ms;
+  --cui-transition-distance: 1rem;
+}`;
 
 const jsCode = `import { motionDuration } from "@itguy614/clean-ui";
 
@@ -275,6 +343,88 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
         <CuiAlert v-if="!alertGone" :key="alertKey" color="success" title="Saved" dismissible @dismiss="alertGone = true">
           Dismiss me: the alert fades out, then reports it.
         </CuiAlert>
+      </CuiStack>
+    </Example>
+
+    <Example title="CuiTransition" :code="transitionCode">
+      <CuiStack spacing="4">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          Content of your own that appears and disappears: wrap it in
+          <code class="cui-code">CuiTransition</code> instead of writing the CSS. It enters over
+          <code class="cui-code">base</code>, leaves over <code class="cui-code">fast</code> and
+          moves by transform and opacity only. Under reduced motion every preset fades where the
+          content stands. Hide it with <code class="cui-code">v-show</code> and a quick toggle
+          turns straight back from where it was; with <code class="cui-code">v-if</code> the
+          returning content is a new element, so it fades in beside the one still leaving.
+        </p>
+        <CuiFlex gap="4" class="flex-wrap items-end">
+          <CuiRadioGroup v-model="preset" label="Preset" orientation="horizontal">
+            <CuiRadio value="fade" label="fade" />
+            <CuiRadio value="fade-slide" label="fade-slide" />
+            <CuiRadio value="grow" label="grow" />
+            <CuiRadio value="collapse" label="collapse" />
+          </CuiRadioGroup>
+          <CuiRadioGroup v-model="side" label="Side (fade-slide)" orientation="horizontal" :disabled="preset !== 'fade-slide'">
+            <CuiRadio value="top" label="top" />
+            <CuiRadio value="bottom" label="bottom" />
+            <CuiRadio value="start" label="start" />
+            <CuiRadio value="end" label="end" />
+          </CuiRadioGroup>
+          <CuiButton variant="outline" @click="presetShown = !presetShown">{{ presetShown ? "Hide" : "Show" }}</CuiButton>
+        </CuiFlex>
+        <div style="min-height: 6rem;">
+          <CuiTransition :preset="preset" :side="side">
+            <div v-show="presetShown">
+              <CuiAlert color="info" title="Hello">This is the content that comes and goes.</CuiAlert>
+            </div>
+          </CuiTransition>
+        </div>
+        <PropTable :props="TRANSITION_PROPS" />
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          How far <code class="cui-code">fade-slide</code> travels is a motion token,
+          <code class="cui-code">--cui-transition-distance</code> (default
+          <code class="cui-code">0.5rem</code>). Like the duration and easing tokens, set it on
+          <code class="cui-code">:root</code> or on any container.
+        </p>
+      </CuiStack>
+    </Example>
+
+    <Example title="Swapping content in place">
+      <CuiStack spacing="3">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          An inline editor: the text and its input take turns with
+          <code class="cui-code">mode="out-in"</code>, each carrying its own
+          <code class="cui-code">key</code>.
+        </p>
+        <CuiFlex gap="3" class="items-center" style="min-height: 3rem;">
+          <CuiTransition mode="out-in" preset="fade-slide" side="top">
+            <CuiInput v-if="editing" key="edit" v-model="name" label="Name" style="max-width: 18rem;" />
+            <strong v-else key="view">{{ name }}</strong>
+          </CuiTransition>
+          <CuiButton variant="outline" @click="editing = !editing">{{ editing ? "Done" : "Edit" }}</CuiButton>
+        </CuiFlex>
+      </CuiStack>
+    </Example>
+
+    <Example title="The preset classes, on a raw Transition" :code="rawCode">
+      <CuiStack spacing="3">
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          Every preset is also a set of classes:
+          <code class="cui-code">cui-transition-fade</code>, <code class="cui-code">-fade-slide</code>,
+          <code class="cui-code">-grow</code> and <code class="cui-code">-collapse</code>, to use as a
+          <code class="cui-code">&lt;Transition name&gt;</code>. That is the way into a
+          <code class="cui-code">&lt;TransitionGroup&gt;</code>. Add and remove a row here: the
+          others glide into place.
+        </p>
+        <CuiButton variant="outline" @click="addRow">Add a row</CuiButton>
+        <TransitionGroup name="cui-transition-collapse" tag="ul" style="list-style: none; padding: 0; margin: 0; max-width: 24rem;">
+          <li v-for="row in rows" :key="row.id" class="cui-transition-collapse">
+            <CuiFlex gap="3" class="items-center justify-between" style="padding: 0.375rem 0;">
+              <span>{{ row.label }}</span>
+              <CuiButton size="xs" variant="ghost" color="error" @click="removeRow(row.id)">Remove</CuiButton>
+            </CuiFlex>
+          </li>
+        </TransitionGroup>
       </CuiStack>
     </Example>
 
