@@ -333,7 +333,7 @@ export { BUILTIN_ICONS } from "./icons/builtin";
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
 export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";
 export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
-export { useDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
+export { useDensity, restoreDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";
 export { useBreakpoint } from "./composables/useBreakpoint";
 export { useGridContext, useFlexContext } from "./composables/useLayoutContext";

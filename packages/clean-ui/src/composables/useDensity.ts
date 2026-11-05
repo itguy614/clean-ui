@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 
 export type DensityId = "compact" | "default" | "comfortable";
@@ -21,8 +21,9 @@ const DEFAULT: DensityId = "default";
 
 const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
 
-// Shared reactive state — all components see the same density.
-const activeDensity = ref<DensityId>(loadDensity());
+// Shared reactive state — all components see the same density. Starts at the default and is
+// filled from storage on first use (see restoreDensity), never at import (#209).
+const activeDensity = ref<DensityId>(DEFAULT);
 
 function loadDensity(): DensityId {
   const stored = safeGetItem(STORAGE_KEY);
@@ -41,23 +42,43 @@ function applyDensity(id: DensityId) {
   if (id !== "default") root.classList.add(`${CLASS_PREFIX}${id}`);
 }
 
-// Importing the library must not touch the page (#389): no rewriting <html>'s density
-// classes, which may be the consumer's own, and no writing to their localStorage. Unlike
-// useTheme, which restores on its first use, a density stored by an earlier setDensity is
-// still restored here, at import (#209 makes it lazy in 2.0); a stored "default" or an
-// invalid value leaves the page as it is. A change persists and applies via the watcher.
-if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
-watch(activeDensity, (id) => {
-  applyDensity(id);
-  safeSetItem(STORAGE_KEY, id);
-});
+let restored = false;
+
+/**
+ * Read the stored density and apply it to `<html>`, once; later calls do nothing.
+ * `useDensity()` calls it, so an app that uses the composable never needs to. Call it
+ * yourself at startup only if density must apply before anything renders it (a stored
+ * "default", or a value that isn't a density, leaves the page as it is).
+ *
+ * Needs a DOM: on the server it only reads the default. Importing the library does none of
+ * this (#209, #389): no density localStorage read or write, and
+ * no change to `<html>`'s classes, which may be the consumer's own. The persisting watcher
+ * is created here too, so only a real change after this writes to storage.
+ */
+export function restoreDensity(): void {
+  if (restored) return;
+  activeDensity.value = loadDensity();
+  if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
+  // Detached: the first caller is usually a component, whose unmount must not stop it.
+  effectScope(true).run(() => {
+    watch(activeDensity, (id) => {
+      applyDensity(id);
+      safeSetItem(STORAGE_KEY, id);
+    });
+  });
+  // Last, so a failure above leaves the next call free to try again.
+  restored = true;
+}
 
 /**
  * Density management composable. Shared singleton, mirrors `useTheme`.
- * Sets the active UI density once for the whole app (or a scoped subtree, if
- * you apply a `cui-density-*` class to a container yourself).
+ * Restores the stored density on first use (browser only; see `restoreDensity`).
+ * Sets the active UI density once for the whole app (or a scoped subtree, if you apply a
+ * `cui-density-*` class to a container yourself).
  */
 export function useDensity() {
+  restoreDensity();
+
   function setDensity(id: DensityId) {
     activeDensity.value = id;
   }
