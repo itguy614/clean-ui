@@ -188,7 +188,6 @@ const themeScope = useScopedTheme(() => state.toasts.value.length > 0);
           } : undefined"
         >
         <CuiToast
-          :toast-id="toast.id"
           :title="toast.title"
           :description="toast.description"
           :color="toast.color"
