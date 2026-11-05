@@ -47,7 +47,7 @@ const meta: ComponentMeta = {
           name: "value",
           type: "string",
           default: "— (required)",
-          description: "Identifies the item in v-model. Also forms the trigger's and panel's DOM ids, so it must be unique across the page",
+          description: "Identifies the item in v-model. Unique within its accordion",
         },
         { name: "label", type: "string", description: "Header text. Use the #header slot instead for anything richer" },
         {
