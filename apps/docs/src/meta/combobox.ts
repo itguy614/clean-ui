@@ -39,13 +39,20 @@ const meta: ComponentMeta = {
   ],
 
   slots: [
-    { name: "option", payload: "{ option, selected }", description: "Renders one row of the dropdown" },
+    { name: "option", payload: "{ option, selected, highlighted }", description: "Renders one row of the dropdown. `highlighted` is true on the row the keyboard highlight is on" },
     { name: "selected", payload: "{ option }", description: "Renders a selected value in the control" },
   ],
 
   events: [
     { name: "update:modelValue", payload: "string | number | Array | null", description: "Fires when the selection changes (v-model)" },
     { name: "search", payload: "string", description: "Fires on input change with the current search query" },
+    { name: "option-keydown", payload: "(event: KeyboardEvent, option: ComboboxOption)", description: "Fires for every keydown in the input while an option is highlighted and the list is showing, before the built-in handling. Call event.preventDefault() to stop the default (Enter then doesn't select). Wire row-action shortcuts here, e.g. Alt+F to favorite" },
+  ],
+
+  methods: [
+    { name: "highlightedOption", signature: "ComboboxOption | null", description: "The option the highlight is on, or null when none is or the list is closed. Read-only; reactive when read through a template ref" },
+    { name: "focus", signature: "(opts?: FocusOptions) => void", description: "Focus the search input" },
+    { name: "blur", signature: "() => void", description: "Blur the search input" },
   ],
 
   tokens: [

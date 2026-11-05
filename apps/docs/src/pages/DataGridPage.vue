@@ -19,6 +19,7 @@ import {
   useDataGrid,
   CuiSlideover,
   type DataGridColumn,
+  type DataGridColumnDef,
   type DataGridRow,
   type DataGridBulkAction,
 } from "@itguy614/clean-ui";
@@ -124,6 +125,43 @@ const stickyBulkColumns = computed<DataGridColumn[]>(() =>
     stickyBulkRem.value && col.key === "name" ? { ...col, width: "12rem" } : col,
   ),
 );
+
+// Column groups: per-antenna RFID counts and signal strength under spanning headers
+const antennas = ["A1", "A2", "A3", "A4"];
+const groupedColumns: DataGridColumnDef[] = [
+  { key: "epc", label: "EPC", sortable: true, sticky: true, width: "180px" },
+  {
+    label: "Reads",
+    children: antennas.map((a, i) => ({ key: `r${i + 1}`, label: a, sortable: true, align: "right", width: "80px" })),
+  },
+  {
+    label: "RSSI (dBm)",
+    children: antennas.map((a, i) => ({ key: `s${i + 1}`, label: a, sortable: true, align: "right", width: "80px" })),
+  },
+  // Leaf labels that don't restart per group: only the rule says where this one begins
+  {
+    label: "Gain (dB)",
+    children: [
+      { key: "g1", label: "Antenna 1", align: "right", width: "110px" },
+      { key: "g2", label: "Antenna 2", align: "right", width: "110px" },
+    ],
+  },
+];
+const tagData: DataGridRow[] = Array.from({ length: 12 }, (_, i) => ({
+  id: String(i + 1),
+  epc: `E280 6894 0000 ${String(4000 + i * 37).padStart(4, "0")}`,
+  r1: (i * 7) % 23, r2: (i * 5) % 17, r3: (i * 3) % 11, r4: (i * 11) % 29,
+  s1: -40 - ((i * 3) % 25), s2: -45 - ((i * 5) % 25), s3: -50 - ((i * 7) % 25), s4: -55 - ((i * 2) % 25),
+  g1: 6 + (i % 4), g2: 7 + (i % 3),
+}));
+
+// Header slot: richer header content than the label; the label still names the column
+// in the column manager.
+const headerSlotColumns: DataGridColumn[] = [
+  { key: "name", label: "Name", sortable: true },
+  { key: "email", label: "Email" },
+  { key: "role", label: "Role", sortable: true },
+];
 
 // Large dataset to demonstrate virtualization (10,000 rows)
 const roles = ["Engineering", "Design", "Marketing", "Sales", "Support"];
@@ -410,6 +448,54 @@ function step(by: number) {
             hide-toolbar
           />
         </CuiStack>
+      </Example>
+
+      <!-- Column groups -->
+      <Example title="Column Groups (two-row header)" :code="`<CuiDataGrid
+  :columns=&quot;[
+    { key: 'epc', label: 'EPC', sortable: true, sticky: true, width: '180px' },
+    { label: 'Reads', children: [
+      { key: 'r1', label: 'A1', sortable: true },
+      { key: 'r2', label: 'A2', sortable: true },
+      // …A3, A4
+    ] },
+    { label: 'RSSI (dBm)', children: [
+      { key: 's1', label: 'A1', sortable: true },
+      // …A2 to A4
+    ] },
+  ]&quot;
+  :data=&quot;tags&quot;
+  max-height=&quot;320px&quot;
+/>`">
+        <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            A group has a <code>label</code> and <code>children</code> but no <code>key</code>:
+            its cell spans the leaves that are showing, and ungrouped columns span both rows.
+            A rule marks where each group after the first begins, through the header and body.
+            Sorting, filtering and saved
+            views work on the leaves. Open <strong>Columns</strong>: groups list with their leaves
+            indented; drag a leaf within its group, drag a group header to move the whole block,
+            or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
+            group goes. Screen readers announce a leaf with its group (&ldquo;Reads, A1&rdquo;).
+          </p>
+          <CuiDataGrid :columns="groupedColumns" :data="tagData" max-height="320px" size="sm" />
+        </CuiStack>
+      </Example>
+
+      <!-- Header slot -->
+      <Example title="Header Slot" :code="`<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot;>
+  <!-- One column's header; for a sortable column it sits inside the sort button -->
+  <template #header-role>
+    <CuiIcon name=&quot;push-pin&quot; size=&quot;0.875rem&quot; /> Role
+  </template>
+  <!-- Or every column's, given { column }; a #header-<key> slot wins -->
+  <template #header=&quot;{ column }&quot;>{{ column.label }}</template>
+</CuiDataGrid>`">
+        <CuiDataGrid :columns="headerSlotColumns" :data="simpleData" size="sm">
+          <template #header-role>
+            <CuiIcon name="push-pin" size="0.875rem" aria-hidden="true" /> Role
+          </template>
+        </CuiDataGrid>
       </Example>
 
       <!-- Virtualized -->

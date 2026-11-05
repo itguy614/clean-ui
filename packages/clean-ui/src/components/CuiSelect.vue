@@ -275,12 +275,13 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
         'cui-select--disabled': disabled,
       }"
       :style="{
-        '--_sel-min-height': dims.minHeight,
-        '--_sel-px': dims.px,
-        '--_sel-font-size': dims.fontSize,
-        '--_sel-focus-ring': `var(--cui-${color}-focus-ring)`,
-        '--_sel-border': error ? 'var(--cui-error)' : `var(--cui-border-strong)`,
-        '--_sel-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
+        '--_select-min-height': dims.minHeight,
+        '--_select-radius': RADIUS_SCALE[rounded],
+        '--_select-px': dims.px,
+        '--_select-font-size': dims.fontSize,
+        '--_select-focus-ring': `var(--cui-${color}-focus-ring)`,
+        '--_select-border': error ? 'var(--cui-error)' : `var(--cui-border-strong)`,
+        '--_select-focus-border': error ? 'var(--cui-error)' : `var(--cui-${color})`,
       }"
     >
       <!-- Trigger -->
@@ -291,7 +292,6 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
         :aria-required="ariaRequired || undefined"
         v-bind="listbox.inputAttrs.value"
         class="cui-select__trigger"
-        :style="{ borderRadius: RADIUS_SCALE[rounded] }"
         aria-haspopup="listbox"
         :aria-disabled="disabled || readonly || undefined"
         :aria-invalid="error || undefined"
@@ -374,7 +374,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
           :role="section.group ? 'group' : undefined"
           :aria-labelledby="section.group ? groupId(si) : undefined"
         >
-          <div v-if="section.group" :id="groupId(si)" class="cui-select__group-header" :style="{ '--_sel-px': dims.px }">
+          <div v-if="section.group" :id="groupId(si)" class="cui-select__group-header" :style="{ '--_select-px': dims.px }">
             {{ section.group }}
           </div>
           <!-- The cui-select__option--* classes are for consumer CSS written against them;
@@ -397,7 +397,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
           >
             <!-- Checkbox for multi-select only -->
             <span v-if="multiple" class="cui-select__check">
-              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :style="{ color: `var(--cui-${color})` }" />
+              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :color="color" />
             </span>
             <span class="cui-select__option-label">
               <slot name="option" :option="opt">
@@ -430,15 +430,19 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 }
 
 /* --- Trigger --- */
+:where(.cui-select__trigger) {
+  border-radius: var(--cui-select-radius, var(--_select-radius));
+}
+
 .cui-select__trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--_sel-min-height);
-  padding: calc(0.25rem * var(--cui-density-scale, 1)) var(--_sel-px);
-  border: 1px solid var(--_sel-border);
+  min-height: var(--_select-min-height);
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) var(--_select-px);
+  border: 1px solid var(--_select-border);
   background: var(--cui-surface-base);
-  font-size: var(--_sel-font-size);
+  font-size: var(--_select-font-size);
   cursor: pointer;
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   gap: calc(0.5rem * var(--cui-density-scale, 1));
@@ -447,13 +451,13 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 
 .cui-select__trigger:focus-visible {
   outline: none;
-  border-color: var(--_sel-focus-border);
-  box-shadow: 0 0 0 2px var(--_sel-focus-ring);
+  border-color: var(--_select-focus-border);
+  box-shadow: 0 0 0 2px var(--_select-focus-ring);
 }
 
 .cui-select--open .cui-select__trigger {
-  border-color: var(--_sel-focus-border);
-  box-shadow: 0 0 0 2px var(--_sel-focus-ring);
+  border-color: var(--_select-focus-border);
+  box-shadow: 0 0 0 2px var(--_select-focus-ring);
 }
 
 .cui-select--error .cui-select__trigger {
@@ -478,7 +482,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
-  min-height: calc(var(--_sel-min-height) - 0.75rem);
+  min-height: calc(var(--_select-min-height) - 0.75rem);
 }
 
 .cui-select__label {
@@ -558,7 +562,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 /* --- Group header --- */
 .cui-select__group-header {
   /* Inline padding matches the option rows', which follow the size (#216). */
-  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--_sel-px) calc(0.25rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--_select-px) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;

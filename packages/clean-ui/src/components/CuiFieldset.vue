@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useCuiId } from "../composables/useCuiId";
+import { useCollapsible } from "../composables/useCollapsible";
 import type { CuiRounded, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { RADIUS_SCALE } from "../utils/sizing";
 
@@ -45,10 +47,22 @@ watch(
 );
 
 function toggle() {
-  if (!props.collapsible) return;
+  if (!props.collapsible || props.disabled) return;
   isExpanded.value = !isExpanded.value;
   emit("update:expanded", isExpanded.value);
 }
+
+// The content collapses by grid-template-rows and is hidden once shut (until-found, else
+// inert), so collapsed fields are out of the tab order and the accessibility tree (#176).
+const contentId = useCuiId("fieldset-content");
+const collapsed = computed(() => props.collapsible && !isExpanded.value);
+const { panel, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(
+  () => !collapsed.value,
+  () => {
+    isExpanded.value = true;
+    emit("update:expanded", true);
+  },
+);
 
 const rootStyle = computed(() => {
   const c = props.color;
@@ -90,19 +104,25 @@ const rootStyle = computed(() => {
     :style="rootStyle"
     :disabled="disabled || undefined"
   >
-    <legend
-      class="cui-fieldset__legend"
-      :class="{ 'cui-fieldset__legend--clickable': collapsible }"
-      @click="toggle"
-    >
-      <CuiIcon
+    <legend class="cui-fieldset__legend">
+      <button
         v-if="collapsible"
-        name="caret-down"
-        size="1rem"
-        class="cui-fieldset__chevron"
-        :class="{ 'cui-fieldset__chevron--collapsed': !isExpanded }"
-      />
-      <span>{{ legend }}</span>
+        type="button"
+        class="cui-fieldset__toggle"
+        :aria-expanded="isExpanded"
+        :aria-controls="contentId"
+        :disabled="disabled || undefined"
+        @click="toggle"
+      >
+        <CuiIcon
+          name="caret-down"
+          size="1rem"
+          class="cui-fieldset__chevron"
+          :class="{ 'cui-fieldset__chevron--collapsed': !isExpanded }"
+        />
+        <span>{{ legend }}</span>
+      </button>
+      <span v-else>{{ legend }}</span>
     </legend>
 
     <div
@@ -113,10 +133,17 @@ const rootStyle = computed(() => {
     </div>
 
     <div
-      class="cui-fieldset__content"
-      :class="{ 'cui-fieldset__content--hidden': collapsible && !isExpanded }"
+      :id="collapsible ? contentId : undefined"
+      ref="panel"
+      class="cui-fieldset__body"
+      :class="{ 'cui-fieldset__body--collapsed': collapsed }"
+      :hidden.attr="hiddenAttr"
+      :inert.attr="inertAttr"
+      @beforematch="onBeforeMatch"
     >
-      <slot />
+      <div class="cui-fieldset__content">
+        <slot />
+      </div>
     </div>
   </fieldset>
 </template>
@@ -161,17 +188,46 @@ const rootStyle = computed(() => {
   padding-left: 0;
 }
 
-.cui-fieldset__legend--clickable {
+/* The toggle is a real button inside the legend (#176): focusable, Space/Enter, and the
+   pressed state is announced through aria-expanded. */
+.cui-fieldset__toggle {
+  display: flex;
+  align-items: center;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
+  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.375rem * var(--cui-density-scale, 1));
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0.25rem;
   cursor: pointer;
   user-select: none;
-  border-radius: 0.25rem;
-  padding: calc(0.125rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
-  margin: calc(-0.125rem * var(--cui-density-scale, 1)) 0;
+  text-align: left;
   transition: background var(--cui-duration-fast) ease;
 }
 
-.cui-fieldset__legend--clickable:hover {
+.cui-fieldset--ghost .cui-fieldset__toggle {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.cui-fieldset__toggle:hover {
   background: var(--cui-surface-bg);
+}
+
+.cui-fieldset__toggle:disabled {
+  cursor: default;
+}
+
+.cui-fieldset__toggle:disabled:hover {
+  background: none;
+}
+
+.cui-fieldset__toggle:focus-visible {
+  outline: 2px solid var(--cui-primary-focus-ring);
+  outline-offset: 2px;
 }
 
 /* --- Chevron --- */
@@ -199,31 +255,51 @@ const rootStyle = computed(() => {
   padding-left: 0;
 }
 
-/* --- Content --- */
-/* The gutter is room for a child's focus ring. `overflow: hidden` is required for the
-   collapse animation, but it also clips the ring a field draws OUTSIDE its own box — a
-   2px box-shadow on inputs, a 2px outline at 2px offset on checkboxes and radios. A
-   full-width field sits flush against this box, so the ring was cut off on the left and
-   right of every field, and on the top and bottom of the first and last. The padding
-   gives it somewhere to land and the negative margin puts the layout back where it was.
+/* --- Content ---
+   The body is the collapse: a grid whose one row goes 0fr -> 1fr (no height is measured),
+   fading as it goes. The content inside shrinks (min-height: 0) and clips.
 
-   Vertical padding is dropped while collapsed: with `box-sizing: border-box`, padding
-   survives `max-height: 0`, so the content would never animate away to nothing. */
+   The gutter is room for a child's focus ring. `overflow: hidden` is required for the
+   collapse, but it also clips the ring a field draws OUTSIDE its own box — a 2px box-shadow
+   on inputs, a 2px outline at 2px offset on checkboxes and radios. A full-width field sits
+   flush against this box, so the ring was cut off on the left and right of every field, and
+   on the top and bottom of the first and last. The padding gives it somewhere to land and the
+   negative margin puts the layout back where it was.
+
+   Vertical padding is dropped while collapsed: padding can't shrink below itself, so it
+   would hold the row open by 8px. (It snaps, rather than transitions: with the negative
+   margin the layout is the same either side, and a ring has nothing to show on a closing
+   section.) The opacity is listed first so reduced motion, which keeps only opacity, pairs
+   it with the first duration. */
+.cui-fieldset__body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    opacity var(--cui-duration-base) var(--cui-ease-out),
+    grid-template-rows var(--cui-duration-slow) var(--cui-ease-out);
+}
+
+.cui-fieldset__body--collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.cui-fieldset__body[inert] {
+  visibility: hidden;
+}
+
 .cui-fieldset__content {
   display: flex;
   flex-direction: column;
   gap: calc(1rem * var(--cui-density-scale, 1));
+  min-height: 0;
   padding: 4px;
   margin: -4px;
   overflow: hidden;
-  transition: max-height var(--cui-duration-slow) var(--cui-ease-out), opacity var(--cui-duration-base) var(--cui-ease-out), padding var(--cui-duration-slow) var(--cui-ease-out);
 }
 
-.cui-fieldset__content--hidden {
-  max-height: 0;
-  opacity: 0;
+.cui-fieldset__body--collapsed > .cui-fieldset__content {
   padding-block: 0;
   margin-block: 0;
-  pointer-events: none;
 }
 </style>

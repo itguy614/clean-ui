@@ -23,7 +23,15 @@ export interface CleanUIConfig {
   headingLevels?: Partial<CuiHeadingLevels>;
   /** The icon each colour role renders in CuiAlert, CuiToast and CuiBanner. */
   roleIcons?: Partial<Record<CuiColor, string>>;
+  /**
+   * The locale dates, month and weekday names, file sizes and AM/PM labels are formatted in
+   * (#337), as a BCP 47 tag such as `"de"`. Unset, it follows the document's `lang`, then `"en"`.
+   */
+  locale?: string;
 }
 
+/** `CleanUIConfig` once merged: every layer present, `locale` still optional (unset means the document's). */
+export type ResolvedCleanUIConfig = Required<Omit<CleanUIConfig, "locale">> & Pick<CleanUIConfig, "locale">;
+
 /** The defaults an app (`createCleanUI`) or a subtree (`CuiConfigProvider`) provides, merged down the tree. */
-export const CuiDefaultsKey: InjectionKey<Readonly<Ref<Required<CleanUIConfig>>>> = Symbol("cui-defaults");
+export const CuiDefaultsKey: InjectionKey<Readonly<Ref<ResolvedCleanUIConfig>>> = Symbol("cui-defaults");

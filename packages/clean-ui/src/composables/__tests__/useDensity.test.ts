@@ -54,12 +54,13 @@ describe("useDensity", () => {
   });
 });
 
-// #389 — importing the library ran applyDensity: it stripped a density class the consumer
-// put on <html>, and wrote "cui-density=default" into their localStorage.
-describe("useDensity at import", () => {
+// #389, #209 — importing the library ran applyDensity: it stripped a density class the
+// consumer put on <html>, and wrote "cui-density=default" into their localStorage. Now nothing
+// happens until the first useDensity() / restoreDensity().
+describe("useDensity at import and first use", () => {
   async function freshImport() {
     vi.resetModules();
-    return (await import("../useDensity")).useDensity;
+    return await import("../useDensity");
   }
   // Earlier tests in this file store a density; each of these starts from nothing stored.
   beforeEach(() => localStorage.clear());
@@ -69,25 +70,62 @@ describe("useDensity at import", () => {
     document.documentElement.className = "";
   });
 
-  it("leaves <html> and localStorage alone when nothing is stored", async () => {
+  it("does nothing at import, even with a density stored", async () => {
+    localStorage.setItem("cui-density", "comfortable");
     document.documentElement.className = "cui-density-compact";
+    const getItem = vi.spyOn(Storage.prototype, "getItem");
     const setItem = vi.spyOn(Storage.prototype, "setItem");
     await freshImport();
     expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
+    expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it("leaves <html> and localStorage alone on first use when nothing is stored", async () => {
+    document.documentElement.className = "cui-density-compact";
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const { useDensity } = await freshImport();
+    useDensity();
+    await nextTick();
+    expect(document.documentElement.className).toBe("cui-density-compact");
     expect(setItem).not.toHaveBeenCalled();
   });
 
   it("leaves the consumer's class alone when the stored value isn't a density", async () => {
     localStorage.setItem("cui-density", "huge");
     document.documentElement.className = "cui-density-compact";
-    await freshImport();
+    const { useDensity } = await freshImport();
+    useDensity();
+    await nextTick();
     expect(document.documentElement.className).toBe("cui-density-compact");
     expect(localStorage.getItem("cui-density"), "not overwritten").toBe("huge");
   });
 
-  it("still restores a density stored earlier", async () => {
+  it("restores a stored density on first useDensity()", async () => {
     localStorage.setItem("cui-density", "comfortable");
-    await freshImport();
+    const { useDensity } = await freshImport();
+    expect(useDensity().getDensity()).toBe("comfortable");
     expect(densityClasses()).toEqual(["cui-density-comfortable"]);
+  });
+
+  it("restoreDensity() applies a stored density without useDensity(), once", async () => {
+    localStorage.setItem("cui-density", "compact");
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(densityClasses()).toEqual(["cui-density-compact"]);
+    document.documentElement.className = "";
+    restoreDensity();
+    expect(densityClasses(), "a second call does nothing").toEqual([]);
+  });
+
+  it("persists a change made after the first caller's component unmounted", async () => {
+    const { useDensity } = await freshImport();
+    const { mount } = await import("@vue/test-utils");
+    const wrapper = mount({ setup: () => ({ d: useDensity() }), template: "<i />" });
+    wrapper.unmount();
+    useDensity().setDensity("compact");
+    await nextTick();
+    expect(localStorage.getItem("cui-density")).toBe("compact");
+    expect(densityClasses()).toEqual(["cui-density-compact"]);
   });
 });
