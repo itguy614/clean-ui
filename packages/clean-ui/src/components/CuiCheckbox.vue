@@ -85,7 +85,7 @@ const choice = useChoiceLabelling(props);
     ref="elRef"
     v-show="!hidden"
     class="cui-checkbox"
-    :style="{ '--_check-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
+    :style="{ '--_checkbox-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
     :class="{
       'cui-checkbox--checked': isChecked,
       'cui-checkbox--indeterminate': indeterminate && !isChecked,
@@ -123,9 +123,9 @@ const choice = useChoiceLabelling(props);
     <span
       class="cui-checkbox__indicator"
       :style="{
-        '--_check-color': `var(--cui-${resolvedColor})`,
-        '--_check-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--cui-border-strong)`,
-        '--_check-bg': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
+        '--_checkbox-color': `var(--cui-${resolvedColor})`,
+        '--_checkbox-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--cui-border-strong)`,
+        '--_checkbox-bg': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
     >
       <!-- Checkmark -->
@@ -176,18 +176,18 @@ const choice = useChoiceLabelling(props);
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 0.25rem;
-  border: 1px solid var(--_check-border);
-  background: var(--_check-bg);
+  border: 1px solid var(--_checkbox-border);
+  background: var(--_checkbox-bg);
   transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   margin-top: 0.125rem;
 }
 
 .cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator {
-  border-color: var(--_check-color);
+  border-color: var(--_checkbox-color);
 }
 
 .cui-checkbox:focus-visible {
-  outline: 2px solid var(--_check-focus-ring);
+  outline: 2px solid var(--_checkbox-focus-ring);
   outline-offset: 2px;
   border-radius: 0.25rem;
 }

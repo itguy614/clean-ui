@@ -1,5 +1,7 @@
 import { version } from "./version";
-import { warnOnce } from "./utils/devWarn";
+import { __DEV__, warnOnce } from "./utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 interface CleanUIGlobal {
   __CUI_INSTANCE__?: string;
@@ -27,7 +29,7 @@ export function registerInstance(
   }
   if (existing === current) return;
 
-  warnOnce(
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[clean-ui] Detected two copies of @itguy614/clean-ui: v${existing} and v${current}. ` +
       "Components share module-scope singletons (form context, the icon registry, theme/density " +
       "state), so a duplicated instance can fail silently instead of erroring. Fix: dedupe " +

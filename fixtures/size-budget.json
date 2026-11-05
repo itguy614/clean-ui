@@ -16,8 +16,8 @@
     {
       "package": "@itguy614/clean-ui-editor",
       "scenario": "editor",
-      "gzipBytes": 161792,
-      "measured": "2026-11-01"
+      "gzipBytes": 163840,
+      "measured": "2026-11-03"
     },
     {
       "package": "@itguy614/clean-ui-editor",

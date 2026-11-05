@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { formatDate, parseFormattedDate, MONTH_NAMES, MONTH_NAMES_SHORT } from "../date";
+import { formatDate, parseFormattedDate } from "../date";
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
  * #340 — formatDate replaced its tokens one after another, so the single-letter `M` and

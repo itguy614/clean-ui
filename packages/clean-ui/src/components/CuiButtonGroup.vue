@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useTemplateRef } from "vue";
 import type { HideableProps, AriaLabelableProps } from "../types/common";
+import { useButtonGroupProvider } from "../composables/useButtonGroup";
+import type { ButtonGroupOrientation as Orientation } from "./button-group-context";
 
-export type ButtonGroupOrientation = "horizontal" | "vertical";
+export type ButtonGroupOrientation = Orientation;
 
 export interface CuiButtonGroupProps extends AriaLabelableProps, HideableProps {
   /** Accessible group name, when no `aria-labelledby` target exists. */
@@ -10,14 +13,18 @@ export interface CuiButtonGroupProps extends AriaLabelableProps, HideableProps {
   orientation?: ButtonGroupOrientation;
 }
 
-withDefaults(defineProps<CuiButtonGroupProps>(), {
+const props = withDefaults(defineProps<CuiButtonGroupProps>(), {
   orientation: "horizontal",
   hidden: false,
 });
+
+// Each button reads its own place from this and sets its own corners (#444).
+useButtonGroupProvider({ orientation: () => props.orientation, el: useTemplateRef("groupRef") });
 </script>
 
 <template>
   <div
+    ref="groupRef"
     v-show="!hidden"
     class="cui-button-group"
     :class="`cui-button-group--${orientation}`"
@@ -50,75 +57,7 @@ withDefaults(defineProps<CuiButtonGroupProps>(), {
   flex-direction: column;
 }
 
-/* Strip inner border-radius where two buttons meet. Only painted buttons meet: a ghost
-   button (`cui-button--edgeless`) draws no edge, so beside one a painted button keeps its
-   corners; a pressed ghost button has one, and counts as painted (#396). A lone pressed
-   toggle among ghost ones stays whole, and a run of pressed ones merges into one shape
-   (#190 review). A dropdown still merges by position. */
-.cui-button-group--horizontal > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
-.cui-button-group--horizontal > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
-.cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.cui-button-group--horizontal > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
-.cui-button-group--horizontal > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
-.cui-button-group--horizontal > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-/* Remove double borders between horizontal buttons */
-.cui-button-group--horizontal > :deep(.cui-button + .cui-button),
-.cui-button-group--horizontal > :deep(.cui-dropdown + .cui-button),
-.cui-button-group--horizontal > :deep(.cui-button + .cui-dropdown .cui-button),
-.cui-button-group--horizontal > :deep(.cui-dropdown + .cui-dropdown .cui-button) {
-  margin-left: -1px;
-}
-
-/* Strip inner border-radius on vertical buttons, by the same rule. */
-.cui-button-group--vertical > :deep(.cui-button:not(.cui-button--edgeless):has(+ :is(.cui-button:not(.cui-button--edgeless), .cui-dropdown))),
-.cui-button-group--vertical > :deep(.cui-dropdown:first-child:not(:last-child) .cui-button),
-.cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.cui-button-group--vertical > :deep(:is(.cui-button:not(.cui-button--edgeless), .cui-dropdown) + .cui-button:not(.cui-button--edgeless)),
-.cui-button-group--vertical > :deep(.cui-dropdown:last-child:not(:first-child) .cui-button),
-.cui-button-group--vertical > :deep(.cui-dropdown:not(:first-child):not(:last-child) .cui-button) {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-/* Remove double borders between vertical buttons */
-.cui-button-group--vertical > :deep(.cui-button + .cui-button),
-.cui-button-group--vertical > :deep(.cui-dropdown + .cui-button),
-.cui-button-group--vertical > :deep(.cui-button + .cui-dropdown .cui-button),
-.cui-button-group--vertical > :deep(.cui-dropdown + .cui-dropdown .cui-button) {
-  margin-top: -1px;
-}
-
-/* Lift a button above its siblings so the shared border shows its edge, in three tiers: a
-   hovered button, then a selected one, then a focused one. A hovered neighbour must stay
-   below a selected button, or its hover fill paints over the selected border it overlaps. */
-.cui-button-group > :deep(.cui-button:hover),
-.cui-button-group > :deep(.cui-dropdown .cui-button:hover) {
-  z-index: 1;
-  position: relative;
-}
-
-.cui-button-group > :deep(.cui-button[aria-pressed="true"]),
-.cui-button-group > :deep(.cui-radio-button--active),
-.cui-button-group > :deep([aria-checked="true"]) {
-  z-index: 2;
-  position: relative;
-}
-
-.cui-button-group > :deep(.cui-button:focus-visible),
-.cui-button-group > :deep(.cui-dropdown .cui-button:focus-visible) {
-  z-index: 3;
-  position: relative;
-}
+/* Corners, shared borders and the stacking of a hovered, pressed or focused button belong to
+   the buttons themselves, from their place in the group (#444): `.cui-button--flat-*`,
+   `--seam-*` and `--grouped` in `styles/components-shared.css`. */
 </style>

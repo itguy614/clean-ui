@@ -131,6 +131,12 @@ const meta: ComponentMeta = {
       ],
     },
   ],
+
+  tokens: [
+    { name: "--cui-radio-height", default: "per size", description: "Height of a radio in a button-variant group" },
+    { name: "--cui-radio-px", default: "per size", description: "Horizontal padding of a radio in a button-variant group" },
+    { name: "--cui-radio-font-size", default: "per size", description: "Font size of a radio in a button-variant group" },
+  ],
 };
 
 export default meta;

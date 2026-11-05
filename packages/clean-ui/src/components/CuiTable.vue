@@ -5,7 +5,9 @@ import type { SizeableProps, HideableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useScrollArea } from "../composables/useScrollArea";
 import { useMessages } from "../composables/useMessages";
-import { warnOnce } from "../utils/devWarn";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface CuiTableProps extends HideableProps, SizeableProps {
   /** Alternating row backgrounds */
@@ -111,7 +113,7 @@ function measureOverflow() {
   // doesn't reliably report overflowing content in its own scrollWidth.
   isOverflowingX.value = Math.max(table.scrollWidth, table.offsetWidth) - wrap.clientWidth > 1;
 
-  if (isOverflowingX.value && props.stickyHeader && !props.maxHeight) {
+  if (__DEV__ && process.env.NODE_ENV !== "production" && isOverflowingX.value && props.stickyHeader && !props.maxHeight) {
     warnOnce(
       "[clean-ui] CuiTable: stickyHeader with a horizontally overflowing table needs " +
         "maxHeight. The scroll container required to contain the overflow also becomes " +
