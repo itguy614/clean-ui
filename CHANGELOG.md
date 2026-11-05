@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   call. If you relied on it being applied at import and don't call `useDensity()` before first
   paint, call the new `restoreDensity()` at startup (before `app.mount()`).
 
+### Added
+
+- **CuiCombobox `option-keydown`** (#347): fires `(event, option)` for a keydown in the input
+  while an option is highlighted, before the built-in handling (`preventDefault()` stops it), so
+  a row action (a favorite star) can have a keyboard shortcut. The highlighted option is also
+  the option slot's `highlighted` prop and the exposed `highlightedOption`.
+
 ### Changed
 
 - **Template `:style` bindings no longer write themeable properties** (#333). CuiInput,
