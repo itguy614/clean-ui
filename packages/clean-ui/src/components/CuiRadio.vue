@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, ref } from "vue";
+import { useButtonGroupMember } from "../composables/useButtonGroup";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
@@ -62,6 +63,9 @@ const buttonSizeStyles = computed(() => BUTTON_SIZE_SCALE[buttonSize.value] ?? B
 
 const elRef = ref<HTMLElement>();
 
+// In a button-variant group, this segment sets its own corners from its place (#444).
+const groupClasses = useButtonGroupMember(() => elRef.value);
+
 function select() {
   if (isDisabled.value || isReadonly.value) return;
   if (group) {
@@ -92,10 +96,10 @@ const choice = useChoiceLabelling(props);
     ref="elRef"
     type="button"
     class="cui-radio-button cui-button"
-    :class="{
+    :class="[groupClasses, {
       'cui-radio-button--active': isChecked,
       'cui-radio-button--disabled': isDisabled,
-    }"
+    }]"
     :style="{
       '--_rb-color': `var(--cui-${resolvedColor})`,
       '--_rb-bg': `var(--cui-${resolvedColor}-bg)`,
@@ -289,8 +293,12 @@ const choice = useChoiceLabelling(props);
   border: 1px solid var(--cui-border-strong);
   background: transparent;
   color: var(--_rb-color);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   transition: background var(--cui-duration-fast) ease, color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
+}
+
+/* Zero specificity, so a group's square corners (`.cui-button--flat-*`) win over it. */
+:where(.cui-radio-button) {
+  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
 }
 
 .cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active) {
@@ -304,8 +312,6 @@ const choice = useChoiceLabelling(props);
   /* Keep the neutral border on the active segment (both light and dark) so the
      group stays visually connected — only the fill and text change. */
   border-color: var(--cui-border-strong);
-  position: relative;
-  z-index: 1;
 }
 
 .cui-radio-button--active:hover:not(:disabled) {
@@ -323,5 +329,5 @@ const choice = useChoiceLabelling(props);
   cursor: not-allowed;
 }
 
-/* Radius merging is handled by CuiButtonGroup via the .cui-button class */
+/* Radius merging comes from the group context, as the `.cui-button--flat-*` classes (#444). */
 </style>
