@@ -1,9 +1,9 @@
-import { computed, inject, provide, shallowReactive, type Ref } from "vue";
+import { computed, inject, provide, shallowReactive, shallowRef, type Ref } from "vue";
 import { registerRoleIcons } from "./colorIconMap";
-import { CuiDefaultsKey, type CleanUIConfig, type CuiHeadingLevels } from "../components/config-context";
+import { CuiDefaultsKey, type CleanUIConfig, type CuiHeadingLevels, type ResolvedCleanUIConfig } from "../components/config-context";
 import type { CuiTitleAs } from "../types/common";
 
-export type { CleanUIConfig, CuiHeadingLevels };
+export type { CleanUIConfig, CuiHeadingLevels, ResolvedCleanUIConfig };
 
 /** The library's own levels: a card or an empty state sits under a section, a dialog is its own page. */
 const HEADING_DEFAULTS: CuiHeadingLevels = {
@@ -16,6 +16,9 @@ const HEADING_DEFAULTS: CuiHeadingLevels = {
 /** The global fallback, under every app's and every provider's own. */
 const globalHeadingLevels = shallowReactive<Partial<CuiHeadingLevels>>({});
 
+/** The global locale (#337), beneath any app's or provider's own; read by `useLocale()`. */
+export const globalLocale = shallowRef<string | undefined>();
+
 /**
  * Set the library's **global** defaults (#149): the fallback beneath any app's own. A
  * per-component prop wins over them, then the nearest `CuiConfigProvider`, then the options
@@ -23,7 +26,7 @@ const globalHeadingLevels = shallowReactive<Partial<CuiHeadingLevels>>({});
  * has no app to hand: a test setup, a micro-frontend shell.
  *
  * ```ts
- * configureCleanUI({ headingLevels: { cardHeader: "h2" }, roleIcons: { error: "siren" } });
+ * configureCleanUI({ headingLevels: { cardHeader: "h2" }, roleIcons: { error: "siren" }, locale: "de" });
  * ```
  *
  * Reactive, so a call after mount re-renders, and cumulative: each call merges into what
@@ -33,10 +36,11 @@ const globalHeadingLevels = shallowReactive<Partial<CuiHeadingLevels>>({});
 export function configureCleanUI(config: CleanUIConfig): void {
   if (config.headingLevels) Object.assign(globalHeadingLevels, config.headingLevels);
   if (config.roleIcons) registerRoleIcons(config.roleIcons);
+  if (config.locale !== undefined) globalLocale.value = config.locale;
 }
 
 /** The defaults provided above this component — an app's, merged with any providers' — or null. */
-export function useCleanUIDefaults(): Readonly<Ref<Required<CleanUIConfig>>> | null {
+export function useCleanUIDefaults(): Readonly<Ref<ResolvedCleanUIConfig>> | null {
   return inject(CuiDefaultsKey, null);
 }
 
@@ -65,10 +69,11 @@ function over<T extends object>(base: Partial<T> | undefined, layer: Partial<T> 
 }
 
 /** Merge a layer of defaults onto the one beneath it. */
-export function mergeDefaults(base: Required<CleanUIConfig> | undefined, layer: CleanUIConfig): Required<CleanUIConfig> {
+export function mergeDefaults(base: ResolvedCleanUIConfig | undefined, layer: CleanUIConfig): ResolvedCleanUIConfig {
   return {
     headingLevels: over(base?.headingLevels, layer.headingLevels),
     roleIcons: over(base?.roleIcons, layer.roleIcons),
+    locale: layer.locale ?? base?.locale,
   };
 }
 
