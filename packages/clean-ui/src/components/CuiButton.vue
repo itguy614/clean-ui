@@ -3,7 +3,9 @@ import { computed, useTemplateRef } from "vue";
 import type { Component } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { BUTTON_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
-import { warnVariantColor } from "../utils/devWarn";
+import { __DEV__, warnVariantColor } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { disabledLink } from "../utils/disabled-link";
 import type {
   CuiColor,
@@ -74,7 +76,7 @@ const props = withDefaults(defineProps<CuiButtonProps>(), {
   pressed: undefined,
 });
 
-warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
+if (__DEV__ && process.env.NODE_ENV !== "production") warnVariantColor("CuiButton", { value: props.variant, allowed: ["solid", "outline", "dash", "ghost"] }, props.color);
 
 const isDisabled = computed(() => props.disabled || props.loading);
 

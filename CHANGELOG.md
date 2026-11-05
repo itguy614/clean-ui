@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   call. If you relied on it being applied at import and don't call `useDensity()` before first
   paint, call the new `restoreDensity()` at startup (before `app.mount()`).
 
+### Changed
+
+- **Development warnings are stripped from production builds** (#369). `warnOnce`,
+  `warnVariantColor`, the component misuse warnings and the duplicate-load warning now sit
+  behind `process.env.NODE_ENV !== "production"` (read inside a try/catch, so a
+  no-bundler native-ESM import still loads, with warnings off), as Vue's own bundler builds
+  do. Your bundler replaces the expression, so the messages are dead code and drop out.
+  Development builds warn exactly as before.
+
 ## [1.8.0] - 2026-11-02
 
 ### Added

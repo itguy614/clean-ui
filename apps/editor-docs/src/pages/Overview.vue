@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, defineAsyncComponent } from "vue";
 import { CuiCard, CuiCardHeader, CuiCardBody, CuiStack, CuiFlex } from "@itguy614/clean-ui";
-import { CuiMarkdownEditor } from "@itguy614/clean-ui-editor";
 import Example from "../components/Example.vue";
+
+// Loaded on demand so CodeMirror stays out of this page's first paint (CLAUDE.md, step 11).
+const CuiMarkdownEditor = defineAsyncComponent(() =>
+  import("@itguy614/clean-ui-editor").then((m) => m.CuiMarkdownEditor),
+);
 
 const doc = ref(
   [
