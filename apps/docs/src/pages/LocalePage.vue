@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineComponent, h, ref } from "vue";
-import { CuiStack, CuiSelect, CuiConfigProvider, CuiDatePicker, CuiFileUpload, CuiTimePicker, useLocale } from "@itguy614/clean-ui";
+import { CuiAlert, CuiStack, CuiSelect, CuiConfigProvider, CuiDatePicker, CuiFileUpload, CuiTimePicker, useLocale } from "@itguy614/clean-ui";
 import Example from "../components/Example.vue";
 
 const locales = [
@@ -58,6 +58,14 @@ const locale = useLocale(); // ComputedRef<string>`;
         <code>hh:mm AM/PM</code> in every locale.
       </p>
     </div>
+
+    <CuiAlert color="info" title="Locale does not translate text">
+      Translated strings come from the message catalogue, set under
+      <router-link to="/foundations/localization">Foundations &rarr; Localization</router-link>.
+      Setting only one of the two gives a half-localised UI: a German catalogue with no
+      <code>locale</code> shows &ldquo;Heute&rdquo; beside &ldquo;Oct&rdquo;, and the reverse
+      shows &ldquo;Okt&rdquo; beside &ldquo;Today&rdquo;.
+    </CuiAlert>
 
     <Example title="Setting it" :code="setupCode">
       <p style="margin: 0">Resolved here: <Resolved /></p>
