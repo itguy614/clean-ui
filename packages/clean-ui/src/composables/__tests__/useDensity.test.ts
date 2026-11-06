@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { nextTick } from "vue";
+import { spyStorage } from "../../__tests__/storage-spy";
 import { useDensity, DENSITY_PRESETS } from "../useDensity";
 
 const densityClasses = () =>
@@ -73,8 +74,8 @@ describe("useDensity at import and first use", () => {
   it("does nothing at import, even with a density stored", async () => {
     localStorage.setItem("cui-density", "comfortable");
     document.documentElement.className = "cui-density-compact";
-    const getItem = vi.spyOn(Storage.prototype, "getItem");
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const getItem = spyStorage("getItem");
+    const setItem = spyStorage("setItem");
     await freshImport();
     expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
     expect(getItem).not.toHaveBeenCalled();
@@ -83,7 +84,7 @@ describe("useDensity at import and first use", () => {
 
   it("leaves <html> and localStorage alone on first use when nothing is stored", async () => {
     document.documentElement.className = "cui-density-compact";
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const setItem = spyStorage("setItem");
     const { useDensity } = await freshImport();
     useDensity();
     await nextTick();

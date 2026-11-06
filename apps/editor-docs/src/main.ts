@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { createCleanUI } from "@itguy614/clean-ui";
+import { createCleanUI, restoreDensity, restoreTheme } from "@itguy614/clean-ui";
 // Same exception the main docs site takes (see its Icons page): a docs
 // site's own chrome renders whatever icon name this file picks, so it takes
 // the full icon package rather than curating a list — the editor's own
@@ -9,6 +9,11 @@ import "@itguy614/clean-ui/icons/lazy";
 import router from "./router";
 import App from "./App.vue";
 import "./styles/main.css";
+
+// Importing the library no longer applies the stored theme or density (#209, #463): apply
+// them before anything renders.
+restoreTheme();
+restoreDensity();
 
 const app = createApp(App);
 app.use(router);

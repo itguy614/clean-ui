@@ -1,5 +1,6 @@
-import { ref, watch } from "vue";
+import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
+import { THEME_CLASS_PREFIX, THEME_STORAGE_KEY } from "../ssr-constants";
 
 export interface ThemePreset {
   id: string;
@@ -18,8 +19,9 @@ export const THEME_PRESETS: ThemePreset[] = [
   { id: "ruby", label: "Ruby", description: "Bold red" },
 ];
 
-const STORAGE_KEY = "cui-theme";
-export const CLASS_PREFIX = "cui-theme-";
+const STORAGE_KEY = THEME_STORAGE_KEY;
+export const CLASS_PREFIX = THEME_CLASS_PREFIX;
+const DEFAULT = "default";
 
 // Only the classes clean-ui itself may add. `applyTheme` strips these and no
 // others, so a consuming app's own `cui-theme-<brand>` class on <html> — a
@@ -32,11 +34,13 @@ const PRESET_CLASSES = new Set([...THEME_PRESETS.map((p) => `${CLASS_PREFIX}${p.
 function loadTheme(): string {
   // No-op default: with nothing stored, don't force a theme — "default" adds no
   // class, leaving whatever the consumer set (their own theme, or the base scale).
-  return safeGetItem(STORAGE_KEY) ?? "default";
+  return safeGetItem(STORAGE_KEY) ?? DEFAULT;
 }
 
-// Shared reactive singleton — all components see the same theme.
-const activeTheme = ref<string>(loadTheme());
+// Shared reactive state — all components see the same theme. Starts at the default and is
+// filled from storage on first use (see restoreTheme), never at import (#463, as #209 did
+// for density).
+const activeTheme = ref<string>(DEFAULT);
 
 function applyTheme(themeId: string) {
   if (typeof document === "undefined") return;
@@ -55,33 +59,43 @@ function applyTheme(themeId: string) {
   }
 }
 
-// Persist + reflect changes. Registered at module scope, but the callback only
-// runs when the theme actually *changes* (via setTheme) — so merely importing
-// the library never rewrites <html>. This is the fix for the import-time side
-// effect: no unconditional `applyTheme(...)` at module load.
-watch(activeTheme, (newTheme) => {
-  applyTheme(newTheme);
-  safeSetItem(STORAGE_KEY, newTheme);
-});
-
-// Re-apply a previously-stored selection the first time the composable is used
-// (browser only) — on demand, not as an import side effect. Only applies when
-// the user explicitly stored a theme; otherwise the document is left untouched.
 let restored = false;
-function restoreStoredTheme() {
+
+/**
+ * Read the stored theme and apply it to `<html>`, once; later calls do nothing.
+ * `useTheme()` calls it, so an app that uses the composable never needs to. Call it
+ * yourself at startup only if the theme must apply before anything renders it (or use
+ * `ssrThemeInitScript`, which does it before first paint). Nothing stored, or the default,
+ * leaves the page as it is.
+ *
+ * Needs a DOM: on the server it only reads the default. Importing the library does none of
+ * this: no `cui-theme` localStorage read or write, and no change to `<html>`'s classes,
+ * which may be the consumer's own. The persisting watcher is created here too, so only a
+ * real change after this writes to storage.
+ */
+export function restoreTheme(): void {
   if (restored) return;
+  activeTheme.value = loadTheme();
+  // "navy" is the default's name: no class (applyTheme would only strip one).
+  if (activeTheme.value !== DEFAULT && activeTheme.value !== "navy") applyTheme(activeTheme.value);
+  // Detached: the first caller is usually a component, whose unmount must not stop it.
+  effectScope(true).run(() => {
+    watch(activeTheme, (newTheme) => {
+      applyTheme(newTheme);
+      safeSetItem(STORAGE_KEY, newTheme);
+    });
+  });
+  // Last, so a failure above leaves the next call free to try again.
   restored = true;
-  if (safeGetItem(STORAGE_KEY) != null) {
-    applyTheme(activeTheme.value);
-  }
 }
 
 /**
  * Theme management composable.
- * Shared singleton — all components see the same theme.
+ * Shared singleton — all components see the same theme. Restores the stored theme on first
+ * use (browser only; see `restoreTheme`).
  */
 export function useTheme() {
-  restoreStoredTheme();
+  restoreTheme();
 
   function setTheme(themeId: string) {
     activeTheme.value = themeId;

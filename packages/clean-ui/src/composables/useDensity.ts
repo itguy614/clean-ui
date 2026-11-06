@@ -1,5 +1,6 @@
 import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
+import { DENSITY_CLASS_PREFIX, DENSITY_STORAGE_KEY } from "../ssr-constants";
 
 export type DensityId = "compact" | "default" | "comfortable";
 
@@ -15,8 +16,8 @@ export const DENSITY_PRESETS: DensityPreset[] = [
   { id: "comfortable", label: "Comfortable", description: "Roomier spacing" },
 ];
 
-const STORAGE_KEY = "cui-density";
-const CLASS_PREFIX = "cui-density-";
+const STORAGE_KEY = DENSITY_STORAGE_KEY;
+const CLASS_PREFIX = DENSITY_CLASS_PREFIX;
 const DEFAULT: DensityId = "default";
 
 const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
