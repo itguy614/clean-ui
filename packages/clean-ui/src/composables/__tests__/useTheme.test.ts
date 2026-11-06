@@ -140,6 +140,30 @@ describe("useTheme at import and first use (#463)", () => {
     expect(root().className).toBe("cui-theme-forest");
   });
 
+  it.each(["default", "navy"])("a stored %s strips a stale preset class", async (stored) => {
+    localStorage.setItem("cui-theme", stored);
+    root().className = "cui-theme-forest consumer-class cui-theme-acme";
+    const { restoreTheme } = await freshModule();
+    restoreTheme();
+    expect(root().className).toBe("consumer-class cui-theme-acme");
+  });
+
+  it("a stored default with no class to strip changes nothing", async () => {
+    localStorage.setItem("cui-theme", "default");
+    root().className = "consumer-class";
+    const { restoreTheme } = await freshModule();
+    restoreTheme();
+    expect(root().className).toBe("consumer-class");
+  });
+
+  it("a script-set class matching the stored theme stays, once", async () => {
+    localStorage.setItem("cui-theme", "violet");
+    root().className = "cui-theme-violet";
+    const { restoreTheme } = await freshModule();
+    restoreTheme();
+    expect(root().className).toBe("cui-theme-violet");
+  });
+
   it("persists a change made after the first caller's component unmounted", async () => {
     const useTheme = await freshUseTheme();
     const { mount } = await import("@vue/test-utils");

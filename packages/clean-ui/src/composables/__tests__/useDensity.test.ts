@@ -119,6 +119,30 @@ describe("useDensity at import and first use", () => {
     expect(densityClasses(), "a second call does nothing").toEqual([]);
   });
 
+  it("a stored default strips a stale density class", async () => {
+    localStorage.setItem("cui-density", "default");
+    document.documentElement.className = "cui-density-compact consumer-class";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("consumer-class");
+  });
+
+  it("a stored default with no class to strip changes nothing", async () => {
+    localStorage.setItem("cui-density", "default");
+    document.documentElement.className = "consumer-class";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("consumer-class");
+  });
+
+  it("a script-set class matching the stored density stays, once", async () => {
+    localStorage.setItem("cui-density", "compact");
+    document.documentElement.className = "cui-density-compact";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("cui-density-compact");
+  });
+
   it("persists a change made after the first caller's component unmounted", async () => {
     const { useDensity } = await freshImport();
     const { mount } = await import("@vue/test-utils");

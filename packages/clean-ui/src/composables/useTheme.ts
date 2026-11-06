@@ -31,12 +31,6 @@ const DEFAULT = "default";
 // consumer's own :root palette.
 const PRESET_CLASSES = new Set([...THEME_PRESETS.map((p) => `${CLASS_PREFIX}${p.id}`), `${CLASS_PREFIX}navy`]);
 
-function loadTheme(): string {
-  // No-op default: with nothing stored, don't force a theme — "default" adds no
-  // class, leaving whatever the consumer set (their own theme, or the base scale).
-  return safeGetItem(STORAGE_KEY) ?? DEFAULT;
-}
-
 // Shared reactive state — all components see the same theme. Starts at the default and is
 // filled from storage on first use (see restoreTheme), never at import (#463, as #209 did
 // for density).
@@ -75,9 +69,11 @@ let restored = false;
  */
 export function restoreTheme(): void {
   if (restored) return;
-  activeTheme.value = loadTheme();
-  // "navy" is the default's name: no class (applyTheme would only strip one).
-  if (activeTheme.value !== DEFAULT && activeTheme.value !== "navy") applyTheme(activeTheme.value);
+  const stored = safeGetItem(STORAGE_KEY);
+  activeTheme.value = stored ?? DEFAULT;
+  // A stored choice always wins, the default included: applying it strips a stale preset
+  // class (from static markup, say). Nothing stored leaves <html> as it is.
+  if (stored != null) applyTheme(stored);
   // Detached: the first caller is usually a component, whose unmount must not stop it.
   effectScope(true).run(() => {
     watch(activeTheme, (newTheme) => {
