@@ -231,6 +231,10 @@ export interface CuiCoreMessages {
     /** Accessible name for an overflowing scroll area, when it isn't given one (#143). */
     region: string;
   };
+  codeBlock: {
+    /** Accessible name for a code block's region while it scrolls (#163). */
+    region: string;
+  };
   dataGrid: {
     noResultsTitle: string;
     noResultsDescription: string;
@@ -394,6 +398,7 @@ export const defaultMessages: CuiCoreMessages = {
   tabs: { closeTab: "Close tab" },
   table: { scrollRegionLabel: "Scrollable table" },
   scrollArea: { region: "Scrollable content" },
+  codeBlock: { region: "Scrollable code" },
   dataGrid: {
     noResultsTitle: "No results found",
     noResultsDescription: "Try adjusting your search or filters.",

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
+  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
+  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
+  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
+
+### Changed
+
+- **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
+  new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
+  Each line is a block `span` in `<code>`; the gutter is inside the `<pre>`. A selector
+  that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
+  `codeBlock.region` message name the scroll region; an `aria-label` attribute on
+  `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9
