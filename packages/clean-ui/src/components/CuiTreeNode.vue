@@ -72,10 +72,6 @@ function onNodeClick() {
     emit("select-node", props.node);
   }
 }
-
-// The one value a row needs that the root can't give it: how deep it is. Indent and the
-// connector lines are `calc()`s of it in the stylesheet.
-const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) }));
 </script>
 
 <template>
@@ -90,7 +86,7 @@ const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) })
     :aria-level="depth + 1"
     :aria-setsize="sizeOfSet"
     :aria-posinset="positionInSet"
-    :style="depthVars"
+    :style="{ '--_tree-view-depth': depth }"
     @focusin.self="emit('node-focused', node.id)"
   >
     <!--
@@ -246,11 +242,6 @@ const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) })
 
 .cui-tree-node__row--disabled {
   cursor: default;
-  opacity: 0.5;
-}
-
-.cui-tree-node__row--selected {
-  font-weight: 600;
 }
 
 :where(.cui-tree-node__row) {
@@ -270,11 +261,14 @@ const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) })
 :where(.cui-tree-node__row--selected) {
   background: var(--cui-tree-view-pressed-bg, var(--cui-primary-bg));
   color: var(--cui-tree-view-pressed-color, var(--cui-primary));
+  font-weight: 600;
 }
 
-/* After selected, so a disabled selected row is still dimmed text on the tint. */
+/* After selected, so a disabled selected row is still dimmed text on the tint. Its own
+   colour, not the row token: setting `color` to restyle rows mustn't un-dim these. */
 :where(.cui-tree-node__row--disabled) {
-  color: var(--cui-tree-view-color, var(--cui-text-tertiary));
+  color: var(--cui-text-tertiary);
+  opacity: 0.5;
 }
 
 /* The expand/collapse box is the hit size, not the glyph's. */
@@ -306,7 +300,7 @@ const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) })
 }
 
 :where(.cui-tree-node__row--selected .cui-tree-node__icon) {
-  color: var(--cui-primary);
+  color: var(--cui-tree-view-pressed-color, var(--cui-primary));
 }
 
 .cui-tree-node__content {
