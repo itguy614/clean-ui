@@ -107,6 +107,28 @@ describe("CuiTimePicker minTime / maxTime", () => {
     expect(last()).toBe("17:00");
   });
 
+  it("steps across 12 in a 12h range, skipping the hours it excludes", async () => {
+    await open({ modelValue: "05:00 PM", format: "12", minTime: "09:00 AM", maxTime: "05:30 PM" });
+    const [h] = spin();
+    expect(h.getAttribute("aria-valuemin")).toBe("1");
+    expect(h.getAttribute("aria-valuemax")).toBe("12");
+    h.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    await wrapper!.vm.$nextTick();
+    // 6 PM is out of range; the next selectable hour is 12 PM, as on the clock.
+    expect(last()).toBe("12:00 PM");
+  });
+
+  it("keeps the minute stepper sane when the model is outside the range", async () => {
+    await open({ modelValue: "08:00 PM", format: "12", minTime: "09:00 AM", maxTime: "05:30 PM" });
+    const m = spin()[1];
+    expect([m.getAttribute("aria-valuemin"), m.getAttribute("aria-valuemax")]).toEqual(["0", "59"]);
+  });
+
+  it("reads an AM/PM model on the 24h clock when format is 24", async () => {
+    await open({ modelValue: "03:00 PM", format: "24", minTime: "09:00", maxTime: "17:00" });
+    expect(spin()[0].getAttribute("aria-valuenow")).toBe("15");
+  });
+
   it("keeps the full bounds without a range", async () => {
     await open({ modelValue: "10:30", format: "24" });
     const [h] = spin();

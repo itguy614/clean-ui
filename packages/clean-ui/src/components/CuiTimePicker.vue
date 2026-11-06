@@ -100,9 +100,12 @@ function parseTime(val: string) {
   // Try "hh:mm AM/PM"
   const m12 = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (m12) {
-    hours.value = parseInt(m12[1]);
+    const h = parseInt(m12[1]);
+    const p = m12[3].toUpperCase() as "AM" | "PM";
+    // A 24h picker holds the hour on the 24h clock, so "03:00 PM" is 15 there.
+    hours.value = props.format === "24" ? (h % 12) + (p === "PM" ? 12 : 0) : h;
     minutes.value = parseInt(m12[2]);
-    period.value = m12[3].toUpperCase() as "AM" | "PM";
+    period.value = p;
   }
 }
 
@@ -198,12 +201,12 @@ const inputPlaceholder = computed(() =>
 // are the range's, and they stop there rather than wrapping.
 const currentHour24 = computed(() => Math.floor(toMinutes(hours.value, minutes.value, period.value) / 60));
 
-const hourBounds = computed(() => {
-  const full = props.format === "12" ? { min: 1, max: 12 } : { min: 0, max: 23 };
-  if (!range.value) return full;
-  // The displayed hours that hold a selectable minute, in this period when there is one.
-  // In 12h a range crossing 12 reads non-contiguously (12, 1, 2 ...), so the bounds are the
-  // outermost displayed hours and the commit clamp does the rest.
+/**
+ * The displayed hours that hold a selectable minute, in the current period in 12h, in
+ * clock order. Null without a range.
+ */
+const validHours = computed<number[] | null>(() => {
+  if (!range.value) return null;
   const shown: number[] = [];
   for (let h = 0; h < 24; h++) {
     if (h * 60 + 59 < range.value.lo || h * 60 > range.value.hi) continue;
@@ -214,19 +217,30 @@ const hourBounds = computed(() => {
       shown.push(h);
     }
   }
-  return shown.length ? { min: Math.min(...shown), max: Math.max(...shown) } : full;
+  return shown.length ? shown : null;
 });
-const hourMin = computed(() => hourBounds.value.min);
-const hourMax = computed(() => hourBounds.value.max);
+
+const hourMin = computed(() =>
+  validHours.value ? Math.min(...validHours.value) : props.format === "12" ? 1 : 0);
+const hourMax = computed(() =>
+  validHours.value ? Math.max(...validHours.value) : props.format === "12" ? 12 : 23);
 
 const minuteBounds = computed(() => {
-  if (!range.value) return { min: 0, max: 59 };
-  const base = currentHour24.value * 60;
-  return { min: Math.max(range.value.lo - base, 0), max: Math.min(range.value.hi - base, 59) };
+  const r = range.value;
+  const h = currentHour24.value;
+  // An hour outside the range (a model value that arrived out of range) has no bounds of
+  // its own: keep every minute reachable rather than invert the stepper.
+  if (!r || h * 60 + 59 < r.lo || h * 60 > r.hi) return { min: 0, max: 59 };
+  return { min: Math.max(r.lo - h * 60, 0), max: Math.min(r.hi - h * 60, 59) };
 });
 
-/** Wrapping past an end would jump out of the range, so it is off whenever one is set. */
-const hoursWrap = computed(() => !range.value);
+/**
+ * A 12h range that includes 12 reads 12, 1, 2 ... in clock order, which numeric bounds can
+ * only express by wrapping from 12 to 1. Every other range stops at its ends: wrapping
+ * past one would jump out of it.
+ */
+const hoursWrap = computed(() =>
+  !range.value || (props.format === "12" && !!validHours.value && validHours.value.length > 1 && validHours.value.includes(12)));
 const minutesWrap = computed(() => minuteBounds.value.min === 0 && minuteBounds.value.max === 59);
 
 /** An AM/PM button is disabled when no time in that half of the day is selectable. */
@@ -236,6 +250,26 @@ function periodDisabled(p: "AM" | "PM"): boolean {
 }
 
 function onHourChange(val: number) {
+  const valid = validHours.value;
+  if (valid && !valid.includes(val)) {
+    // One arrow step onto an hour the range excludes moves on to the next selectable hour
+    // in that direction (12h wraps, as the clock does) instead of snapping to a bound.
+    const mod = props.format === "12" ? 12 : 24;
+    const delta = (val - hours.value + mod) % mod;
+    // 24h does not wrap, so a typed hour past an end is clamped rather than skipped over.
+    const dir = props.format === "24" ? 0 : delta === 1 ? 1 : delta === mod - 1 ? -1 : 0;
+    if (dir) {
+      for (let k = 1; k < mod; k++) {
+        const raw = (((hours.value + dir * k) % mod) + mod) % mod;
+        const cand = props.format === "12" ? raw || 12 : raw;
+        if (valid.includes(cand)) {
+          val = cand;
+          break;
+        }
+      }
+      if (val !== hours.value && !valid.includes(val)) return;
+    }
+  }
   hours.value = val;
   emitValue();
 }
@@ -266,7 +300,7 @@ const panelEl = useTemplateRef<HTMLElement>("panelEl");
 let cachedFields: HTMLElement[] = [];
 function panelFields(): HTMLElement[] {
   if (cachedFields.length === 0) {
-    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period:not(:disabled)') ?? [])];
   }
   return cachedFields;
 }
