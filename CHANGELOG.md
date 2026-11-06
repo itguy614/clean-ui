@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `CuiTransferList` paints from a stylesheet instead of inline style objects, so a plain consumer rule or a container token restyles it with no `!important`. New tokens: `--cui-transfer-list-gap`, `-bg`, `-border`, `-radius`, `-px`, `-py`, `-font-size`, `-color`, `-pressed-bg` (a row marked for transfer). The DOM, classes and look are unchanged; its parts gain `cui-transfer-list__*` classes. `CuiMaskedInput` has no paint of its own (it renders a `CuiInput`), so it needed no change beyond being guarded (#469).
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9
