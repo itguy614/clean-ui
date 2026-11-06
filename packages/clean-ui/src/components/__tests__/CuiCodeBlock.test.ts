@@ -31,7 +31,7 @@ describe("CuiCodeBlock structure (#163)", () => {
     expect(code.classes()).toContain("cui-code-block__code");
     expect(w.find("pre").classes()).toContain("cui-code-block__pre");
     expect(code.element.children).toHaveLength(2);
-    expect(code.text()).toBe("const x = 1;const y = 2;");
+    expect(code.text()).toBe(CODE);
   });
 
   it("hides the line-number gutter from assistive tech and keeps it out of the code text", () => {

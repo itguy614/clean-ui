@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
   Each line is a block `span` in `<code>`; the gutter is inside the `<pre>`. A selector
   that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
-  `codeBlock.region` message name the scroll region. The look is unchanged.
+  `codeBlock.region` message name the scroll region; an `aria-label` attribute on
+  `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
 
 ## [1.9.0] - 2026-11-05
 

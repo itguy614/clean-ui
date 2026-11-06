@@ -157,7 +157,9 @@ const area = useScrollArea({
         >{{ startLine + i }}</span>
       </span>
 
-      <!-- Code content -->
+      <!-- Code content. No whitespace between <code> and its lines: inside a <pre> it would
+           render as blank lines. Each line ends in a real newline, so the text copies and
+           reads as source whatever the browser does between blocks. -->
       <code
         class="cui-code-block__code"
         :style="{
@@ -168,8 +170,7 @@ const area = useScrollArea({
           color: 'inherit',
           padding: `0 ${cfg.padding} 0 ${lineNumbers ? '0' : cfg.padding}`,
         }"
-      >
-        <span
+      ><span
           v-for="(line, i) in lines"
           :key="i"
           :style="{
@@ -191,8 +192,7 @@ const area = useScrollArea({
               : '2px solid transparent',
             borderRadius: '2px',
           }"
-        >{{ line || " " }}</span>
-      </code>
+        >{{ line || " " }}{{ i < lines.length - 1 ? "\n" : "" }}</span></code>
     </pre>
   </div>
 </template>

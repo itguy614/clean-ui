@@ -88,4 +88,29 @@ describe("CuiCodeBlock in a real browser (#163)", () => {
       }
     }
   });
+
+  it("copies as the newline-separated source, whatever the browser does between blocks", () => {
+    const src = "const a = 1;\nconst b = 2;\nconst c = 3;";
+    const pre = block({ code: src, lineNumbers: true, copyable: false });
+    const code = pre.querySelector("code")!;
+    const range = document.createRange();
+    range.selectNodeContents(code);
+    const sel = window.getSelection()!;
+    sel.removeAllRanges();
+    sel.addRange(range);
+    expect(sel.toString()).toBe(src);
+    // The newlines add no blank lines: three lines tall, not five.
+    const line = code.firstElementChild as HTMLElement;
+    expect(code.getBoundingClientRect().height).toBeCloseTo(line.getBoundingClientRect().height * 3, 0);
+    sel.removeAllRanges();
+  });
+
+  it("keeps each line number level with its line", () => {
+    const pre = block({ code: "a\nb\nc", lineNumbers: true, copyable: false });
+    const nums = pre.querySelectorAll<HTMLElement>(".cui-code-block__gutter > span");
+    const lines = pre.querySelectorAll<HTMLElement>("code > span");
+    for (let i = 0; i < 3; i++) {
+      expect(nums[i].getBoundingClientRect().top, `row ${i}`).toBeCloseTo(lines[i].getBoundingClientRect().top, 0);
+    }
+  });
 });
