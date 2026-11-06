@@ -339,9 +339,10 @@ export { BUILTIN_ICONS } from "./icons/builtin";
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
 export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";
-export { useTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
+export { useTheme, restoreTheme, THEME_PRESETS, type ThemePreset } from "./composables/useTheme";
 export { useDensity, restoreDensity, DENSITY_PRESETS, type DensityId, type DensityPreset } from "./composables/useDensity";
 export { ssrThemeInitScript } from "./ssr-theme-init";
+export { ssrDensityInitScript } from "./ssr-density-init";
 export { useBreakpoint } from "./composables/useBreakpoint";
 export { useGridContext, useFlexContext } from "./composables/useLayoutContext";
 export type { LayoutContext } from "./composables/useLayoutContext";

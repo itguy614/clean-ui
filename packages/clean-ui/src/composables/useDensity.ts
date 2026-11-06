@@ -1,7 +1,9 @@
 import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
+import { DENSITY_CLASS_PREFIX, DENSITY_IDS, DENSITY_STORAGE_KEY } from "../ssr-constants";
 
-export type DensityId = "compact" | "default" | "comfortable";
+// Derived from the ids the pre-paint init script reads, so adding one updates both.
+export type DensityId = (typeof DENSITY_IDS)[number];
 
 export interface DensityPreset {
   id: DensityId;
@@ -15,8 +17,8 @@ export const DENSITY_PRESETS: DensityPreset[] = [
   { id: "comfortable", label: "Comfortable", description: "Roomier spacing" },
 ];
 
-const STORAGE_KEY = "cui-density";
-const CLASS_PREFIX = "cui-density-";
+const STORAGE_KEY = DENSITY_STORAGE_KEY;
+const CLASS_PREFIX = DENSITY_CLASS_PREFIX;
 const DEFAULT: DensityId = "default";
 
 const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
@@ -24,11 +26,6 @@ const VALID_IDS = new Set<string>(DENSITY_PRESETS.map((p) => p.id));
 // Shared reactive state — all components see the same density. Starts at the default and is
 // filled from storage on first use (see restoreDensity), never at import (#209).
 const activeDensity = ref<DensityId>(DEFAULT);
-
-function loadDensity(): DensityId {
-  const stored = safeGetItem(STORAGE_KEY);
-  return stored && VALID_IDS.has(stored) ? (stored as DensityId) : DEFAULT;
-}
 
 function applyDensity(id: DensityId) {
   if (typeof document === "undefined") return;
@@ -57,8 +54,12 @@ let restored = false;
  */
 export function restoreDensity(): void {
   if (restored) return;
-  activeDensity.value = loadDensity();
-  if (activeDensity.value !== DEFAULT) applyDensity(activeDensity.value);
+  const stored = safeGetItem(STORAGE_KEY);
+  const valid = stored != null && VALID_IDS.has(stored);
+  activeDensity.value = valid ? (stored as DensityId) : DEFAULT;
+  // A stored density always wins, "default" included: applying it strips a stale
+  // cui-density-* class. Nothing stored, or a value that isn't a density, leaves <html> alone.
+  if (valid) applyDensity(activeDensity.value);
   // Detached: the first caller is usually a component, whose unmount must not stop it.
   effectScope(true).run(() => {
     watch(activeDensity, (id) => {

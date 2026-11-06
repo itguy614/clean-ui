@@ -1,3 +1,5 @@
+import { THEME_CLASS_PREFIX, THEME_STORAGE_KEY } from "./ssr-constants";
+
 /**
  * SSR Theme Init Script
  *
@@ -18,6 +20,9 @@
  *     },
  *   })
  *
+ * With this script in the head, the class is on <html> before first paint, so an app need
+ * not call `restoreTheme()` at startup. Pair it with `ssrDensityInitScript` for density.
+ *
  * Keys read:
  *   - "cui-theme"  → adds "cui-theme-{id}" class (theme preset)
  *
@@ -28,9 +33,9 @@
 export const ssrThemeInitScript = `
 (function() {
   try {
-    var theme = localStorage.getItem('cui-theme');
+    var theme = localStorage.getItem('${THEME_STORAGE_KEY}');
     if (theme && theme !== 'default' && theme !== 'navy') {
-      document.documentElement.classList.add('cui-theme-' + theme);
+      document.documentElement.classList.add('${THEME_CLASS_PREFIX}' + theme);
     }
   } catch(e) {}
 })();

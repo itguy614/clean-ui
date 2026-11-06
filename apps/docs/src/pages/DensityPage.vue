@@ -72,6 +72,27 @@ setDensity("compact");</code></pre>
         </p>
         <pre class="cui-pre" style="margin-top: 0.5rem;"><code class="cui-code">import { restoreDensity } from "@itguy614/clean-ui";
 restoreDensity(); // before app.mount()</code></pre>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
+          For a server-rendered or lazily loaded app, apply it before the first paint instead:
+          <code class="cui-code">ssrDensityInitScript</code> is a small inline script string that reads
+          the stored density and adds its <code class="cui-code">cui-density-*</code> class to
+          <code class="cui-code">&lt;html&gt;</code>. Put it in the <code class="cui-code">&lt;head&gt;</code>
+          before any stylesheets, beside <code class="cui-code">ssrThemeInitScript</code>. A stored
+          "default", or any value that isn't a density, adds nothing.
+        </p>
+        <pre class="cui-pre" style="margin-top: 0.5rem;"><code class="cui-code">// nuxt.config.ts
+import { ssrThemeInitScript, ssrDensityInitScript } from "@itguy614/clean-ui";
+
+export default defineNuxtConfig({
+  app: {
+    head: {
+      script: [
+        { children: ssrThemeInitScript, type: "text/javascript" },
+        { children: ssrDensityInitScript, type: "text/javascript" },
+      ],
+    },
+  },
+});</code></pre>
         <p class="text-sm" style="margin-top: 0.75rem;">
           <strong>Density moves whitespace, not type.</strong> Padding, gaps, and control heights
           scale; <strong>font sizes never do</strong> (text stays equally readable). Interactive

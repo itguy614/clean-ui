@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.10
+
+- **Importing the library no longer applies the stored theme.** `useTheme` is now lazy, as
+  `useDensity` became in 1.9: no `cui-theme` read or write, no `<html>` class change and no
+  module-level watcher at import. The stored theme is restored on the first `useTheme()` call.
+  An app that relied on the import-time restore and does not call `useTheme()` before first
+  paint must call the new `restoreTheme()` at startup (or use `ssrThemeInitScript`).
+
+### Added
+
+- `ssrDensityInitScript`: an inline `<head>` script that applies the stored density to
+  `<html>` before first paint, beside `ssrThemeInitScript` (#463).
+- `restoreTheme()`: apply the stored theme once, without calling `useTheme()` (#463).
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9
