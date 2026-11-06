@@ -271,11 +271,32 @@ describe("CuiDataGrid column groups", () => {
 });
 
 describe("CuiDataGrid header slots", () => {
-  it("renders #header-<key> in place of the label, inside the sort button for a sortable column", () => {
+  it("renders #header-<key> in place of the label, beside (never inside) the sort button of a sortable column", () => {
     mountGrid({}, { "header-epc": `<b class="custom">Tag EPC</b>` });
     const epc = th("Tag EPC");
-    expect(epc.find("button.cui-data-grid-table__sort .custom").exists()).toBe(true);
-    expect(epc.find("button").text()).toBe("Tag EPC");
+    expect(epc.find(".custom").exists()).toBe(true);
+    expect(epc.find("button .custom").exists()).toBe(false);
+    // the icon-only sort button keeps the column's label as its name
+    expect(epc.find("button.cui-data-grid-table__sort").attributes("aria-label")).toBe("EPC");
+  });
+
+  it("keeps interactive header content out of the sort button, and still sorts from the button", async () => {
+    mountGrid({}, { "header-epc": `<a class="link" href="#x">Tag EPC</a>` });
+    const epc = th("Tag EPC");
+    expect(epc.find("button a").exists()).toBe(false);
+    expect(epc.find("a.link").exists()).toBe(true);
+    await epc.find("button.cui-data-grid-table__sort").trigger("click");
+    expect(epc.attributes("aria-sort")).toBe("ascending");
+  });
+
+  it("names the sort button from the label when the slot is only an icon", () => {
+    mountGrid({}, { "header-epc": `<svg class="ico" aria-hidden="true"></svg>` });
+    expect(w!.find("thead button.cui-data-grid-table__sort").attributes("aria-label")).toBe("EPC");
+  });
+
+  it("keeps the label inside the sort button when no header slot is given", () => {
+    mountGrid();
+    expect(th("EPC").find("button.cui-data-grid-table__sort").text()).toBe("EPC");
   });
 
   it("renders a generic #header with the column, and #header-<key> wins over it", () => {

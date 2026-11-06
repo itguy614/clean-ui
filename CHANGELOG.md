@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.10
+
+- **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
+  order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
+  (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
+  group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
+  unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
+- **A sortable header with a header slot no longer puts the slot inside the sort button.** The
+  slot content sits beside an icon-only sort button, named by the column's `label`, so
+  clicking the slot content itself no longer sorts.
+
+### Added
+
+- `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
+- The column manager shows a lock, with an accessible name, on a frozen column
+  (`messages.dataGrid.frozenColumn`).
+
+### Changed
+
+- `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
+  ("Reads · A1").
+- A frozen column group's header cell pins across its whole span on horizontal scroll.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

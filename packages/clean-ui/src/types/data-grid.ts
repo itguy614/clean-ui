@@ -27,7 +27,12 @@ export interface DataGridColumn {
   width?: string;
   /** Prevent text wrapping */
   nowrap?: boolean;
-  /** Pin column to the left edge during horizontal scroll (requires width) */
+  /**
+   * Freeze the column: pinned to the left edge during horizontal scroll (requires width).
+   * Frozen columns are always the leftmost block, in declared order, and can't be reordered in
+   * the column manager. A column group is frozen wholly or not at all: one that mixes frozen and
+   * non-frozen leaves is unfrozen, with a development warning.
+   */
   sticky?: boolean;
 }
 

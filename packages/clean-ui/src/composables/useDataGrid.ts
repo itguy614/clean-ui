@@ -15,6 +15,10 @@ import type {
 } from "../types/data-grid";
 import { isDataGridColumnGroup } from "../types/data-grid";
 import { DataGridContextKey, type DataGridContext } from "../components/data-grid-context";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+import { useMessages } from "./useMessages";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface UseDataGridOptions {
   /**
@@ -69,6 +73,33 @@ export function useDataGrid(options: UseDataGridOptions) {
   });
   const columnGroupOf = (key: string) => columnGroupByKey.value.get(key);
 
+  /**
+   * The frozen columns (`sticky: true`), in declared order: the leftmost block, always (#465).
+   * A group is frozen wholly or not at all: one whose leaves mix frozen and not is a config
+   * error (a group must stay contiguous, and the frozen block must stay leftmost), so its
+   * leaves are all unfrozen, with a development warning.
+   */
+  const frozenOrder = computed(() => {
+    const keys: string[] = [];
+    for (const d of definitions.value) {
+      if (!isDataGridColumnGroup(d)) {
+        if (d.sticky) keys.push(d.key);
+        continue;
+      }
+      const frozen = d.children.filter((c) => c.sticky).length;
+      if (frozen === d.children.length) keys.push(...d.children.map((c) => c.key));
+      else if (frozen > 0 && __DEV__ && process.env.NODE_ENV !== "production") {
+        warnOnce(
+          `[clean-ui] CuiDataGrid: column group "${d.label}" mixes frozen (sticky) and non-frozen columns. ` +
+            `A group is frozen wholly or not at all, so its columns are unfrozen: mark every column in the group sticky, or none.`,
+        );
+      }
+    }
+    return keys;
+  });
+  const frozenKeys = computed(() => new Set(frozenOrder.value));
+  const isFrozen = (key: string) => frozenKeys.value.has(key);
+
   // A leaf re-created with identical fields (an inline literal) is the same column.
   const sameColumn = (a: DataGridColumn, b: DataGridColumn) => {
     if (a === b) return true;
@@ -117,6 +148,23 @@ export function useDataGrid(options: UseDataGridOptions) {
     }
     return result;
   }
+
+  /**
+   * The frozen columns first, in declared order, whatever the stored order says (#465): a
+   * frozen column is pinned at the summed widths of the frozen columns before it, which only
+   * lines up when they are the leftmost block. The rest keep their relative order.
+   */
+  function pinFrozenFirst(state: DataGridColumnState[]): DataGridColumnState[] {
+    const order = frozenOrder.value;
+    if (order.length === 0) return state;
+    const byKey = new Map(state.map((cs) => [cs.key, cs]));
+    const head = order.flatMap((key) => (byKey.has(key) ? [byKey.get(key)!] : []));
+    const frozen = frozenKeys.value;
+    return [...head, ...state.filter((cs) => !frozen.has(cs.key))];
+  }
+
+  /** Every ordering rule, applied to a state: groups contiguous, frozen columns leftmost. */
+  const normaliseOrder = (state: DataGridColumnState[]) => pinFrozenFirst(keepGroupsTogether(state));
 
   /**
    * The order as the column manager shows it: each group once, with its leaves, and each
@@ -171,14 +219,14 @@ export function useDataGrid(options: UseDataGridOptions) {
       }
       result.splice(at, 0, defaultStateOf(col));
     });
-    return keepGroupsTogether(result);
+    return normaliseOrder(result);
   }
 
   // --- Column state ---
   const columnState = ref<DataGridColumnState[]>(
     initialView?.columns
       ? reconcileColumnState(initialView.columns.map((cs) => ({ ...cs })), columns)
-      : columns.map(defaultStateOf),
+      : normaliseOrder(columns.map(defaultStateOf)),
   );
 
   // Follow later definition changes (#258).
@@ -238,7 +286,9 @@ export function useDataGrid(options: UseDataGridOptions) {
   function reorderColumns(fromIndex: number, toIndex: number) {
     const arr = [...columnState.value];
     const moved = arr[fromIndex];
-    if (!moved) return;
+    // A frozen column never moves, and nothing moves in among them.
+    if (!moved || isFrozen(moved.key)) return;
+    toIndex = Math.max(toIndex, frozenOrder.value.length);
     const group = columnGroupByKey.value.get(moved.key);
     if (group) {
       const members = arr.flatMap((cs, i) => (columnGroupByKey.value.get(cs.key) === group ? [i] : []));
@@ -246,15 +296,18 @@ export function useDataGrid(options: UseDataGridOptions) {
     }
     arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, moved);
-    columnState.value = keepGroupsTogether(arr);
+    columnState.value = normaliseOrder(arr);
   }
 
   /** Move a unit (a whole group, or an ungrouped column) to another place in `columnUnits`. */
   function reorderUnit(fromUnit: number, toUnit: number) {
     const units = [...columnUnits.value];
+    const isFrozenUnit = (u: DataGridColumnUnit) => (u.type === "group" ? u.keys : [u.key]).some(isFrozen);
     const [moved] = units.splice(fromUnit, 1);
-    if (!moved) return;
-    units.splice(Math.min(Math.max(toUnit, 0), units.length), 0, moved);
+    if (!moved || isFrozenUnit(moved)) return;
+    // Frozen units are the leftmost block: nothing lands before or among them.
+    const floor = units.filter(isFrozenUnit).length;
+    units.splice(Math.min(Math.max(toUnit, floor), units.length), 0, moved);
     const byKey = new Map(columnState.value.map((cs) => [cs.key, cs]));
     columnState.value = units
       .flatMap((u) => (u.type === "group" ? u.keys : [u.key]))
@@ -607,7 +660,7 @@ export function useDataGrid(options: UseDataGridOptions) {
 
   function getDefaultConfig(): DataGridViewConfig {
     return {
-      columns: columns.map(defaultStateOf),
+      columns: normaliseOrder(columns.map(defaultStateOf)),
       sort: null,
       filters: [],
       perPage: defaultPerPage,
@@ -701,6 +754,7 @@ export function useDataGrid(options: UseDataGridOptions) {
   const context: DataGridContext = {
     columns,
     columnGroupOf,
+    isFrozen,
     columnUnits,
     columnState,
     visibleColumns,
@@ -761,4 +815,17 @@ export function useDataGridState(): DataGridContext {
   const ctx = inject(DataGridContextKey);
   if (!ctx) throw new Error("useDataGridState must be used within a CuiDataGrid");
   return ctx;
+}
+
+/**
+ * A column's label as the grid shows it out of context: "Reads · A1" under a group, since a
+ * leaf label alone repeats per group (#461). Call in setup, under a CuiDataGrid.
+ */
+export function useColumnLabel(): (col: { key: string; label: string }) => string {
+  const grid = useDataGridState();
+  const messages = useMessages();
+  return (col) => {
+    const group = grid.columnGroupOf(col.key);
+    return group ? messages.value.dataGrid.groupedColumn(group.label, col.label) : col.label;
+  };
 }

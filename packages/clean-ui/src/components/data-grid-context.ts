@@ -17,6 +17,8 @@ export interface DataGridContext {
   columns: DataGridColumn[];
   /** The group a leaf column sits under (a spanning header), if any. */
   columnGroupOf: (key: string) => DataGridColumnGroup | undefined;
+  /** Whether a column is frozen (`sticky`): the leftmost block, never moved. A group is frozen wholly or not at all. */
+  isFrozen: (key: string) => boolean;
   /** The column order as units: each group once (with its leaf keys), each ungrouped column. */
   columnUnits: ComputedRef<DataGridColumnUnit[]>;
   columnState: Ref<DataGridColumnState[]>;
