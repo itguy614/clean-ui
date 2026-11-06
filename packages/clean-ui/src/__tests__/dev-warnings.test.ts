@@ -45,11 +45,11 @@ describe("the scans catch a violation", () => {
     expect(unguardedWarnCalls(`function f() {\n  if (${both}) warnOnce("x");\n}`)).toBe(0);
     // `__DEV__` alone keeps the string in a production bundle.
     expect(unguardedWarnCalls('function f() {\n  if (__DEV__) warnOnce("x");\n}')).toBe(1);
-    // A guard well before the call (here, another statement's) doesn't cover it.
     // The editor's registry builds its text where it pushes (#462).
     expect(unguardedWarnCalls('if (x) {\n  warnings.push({ message: `a ${x}` });\n}')).toBe(1);
     expect(unguardedWarnCalls('warnDev(`[X] ${m}`);')).toBe(1);
     expect(unguardedWarnCalls(`if (${both} && x) {\n  warnings.push({ message: "a" });\n}`)).toBe(0);
+    // A guard well before the call (here, another statement's) doesn't cover it.
     expect(unguardedWarnCalls(`if (${both}) { a(); }\n${"//".repeat(1)}\n${" ".repeat(250)}warnOnce("x");`)).toBe(1);
   });
 });

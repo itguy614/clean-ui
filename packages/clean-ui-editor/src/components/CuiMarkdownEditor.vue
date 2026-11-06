@@ -311,8 +311,8 @@ function parseAdvanced(update: ViewUpdate): boolean {
 }
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
-  for (const warning of warnings) {
-    if (__DEV__ && process.env.NODE_ENV !== "production") warnDev(`[CuiMarkdownEditor] ${warning.message}`);
+  if (__DEV__ && process.env.NODE_ENV !== "production") {
+    for (const warning of warnings) warnDev(`[CuiMarkdownEditor] ${warning.message}`);
   }
 }
 
