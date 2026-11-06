@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, shallowRef } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
@@ -12,6 +12,7 @@ import { useMessages } from "../composables/useMessages";
 const messages = useMessages();
 
 const grid = useDataGridState();
+const columnLabel = useColumnLabel();
 
 // What the manager lists: a group's header row, then its leaves; or a loose column. A
 // row's `unit` is its place in grid.columnUnits — what moving a group or loose column moves.
@@ -35,26 +36,25 @@ const rows = computed<Row[]>(() =>
 function getLabel(key: string): string {
   return grid.columns.find((c) => c.key === key)?.label ?? key;
 }
+const fullLabel = (key: string) => {
+  const col = grid.columns.find((c) => c.key === key);
+  return col ? columnLabel(col) : key;
+};
 
 // What it is called out of context ("Reads · A1"): "A1" alone repeats per group, and a screen
 // reader user hears a leaf's checkbox and buttons without the header row.
 function nameOf(row: Row): string {
   if (row.kind === "group") return row.group.label;
-  const label = getLabel(row.key);
-  return row.kind === "leaf" ? messages.value.dataGrid.groupedColumn(row.group.label, label) : label;
+  return fullLabel(row.key);
 }
 
 // A frozen column (or a group, which is frozen wholly) is the grid's leftmost block and stays
 // put: no handle, no move buttons, and nothing is dropped in among them (#465). The grid's own
 // state refuses it too.
 function isFrozenRow(row: Row): boolean {
-  if (row.kind !== "group") return grid.isFrozen(row.key);
-  const unit = grid.columnUnits.value[row.unit];
-  return unit?.type === "group" && unit.keys.some(grid.isFrozen);
+  return row.kind === "group" ? grid.isFrozenUnit(grid.columnUnits.value[row.unit]) : grid.isFrozen(row.key);
 }
-const frozenUnits = computed(
-  () => grid.columnUnits.value.filter((u) => (u.type === "group" ? u.keys : [u.key]).some(grid.isFrozen)).length,
-);
+const frozenUnits = computed(() => grid.columnUnits.value.filter(grid.isFrozenUnit).length);
 const indexOfKey = (key: string) => grid.columnState.value.findIndex((cs) => cs.key === key);
 
 // --- Drag ---

@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
   unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
 - **A sortable header with a header slot no longer puts the slot inside the sort button.** The
-  slot content sits beside an icon-only sort button, named by the column's `label`, so
-  clicking the slot content itself no longer sorts.
+  slot content sits beside an icon-only sort button, named by the column's label (with its
+  group), so interactive content in a header slot is valid. A click on plain slot content still
+  sorts. A selector that targeted `.cui-data-grid-table__sort` around slot content no longer
+  matches it.
 
 ### Added
 

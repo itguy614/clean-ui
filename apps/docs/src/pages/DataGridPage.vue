@@ -176,8 +176,15 @@ const frozenColumns: DataGridColumnDef[] = [
     label: "RSSI (dBm)",
     children: ["A1", "A2", "A3"].map((a, i) => ({ key: `s${i + 1}`, label: a, align: "right", width: "110px" })),
   },
-  { label: "Mixed", children: [{ key: "m1", label: "Frozen?", sticky: true, width: "110px" }, { key: "m2", label: "Not", width: "110px" }] },
 ];
+// A group mixing frozen and normal leaves is a config error: the grid unfreezes it, and warns
+// in development, so it is off until asked for.
+const showMixedGroup = ref(false);
+const mixedGroup: DataGridColumnDef = {
+  label: "Mixed",
+  children: [{ key: "m1", label: "Frozen?", sticky: true, width: "110px" }, { key: "m2", label: "Not", width: "110px" }],
+};
+const frozenGridColumns = computed(() => (showMixedGroup.value ? [...frozenColumns, mixedGroup] : frozenColumns));
 const frozenData: DataGridRow[] = Array.from({ length: 8 }, (_, i) => ({
   id: String(i + 1),
   reading: `#${i + 1}`,
@@ -543,10 +550,11 @@ function step(by: number) {
             group, and scrolling right pins the group&rsquo;s header cell over both its
             columns. Open <strong>Columns</strong>: frozen columns show a lock instead of a
             drag handle, have no move buttons, and nothing can be dropped among them. The
-            <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not), so the
-            grid unfreezes it and, in development, warns in the console.
+            <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not): switch it on
+            and the grid unfreezes it, and in development warns in the console.
           </p>
-          <CuiDataGrid :columns="frozenColumns" :data="frozenData" max-height="320px" size="sm" />
+          <CuiToggle v-model="showMixedGroup" label="Add a group that mixes frozen and normal columns" />
+          <CuiDataGrid :columns="frozenGridColumns" :data="frozenData" max-height="320px" size="sm" />
         </CuiStack>
       </Example>
 

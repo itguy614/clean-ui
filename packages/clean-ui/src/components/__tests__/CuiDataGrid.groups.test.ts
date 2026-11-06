@@ -289,6 +289,25 @@ describe("CuiDataGrid header slots", () => {
     expect(epc.attributes("aria-sort")).toBe("ascending");
   });
 
+  it("still sorts on a click of plain slot content, but not of a link inside it", async () => {
+    mountGrid({}, { "header-epc": `<span class="plain">Tag</span> <a class="link" href="#x">more</a>` });
+    const epc = th("Tag more");
+    await epc.find("a.link").trigger("click");
+    expect(epc.attributes("aria-sort")).toBeUndefined();
+    await epc.find(".plain").trigger("click");
+    expect(epc.attributes("aria-sort")).toBe("ascending");
+    // and a click on the sort button sorts once, not twice
+    await epc.find("button.cui-data-grid-table__sort").trigger("click");
+    expect(epc.attributes("aria-sort")).toBe("descending");
+  });
+
+  it("names an icon-only sort button with its group, so grouped A1s differ", () => {
+    mountGrid({}, { header: `<svg aria-hidden="true"></svg>` });
+    const names = w!.findAll("thead button.cui-data-grid-table__sort").map((b) => b.attributes("aria-label"));
+    expect(names).toContain("Reads · A2");
+    expect(names).toContain("EPC");
+  });
+
   it("names the sort button from the label when the slot is only an icon", () => {
     mountGrid({}, { "header-epc": `<svg class="ico" aria-hidden="true"></svg>` });
     expect(w!.find("thead button.cui-data-grid-table__sort").attributes("aria-label")).toBe("EPC");

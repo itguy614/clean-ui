@@ -84,21 +84,29 @@ export function useDataGrid(options: UseDataGridOptions) {
     for (const d of definitions.value) {
       if (!isDataGridColumnGroup(d)) {
         if (d.sticky) keys.push(d.key);
-        continue;
-      }
+      } else if (d.children.every((c) => c.sticky)) keys.push(...d.children.map((c) => c.key));
+    }
+    return keys;
+  });
+  const frozenKeys = computed(() => new Set(frozenOrder.value));
+  const isFrozen = (key: string) => frozenKeys.value.has(key);
+  /** A unit (a group, or a loose column) is frozen when its columns are: a group, wholly. */
+  const isFrozenUnit = (u: DataGridColumnUnit) => (u.type === "group" ? u.keys : [u.key]).some(isFrozen);
+
+  // A mixed group is a config error: reported when the definitions are set and when they change.
+  function warnMixedGroups(defs: DataGridColumnDef[]) {
+    for (const d of defs) {
+      if (!isDataGridColumnGroup(d)) continue;
       const frozen = d.children.filter((c) => c.sticky).length;
-      if (frozen === d.children.length) keys.push(...d.children.map((c) => c.key));
-      else if (frozen > 0 && __DEV__ && process.env.NODE_ENV !== "production") {
+      if (frozen > 0 && frozen < d.children.length && __DEV__ && process.env.NODE_ENV !== "production") {
         warnOnce(
           `[clean-ui] CuiDataGrid: column group "${d.label}" mixes frozen (sticky) and non-frozen columns. ` +
             `A group is frozen wholly or not at all, so its columns are unfrozen: mark every column in the group sticky, or none.`,
         );
       }
     }
-    return keys;
-  });
-  const frozenKeys = computed(() => new Set(frozenOrder.value));
-  const isFrozen = (key: string) => frozenKeys.value.has(key);
+  }
+  warnMixedGroups(definitions.value);
 
   // A leaf re-created with identical fields (an inline literal) is the same column.
   const sameColumn = (a: DataGridColumn, b: DataGridColumn) => {
@@ -241,6 +249,7 @@ export function useDataGrid(options: UseDataGridOptions) {
       const previous = [...columns];
       const leaves = flattenColumns(next);
       definitions.value = next;
+      warnMixedGroups(next);
       // Leaves unchanged (only a group label moved): nothing for the leaf-keyed passes to redo.
       if (leaves.length !== columns.length || leaves.some((c, i) => c !== columns[i])) {
         columns.splice(0, columns.length, ...leaves);
@@ -302,16 +311,15 @@ export function useDataGrid(options: UseDataGridOptions) {
   /** Move a unit (a whole group, or an ungrouped column) to another place in `columnUnits`. */
   function reorderUnit(fromUnit: number, toUnit: number) {
     const units = [...columnUnits.value];
-    const isFrozenUnit = (u: DataGridColumnUnit) => (u.type === "group" ? u.keys : [u.key]).some(isFrozen);
     const [moved] = units.splice(fromUnit, 1);
     if (!moved || isFrozenUnit(moved)) return;
     // Frozen units are the leftmost block: nothing lands before or among them.
     const floor = units.filter(isFrozenUnit).length;
     units.splice(Math.min(Math.max(toUnit, floor), units.length), 0, moved);
     const byKey = new Map(columnState.value.map((cs) => [cs.key, cs]));
-    columnState.value = units
-      .flatMap((u) => (u.type === "group" ? u.keys : [u.key]))
-      .map((key) => byKey.get(key)!);
+    columnState.value = normaliseOrder(
+      units.flatMap((u) => (u.type === "group" ? u.keys : [u.key])).map((key) => byKey.get(key)!),
+    );
   }
 
   /** Move a whole group to a place among the units (groups and ungrouped columns). */
@@ -755,6 +763,7 @@ export function useDataGrid(options: UseDataGridOptions) {
     columns,
     columnGroupOf,
     isFrozen,
+    isFrozenUnit,
     columnUnits,
     columnState,
     visibleColumns,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
 import { useEventListener } from "../composables/useEventListener";
 import { useListNavigation } from "../composables/useListNavigation";
@@ -85,6 +85,7 @@ const emit = defineEmits<{
 }>();
 
 const grid = useDataGridState();
+const columnLabel = useColumnLabel();
 
 const hasBulkActions = computed(() => (props.bulkActions?.length ?? 0) > 0);
 
@@ -370,6 +371,17 @@ function groupHeaderStyle(cell: Extract<HeadCell, { kind: "group" }>) {
   return headerPinStyle(stickyColumnOffsets.value.get(cell.firstKey), cell.lastKey === lastStickyKey.value);
 }
 
+// A header slot sits beside the sort button, not in it, but a click on its plain content still
+// sorts, as the whole cell did. A click on interactive content in the slot is that content's own,
+// and the sort button handles its own click.
+const INTERACTIVE =
+  "a, button, input, select, textarea, label, summary, [role='button'], [role='link'], [role='menuitem'], [tabindex], [contenteditable='true']";
+function onSortGroupClick(e: MouseEvent, key: string) {
+  const hit = (e.target as Element | null)?.closest(INTERACTIVE);
+  if (hit && (e.currentTarget as Element).contains(hit)) return;
+  grid.applySort(key);
+}
+
 function leafHeaderStyle(cell: Extract<HeadCell, { kind: "leaf" }>) {
   const style = headerCellStyle(cell.col);
   return cell.groupId && props.stickyHeader ? { ...style, "--_data-grid-head-top": `${headRow1Height.value}px` } : style;
@@ -573,13 +585,14 @@ const totalCols = computed(() => {
               <div
                 v-if="cell.col.sortable && customHeader?.(cell.col.key)"
                 class="cui-data-grid-table__sort-group"
+                @click="onSortGroupClick($event, cell.col.key)"
                 :style="{ justifyContent: cell.col.align === 'right' ? 'flex-end' : cell.col.align === 'center' ? 'center' : 'flex-start' }"
               >
                 <slot name="header" :column="cell.col">{{ cell.col.label }}</slot>
                 <button
                   type="button"
                   class="cui-data-grid-table__sort cui-data-grid-table__sort--icon"
-                  :aria-label="cell.col.label"
+                  :aria-label="columnLabel(cell.col)"
                   @click="grid.applySort(cell.col.key)"
                 >
                   <CuiIcon
@@ -759,6 +772,8 @@ const totalCols = computed(() => {
 /* The whole cell's width, so the click target is the header, not just its label. */
 .cui-data-grid-table__sort-group {
   display: flex;
+  cursor: pointer;
+  user-select: none;
   align-items: center;
   gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
