@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

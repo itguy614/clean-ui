@@ -163,3 +163,22 @@ export function presetTransition(
  */
 export const subtreeTransition = { css: false, onLeave: afterAnimations };
 
+
+/**
+ * Takes a leaving list item out of the flow where it stands (CuiTransitionGroup, #447;
+ * CuiToastProvider, #263), so the items after it can move up while it fades. An absolute
+ * item has to be given the box it had: its offset in the container (less its margin, which
+ * `top`/`left` measure from), and its size. In a flex container it would otherwise jump to
+ * the start edge, and a grid or auto-sized one would collapse. Call it from `before-leave`.
+ */
+export function pinOutOfFlow(el: Element): void {
+  const node = el as HTMLElement;
+  const { marginTop, marginLeft } = getComputedStyle(node);
+  const { style } = node;
+  style.top = `${node.offsetTop - (parseFloat(marginTop) || 0)}px`;
+  style.left = `${node.offsetLeft - (parseFloat(marginLeft) || 0)}px`;
+  style.width = `${node.offsetWidth}px`;
+  style.height = `${node.offsetHeight}px`;
+  style.boxSizing = "border-box";
+  style.position = "absolute";
+}
