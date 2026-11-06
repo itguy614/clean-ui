@@ -169,6 +169,7 @@ describe("every component root is inside the scope", () => {
     "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
     "CuiAlert.vue": "wraps .cui-alert in a <Transition>, for its exit (#263)",
     "CuiTransition.vue": "wraps the consumer's own element in a <Transition>; the element carries their classes (#397)",
+    "CuiTransitionGroup.vue": "a <TransitionGroup> with no tag is a fragment; with one it adds .cui-transition-group to the element it renders (#447)",
   };
 
   /**
