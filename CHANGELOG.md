@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`CuiColorPicker` is styled by a stylesheet instead of inline style objects (#467, part of #213).**
+  It looks the same. A plain rule such as `.cui-color-picker { width: 320px }` or a token on a
+  container now wins without `!important`. New tokens: `--cui-color-picker-width`, `-height`
+  (the gradient), `-font-size`, `-bg`, `-border` and `-radius`, alongside the existing `-focus-ring`.
+  The picker's frame radius now follows `--cui-radius-lg`, and its text field, swatches and
+  swatch-only preview follow `--cui-radius-sm`. The parts gained `cui-color-picker__*` classes
+  (and the root `cui-color-picker--disabled` while disabled); the DOM is otherwise unchanged.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef, type CSSProperties, type Ref } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, useTemplateRef, type Ref } from "vue";
 import type { HideableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
-import { clampSize } from "../utils/sizing";
+import { clampSize, RADIUS_SCALE } from "../utils/sizing";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
@@ -60,12 +60,30 @@ const activeFormat = ref<ColorFormat>(props.format);
 const textInput = ref("");
 
 // Size config
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; fontSize: string }> = {
-  sm: { width: "220px", gradientHeight: "130px", sliderHeight: "10px", thumbSize: "14px", swatchSize: "20px", fontSize: "0.75rem" },
-  md: { width: "280px", gradientHeight: "160px", sliderHeight: "12px", thumbSize: "16px", swatchSize: "24px", fontSize: "0.8125rem" },
-  lg: { width: "340px", gradientHeight: "200px", sliderHeight: "14px", thumbSize: "18px", swatchSize: "28px", fontSize: "0.875rem" },
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { width: string; gradientHeight: string; sliderHeight: string; thumbSize: string; swatchSize: string; textSize: string }> = {
+  sm: { width: "220px", gradientHeight: "130px", sliderHeight: "10px", thumbSize: "14px", swatchSize: "20px", textSize: "0.75rem" },
+  md: { width: "280px", gradientHeight: "160px", sliderHeight: "12px", thumbSize: "16px", swatchSize: "24px", textSize: "0.8125rem" },
+  lg: { width: "340px", gradientHeight: "200px", sliderHeight: "14px", thumbSize: "18px", swatchSize: "28px", textSize: "0.875rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+
+/**
+ * The size's dimensions, as private `--_color-picker-*` properties. The stylesheet reads each
+ * back behind a public `--cui-color-picker-*` token where there is one (width, height,
+ * font-size, radius); the rest are geometry, with no public token. They change with `size`
+ * only, so emitting them on the root costs nothing while a handle is dragged. See
+ * "Themeable Properties" in CLAUDE.md.
+ */
+const rootVars = computed(() => ({
+  "--_color-picker-width": cfg.value.width,
+  "--_color-picker-height": cfg.value.gradientHeight,
+  "--_color-picker-track-height": cfg.value.sliderHeight,
+  "--_color-picker-thumb-size": cfg.value.thumbSize,
+  "--_color-picker-swatch-size": cfg.value.swatchSize,
+  "--_color-picker-font-size": cfg.value.textSize,
+  "--_color-picker-radius": RADIUS_SCALE.lg,
+  "--_color-picker-radius-sm": RADIUS_SCALE.sm,
+}));
 
 // Computed RGB from HSV
 const currentRgb = computed(() => hsvToRgb(hue.value, sat.value, val.value));
@@ -281,16 +299,11 @@ const valAttrs = computed(() => sliderAttrs(sliders.val, false));
 const hueAttrs = computed(() => sliderAttrs(sliders.hue));
 const alphaAttrs = computed(() => sliderAttrs(sliders.alpha));
 
-// The gradient's thumb, where both of its sliders sit.
-const gradientThumbPos = computed<CSSProperties>(() => ({
-  position: "absolute",
+// Where the gradient's two sliders sit: the one thing about them that moves. Their size, shape
+// and paint are in the stylesheet.
+const gradientThumbPos = computed(() => ({
   left: `${sat.value * 100}%`,
   top: `${(1 - val.value) * 100}%`,
-  width: cfg.value.thumbSize,
-  height: cfg.value.thumbSize,
-  borderRadius: "50%",
-  transform: "translate(-50%, -50%)",
-  pointerEvents: "none",
 }));
 
 // --- Text input ---
@@ -364,14 +377,13 @@ function onSwatchKeydown(e: KeyboardEvent) {
   if (e.defaultPrevented && !isSelected(i)) onSwatchClick(resolvedPalette.value[i]);
 }
 
-// Gradient hue color for background
+// The fully saturated colour at the current hue. This and the colour data after it (`displayColor`,
+// `currentHex`) change on every drag frame, so each reaches the stylesheet as a private property on
+// the element that paints it, never on the root, where it would restyle every descendant.
 const hueColor = computed(() => {
   const rgb = hsvToRgb(hue.value, 1, 1);
   return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 });
-
-// Checkerboard for alpha
-const checkerboard = "repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50%) 0 0 / 12px 12px";
 
 // Expose imperative handle — the text input if shown, else the first control that takes
 // focus: the gradient's slider pair, or the swatches' tab stop when swatchOnly.
@@ -394,121 +406,66 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
+  <!-- One frame around the gradient and the controls together. -->
   <div
     class="cui-color-picker"
+    :class="{ 'cui-color-picker--disabled': disabled }"
     ref="rootEl"
     v-show="!hidden"
-    :style="{
-      width: cfg.width,
-      // One frame around the gradient and the controls together.
-      border: '1px solid var(--cui-border)',
-      borderRadius: '0.5rem',
-      background: 'var(--cui-surface-base, white)',
-      opacity: disabled ? '0.5' : '1',
-      pointerEvents: disabled ? 'none' : undefined,
-      userSelect: 'none',
-    }"
+    :style="rootVars"
   >
     <!-- Saturation/brightness gradient -->
     <div
       v-if="!swatchOnly"
       ref="gradientRef"
       class="cui-color-picker__gradient"
-      :style="{
-        position: 'relative',
-        width: '100%',
-        height: cfg.gradientHeight,
-        // Inside the frame's 1px border, so its corners follow the frame's.
-        borderRadius: 'calc(0.5rem - 1px) calc(0.5rem - 1px) 0 0',
-        cursor: 'crosshair',
-        touchAction: 'none',
-        overflow: 'hidden',
-        background: hueColor,
-      }"
+      :style="{ '--_color-picker-hue': hueColor }"
       @pointerdown.prevent="onGradientPointerDown"
       @keydown="onGradientKeydown"
     >
       <!-- White overlay (left to right) -->
-      <div :style="{ position: 'absolute', inset: '0', background: 'linear-gradient(to right, white, transparent)' }" />
+      <div class="cui-color-picker__overlay cui-color-picker__overlay--white" />
       <!-- Black overlay (top to bottom) -->
-      <div :style="{ position: 'absolute', inset: '0', background: 'linear-gradient(to bottom, transparent, black)' }" />
+      <div class="cui-color-picker__overlay cui-color-picker__overlay--black" />
       <!-- Thumb: the saturation slider, with the brightness slider laid over it — two
            sliders in one place, one tab stop (see onGradientKeydown) -->
       <div
         ref="satSliderRef"
-        class="cui-color-picker__thumb"
+        class="cui-color-picker__thumb cui-color-picker__thumb--sat"
         v-bind="satAttrs"
-        :style="{ ...gradientThumbPos, border: '2px solid white', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }"
+        :style="gradientThumbPos"
       />
       <div
         ref="valSliderRef"
-        class="cui-color-picker__thumb"
+        class="cui-color-picker__thumb cui-color-picker__thumb--val"
         v-bind="valAttrs"
         :style="gradientThumbPos"
       />
     </div>
 
     <!-- Sliders + controls area -->
-    <div
-      :style="{
-        padding: 'calc(0.75rem * var(--cui-density-scale, 1))',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
-      }"
-    >
+    <div class="cui-color-picker__body">
       <!-- Preview + sliders row -->
-      <div v-if="!swatchOnly" :style="{ display: 'flex', gap: 'calc(0.625rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
+      <div v-if="!swatchOnly" class="cui-color-picker__row">
         <!-- Color preview circle -->
-        <div
-          :style="{
-            width: '2rem',
-            height: '2rem',
-            borderRadius: '50%',
-            border: '1px solid var(--cui-border)',
-            flexShrink: '0',
-            background: checkerboard,
-            position: 'relative',
-            overflow: 'hidden',
-          }"
-        >
-          <div :style="{ position: 'absolute', inset: '0', borderRadius: '50%', background: displayColor }" />
+        <div class="cui-color-picker__preview">
+          <div class="cui-color-picker__preview-fill" :style="{ '--_color-picker-value': displayColor }" />
         </div>
 
         <!-- Sliders -->
-        <div :style="{ flex: '1', display: 'flex', flexDirection: 'column', gap: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+        <div class="cui-color-picker__sliders">
           <!-- Hue slider -->
           <div
             ref="hueRef"
             class="cui-color-picker__hue"
-            :style="{
-              position: 'relative',
-              height: cfg.sliderHeight,
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              touchAction: 'none',
-              background: 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)',
-            }"
             @pointerdown.prevent="onHuePointerDown"
             @keydown="onHueKeydown"
           >
             <div
               ref="hueSliderRef"
-              class="cui-color-picker__thumb"
+              class="cui-color-picker__thumb cui-color-picker__thumb--hue"
               v-bind="hueAttrs"
-              :style="{
-                position: 'absolute',
-                left: `${(hue / 360) * 100}%`,
-                top: '50%',
-                width: cfg.thumbSize,
-                height: cfg.thumbSize,
-                borderRadius: '50%',
-                border: '2px solid white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                background: hueColor,
-              }"
+              :style="{ left: `${(hue / 360) * 100}%`, '--_color-picker-value': hueColor }"
             />
           </div>
 
@@ -517,57 +474,31 @@ defineExpose({ el: rootEl, focus, blur });
             v-if="showAlpha"
             ref="alphaRef"
             class="cui-color-picker__alpha"
-            :style="{
-              position: 'relative',
-              height: cfg.sliderHeight,
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              touchAction: 'none',
-              background: checkerboard,
-              overflow: 'hidden',
-            }"
             @pointerdown.prevent="onAlphaPointerDown"
             @keydown="onAlphaKeydown"
           >
-            <div :style="{ position: 'absolute', inset: '0', borderRadius: '9999px', background: `linear-gradient(to right, transparent, ${currentHex})` }" />
+            <div class="cui-color-picker__alpha-fill" :style="{ '--_color-picker-value': currentHex }" />
             <div
               ref="alphaSliderRef"
-              class="cui-color-picker__thumb"
+              class="cui-color-picker__thumb cui-color-picker__thumb--alpha"
               v-bind="alphaAttrs"
-              :style="{
-                position: 'absolute',
-                left: `${alpha * 100}%`,
-                top: '50%',
-                width: cfg.thumbSize,
-                height: cfg.thumbSize,
-                borderRadius: '50%',
-                border: '2px solid white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'none',
-                background: currentHex,
-              }"
+              :style="{ left: `${alpha * 100}%`, '--_color-picker-value': currentHex }"
             />
           </div>
         </div>
       </div>
 
       <!-- Input + format toggle -->
-      <div v-if="showInput" :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))', alignItems: 'center' }">
+      <div v-if="showInput" class="cui-color-picker__input-row">
         <!-- Swatch-only preview -->
         <div
           v-if="swatchOnly"
-          :style="{
-            width: '1.5rem',
-            height: '1.5rem',
-            borderRadius: '0.25rem',
-            border: '1px solid var(--cui-border)',
-            flexShrink: '0',
-            background: displayColor,
-          }"
+          class="cui-color-picker__swatch-preview"
+          :style="{ '--_color-picker-value': displayColor }"
         />
         <input
           ref="inputEl"
+          class="cui-color-picker__input"
           :id="id"
           :name="name"
           :autocomplete="autocomplete"
@@ -576,27 +507,15 @@ defineExpose({ el: rootEl, focus, blur });
           :aria-labelledby="ariaLabelledby"
           v-model="textInput"
           :disabled="disabled"
-          :style="{
-            flex: '1',
-            padding: 'calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1))',
-            fontSize: cfg.fontSize,
-            fontFamily: 'var(--cui-font-mono, monospace)',
-            border: '1px solid var(--cui-border-strong, var(--cui-border))',
-            borderRadius: '0.25rem',
-            background: 'var(--cui-surface-base, white)',
-            color: 'var(--cui-text-body)',
-            outline: 'none',
-            minWidth: '0',
-          }"
           @keydown.enter="onTextSubmit"
           @blur="onTextSubmit"
         />
         <CuiButton
           v-if="showFormatToggle"
+          class="cui-color-picker__format"
           variant="ghost"
           :disabled="disabled"
           size="xs"
-          :style="{ flexShrink: '0', fontFamily: 'var(--cui-font-mono, monospace)', fontSize: cfg.fontSize, fontWeight: '600', minWidth: '2.5rem' }"
           @click="toggleFormat"
         >
           {{ activeFormat.toUpperCase() }}
@@ -607,10 +526,10 @@ defineExpose({ el: rootEl, focus, blur });
       <div
         v-if="resolvedPalette.length > 0"
         ref="swatchesRef"
+        class="cui-color-picker__swatches"
         role="radiogroup"
         :aria-label="messages.colorPicker.swatches"
         :aria-disabled="disabled || undefined"
-        :style="{ display: 'flex', flexWrap: 'wrap', gap: 'calc(0.3125rem * var(--cui-density-scale, 1))' }"
         @keydown="onSwatchKeydown"
         @focusin="roving.onFocusin"
       >
@@ -625,15 +544,7 @@ defineExpose({ el: rootEl, focus, blur });
           :aria-label="color"
           :disabled="disabled"
           :tabindex="roving.tabIndex(i)"
-          :style="{
-            width: cfg.swatchSize,
-            height: cfg.swatchSize,
-            borderRadius: '0.25rem',
-            background: color,
-            cursor: 'pointer',
-            border: isSelected(i) ? '2px solid var(--cui-primary)' : '1px solid var(--cui-border)',
-            boxShadow: isSelected(i) ? '0 0 0 1px var(--cui-primary)' : 'none',
-          }"
+          :style="{ '--_color-picker-value': color }"
           @click="onSwatchClick(color)"
         ></button>
       </div>
@@ -653,7 +564,106 @@ defineExpose({ el: rootEl, focus, blur });
   }
 }
 
-/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) ---
+   Each rule reads the public `--cui-color-picker-<slot>` token and falls back to the private
+   `--_color-picker-<slot>` the component emits for its size, or to a plain default. A rule that
+   is the same colour whatever the size has the default only. The whole compound sits inside
+   `:where()`, so a state or attribute selector stays at zero. */
+:where(.cui-color-picker) {
+  width: var(--cui-color-picker-width, var(--_color-picker-width));
+  border: var(--cui-color-picker-border, 1px solid var(--cui-border));
+  border-radius: var(--cui-color-picker-radius, var(--_color-picker-radius));
+  background: var(--cui-color-picker-bg, var(--cui-surface-base, white));
+}
+
+/* Inside the frame's 1px border, so its top corners follow the frame's. */
+:where(.cui-color-picker__gradient) {
+  height: var(--cui-color-picker-height, var(--_color-picker-height));
+  border-radius: calc(var(--cui-color-picker-radius, var(--_color-picker-radius)) - 1px) calc(var(--cui-color-picker-radius, var(--_color-picker-radius)) - 1px) 0 0;
+}
+
+:where(.cui-color-picker__body) {
+  padding: calc(0.75rem * var(--cui-density-scale, 1));
+  gap: calc(0.625rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-color-picker__row) {
+  gap: calc(0.625rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-color-picker__sliders) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-color-picker__input-row) {
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-color-picker__swatches) {
+  gap: calc(0.3125rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-color-picker__preview) {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--cui-border);
+  border-radius: 50%;
+}
+
+:where(.cui-color-picker__swatch-preview) {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--cui-border);
+  border-radius: var(--_color-picker-radius-sm);
+}
+
+:where(.cui-color-picker__hue, .cui-color-picker__alpha) {
+  height: var(--_color-picker-track-height);
+  border-radius: 9999px;
+}
+
+:where(.cui-color-picker__preview-fill) {
+  border-radius: 50%;
+}
+
+:where(.cui-color-picker__alpha-fill) {
+  border-radius: 9999px;
+}
+
+/* A thumb's ring is white on any colour at all, with a shadow for a pale one behind it; the
+   brightness slider is a borderless twin laid over the saturation one. */
+:where(.cui-color-picker__thumb) {
+  width: var(--_color-picker-thumb-size);
+  height: var(--_color-picker-thumb-size);
+  border-radius: 50%;
+}
+
+:where(.cui-color-picker__thumb--sat, .cui-color-picker__thumb--hue, .cui-color-picker__thumb--alpha) {
+  border: 2px solid white;
+}
+
+:where(.cui-color-picker__input) {
+  padding: calc(0.3125rem * var(--cui-density-scale, 1)) calc(0.5rem * var(--cui-density-scale, 1));
+  font-size: var(--cui-color-picker-font-size, var(--_color-picker-font-size));
+  border: 1px solid var(--cui-border-strong, var(--cui-border));
+  border-radius: var(--_color-picker-radius-sm);
+  background: var(--cui-color-picker-bg, var(--cui-surface-base, white));
+  color: var(--cui-text-body);
+}
+
+:where(.cui-color-picker__swatch) {
+  width: var(--_color-picker-swatch-size);
+  height: var(--_color-picker-swatch-size);
+  border: 1px solid var(--cui-border);
+  border-radius: var(--_color-picker-radius-sm);
+  box-shadow: none;
+}
+
+:where(.cui-color-picker__swatch[aria-checked="true"]) {
+  border: 2px solid var(--cui-primary);
+  box-shadow: 0 0 0 1px var(--cui-primary);
+}
+
 /* The gradient's ring goes on the visible thumb whichever of its two sliders has focus. */
 /* A thumb sits on any colour at all, where the theme's translucent ring can vanish, so its
    default is black beside the thumb's white border: one of the two always contrasts. No
@@ -671,7 +681,147 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* --- Structural --- */
+.cui-color-picker {
+  user-select: none;
+}
+
+.cui-color-picker--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.cui-color-picker__gradient {
+  position: relative;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  overflow: hidden;
+  background: var(--_color-picker-hue);
+}
+
+.cui-color-picker__overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.cui-color-picker__overlay--white {
+  background: linear-gradient(to right, white, transparent);
+}
+
+.cui-color-picker__overlay--black {
+  background: linear-gradient(to bottom, transparent, black);
+}
+
+.cui-color-picker__body,
+.cui-color-picker__sliders {
+  display: flex;
+  flex-direction: column;
+}
+
+.cui-color-picker__sliders {
+  flex: 1;
+}
+
+.cui-color-picker__row,
+.cui-color-picker__input-row {
+  display: flex;
+  align-items: center;
+}
+
+.cui-color-picker__swatches {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* The checkerboard under a colour that may be translucent. */
+.cui-color-picker__preview,
+.cui-color-picker__alpha {
+  background: repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50%) 0 0 / 12px 12px;
+}
+
+.cui-color-picker__preview {
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.cui-color-picker__preview-fill,
+.cui-color-picker__alpha-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.cui-color-picker__preview-fill {
+  background: var(--_color-picker-value);
+}
+
+.cui-color-picker__alpha-fill {
+  background: linear-gradient(to right, transparent, var(--_color-picker-value));
+}
+
+.cui-color-picker__swatch-preview {
+  flex-shrink: 0;
+  background: var(--_color-picker-value);
+}
+
+.cui-color-picker__hue,
+.cui-color-picker__alpha {
+  position: relative;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.cui-color-picker__hue {
+  background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+}
+
+.cui-color-picker__alpha {
+  overflow: hidden;
+}
+
+/* The handles. Where one sits (`left`, and `top` on the gradient) is written inline as the value
+   changes; the centring transform is the same for all of them. */
+.cui-color-picker__thumb {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.cui-color-picker__thumb--hue,
+.cui-color-picker__thumb--alpha {
+  top: 50%;
+  background: var(--_color-picker-value);
+}
+
+.cui-color-picker__thumb--sat,
+.cui-color-picker__thumb--hue,
+.cui-color-picker__thumb--alpha {
+  box-shadow: 0 1px var(--_color-picker-thumb-blur, 3px) rgba(0, 0, 0, 0.3);
+}
+
+.cui-color-picker__thumb--sat {
+  --_color-picker-thumb-blur: 4px;
+}
+
+.cui-color-picker__input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--cui-font-mono, monospace);
+  outline: none;
+}
+
+/* Over CuiButton's own `.cui-button` rules, which are at the same specificity otherwise. */
+.cui-color-picker .cui-color-picker__format {
+  --cui-button-font-size: var(--cui-color-picker-font-size, var(--_color-picker-font-size));
+  flex-shrink: 0;
+  font-family: var(--cui-font-mono, monospace);
+  font-weight: 600;
+  min-width: 2.5rem;
+}
+
 .cui-color-picker__swatch {
   padding: 0;
+  cursor: pointer;
+  background: var(--_color-picker-value);
 }
 </style>
