@@ -13,7 +13,8 @@ const props = defineProps<{
   selectable: boolean;
   showLines: boolean;
   animated: boolean;
-  cfg: { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string };
+  /** The glyph size, for CuiIcon. Every other size reaches the stylesheet as `--_tree-view-*`, from the root. */
+  iconSize: string;
   /** The single item carrying `tabindex="0"` — roving focus is owned by CuiTreeView. */
   activeId: string | number | null;
   /** aria-setsize / aria-posinset for this node among its siblings. */
@@ -72,9 +73,9 @@ function onNodeClick() {
   }
 }
 
-// Line positioning helpers
-const pad = computed(() => props.cfg.padX);
-const lineColor = "var(--cui-border-strong, var(--cui-border))";
+// The one value a row needs that the root can't give it: how deep it is. Indent and the
+// connector lines are `calc()`s of it in the stylesheet.
+const depthVars = computed(() => ({ "--_tree-view-depth": String(props.depth) }));
 </script>
 
 <template>
@@ -89,111 +90,51 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
     :aria-level="depth + 1"
     :aria-setsize="sizeOfSet"
     :aria-posinset="positionInSet"
-    :style="{ position: 'relative', outline: 'none' }"
+    :style="depthVars"
     @focusin.self="emit('node-focused', node.id)"
   >
     <!--
       Parent's vertical continuation line — extends full height of this treeitem
       so siblings appear connected. Last sibling doesn't draw this.
     -->
-    <div
-      v-if="showLines && depth > 0 && !isLast"
-      :style="{
-        position: 'absolute',
-        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
-        top: '0',
-        bottom: '0',
-        width: '0',
-        borderLeft: `1px solid ${lineColor}`,
-        zIndex: '0',
-      }"
-    />
+    <div v-if="showLines && depth > 0 && !isLast" class="cui-tree-node__line cui-tree-node__line--through" />
 
     <!--
       L-connector for last sibling — vertical line stops at row midpoint
     -->
-    <div
-      v-if="showLines && depth > 0 && isLast"
-      :style="{
-        position: 'absolute',
-        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
-        top: '0',
-        height: `calc(${cfg.padY} + 0.625em)`,
-        width: '0',
-        borderLeft: `1px solid ${lineColor}`,
-        zIndex: '0',
-      }"
-    />
+    <div v-if="showLines && depth > 0 && isLast" class="cui-tree-node__line cui-tree-node__line--elbow" />
 
     <!-- Horizontal branch connecting to parent's vertical line -->
-    <div
-      v-if="showLines && depth > 0"
-      :style="{
-        position: 'absolute',
-        left: `calc((${depth} - 1) * ${cfg.indent} + ${pad} + 0.5rem)`,
-        top: `calc(${cfg.padY} + 0.625em)`,
-        width: `calc(${cfg.indent} * 0.5)`,
-        height: '0',
-        borderTop: `1px solid ${lineColor}`,
-        zIndex: '0',
-      }"
-    />
+    <div v-if="showLines && depth > 0" class="cui-tree-node__line cui-tree-node__line--branch" />
 
     <!-- Node row -->
     <div
       class="cui-tree-node__row"
-      :style="{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        paddingTop: cfg.padY,
-        paddingRight: cfg.padX,
-        paddingBottom: cfg.padY,
-        paddingLeft: `calc(${pad} + ${depth} * ${cfg.indent})`,
-        fontSize: cfg.fontSize,
-        cursor: node.disabled ? 'default' : 'pointer',
-        borderRadius: '0.25rem',
-        background: isSelected ? 'var(--cui-primary-bg)' : 'transparent',
-        color: node.disabled ? 'var(--cui-text-tertiary)' : isSelected ? 'var(--cui-primary)' : 'var(--cui-text-body)',
-        fontWeight: isSelected ? '600' : '400',
-        opacity: node.disabled ? '0.5' : '1',
-        position: 'relative',
-        zIndex: '1',
-      }"
+      :class="{ 'cui-tree-node__row--selected': isSelected, 'cui-tree-node__row--disabled': node.disabled }"
       @click="onNodeClick"
     >
-      <!-- Expand/collapse chevron. The box is cfg.hitSize (>= 24px), not the
+      <!-- Expand/collapse chevron. The box is the hit size (>= 24px), not the
            glyph size, so the caret stays visually small but is tappable. Leaf
            nodes render the same box empty, which keeps labels aligned and every
            row the same height. -->
       <div
         class="cui-tree-node__chevron"
-        :style="{
-          width: cfg.hitSize,
-          height: cfg.hitSize,
-          marginLeft: `calc((${cfg.iconSize} - ${cfg.hitSize}) / 2)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: '0',
-          transition: 'transform var(--cui-duration-slow) var(--cui-ease-in-out)',
-          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-        }"
+        :class="{ 'cui-tree-node__chevron--expanded': isExpanded }"
         @click="hasChildren && onChevronClick($event)"
       >
-        <CuiIcon v-if="hasChildren" name="caret-right" :size="cfg.iconSize" :style="{ color: 'var(--cui-text-tertiary)' }" />
+        <CuiIcon v-if="hasChildren" class="cui-tree-node__caret" name="caret-right" :size="iconSize" />
       </div>
 
       <!-- Node icon -->
       <CuiIcon
         v-if="node.icon"
+        class="cui-tree-node__icon"
         :name="node.icon"
-        :size="cfg.iconSize"
-        :style="{ flexShrink: '0', color: isSelected ? 'var(--cui-primary)' : 'var(--cui-text-secondary)' }"
+        :size="iconSize"
       />
 
       <!-- Node content -->
-      <div :style="{ flex: '1', minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }">
+      <div class="cui-tree-node__content">
         <slot name="node" :node="node" :selected="isSelected" :expanded="isExpanded" :depth="depth">
           {{ node.label }}
         </slot>
@@ -226,7 +167,7 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
           :selectable="selectable"
           :show-lines="showLines"
           :animated="animated"
-          :cfg="cfg"
+          :icon-size="iconSize"
           :active-id="activeId"
           :size-of-set="node.children!.length"
           :position-in-set="idx + 1"
@@ -245,16 +186,147 @@ const lineColor = "var(--cui-border-strong, var(--cui-border))";
 
 <style scoped>
 /*
+  Themeable paint (#468): every rule that reads a token is a whole-compound :where(), so
+  a consumer's plain class rule or a `--cui-tree-view-<slot>` on a container wins without
+  !important. CuiTreeView emits the size scale as private `--_tree-view-*` properties on
+  its root; this node adds only its depth. Layout stays at normal specificity. A row is
+  crossed by the keyboard, so none of its colours transition.
+*/
+.cui-tree-node {
+  position: relative;
+  outline: none;
+}
+
+/* Connector lines. `through` is a parent's continuation, `elbow` stops at the row's
+   midpoint for a last sibling, `branch` runs across to the parent's line. */
+.cui-tree-node__line {
+  position: absolute;
+  left: calc((var(--_tree-view-depth) - 1) * var(--_tree-view-indent) + var(--cui-tree-view-px, var(--_tree-view-px)) + 0.5rem);
+  width: 0;
+  z-index: 0;
+}
+
+.cui-tree-node__line--through {
+  top: 0;
+  bottom: 0;
+  border-left-width: 1px;
+  border-left-style: solid;
+}
+
+.cui-tree-node__line--elbow {
+  top: 0;
+  height: calc(var(--cui-tree-view-py, var(--_tree-view-py)) + 0.625em);
+  border-left-width: 1px;
+  border-left-style: solid;
+}
+
+.cui-tree-node__line--branch {
+  top: calc(var(--cui-tree-view-py, var(--_tree-view-py)) + 0.625em);
+  width: calc(var(--_tree-view-indent) * 0.5);
+  height: 0;
+  border-top-width: 1px;
+  border-top-style: solid;
+}
+
+:where(.cui-tree-node__line--through, .cui-tree-node__line--elbow) {
+  border-left-color: var(--cui-tree-view-border, var(--cui-border-strong, var(--cui-border)));
+}
+
+:where(.cui-tree-node__line--branch) {
+  border-top-color: var(--cui-tree-view-border, var(--cui-border-strong, var(--cui-border)));
+}
+
+.cui-tree-node__row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.cui-tree-node__row--disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.cui-tree-node__row--selected {
+  font-weight: 600;
+}
+
+:where(.cui-tree-node__row) {
+  gap: var(--cui-tree-view-gap, var(--_tree-view-gap));
+  padding-top: var(--cui-tree-view-py, var(--_tree-view-py));
+  padding-right: var(--cui-tree-view-px, var(--_tree-view-px));
+  padding-bottom: var(--cui-tree-view-py, var(--_tree-view-py));
+  padding-left: calc(var(--cui-tree-view-px, var(--_tree-view-px)) + var(--_tree-view-depth) * var(--_tree-view-indent));
+  font-size: var(--cui-tree-view-font-size, var(--_tree-view-font-size));
+  font-weight: 400;
+  border-radius: var(--cui-tree-view-radius, var(--_tree-view-radius));
+  background: var(--cui-tree-view-bg, transparent);
+  color: var(--cui-tree-view-color, var(--cui-text-body));
+}
+
+/* Selected is the toggle's "on" state: the subtle tint, never the hero colour. */
+:where(.cui-tree-node__row--selected) {
+  background: var(--cui-tree-view-pressed-bg, var(--cui-primary-bg));
+  color: var(--cui-tree-view-pressed-color, var(--cui-primary));
+}
+
+/* After selected, so a disabled selected row is still dimmed text on the tint. */
+:where(.cui-tree-node__row--disabled) {
+  color: var(--cui-tree-view-color, var(--cui-text-tertiary));
+}
+
+/* The expand/collapse box is the hit size, not the glyph's. */
+.cui-tree-node__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--cui-duration-slow) var(--cui-ease-in-out);
+  transform: rotate(0deg);
+}
+
+.cui-tree-node__chevron--expanded {
+  transform: rotate(90deg);
+}
+
+:where(.cui-tree-node__chevron) {
+  width: var(--cui-tree-view-height, var(--_tree-view-height));
+  height: var(--cui-tree-view-height, var(--_tree-view-height));
+  margin-left: calc((var(--_tree-view-icon-size) - var(--cui-tree-view-height, var(--_tree-view-height))) / 2);
+}
+
+:where(.cui-tree-node__caret) {
+  color: var(--cui-text-tertiary);
+}
+
+:where(.cui-tree-node__icon) {
+  color: var(--cui-text-secondary);
+}
+
+:where(.cui-tree-node__row--selected .cui-tree-node__icon) {
+  color: var(--cui-primary);
+}
+
+.cui-tree-node__content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
   The focus ring goes on the ROW, not on the element that holds it. `treeitem`
   has to sit on the outer node — it is what contains the child `group`, per the
   ARIA tree pattern — but that element wraps the entire subtree, so an outline on
   it would draw a box around every descendant. Outlining the row instead marks
   exactly the item that has focus.
 */
-.cui-tree-node:focus-visible > .cui-tree-node__row {
-  outline: 2px solid var(--cui-primary-focus-ring);
+:where(.cui-tree-node:focus-visible > .cui-tree-node__row) {
+  outline: 2px solid var(--cui-tree-view-focus-ring, var(--cui-primary-focus-ring));
   outline-offset: -2px;
-  border-radius: 0.25rem;
 }
 
 /* The collapse: one grid row, 0fr -> 1fr, with the clip shrinking inside it. The row
