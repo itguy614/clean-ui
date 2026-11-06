@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`CuiTreeView` is styled from a stylesheet (#468, part of #213).** Rows, chevrons, icons and
+  connector lines no longer carry inline paint, so a plain class rule or a container token now
+  restyles them without `!important`. New tokens: `--cui-tree-view-bg`, `-color`,
+  `-pressed-bg`, `-pressed-color`, `-border`, `-focus-ring`, `-radius`, `-px`, `-py`, `-gap`,
+  `-font-size` and `-height`. Rendering is unchanged, except that the row's corner radius now
+  follows `--cui-radius-sm` (default `0.25rem`, as before). The unexported `CuiTreeNode`'s `cfg`
+  prop is now `iconSize`.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

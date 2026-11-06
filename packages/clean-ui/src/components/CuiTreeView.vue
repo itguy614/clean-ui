@@ -2,7 +2,7 @@
 import { ref, computed, watch, nextTick, useTemplateRef } from "vue";
 import CuiTreeNode from "./CuiTreeNode.vue";
 import type { HideableProps, SizeableProps } from "../types/common";
-import { scaleDensity, scaleControlHeight, clampSize } from "../utils/sizing";
+import { scaleDensity, scaleControlHeight, clampSize, RADIUS_SCALE } from "../utils/sizing";
 import { useListNavigation } from "../composables/useListNavigation";
 
 export interface TreeNode {
@@ -308,12 +308,26 @@ watch(visibleItems, () => {
 // independent of `iconSize`, which stays the glyph's visual size: at sm the caret
 // still draws at 12px, inside a 24px target.
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string }> = {
-  sm: { fontSize: "0.8125rem", iconSize: "0.75rem", hitSize: scaleControlHeight("0.75rem"), indent: scaleDensity("1rem"), padY: scaleDensity("0.1875rem"), padX: scaleDensity("0.375rem") },
-  md: { fontSize: "0.875rem", iconSize: "0.875rem", hitSize: scaleControlHeight("0.875rem"), indent: scaleDensity("1.25rem"), padY: scaleDensity("0.25rem"), padX: scaleDensity("0.5rem") },
-  lg: { fontSize: "0.9375rem", iconSize: "1rem", hitSize: scaleControlHeight("1rem"), indent: scaleDensity("1.5rem"), padY: scaleDensity("0.375rem"), padX: scaleDensity("0.625rem") },
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { textSize: string; iconSize: string; hitSize: string; indent: string; padY: string; padX: string }> = {
+  sm: { textSize: "0.8125rem", iconSize: "0.75rem", hitSize: scaleControlHeight("0.75rem"), indent: scaleDensity("1rem"), padY: scaleDensity("0.1875rem"), padX: scaleDensity("0.375rem") },
+  md: { textSize: "0.875rem", iconSize: "0.875rem", hitSize: scaleControlHeight("0.875rem"), indent: scaleDensity("1.25rem"), padY: scaleDensity("0.25rem"), padX: scaleDensity("0.5rem") },
+  lg: { textSize: "0.9375rem", iconSize: "1rem", hitSize: scaleControlHeight("1rem"), indent: scaleDensity("1.5rem"), padY: scaleDensity("0.375rem"), padX: scaleDensity("0.625rem") },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+
+// The size scale reaches the stylesheet as private properties on the root, which
+// CuiTreeNode's rules read back as `var(--cui-tree-view-<slot>, var(--_tree-view-<slot>))`:
+// a consumer's token or plain rule wins, which a bare inline declaration on every row would
+// have blocked (#468). `indent` and `icon-size` have no public slot, so they stay private.
+const cssVars = computed(() => ({
+  "--_tree-view-font-size": cfg.value.textSize,
+  "--_tree-view-icon-size": cfg.value.iconSize,
+  "--_tree-view-height": cfg.value.hitSize,
+  "--_tree-view-indent": cfg.value.indent,
+  "--_tree-view-px": cfg.value.padX,
+  "--_tree-view-py": cfg.value.padY,
+  "--_tree-view-gap": scaleDensity("0.25rem"),
+  "--_tree-view-radius": RADIUS_SCALE.sm,}));
 
 /**
  * Imperative expansion, for the cases a bound array is clumsy for: expanding on
@@ -361,6 +375,7 @@ defineExpose({
     ref="el"
     v-show="!hidden"
     class="cui-tree-view"
+    :style="cssVars"
     role="tree"
     :aria-multiselectable="multiple || undefined"
     @keydown="onTreeKeydown"
@@ -376,7 +391,7 @@ defineExpose({
       :selectable="selectable"
       :show-lines="showLines"
       :animated="animated"
-      :cfg="cfg"
+      :icon-size="cfg.iconSize"
       :active-id="activeId"
       :size-of-set="nodes.length"
       :position-in-set="idx + 1"

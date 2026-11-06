@@ -67,6 +67,8 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiPinInput.vue", issue: "#196" },
   { file: "CuiModal.vue", issue: "#407" },
   { file: "CuiSlideover.vue", issue: "#407" },
+  { file: "CuiTreeView.vue", issue: "#468" },
+  { file: "CuiTreeNode.vue", issue: "#468" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
