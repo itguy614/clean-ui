@@ -3,7 +3,7 @@ import { version } from "./version";
 // clean-ui's `__DEV__` pair (utils/devWarn.ts, #369), repeated rather than imported so this
 // file takes no runtime dependency on a clean-ui internal. See there for why both halves.
 declare const process: { env: { NODE_ENV?: string } };
-const __DEV__ = (() => {
+export const __DEV__: boolean = (() => {
   try {
     return process.env.NODE_ENV !== "production";
   } catch {
@@ -12,8 +12,9 @@ const __DEV__ = (() => {
 })();
 
 /**
- * A plugin-registry warning, with no de-duplication. The caller passes a prebuilt message, so
- * only the `console.warn` is stripped from production, not the text.
+ * A plugin-registry warning, with no de-duplication. Its sink only: the caller builds the text
+ * under `if (__DEV__ && process.env.NODE_ENV !== "production")`, so the string is dead code a
+ * consumer's production build drops (#462).
  */
 export function warnDev(message: string): void {
   if (__DEV__ && process.env.NODE_ENV !== "production") console.warn(message);
