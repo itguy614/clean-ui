@@ -77,6 +77,7 @@ const sizeVars = computed(() => {
     "--_date-range-picker-field-width": `${props.format.length + 1}ch`,
   };
 });
+
 const messages = useMessages();
 const locale = useLocale();
 // The month and weekday text the calendar draws and announces (#337), in the library's locale.
