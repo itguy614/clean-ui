@@ -60,12 +60,16 @@ describe("ssrDensityInitScript (#463)", () => {
 
   it("agrees with useDensity on key, class names and ids", async () => {
     expect(DENSITY_PRESETS.map((p) => p.id)).toEqual([...DENSITY_IDS]);
+    // Restore first (nothing stored), so each setDensity below is a real change from the
+    // previous value and its watcher writes the key and class.
+    useDensity();
     for (const id of DENSITY_IDS.filter((i) => i !== "default")) {
       root().className = "";
       localStorage.setItem(DENSITY_STORAGE_KEY, id);
       run(ssrDensityInitScript);
       const fromScript = root().className;
       root().className = "";
+      localStorage.removeItem(DENSITY_STORAGE_KEY);
       useDensity().setDensity(id);
       await nextTick();
       // The composable writes the same key and the same class the script read and added.

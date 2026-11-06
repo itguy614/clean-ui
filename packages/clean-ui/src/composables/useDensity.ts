@@ -1,8 +1,9 @@
 import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
-import { DENSITY_CLASS_PREFIX, DENSITY_STORAGE_KEY } from "../ssr-constants";
+import { DENSITY_CLASS_PREFIX, DENSITY_IDS, DENSITY_STORAGE_KEY } from "../ssr-constants";
 
-export type DensityId = "compact" | "default" | "comfortable";
+// Derived from the ids the pre-paint init script reads, so adding one updates both.
+export type DensityId = (typeof DENSITY_IDS)[number];
 
 export interface DensityPreset {
   id: DensityId;
