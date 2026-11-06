@@ -111,6 +111,8 @@ function activate(value: string) {
 }
 
 function close(value: string) {
+  // A disabled tab can't be closed, by a click or a key.
+  if (tabs.value.find((t) => t.value === value)?.disabled) return;
   emit("close", value);
 }
 
@@ -155,7 +157,36 @@ const nav = useListNavigation({
   rtl: () => !!barRef.value && getComputedStyle(barRef.value).direction === "rtl",
 });
 
+/**
+ * Delete or Backspace on a closeable tab closes it (APG). The *focused* tab, not the active
+ * one: focus can rest on a tab the selection isn't on, or on its close button. Focus then
+ * goes to the next tab, else the previous, so the keyboard isn't left on a removed element.
+ */
+function closeFromKey(e: KeyboardEvent): boolean {
+  if ((e.key !== "Delete" && e.key !== "Backspace") || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return false;
+  const value = (e.target as Element | null)
+    ?.closest<HTMLElement>(".cui-tabs__tab")
+    ?.querySelector<HTMLElement>('[role="tab"]')?.dataset.cuiTabValue;
+  const list = tabs.value;
+  const at = list.findIndex((t) => t.value === value);
+  if (at < 0 || !list[at].closeable) return false;
+  e.preventDefault();
+  if (list[at].disabled) return true;
+  const neighbour = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
+  close(list[at].value);
+  if (neighbour) {
+    nextTick(() => {
+      const el = tabElement(neighbour.value);
+      el?.focus({ preventScroll: true });
+      const scroller = areaRef.value?.el;
+      if (el && scroller) scrollIntoViewWithin(scroller, el, "instant");
+    });
+  }
+  return true;
+}
+
 function onKeydown(e: KeyboardEvent) {
+  if (closeFromKey(e)) return;
   const list = tabs.value;
   const from = list.findIndex((t) => t.value === activeTab.value);
   if (from < 0) return;
@@ -190,7 +221,7 @@ function onKeydown(e: KeyboardEvent) {
  */
 function tabElement(value: string): HTMLElement | null {
   const id = tabId(value);
-  return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
+  return [...(barRef.value?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])].find((el) => el.id === id) ?? null;
 }
 
 // The one way the bar brings the active tab into view — keyboard nav, v-model
@@ -239,42 +270,52 @@ const messages = useMessages();
         @keydown="onKeydown"
         @pointermove="keyedButtons = false"
       >
-        <button
+        <div
           v-for="tab in tabs"
           :key="tab.value"
-          type="button"
-          :data-cui-tab-value="tab.value"
           class="cui-tabs__tab"
           :class="{
             'cui-tabs__tab--active': activeTab === tab.value,
             'cui-tabs__tab--disabled': tab.disabled,
+            'cui-tabs__tab--closeable': tab.closeable,
           }"
           :style="{
             '--_tab-color': `var(--cui-${color})`,
           }"
-          role="tab"
-          :id="tabId(tab.value)"
-          :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
-          :aria-selected="activeTab === tab.value"
-          :aria-disabled="tab.disabled || undefined"
-          :tabindex="activeTab === tab.value ? 0 : -1"
-          @click="onTabClick(tab)"
+          role="presentation"
         >
-          <span class="cui-tabs__tab-content">
-            <component :is="tab.labelSlot" v-if="tab.labelSlot" />
-            <template v-else>{{ tab.label }}</template>
-          </span>
+          <button
+            type="button"
+            :data-cui-tab-value="tab.value"
+            class="cui-tabs__tab-button"
+            role="tab"
+            :id="tabId(tab.value)"
+            :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
+            :aria-selected="activeTab === tab.value"
+            :aria-disabled="tab.disabled || undefined"
+            :tabindex="activeTab === tab.value ? 0 : -1"
+            @click="onTabClick(tab)"
+          >
+            <span class="cui-tabs__tab-content">
+              <component :is="tab.labelSlot" v-if="tab.labelSlot" />
+              <template v-else>{{ tab.label }}</template>
+            </span>
+          </button>
+          <!-- A sibling of the tab button, never inside it: a button can't contain one. Out of
+               the tab sequence (Delete on the focused tab closes it), but pointer and
+               virtual-cursor reachable. -->
           <button
             v-if="tab.closeable"
             type="button"
             class="cui-tabs__tab-close"
-            :aria-label="messages.tabs.closeTab"
+            :aria-label="tab.label ? messages.tabs.closeNamedTab(tab.label) : messages.tabs.closeTab"
+            :disabled="tab.disabled"
             tabindex="-1"
-            @click.stop="close(tab.value)"
+            @click="close(tab.value)"
           >
             <CuiIcon name="x" size="0.75rem" />
           </button>
-        </button>
+        </div>
       </div>
       </CuiScrollArea>
     </div>
@@ -399,7 +440,6 @@ const messages = useMessages();
   flex-shrink: 0;
   align-items: center;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
-  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--cui-text-secondary);
@@ -427,7 +467,27 @@ const messages = useMessages();
   cursor: not-allowed;
 }
 
-.cui-tabs__tab:focus-visible {
+/* The tab button is the inner element: it carries the padding (so the whole tab is its hit
+   area) and resets itself, while the wrapper paints the tab. */
+.cui-tabs__tab-button {
+  flex: 1 1 auto;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: inherit;
+  white-space: inherit;
+  text-align: start;
+  outline: none;
+}
+
+/* A close button follows the label, so the label's trailing padding moves past it. */
+.cui-tabs__tab--closeable .cui-tabs__tab-button {
+  padding-inline-end: 0;
+}
+
+.cui-tabs__tab:has(.cui-tabs__tab-button:focus-visible) {
   outline: 2px solid var(--_tab-color);
   outline-offset: -2px;
   border-radius: 0.25rem;
@@ -468,11 +528,15 @@ const messages = useMessages();
   color: var(--cui-text-tertiary);
   padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
-  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
+  margin-inline-end: calc(0.75rem * var(--cui-density-scale, 1));
   transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
-.cui-tabs__tab-close:hover {
+.cui-tabs__tab-close:disabled {
+  cursor: not-allowed;
+}
+
+.cui-tabs__tab-close:hover:not(:disabled) {
   color: var(--cui-text-body);
   background: var(--cui-surface-dark-bg);
 }

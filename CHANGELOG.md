@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+
+### Changed
+
+- **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

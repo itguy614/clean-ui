@@ -222,7 +222,12 @@ export interface CuiCoreMessages {
      */
     required: string;
   };
-  tabs: { closeTab: string };
+  tabs: {
+    /** Accessible name for a closeable tab's close button when the tab has no label to name. */
+    closeTab: string;
+    /** Accessible name for a closeable tab's close button: names the tab it closes. */
+    closeNamedTab: (label: string) => string;
+  };
   table: {
     /** Accessible name for the scroll region a table gets when it overflows. */
     scrollRegionLabel: string;
@@ -391,7 +396,7 @@ export const defaultMessages: CuiCoreMessages = {
     degrees: (value) => `${value} degrees`,
   },
   formField: { required: "(required)" },
-  tabs: { closeTab: "Close tab" },
+  tabs: { closeTab: "Close tab", closeNamedTab: (label) => `Close ${label}` },
   table: { scrollRegionLabel: "Scrollable table" },
   scrollArea: { region: "Scrollable content" },
   dataGrid: {
