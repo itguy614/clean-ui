@@ -141,9 +141,12 @@ function resetTabs() {
         the active tab has <code>aria-controls</code>, since the other panels aren't rendered.
       </p>
       <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gap.</strong> A closeable tab's close button is
-        <code>tabindex="-1"</code>, which makes closing a tab pointer-only — offer a keyboard
-        route to the same action.
+        <strong>Closing a tab from the keyboard.</strong> <code>Delete</code> (or
+        <code>Backspace</code>) on a focused closeable tab emits <code>close</code>, the same
+        as clicking its close button, and moves focus to the next tab (the previous one when
+        it was last). The close button is a sibling of the tab button, named "Close" plus the
+        tab's label, and stays out of the tab sequence since the key covers keyboard users. A
+        disabled tab can't be closed.
       </p>
     </template>
 
