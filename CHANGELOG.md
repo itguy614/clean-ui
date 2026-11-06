@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
+  built a style object per day cell (42 a month) and every other part was inline too, so none
+  of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
+  zero specificity, and a day's state (selected, today, in range, outside the month, disabled)
+  is a modifier class. Nothing about how they look changes. New tokens:
+  `--cui-date-picker-pressed-bg` / `-pressed-color` and `--cui-date-range-picker-pressed-bg` /
+  `-pressed-color` for the selected day or the range's ends, and `--cui-date-range-picker-bg` /
+  `-border` / `-radius` for the range trigger. The panel is teleported to `<body>`, so a
+  `pressed-*` token has to be set on `:root` or `<body>`.
+
 ### Added
 
 - **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
