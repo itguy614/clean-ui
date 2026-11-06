@@ -566,7 +566,7 @@ const rootStyle = computed(() => ({
 
 :where(.cui-transfer-list__panel) {
   border: var(--cui-transfer-list-border, 1px solid var(--cui-border));
-  border-radius: var(--cui-transfer-list-radius, 0.5rem);
+  border-radius: var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem));
   background: var(--cui-transfer-list-bg, var(--cui-surface-base, white));
 }
 
@@ -606,11 +606,12 @@ const rootStyle = computed(() => ({
 
 :where(.cui-transfer-list__scroller) {
   padding: 0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
-  border-radius: 0 0 var(--cui-transfer-list-radius, 0.5rem) var(--cui-transfer-list-radius, 0.5rem);
+  border-radius: 0 0 var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem)) var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem));
 }
 
-/* The dashed drop zone, while a row from the other list is dragged over this one. */
-:where(.cui-transfer-list__scroller--drop) {
+/* The dashed drop zone, while a row from the other list is dragged over this one. A drag
+   cue, not paint: at normal specificity, so restyling the scroller can't erase it. */
+.cui-transfer-list__scroller--drop {
   outline: 2px dashed var(--cui-primary);
 }
 
@@ -637,7 +638,7 @@ const rootStyle = computed(() => ({
   gap: calc(0.5rem * var(--cui-density-scale, 1));
   padding: var(--cui-transfer-list-py, var(--_transfer-list-py)) var(--cui-transfer-list-px, var(--_transfer-list-px));
   font-size: var(--cui-transfer-list-font-size, var(--_transfer-list-font-size));
-  border-radius: 0.25rem;
+  border-radius: var(--cui-radius-sm, 0.25rem);
   background: transparent;
   color: var(--cui-transfer-list-color, var(--cui-text-body));
 }
@@ -652,12 +653,12 @@ const rootStyle = computed(() => ({
   opacity: 0.5;
 }
 
-/* The line where a dragged row would land. */
-:where(.cui-transfer-list__option--drop-before) {
+/* The line where a dragged row would land: a drag cue, at normal specificity. */
+.cui-transfer-list__option--drop-before {
   border-top: 2px solid var(--cui-primary);
 }
 
-:where(.cui-transfer-list__option--drop-after) {
+.cui-transfer-list__option--drop-after {
   border-bottom: 2px solid var(--cui-primary);
 }
 
