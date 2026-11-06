@@ -26,8 +26,9 @@ const EXEMPT: Record<string, { count: number; why: string }> = {
 
 // A shadow declaration: `box-shadow:`, a style binding's `boxShadow:`, a shadow custom
 // property (`--cui-shadow-md`, `"--_listbox-panel-shadow"`) or a constant holding one
-// (`PINNED_EDGE_SHADOW = "..."`): the rest of its line.
-const SHADOW = /[\w-]*shadow[\w-]*["']?\s*[:=]([^;\n]*)/gi;
+// (`PINNED_EDGE_SHADOW = "..."`): the rest of its line, and the next
+// while a line ends in a comma and the next starts a layer (a length or `inset`), so layers split over several lines count.
+const SHADOW = /[\w-]*shadow[\w-]*["']?\s*[:=]([^;\n]*(?:(?<=,[ \t]*)\n(?=\s*(?:-?[\d.]|inset\b))[^;\n]*)*)/gi;
 // A colour written out in it, whatever its notation — `color-mix()` of black has its black.
 // A `var(--…)` colour isn't one: it resolves through the theme.
 const LITERAL = /#[0-9a-f]{3,8}\b|\bblack\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/gi;
@@ -58,6 +59,7 @@ describe("shadows come from the elevation tokens (#224)", () => {
       '  boxShadow: "0 1px rgba(0, 0, 0, 0.1)",',
       '"--_listbox-panel-shadow": token("panel-shadow", "0 1px #00000014"),',
       "--cui-shadow-md: 0 4px 16px rgb(0 0 0 / 0.1);",
+      "box-shadow: 0 1px 2px var(--x),\n    0 4px 8px black;",
       'const PINNED_EDGE_SHADOW = "2px 0 4px -1px rgba(0,0,0,0.08)";',
     ];
     for (const line of sample) expect(literals(line), line).toBe(1);

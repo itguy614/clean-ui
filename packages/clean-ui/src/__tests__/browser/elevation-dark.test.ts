@@ -40,6 +40,16 @@ describe("elevated surfaces strengthen their shadow in dark mode (real browser)"
 
   const settle = () => frames(3);
 
+  /** The level each surface is meant to read, as the cascade resolves it right now. */
+  function level(name: string): string {
+    const probe = document.body.appendChild(document.createElement("div"));
+    probe.style.boxShadow = `var(--cui-shadow-${name})`;
+    const resolved = shadowOf(probe);
+    probe.remove();
+    return resolved;
+  }
+  const LEVEL: Record<string, string> = { CuiCard: "xs", CuiPopover: "md", CuiToast: "md", CuiSlideover: "lg", CuiListboxPanel: "md" };
+
   const SURFACES: Record<string, () => Promise<HTMLElement>> = {
     async CuiCard() {
       fixtures.track(mount(CuiCard, { props: { variant: "elevated" }, slots: { default: "Body" }, attachTo: fixtures.host() }));
@@ -75,15 +85,17 @@ describe("elevated surfaces strengthen their shadow in dark mode (real browser)"
     },
   };
 
-  describe.each(Object.entries(SURFACES))("%s", (_name, open) => {
+  describe.each(Object.entries(SURFACES))("%s", (name, open) => {
     it("casts a stronger shadow under .dark than in light mode", async () => {
       const el = await open();
       expect(el).not.toBeNull();
       const light = shadowOf(el);
-      expect(weight(light)).toBeGreaterThan(0); // precondition: a shadow, read from the token
+      expect(weight(light)).toBeGreaterThan(0); // precondition: a shadow
+      expect(light).toBe(level(LEVEL[name]!)); // and it is the level's, not a literal
       document.documentElement.classList.add("dark");
       await settle();
       expect(weight(shadowOf(el))).toBeGreaterThan(weight(light));
+      expect(shadowOf(el)).toBe(level(LEVEL[name]!));
     });
   });
 
