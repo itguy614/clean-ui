@@ -141,7 +141,7 @@ const choice = useChoiceLabelling(props);
         '--_toggle-height': dims.h,
         '--_toggle-color': `var(--cui-${resolvedColor})`,
         '--_toggle-bg': `var(--cui-${resolvedColor}-bg)`,
-        '--_toggle-hover': `var(--cui-${resolvedColor}-hover)`,
+        '--_toggle-hover-border': `var(--cui-${resolvedColor}-hover)`,
         '--_toggle-active': `var(--cui-${resolvedColor}-active)`,
       }"
     >
@@ -192,9 +192,16 @@ const choice = useChoiceLabelling(props);
 }
 
 .cui-toggle:focus-visible {
-  outline: 2px solid var(--_toggle-focus-ring);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+/* Themeable (#454): zero specificity, so a consumer's plain `.cui-toggle:focus-visible { … }`
+   or `--cui-toggle-focus-ring` on a container wins. */
+:where(.cui-toggle:focus-visible) {
+  outline-color: var(--cui-toggle-focus-ring, var(--_toggle-focus-ring));
 }
 
 /* --- Track --- */
@@ -204,36 +211,45 @@ const choice = useChoiceLabelling(props);
   align-items: center;
   flex-shrink: 0;
   border-radius: 9999px;
-  /* Subtle-first, mirroring the checkbox: no fill when off, light-primary tint
-     when on. The knob is the primary "dot" in both states. */
-  background: transparent;
-  border: 1px solid var(--cui-border-strong);
+  border-width: 1px;
+  border-style: solid;
   transition: background var(--cui-duration-base) ease, border-color var(--cui-duration-base) ease;
   padding: calc(0.125rem - 1px);
   margin-top: 0.125rem;
 }
 
-/* The track's height is tied to the knob and the track width, which follow the size preset, so
-   it is private only (#333). */
+/* Themeable (#333, #454): zero specificity, so a consumer's plain `.cui-toggle__track { … }`
+   or a `--cui-toggle-*` token on a container wins.
+
+   The track's height is tied to the knob and the track width, which follow the size preset, so
+   it is private only (#333). The pressed border has no slot in the vocabulary, so
+   `--_toggle-active` is private only too.
+
+   The state rules sit in the order they used to win by specificity: resting, on, hover,
+   pressed, then on and hovered, which still beats pressed. */
 :where(.cui-toggle__track) {
   height: var(--_toggle-height);
+  /* Subtle-first, mirroring the checkbox: no fill when off, light-primary tint
+     when on. The knob is the primary "dot" in both states. */
+  background: transparent;
+  border-color: var(--cui-border-strong);
 }
 
-.cui-toggle--checked .cui-toggle__track {
-  background: var(--_toggle-bg);
-  border-color: var(--_toggle-color);
+:where(.cui-toggle--checked .cui-toggle__track) {
+  background: var(--cui-toggle-bg, var(--_toggle-bg));
+  border-color: var(--cui-toggle-color, var(--_toggle-color));
 }
 
-.cui-toggle:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  border-color: var(--_toggle-color);
+:where(.cui-toggle:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track) {
+  border-color: var(--cui-toggle-color, var(--_toggle-color));
 }
 
-.cui-toggle--checked:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
-  border-color: var(--_toggle-hover);
-}
-
-.cui-toggle:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track {
+:where(.cui-toggle:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track) {
   border-color: var(--_toggle-active);
+}
+
+:where(.cui-toggle--checked:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track) {
+  border-color: var(--cui-toggle-hover-border, var(--_toggle-hover-border));
 }
 
 /* --- Knob (primary "dot" in both states) --- */
@@ -242,10 +258,14 @@ const choice = useChoiceLabelling(props);
   width: var(--_toggle-knob-size);
   height: var(--_toggle-knob-size);
   border-radius: 50%;
-  background: var(--_toggle-color);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
   transition: transform var(--cui-duration-press) var(--cui-ease-in-out), background var(--cui-duration-base) ease;
   z-index: 1;
+}
+
+/* The knob is the accent colour; one token recolours it with the track's border. */
+:where(.cui-toggle__knob) {
+  background: var(--cui-toggle-color, var(--_toggle-color));
 }
 
 /* --- Labels inside track --- */
@@ -264,8 +284,8 @@ const choice = useChoiceLabelling(props);
   font-size: var(--cui-toggle-font-size, var(--_toggle-font-size));
 }
 
-.cui-toggle__on-label {
-  color: var(--_toggle-color);
+:where(.cui-toggle__on-label) {
+  color: var(--cui-toggle-color, var(--_toggle-color));
 }
 
 /* --- Label --- */

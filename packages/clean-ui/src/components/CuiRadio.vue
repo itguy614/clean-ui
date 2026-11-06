@@ -103,8 +103,8 @@ const choice = useChoiceLabelling(props);
     :style="{
       '--_radio-color': `var(--cui-${resolvedColor})`,
       '--_radio-bg': `var(--cui-${resolvedColor}-bg)`,
-      '--_radio-text': `var(--cui-${resolvedColor}-text)`,
-      '--_radio-solid': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
+      '--_radio-hover-color': `var(--cui-${resolvedColor}-text)`,
+      '--_radio-hover-bg': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
       '--_radio-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`,
       '--_radio-height': buttonSizeStyles.height,
       '--_radio-px': buttonSizeStyles.px,
@@ -225,20 +225,33 @@ const choice = useChoiceLabelling(props);
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 50%;
-  border: 1px solid var(--_radio-border);
-  background: var(--_radio-bg);
+  border-width: 1px;
+  border-style: solid;
   transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   margin-top: 0.125rem; /* align with first line of text */
 }
 
-.cui-radio:hover:not(.cui-radio--disabled):not(.cui-radio--readonly) .cui-radio__indicator {
-  border-color: var(--_radio-color);
+/* Themeable (#454): zero specificity, so a consumer's plain `.cui-radio__indicator { … }` or a
+   `--cui-radio-*` token on a container wins. The indicator's border and fill are resolved for
+   its state (checked or resting) in the script. */
+:where(.cui-radio__indicator) {
+  border-color: var(--cui-radio-border, var(--_radio-border));
+  background: var(--cui-radio-bg, var(--_radio-bg));
+}
+
+:where(.cui-radio:hover:not(.cui-radio--disabled):not(.cui-radio--readonly) .cui-radio__indicator) {
+  border-color: var(--cui-radio-color, var(--_radio-color));
 }
 
 .cui-radio:focus-visible {
-  outline: 2px solid var(--_radio-focus-ring);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+:where(.cui-radio:focus-visible) {
+  outline-color: var(--cui-radio-focus-ring, var(--_radio-focus-ring));
 }
 
 /* --- Inner dot --- */
@@ -246,8 +259,12 @@ const choice = useChoiceLabelling(props);
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: var(--_radio-color);
   animation: cui-radio-pop var(--cui-duration-fast) var(--cui-ease-out);
+}
+
+/* Zero specificity, like the rest of the paint above (#454). */
+:where(.cui-radio__dot) {
+  background: var(--cui-radio-color, var(--_radio-color));
 }
 
 /* A brief settle, not a pop from nothing with an overshoot: a radio is a high-frequency
@@ -289,42 +306,52 @@ const choice = useChoiceLabelling(props);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  border: 1px solid var(--cui-border-strong);
-  background: transparent;
-  color: var(--_radio-color);
+  border-width: 1px;
+  border-style: solid;
   transition: background var(--cui-duration-fast) ease, color var(--cui-duration-fast) ease, border-color var(--cui-duration-fast) ease;
 }
 
-/* Zero specificity, so a group's square corners (`.cui-button--flat-*`) win over it. */
+/* Zero specificity, so a group's square corners (`.cui-button--flat-*`) win over it, and so
+   does a consumer's plain `.cui-radio-button { … }` or a `--cui-radio-*` token (#454). The
+   state rules follow in the order they cascade: resting, hover, selected, selected and hovered. */
 :where(.cui-radio-button) {
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
   height: var(--cui-radio-height, var(--_radio-height));
   padding-left: var(--cui-radio-px, var(--_radio-px));
   padding-right: var(--cui-radio-px, var(--_radio-px));
   font-size: var(--cui-radio-font-size, var(--_radio-font-size));
+  border-color: var(--cui-border-strong);
+  background: transparent;
+  color: var(--cui-radio-color, var(--_radio-color));
 }
 
-.cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active) {
-  background: var(--_radio-bg);
-  border-color: var(--_radio-color);
+:where(.cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active)) {
+  background: var(--cui-radio-bg, var(--_radio-bg));
+  border-color: var(--cui-radio-color, var(--_radio-color));
 }
 
-.cui-radio-button--active {
-  background: var(--_radio-bg);
-  color: var(--_radio-color);
+:where(.cui-radio-button--active) {
+  background: var(--cui-radio-bg, var(--_radio-bg));
+  color: var(--cui-radio-color, var(--_radio-color));
   /* Keep the neutral border on the active segment (both light and dark) so the
      group stays visually connected — only the fill and text change. */
   border-color: var(--cui-border-strong);
 }
 
-.cui-radio-button--active:hover:not(:disabled) {
-  background: var(--_radio-solid);
-  color: var(--_radio-text);
+/* The selected segment under the pointer fills solid. */
+:where(.cui-radio-button--active:hover:not(:disabled)) {
+  background: var(--cui-radio-hover-bg, var(--_radio-hover-bg));
+  color: var(--cui-radio-hover-color, var(--_radio-hover-color));
 }
 
 .cui-radio-button:focus-visible {
-  outline: 2px solid var(--_radio-focus-ring);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: 2px;
+}
+
+:where(.cui-radio-button:focus-visible) {
+  outline-color: var(--cui-radio-focus-ring, var(--_radio-focus-ring));
 }
 
 .cui-radio-button--disabled {

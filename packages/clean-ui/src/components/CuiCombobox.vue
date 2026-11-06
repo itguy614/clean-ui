@@ -517,9 +517,15 @@ function optionClass(index: number, option: ComboboxOption) {
   min-height: var(--cui-combobox-min-height, var(--_combobox-min-height));
   padding: var(--cui-combobox-padding, var(--_combobox-padding));
   border-radius: var(--cui-combobox-radius, var(--_combobox-radius));
-  border: var(--cui-combobox-border-width, 1px) solid var(--_combobox-border);
+  border: var(--cui-combobox-border-width, 1px) solid var(--cui-combobox-border, var(--_combobox-border));
   background: var(--cui-combobox-bg, var(--cui-surface-base, white));
   font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
+}
+
+/* After the resting rule: both are zero specificity, so the later one wins (#454). */
+:where(.cui-combobox__control:focus-within:not(.cui-combobox__control--disabled)) {
+  border-color: var(--cui-combobox-focus-border, var(--_combobox-focus-border));
+  box-shadow: 0 0 0 2px var(--cui-combobox-focus-ring, var(--_combobox-focus-ring));
 }
 
 /* The panel and its option rows are painted by CuiListboxPanel, from this component's
@@ -552,8 +558,6 @@ function optionClass(index: number, option: ComboboxOption) {
   background: transparent;
   padding: 0;
   font-family: inherit;
-  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
-  color: var(--cui-combobox-color, var(--cui-text-body));
   /* A determinate line-height, so the field's intrinsic height cannot push the control
      past the shared scale's height: at `sm` the browser default plus the field's own
      padding came to 24px, which with the control's padding and borders made the box 34px
@@ -561,9 +565,9 @@ function optionClass(index: number, option: ComboboxOption) {
   line-height: 1.25;
 }
 
-.cui-combobox__control:focus-within:not(.cui-combobox__control--disabled) {
-  border-color: var(--_combobox-focus-border);
-  box-shadow: 0 0 0 2px var(--_combobox-focus-ring);
+:where(.cui-combobox__input) {
+  font-size: var(--cui-combobox-font-size, var(--_combobox-font-size));
+  color: var(--cui-combobox-color, var(--cui-text-body));
 }
 
 .cui-combobox__error {

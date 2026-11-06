@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The form controls' stylesheets read their tokens through the public layer** (#454, part 1).
+  `CuiInput`, `CuiTextarea`, `CuiSelect`, `CuiCheckbox`, `CuiRadio`, `CuiToggle`, `CuiCombobox`
+  and `CuiProgress` painted and sized from private `--_<component>-*` properties directly, so
+  a container's token or a plain `.cui-input { … }` rule could not win over them. Each value
+  is now read as `var(--cui-<component>-<slot>, var(--_<component>-<slot>))` inside a
+  zero-specificity rule, and the slots are new public tokens: `--cui-input-{height,border,px,
+  font-size,focus-border,focus-ring}`, `--cui-textarea-{border,px,py,font-size,focus-border,
+  focus-ring}`, `--cui-select-{min-height,px,border,focus-border,focus-ring}`,
+  `--cui-checkbox-{border,bg,hover-border,focus-ring}`, `--cui-radio-{bg,border,color,
+  hover-bg,hover-color,focus-ring}`, `--cui-toggle-{bg,color,hover-border,focus-ring}`,
+  `--cui-combobox-{border,focus-border,focus-ring}` and `--cui-progress-{bg,color}`. Nothing
+  changes unless you set one: rendering is identical in every size, state and mode. Geometry
+  that follows the size preset (a toggle's track and knob, a progress circle's box) and
+  `CuiSelect`'s trigger font size (`--cui-select-font-size` already sizes its options) stay
+  private. An invalid field keeps the error colour on its border whatever the token says.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9

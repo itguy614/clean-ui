@@ -120,6 +120,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-toggle-font-size", default: "per size", description: "Font size of the ON label inside the track" },
+    { name: "--cui-toggle-bg", default: "var(--cui-primary-bg)", description: "Track fill when on" },
+    { name: "--cui-toggle-color", default: "var(--cui-primary)", description: "Accent: the knob, the on track's border and the ON label, and the off track's hover border" },
+    { name: "--cui-toggle-hover-border", default: "var(--cui-primary-hover)", description: "Border color of the on track under the pointer" },
+    { name: "--cui-toggle-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
   ],
 };
 

@@ -112,6 +112,11 @@ const meta: ComponentMeta = {
   // CuiCombobox and CuiTagInput, under the select prefix.
   tokens: [
     { name: "--cui-select-radius", default: "per rounded", description: "Corner radius of the trigger" },
+    { name: "--cui-select-min-height", default: "per size", description: "Trigger height floor — it grows with its chips" },
+    { name: "--cui-select-px", default: "per size", description: "Horizontal padding of the trigger and the group headers" },
+    { name: "--cui-select-border", default: "var(--cui-border-strong)", description: "Trigger border color (an invalid field keeps the error color)" },
+    { name: "--cui-select-focus-border", default: "var(--cui-primary)", description: "Trigger border color while open or focused" },
+    { name: "--cui-select-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Trigger focus ring color" },
     { name: "--cui-select-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
     { name: "--cui-select-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
     { name: "--cui-select-panel-radius", default: "0.5rem", description: "Dropdown corner radius" },
