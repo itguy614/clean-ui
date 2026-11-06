@@ -312,7 +312,8 @@ defineExpose({ el: rootEl, focus, blur });
                 :aria-selected="selectedDate ? day.date.toDateString() === selectedDate.toDateString() : false"
                 :aria-disabled="day.disabled || undefined"
                 :aria-label="fullDateLabel(day.date, locale)"
-                :data-disabled="day.disabled"                @click="selectDay(day)"
+                :data-disabled="day.disabled"
+                @click="selectDay(day)"
               >
                 {{ day.date.getDate() }}
               </div>

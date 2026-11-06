@@ -31,7 +31,8 @@ const TRIGGER = [
   "display", "align-items", "column-gap", "height", "padding-left", "padding-right", "border-top-width", "border-top-style",
   "border-top-color", "border-top-left-radius", "background-color", "opacity", "cursor",
 ];
-const FIELD = ["border-top-width", "background-color", "outline-style", "color", "padding-left", "width", "cursor", "font-size"];
+// No `width`: the fields are sized in `ch`, which follows the platform's default font.
+const FIELD = ["border-top-width", "background-color", "outline-style", "color", "padding-left", "cursor", "font-size"];
 
 type Props = Record<string, unknown>;
 interface Scenario { picker: "single" | "range"; props: Props; dark?: boolean; density?: string; view?: "days" | "months" | "years"; picking?: boolean }

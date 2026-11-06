@@ -88,7 +88,7 @@ describe("date pickers' themeable properties (real browser)", () => {
 
     it("lets a plain consumer rule win, with no !important", async () => {
       extra = injectStyle(`.cui-date-range-picker__trigger { background: rgb(1, 2, 3); border-color: rgb(4, 5, 6); border-radius: 3px; height: 50px; padding: 0 9px; }
-        .cui-date-range-picker__field { color: rgb(7, 8, 9); font-size: 19px; width: 77px; }
+        .cui-date-range-picker__field { color: rgb(7, 8, 9); font-size: 19px; }
         .cui-date-range-picker__day--selected { background: rgb(11, 12, 13); }
         .cui-date-range-picker__day--in-range { background: rgb(14, 15, 16); }`);
       const root = await open(CuiDateRangePicker, props);
