@@ -124,7 +124,6 @@ describe("CuiColorPicker looks the same as its inline-style implementation (#467
   });
 
   const recorded = baseline as Record<string, Record<string, Record<string, string>>>;
-  const dump: Record<string, unknown> = {};
 
   for (const [name, { props, mode, density }] of Object.entries(SCENARIOS)) {
     it(name, async () => {
@@ -137,12 +136,9 @@ describe("CuiColorPicker looks the same as its inline-style implementation (#467
       wrappers.push(wrapper);
       await nextTick();
       const actual = snapshot(host.querySelector<HTMLElement>(".cui-color-picker")!);
-      if (!recorded[name]) {
-        // Recording mode: an empty baseline prints what the current implementation computes.
-        dump[name] = actual;
-        console.log(`BASELINE ${JSON.stringify({ [name]: actual })}`);
-        return;
-      }
+      // To re-record, empty the baseline: this prints each scenario's snapshot before failing.
+      if (!recorded[name]) console.log(`BASELINE ${JSON.stringify({ [name]: actual })}`);
+      expect(recorded[name], `no recorded baseline for ${name}`).toBeDefined();
       expect(actual).toEqual(recorded[name]);
     });
   }

@@ -37,7 +37,7 @@ const meta: ComponentMeta = {
     { name: "--cui-color-picker-height", default: "per size", description: "Height of the saturation/brightness gradient" },
     { name: "--cui-color-picker-font-size", default: "per size", description: "Size of the text field and the format button" },
     { name: "--cui-color-picker-bg", default: "var(--cui-surface-base)", description: "Background of the picker and its text field" },
-    { name: "--cui-color-picker-border", default: "1px solid var(--cui-border)", description: "Frame around the picker" },
+    { name: "--cui-color-picker-border", default: "1px solid var(--cui-border)", description: "Frame around the picker. A whole border shorthand (width, style and colour): a colour alone leaves it with no border. The gradient's top corners assume a 1px frame" },
     { name: "--cui-color-picker-radius", default: "var(--cui-radius-lg)", description: "Corner radius of the frame; the gradient's top corners follow it" },
     { name: "--cui-color-picker-focus-ring", default: "#000 on the handles, var(--cui-primary-focus-ring) on the swatches", description: "Colour of the focus ring on a handle or swatch" },
   ],

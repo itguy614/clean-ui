@@ -790,12 +790,14 @@ defineExpose({ el: rootEl, focus, blur });
 .cui-color-picker__thumb--hue,
 .cui-color-picker__thumb--alpha {
   top: 50%;
+}
+
+/* Paint, so at zero specificity (one `:where()` rule, the blur set per handle). */
+:where(.cui-color-picker__thumb--hue, .cui-color-picker__thumb--alpha) {
   background: var(--_color-picker-value);
 }
 
-.cui-color-picker__thumb--sat,
-.cui-color-picker__thumb--hue,
-.cui-color-picker__thumb--alpha {
+:where(.cui-color-picker__thumb--sat, .cui-color-picker__thumb--hue, .cui-color-picker__thumb--alpha) {
   box-shadow: 0 1px var(--_color-picker-thumb-blur, 3px) rgba(0, 0, 0, 0.3);
 }
 
@@ -803,10 +805,13 @@ defineExpose({ el: rootEl, focus, blur });
   --_color-picker-thumb-blur: 4px;
 }
 
+:where(.cui-color-picker__input) {
+  font-family: var(--cui-font-mono, monospace);
+}
+
 .cui-color-picker__input {
   flex: 1;
   min-width: 0;
-  font-family: var(--cui-font-mono, monospace);
   outline: none;
 }
 
