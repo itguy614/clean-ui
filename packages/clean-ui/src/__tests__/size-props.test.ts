@@ -27,4 +27,17 @@ describe("size props", () => {
     expect(offenders.filter((f) => !(f in EXEMPT))).toEqual([]);
     expect(Object.keys(EXEMPT).filter((f) => !offenders.includes(f))).toEqual([]);
   });
+
+  // #178: the three pickers take `size` from SizeableProps (the flat CuiSize) and read it
+  // through the shared input scale, which styles all five steps, so there is nothing to
+  // narrow with clampSize(). A local `size?:` re-declaration or a private map would drift.
+  it.each(["CuiDatePicker.vue", "CuiDateRangePicker.vue", "CuiTimePicker.vue"])(
+    "%s takes size from SizeableProps",
+    (f) => {
+      const dir = join(dirname(fileURLToPath(import.meta.url)), "../components");
+      const src = script(readFileSync(join(dir, f), "utf8"));
+      expect(src).toMatch(/export interface Cui\w+Props extends [^{]*\bSizeableProps\b/);
+      expect(src).not.toMatch(/^\s+size\?:/m);
+    },
+  );
 });

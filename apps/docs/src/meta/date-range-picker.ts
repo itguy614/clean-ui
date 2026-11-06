@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
     { name: "separator", type: "string", default: "→", description: "Text between the two fields" },
     { name: "startPlaceholder", type: "string", description: "Placeholder for the start field. Defaults to the format, lower-cased" },
     { name: "endPlaceholder", type: "string", description: "Placeholder for the end field. Defaults to the format, lower-cased" },
-    { name: "label", type: "string", description: "Label text above the control. It renders as plain text with no for association — see Known gaps" },
+    { name: "label", type: "string", description: "Label text above the control. It names both date inputs through aria-labelledby" },
     { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Trigger height, padding and font size, from the shared input scale, so it lines up with CuiInput, CuiDatePicker and CuiTimePicker" },
     disabledProp,
     hiddenProp,

@@ -9,6 +9,8 @@ const time1 = ref("09:30 AM");
 const time2 = ref("14:45");
 const time3 = ref("");
 const time4 = ref("02:00 PM");
+const time5 = ref("10:00 AM");
+const time6 = ref("19:00");
 </script>
 
 <template>
@@ -121,6 +123,20 @@ const time4 = ref("02:00 PM");
           <CuiTimePicker model-value="09:00 AM" size="md" label="Medium" />
           <CuiTimePicker model-value="09:00 AM" size="lg" label="Large" />
         </CuiFlex>
+      </Example>
+
+      <!-- Range -->
+      <Example title="Minimum and maximum time" :code="`<CuiTimePicker v-model=&quot;time&quot; label=&quot;Opening hours&quot; min-time=&quot;09:00 AM&quot; max-time=&quot;05:30 PM&quot; />
+<CuiTimePicker v-model=&quot;time&quot; format=&quot;24&quot; label=&quot;Night shift&quot; min-time=&quot;18:00&quot; max-time=&quot;23:00&quot; />`">
+        <CuiFlex gap="4" class="items-start flex-wrap">
+          <CuiTimePicker v-model="time5" label="Opening hours (9:00 AM to 5:30 PM)" min-time="09:00 AM" max-time="05:30 PM" />
+          <CuiTimePicker v-model="time6" format="24" label="Late shift (18:00 to 23:00)" min-time="18:00" max-time="23:00" />
+        </CuiFlex>
+        <p class="text-sm" style="color: var(--cui-text-secondary);">
+          The steppers stop at the range rather than wrapping, a typed hour is clamped to it,
+          and an AM/PM button with nothing selectable is disabled. The value is still
+          <code class="cui-code">hh:mm AM/PM</code>, in every locale.
+        </p>
       </Example>
 
       <!-- Disabled -->
