@@ -242,3 +242,93 @@ describe("converted stylesheets read every private property through its public t
     });
   }
 });
+
+/**
+ * #454 — the same read-through contract for a component whose stylesheet is its own
+ * `<style>` block. #333 converted what a template `:style` binding painted, but the
+ * stylesheets kept reading the private `--_<c>-<slot>` token directly (`height:
+ * var(--_input-height)`), so a consumer's container token or plain `.cui-input` rule could
+ * not win. A listed component must read EVERY private token as the fallback of its public
+ * one — `var(--cui-<c>-<slot>, var(--_<c>-<slot>))` — and wherever it does, inside a rule
+ * wrapped whole in `:where()`, so a consumer's plain rule at (0,1,0) wins too.
+ *
+ * Opt-in, like `CONVERTED_STYLESHEETS`: add a component when its PR converts it. The rest
+ * of the ~15 with direct reads follow in the next PR, which turns the guard on for them.
+ *
+ * `privateOnly` lists slots with no public layer ON PURPOSE, each with its reason: a size
+ * preset's geometry (a toggle's knob), a value that follows the data (a progress fill's
+ * position), a floating label's offset. They may be read bare, anywhere. An entry the
+ * stylesheet no longer reads is stale and fails.
+ */
+const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the form field" };
+const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
+  { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
+  {
+    file: "CuiSelect.vue",
+    component: "select",
+    privateOnly: { "font-size": "--cui-select-font-size already sizes the option rows (the listbox panel reads it by prefix)" },
+    issue: "#454",
+  },
+  { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
+  { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
+  { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiToggle.vue",
+    component: "toggle",
+    privateOnly: {
+      height: "the track's height follows the size preset, with the knob and the track width (#333)",
+      "knob-size": "the knob's box follows the size preset (#333)",
+      active: "the pressed border has no slot in the vocabulary",
+    },
+    issue: "#454",
+  },
+  { file: "CuiCombobox.vue", component: "combobox", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiProgress.vue",
+    component: "progress",
+    privateOnly: {
+      width: "the circle's box is tied to its SVG",
+      height: "the circle's box is tied to its SVG (the bar's track reads --cui-progress-height)",
+      percent: "the fill's position follows the value",
+    },
+    issue: "#454",
+  },
+];
+
+/** The text of every `<style>` block in an SFC, comments removed. */
+function sfcStyles(source: string): string {
+  return stripComments([...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n"));
+}
+
+describe("converted component stylesheets read every private property through its public token (#454)", () => {
+  for (const { file, component, privateOnly, issue } of CONVERTED_SFC_STYLESHEETS) {
+    const path = COMPONENTS.get(file);
+    const css = path ? sfcStyles(readFileSync(path, "utf-8")) : "";
+    const hint = `${file} (${issue}): read it as var(--cui-${component}-<slot>, var(--_${component}-<slot>)) inside a whole :where() rule, or list the slot in privateOnly with a reason`;
+
+    it(`${file} reads each --_${component}-<slot> only as the fallback of --cui-${component}-<slot>`, () => {
+      expect(path, `${file} is not a component`).toBeDefined();
+      const reads = [...css.matchAll(new RegExp(`var\\(\\s*--_${component}-([\\w-]+)`, "g"))];
+      // A scan that matched nothing would pass vacuously.
+      expect(reads.length).toBeGreaterThan(0);
+      const bare = reads
+        .filter((m) => !(m[1] in privateOnly))
+        .filter((m) => !new RegExp(`var\\(\\s*--cui-${component}-${m[1]}\\s*,\\s*$`).test(css.slice(0, m.index)))
+        .map((m) => `var(--_${component}-${m[1]})`);
+      expect([...new Set(bare)], hint).toEqual([]);
+    });
+
+    it(`${file} wraps every rule that reads a public --cui-${component}-* token whole in :where()`, () => {
+      const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: splitSelectorList(m[1].trim()), body: m[2] }));
+      const reading = new RegExp(`var\\(\\s*--cui-${component}-`);
+      const selectors = rules.filter(({ body }) => reading.test(body)).flatMap(({ selectors }) => selectors);
+      expect(selectors.length).toBeGreaterThan(0);
+      expect(selectors.filter((s) => !isWholeWhere(s)), hint).toEqual([]);
+    });
+
+    it(`${file} keeps no stale privateOnly entry`, () => {
+      const stale = Object.keys(privateOnly).filter((slot) => !new RegExp(`var\\(\\s*--_${component}-${slot}(?![\\w-])`).test(css));
+      expect(stale).toEqual([]);
+    });
+  }
+});

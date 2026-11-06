@@ -69,7 +69,15 @@ const meta: ComponentMeta = {
     { name: "blur", signature: "() => void", description: "Blur the native input" },
   ],
 
-  tokens: [{ name: "--cui-input-radius", default: "per rounded", description: "Corner radius of the field" }],
+  tokens: [
+    { name: "--cui-input-radius", default: "per rounded", description: "Corner radius of the field" },
+    { name: "--cui-input-height", default: "per size", description: "Outer height of the field, borders included" },
+    { name: "--cui-input-border", default: "var(--cui-border-strong)", description: "Border color, attached-button separators included (an invalid field keeps the error color)" },
+    { name: "--cui-input-px", default: "per size", description: "Horizontal padding inside the field" },
+    { name: "--cui-input-font-size", default: "per size", description: "Font size of the value, prefix and suffix" },
+    { name: "--cui-input-focus-border", default: "var(--cui-primary)", description: "Border color while focused" },
+    { name: "--cui-input-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
+  ],
 };
 
 export default meta;
