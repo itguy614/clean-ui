@@ -25,7 +25,7 @@ const EXEMPT: Record<string, { count: number; why: string }> = {
   "clean-ui/src/components/CuiTabs.vue": { count: 1, why: "the segmented tab's raised pill — a control affordance, not elevation" },
   "clean-ui/src/components/CuiToggle.vue": { count: 1, why: "the toggle knob — a control affordance" },
   "clean-ui/src/components/CuiSlider.vue": { count: 2, why: "the slider thumb, resting and dragging — a control affordance" },
-  "clean-ui/src/components/CuiColorPicker.vue": { count: 3, why: "the picker's handles — control affordances" },
+  "clean-ui/src/components/CuiColorPicker.vue": { count: 1, why: "the picker's handles (one rule, blur set per handle) — control affordances" },
 };
 
 const BLACK = /rgba?\(\s*0[\s,]+0[\s,]+0\b/g;
