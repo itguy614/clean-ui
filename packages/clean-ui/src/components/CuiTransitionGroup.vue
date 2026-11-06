@@ -48,8 +48,7 @@ const classes = computed(() => {
     :tag="tag"
     :appear="appear"
     :move-class="moveClass ?? 'cui-transition-move'"
-    :class="tag ? 'cui-transition-group' : undefined"
-    v-bind="classes"
+    v-bind="{ ...classes, ...(tag ? { class: 'cui-transition-group' } : {}) }"
     @before-leave="pinOutOfFlow"
   >
     <slot />

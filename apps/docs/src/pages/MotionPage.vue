@@ -156,10 +156,10 @@ const addRow = () => rows.value.unshift({ id: nextRow++, label: `New task ${next
 const removeRow = (id: number) => (rows.value = rows.value.filter((r) => r.id !== id));
 
 const GROUP_PROPS: PropRow[] = [
-  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "As for CuiTransition. collapse wants each item to hold one child element, which it clips while the item's row shrinks" },
+  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "As for CuiTransition. collapse wants each item to hold one child element, which it clips. A leaving item is out of the flow, so its siblings take its space at once (they glide there); the leaver itself fades" },
   { name: "side", type: '"top" | "bottom" | "start" | "end"', default: '"bottom"', description: "fade-slide only: the edge items slide in from" },
   { name: "duration", type: '"fast" | "base" | "slow"', default: '"base"', description: "The enter's duration token. The exit always runs over fast" },
-  { name: "tag", type: "string", description: "The element to render, as for Vue's <TransitionGroup>. With none, the items render straight into the parent. A tag gets position: relative, which is where a leaving item is pinned" },
+  { name: "tag", type: "string", description: "The element to render, as for Vue's <TransitionGroup>. With none, the items render straight into the parent. A tag gets position: relative, which is where a leaving item is pinned: give a list a tag (and no table-row items)" },
   { name: "appear", type: "boolean", default: "false", description: "Also play the enter on first render" },
   { name: "moveClass", type: "string", default: '"cui-transition-move"', description: "The class an item that stays takes while it slides into place" },
   { name: "@before-enter, @after-enter, @before-leave, @after-leave …", type: "Vue transition events", description: "Passed through to <TransitionGroup>" },

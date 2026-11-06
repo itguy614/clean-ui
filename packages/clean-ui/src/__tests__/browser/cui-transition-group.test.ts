@@ -139,6 +139,17 @@ describe("CuiTransitionGroup (real browser)", () => {
     expect(document.querySelector('.row[data-n="2"]')).toBeNull();
   });
 
+  it("pins several leavers of one update each where it stood, not on top of each other", async () => {
+    const w = demo();
+    await settled();
+    const tops = [1, 2, 3].map((n) => row(n).getBoundingClientRect().top);
+    items(w).splice(0, 3);
+    await w.vm.$nextTick();
+    // Each one's own offset: measured before the first was pulled out of the flow.
+    expect([1, 2, 3].map((n) => row(n).style.top)).toEqual(["0px", "34px", "68px"]);
+    expect([1, 2, 3].map((n) => row(n).getBoundingClientRect().top)).toEqual(tops);
+  });
+
   it("slides the rest into place by transform, over base on the in-out curve", async () => {
     const w = demo();
     await settled();

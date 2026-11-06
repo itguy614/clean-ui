@@ -74,8 +74,8 @@ const containerStyle = computed(() => {
 });
 
 /**
- * A leaving toast is taken out of the flow (position: absolute, in its leave class) so the
- * rest can move into its place. In a flex container an absolute item would jump to the
+ * A leaving toast is taken out of the flow (pinOutOfFlow sets position: absolute inline;
+ * the leave class repeats it) so the rest can move into its place. In a flex container an absolute item would jump to the
  * start edge, so pin it where it is first (pinOutOfFlow).
  */
 function pinLeaving(el: Element) {
