@@ -88,9 +88,10 @@ it("opens the calendar from the start field with ArrowDown", async () => {
     await wrapper!.vm.$nextTick();
 
     // Cells between the start and the focused cell are part of the previewed
-    // range, so more than just the start is highlighted.
-    const highlighted = [...document.querySelectorAll<HTMLElement>('[role="gridcell"]')].filter(
-      (c) => c.style.background && c.style.background !== "transparent",
+    // range, so more than just the start is highlighted (the stylesheet paints the state
+    // classes, #466).
+    const highlighted = document.querySelectorAll(
+      '[role="gridcell"][class*="--selected"], [role="gridcell"][class*="--in-range"]',
     );
     expect(highlighted.length).toBeGreaterThan(1);
   });

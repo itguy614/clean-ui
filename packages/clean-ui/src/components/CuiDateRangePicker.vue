@@ -73,19 +73,10 @@ const sizeVars = computed(() => {
     "--_date-range-picker-height": s.height,
     "--_date-range-picker-px": s.px,
     "--_date-range-picker-font-size": s.fontSize,
+    // The fields are as wide as the format they show.
+    "--_date-range-picker-field-width": `${props.format.length + 1}ch`,
   };
 });
-/** The start and end fields: bare inputs inside the trigger, sized by it. */
-const fieldStyle = computed(() => ({
-  border: "none",
-  background: "transparent",
-  outline: "none",
-  color: "var(--cui-text-body)",
-  padding: "0",
-  width: `${props.format.length + 1}ch`,
-  cursor: "pointer",
-}));
-
 const messages = useMessages();
 const locale = useLocale();
 // The month and weekday text the calendar draws and announces (#337), in the library's locale.
@@ -246,68 +237,30 @@ watch(focusedDate, (date) => {
   if (selecting.value === "end") hoverDate.value = date;
 });
 
-// Day styling
-function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
-  const s: Record<string, string> = {
-    width: "2rem",
-    height: "2rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "0.8125rem",
-    cursor: day.disabled ? "default" : "pointer",
-    position: "relative",
-  };
-
-  const inRange = isInRange(day.date);
-  const rangeStart = isRangeStart(day.date);
-  const rangeEnd = isRangeEnd(day.date);
-  const today = props.highlightToday && isToday(day.date);
-
-  if (day.disabled) {
-    s.color = "var(--cui-text-tertiary)";
-    s.opacity = "0.35";
-  } else if (rangeStart || rangeEnd) {
-    s.background = "var(--cui-primary)";
-    s.color = "var(--cui-primary-text, white)";
-    s.fontWeight = "600";
-    s.borderRadius = rangeStart && !rangeEnd ? "0.375rem 0 0 0.375rem"
-      : !rangeStart && rangeEnd ? "0 0.375rem 0.375rem 0"
-      : "0.375rem";
-  } else if (inRange) {
-    s.background = "var(--cui-primary-bg)";
-    s.color = "var(--cui-primary)";
-    s.borderRadius = "0";
-  } else if (today) {
-    s.background = "var(--cui-primary-bg)";
-    s.color = "var(--cui-primary)";
-    s.fontWeight = "600";
-    s.borderRadius = "0.375rem";
-  } else if (!day.inMonth) {
-    s.color = "var(--cui-text-tertiary)";
-    s.borderRadius = "0.375rem";
-  } else {
-    s.color = "var(--cui-text-body)";
-    s.borderRadius = "0.375rem";
+// A day cell's state, as the modifier classes the stylesheet paints (#466). One at a time, in
+// this order: disabled, the range's ends, inside the range, today, outside the month. An end
+// that is also the start (or has no partner yet) is rounded on both sides.
+function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
+  if (day.disabled) return "cui-date-range-picker__day--disabled";
+  const start = isRangeStart(day.date);
+  const end = isRangeEnd(day.date);
+  if (start || end) {
+    return [
+      "cui-date-range-picker__day--selected",
+      start && !end && "cui-date-range-picker__day--start",
+      !start && end && "cui-date-range-picker__day--end",
+    ];
   }
-
-  return s;
+  if (isInRange(day.date)) return "cui-date-range-picker__day--in-range";
+  if (props.highlightToday && isToday(day.date)) return "cui-date-range-picker__day--today";
+  if (!day.inMonth) return "cui-date-range-picker__day--outside";
+  return undefined;
 }
 </script>
 
 <template>
   <div class="cui-date-range-picker" v-show="!hidden">
-    <label
-      v-if="label"
-      :id="labelId"
-      :style="{
-        display: 'block',
-        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: 'var(--cui-text-secondary)',
-      }"
-    >
+    <label v-if="label" :id="labelId" class="cui-date-range-picker__label">
       {{ label }}
     </label>
 
@@ -322,19 +275,10 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
       <!-- Trigger: two masked inputs with separator -->
       <div
         class="cui-date-range-picker__trigger"
-        :style="{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'calc(0.375rem * var(--cui-density-scale, 1))',
-          border: '1px solid var(--cui-border-strong, var(--cui-border))',
-          borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
-          ...sizeVars,
-          background: 'var(--cui-surface-base, white)',
-          opacity: disabled ? '0.5' : '1',
-          cursor: disabled ? 'default' : 'pointer',
-        }"
+        :class="{ 'cui-date-range-picker__trigger--disabled': disabled }"
+        :style="sizeVars"
       >
-        <CuiIcon name="calendar-blank" size="0.875rem" style="color: var(--cui-text-tertiary); flex-shrink: 0;" />
+        <CuiIcon name="calendar-blank" size="0.875rem" class="cui-date-range-picker__icon" />
         <input
           ref="startInput"
           @focus="openedFrom = 'start'"
@@ -349,9 +293,8 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :placeholder="startPlaceholder || props.format.toLowerCase()"
           readonly
           class="cui-date-range-picker__field"
-          :style="fieldStyle"
         />
-        <span :style="{ color: 'var(--cui-text-tertiary)', fontSize: '0.75rem', flexShrink: '0' }">{{ separator }}</span>
+        <span class="cui-date-range-picker__separator">{{ separator }}</span>
         <!-- The end input was focusable but unnamed and deaf to keys (#391): it takes the
              start input's keys, and its own name. -->
         <!-- hidden: aria-labelledby still reads them, and browse mode doesn't read them as text. -->
@@ -367,36 +310,29 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           :placeholder="endPlaceholder || props.format.toLowerCase()"
           readonly
           class="cui-date-range-picker__field"
-          :style="fieldStyle"
         />
       </div>
 
       <!-- Calendar popover -->
       <template #content>
-        <div :style="{ padding: 'calc(0.25rem * var(--cui-density-scale, 1))', minWidth: '260px' }">
+        <div class="cui-date-range-picker__calendar">
 
           <!-- Status bar -->
-          <div :style="{
-            fontSize: '0.75rem',
-            color: 'var(--cui-text-secondary)',
-            textAlign: 'center',
-            marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
-            fontWeight: '500',
-          }">
+          <div class="cui-date-range-picker__status">
             {{ selecting === 'start' ? messages.dateRangePicker.selectStart : messages.dateRangePicker.selectEnd }}
           </div>
 
           <!-- DAYS VIEW -->
           <template v-if="viewMode === 'days'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-range-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
+              <div class="cui-date-range-picker__header-title">
+                <CuiButton variant="ghost" size="xs" class="cui-date-range-picker__title-btn" @click="viewMode = 'months'">
                   {{ monthsShort[viewMonth] }}
                 </CuiButton>
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
+                <CuiButton variant="ghost" size="xs" class="cui-date-range-picker__title-btn" @click="viewMode = 'years'">
                   {{ viewYear }}
                 </CuiButton>
               </div>
@@ -405,30 +341,27 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
               </CuiButton>
             </div>
 
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
-              <div
-                v-for="(name, i) in weekdays"
-                :key="i"
-                :style="{ textAlign: 'center', fontSize: '0.6875rem', fontWeight: '600', color: 'var(--cui-text-tertiary)', padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0', textTransform: 'uppercase' }"
-              >{{ name }}</div>
+            <div class="cui-date-range-picker__weekdays">
+              <div v-for="(name, i) in weekdays" :key="i" class="cui-date-range-picker__weekday">{{ name }}</div>
             </div>
 
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-range-picker__days"
               :aria-label="monthYearLabel(new Date(viewYear, viewMonth, 1), locale)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(1px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(day, i) in calendarDays"
                 :key="i"
                 role="gridcell"
+                class="cui-date-range-picker__day"
+                :class="dayState(day)"
                 :data-cui-cell="day.key"
                 :tabindex="cellTabIndex(day.key)"
                 :aria-disabled="day.disabled || undefined"
                 :aria-label="fullDateLabel(day.date, locale)"
-                :style="dayStyle(day)"
                 @click="selectDay(day)"
                 @mouseenter="onDayHover(day.date)"
               >
@@ -439,25 +372,26 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
           <!-- MONTHS VIEW -->
           <template v-else-if="viewMode === 'months'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-range-picker__header">
               <CuiButton variant="ghost" size="xs" @click="viewYear--"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
-              <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">{{ viewYear }}</CuiButton>
+              <CuiButton variant="ghost" size="xs" class="cui-date-range-picker__title-btn" @click="viewMode = 'years'">{{ viewYear }}</CuiButton>
               <CuiButton variant="ghost" size="xs" @click="viewYear++"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
             </div>
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-range-picker__options"
               :aria-label="String(viewYear)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(name, i) in monthsShort" :key="i"
                 role="gridcell"
+                class="cui-date-range-picker__option"
+                :class="{ 'cui-date-range-picker__option--current': viewMonth === i }"
                 :data-cui-cell="monthKeys[i]"
                 :tabindex="cellTabIndex(monthKeys[i])"
                 :aria-label="monthYearLabel(new Date(viewYear, i, 1), locale)"
-                :style="{ padding: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', color: viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
                 @click="selectMonth(i)"
               >{{ name }}</div>
             </div>
@@ -465,25 +399,26 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 
           <!-- YEARS VIEW -->
           <template v-else-if="viewMode === 'years'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-range-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevYearRange"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
-              <span :style="{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--cui-text-body)' }">{{ yearRangeStart }} – {{ yearRangeEnd }}</span>
+              <span class="cui-date-range-picker__years-range">{{ yearRangeStart }} – {{ yearRangeEnd }}</span>
               <CuiButton variant="ghost" size="xs" @click="nextYearRange"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
             </div>
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-range-picker__options"
               :aria-label="messages.datePicker.yearRange(yearRangeStart, yearRangeEnd)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(year, yi) in yearRange" :key="year"
                 role="gridcell"
+                class="cui-date-range-picker__option cui-date-range-picker__option--year"
+                :class="{ 'cui-date-range-picker__option--current': viewYear === year }"
                 :data-cui-cell="yearKeys[yi]"
                 :tabindex="cellTabIndex(yearKeys[yi])"
                 :aria-label="String(year)"
-                :style="{ padding: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center', borderRadius: '0.375rem', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: viewYear === year ? '600' : '400', color: viewYear === year ? 'var(--cui-primary)' : 'var(--cui-text-body)' }"
                 @click="selectYear(year)"
               >{{ year }}</div>
             </div>
@@ -496,13 +431,217 @@ function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 </template>
 
 <style scoped>
-/* Size, from the input scale (#349). Themeable, so zero specificity. */
+/* The picker's paint (#466). Themeable declarations sit inside :where(), so a consumer's plain
+   rule, or a --cui-date-range-picker-* token on a container, wins; structure stays at normal
+   specificity. The panel is teleported, but its content is this component's own, so the scope
+   still reaches it. The start and end days are the control's "on" state: pressed-bg / -color.
+   State rules follow their base rules, since at zero specificity the source order decides. */
+/* The scoped base gives every cui-* element line-height 1.5, but these sat inside the popover's
+   body and followed its 1.55: each part hands the inherited one on (#466). */
+:where(
+  .cui-date-range-picker__label,
+  .cui-date-range-picker__calendar,
+  .cui-date-range-picker__status,
+  .cui-date-range-picker__header,
+  .cui-date-range-picker__header-title,
+  .cui-date-range-picker__years-range,
+  .cui-date-range-picker__weekdays,
+  .cui-date-range-picker__weekday,
+  .cui-date-range-picker__days,
+  .cui-date-range-picker__options,
+  .cui-date-range-picker__day,
+  .cui-date-range-picker__option
+) {
+  line-height: inherit;
+}
+
+:where(.cui-date-range-picker__label) {
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+.cui-date-range-picker__label {
+  display: block;
+}
+
+/* The trigger's box comes from the shared input scale, so a range picker lines up with a
+   CuiInput, CuiDatePicker or CuiTimePicker of the same `size` (#349). */
 :where(.cui-date-range-picker__trigger) {
   height: var(--cui-date-range-picker-height, var(--_date-range-picker-height));
   padding: 0 var(--cui-date-range-picker-px, var(--_date-range-picker-px));
+  border: 1px solid var(--cui-date-range-picker-border, var(--cui-border-strong, var(--cui-border)));
+  border-radius: var(--cui-date-range-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  background: var(--cui-date-range-picker-bg, var(--cui-surface-base, white));
+}
+.cui-date-range-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  cursor: pointer;
+}
+.cui-date-range-picker__trigger--disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
+:where(.cui-date-range-picker__icon, .cui-date-range-picker__separator) {
+  color: var(--cui-text-tertiary);
+}
+.cui-date-range-picker__icon,
+.cui-date-range-picker__separator {
+  flex-shrink: 0;
+}
+:where(.cui-date-range-picker__separator) {
+  font-size: 0.75rem;
+}
+
+/* The start and end fields: bare inputs inside the trigger, sized by it. */
 :where(.cui-date-range-picker__field) {
   font-size: var(--cui-date-range-picker-font-size, var(--_date-range-picker-font-size));
+  border: none;
+  background: transparent;
+  color: var(--cui-text-body);
+  padding: 0;
+}
+.cui-date-range-picker__field {
+  width: var(--_date-range-picker-field-width);
+  outline: none;
+  cursor: pointer;
+}
+
+:where(.cui-date-range-picker__calendar) {
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
+}
+.cui-date-range-picker__calendar {
+  min-width: 260px;
+}
+
+:where(.cui-date-range-picker__status) {
+  font-size: 0.75rem;
+  color: var(--cui-text-secondary);
+  font-weight: 500;
+}
+.cui-date-range-picker__status {
+  text-align: center;
+  margin-bottom: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+.cui-date-range-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(0.5rem * var(--cui-density-scale, 1));
+}
+.cui-date-range-picker__header-title {
+  display: flex;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+}
+/* Beats CuiButton's own weight, whichever stylesheet loads last. */
+.cui-button.cui-date-range-picker__title-btn {
+  font-weight: 600;
+}
+:where(.cui-date-range-picker__years-range) {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cui-text-body);
+}
+
+.cui-date-range-picker__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+}
+:where(.cui-date-range-picker__weekday) {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cui-text-tertiary);
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) 0;
+}
+.cui-date-range-picker__weekday {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cui-date-range-picker__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: calc(1px * var(--cui-density-scale, 1));
+}
+.cui-date-range-picker__options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(4px * var(--cui-density-scale, 1));
+}
+
+/* Cells. A day never transitions: the keyboard crosses them (Motion). A disabled day keeps the
+   square corners it always had: it has no fill to round. */
+:where(.cui-date-range-picker__day) {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.8125rem;
+  color: var(--cui-text-body);
+  border-radius: 0.375rem;
+}
+.cui-date-range-picker__day {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+:where(.cui-date-range-picker__option) {
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--cui-text-body);
+}
+.cui-date-range-picker__option {
+  text-align: center;
+  cursor: pointer;
+}
+
+/* States: outside the month, today, in the range, the range's ends, disabled. */
+:where(.cui-date-range-picker__day--outside) {
+  color: var(--cui-text-tertiary);
+}
+:where(.cui-date-range-picker__day--today) {
+  background: var(--cui-primary-bg);
+  color: var(--cui-primary);
+  font-weight: 600;
+}
+:where(.cui-date-range-picker__day--in-range) {
+  background: var(--cui-primary-bg);
+  color: var(--cui-primary);
+  border-radius: 0;
+}
+:where(.cui-date-range-picker__day--selected) {
+  background: var(--cui-date-range-picker-pressed-bg, var(--cui-primary));
+  color: var(--cui-date-range-picker-pressed-color, var(--cui-primary-text, white));
+  font-weight: 600;
+}
+:where(.cui-date-range-picker__day--start) {
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+:where(.cui-date-range-picker__day--end) {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+:where(.cui-date-range-picker__day--disabled) {
+  color: var(--cui-text-tertiary);
+  opacity: 0.35;
+  border-radius: 0;
+}
+.cui-date-range-picker__day--disabled {
+  cursor: default;
+}
+:where(.cui-date-range-picker__option--year) {
+  font-weight: 400;
+}
+:where(.cui-date-range-picker__option--current) {
+  color: var(--cui-primary);
+}
+:where(.cui-date-range-picker__option--year.cui-date-range-picker__option--current) {
+  font-weight: 600;
 }
 </style>

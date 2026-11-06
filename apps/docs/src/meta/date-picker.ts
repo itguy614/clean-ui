@@ -30,6 +30,11 @@ const meta: ComponentMeta = {
     { name: "update:modelValue", payload: "string | Date | null", description: "Fires when a date is selected in the grid, typed into the field, or chosen via Today" },
   ],
 
+  tokens: [
+    { name: "--cui-date-picker-pressed-bg", default: "var(--cui-primary)", description: "Background of the selected day, month or year. Set it where the calendar can see it: the panel is teleported to <body>, so on :root or <body>, not on the picker's container" },
+    { name: "--cui-date-picker-pressed-color", default: "var(--cui-primary-text)", description: "Text color of the selected day, month or year" },
+  ],
+
   methods: [
     { name: "focus", signature: "(options?: FocusOptions) => void", description: "Focus the field. Always passes preventScroll — the panel opens beside a trigger the user is already looking at" },
     { name: "blur", signature: "() => void", description: "Blur the field" },

@@ -189,41 +189,27 @@ function onInputChange(rawVal: string | number) {
   }
 }
 
-// Day cell styling
-function dayStyle(day: { date: Date; inMonth: boolean; disabled: boolean }) {
-  const s: Record<string, string> = {
-    width: "2rem",
-    height: "2rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "0.375rem",
-    fontSize: "0.8125rem",
-    cursor: day.disabled ? "default" : "pointer",
-  };
-
-  const selected = selectedDate.value && isSameDay(day.date, selectedDate.value);
-  const today = props.highlightToday && isToday(day.date);
-
-  if (day.disabled) {
-    s.color = "var(--cui-text-tertiary)";
-    s.opacity = "0.35";
-  } else if (selected) {
-    s.background = "var(--cui-primary)";
-    s.color = "var(--cui-primary-text, white)";
-    s.fontWeight = "600";
-  } else if (today) {
-    s.background = "var(--cui-primary-bg)";
-    s.color = "var(--cui-primary)";
-    s.fontWeight = "600";
-  } else if (!day.inMonth) {
-    s.color = "var(--cui-text-tertiary)";
-  } else {
-    s.color = "var(--cui-text-body)";
-  }
-
-  return s;
+// A day cell's state, as the one modifier class the stylesheet paints (#466). One at a time,
+// in this order: disabled, selected, today, outside the month.
+function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
+  if (day.disabled) return "cui-date-picker__day--disabled";
+  if (selectedDate.value && isSameDay(day.date, selectedDate.value)) return "cui-date-picker__day--selected";
+  if (props.highlightToday && isToday(day.date)) return "cui-date-picker__day--today";
+  if (!day.inMonth) return "cui-date-picker__day--outside";
+  return undefined;
 }
+
+/** A month or year cell's modifiers: selected, the one the view is on, and set in bold. */
+function optionState(selected: boolean, current: boolean, strong: boolean) {
+  return {
+    "cui-date-picker__option--selected": selected,
+    "cui-date-picker__option--current": current,
+    "cui-date-picker__option--strong": strong,
+  };
+}
+
+const isSelectedMonth = (i: number) =>
+  !!selectedDate.value && selectedDate.value.getMonth() === i && selectedDate.value.getFullYear() === viewYear.value;
 
 // Expose imperative handle
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
@@ -241,17 +227,7 @@ defineExpose({ el: rootEl, focus, blur });
 
 <template>
   <div class="cui-date-picker" ref="rootEl" v-show="!hidden">
-    <label
-      v-if="label"
-      :id="labelId"
-      :style="{
-        display: 'block',
-        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: 'var(--cui-text-secondary)',
-      }"
-    >
+    <label v-if="label" :id="labelId" class="cui-date-picker__label">
       {{ label }}
     </label>
 
@@ -282,26 +258,26 @@ defineExpose({ el: rootEl, focus, blur });
         @update:model-value="onInputChange"
       >
         <template #suffix>
-          <CuiIcon name="calendar-blank" size="0.875rem" style="color: var(--cui-text-tertiary);" />
+          <CuiIcon name="calendar-blank" size="0.875rem" class="cui-date-picker__icon" />
         </template>
       </CuiMaskedInput>
 
       <!-- Calendar popover -->
       <template #content>
-        <div :style="{ padding: 'calc(0.25rem * var(--cui-density-scale, 1))', minWidth: '260px' }">
+        <div class="cui-date-picker__calendar">
 
           <!-- DAYS VIEW -->
           <template v-if="viewMode === 'days'">
             <!-- Header: nav + month/year -->
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <div :style="{ display: 'flex', gap: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'months'">
+              <div class="cui-date-picker__header-title">
+                <CuiButton variant="ghost" size="xs" class="cui-date-picker__title-btn" @click="viewMode = 'months'">
                   {{ monthsShort[viewMonth] }}
                 </CuiButton>
-                <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
+                <CuiButton variant="ghost" size="xs" class="cui-date-picker__title-btn" @click="viewMode = 'years'">
                   {{ viewYear }}
                 </CuiButton>
               </div>
@@ -311,19 +287,8 @@ defineExpose({ el: rootEl, focus, blur });
             </div>
 
             <!-- Day names -->
-            <div :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0', marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
-              <div
-                v-for="(name, i) in weekdays"
-                :key="i"
-                :style="{
-                  textAlign: 'center',
-                  fontSize: '0.6875rem',
-                  fontWeight: '600',
-                  color: 'var(--cui-text-tertiary)',
-                  padding: 'calc(0.25rem * var(--cui-density-scale, 1)) 0',
-                  textTransform: 'uppercase',
-                }"
-              >
+            <div class="cui-date-picker__weekdays">
+              <div v-for="(name, i) in weekdays" :key="i" class="cui-date-picker__weekday">
                 {{ name }}
               </div>
             </div>
@@ -332,29 +297,29 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-picker__days"
               :aria-label="monthYearLabel(new Date(viewYear, viewMonth, 1), locale)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'calc(2px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(day, i) in calendarDays"
                 :key="i"
                 role="gridcell"
+                class="cui-date-picker__day"
+                :class="dayState(day)"
                 :data-cui-cell="day.key"
                 :tabindex="cellTabIndex(day.key)"
                 :aria-selected="selectedDate ? day.date.toDateString() === selectedDate.toDateString() : false"
                 :aria-disabled="day.disabled || undefined"
                 :aria-label="fullDateLabel(day.date, locale)"
-                :style="dayStyle(day)"
-                :data-disabled="day.disabled"
-                @click="selectDay(day)"
+                :data-disabled="day.disabled"                @click="selectDay(day)"
               >
                 {{ day.date.getDate() }}
               </div>
             </div>
 
             <!-- Today button -->
-            <div v-if="highlightToday" :style="{ marginTop: 'calc(0.5rem * var(--cui-density-scale, 1))', textAlign: 'center' }">
+            <div v-if="highlightToday" class="cui-date-picker__today">
               <CuiButton variant="ghost" size="xs" @click="selectDay({ date: new Date(), disabled: isDisabled(new Date()) })">
                 {{ messages.datePicker.today }}
               </CuiButton>
@@ -363,11 +328,11 @@ defineExpose({ el: rootEl, focus, blur });
 
           <!-- MONTHS VIEW -->
           <template v-else-if="viewMode === 'months'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="viewYear--">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <CuiButton variant="ghost" size="xs" :style="{ fontWeight: '600' }" @click="viewMode = 'years'">
+              <CuiButton variant="ghost" size="xs" class="cui-date-picker__title-btn" @click="viewMode = 'years'">
                 {{ viewYear }}
               </CuiButton>
               <CuiButton variant="ghost" size="xs" @click="viewYear++">
@@ -378,27 +343,19 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-picker__options"
               :aria-label="String(viewYear)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(name, i) in monthsShort"
                 :key="i"
                 role="gridcell"
+                class="cui-date-picker__option"
+                :class="optionState(isSelectedMonth(i), viewMonth === i, isSelectedMonth(i))"
                 :data-cui-cell="monthKeys[i]"
                 :tabindex="cellTabIndex(monthKeys[i])"
                 :aria-label="monthYearLabel(new Date(viewYear, i, 1), locale)"
-                :style="{
-                  padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
-                  textAlign: 'center',
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  fontWeight: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? '600' : '400',
-                  background: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? 'var(--cui-primary)' : 'transparent',
-                  color: selectedDate && selectedDate.getMonth() === i && selectedDate.getFullYear() === viewYear ? 'var(--cui-primary-text, white)' : viewMonth === i ? 'var(--cui-primary)' : 'var(--cui-text-body)',
-                }"
                 @click="selectMonth(i)"
               >
                 {{ name }}
@@ -408,11 +365,11 @@ defineExpose({ el: rootEl, focus, blur });
 
           <!-- YEARS VIEW -->
           <template v-else-if="viewMode === 'years'">
-            <div :style="{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }">
+            <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevYearRange">
                 <CuiIcon name="caret-left" size="0.875rem" />
               </CuiButton>
-              <span :style="{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
+              <span class="cui-date-picker__years-range">
                 {{ yearRangeStart }} – {{ yearRangeEnd }}
               </span>
               <CuiButton variant="ghost" size="xs" @click="nextYearRange">
@@ -423,27 +380,19 @@ defineExpose({ el: rootEl, focus, blur });
             <div
               ref="gridRef"
               role="grid"
+              class="cui-date-picker__options"
               :aria-label="messages.datePicker.yearRange(yearRangeStart, yearRangeEnd)"
-              :style="{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'calc(4px * var(--cui-density-scale, 1))' }"
               @keydown="onGridKeydown"
             >
               <div
                 v-for="(year, yi) in yearRange"
                 :key="year"
                 role="gridcell"
+                class="cui-date-picker__option"
+                :class="optionState(!!selectedDate && selectedDate.getFullYear() === year, viewYear === year, viewYear === year)"
                 :data-cui-cell="yearKeys[yi]"
                 :tabindex="cellTabIndex(yearKeys[yi])"
                 :aria-label="String(year)"
-                :style="{
-                  padding: 'calc(0.5rem * var(--cui-density-scale, 1))',
-                  textAlign: 'center',
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer',
-                  fontSize: '0.8125rem',
-                  fontWeight: viewYear === year ? '600' : '400',
-                  background: selectedDate && selectedDate.getFullYear() === year ? 'var(--cui-primary)' : 'transparent',
-                  color: selectedDate && selectedDate.getFullYear() === year ? 'var(--cui-primary-text, white)' : viewYear === year ? 'var(--cui-primary)' : 'var(--cui-text-body)',
-                }"
                 @click="selectYear(year)"
               >
                 {{ year }}
@@ -456,3 +405,158 @@ defineExpose({ el: rootEl, focus, blur });
     </CuiPopover>
   </div>
 </template>
+
+<style scoped>
+/* The calendar's paint (#466). Themeable declarations sit inside :where(), so a consumer's
+   plain rule, or a --cui-date-picker-* token on a container, wins; structure stays at normal
+   specificity. The panel is teleported, but its content is this component's own, so the scope
+   still reaches it. The selected day is the control's "on" state: pressed-bg / pressed-color.
+   State rules follow their base rules, since at zero specificity the source order decides. */
+/* The scoped base gives every cui-* element line-height 1.5, but these sat inside the popover's
+   body and followed its 1.55: each part hands the inherited one on (#466). */
+:where(
+  .cui-date-picker__label,
+  .cui-date-picker__calendar,
+  .cui-date-picker__header,
+  .cui-date-picker__header-title,
+  .cui-date-picker__years-range,
+  .cui-date-picker__weekdays,
+  .cui-date-picker__weekday,
+  .cui-date-picker__days,
+  .cui-date-picker__options,
+  .cui-date-picker__today,
+  .cui-date-picker__day,
+  .cui-date-picker__option
+) {
+  line-height: inherit;
+}
+
+:where(.cui-date-picker__label) {
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+.cui-date-picker__label {
+  display: block;
+}
+
+:where(.cui-date-picker__icon) {
+  color: var(--cui-text-tertiary);
+}
+
+:where(.cui-date-picker__calendar) {
+  padding: calc(0.25rem * var(--cui-density-scale, 1));
+}
+.cui-date-picker__calendar {
+  min-width: 260px;
+}
+
+.cui-date-picker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(0.5rem * var(--cui-density-scale, 1));
+}
+.cui-date-picker__header-title {
+  display: flex;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+}
+/* Beats CuiButton's own weight, whichever stylesheet loads last. */
+.cui-button.cui-date-picker__title-btn {
+  font-weight: 600;
+}
+:where(.cui-date-picker__years-range) {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--cui-text-body);
+}
+
+.cui-date-picker__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+}
+:where(.cui-date-picker__weekday) {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cui-text-tertiary);
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) 0;
+}
+.cui-date-picker__weekday {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cui-date-picker__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: calc(2px * var(--cui-density-scale, 1));
+}
+.cui-date-picker__options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(4px * var(--cui-density-scale, 1));
+}
+.cui-date-picker__today {
+  margin-top: calc(0.5rem * var(--cui-density-scale, 1));
+  text-align: center;
+}
+
+/* Cells. A day never transitions: the keyboard crosses them (Motion). */
+:where(.cui-date-picker__day) {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--cui-text-body);
+}
+.cui-date-picker__day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+:where(.cui-date-picker__option) {
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--cui-text-body);
+}
+.cui-date-picker__option {
+  text-align: center;
+  cursor: pointer;
+}
+
+/* States: outside the month, today, the view's current month or year, selected, disabled. */
+:where(.cui-date-picker__day--outside) {
+  color: var(--cui-text-tertiary);
+}
+:where(.cui-date-picker__day--today) {
+  background: var(--cui-primary-bg);
+  color: var(--cui-primary);
+  font-weight: 600;
+}
+:where(.cui-date-picker__option--current) {
+  color: var(--cui-primary);
+}
+:where(.cui-date-picker__option--strong) {
+  font-weight: 600;
+}
+:where(.cui-date-picker__day--selected, .cui-date-picker__option--selected) {
+  background: var(--cui-date-picker-pressed-bg, var(--cui-primary));
+  color: var(--cui-date-picker-pressed-color, var(--cui-primary-text, white));
+}
+:where(.cui-date-picker__day--selected) {
+  font-weight: 600;
+}
+:where(.cui-date-picker__day--disabled) {
+  color: var(--cui-text-tertiary);
+  opacity: 0.35;
+}
+.cui-date-picker__day--disabled {
+  cursor: default;
+}
+</style>
