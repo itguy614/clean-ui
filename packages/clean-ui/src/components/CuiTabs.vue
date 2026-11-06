@@ -67,6 +67,11 @@ function onTabClick(tab: TabDefinition) {
   keyed.value = keyedButtons.value = false;
   activate(tab.value);
 }
+/** A click on the tab's own area around its button (the gap by a close button) is a click on the tab. */
+function onTabAreaClick(tab: TabDefinition) {
+  onTabClick(tab);
+  tabElement(tab.value)?.focus({ preventScroll: true });
+}
 const areaRef = ref<InstanceType<typeof CuiScrollArea> | null>(null);
 
 // Sync external v-model
@@ -171,11 +176,21 @@ function closeFromKey(e: KeyboardEvent): boolean {
   const at = list.findIndex((t) => t.value === value);
   if (at < 0 || !list[at].closeable) return false;
   e.preventDefault();
-  if (list[at].disabled) return true;
+  // A held key repeats: one press closes one tab.
+  if (e.repeat || list[at].disabled) return true;
+  const closing = list[at].value;
   const neighbour = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
-  close(list[at].value);
+  close(closing);
   if (neighbour) {
     nextTick(() => {
+      // `close` is a request: if the consumer kept the tab (a confirm, a refusal), so does focus.
+      if (tabs.value.some((t) => t.value === closing)) return;
+      // The selection went with the tab and nothing took it over: the neighbour does, or the
+      // bar would be left with no tab stop and arrow keys that do nothing.
+      if (!tabs.value.some((t) => t.value === activeTab.value)) {
+        keyed.value = keyedButtons.value = true;
+        activate(neighbour.value);
+      }
       const el = tabElement(neighbour.value);
       el?.focus({ preventScroll: true });
       const scroller = areaRef.value?.el;
@@ -283,6 +298,7 @@ const messages = useMessages();
             '--_tab-color': `var(--cui-${color})`,
           }"
           role="presentation"
+          @click.self="onTabAreaClick(tab)"
         >
           <button
             type="button"

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { defineComponent, ref } from "vue";
 import CuiTabs from "../CuiTabs.vue";
 import CuiTab from "../CuiTab.vue";
@@ -7,17 +7,27 @@ import CuiTab from "../CuiTab.vue";
 // #153 — the close button is a sibling of the tab button (a button can't hold a button), and
 // Delete closes the focused closeable tab.
 describe("CuiTabs closeable tabs (#153)", () => {
-  function closeHost(opts: { disabledTwo?: boolean } = {}) {
+  // `remove: false` is a consumer that keeps the tab on `close` (a confirm, a refusal).
+  function closeHost(opts: { disabledTwo?: boolean; remove?: boolean } = {}) {
     const closed: string[] = [];
     const wrapper = mount(
       defineComponent({
         components: { CuiTabs, CuiTab },
-        setup: () => ({ active: ref("one"), closed }),
+        setup() {
+          const items = ref([
+            { value: "one", closeable: true, disabled: false },
+            { value: "two", closeable: true, disabled: !!opts.disabledTwo },
+            { value: "three", closeable: false, disabled: false },
+          ]);
+          const onClose = (v: string) => {
+            closed.push(v);
+            if (opts.remove !== false) items.value = items.value.filter((i) => i.value !== v);
+          };
+          return { active: ref("one"), items, onClose };
+        },
         template: `
-          <CuiTabs v-model="active" @close="(v) => closed.push(v)">
-            <CuiTab value="one" label="One" closeable>1</CuiTab>
-            <CuiTab value="two" label="Two" closeable ${opts.disabledTwo ? "disabled" : ""}>2</CuiTab>
-            <CuiTab value="three" label="Three">3</CuiTab>
+          <CuiTabs v-model="active" @close="onClose">
+            <CuiTab v-for="i in items" :key="i.value" :value="i.value" :label="i.value[0].toUpperCase() + i.value.slice(1)" :closeable="i.closeable" :disabled="i.disabled">x</CuiTab>
           </CuiTabs>`,
       }),
       { attachTo: document.body },
@@ -56,9 +66,40 @@ describe("CuiTabs closeable tabs (#153)", () => {
     const tabs = wrapper.findAll<HTMLElement>('[role="tab"]');
     tabs[0].element.focus();
     key(tabs[0].element, k);
-    await wrapper.vm.$nextTick();
+    await flushPromises();
     expect(closed).toEqual(["one"]);
     expect(document.activeElement).toBe(tabs[1].element);
+    // "one" was the active tab and the consumer dropped it: the neighbour took the selection.
+    expect(tabs[1].attributes("aria-selected")).toBe("true");
+    wrapper.unmount();
+  });
+
+  it("does not move focus when the consumer keeps the tab", async () => {
+    const { wrapper, closed } = closeHost({ remove: false });
+    await wrapper.vm.$nextTick();
+    const tabs = wrapper.findAll<HTMLElement>('[role="tab"]');
+    tabs[0].element.focus();
+    key(tabs[0].element, "Delete");
+    await wrapper.vm.$nextTick();
+    expect(closed).toEqual(["one"]);
+    expect(document.activeElement).toBe(tabs[0].element);
+    wrapper.unmount();
+  });
+
+  it("ignores an auto-repeated key, so a held Delete closes one tab", async () => {
+    const { wrapper, closed } = closeHost();
+    await wrapper.vm.$nextTick();
+    const tab = wrapper.get<HTMLElement>('[role="tab"]').element;
+    key(tab, "Delete", { repeat: true });
+    expect(closed).toEqual([]);
+    wrapper.unmount();
+  });
+
+  it("a click on the tab's area beside its close button activates the tab", async () => {
+    const { wrapper } = closeHost();
+    await wrapper.vm.$nextTick();
+    await wrapper.findAll(".cui-tabs__tab")[1].trigger("click");
+    expect(wrapper.findAll('[role="tab"]')[1].attributes("aria-selected")).toBe("true");
     wrapper.unmount();
   });
 
@@ -67,11 +108,14 @@ describe("CuiTabs closeable tabs (#153)", () => {
     const wrapper = mount(
       defineComponent({
         components: { CuiTabs, CuiTab },
-        setup: () => ({ active: ref("one"), closed }),
+        setup() {
+          const showTwo = ref(true);
+          return { active: ref("one"), showTwo, onClose: (v: string) => (closed.push(v), (showTwo.value = false)) };
+        },
         template: `
-          <CuiTabs v-model="active" @close="(v) => closed.push(v)">
+          <CuiTabs v-model="active" @close="onClose">
             <CuiTab value="one" label="One">1</CuiTab>
-            <CuiTab value="two" label="Two" closeable>2</CuiTab>
+            <CuiTab v-if="showTwo" value="two" label="Two" closeable>2</CuiTab>
           </CuiTabs>`,
       }),
       { attachTo: document.body },
@@ -80,7 +124,7 @@ describe("CuiTabs closeable tabs (#153)", () => {
     const tabs = wrapper.findAll<HTMLElement>('[role="tab"]');
     tabs[1].element.focus();
     key(tabs[1].element, "Delete");
-    await wrapper.vm.$nextTick();
+    await flushPromises();
     expect(closed).toEqual(["two"]);
     expect(document.activeElement).toBe(tabs[0].element);
     wrapper.unmount();
