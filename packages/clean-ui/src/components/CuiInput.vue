@@ -425,7 +425,8 @@ function prefixIsIcon(): boolean {
   border-left-style: solid;
 }
 
-/* The separators take the field's border colour, so one token recolours both. */
+/* The separators take the field's border colour, so one token recolours both. An invalid
+   field's stay red whatever the token says, as its outer border does. */
 :where(.cui-input__prefix-button) {
   border-right-color: var(--cui-input-border, var(--_input-border));
 }
@@ -455,6 +456,14 @@ function prefixIsIcon(): boolean {
 /* --- Error state --- */
 .cui-input--error {
   border-color: var(--cui-error);
+}
+
+.cui-input--error .cui-input__prefix-button {
+  border-right-color: var(--cui-error);
+}
+
+.cui-input--error .cui-input__suffix-button {
+  border-left-color: var(--cui-error);
 }
 
 /* The ring stays the field's own (`--cui-input-focus-ring`), error or not. A red one was

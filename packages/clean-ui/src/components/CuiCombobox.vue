@@ -370,7 +370,7 @@ function optionClass(index: number, option: ComboboxOption) {
     <div
       ref="controlRef"
       class="cui-combobox__control"
-      :class="{ 'cui-combobox__control--disabled': disabled }"
+      :class="{ 'cui-combobox__control--disabled': disabled, 'cui-combobox__control--error': error }"
       :style="{
         '--_combobox-radius': RADIUS_SCALE[rounded],
         '--_combobox-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
@@ -526,6 +526,17 @@ function optionClass(index: number, option: ComboboxOption) {
 :where(.cui-combobox__control:focus-within:not(.cui-combobox__control--disabled)) {
   border-color: var(--cui-combobox-focus-border, var(--_combobox-focus-border));
   box-shadow: 0 0 0 2px var(--cui-combobox-focus-ring, var(--_combobox-focus-ring));
+}
+
+/* An invalid field keeps its error colours whatever a consumer's token says, so a themed
+   border or ring cannot hide it. Normal specificity, on purpose. */
+.cui-combobox__control--error {
+  border-color: var(--cui-error);
+}
+
+.cui-combobox__control--error:focus-within:not(.cui-combobox__control--disabled) {
+  border-color: var(--cui-error);
+  box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
 
 /* The panel and its option rows are painted by CuiListboxPanel, from this component's

@@ -102,6 +102,7 @@ const choice = useChoiceLabelling(props);
     }]"
     :style="{
       '--_radio-color': `var(--cui-${resolvedColor})`,
+      '--_radio-hover-border': `var(--cui-${resolvedColor})`,
       '--_radio-bg': `var(--cui-${resolvedColor}-bg)`,
       '--_radio-hover-color': `var(--cui-${resolvedColor}-text)`,
       '--_radio-hover-bg': `var(--cui-${resolvedColor}-solid, var(--cui-${resolvedColor}))`,
@@ -176,6 +177,7 @@ const choice = useChoiceLabelling(props);
       class="cui-radio__indicator"
       :style="{
         '--_radio-color': `var(--cui-${resolvedColor})`,
+        '--_radio-hover-border': `var(--cui-${resolvedColor})`,
         '--_radio-border': isChecked ? `var(--cui-${resolvedColor}-border)` : `var(--cui-border-strong)`,
         '--_radio-bg': isChecked ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
@@ -240,7 +242,7 @@ const choice = useChoiceLabelling(props);
 }
 
 :where(.cui-radio:hover:not(.cui-radio--disabled):not(.cui-radio--readonly) .cui-radio__indicator) {
-  border-color: var(--cui-radio-color, var(--_radio-color));
+  border-color: var(--cui-radio-hover-border, var(--_radio-hover-border));
 }
 
 .cui-radio:focus-visible {
@@ -327,7 +329,7 @@ const choice = useChoiceLabelling(props);
 
 :where(.cui-radio-button:hover:not(:disabled):not(.cui-radio-button--active)) {
   background: var(--cui-radio-bg, var(--_radio-bg));
-  border-color: var(--cui-radio-color, var(--_radio-color));
+  border-color: var(--cui-radio-hover-border, var(--_radio-hover-border));
 }
 
 :where(.cui-radio-button--active) {

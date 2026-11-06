@@ -193,8 +193,9 @@ describe("template bindings are themeable (real browser)", () => {
     /** The property a consumer's plain rule sets, when it isn't `prop` (a shorthand, say). */
     plain?: string;
   };
-  const inGroup = (): Component => ({
-    render: () => h(CuiRadioGroup, { variant: "buttons", modelValue: "a" }, () => [h(CuiRadio, { value: "a", label: "a" })]),
+  /** A button-variant group of one, selected unless `modelValue` is another value. */
+  const inGroup = (modelValue = "a"): Component => ({
+    render: () => h(CuiRadioGroup, { variant: "buttons", modelValue }, () => [h(CuiRadio, { value: "a", label: "a" })]),
   });
   const input = { modelValue: "" };
   const select = { modelValue: "", options: [] };
@@ -222,16 +223,19 @@ describe("template bindings are themeable (real browser)", () => {
     { name: "radio border", component: CuiRadio, props: { modelValue: "b", value: "a" }, part: ".cui-radio__indicator", prop: "border-top-color", token: "--cui-radio-border", value: "rgb(1, 2, 3)", plain: "border-color" },
     { name: "radio bg", component: CuiRadio, props: { modelValue: "a", value: "a" }, part: ".cui-radio__indicator", prop: "background-color", token: "--cui-radio-bg", value: "rgb(2, 3, 4)", plain: "background" },
     { name: "radio color (dot)", component: CuiRadio, props: { modelValue: "a", value: "a" }, part: ".cui-radio__dot", prop: "background-color", token: "--cui-radio-color", value: "rgb(5, 6, 7)", plain: "background" },
+    { name: "radio hover-border", component: CuiRadio, props: { modelValue: "b", value: "a" }, part: ".cui-radio__indicator", prop: "border-top-color", token: "--cui-radio-hover-border", value: "rgb(5, 6, 7)", state: "hover", at: ".cui-radio", plain: "border-color" },
     { name: "radio focus-ring", component: CuiRadio, props: { modelValue: "a", value: "a" }, part: ".cui-radio", prop: "outline-color", token: "--cui-radio-focus-ring", value: "rgb(7, 8, 9)", state: "focus", at: ".cui-radio" },
     { name: "radio button color", component: inGroup(), props: {}, part: ".cui-radio-button", prop: "color", token: "--cui-radio-color", value: "rgb(5, 6, 7)" },
     { name: "radio button bg", component: inGroup(), props: {}, part: ".cui-radio-button", prop: "background-color", token: "--cui-radio-bg", value: "rgb(2, 3, 4)", plain: "background" },
     { name: "radio button hover-bg", component: inGroup(), props: {}, part: ".cui-radio-button", prop: "background-color", token: "--cui-radio-hover-bg", value: "rgb(9, 8, 7)", state: "hover", at: ".cui-radio-button", plain: "background" },
     { name: "radio button hover-color", component: inGroup(), props: {}, part: ".cui-radio-button", prop: "color", token: "--cui-radio-hover-color", value: "rgb(6, 5, 4)", state: "hover", at: ".cui-radio-button" },
+    { name: "radio button hover-border", component: inGroup("b"), props: {}, part: ".cui-radio-button", prop: "border-top-color", token: "--cui-radio-hover-border", value: "rgb(5, 6, 7)", state: "hover", at: ".cui-radio-button", plain: "border-color" },
     { name: "radio button focus-ring", component: inGroup(), props: {}, part: ".cui-radio-button", prop: "outline-color", token: "--cui-radio-focus-ring", value: "rgb(7, 8, 9)", state: "focus", at: ".cui-radio-button" },
     { name: "toggle bg (on)", component: CuiToggle, props: { modelValue: true }, part: ".cui-toggle__track", prop: "background-color", token: "--cui-toggle-bg", value: "rgb(2, 3, 4)", plain: "background" },
     { name: "toggle color (on border)", component: CuiToggle, props: { modelValue: true }, part: ".cui-toggle__track", prop: "border-top-color", token: "--cui-toggle-color", value: "rgb(5, 6, 7)", plain: "border-color" },
     { name: "toggle color (knob)", component: CuiToggle, props: { modelValue: false }, part: ".cui-toggle__knob", prop: "background-color", token: "--cui-toggle-color", value: "rgb(5, 6, 7)", plain: "background" },
     { name: "toggle hover-border (on)", component: CuiToggle, props: { modelValue: true }, part: ".cui-toggle__track", prop: "border-top-color", token: "--cui-toggle-hover-border", value: "rgb(8, 9, 1)", state: "hover", at: ".cui-toggle", plain: "border-color" },
+    { name: "toggle hover-border (off)", component: CuiToggle, props: { modelValue: false }, part: ".cui-toggle__track", prop: "border-top-color", token: "--cui-toggle-hover-border", value: "rgb(8, 9, 1)", state: "hover", at: ".cui-toggle", plain: "border-color" },
     { name: "toggle focus-ring", component: CuiToggle, props: { modelValue: true }, part: ".cui-toggle", prop: "outline-color", token: "--cui-toggle-focus-ring", value: "rgb(7, 8, 9)", state: "focus", at: ".cui-toggle" },
     { name: "combobox border", component: CuiCombobox, props: { options: [] }, part: ".cui-combobox__control", prop: "border-top-color", token: "--cui-combobox-border", value: "rgb(1, 2, 3)", plain: "border-color" },
     { name: "combobox focus-border", component: CuiCombobox, props: { options: [] }, part: ".cui-combobox__control", prop: "border-top-color", token: "--cui-combobox-focus-border", value: "rgb(4, 5, 6)", state: "focus", at: "input", plain: "border-color" },
@@ -248,6 +252,28 @@ describe("template bindings are themeable (real browser)", () => {
     expect(await size("--cui-select-font-size: 31px")).toBe(resting);
     consumerRule(".cui-select__trigger { font-size: 27px; }");
     expect(await size()).toBe(27);
+  });
+
+  it("an invalid field keeps its error colours under a border token (#454)", async () => {
+    const host = "--cui-input-border: rgb(1, 2, 3); --cui-combobox-border: rgb(1, 2, 3); --cui-combobox-focus-border: rgb(1, 2, 3)";
+    const error = getComputedStyle(await render(CuiInput, { modelValue: "", error: true }, ".cui-input", host)).borderTopColor;
+    expect(error).not.toBe("rgb(1, 2, 3)");
+    // The attached-button separators follow the outer border.
+    const withButtons = mount(
+      { render: () => h(CuiInput, { modelValue: "", error: true }, { "suffix-button": () => h(CuiButton, null, () => "Go") }) },
+      { attachTo: newHost(host) },
+    );
+    wrappers.push(withButtons);
+    await nextTick();
+    const separator = withButtons.element.parentElement!.querySelector<HTMLElement>(".cui-input__suffix-button")!;
+    expect(getComputedStyle(separator).borderLeftColor).toBe(error);
+    const combo = await render(CuiCombobox, { options: [], error: true }, ".cui-combobox__control", host);
+    expect(getComputedStyle(combo).borderTopColor).toBe(error);
+    (combo.querySelector("input") as HTMLElement).focus();
+    await nextTick();
+    settle();
+    expect(getComputedStyle(combo).borderTopColor).toBe(error);
+    expect(getComputedStyle(combo).boxShadow).not.toContain("rgb(1, 2, 3)");
   });
 
   /** Finite transitions finish at once, so a colour is read at its target. */

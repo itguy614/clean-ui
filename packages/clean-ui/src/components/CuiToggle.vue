@@ -141,7 +141,7 @@ const choice = useChoiceLabelling(props);
         '--_toggle-height': dims.h,
         '--_toggle-color': `var(--cui-${resolvedColor})`,
         '--_toggle-bg': `var(--cui-${resolvedColor}-bg)`,
-        '--_toggle-hover-border': `var(--cui-${resolvedColor}-hover)`,
+        '--_toggle-hover-border': isChecked ? `var(--cui-${resolvedColor}-hover)` : `var(--cui-${resolvedColor})`,
         '--_toggle-active': `var(--cui-${resolvedColor}-active)`,
       }"
     >
@@ -241,7 +241,7 @@ const choice = useChoiceLabelling(props);
 }
 
 :where(.cui-toggle:hover:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track) {
-  border-color: var(--cui-toggle-color, var(--_toggle-color));
+  border-color: var(--cui-toggle-hover-border, var(--_toggle-hover-border));
 }
 
 :where(.cui-toggle:active:not(.cui-toggle--disabled):not(.cui-toggle--readonly) .cui-toggle__track) {
