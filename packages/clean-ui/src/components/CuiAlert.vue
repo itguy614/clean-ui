@@ -186,6 +186,21 @@ const messages = useMessages();
   border-radius: var(--cui-alert-radius, var(--_alert-radius));
 }
 
+/* A part's own colour has no slot in the vocabulary, so it stays a private token, but the
+   rule is zero specificity: a consumer's plain `.cui-alert__icon { color }` wins. */
+:where(.cui-alert__icon) {
+  color: var(--_alert-icon-color);
+}
+
+:where(.cui-alert__dismiss) {
+  color: var(--_alert-dismiss-color);
+}
+
+/* The glow's ring: a pseudo-element, so :where() wraps its originating element. */
+:where(.cui-alert--glow.cui-alert--mounted)::after {
+  box-shadow: 0 0 12px 2px var(--cui-alert-focus-ring, var(--_alert-focus-ring));
+}
+
 .cui-alert {
   display: flex;
   align-items: flex-start;
@@ -198,7 +213,6 @@ const messages = useMessages();
 .cui-alert__icon {
   display: flex;
   flex-shrink: 0;
-  color: var(--_alert-icon-color);
   margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 
@@ -238,7 +252,6 @@ const messages = useMessages();
   border: none;
   background: none;
   cursor: pointer;
-  color: var(--_alert-dismiss-color);
   padding: 0;
   border-radius: 0.25rem;
   opacity: 0.6;
@@ -313,7 +326,6 @@ const messages = useMessages();
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 12px 2px var(--_alert-focus-ring);
   pointer-events: none;
   animation: cui-glow-fade 2s ease-in-out infinite;
 }

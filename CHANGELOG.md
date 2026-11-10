@@ -55,6 +55,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--cui-select-font-size` now sizes the trigger as well as the options, as
   `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
   attached-button separators) whatever the token says.
+- **The rest of the components read their private tokens through the public layer, and a guard
+  keeps them there** (#454, part 2). `CuiAlert`, `CuiToast`, `CuiTabs` and `CuiTagInput` read
+  `--_<component>-*` properties directly in their stylesheets; they now go through new public
+  tokens inside zero-specificity rules, so a container token or a plain class rule wins:
+  `--cui-alert-focus-ring` and `--cui-toast-focus-ring` (the `glow` ring),
+  `--cui-tabs-color` (the active tab's text and underline bar), `--cui-tabs-focus-ring` and
+  `--cui-tag-input-border`. An icon's, a dismiss button's and a progress bar's own colours have
+  no slot in the vocabulary: they stay private, but their rules are zero specificity too, so a
+  plain `.cui-alert__icon { color }` wins. `CuiBanner`, `CuiListItem` and `CuiTooltip` already
+  read through the public layer. Nothing changes unless you set one: rendering is identical in
+  every variant, colour, state and mode. `CuiTabs` now emits its colour once on its root
+  instead of on each tab, and an invalid `CuiTagInput` carries `cui-tag-input__control--error`
+  and keeps the error colour whatever `--cui-tag-input-border` says. In `control-token.test.ts`
+  the guard now covers every component: a stylesheet that reads a `--_x-y` outside a public
+  token's fallback fails unless it is listed with a reason.
+- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
+  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
+  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
 
 ### Changed
 
