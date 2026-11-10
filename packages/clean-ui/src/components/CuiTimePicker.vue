@@ -5,12 +5,16 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { __DEV__, warnOnce } from "../utils/devWarn";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { dayPeriodLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
+
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export type TimePickerFormat = "12" | "24";
 
@@ -21,9 +25,13 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   format?: TimePickerFormat;
   /** Minute step increment */
   minuteStep?: number;
-  /** Minimum time (HH:mm) */
+  /**
+   * Earliest selectable time, in the same forms the model accepts: "HH:mm" or
+   * "hh:mm AM/PM". An invalid value, or a range with min after max, warns in
+   * development and is ignored.
+   */
   minTime?: string;
-  /** Maximum time (HH:mm) */
+  /** Latest selectable time. Same form as `minTime`. */
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
@@ -92,9 +100,12 @@ function parseTime(val: string) {
   // Try "hh:mm AM/PM"
   const m12 = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (m12) {
-    hours.value = parseInt(m12[1]);
+    const h = parseInt(m12[1]);
+    const p = m12[3].toUpperCase() as "AM" | "PM";
+    // A 24h picker holds the hour on the 24h clock, so "03:00 PM" is 15 there.
+    hours.value = props.format === "24" ? (h % 12) + (p === "PM" ? 12 : 0) : h;
     minutes.value = parseInt(m12[2]);
-    period.value = m12[3].toUpperCase() as "AM" | "PM";
+    period.value = p;
   }
 }
 
@@ -109,7 +120,69 @@ function formatOutput(labels?: { AM: string; PM: string }): string {
   return `${String(hours.value).padStart(2, "0")}:${String(minutes.value).padStart(2, "0")} ${labels ? labels[period.value] : period.value}`;
 }
 
+/** Minutes since midnight for a 24h clock time, or a 12h one with its period. */
+function toMinutes(h: number, m: number, p: "AM" | "PM"): number {
+  return (props.format === "12" ? (h % 12) + (p === "PM" ? 12 : 0) : h) * 60 + m;
+}
+
+/** A "HH:mm" or "hh:mm AM/PM" string as minutes since midnight, or null if it is neither. */
+function parseClock(val: string): number | null {
+  const m24 = val.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) {
+    const h = parseInt(m24[1]);
+    const m = parseInt(m24[2]);
+    return h <= 23 && m <= 59 ? h * 60 + m : null;
+  }
+  const m12 = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (m12) {
+    const h = parseInt(m12[1]);
+    const m = parseInt(m12[2]);
+    return h >= 1 && h <= 12 && m <= 59 ? (h % 12) * 60 + m + (m12[3].toUpperCase() === "PM" ? 720 : 0) : null;
+  }
+  return null;
+}
+
+/**
+ * The selectable range in minutes since midnight, or null when there is none to enforce:
+ * neither bound set, or the bounds are unusable. A bad range is ignored whole rather than
+ * half-applied, so one typo cannot silently narrow the picker.
+ */
+const range = computed<{ lo: number; hi: number } | null>(() => {
+  if (!props.minTime && !props.maxTime) return null;
+  const lo = props.minTime ? parseClock(props.minTime) : 0;
+  const hi = props.maxTime ? parseClock(props.maxTime) : 1439;
+  if (lo === null || hi === null || lo > hi) {
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnOnce(
+        `[clean-ui] CuiTimePicker: ignoring minTime="${props.minTime ?? ""}" maxTime="${props.maxTime ?? ""}". ` +
+          `Use "HH:mm" or "hh:mm AM/PM", with minTime not after maxTime.`,
+      );
+    }
+    return null;
+  }
+  return { lo, hi };
+});
+
+/** Hold the current time inside the range, moving it to the nearest bound. */
+function clampToRange() {
+  if (!range.value) return;
+  const total = toMinutes(hours.value, minutes.value, period.value);
+  const next = Math.min(Math.max(total, range.value.lo), range.value.hi);
+  if (next === total) return;
+  const h24 = Math.floor(next / 60);
+  if (props.format === "12") {
+    period.value = h24 >= 12 ? "PM" : "AM";
+    hours.value = h24 % 12 || 12;
+  } else {
+    hours.value = h24;
+  }
+  minutes.value = next % 60;
+}
+
 function emitValue() {
+  // Nothing outside the range is ever committed, however it got here: a typed hour, a
+  // stepper, the AM/PM buttons, or Enter on a value that arrived out of range.
+  clampToRange();
   emit("update:modelValue", formatOutput());
 }
 
@@ -124,17 +197,90 @@ const inputPlaceholder = computed(() =>
   props.placeholder ?? (props.format === "24" ? "hh:mm" : `hh:mm ${periodLabels.value.AM}`),
 );
 
-// Hour/minute limits
-const hourMin = computed(() => props.format === "12" ? 1 : 0);
-const hourMax = computed(() => props.format === "12" ? 12 : 23);
+// Hour/minute limits. With a range, the steppers' bounds (and so their aria-valuemin/max)
+// are the range's, and they stop there rather than wrapping.
+const currentHour24 = computed(() => Math.floor(toMinutes(hours.value, minutes.value, period.value) / 60));
+
+/**
+ * The displayed hours that hold a selectable minute, in the current period in 12h, in
+ * clock order. Null without a range.
+ */
+const validHours = computed<number[] | null>(() => {
+  if (!range.value) return null;
+  const shown: number[] = [];
+  for (let h = 0; h < 24; h++) {
+    if (h * 60 + 59 < range.value.lo || h * 60 > range.value.hi) continue;
+    if (props.format === "12") {
+      if ((h >= 12) !== (period.value === "PM")) continue;
+      shown.push(h % 12 || 12);
+    } else {
+      shown.push(h);
+    }
+  }
+  return shown.length ? shown : null;
+});
+
+const hourMin = computed(() =>
+  validHours.value ? Math.min(...validHours.value) : props.format === "12" ? 1 : 0);
+const hourMax = computed(() =>
+  validHours.value ? Math.max(...validHours.value) : props.format === "12" ? 12 : 23);
+
+const minuteBounds = computed(() => {
+  const r = range.value;
+  const h = currentHour24.value;
+  // An hour outside the range (a model value that arrived out of range) has no bounds of
+  // its own: keep every minute reachable rather than invert the stepper.
+  if (!r || h * 60 + 59 < r.lo || h * 60 > r.hi) return { min: 0, max: 59 };
+  return { min: Math.max(r.lo - h * 60, 0), max: Math.min(r.hi - h * 60, 59) };
+});
+
+/**
+ * A 12h range that includes 12 reads 12, 1, 2 ... in clock order, which numeric bounds can
+ * only express by wrapping from 12 to 1. Every other range stops at its ends: wrapping
+ * past one would jump out of it.
+ */
+const hoursWrap = computed(() =>
+  !range.value || (props.format === "12" && !!validHours.value && validHours.value.length > 1 && validHours.value.includes(12)));
+const minutesWrap = computed(() => minuteBounds.value.min === 0 && minuteBounds.value.max === 59);
+
+/** An AM/PM button is disabled when no time in that half of the day is selectable. */
+function periodDisabled(p: "AM" | "PM"): boolean {
+  if (!range.value) return false;
+  return p === "AM" ? range.value.lo >= 720 : range.value.hi < 720;
+}
 
 function onHourChange(val: number) {
+  const valid = validHours.value;
+  if (valid && !valid.includes(val)) {
+    // One arrow step onto an hour the range excludes moves on to the next selectable hour
+    // in that direction (12h wraps, as the clock does) instead of snapping to a bound.
+    const mod = props.format === "12" ? 12 : 24;
+    const delta = (val - hours.value + mod) % mod;
+    // 24h does not wrap, so a typed hour past an end is clamped rather than skipped over.
+    const dir = props.format === "24" ? 0 : delta === 1 ? 1 : delta === mod - 1 ? -1 : 0;
+    if (dir) {
+      for (let k = 1; k < mod; k++) {
+        const raw = (((hours.value + dir * k) % mod) + mod) % mod;
+        const cand = props.format === "12" ? raw || 12 : raw;
+        if (valid.includes(cand)) {
+          val = cand;
+          break;
+        }
+      }
+      if (val !== hours.value && !valid.includes(val)) return;
+    }
+  }
   hours.value = val;
   emitValue();
 }
 
 function onMinuteChange(val: number) {
   minutes.value = val;
+  emitValue();
+}
+
+function onPeriodClick(p: "AM" | "PM") {
+  period.value = p;
   emitValue();
 }
 
@@ -154,7 +300,7 @@ const panelEl = useTemplateRef<HTMLElement>("panelEl");
 let cachedFields: HTMLElement[] = [];
 function panelFields(): HTMLElement[] {
   if (cachedFields.length === 0) {
-    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period:not(:disabled)') ?? [])];
   }
   return cachedFields;
 }
@@ -351,7 +497,7 @@ defineExpose({ el: rootEl, focus, blur });
             orientation="vertical"
             size="sm"
             :pad="2"
-            wrap
+            :wrap="hoursWrap"
             @update:model-value="onHourChange"
           />
 
@@ -362,13 +508,13 @@ defineExpose({ el: rootEl, focus, blur });
           <CuiInputStepper
             :aria-labelledby="minutesNameId"
             :model-value="minutes"
-            :min="0"
-            :max="59"
+            :min="minuteBounds.min"
+            :max="minuteBounds.max"
             :step="minuteStep"
             orientation="vertical"
             size="sm"
             :pad="2"
-            wrap
+            :wrap="minutesWrap"
             @update:model-value="onMinuteChange"
           />
 
@@ -385,7 +531,8 @@ defineExpose({ el: rootEl, focus, blur });
                 minWidth: '2.5rem',
               }"
               class="cui-time-picker__period"
-              @click="period = 'AM'; emitValue()"
+              :disabled="periodDisabled('AM')"
+              @click="onPeriodClick('AM')"
             >{{ periodLabels.AM }}</CuiButton>
             <CuiButton
               variant="ghost"
@@ -398,7 +545,8 @@ defineExpose({ el: rootEl, focus, blur });
                 minWidth: '2.5rem',
               }"
               class="cui-time-picker__period"
-              @click="period = 'PM'; emitValue()"
+              :disabled="periodDisabled('PM')"
+              @click="onPeriodClick('PM')"
             >{{ periodLabels.PM }}</CuiButton>
           </div>
         </div>

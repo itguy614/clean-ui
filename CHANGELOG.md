@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
+  documented as constraints but read by nothing. Both take the forms the model uses
+  (`"HH:mm"` or `"hh:mm AM/PM"`). The steppers' bounds, and so their `aria-valuemin` and
+  `aria-valuemax`, follow the range and stop at it rather than wrapping; a typed or stepped
+  value is clamped to the nearest bound, nothing outside the range is committed, and an
+  AM/PM button with no selectable time is disabled. The model value stays `hh:mm AM/PM`. An
+  invalid or inverted range warns in development and is ignored.
 - `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
 - The column manager shows a lock, with an accessible name, on a frozen column
   (`messages.dataGrid.frozenColumn`).

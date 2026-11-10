@@ -10,6 +10,7 @@ const range2 = ref<DateRangeValue>({ start: null, end: null });
 const range3 = ref<DateRangeValue>({ start: null, end: null });
 const range4 = ref<DateRangeValue>({ start: null, end: null });
 const range5 = ref<DateRangeValue>({ start: null, end: null });
+const range6 = ref<DateRangeValue>({ start: null, end: null });
 </script>
 
 <template>
@@ -124,6 +125,17 @@ const range5 = ref<DateRangeValue>({ start: null, end: null });
           min-date="2025-01-01"
           max-date="2025-12-31"
         />
+      </Example>
+
+      <!-- Sizes -->
+      <Example title="Sizes" :code="`<CuiDateRangePicker size=&quot;sm&quot; />
+<CuiDateRangePicker size=&quot;md&quot; />
+<CuiDateRangePicker size=&quot;lg&quot; />`">
+        <CuiFlex gap="4" class="items-end flex-wrap">
+          <CuiDateRangePicker v-model="range6" size="sm" label="Small" />
+          <CuiDateRangePicker v-model="range6" size="md" label="Medium" />
+          <CuiDateRangePicker v-model="range6" size="lg" label="Large" />
+        </CuiFlex>
       </Example>
 
       <!-- Blackout dates blocking range -->
