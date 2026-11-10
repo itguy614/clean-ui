@@ -165,7 +165,7 @@ const tokens = computed(() => {
     "--_listbox-panel-bg": token("panel-bg", "var(--cui-surface-base)"),
     "--_listbox-panel-border": token("panel-border", "1px solid var(--cui-border)"),
     "--_listbox-panel-radius": token("panel-radius", "0.5rem"),
-    "--_listbox-panel-shadow": token("panel-shadow", "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)"),
+    "--_listbox-panel-shadow": token("panel-shadow", "var(--cui-shadow-md)"),
     "--_listbox-panel-padding": token("panel-padding", "calc(0.25rem * var(--cui-density-scale, 1))"),
     "--_listbox-font-size": token("font-size", props.fontSize),
     "--_listbox-item-padding": token("item-padding", props.itemPadding),

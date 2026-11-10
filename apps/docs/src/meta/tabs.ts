@@ -47,7 +47,7 @@ const meta: ComponentMeta = {
           name: "close",
           payload: "string",
           description:
-            "A closeable tab's close button was activated. Nothing is removed for you — drop the tab from your own list",
+            "A closeable tab's close button was clicked, or Delete or Backspace was pressed on the focused tab. Nothing is removed for you — drop the tab from your own list. A disabled tab never emits it",
         },
       ],
     },

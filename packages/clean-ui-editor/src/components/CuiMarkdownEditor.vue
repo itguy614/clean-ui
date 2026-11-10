@@ -5,6 +5,9 @@
 // Runs once, at module evaluation. See issue #86.
 import { registerEditorIcons } from "../icons";
 registerEditorIcons();
+
+// Module-scoped, for the literal half of the dev guard (see duplicate-guard.ts).
+declare const process: { env: { NODE_ENV?: string } };
 </script>
 
 <script setup lang="ts">
@@ -26,7 +29,7 @@ import {
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
 import { exitListWithBlankLine } from "../language/exit-list-blank-line";
-import { registerEditorInstance, warnDev, translateCodeMirrorError } from "../duplicate-guard";
+import { __DEV__, registerEditorInstance, warnDev, translateCodeMirrorError } from "../duplicate-guard";
 import { throttle } from "../utils/throttle";
 import { revealExtension, setActiveConstructsEffect } from "../reveal";
 import { codeBackgroundPlugin } from "../theme/code-decorations";
@@ -308,8 +311,8 @@ function parseAdvanced(update: ViewUpdate): boolean {
 }
 
 function reportPluginWarnings(warnings: RegistryWarning[]) {
-  for (const warning of warnings) {
-    warnDev(`[CuiMarkdownEditor] ${warning.message}`);
+  if (__DEV__ && process.env.NODE_ENV !== "production") {
+    for (const warning of warnings) warnDev(`[CuiMarkdownEditor] ${warning.message}`);
   }
 }
 

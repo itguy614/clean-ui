@@ -80,6 +80,21 @@ const meta: ComponentMeta = {
     { name: "expandedIds", signature: "() => (string | number)[]", description: "The ids currently expanded" },
     { name: "el", signature: "HTMLElement", description: "The root element" },
   ],
+
+  tokens: [
+    { name: "--cui-tree-view-bg", default: "transparent", description: "Row fill" },
+    { name: "--cui-tree-view-color", default: "var(--cui-text-body)", description: "Row text (a disabled row: var(--cui-text-tertiary))" },
+    { name: "--cui-tree-view-pressed-bg", default: "var(--cui-primary-bg)", description: "Selected row fill" },
+    { name: "--cui-tree-view-pressed-color", default: "var(--cui-primary)", description: "Selected row text" },
+    { name: "--cui-tree-view-border", default: "var(--cui-border-strong, var(--cui-border))", description: "Connector line colour" },
+    { name: "--cui-tree-view-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring colour, drawn on the row" },
+    { name: "--cui-tree-view-radius", default: "var(--cui-radius-sm, 0.25rem)", description: "Row corner radius, and so the focus ring's" },
+    { name: "--cui-tree-view-px", default: "0.5rem (size and density)", description: "Row horizontal padding; the first level's indent and the connectors follow it" },
+    { name: "--cui-tree-view-py", default: "0.25rem (size and density)", description: "Row vertical padding; the connectors' midpoint follows it" },
+    { name: "--cui-tree-view-gap", default: "0.25rem (density-scaled)", description: "Gap between chevron, icon and label" },
+    { name: "--cui-tree-view-font-size", default: "0.875rem (size)", description: "Row text size" },
+    { name: "--cui-tree-view-height", default: "24px minimum (size)", description: "The chevron's square hit box" },
+  ],
 };
 
 export default meta;
