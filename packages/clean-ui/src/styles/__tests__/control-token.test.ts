@@ -404,6 +404,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiAvatarGroup.vue": { "avatar-group-spacing": `the overlap follows the \`spacing\` prop (${GEOMETRY})` },
   "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
   "CuiContextMenu.vue": { "context-menu-transform-origin": TRANSFORM_ORIGIN },
+  "CuiDateRangePicker.vue": { "date-range-picker-field-width": `the start and end fields are as wide as the \`format\` prop's text (${GEOMETRY})` },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
   "CuiPopover.vue": { "popover-transform-origin": TRANSFORM_ORIGIN },
