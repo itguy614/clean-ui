@@ -187,12 +187,13 @@ describe("the grid managers look the same as their inline-style implementation (
       items.forEach((it, i) => {
         Object.assign(out, {
           [`item${i}`]: [it, ["display", "align-items", "color", "background-color", "padding-left"]],
-          [`item${i}-row`]: [it.querySelector(":scope > div"), VM_ROW],
-          [`item${i}-label`]: [it.querySelector(":scope > div > span"), ["display", "align-items", "column-gap"]],
-          [`item${i}-check`]: [it.querySelector(":scope > div > span > .cui-icon"), ["color", "width"]],
+          [`item${i}-row`]: [it.querySelector("div"), VM_ROW],
+          [`item${i}-label`]: [it.querySelector("div > span"), ["display", "align-items", "column-gap"]],
+          [`item${i}-check`]: [it.querySelector("div > span > .cui-icon"), ["color", "width"]],
           [`item${i}-delete`]: [it.querySelector("button"), VM_DELETE],
           [`item${i}-delete-icon`]: [it.querySelector("button .cui-icon"), ["width", "color"]],
-          [`item${i}-icon`]: [it.querySelector(":scope > .cui-icon"), ["color", "width"]],
+          // The icon of an action item (save, save as, reset): the ones with no row of their own.
+          [`item${i}-icon`]: [it.querySelector("div") ? null : it.querySelector(".cui-icon"), ["color", "width"]],
         });
       });
       return out;
@@ -215,6 +216,27 @@ describe("the grid managers look the same as their inline-style implementation (
           await frames(14);
         }
         check(name, snapshot(locateVm()));
+      });
+    }
+
+    // A loaded view the grid has since moved away from: the dirty badge, and "save" on top of "save as".
+    for (const dark of [false, true]) {
+      const name = `vm-dirty${dark ? "-dark" : ""}`;
+      it(name, async () => {
+        await openMenu({ dark });
+        await userEvent.click(document.querySelectorAll<HTMLElement>('[role="menuitem"]')[0]);
+        await frames(8);
+        await userEvent.click(host!.querySelector<HTMLElement>(".cui-data-grid-column-manager button")!);
+        await frames(12);
+        await userEvent.click(document.querySelector<HTMLElement>(".cui-data-grid-column-manager__row .cui-checkbox")!);
+        await frames(4);
+        await userEvent.keyboard("{Escape}");
+        await frames(12);
+        await userEvent.click(triggerOf());
+        await frames(14);
+        const parts = locateVm();
+        expect(parts.badge[0], "the grid is dirty, so the trigger carries a badge").not.toBeNull();
+        check(name, snapshot(parts));
       });
     }
 
