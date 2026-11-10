@@ -88,7 +88,7 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
     const { table, scroller } = await scrolledGrid({
       columns: [
         { key: "name", label: "Name", width: "100px" },
-        { label: "Reads", children: [{ key: "r1", label: "R1", sticky: true, width: "100px" }, { key: "r2", label: "R2", width: "300px" }] },
+        { label: "Reads", children: [{ key: "r1", label: "R1", sticky: true, width: "100px" }, { key: "r2", label: "R2", sticky: true, width: "100px" }] },
         { key: "z", label: "Z", width: "300px" },
       ],
       data: data.map((r) => ({ ...r, name: r.epc, z: 1 })),
@@ -98,16 +98,21 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
     await frames(2);
     const group = cell(table, "Reads");
     const leaf = cell(table, "R1");
+    // a frozen group is wholly frozen (#465): its spanning cell pins over its whole span too
+    expect(rect(group).left).toBeCloseTo(rect(scroller).left, 0);
+    expect(rect(group).width).toBeCloseTo(200, 0);
+    expect(getComputedStyle(group).position).toBe("sticky");
     expect(rect(leaf).left).toBeCloseTo(rect(scroller).left, 0);
     expect(rect(leaf).top).toBeCloseTo(rect(group).bottom, 0);
   });
 
   describe("group separators", () => {
     const RULE = "rgb(255, 0, 0)";
+    // both groups are frozen, so they lead (#465); "name" scrolls
     const sepColumns: DataGridColumnDef[] = [
-      { key: "name", label: "Name", width: "100px" },
-      { label: "North", children: [{ key: "a1", label: "A1", sticky: true, width: "100px" }, { key: "a2", label: "A2", width: "200px" }] },
-      { label: "South", children: [{ key: "b1", label: "B1", sticky: true, width: "100px" }, { key: "b2", label: "B2", width: "300px" }] },
+      { key: "name", label: "Name", width: "300px" },
+      { label: "North", children: [{ key: "a1", label: "A1", sticky: true, width: "100px" }, { key: "a2", label: "A2", sticky: true, width: "50px" }] },
+      { label: "South", children: [{ key: "b1", label: "B1", sticky: true, width: "100px" }, { key: "b2", label: "B2", sticky: true, width: "50px" }] },
     ];
     const sepData = data.map((r) => ({ ...r, name: r.epc, a1: 1, a2: 2, b1: 3, b2: 4 }));
     const rule = (el: Element) => getComputedStyle(el, "::before");
@@ -129,7 +134,7 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
     it("draws a themeable rule on the second group's first leaf, in the header and the body, not the first group's", async () => {
       const { table } = await grid();
       const b1Head = cell(table, "B1");
-      const b1Body = table.querySelector("tbody tr")!.children[3];
+      const b1Body = table.querySelector("tbody tr")!.children[2];
       for (const el of [b1Head, cell(table, "South"), b1Body]) {
         expect(rule(el).content).not.toBe("none");
         expect(rule(el).width).toBe("1px");
@@ -137,7 +142,7 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
       }
       expect(rule(cell(table, "A1")).content).toBe("none");
       expect(rule(cell(table, "North")).content).toBe("none");
-      expect(rule(table.querySelector("tbody tr")!.children[1]).content).toBe("none");
+      expect(rule(table.querySelector("tbody tr")!.children[0]).content).toBe("none");
     });
 
     it("keeps the rule with a frozen group-start leaf on horizontal scroll", async () => {
@@ -146,9 +151,9 @@ describe("CuiDataGrid column groups: sticky header and frozen columns (real brow
       scroller.scrollTop = 40;
       await frames(2);
       const b1 = cell(table, "B1");
-      const bodyB1 = table.querySelector("tbody tr")!.children[3];
-      // pinned beside A1, still carrying its rule
-      expect(rect(b1).left).toBeCloseTo(rect(scroller).left + 100, 0);
+      const bodyB1 = table.querySelector("tbody tr")!.children[2];
+      // pinned beside North, still carrying its rule
+      expect(rect(b1).left).toBeCloseTo(rect(scroller).left + 150, 0);
       expect(rect(bodyB1).left).toBeCloseTo(rect(b1).left, 0);
       expect(getComputedStyle(b1).position).toBe("sticky");
       expect(rule(b1).backgroundColor).toBe(RULE);
