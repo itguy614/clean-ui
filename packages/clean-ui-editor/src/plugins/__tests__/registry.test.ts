@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { definePlugin } from "../define-plugin";
 import { buildRegistry } from "../registry";
 import { DEFAULT_PLUGINS } from "../default-plugins";
@@ -103,5 +103,24 @@ describe("buildRegistry", () => {
     if (!result.ok) return;
 
     expect(result.registry.warnings).toEqual([]);
+  });
+
+  describe("in a production build (#462)", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    });
+
+    it("builds no warning text, though the same plugins warn in development", async () => {
+      const dup = [definePlugin({ id: "a", commands: {} }), definePlugin({ id: "a", commands: {} })];
+      const dev = buildRegistry(dup);
+      expect(dev.ok && dev.registry.warnings).toHaveLength(1);
+
+      vi.stubEnv("NODE_ENV", "production");
+      vi.resetModules();
+      const prod = await import("../registry");
+      const result = prod.buildRegistry(dup);
+      expect(result.ok && result.registry.warnings).toEqual([]);
+    });
   });
 });

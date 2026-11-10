@@ -7,8 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.10
+
+- **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
+  order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
+  (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
+  group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
+  unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
+- **A sortable header with a header slot no longer puts the slot inside the sort button.** The
+  slot content sits beside an icon-only sort button, named by the column's label (with its
+  group), so interactive content in a header slot is valid. A click on plain slot content still
+  sorts. A selector that targeted `.cui-data-grid-table__sort` around slot content no longer
+  matches it.
+
+### Fixed
+
+- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
+  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
+  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
+  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+
+### Added
+
+- `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
+- The column manager shows a lock, with an accessible name, on a frozen column
+  (`messages.dataGrid.frozenColumn`).
+- `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
+
+- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
+  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
+  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
+
 ### Changed
 
+- **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
+  new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
+  Each line is a block `span` in `<code>`; the gutter is inside the `<pre>`. A selector
+  that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
+  `codeBlock.region` message name the scroll region; an `aria-label` attribute on
+  `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
+- `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
+  ("Reads · A1").
+- A frozen column group's header cell pins across its whole span on horizontal scroll.
+- **Shadows strengthen in dark mode on more surfaces** (#335). They were written as a black
+  literal, as faint on a dark surface as on a light one. They read the elevation tokens now,
+  so light mode is as before, give or take the differences below, and dark mode is darker.
+  CuiCard `elevated` is `xs` (unchanged in light); CuiPopover and the select, combobox and
+  tag-input panel are `md` (was a layered `0 8px 24px -4px / 0.12` + `0 2px 8px -2px / 0.08`:
+  now `0 4px 16px / 0.1`, one value shared with CuiDropdownMenu); CuiToast is `md` (was
+  `0 8px 24px / 0.15`); CuiSlideover is `lg` (was `0 16px 48px / 0.15`, now `/ 0.2`);
+  CuiDataGridBulkBar is `up` (unchanged in light). The Tabs pill, Toggle knob, Slider thumb
+  and ColorPicker handles keep their own.
+- **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
+- **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
 - **`CuiColorPicker` is styled by a stylesheet instead of inline style objects (#467, part of #213).**
   It looks the same. A plain rule such as `.cui-color-picker { width: 320px }` or a token on a
   container now wins without `!important`. New tokens: `--cui-color-picker-width`, `-height`
