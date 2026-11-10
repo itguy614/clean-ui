@@ -414,6 +414,51 @@ describe("converted component stylesheets read every private property through it
 });
 
 /**
+ * The same read-through contract for a converted component with NO dynamic part: it emits no
+ * private `--_<c>-<slot>` property (its states are modifier classes, its geometry static), so
+ * `CONVERTED_SFC_STYLESHEETS` cannot list it: that list requires at least one private read, to
+ * stop a scan that matched nothing passing vacuously. These still get the half that matters
+ * for a consumer: every rule that reads a public `--cui-<c>-<slot>` token is a whole-compound
+ * `:where()` (so a consumer's plain rule at (0,1,0) wins), and the stylesheet reads some token at
+ * all. A component that later gains a private property moves to `CONVERTED_SFC_STYLESHEETS`,
+ * and fails here until it does. Inline keys are `CONVERTED`'s job.
+ */
+const STATIC_SFC_STYLESHEETS: Array<{ file: string; component: string; reason: string; issue: string }> = [
+  { file: "CuiModalHeader.vue", component: "modal-header", reason: "its state is the close button's :hover rule and static geometry", issue: "#489" },
+  { file: "CuiModalBody.vue", component: "modal-body", reason: "static geometry; the only variants are modifier classes", issue: "#489" },
+  { file: "CuiModalFooter.vue", component: "modal-footer", reason: "static geometry and paint", issue: "#489" },
+  { file: "CuiDataGridViewManager.vue", component: "data-grid-view-manager", reason: "the active view and a disabled item are modifier classes", issue: "#489" },
+];
+
+describe("converted component stylesheets with no dynamic part still read public tokens through :where() (#489)", () => {
+  it("lists a component only once, and not as one that has private reads", () => {
+    const listed = STATIC_SFC_STYLESHEETS.map((c) => c.file);
+    expect(listed.filter((f, i) => listed.indexOf(f) !== i)).toEqual([]);
+    expect(listed.filter((f) => CONVERTED_SFC_STYLESHEETS.some((c) => c.file === f))).toEqual([]);
+  });
+
+  for (const { file, component, reason, issue } of STATIC_SFC_STYLESHEETS) {
+    const path = COMPONENTS.get(file);
+    const css = path ? sfcStyles(readFileSync(path, "utf-8")) : "";
+    const hint = `${file} (${issue}, ${reason})`;
+
+    it(`${file} emits no private --_${component}-* read: otherwise it belongs in CONVERTED_SFC_STYLESHEETS`, () => {
+      expect(path, `${file} is not a component`).toBeDefined();
+      expect(privateReads(css).filter((r) => r.name.startsWith(`${component}-`)).map((r) => `var(--_${r.name})`), hint).toEqual([]);
+    });
+
+    it(`${file} wraps every rule that reads a public --cui-${component}-* token whole in :where()`, () => {
+      const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: splitSelectorList(m[1].trim()), body: m[2] }));
+      const reading = new RegExp(`var\\(\\s*--cui-${component}-`);
+      const selectors = rules.filter(({ body }) => reading.test(body)).flatMap(({ selectors }) => selectors);
+      // A scan that matched nothing would pass vacuously.
+      expect(selectors.length).toBeGreaterThan(0);
+      expect(selectors.filter((s) => !isWholeWhere(s)), hint).toEqual([]);
+    });
+  }
+});
+
+/**
  * #454 — the guard on everywhere. A component's stylesheet may read a private
  * `--_<x>-<y>` property only as (inside the fallback of) a public `--cui-…` token, unless
  * the slot is listed here with a reason. Anything not converted above is checked too, so a
