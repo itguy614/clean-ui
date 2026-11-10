@@ -2,13 +2,14 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
+import { colorModeInitHtml } from "../../config/color-mode-init-html";
 import { workspaceAliases, workspaceVersionDefines } from "../../config/workspace-aliases";
 
 export default defineConfig({
   // GitHub Pages composed artifact: "/clean-ui/editor/" in production (see
   // config/docs-sites.mjs), "/" for local dev.
   base: process.env.VITE_BASE ?? "/",
-  plugins: [vue(), tailwindcss()],
+  plugins: [vue(), tailwindcss(), colorModeInitHtml()],
   define: workspaceVersionDefines(),
   resolve: {
     alias: workspaceAliases(),

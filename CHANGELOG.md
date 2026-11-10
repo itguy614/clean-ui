@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`CuiDataGrid`: a frozen column with no `width` no longer has the next one pinned on top of it** (#485). The grid measures the rendered header cell of a frozen column that declares no usable `width` and pins later frozen columns (and frozen group headers) after it, updating on resize, column hide/show, density and font load. A declared `width` still wins. In development, a frozen column without a `width` warns once: set `width` for a stable first layout.
 - **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
   overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
   2.1.1), and adds no tab stop while the code fits. The line-number gutter is
@@ -35,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `useColorMode()`: a persisted light, dark or system choice that sets the `dark` class on
+  `<html>` and follows `prefers-color-scheme` live while the mode is system, with
+  `restoreColorMode()` and `ssrColorModeInitScript` (a pre-paint `<head>` script). Lazy like
+  `useTheme`: importing the library reads no storage and adds no listener (#487).
 - `ssrDensityInitScript`: an inline `<head>` script that applies the stored density to
   `<html>` before first paint, beside `ssrThemeInitScript` (#463).
 - `restoreTheme()`: apply the stored theme once, without calling `useTheme()` (#463).
@@ -99,6 +104,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-px` and `-py`. A guard now requires every component to have a `<style>` block or an
   explicit, justified exemption (#213).
 
+
+- The Color Scheme page no longer says clean-ui leaves the dark toggle to you: `useColorMode()`
+  owns it, and `useColorScheme()` still only observes (#487). The docs sites' header color-mode
+  button is built on it and survives a refresh.
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
   built a style object per day cell (42 a month) and every other part was inline too, so none
   of it could be restyled without `!important`. The static paint is in a scoped stylesheet at

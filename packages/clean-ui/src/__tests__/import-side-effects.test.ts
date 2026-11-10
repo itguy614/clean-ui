@@ -9,11 +9,16 @@ describe("importing the barrel", () => {
     vi.restoreAllMocks();
     localStorage.clear();
     document.documentElement.className = "";
+    delete (window as { matchMedia?: unknown }).matchMedia;
   });
 
   it("reads and writes no storage and changes no class on <html>", async () => {
     localStorage.setItem("cui-density", "compact");
     localStorage.setItem("cui-theme", "forest");
+    localStorage.setItem("cui-color-mode", "dark");
+    // A matchMedia that records any listener: importing must not ask for one.
+    const matchMedia = vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+    Object.defineProperty(window, "matchMedia", { configurable: true, writable: true, value: matchMedia });
     document.documentElement.className = "consumer-class";
     const getItem = spyStorage("getItem");
     const setItem = spyStorage("setItem");
@@ -31,7 +36,9 @@ describe("importing the barrel", () => {
     expect(remove).not.toHaveBeenCalled();
     expect(toggle).not.toHaveBeenCalled();
     expect(document.documentElement.className).toBe("consumer-class");
-    // A stored density or theme waits for first use (#209, #463): no cui-* key is read at import.
+    // No colour-mode listener or query either (#487).
+    expect(matchMedia).not.toHaveBeenCalled();
+    // A stored density, theme or colour mode waits for first use (#209, #463): no cui-* key is read at import.
     expect(getItem.mock.calls.filter(([key]) => String(key).startsWith("cui-"))).toEqual([]);
   });
 });

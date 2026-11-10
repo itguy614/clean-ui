@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
 import { useEventListener } from "../composables/useEventListener";
@@ -7,6 +7,7 @@ import { useListNavigation } from "../composables/useListNavigation";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { RESTORE_FOCUS_ATTR } from "../utils/focusRestore";
+import { __DEV__, warnOnce } from "../utils/devWarn";
 import type { DataGridColumn, DataGridColumnGroup, DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -22,6 +23,9 @@ import CuiDropdownItem from "./CuiDropdownItem.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiContextMenu from "./CuiContextMenu.vue";
 import type { SizeableProps } from "../types/common";
+
+// Module-scoped, so the library doesn't pull Node's global types into its own build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface CuiDataGridTableProps extends SizeableProps {
   rowKey?: string;
@@ -212,6 +216,15 @@ const tableMinWidth = computed(() => {
   ]);
 });
 
+// Rendered widths of the frozen columns that declare no usable `width` (#485), read from
+// their header cells (see the observer below). Empty on the server and before mount, so a
+// first paint uses what is declared only.
+const measuredWidths = shallowRef(new Map<string, number>());
+const unsizedFrozenKeys = computed(() =>
+  // The last frozen column's width feeds no offset, so it is never measured.
+  grid.visibleColumns.value.filter((c) => grid.isFrozen(c.key) && !toLength(c.width) && c.key !== lastStickyKey.value).map((c) => c.key),
+);
+
 // Sticky column offsets: each frozen column is pinned at the summed widths of
 // the frozen columns before it, starting after the bulk-select column.
 const stickyColumnOffsets = computed(() => {
@@ -221,8 +234,9 @@ const stickyColumnOffsets = computed(() => {
   for (const col of grid.visibleColumns.value) {
     if (!grid.isFrozen(col.key)) continue;
     offsets.set(col.key, sumLengths(before));
-    // Sticky without a usable width contributes nothing to later offsets.
-    const width = toLength(col.width);
+    // A declared width is the source of truth; without one, the measured header cell (#485).
+    const measured = measuredWidths.value.get(col.key);
+    const width = toLength(col.width) ?? (measured ? `${measured}px` : undefined);
     if (width) before.push(width);
   }
   return offsets;
@@ -356,13 +370,41 @@ const auxRowspan = computed(() => (headerRows.value.length > 1 ? 2 : undefined))
 const headRow1 = ref<HTMLElement | null>(null);
 const headRow1Height = ref(0);
 let headObserver: ResizeObserver | undefined;
-onMounted(() => {
+// One observer for the first header row's height and the unsized frozen columns' widths.
+// Pinning only moves a cell, never resizes it, and a column's offset depends on the columns
+// before it alone, so the widths settle left to right with no loop.
+function measureHead() {
   const el = headRow1.value;
-  if (!el || typeof ResizeObserver === "undefined") return;
+  if (!el) return;
   headRow1Height.value = el.offsetHeight;
-  headObserver = new ResizeObserver(() => (headRow1Height.value = el.offsetHeight));
+  const next = new Map<string, number>();
+  for (const th of el.closest("thead")?.querySelectorAll<HTMLElement>("[data-cui-col]") ?? []) {
+    if (unsizedFrozenKeys.value.includes(th.dataset.cuiCol!)) next.set(th.dataset.cuiCol!, th.getBoundingClientRect().width);
+  }
+  const prev = measuredWidths.value;
+  if (next.size !== prev.size || [...next].some(([k, w]) => Math.abs(w - (prev.get(k) ?? -1)) > 0.01)) measuredWidths.value = next;
+}
+function observeHead() {
+  const el = headRow1.value;
+  if (!el) return;
+  for (const key of unsizedFrozenKeys.value) {
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnOnce(
+        `[clean-ui] CuiDataGrid: frozen (sticky) column "${key}" has no usable width (a px, rem or calc() length). Its width is measured after the first paint, ` +
+          `so the columns frozen after it jump into place. Set width on every frozen column for a stable first layout.`,
+      );
+    }
+  }
+  if (typeof ResizeObserver === "undefined") return;
+  headObserver?.disconnect();
+  headObserver ??= new ResizeObserver(measureHead);
   headObserver.observe(el);
-});
+  el.closest("thead")?.querySelectorAll<HTMLElement>("[data-cui-col]").forEach((th) => {
+    if (unsizedFrozenKeys.value.includes(th.dataset.cuiCol!)) headObserver!.observe(th);
+  });
+  measureHead();
+}
+onMounted(observeHead);
 onBeforeUnmount(() => headObserver?.disconnect());
 
 // A frozen group is frozen wholly (the grid unfreezes a mixed one), so its spanning cell pins
@@ -433,6 +475,9 @@ const renderedRows = computed<DataGridRow[]>(() =>
 // A row is found by its place in renderedRows, not by rowKey, which may be missing or
 // repeated, and by this grid's own id, so a row of a grid nested in a cell is not ours.
 const gridId = useCuiId("data-grid");
+
+// headerRows too: a leaf can get a new <th> (moved between rows) with the same key set.
+watch([unsizedFrozenKeys, headerRows], observeHead, { flush: "post" });
 function rowWithActions(el: Element): DataGridRow | undefined {
   const [owner, index] = el.closest("[data-cui-grid-row]")?.getAttribute("data-cui-grid-row")?.split(":") ?? [];
   const row = owner === gridId ? renderedRows.value[Number(index)] : undefined;
@@ -570,6 +615,7 @@ const totalCols = computed(() => {
                 'cui-data-grid-table__head-leaf': cell.groupId,
                 'cui-data-grid-table__group-start': groupStarts.keys.has(cell.key),
               }"
+              :data-cui-col="cell.key"
               :headers="cell.groupId"
               :align="cell.col.align"
               :width="cell.col.width"
