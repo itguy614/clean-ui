@@ -217,6 +217,7 @@ describe.each(["light", "dark"] as const)("panel gap to the trigger (%s, real br
   describe.each(cases)("$name", (c) => {
     it("sits the intended gap from its trigger, opening below", async () => {
       const el = host("top");
+      expect(document.querySelector(c.panel), "a panel from an earlier test is still mounted").toBeNull();
       wrapper = c.mountIt(el);
       await c.open(el);
       const panel = await settle(c.panel);
@@ -227,6 +228,7 @@ describe.each(["light", "dark"] as const)("panel gap to the trigger (%s, real br
 
     it("keeps the same gap when flipped, with no room below", async () => {
       const el = host("bottom");
+      expect(document.querySelector(c.panel), "a panel from an earlier test is still mounted").toBeNull();
       wrapper = c.mountIt(el);
       await c.open(el);
       const panel = await settle(c.panel);

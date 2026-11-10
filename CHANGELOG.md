@@ -91,8 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The date, date-range and time pickers, and any `CuiPopover` with `no-arrow`, now open 4px from their trigger, 6px closer than before (#486).** They had `CuiPopover`'s 10px default, which leaves room for an arrow they don't draw, while a Combobox or Select sat 4px away. One shared `PANEL_OFFSET` now sets the gap for every arrowless trigger-anchored panel. A popover with an arrow keeps 10px and a tooltip 8px; an explicit `offset` is unchanged. A visual change only.
-
+- **The date, date-range and time pickers, and any `CuiPopover` with `no-arrow`, now open 4px
+  from their trigger, 6px closer than before (#486).** They had `CuiPopover`'s 10px default,
+  which leaves room for an arrow they don't draw, while a Combobox or Select sat 4px away. One
+  shared `PANEL_OFFSET` now sets the gap for every arrowless trigger-anchored panel. A popover
+  with an arrow keeps 10px, and `CuiTooltip` keeps 8px (arrow or not); an explicit `offset` is
+  unchanged. A visual change only.
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
   built a style object per day cell (42 a month) and every other part was inline too, so none
   of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
