@@ -796,7 +796,11 @@
   color: inherit;
 }
 
-.cui-kbd {
+/* The helper for a bare `<kbd class="cui-kbd">`. CuiKbd carries the same class and paints
+   itself from its own stylesheet, so it opts out with `cui-kbd--keycap` (a :where(), which
+   keeps this rule at (0,1,0)); otherwise this one would outrank the component's zero-
+   specificity rules (#489). */
+.cui-kbd:where(:not(.cui-kbd--keycap)) {
   font-family: var(--cui-font-mono);
   font-size: var(--cui-font-size-code);
   background: var(--color-surface-800);
@@ -807,7 +811,7 @@
   box-shadow: inset 0 -1px 0 var(--color-surface-700);
 }
 
-:where(.dark, .dark *) .cui-kbd {
+:where(.dark, .dark *) .cui-kbd:where(:not(.cui-kbd--keycap)) {
   background: var(--color-surface-700);
   border-color: var(--color-surface-500);
   box-shadow: inset 0 -1px 0 var(--color-surface-600);

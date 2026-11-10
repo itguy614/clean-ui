@@ -82,6 +82,9 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiDataGridColumnManager.vue", issue: "#489" },
   { file: "CuiDataGridViewManager.vue", issue: "#489" },
   { file: "CuiTimePicker.vue", issue: "#489" },
+  { file: "CuiDivider.vue", issue: "#489" },
+  { file: "CuiKbd.vue", issue: "#489" },
+  { file: "CuiTimelineItem.vue", issue: "#489" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -330,6 +333,9 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     issue: "#484",
   },
   { file: "CuiConfirmDialog.vue", component: "confirm-dialog", privateOnly: {}, issue: "#489" },
+  { file: "CuiDivider.vue", component: "divider", privateOnly: { spacing: "follows the `spacing` prop: margin geometry from the data, with no slot in the vocabulary (#489)" }, issue: "#489" },
+  { file: "CuiKbd.vue", component: "kbd", privateOnly: { "min-width": "the size preset's key width, with no slot in the vocabulary and no public token (#489)" }, issue: "#489" },
+  { file: "CuiTimelineItem.vue", component: "timeline-item", privateOnly: {}, issue: "#489" },
   {
     file: "CuiToast.vue",
     component: "toast",
