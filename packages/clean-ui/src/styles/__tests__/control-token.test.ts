@@ -75,6 +75,10 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiTreeView.vue", issue: "#468" },
   { file: "CuiTreeNode.vue", issue: "#468" },
   { file: "CuiCodeBlock.vue", issue: "#484" },
+  { file: "CuiModalHeader.vue", issue: "#489" },
+  { file: "CuiModalBody.vue", issue: "#489" },
+  { file: "CuiModalFooter.vue", issue: "#489" },
+  { file: "CuiConfirmDialog.vue", issue: "#489" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -320,6 +324,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     },
     issue: "#484",
   },
+  { file: "CuiConfirmDialog.vue", component: "confirm-dialog", privateOnly: {}, issue: "#489" },
   {
     file: "CuiToast.vue",
     component: "toast",

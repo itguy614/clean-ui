@@ -21,21 +21,29 @@ withDefaults(defineProps<CuiModalBodyProps>(), {
     Flex item in the modal column: sizes to its content, then shrinks when the modal hits
     its max-height.
   -->
-  <CuiScrollArea
-    class="cui-modal-body"
-    :hidden="hidden"
-    :style="{ flex: '1 1 auto', minHeight: '0' }"
-  >
-    <div
-      class="cui-modal-body__content"
-      :style="{
-        padding: noPadding ? '0' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1))',
-        fontSize: '0.875rem',
-        lineHeight: '1.6',
-        color: 'var(--cui-text-secondary)',
-      }"
-    >
+  <CuiScrollArea class="cui-modal-body" :hidden="hidden">
+    <div class="cui-modal-body__content" :class="{ 'cui-modal-body__content--flush': noPadding }">
       <slot />
     </div>
   </CuiScrollArea>
 </template>
+
+<style scoped>
+/* Every themeable rule is a whole :where(), so a consumer's plain `.cui-modal-body__content { … }`
+   at (0,1,0) wins without !important; the flex sizing is structure and keeps normal specificity. */
+.cui-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+:where(.cui-modal-body__content) {
+  padding: var(--cui-modal-body-py, calc(0.75rem * var(--cui-density-scale, 1))) var(--cui-modal-body-px, calc(1.5rem * var(--cui-density-scale, 1)));
+  font-size: var(--cui-modal-body-font-size, 0.875rem);
+  line-height: 1.6;
+  color: var(--cui-modal-body-color, var(--cui-text-secondary));
+}
+/* After the base rule, so it wins at equal specificity; it drops the padding altogether, so
+   the padding tokens above cannot bring it back. */
+:where(.cui-modal-body__content--flush) {
+  padding: 0;
+}
+</style>

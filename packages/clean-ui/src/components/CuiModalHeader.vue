@@ -34,68 +34,88 @@ const messages = useMessages();
 </script>
 
 <template>
-  <div
-    class="cui-modal-header"
-    v-show="!hidden"
-    :style="{
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 'calc(0.75rem * var(--cui-density-scale, 1))',
-      padding: 'calc(1.25rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))',
-      flexShrink: '0',
-      background: 'var(--cui-surface-base)',
-      position: 'relative',
-      zIndex: '1',
-    }"
-  >
-    <div style="flex: 1; min-width: 0;">
+  <div class="cui-modal-header" v-show="!hidden">
+    <div class="cui-modal-header__main">
       <slot>
-        <component
-          :is="headingTag"
-          v-if="title"
-          :id="titleId"
-          class="cui-modal-header__title"
-          :style="{
-            fontSize: '1.125rem',
-            fontWeight: '600',
-            lineHeight: '1.4',
-            color: 'var(--cui-text-emphasis)',
-            margin: '0',
-          }"
-        >
+        <component :is="headingTag" v-if="title" :id="titleId" class="cui-modal-header__title">
           {{ title }}
         </component>
       </slot>
     </div>
-    <div v-if="$slots.actions" style="display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1)); flex-shrink: 0;">
+    <div v-if="$slots.actions" class="cui-modal-header__actions">
       <slot name="actions" />
     </div>
-    <button
-      v-if="!noCloseButton"
-      type="button"
-      :style="{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1.75rem',
-        height: '1.75rem',
-        border: 'none',
-        background: 'none',
-        cursor: 'pointer',
-        color: 'var(--cui-text-tertiary)',
-        padding: '0',
-        borderRadius: '0.375rem',
-        flexShrink: '0',
-        marginTop: 'calc(-0.125rem * var(--cui-density-scale, 1))',
-        marginRight: 'calc(-0.25rem * var(--cui-density-scale, 1))',
-        transition: 'color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease',
-      }"
-      :aria-label="messages.close"
-      @click="emit('close')"
-      @mouseenter="($event.target as HTMLElement).style.color = 'var(--cui-text-body)'; ($event.target as HTMLElement).style.background = 'var(--cui-primary-bg)'"
-      @mouseleave="($event.target as HTMLElement).style.color = 'var(--cui-text-tertiary)'; ($event.target as HTMLElement).style.background = 'none'"
-    >
+    <button v-if="!noCloseButton" type="button" class="cui-modal-header__close" :aria-label="messages.close" @click="emit('close')">
       <CuiIcon name="x" size="1rem" />
     </button>
   </div>
 </template>
+
+<style scoped>
+/*
+ * Every themeable rule is a whole :where(), so a consumer's plain `.cui-modal-header { … }` at
+ * (0,1,0) wins without !important; structure (display, position, flex) keeps normal
+ * specificity. The close button's hover was written from mouseenter and mouseleave handlers
+ * (an inline background and colour); it is a :hover rule now.
+ */
+.cui-modal-header {
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+:where(.cui-modal-header) {
+  gap: var(--cui-modal-header-gap, calc(0.75rem * var(--cui-density-scale, 1)));
+  padding: calc(1.25rem * var(--cui-density-scale, 1)) var(--cui-modal-header-px, calc(1.5rem * var(--cui-density-scale, 1))) calc(0.25rem * var(--cui-density-scale, 1));
+  background: var(--cui-modal-header-bg, var(--cui-surface-base));
+}
+
+.cui-modal-header__main {
+  flex: 1;
+  min-width: 0;
+}
+
+:where(.cui-modal-header__title) {
+  font-size: var(--cui-modal-header-font-size, 1.125rem);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--cui-modal-header-color, var(--cui-text-emphasis));
+  margin: 0;
+}
+
+.cui-modal-header__actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+:where(.cui-modal-header__actions) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-modal-header__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: pointer;
+}
+:where(.cui-modal-header__close) {
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--cui-text-tertiary);
+  margin-top: calc(-0.125rem * var(--cui-density-scale, 1));
+  margin-right: calc(-0.25rem * var(--cui-density-scale, 1));
+  transition:
+    color var(--cui-duration-fast) ease,
+    background var(--cui-duration-fast) ease;
+}
+:where(.cui-modal-header__close:hover) {
+  color: var(--cui-modal-header-hover-color, var(--cui-text-body));
+  background: var(--cui-modal-header-hover-bg, var(--cui-primary-bg));
+}
+</style>
