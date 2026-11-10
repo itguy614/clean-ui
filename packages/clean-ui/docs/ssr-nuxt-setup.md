@@ -5,24 +5,27 @@
 Add the inline init script to your `<head>` **before** any stylesheets in `nuxt.config.ts`:
 
 ```ts
-import { ssrThemeInitScript } from '@itguy614/clean-ui'
+import { ssrThemeInitScript, ssrDensityInitScript } from '@itguy614/clean-ui'
 
 export default defineNuxtConfig({
   app: {
     head: {
       script: [
-        {
-          children: ssrThemeInitScript,
-          type: 'text/javascript',
-        },
+        { children: ssrThemeInitScript, type: 'text/javascript' },
+        { children: ssrDensityInitScript, type: 'text/javascript' },
       ],
     },
   },
 })
 ```
 
-This reads `cui-theme` from `localStorage` and applies the correct theme class
-to `<html>` before the first paint — no flash.
+This reads `cui-theme` and `cui-density` from `localStorage` and applies the
+matching classes to `<html>` before the first paint — no flash.
+
+Importing the library applies neither setting: the stored theme and density are
+restored on the first `useTheme()` / `useDensity()` call. With the scripts above
+you need nothing more. Without them, call `restoreTheme()` and `restoreDensity()`
+at startup if the stored choice must apply before anything calls the composables.
 
 > Dark mode is class-based (toggle `.dark` on `<html>`). The library doesn't
 > persist a dark preference itself, so if your app stores one, add a matching

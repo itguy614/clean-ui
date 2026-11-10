@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading to 1.10
 
+- **Importing the library no longer applies the stored theme.** `useTheme` is now lazy, as
+  `useDensity` became in 1.9: no `cui-theme` read or write, no `<html>` class change and no
+  module-level watcher at import. The stored theme is restored on the first `useTheme()` call.
+  An app that relied on the import-time restore and does not call `useTheme()` before first
+  paint must call the new `restoreTheme()` at startup (or use `ssrThemeInitScript`).
 - **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
   order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
   (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
@@ -30,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ssrDensityInitScript`: an inline `<head>` script that applies the stored density to
+  `<html>` before first paint, beside `ssrThemeInitScript` (#463).
+- `restoreTheme()`: apply the stored theme once, without calling `useTheme()` (#463).
 - **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
   documented as constraints but read by nothing. Both take the forms the model uses
   (`"HH:mm"` or `"hh:mm AM/PM"`). The steppers' bounds, and so their `aria-valuemin` and

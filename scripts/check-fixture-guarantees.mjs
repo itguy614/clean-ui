@@ -222,6 +222,21 @@ const GUARANTEES = [
     },
   },
   {
+    id: "theme-tree-shakes",
+    name: "an app that never uses the theme composable bundles none of it (#463)",
+    check(distDir) {
+      // useTheme's storage key as a string literal, which only that module has (the class
+      // prefix `cui-theme-` is shared with the overlays' scoped-theme code, so it is not
+      // looked for). A page that doesn't call useTheme must not carry it: a sideEffects
+      // entry for it, or work at import time, is back. (The basic page uses it on purpose,
+      // and skips this in scripts/fixture-scenarios.mjs.)
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-theme["'`]/.test(js)
+        ? "found useTheme's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
     id: "no-dev-warnings",
     name: "no development warning text in the production bundle (#369)",
     check(distDir) {

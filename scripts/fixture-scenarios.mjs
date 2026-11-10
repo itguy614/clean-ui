@@ -12,7 +12,7 @@
  * `skipGuarantees` maps a guarantee id (see check-fixture-guarantees.mjs) to the reason it
  * does not hold for that page. A guarantee runs on every scenario that doesn't list it, and
  * a listed one that holds again fails, so the skip is removed. Every page passes every
- * guarantee today, so each map is empty.
+ * guarantee today except `basic`, which uses useTheme on purpose.
  */
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
@@ -22,7 +22,11 @@ import { fileURLToPath } from "node:url";
 export const FIXTURE_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../fixtures/consumer-app");
 
 export const SCENARIOS = {
-  basic: { input: "index.html", outDir: "dist", skipGuarantees: {} },
+  basic: {
+    input: "index.html",
+    outDir: "dist",
+    skipGuarantees: { "theme-tree-shakes": "App.vue calls useTheme() on purpose (#463)" },
+  },
   grid: { input: "grid.html", outDir: "dist-grid", skipGuarantees: {} },
   editor: { input: "editor.html", outDir: "dist-editor", skipGuarantees: {} },
   render: { input: "render.html", outDir: "dist-render", skipGuarantees: {} },

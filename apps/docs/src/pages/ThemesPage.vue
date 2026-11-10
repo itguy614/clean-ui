@@ -400,18 +400,33 @@ setTheme('teal')
             <code class="cui-code">cui-theme-*</code> class to <code class="cui-code">&lt;html&gt;</code>
             before the first paint. Put it in the <code class="cui-code">&lt;head&gt;</code>, before
             any stylesheets. It only covers the theme preset; if your app persists a dark-mode
-            preference, toggle the <code class="cui-code">dark</code> class the same way.
+            preference, toggle the <code class="cui-code">dark</code> class the same way. The
+            density has a matching <code class="cui-code">ssrDensityInitScript</code>; use both:
           </p>
           <pre class="cui-pre"><code class="cui-code">// nuxt.config.ts
-import { ssrThemeInitScript } from "@itguy614/clean-ui";
+import { ssrThemeInitScript, ssrDensityInitScript } from "@itguy614/clean-ui";
 
 export default defineNuxtConfig({
   app: {
     head: {
-      script: [{ children: ssrThemeInitScript, type: "text/javascript" }],
+      script: [
+        { children: ssrThemeInitScript, type: "text/javascript" },
+        { children: ssrDensityInitScript, type: "text/javascript" },
+      ],
     },
   },
 });</code></pre>
+          <p class="mt-3 mb-3 text-surface-600 dark:text-surface-400">
+            <strong>The stored theme is restored on first use, not at import.</strong> Importing the
+            library reads and writes no <code class="cui-code">cui-theme</code> setting and leaves the
+            classes on <code class="cui-code">&lt;html&gt;</code> alone. The first
+            <code class="cui-code">useTheme()</code> call restores it. An app that doesn't call
+            <code class="cui-code">useTheme()</code> before first paint and doesn't use the init script
+            should call <code class="cui-code">restoreTheme()</code> at startup. It is safe to call more
+            than once.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import { restoreTheme } from "@itguy614/clean-ui";
+restoreTheme(); // before app.mount()</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>
