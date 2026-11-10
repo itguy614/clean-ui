@@ -4,13 +4,13 @@
     {
       "package": "@itguy614/clean-ui",
       "scenario": "basic",
-      "gzipBytes": 68608,
+      "gzipBytes": 70656,
       "measured": "2026-11-10"
     },
     {
       "package": "@itguy614/clean-ui",
       "scenario": "grid",
-      "gzipBytes": 129024,
+      "gzipBytes": 131072,
       "measured": "2026-11-10"
     },
     {
