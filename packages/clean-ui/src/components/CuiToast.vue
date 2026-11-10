@@ -244,7 +244,7 @@ const messages = useMessages();
   padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   min-width: 280px;
   max-width: 420px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  box-shadow: var(--cui-shadow-md);
 }
 
 /* --- Icon --- */
