@@ -74,6 +74,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
   { file: "CuiTreeNode.vue", issue: "#468" },
+  { file: "CuiCodeBlock.vue", issue: "#484" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -310,6 +311,15 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     issue: "#454",
   },
   { file: "CuiBanner.vue", component: "banner", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiCodeBlock.vue",
+    component: "code-block",
+    privateOnly: {
+      "line-height": "the size preset's line height has no slot in the closed vocabulary, and no public token (#484)",
+      "header-font-size": "the header title's size follows the size preset; the code's own font-size is public (#484)",
+    },
+    issue: "#484",
+  },
   {
     file: "CuiToast.vue",
     component: "toast",

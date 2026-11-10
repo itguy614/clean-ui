@@ -91,6 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CuiCodeBlock` paints from a stylesheet (#484).** Its padding, background, border and text
+  colours were inline style objects, so none could be restyled without `!important`. They are
+  now zero-specificity rules in its stylesheet, with the size preset passed as private
+  properties, and a highlighted line or number is a modifier class. Nothing about how it looks
+  changes. New tokens: `--cui-code-block-bg`, `-border`, `-radius`, `-color`, `-font-size`,
+  `-px` and `-py`. A guard now requires every component to have a `<style>` block or an
+  explicit, justified exemption (#213).
+
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
   built a style object per day cell (42 a month) and every other part was inline too, so none
   of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
