@@ -424,6 +424,25 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     "toast-peek-transform": `a toast's place in the stack follows its index (${GEOMETRY})`,
     "toast-peek-opacity": `a toast's place in the stack follows its index (${GEOMETRY})`,
   },
+  // Merged by other PRs after this guard was written. Each is geometry the stylesheet reads
+  // behind no public token, as that component's own comment says; none is paint.
+  "CuiColorPicker.vue": Object.fromEntries(
+    ["radius-sm", "track-height", "thumb-size", "swatch-size", "thumb-blur"].map((s) => [
+      `color-picker-${s}`,
+      "the size preset's geometry, with no public token (see CuiColorPicker's rootVars comment)",
+    ]).concat(
+      ["hue", "value"].map((s) => [`color-picker-${s}`, "a colour that follows the picked value (the data), not a theme colour"]),
+    ),
+  ),
+  "CuiTreeNode.vue": {
+    "tree-view-depth": "this row's depth, from the data",
+    "tree-view-indent": "the size preset's indent step, with no public token (CuiTreeView emits it)",
+    "tree-view-icon-size": "the size preset's glyph size, with no public token (CuiTreeView emits it)",
+  },
+  "CuiTransferList.vue": {
+    "transfer-list-title-font-size": "a part's own size has no slot in the closed vocabulary (the option rows' font-size is public)",
+    "transfer-list-max-height": "follows the `height` prop",
+  },
   // Its own token reads (--cui-list-radius, with CuiList's private --_list-radius as the
   // fallback) are already through the public layer; the corner is a derivation of them.
   "CuiListItem.vue": {
