@@ -237,6 +237,19 @@ const GUARANTEES = [
     },
   },
   {
+    id: "color-mode-tree-shakes",
+    name: "an app that never uses the colour mode composable bundles none of it (#487)",
+    check(distDir) {
+      // useColorMode's storage key as a string literal, which only that module has. No
+      // fixture page uses it, so a hit means the module was kept: a sideEffects entry for
+      // it, or work at import time, is back.
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-color-mode["'`]/.test(js)
+        ? "found useColorMode's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
     id: "no-dev-warnings",
     name: "no development warning text in the production bundle (#369)",
     check(distDir) {

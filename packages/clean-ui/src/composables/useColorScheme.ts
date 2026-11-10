@@ -1,6 +1,8 @@
 import { ref, onMounted, onUnmounted, type Ref } from "vue";
+import { DARK_CLASS } from "../ssr-constants";
 
-export const DARK_CLASS = "dark";
+// One definition, shared with useColorMode and its init script.
+export { DARK_CLASS };
 
 function resolveIsDark(el: Element | null): boolean {
   let node: Element | null = el;

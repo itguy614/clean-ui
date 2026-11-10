@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, watch } from "vue";
+import { computed, ref, provide, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   CuiButton,
@@ -14,15 +14,17 @@ import {
   CuiToastProvider,
   useTheme,
   useDensity,
+  useColorMode,
+  type ColorMode,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
 import { ShowDebugKey } from "./keys";
 
-const isDark = ref(false);
 const showDebug = ref(false);
 const mobileNavOpen = ref(false);
 const { theme, presets, setTheme } = useTheme();
 const { density, presets: densityPresets, setDensity } = useDensity();
+const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
 
 provide(ShowDebugKey, showDebug);
 
@@ -31,10 +33,15 @@ watch(() => route.path, () => {
   mobileNavOpen.value = false;
 });
 
-function toggleDark() {
-  isDark.value = !isDark.value;
-  document.documentElement.classList.toggle("dark", isDark.value);
-}
+// One button cycling light -> dark -> system: the label and icon name the current mode, the
+// accessible name says what a press does.
+const MODE_CYCLE: ColorMode[] = ["light", "dark", "system"];
+const MODE_VIEW: Record<ColorMode, { label: string; icon: string }> = {
+  light: { label: "Light", icon: "sun" },
+  dark: { label: "Dark", icon: "moon" },
+  system: { label: "System", icon: "desktop" },
+};
+const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.value) + 1) % MODE_CYCLE.length]);
 </script>
 
 <template>
@@ -113,9 +120,14 @@ function toggleDark() {
               <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
                 {{ showDebug ? "Hide Debug" : "Show Debug" }}
               </CuiButton>
-              <CuiButton variant="ghost" size="sm" @click="toggleDark">
-                <template #prefix><CuiIcon :name="isDark ? 'sun' : 'moon'" size="sm" /></template>
-                {{ isDark ? "Light" : "Dark" }}
+              <CuiButton
+                variant="ghost"
+                size="sm"
+                :aria-label="`Color mode: ${MODE_VIEW[colorMode].label}. Switch to ${MODE_VIEW[nextColorMode].label}`"
+                @click="setColorMode(nextColorMode)"
+              >
+                <template #prefix><CuiIcon :name="MODE_VIEW[colorMode].icon" size="sm" /></template>
+                {{ MODE_VIEW[colorMode].label }}
               </CuiButton>
             </div>
           </div>
