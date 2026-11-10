@@ -38,6 +38,7 @@ const meta: ComponentMeta = {
     { name: "--cui-alert-color", default: "per variant", description: "Text colour" },
     { name: "--cui-alert-border", default: "1px solid, the role's -border", description: "Border" },
     { name: "--cui-alert-radius", default: "the rounded prop's radius", description: "Corner radius" },
+    { name: "--cui-alert-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon and dismiss colours have no token: a plain `.cui-alert__icon` or `.cui-alert__dismiss` rule wins" },
   ],
 };
 

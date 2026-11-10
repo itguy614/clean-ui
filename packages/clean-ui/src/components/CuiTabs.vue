@@ -266,6 +266,10 @@ const messages = useMessages();
       `cui-tabs--${variant}`,
       `cui-tabs--${orientation}`,
     ]"
+    :style="{
+      '--_tabs-color': `var(--cui-${color})`,
+      '--_tabs-focus-ring': `var(--cui-${color})`,
+    }"
   >
     <!-- Tab bar -->
     <div class="cui-tabs__bar-outer">
@@ -293,9 +297,6 @@ const messages = useMessages();
             'cui-tabs__tab--active': activeTab === tab.value,
             'cui-tabs__tab--disabled': tab.disabled,
             'cui-tabs__tab--closeable': tab.closeable,
-          }"
-          :style="{
-            '--_tab-color': `var(--cui-${color})`,
           }"
           role="presentation"
           @click.self="onTabAreaClick(tab)"
@@ -450,6 +451,38 @@ const messages = useMessages();
   gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
+/* --- Themeable (#454) ---
+   Zero specificity, so a consumer's own rule wins. The resting colour is in here too: the
+   active rules below are zero specificity as well and win by coming after it, where a normal
+   `.cui-tabs__tab { color }` would outrank them. The hover colour stays at normal
+   specificity, as it always has, so it still beats the active colour. */
+:where(.cui-tabs__tab) {
+  color: var(--cui-text-secondary);
+}
+
+/* --- Underline active --- */
+:where(.cui-tabs--underline .cui-tabs__tab--active) {
+  color: var(--cui-tabs-color, var(--_tabs-color));
+}
+
+:where(.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__tab--active) {
+  box-shadow: inset 0 -2px 0 0 var(--cui-tabs-color, var(--_tabs-color));
+}
+
+:where(.cui-tabs--underline.cui-tabs--vertical .cui-tabs__tab--active) {
+  box-shadow: inset -2px 0 0 0 var(--cui-tabs-color, var(--_tabs-color));
+}
+
+/* --- Segmented active --- */
+:where(.cui-tabs--segmented .cui-tabs__tab--active) {
+  color: var(--cui-tabs-color, var(--_tabs-color));
+}
+
+/* The keyboard focus ring: the tab's outline, drawn when its button has focus. */
+:where(.cui-tabs__tab:has(.cui-tabs__tab-button:focus-visible)) {
+  outline-color: var(--cui-tabs-focus-ring, var(--_tabs-focus-ring));
+}
+
 /* --- Tab button --- */
 .cui-tabs__tab {
   display: flex;
@@ -458,7 +491,6 @@ const messages = useMessages();
   gap: calc(0.375rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--cui-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -504,32 +536,19 @@ const messages = useMessages();
 }
 
 .cui-tabs__tab:has(.cui-tabs__tab-button:focus-visible) {
-  outline: 2px solid var(--_tab-color);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: -2px;
   border-radius: 0.25rem;
 }
 
-/* --- Underline active --- */
-.cui-tabs--underline .cui-tabs__tab--active {
-  color: var(--_tab-color);
-}
-
-.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__tab--active {
-  box-shadow: inset 0 -2px 0 0 var(--_tab-color);
-}
-
-.cui-tabs--underline.cui-tabs--vertical .cui-tabs__tab--active {
-  box-shadow: inset -2px 0 0 0 var(--_tab-color);
-}
-
-/* --- Segmented active --- */
+/* --- Segmented --- */
 .cui-tabs--segmented .cui-tabs__tab {
   border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 0.125rem);
 }
 
 .cui-tabs--segmented .cui-tabs__tab--active {
   background: var(--cui-surface-base);
-  color: var(--_tab-color);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
 }
 

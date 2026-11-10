@@ -49,6 +49,7 @@ const meta: ComponentMeta = {
     { name: "--cui-tag-input-radius", default: "per rounded", description: "Control corner radius" },
     { name: "--cui-tag-input-bg", default: "var(--cui-surface-base)", description: "Control background" },
     { name: "--cui-tag-input-color", default: "var(--cui-text-body)", description: "Typed text color" },
+    { name: "--cui-tag-input-border", default: "var(--cui-border-strong)", description: "Control border color (an invalid field uses the error color)" },
     { name: "--cui-tag-input-border-width", default: "1px", description: "Control border width" },
     { name: "--cui-tag-input-panel-bg", default: "var(--cui-surface-base)", description: "Suggestions panel background" },
     { name: "--cui-tag-input-panel-border", default: "1px solid var(--cui-border)", description: "Suggestions panel border" },

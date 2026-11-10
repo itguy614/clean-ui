@@ -13,6 +13,14 @@ import CuiRadioGroup from "../../components/CuiRadioGroup.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiCheckbox from "../../components/CuiCheckbox.vue";
 import CuiCombobox from "../../components/CuiCombobox.vue";
+import CuiAlert from "../../components/CuiAlert.vue";
+import CuiBanner from "../../components/CuiBanner.vue";
+import CuiToast from "../../components/CuiToast.vue";
+import CuiTabs from "../../components/CuiTabs.vue";
+import CuiTab from "../../components/CuiTab.vue";
+import CuiList from "../../components/CuiList.vue";
+import CuiListItem from "../../components/CuiListItem.vue";
+import CuiTagInput from "../../components/CuiTagInput.vue";
 
 /**
  * #333 — these properties used to be bare keys in a template `:style` binding, which outranks
@@ -183,8 +191,13 @@ describe("template bindings are themeable (real browser)", () => {
     /** The part the slot paints. */
     part: string;
     prop: string;
-    token: string;
+    /** The public token; absent for a slot with none, whose private token only a plain rule can beat. */
+    token?: string;
     value: string;
+    /** What the token is set to, when it isn't `value` (a `border` shorthand that paints `value`). */
+    tokenValue?: string;
+    /** Measure the part's pseudo-element instead (`::after`). */
+    pseudo?: string;
     /** Applied before measuring: hover or focus the element matching `at`. */
     state?: "hover" | "focus";
     at?: string;
@@ -199,7 +212,29 @@ describe("template bindings are themeable (real browser)", () => {
   });
   const input = { modelValue: "" };
   const select = { modelValue: "", options: [] };
+  const tabsOf = (props: Record<string, unknown> = {}): Component => ({
+    render: () => h(CuiTabs, { modelValue: "a", ...props }, () => [h(CuiTab, { value: "a", label: "A" }, () => "a"), h(CuiTab, { value: "b", label: "B" }, () => "b")]),
+  });
+  const listOf = (): Component => ({
+    render: () => h(CuiList, { variant: "inset" }, () => [h(CuiListItem, { title: "One" })]),
+  });
   const SLOTS: Slot[] = [
+    // --- #454, part 2: the alert, toast, tab, banner, list and tag-input slots ---
+    { name: "alert focus-ring (glow)", component: CuiAlert, props: { animation: "glow", entrance: "none" }, part: ".cui-alert", pseudo: "::after", prop: "box-shadow", token: "--cui-alert-focus-ring", value: "rgb(7, 8, 9)", contains: true },
+    { name: "alert icon colour (no token)", component: CuiAlert, props: { entrance: "none" }, part: ".cui-alert__icon", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "alert dismiss colour (no token)", component: CuiAlert, props: { entrance: "none", dismissible: true }, part: ".cui-alert__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "toast focus-ring (glow)", component: CuiToast, props: { animation: "glow" }, part: ".cui-toast", pseudo: "::after", prop: "box-shadow", token: "--cui-toast-focus-ring", value: "rgb(7, 8, 9)", contains: true },
+    { name: "toast icon colour (no token)", component: CuiToast, props: {}, part: ".cui-toast__icon", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "toast dismiss colour (no token)", component: CuiToast, props: {}, part: ".cui-toast__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "toast progress track (no token)", component: CuiToast, props: {}, part: ".cui-toast__progress", prop: "background-color", value: "rgb(2, 3, 4)", plain: "background" },
+    { name: "toast progress bar (no token)", component: CuiToast, props: {}, part: ".cui-toast__progress-bar", prop: "background-color", value: "rgb(2, 3, 4)", plain: "background" },
+    { name: "tabs color (underline text)", component: tabsOf(), props: {}, part: ".cui-tabs__tab--active", prop: "color", token: "--cui-tabs-color", value: "rgb(2, 3, 4)" },
+    { name: "tabs color (underline bar)", component: tabsOf(), props: {}, part: ".cui-tabs__tab--active", prop: "box-shadow", token: "--cui-tabs-color", value: "rgb(2, 3, 4)", contains: true },
+    { name: "tabs color (segmented text)", component: tabsOf({ variant: "segmented" }), props: {}, part: ".cui-tabs__tab--active", prop: "color", token: "--cui-tabs-color", value: "rgb(2, 3, 4)" },
+    { name: "tabs focus-ring", component: tabsOf(), props: {}, part: ".cui-tabs__tab--active", prop: "outline-color", token: "--cui-tabs-focus-ring", value: "rgb(7, 8, 9)", state: "focus", at: ".cui-tabs__tab-button" },
+    { name: "banner border (inline)", component: CuiBanner, props: { position: "inline" }, part: ".cui-banner", prop: "border-top-color", token: "--cui-banner-border", tokenValue: "1px solid rgb(1, 2, 3)", value: "rgb(1, 2, 3)", plain: "border-color" },
+    { name: "list radius (inset corner)", component: listOf(), props: {}, part: ".cui-list-item", prop: "border-top-left-radius", token: "--cui-list-radius", value: "13px", plain: "border-start-start-radius" },
+    { name: "tag-input border", component: CuiTagInput, props: { modelValue: [] }, part: ".cui-tag-input__control", prop: "border-top-color", token: "--cui-tag-input-border", value: "rgb(1, 2, 3)", plain: "border-color" },
     { name: "input height", component: CuiInput, props: input, part: ".cui-input", prop: "height", token: "--cui-input-height", value: "61px" },
     { name: "input border", component: CuiInput, props: input, part: ".cui-input", prop: "border-top-color", token: "--cui-input-border", value: "rgb(1, 2, 3)", plain: "border-color" },
     { name: "input px", component: CuiInput, props: input, part: ".cui-input__inner", prop: "padding-left", token: "--cui-input-px", value: "29px" },
@@ -276,15 +311,26 @@ describe("template bindings are themeable (real browser)", () => {
     expect(getComputedStyle(combo).boxShadow).not.toContain("rgb(1, 2, 3)");
   });
 
+  it("an invalid CuiTagInput keeps its error colour under a border token (#454)", async () => {
+    const border = (props: Record<string, unknown>) => render(CuiTagInput, { modelValue: [], ...props }, ".cui-tag-input__control", "--cui-tag-input-border: rgb(1, 2, 3)");
+    expect(getComputedStyle(await border({})).borderTopColor).toBe("rgb(1, 2, 3)");
+    const error = getComputedStyle(await border({ error: true })).borderTopColor;
+    expect(error).not.toBe("rgb(1, 2, 3)");
+    expect(error).not.toBe("");
+  });
+
   /** Finite transitions finish at once, so a colour is read at its target. */
   const settle = () =>
     document.documentElement.getAnimations({ subtree: true }).forEach((a) => a.effect?.getComputedTiming().iterations !== Infinity && a.finish());
 
-  describe.each(SLOTS)("form control slots (#454): $name", (slot) => {
+  describe.each(SLOTS)("token-layer slots (#454): $name", (slot) => {
     async function measure(hostStyle = "") {
       const host = newHost(hostStyle);
       wrappers.push(mount(slot.component, { props: slot.props, attachTo: host }));
       await nextTick();
+      // An alert's glow starts on the next frame. Only there: waiting lets a colour transition
+      // of the form controls begin before `settle()` can finish it.
+      if (slot.pseudo) await new Promise((r) => requestAnimationFrame(() => r(null)));
       if (slot.state) {
         const at = host.querySelector<HTMLElement>(slot.at!)!;
         if (slot.state === "hover") await userEvent.hover(at);
@@ -292,7 +338,7 @@ describe("template bindings are themeable (real browser)", () => {
         await nextTick();
       }
       settle();
-      const value = getComputedStyle(host.querySelector(slot.part)!).getPropertyValue(slot.prop);
+      const value = getComputedStyle(host.querySelector(slot.part)!, slot.pseudo).getPropertyValue(slot.prop);
       return { value, ok: slot.contains ? value.includes(slot.value) : value === slot.value };
     }
 
@@ -300,15 +346,15 @@ describe("template bindings are themeable (real browser)", () => {
       expect((await measure()).ok).toBe(false);
     });
 
-    it("takes the public token from a container", async () => {
-      const result = await measure(`${slot.token}: ${slot.value}`);
+    it.skipIf(!slot.token)("takes the public token from a container", async () => {
+      const result = await measure(`${slot.token}: ${slot.tokenValue ?? slot.value}`);
       expect(result.ok, result.value).toBe(true);
     });
 
     it("loses to a consumer's plain class rule, with no !important", async () => {
       // Written on the state, as a consumer would, so the rule is at least as specific as the
       // component's own state rule would be were it not zero-specificity.
-      const on = `${slot.part}${slot.state === "hover" ? ":hover" : slot.state === "focus" ? ":focus-within" : ""}`;
+      const on = `${slot.part}${slot.state === "hover" ? ":hover" : slot.state === "focus" ? ":focus-within" : ""}${slot.pseudo ?? ""}`;
       consumerRule(slot.contains ? `${on} { box-shadow: 0 0 0 2px ${slot.value}; }` : `${on} { ${slot.plain ?? slot.prop}: ${slot.value}; }`);
       const result = await measure();
       expect(result.ok, result.value).toBe(true);

@@ -7,6 +7,11 @@ const meta: ComponentMeta = {
     "Tabbed interface built from CuiTabs and CuiTab — underline or segmented, horizontal or vertical, with closeable tabs and animated panel transitions.",
   interactive: true,
 
+  tokens: [
+    { name: "--cui-tabs-color", default: "the color prop's role (--cui-primary)", description: "The active tab's text and its underline bar" },
+    { name: "--cui-tabs-focus-ring", default: "the color prop's role (--cui-primary)", description: "The outline drawn round a tab with keyboard focus" },
+  ],
+
   parts: [
     {
       name: "CuiTabs",
