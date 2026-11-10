@@ -236,6 +236,10 @@ export interface CuiCoreMessages {
     /** Accessible name for an overflowing scroll area, when it isn't given one (#143). */
     region: string;
   };
+  codeBlock: {
+    /** Accessible name for a code block's region while it scrolls (#163). */
+    region: string;
+  };
   dataGrid: {
     noResultsTitle: string;
     noResultsDescription: string;
@@ -289,6 +293,8 @@ export interface CuiCoreMessages {
     moveDown: (name: string) => string;
     /** Announced after a move: where it landed, 1-based, among its siblings. */
     moved: (name: string, position: number, total: number) => string;
+    /** Column manager: the lock beside a frozen column, which stays in place at the left (#465). */
+    frozenColumn: (name: string) => string;
     tableView: string;
     cardView: string;
   };
@@ -399,6 +405,7 @@ export const defaultMessages: CuiCoreMessages = {
   tabs: { closeTab: "Close tab", closeNamedTab: (label) => `Close ${label}` },
   table: { scrollRegionLabel: "Scrollable table" },
   scrollArea: { region: "Scrollable content" },
+  codeBlock: { region: "Scrollable code" },
   dataGrid: {
     noResultsTitle: "No results found",
     noResultsDescription: "Try adjusting your search or filters.",
@@ -428,6 +435,7 @@ export const defaultMessages: CuiCoreMessages = {
     moveUp: (name) => `Move ${name} up`,
     moveDown: (name) => `Move ${name} down`,
     moved: (name, position, total) => `${name} moved to position ${position} of ${total}`,
+    frozenColumn: (name) => `${name} is frozen and stays in place`,
     tableView: "Table view",
     cardView: "Card view",
   },

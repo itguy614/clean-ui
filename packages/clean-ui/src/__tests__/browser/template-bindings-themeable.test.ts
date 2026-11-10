@@ -250,6 +250,7 @@ describe("template bindings are themeable (real browser)", () => {
     { name: "select min-height", component: CuiSelect, props: select, part: ".cui-select__trigger", prop: "min-height", token: "--cui-select-min-height", value: "71px" },
     { name: "select px", component: CuiSelect, props: select, part: ".cui-select__trigger", prop: "padding-left", token: "--cui-select-px", value: "29px" },
     { name: "select border", component: CuiSelect, props: select, part: ".cui-select__trigger", prop: "border-top-color", token: "--cui-select-border", value: "rgb(1, 2, 3)", plain: "border-color" },
+    { name: "select font-size", component: CuiSelect, props: select, part: ".cui-select__trigger", prop: "font-size", token: "--cui-select-font-size", value: "23px" },
     { name: "select focus-ring", component: CuiSelect, props: select, part: ".cui-select__trigger", prop: "box-shadow", token: "--cui-select-focus-ring", value: "rgb(7, 8, 9)", state: "focus", at: ".cui-select__trigger", contains: true },
     { name: "checkbox border", component: CuiCheckbox, props: { modelValue: false }, part: ".cui-checkbox__indicator", prop: "border-top-color", token: "--cui-checkbox-border", value: "rgb(1, 2, 3)", plain: "border-color" },
     { name: "checkbox bg", component: CuiCheckbox, props: { modelValue: true }, part: ".cui-checkbox__indicator", prop: "background-color", token: "--cui-checkbox-bg", value: "rgb(2, 3, 4)", plain: "background" },
@@ -281,14 +282,6 @@ describe("template bindings are themeable (real browser)", () => {
     { name: "progress color (circle fill)", component: CuiProgress, props: { value: 5, variant: "circle" }, part: ".cui-progress-circle__fill", prop: "stroke", token: "--cui-progress-color", value: "rgb(5, 6, 7)" },
   ];
 
-  it("CuiSelect's trigger font size answers a plain rule, but not --cui-select-font-size, which sizes the options", async () => {
-    const size = async (hostStyle = "") => px(await render(CuiSelect, { modelValue: "", options: [] }, ".cui-select__trigger", hostStyle), "font-size");
-    const resting = await size();
-    expect(await size("--cui-select-font-size: 31px")).toBe(resting);
-    consumerRule(".cui-select__trigger { font-size: 27px; }");
-    expect(await size()).toBe(27);
-  });
-
   it("an invalid field keeps its error colours under a border token (#454)", async () => {
     const host = "--cui-input-border: rgb(1, 2, 3); --cui-combobox-border: rgb(1, 2, 3); --cui-combobox-focus-border: rgb(1, 2, 3)";
     const error = getComputedStyle(await render(CuiInput, { modelValue: "", error: true }, ".cui-input", host)).borderTopColor;
@@ -317,6 +310,23 @@ describe("template bindings are themeable (real browser)", () => {
     const error = getComputedStyle(await border({ error: true })).borderTopColor;
     expect(error).not.toBe("rgb(1, 2, 3)");
     expect(error).not.toBe("");
+  });
+
+  it("an invalid focused Input and Textarea show the error ring, which a themed focus ring does not hide (#454)", async () => {
+    const host = "--cui-input-focus-ring: rgb(1, 2, 3); --cui-textarea-focus-ring: rgb(1, 2, 3); --cui-error-focus-ring: rgb(9, 8, 7)";
+    for (const [component, part, native] of [[CuiInput, ".cui-input", "input"], [CuiTextarea, ".cui-textarea", "textarea"]] as const) {
+      const normal = await render(component, { modelValue: "" }, part, host);
+      (normal.querySelector(native) as HTMLElement).focus();
+      await nextTick();
+      settle();
+      expect(getComputedStyle(normal).boxShadow).toContain("rgb(1, 2, 3)");
+      const invalid = await render(component, { modelValue: "", error: true }, part, host);
+      (invalid.querySelector(native) as HTMLElement).focus();
+      await nextTick();
+      settle();
+      expect(getComputedStyle(invalid).boxShadow).toContain("rgb(9, 8, 7)");
+      expect(getComputedStyle(invalid).boxShadow).not.toContain("rgb(1, 2, 3)");
+    }
   });
 
   /** Finite transitions finish at once, so a colour is read at its target. */

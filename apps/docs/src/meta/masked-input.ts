@@ -83,6 +83,9 @@ const meta: ComponentMeta = {
     },
     { name: "blur", signature: "() => void", description: "Blur the field" },
   ],
+
+  // CuiMaskedInput draws nothing itself: it is a CuiInput, and restyles through the input's tokens.
+  tokens: [{ name: "--cui-input-radius", default: "per rounded", description: "Corner radius of the field (it is a CuiInput; the field carries cui-input)" }],
 };
 
 export default meta;

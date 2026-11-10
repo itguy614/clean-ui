@@ -154,7 +154,8 @@ defineSlots<
     "toolbar-start"?: () => unknown;
     "toolbar-end"?: () => unknown;
     empty?: () => unknown;
-    card?: (props: { row: T }) => unknown;
+    /** `columnLabel` names a column with its group ("Reads · A1"), for a card that labels its values. */
+    card?: (props: { row: T; columnLabel: (key: string) => string }) => unknown;
     /** Every column's header content; `#header-<key>` takes precedence. Falls back to `label`. */
     header?: (props: { column: DataGridColumn }) => unknown;
   } & {
@@ -168,7 +169,7 @@ defineSlots<
 // Named payload types over the row type T. Used to cast at the loose-internals
 // (DataGridRow) → public-API (T) boundary; named aliases keep the template casts
 // free of inline object-type literals (which the template parser chokes on).
-type CardSlotProps = { row: T };
+type CardSlotProps = { row: T; columnLabel: (key: string) => string };
 type CellSlotProps = { value: unknown; row: T };
 type RowClickPayload = { row: T };
 type RowActionPayload = { action: DataGridRowAction; row: T };
@@ -176,6 +177,7 @@ type BulkActionPayload = { action: DataGridBulkAction; rows: T[] };
 
 const slots = useSlots();
 const hasCardSlot = !!slots.card;
+const hasCustomHeader = (key: string) => !!slots.header || !!slots[`header-${key}`];
 
 const grid = useDataGrid({
   columns: () => props.columns,
@@ -316,6 +318,7 @@ const messages = useMessages();
             :bordered="bordered"
             :size="size"
             :virtualize="virtualize"
+            :custom-header="hasCustomHeader"
             :virtual-row-height="virtualRowHeight"
             :rows-interactive="rowClickable ?? !!onRowClick"
             @row-click="emit('row-click', $event as RowClickPayload)"

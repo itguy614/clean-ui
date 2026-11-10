@@ -65,8 +65,13 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListItem.vue", issue: "#195" },
   { file: "CuiStatusDot.vue", issue: "#234" },
   { file: "CuiPinInput.vue", issue: "#196" },
+  { file: "CuiColorPicker.vue", issue: "#467" },
   { file: "CuiModal.vue", issue: "#407" },
   { file: "CuiSlideover.vue", issue: "#407" },
+  { file: "CuiTransferList.vue", issue: "#469" },
+  { file: "CuiMaskedInput.vue", issue: "#469" },
+  { file: "CuiTreeView.vue", issue: "#468" },
+  { file: "CuiTreeNode.vue", issue: "#468" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -271,12 +276,7 @@ const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the fo
 const PART_COLOUR = "a part's own colour has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
 const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
-  {
-    file: "CuiSelect.vue",
-    component: "select",
-    privateOnly: { "font-size": "--cui-select-font-size already sizes the option rows (the listbox panel reads it by prefix)" },
-    issue: "#454",
-  },
+  { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
   { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
   { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },

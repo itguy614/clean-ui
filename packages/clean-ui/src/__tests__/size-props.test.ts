@@ -27,4 +27,13 @@ describe("size props", () => {
     expect(offenders.filter((f) => !(f in EXEMPT))).toEqual([]);
     expect(Object.keys(EXEMPT).filter((f) => !offenders.includes(f))).toEqual([]);
   });
+
+  // #469: CuiTransferList takes CuiSize by extending SizeableProps (the scan above can't see an
+  // inherited prop) and narrows it with clampSize() before indexing its scale map.
+  it("CuiTransferList takes size from SizeableProps and clamps it", () => {
+    const dir = join(dirname(fileURLToPath(import.meta.url)), "../components");
+    const src = script(readFileSync(join(dir, "CuiTransferList.vue"), "utf8"));
+    expect(src).toMatch(/extends[^{]*\bSizeableProps\b/);
+    expect(src).toMatch(/clampSize\(props\.size,/);
+  });
 });
