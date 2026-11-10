@@ -399,12 +399,13 @@ setTheme('teal')
             small inline script string that reads the stored theme and adds its
             <code class="cui-code">cui-theme-*</code> class to <code class="cui-code">&lt;html&gt;</code>
             before the first paint. Put it in the <code class="cui-code">&lt;head&gt;</code>, before
-            any stylesheets. It only covers the theme preset; if your app persists a dark-mode
-            preference, toggle the <code class="cui-code">dark</code> class the same way. The
-            density has a matching <code class="cui-code">ssrDensityInitScript</code>; use both:
+            any stylesheets. It only covers the theme preset. Density has a matching
+            <code class="cui-code">ssrDensityInitScript</code> and dark mode
+            <code class="cui-code">ssrColorModeInitScript</code>; use all three, and give each inline
+            script your own nonce or hash under a strict CSP:
           </p>
           <pre class="cui-pre"><code class="cui-code">// nuxt.config.ts
-import { ssrThemeInitScript, ssrDensityInitScript } from "@itguy614/clean-ui";
+import { ssrThemeInitScript, ssrDensityInitScript, ssrColorModeInitScript } from "@itguy614/clean-ui";
 
 export default defineNuxtConfig({
   app: {
@@ -412,6 +413,7 @@ export default defineNuxtConfig({
       script: [
         { children: ssrThemeInitScript, type: "text/javascript" },
         { children: ssrDensityInitScript, type: "text/javascript" },
+        { children: ssrColorModeInitScript, type: "text/javascript" },
       ],
     },
   },

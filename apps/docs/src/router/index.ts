@@ -121,6 +121,11 @@ const router = createRouter({
       component: () => import('../pages/LocalePage.vue'),
     },
     {
+      path: '/composables/color-mode',
+      name: 'color-mode',
+      component: () => import('../pages/ColorModePage.vue'),
+    },
+    {
       path: '/composables/roving-focus',
       name: 'roving-focus',
       component: () => import('../pages/RovingFocusPage.vue'),

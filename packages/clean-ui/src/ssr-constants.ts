@@ -11,3 +11,12 @@ export const DENSITY_CLASS_PREFIX = "cui-density-";
 /** Every density id, the default included (it adds no class). */
 export const DENSITY_IDS = ["compact", "default", "comfortable"] as const;
 export const DEFAULT_DENSITY_ID = "default";
+
+// `useColorMode` and ssr-color-mode-init.ts. The dark class is the one `useColorScheme` and
+// every `:root.dark, .dark` token block key on.
+export const COLOR_MODE_STORAGE_KEY = "cui-color-mode";
+export const DARK_CLASS = "dark";
+/** The three choices; "system" follows `prefers-color-scheme` and is the default. */
+export const COLOR_MODE_IDS = ["light", "dark", "system"] as const;
+export const DEFAULT_COLOR_MODE_ID = "system";
+export const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
