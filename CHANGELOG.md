@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`CuiDataGrid`: a frozen column with no `width` no longer has the next one pinned on top of it** (#485). The grid measures the rendered header cell of a frozen column that declares no usable `width` and pins later frozen columns (and frozen group headers) after it, updating on resize, column hide/show, density and font load. A declared `width` still wins. In development, a frozen column without a `width` warns once: set `width` for a stable first layout.
 - **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
   overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
   2.1.1), and adds no tab stop while the code fits. The line-number gutter is
