@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+
 ### Added
 
 - **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `0 8px 24px / 0.15`); CuiSlideover is `lg` (was `0 16px 48px / 0.15`, now `/ 0.2`);
   CuiDataGridBulkBar is `up` (unchanged in light). The Tabs pill, Toggle knob, Slider thumb
   and ColorPicker handles keep their own.
+- **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
 - **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
 
 ## [1.9.0] - 2026-11-05
