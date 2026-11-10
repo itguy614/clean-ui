@@ -64,8 +64,6 @@ const hoursNameId = useCuiId("time-picker-hours");
 const minutesNameId = useCuiId("time-picker-minutes");
 const labelledBy = computed(() => [props.label ? labelId : null, props.ariaLabelledby].filter(Boolean).join(" ") || undefined);
 
-// Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
-// same `size` when placed side by side (#87).
 // The trigger's box comes from the shared input scale, so a time picker lines up with a
 // CuiInput, CuiDatePicker or CuiDateRangePicker of the same `size`. Emitted as private
 // properties, so `--cui-time-picker-*` on a container wins.
@@ -461,7 +459,8 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="labelledBy"
         :tabindex="disabled ? -1 : 0"
-        @keydown="onTriggerKeydown"      >
+        @keydown="onTriggerKeydown"
+      >
         <CuiIcon class="cui-time-picker__icon" name="clock" size="0.875rem" />
         <span class="cui-time-picker__value">{{ displayText || inputPlaceholder }}</span>
       </div>

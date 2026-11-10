@@ -72,6 +72,7 @@ describe("the column manager and frozen columns", () => {
     const over = fire(rowOf("EPC"), "dragover");
     expect(dt.dropEffect).toBe("none");
     expect(over.defaultPrevented).toBe(false);
+    await nextTick();
     expect(rowOf("EPC").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
   });
 

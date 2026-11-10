@@ -217,6 +217,7 @@ describe("CuiDataGrid column groups", () => {
     const outside = fire(row("RSSI (dBm) · A1"), "dragover", dt);
     expect(dt.dropEffect).toBe("none");
     expect(outside.defaultPrevented).toBe(false);
+    await nextTick();
     expect(row("RSSI (dBm) · A1").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
     // a browser fires no drop on a refused target; a forced one changes nothing either
     fire(row("RSSI (dBm) · A1"), "drop", dt);
