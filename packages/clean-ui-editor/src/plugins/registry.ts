@@ -8,6 +8,10 @@ import {
   type PasteRule,
   type DecorationRule,
 } from "./types";
+import { __DEV__ } from "../duplicate-guard";
+
+// Module-scoped (see duplicate-guard.ts): the literal half of the guard a consumer's bundler folds.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface RegistryWarning {
   message: string;
@@ -51,6 +55,9 @@ export type BuildRegistryResult = { ok: true; registry: PluginRegistry } | { ok:
  * An incompatible plugin API version is the one hard rejection (FR22a) — the
  * caller must keep whatever configuration was previously active rather than
  * apply a partially-built one (FR22).
+ *
+ * The warning texts are built only under `__DEV__ && process.env.NODE_ENV !== "production"`
+ * (#462), so a production build drops the strings, and `warnings` is empty there.
  */
 export function buildRegistry(plugins: readonly CuiEditorPlugin[]): BuildRegistryResult {
   for (const plugin of plugins) {
@@ -66,7 +73,7 @@ export function buildRegistry(plugins: readonly CuiEditorPlugin[]): BuildRegistr
 
   const pluginsById = new Map<string, CuiEditorPlugin>();
   for (const plugin of plugins) {
-    if (pluginsById.has(plugin.id)) {
+    if (__DEV__ && process.env.NODE_ENV !== "production" && pluginsById.has(plugin.id)) {
       warnings.push({ message: `Duplicate plugin id "${plugin.id}" — the later registration replaces the earlier one.` });
     }
     pluginsById.set(plugin.id, plugin);
@@ -84,7 +91,7 @@ export function buildRegistry(plugins: readonly CuiEditorPlugin[]): BuildRegistr
   for (const plugin of resolvedPlugins) {
     for (const [commandId, spec] of Object.entries(plugin.commands)) {
       const existing = commands.get(commandId);
-      if (existing) {
+      if (__DEV__ && process.env.NODE_ENV !== "production" && existing) {
         warnings.push({
           message: `Command id "${commandId}" is declared by both "${existing.pluginId}" and "${plugin.id}" — "${plugin.id}"'s wins.`,
         });
@@ -105,7 +112,7 @@ export function buildRegistry(plugins: readonly CuiEditorPlugin[]): BuildRegistr
 
     for (const entry of plugin.keymap ?? []) {
       const existing = keymapByKey.get(entry.key);
-      if (existing) {
+      if (__DEV__ && process.env.NODE_ENV !== "production" && existing) {
         warnings.push({
           message: `Key "${entry.key}" is bound by both "${existing.pluginId}" and "${plugin.id}" — "${plugin.id}"'s binding wins.`,
         });

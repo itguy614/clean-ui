@@ -163,3 +163,54 @@ export function presetTransition(
  */
 export const subtreeTransition = { css: false, onLeave: afterAnimations };
 
+
+type Box = { top: number; left: number; width: number; height: number };
+/** The boxes of a list's children, taken before the first of a batch of leavers is pinned. */
+let measured = new WeakMap<Element, Box>();
+let clearMeasured = false;
+
+function measure(node: HTMLElement): Box {
+  if (!measured.has(node)) {
+    // Every child at once, before any is pinned: pinning one pulls it out of the flow and
+    // shifts the next, so a batch of leavers (a filter, "clear done") measured one by one
+    // would land on top of each other.
+    for (const child of [...(node.parentElement?.children ?? [node])] as HTMLElement[]) {
+      const { marginTop, marginLeft } = getComputedStyle(child);
+      measured.set(child, {
+        top: child.offsetTop - (parseFloat(marginTop) || 0),
+        left: child.offsetLeft - (parseFloat(marginLeft) || 0),
+        width: child.offsetWidth,
+        height: child.offsetHeight,
+      });
+    }
+    if (!clearMeasured) {
+      clearMeasured = true;
+      queueMicrotask(() => {
+        measured = new WeakMap();
+        clearMeasured = false;
+      });
+    }
+  }
+  return measured.get(node)!;
+}
+
+/**
+ * Takes a leaving list item out of the flow where it stands (CuiTransitionGroup, #447;
+ * CuiToastProvider, #263), so the items after it can move up while it fades. An absolute
+ * item has to be given the box it had: its offset in the container (less its margin, which
+ * `top`/`left` measure from), and its size. In a flex container it would otherwise jump to
+ * the start edge, and a grid or auto-sized one would collapse. Call it from `before-leave`;
+ * leavers of one update are measured together, before the first is pinned. Offsets are
+ * layout positions: it assumes a block box, and that its offset parent is the list.
+ */
+export function pinOutOfFlow(el: Element): void {
+  const node = el as HTMLElement;
+  const box = measure(node);
+  const { style } = node;
+  style.top = `${box.top}px`;
+  style.left = `${box.left}px`;
+  style.width = `${box.width}px`;
+  style.height = `${box.height}px`;
+  style.boxSizing = "border-box";
+  style.position = "absolute";
+}

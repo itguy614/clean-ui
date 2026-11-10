@@ -149,7 +149,7 @@ const panelStyle = computed(() => {
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
     borderRadius: RADIUS_SCALE[props.rounded],
-    boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
+    boxShadow: "var(--cui-shadow-md)",
     minWidth: "12rem",
     maxWidth: "24rem",
     overflow: "hidden",
