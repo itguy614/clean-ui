@@ -45,6 +45,8 @@ const meta: ComponentMeta = {
   tokens: [
     { name: "--cui-progress-height", default: "per size", description: "Height of the bar track" },
     { name: "--cui-progress-font-size", default: "per size", description: "Font size of the circle's label" },
+    { name: "--cui-progress-bg", default: "var(--cui-primary-bg)", description: "Track tint (the circle's track stroke)" },
+    { name: "--cui-progress-color", default: "var(--cui-primary)", description: "Fill color (the circle's fill stroke)" },
   ],
 };
 

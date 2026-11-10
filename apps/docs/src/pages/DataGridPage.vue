@@ -155,6 +155,47 @@ const tagData: DataGridRow[] = Array.from({ length: 12 }, (_, i) => ({
   g1: 6 + (i % 4), g2: 7 + (i % 3),
 }));
 
+// Frozen columns: always the leftmost block, in declared order, even when declared out of it.
+// A frozen group is frozen wholly. "Mixed" breaks that rule, so the grid unfreezes it (and
+// warns in development).
+const frozenColumns: DataGridColumnDef[] = [
+  { key: "reading", label: "Reading", width: "120px" },
+  { key: "epc", label: "EPC", sortable: true, sticky: true, width: "160px" },
+  {
+    label: "Tag",
+    children: [
+      { key: "make", label: "Make", sticky: true, width: "100px" },
+      { key: "model", label: "Model", sticky: true, width: "100px" },
+    ],
+  },
+  {
+    label: "Reads",
+    children: ["A1", "A2", "A3"].map((a, i) => ({ key: `r${i + 1}`, label: a, align: "right", width: "110px" })),
+  },
+  {
+    label: "RSSI (dBm)",
+    children: ["A1", "A2", "A3"].map((a, i) => ({ key: `s${i + 1}`, label: a, align: "right", width: "110px" })),
+  },
+];
+// A group mixing frozen and normal leaves is a config error: the grid unfreezes it, and warns
+// in development, so it is off until asked for.
+const showMixedGroup = ref(false);
+const mixedGroup: DataGridColumnDef = {
+  label: "Mixed",
+  children: [{ key: "m1", label: "Frozen?", sticky: true, width: "110px" }, { key: "m2", label: "Not", width: "110px" }],
+};
+const frozenGridColumns = computed(() => (showMixedGroup.value ? [...frozenColumns, mixedGroup] : frozenColumns));
+const frozenData: DataGridRow[] = Array.from({ length: 8 }, (_, i) => ({
+  id: String(i + 1),
+  reading: `#${i + 1}`,
+  epc: `E280 ${4000 + i * 37}`,
+  make: ["Acme", "Zeta"][i % 2],
+  model: `M${i}`,
+  r1: i, r2: i * 2, r3: i * 3,
+  s1: -40 - i, s2: -45 - i, s3: -50 - i,
+  m1: "a", m2: "b",
+}));
+
 // Header slot: richer header content than the label; the label still names the column
 // in the column manager.
 const headerSlotColumns: DataGridColumn[] = [
@@ -482,9 +523,44 @@ function step(by: number) {
         </CuiStack>
       </Example>
 
+      <!-- Frozen columns and groups -->
+      <Example title="Frozen Columns and Groups" :code="`<CuiDataGrid
+  :columns=&quot;[
+    { key: 'reading', label: 'Reading' },                       // declared first, but...
+    { key: 'epc', label: 'EPC', sticky: true, width: '160px' }, // ...frozen columns lead
+    { label: 'Tag', children: [                                 // a group is frozen wholly
+      { key: 'make', label: 'Make', sticky: true, width: '100px' },
+      { key: 'model', label: 'Model', sticky: true, width: '100px' },
+    ] },
+    { label: 'Reads', children: [/* ... */] },
+    // Mixed frozen and normal leaves: unfrozen, with a development warning
+    { label: 'Mixed', children: [
+      { key: 'm1', label: 'Frozen?', sticky: true },
+      { key: 'm2', label: 'Not' },
+    ] },
+  ]&quot;
+  :data=&quot;data&quot;
+  max-height=&quot;320px&quot;
+/>`">
+        <CuiStack spacing="4">
+          <p class="text-sm text-surface-500">
+            Frozen (<code>sticky</code>) columns are always the leftmost block, in the order
+            they are declared, whatever order a saved view stores. Here
+            <strong>Reading</strong> is declared first but sits after the frozen EPC and Tag
+            group, and scrolling right pins the group&rsquo;s header cell over both its
+            columns. Open <strong>Columns</strong>: frozen columns show a lock instead of a
+            drag handle, have no move buttons, and nothing can be dropped among them. The
+            <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not): switch it on
+            and the grid unfreezes it, and in development warns in the console.
+          </p>
+          <CuiToggle v-model="showMixedGroup" label="Add a group that mixes frozen and normal columns" />
+          <CuiDataGrid :columns="frozenGridColumns" :data="frozenData" max-height="320px" size="sm" />
+        </CuiStack>
+      </Example>
+
       <!-- Header slot -->
       <Example title="Header Slot" :code="`<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot;>
-  <!-- One column's header; for a sortable column it sits inside the sort button -->
+  <!-- One column's header; for a sortable column it sits beside the sort button, which keeps the label as its name -->
   <template #header-role>
     <CuiIcon name=&quot;push-pin&quot; size=&quot;0.875rem&quot; /> Role
   </template>

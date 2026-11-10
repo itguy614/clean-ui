@@ -259,12 +259,18 @@ function onDropPanel(e: DragEvent, side: "source" | "target") {
   dropSide.value = null;
 }
 
-function dropIndicatorStyle(value: string | number, side: "source" | "target"): Record<string, string> | undefined {
+/** The modifier that draws the drop line above or below the row the drag is over. */
+function dropClass(value: string | number, side: "source" | "target"): string | undefined {
   if (!dropTarget.value || dropTarget.value.value !== value || dropTarget.value.side !== side) return undefined;
-  const border = "2px solid var(--cui-primary)";
-  return dropTarget.value.position === "before"
-    ? { borderTop: border }
-    : { borderBottom: border };
+  return `cui-transfer-list__option--drop-${dropTarget.value.position}`;
+}
+
+/** A row's state modifiers: marked for transfer, disabled, and the drop line. */
+function optionClass(marks: Set<string | number>, item: TransferListItem, side: "source" | "target") {
+  return [
+    { "cui-transfer-list__option--selected": marks.has(item.value), "cui-transfer-list__option--disabled": item.disabled },
+    dropClass(item.value, side),
+  ];
 }
 
 // --- Keyboard and ARIA (#170) ---
@@ -344,40 +350,22 @@ const moveButtons = computed(() => {
   ];
 });
 
-// Size config
+// Size config. Emitted as private `--_transfer-list-*` properties on the root; the stylesheet
+// reads each back through its public `--cui-transfer-list-*` token.
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; itemPad: string; titleFont: string }> = {
-  sm: { fontSize: "0.8125rem", itemPad: "0.3125rem 0.5rem", titleFont: "0.75rem" },
-  md: { fontSize: "0.875rem", itemPad: "0.4375rem 0.625rem", titleFont: "0.8125rem" },
-  lg: { fontSize: "0.9375rem", itemPad: "0.5rem 0.75rem", titleFont: "0.875rem" },
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { optionFont: string; py: string; px: string; titleFont: string }> = {
+  sm: { optionFont: "0.8125rem", py: "0.3125rem", px: "0.5rem", titleFont: "0.75rem" },
+  md: { optionFont: "0.875rem", py: "0.4375rem", px: "0.625rem", titleFont: "0.8125rem" },
+  lg: { optionFont: "0.9375rem", py: "0.5rem", px: "0.75rem", titleFont: "0.875rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
 
-function itemStyle(selected: boolean, disabled?: boolean) {
-  return {
-    display: "flex",
-    alignItems: "center",
-    gap: "calc(0.5rem * var(--cui-density-scale, 1))",
-    padding: cfg.value.itemPad,
-    fontSize: cfg.value.fontSize,
-    cursor: disabled ? "default" : "pointer",
-    borderRadius: "0.25rem",
-    background: selected ? "var(--cui-primary-bg)" : "transparent",
-    color: disabled ? "var(--cui-text-tertiary)" : "var(--cui-text-body)",
-    opacity: disabled ? "0.5" : "1",
-    userSelect: "none" as const,
-  };
-}
-
-const panelStyle = computed(() => ({
-  flex: "1",
-  minWidth: "0",
-  border: "1px solid var(--cui-border)",
-  borderRadius: "0.5rem",
-  background: "var(--cui-surface-base, white)",
-  display: "flex",
-  flexDirection: "column" as const,
-  overflow: "hidden",
+const rootStyle = computed(() => ({
+  "--_transfer-list-font-size": cfg.value.optionFont,
+  "--_transfer-list-py": cfg.value.py,
+  "--_transfer-list-px": cfg.value.px,
+  "--_transfer-list-title-font-size": cfg.value.titleFont,
+  "--_transfer-list-max-height": props.height,
 }));
 </script>
 
@@ -385,32 +373,25 @@ const panelStyle = computed(() => ({
   <div
     ref="rootEl"
     class="cui-transfer-list"
+    :class="{ 'cui-transfer-list--disabled': disabled }"
     v-show="!hidden"
-    :style="{
-      display: 'flex',
-      gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-      alignItems: 'stretch',
-      opacity: disabled ? '0.5' : '1',
-    }"
+    :style="rootStyle"
   >
     <!-- Source panel -->
-    <div :style="panelStyle">
-      <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :id="ids.sourceTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ sourceLabel }}</span>
-        <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredSourceItems.length }}</span>
+    <div class="cui-transfer-list__panel">
+      <div class="cui-transfer-list__header">
+        <span :id="ids.sourceTitle" class="cui-transfer-list__title">{{ sourceLabel }}</span>
+        <span class="cui-transfer-list__count">{{ filteredSourceItems.length }}</span>
       </div>
-      <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
+      <div v-if="filterable" class="cui-transfer-list__filter">
         <span :id="ids.sourceFilter" class="cui-sr-only">{{ messages.transferList.filter(sourceLabel) }}</span>
         <CuiInput v-model="sourceSearch" :placeholder="sourceFilterLabel" size="sm" :aria-labelledby="ids.sourceFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
-        :style="{
-          flex: '1', overflowY: 'auto', padding: '0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))', maxHeight: height,
-          outline: dropSide === 'source' && dragItem?.from === 'target' ? '2px dashed var(--cui-primary)' : 'none',
-          outlineOffset: '-2px', borderRadius: '0 0 0.5rem 0.5rem',
-        }"
+        class="cui-transfer-list__scroller"
+        :class="{ 'cui-transfer-list__scroller--drop': dropSide === 'source' && dragItem?.from === 'target' }"
         @dragover="onDragOverPanel($event, 'source')"
         @dragleave="onDragLeavePanel"
         @drop="onDropPanel($event, 'source')"
@@ -429,6 +410,7 @@ const panelStyle = computed(() => ({
             v-for="(item, i) in filteredSourceItems"
             :key="String(item.value)"
             class="cui-transfer-list__option"
+            :class="optionClass(sourceSelected, item, 'source')"
             role="option"
             :aria-selected="sourceSelected.has(item.value) ? 'true' : 'false'"
             :aria-disabled="item.disabled || disabled || undefined"
@@ -436,24 +418,23 @@ const panelStyle = computed(() => ({
             :data-value="String(item.value)"
             @keydown="onOptionKeydown($event, item, 'source', i)"
             :draggable="!item.disabled && !disabled"
-            :style="{ ...itemStyle(sourceSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'source') }"
             @click="!item.disabled && toggleSource(item.value)"
             @dblclick="dblClickSource(item)"
             @dragstart="onDragStart($event, item.value, 'source')"
             @dragend="onDragEnd"
             @dragover="onDragOverItem($event, item.value, 'source')"
           >
-            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
+            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
             <slot name="item" :item="item" :side="'source'">
-              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
-              <div :style="{ flex: '1', minWidth: '0' }">
-                <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
-                <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
+              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
+              <div class="cui-transfer-list__item-body">
+                <div class="cui-transfer-list__label">{{ item.label }}</div>
+                <div v-if="item.description" class="cui-transfer-list__description">{{ item.description }}</div>
               </div>
             </slot>
           </div>
         </div>
-        <div v-if="filteredSourceItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
+        <div v-if="filteredSourceItems.length === 0" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
       </div>
@@ -480,23 +461,20 @@ const panelStyle = computed(() => ({
     </CuiToolbar>
 
     <!-- Target panel -->
-    <div :style="panelStyle">
-      <div :style="{ padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }">
-        <span :id="ids.targetTitle" :style="{ fontSize: cfg.titleFont, fontWeight: '600', color: 'var(--cui-text-body)', textTransform: 'uppercase', letterSpacing: '0.03em' }">{{ targetLabel }}</span>
-        <span :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)' }">{{ filteredTargetItems.length }}</span>
+    <div class="cui-transfer-list__panel">
+      <div class="cui-transfer-list__header">
+        <span :id="ids.targetTitle" class="cui-transfer-list__title">{{ targetLabel }}</span>
+        <span class="cui-transfer-list__count">{{ filteredTargetItems.length }}</span>
       </div>
-      <div v-if="filterable" :style="{ padding: '0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))' }">
+      <div v-if="filterable" class="cui-transfer-list__filter">
         <span :id="ids.targetFilter" class="cui-sr-only">{{ messages.transferList.filter(targetLabel) }}</span>
         <CuiInput v-model="targetSearch" :placeholder="targetFilterLabel" size="sm" :aria-labelledby="ids.targetFilter" :disabled="disabled">
           <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
-        :style="{
-          flex: '1', overflowY: 'auto', padding: '0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1))', maxHeight: height,
-          outline: dropSide === 'target' && dragItem?.from === 'source' ? '2px dashed var(--cui-primary)' : 'none',
-          outlineOffset: '-2px', borderRadius: '0 0 0.5rem 0.5rem',
-        }"
+        class="cui-transfer-list__scroller"
+        :class="{ 'cui-transfer-list__scroller--drop': dropSide === 'target' && dragItem?.from === 'source' }"
         @dragover="onDragOverPanel($event, 'target')"
         @dragleave="onDragLeavePanel"
         @drop="onDropPanel($event, 'target')"
@@ -515,6 +493,7 @@ const panelStyle = computed(() => ({
             v-for="(item, i) in filteredTargetItems"
             :key="String(item.value)"
             class="cui-transfer-list__option"
+            :class="optionClass(targetSelected, item, 'target')"
             role="option"
             :aria-selected="targetSelected.has(item.value) ? 'true' : 'false'"
             :aria-disabled="item.disabled || disabled || undefined"
@@ -522,24 +501,23 @@ const panelStyle = computed(() => ({
             :data-value="String(item.value)"
             @keydown="onOptionKeydown($event, item, 'target', i)"
             :draggable="!item.disabled && !disabled"
-            :style="{ ...itemStyle(targetSelected.has(item.value), item.disabled), ...dropIndicatorStyle(item.value, 'target') }"
             @click="!item.disabled && toggleTarget(item.value)"
             @dblclick="dblClickTarget(item)"
             @dragstart="onDragStart($event, item.value, 'target')"
             @dragend="onDragEnd"
             @dragover="onDragOverItem($event, item.value, 'target')"
           >
-            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" :style="{ flexShrink: '0', color: 'var(--cui-text-tertiary)', cursor: 'grab', opacity: '0.4' }" />
+            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
             <slot name="item" :item="item" :side="'target'">
-              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
-              <div :style="{ flex: '1', minWidth: '0' }">
-                <div :style="{ lineHeight: '1.3' }">{{ item.label }}</div>
-                <div v-if="item.description" :style="{ fontSize: '0.6875rem', color: 'var(--cui-text-tertiary)', lineHeight: '1.3' }">{{ item.description }}</div>
+              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
+              <div class="cui-transfer-list__item-body">
+                <div class="cui-transfer-list__label">{{ item.label }}</div>
+                <div v-if="item.description" class="cui-transfer-list__description">{{ item.description }}</div>
               </div>
             </slot>
           </div>
         </div>
-        <div v-if="filteredTargetItems.length === 0" :style="{ padding: 'calc(1rem * var(--cui-density-scale, 1))', textAlign: 'center', fontSize: '0.8125rem', color: 'var(--cui-text-tertiary)' }">
+        <div v-if="filteredTargetItems.length === 0" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
       </div>
@@ -560,9 +538,159 @@ const panelStyle = computed(() => ({
 </style>
 
 <style scoped>
-/* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+/* Structural rules sit at normal specificity: they are the component's layout. Everything a
+   consumer might repaint sits in `:where()` (zero specificity, the whole compound, so the
+   scoped `[data-v-…]` attribute adds nothing) and reads its public `--cui-transfer-list-*`
+   token, falling back to a private `--_transfer-list-*` the component emits per size. */
+.cui-transfer-list {
+  display: flex;
+  align-items: stretch;
+}
+
+:where(.cui-transfer-list) {
+  gap: var(--cui-transfer-list-gap, calc(0.5rem * var(--cui-density-scale, 1)));
+}
+
+.cui-transfer-list--disabled {
+  opacity: 0.5;
+}
+
+/* --- Panels --- */
+.cui-transfer-list__panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+:where(.cui-transfer-list__panel) {
+  border: var(--cui-transfer-list-border, 1px solid var(--cui-border));
+  border-radius: var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem));
+  background: var(--cui-transfer-list-bg, var(--cui-surface-base, white));
+}
+
+.cui-transfer-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+:where(.cui-transfer-list__header) {
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-transfer-list__title) {
+  font-size: var(--_transfer-list-title-font-size);
+  font-weight: 600;
+  color: var(--cui-text-body);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+:where(.cui-transfer-list__count) {
+  font-size: 0.6875rem;
+  color: var(--cui-text-tertiary);
+}
+
+:where(.cui-transfer-list__filter) {
+  padding: 0 calc(0.5rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+.cui-transfer-list__scroller {
+  flex: 1;
+  overflow-y: auto;
+  max-height: var(--_transfer-list-max-height);
+  outline-offset: -2px;
+}
+
+:where(.cui-transfer-list__scroller) {
+  padding: 0 calc(0.375rem * var(--cui-density-scale, 1)) calc(0.375rem * var(--cui-density-scale, 1));
+  border-radius: 0 0 var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem)) var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem));
+}
+
+/* The dashed drop zone, while a row from the other list is dragged over this one. A drag
+   cue, not paint: at normal specificity, so restyling the scroller can't erase it. */
+.cui-transfer-list__scroller--drop {
+  outline: 2px dashed var(--cui-primary);
+}
+
+:where(.cui-transfer-list__empty) {
+  padding: calc(1rem * var(--cui-density-scale, 1));
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--cui-text-tertiary);
+}
+
+/* --- Rows. Keyboard-crossed, so a colour change has no transition (CLAUDE.md, Motion). --- */
+.cui-transfer-list__option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cui-transfer-list__option--disabled {
+  cursor: default;
+}
+
+:where(.cui-transfer-list__option) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: var(--cui-transfer-list-py, var(--_transfer-list-py)) var(--cui-transfer-list-px, var(--_transfer-list-px));
+  font-size: var(--cui-transfer-list-font-size, var(--_transfer-list-font-size));
+  border-radius: var(--cui-radius-sm, 0.25rem);
+  background: transparent;
+  color: var(--cui-transfer-list-color, var(--cui-text-body));
+}
+
+/* A row marked for transfer: the tinted selected fill, as a pressed toggle. */
+:where(.cui-transfer-list__option--selected) {
+  background: var(--cui-transfer-list-pressed-bg, var(--cui-primary-bg));
+}
+
+:where(.cui-transfer-list__option--disabled) {
+  color: var(--cui-text-tertiary);
+  opacity: 0.5;
+}
+
+/* The line where a dragged row would land: a drag cue, at normal specificity. */
+.cui-transfer-list__option--drop-before {
+  border-top: 2px solid var(--cui-primary);
+}
+
+.cui-transfer-list__option--drop-after {
+  border-bottom: 2px solid var(--cui-primary);
+}
+
 :where(.cui-transfer-list__option:focus-visible) {
   outline: 2px solid var(--cui-transfer-list-focus-ring, var(--cui-primary-focus-ring));
   outline-offset: -2px;
+}
+
+:where(.cui-transfer-list__grip) {
+  flex-shrink: 0;
+  color: var(--cui-text-tertiary);
+  cursor: grab;
+  opacity: 0.4;
+}
+
+:where(.cui-transfer-list__item-icon) {
+  flex-shrink: 0;
+  color: var(--cui-text-secondary);
+}
+
+.cui-transfer-list__item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-transfer-list__label {
+  line-height: 1.3;
+}
+
+:where(.cui-transfer-list__description) {
+  font-size: 0.6875rem;
+  color: var(--cui-text-tertiary);
+  line-height: 1.3;
 }
 </style>

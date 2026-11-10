@@ -121,6 +121,13 @@ const meta: ComponentMeta = {
       ],
     },
   ],
+
+  tokens: [
+    { name: "--cui-checkbox-border", default: "per state", description: "Border color of the box (the color role when checked, the neutral border otherwise)" },
+    { name: "--cui-checkbox-bg", default: "per state", description: "Fill of the box (the role tint when checked, none otherwise)" },
+    { name: "--cui-checkbox-hover-border", default: "var(--cui-primary)", description: "Border color of an unchecked box under the pointer" },
+    { name: "--cui-checkbox-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
+  ],
 };
 
 export default meta;

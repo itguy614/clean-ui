@@ -242,6 +242,17 @@ describe("motion in both packages", () => {
     expect(css).toMatch(/transition-timing-function:\s*var\(--cui-ease-out\)/);
   });
 
+  it("scans CuiTransitionGroup (#447): its component, and the move's tokens", () => {
+    const names = sources.map((s) => s.name);
+    expect(names).toContain(`${C}CuiTransitionGroup.vue`);
+    const css = sources.find((s) => s.name.endsWith("components-shared.css"))!.motion;
+    // The move: transform only, on the movement curve, over the token.
+    const move = /:where\(\.cui-transition-move\)\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(move).toMatch(/transition-property:\s*transform;/);
+    expect(move).toMatch(/transition-duration:\s*var\(--cui-duration-base\)/);
+    expect(move).toMatch(/transition-timing-function:\s*var\(--cui-ease-in-out\)/);
+  });
+
   it("scales every floating panel from its trigger", () => {
     // The elements that render an anchored panel. CuiSelect, CuiCombobox and CuiTagInput
     // render theirs through CuiListboxPanel. A new floating panel joins this list.

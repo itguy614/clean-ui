@@ -246,28 +246,32 @@ function prefixIsIcon(): boolean {
   flex-direction: column;
 }
 
-/* Themeable (#333): zero specificity, so a consumer's plain `.cui-input { border-radius }`
-   or `--cui-input-radius` on a container wins. */
+/* Themeable (#333, #454): zero specificity, so a consumer's plain `.cui-input { border-radius }`
+   or `--cui-input-radius` on a container wins. The values are computed in the script and
+   emitted as private `--_input-*` properties; each is read back through its public token. */
 :where(.cui-input) {
   border-radius: var(--cui-input-radius, var(--_input-radius));
+  /* The scale's height is the control's OUTER height, as it is for CuiSelect and the rest.
+     It used to sit on `__inner`, which put the 1px borders outside it and made every input
+     2px taller than a select or combobox of the same size (#123). */
+  height: var(--cui-input-height, var(--_input-height));
+  border-color: var(--cui-input-border, var(--_input-border));
+}
+
+/* After the resting rule: both are zero specificity, so the later one wins. */
+:where(.cui-input:focus-within:not(.cui-input--disabled)) {
+  border-color: var(--cui-input-focus-border, var(--_input-focus-border));
+  box-shadow: 0 0 0 2px var(--cui-input-focus-ring, var(--_input-focus-ring));
 }
 
 .cui-input {
   display: flex;
   align-items: stretch;
-  /* The scale's height is the control's OUTER height, as it is for CuiSelect and the rest.
-     It used to sit on `__inner`, which put the 1px borders outside it and made every input
-     2px taller than a select or combobox of the same size (#123). */
-  height: var(--_input-height);
-  border: 1px solid var(--_input-border);
+  border-width: 1px;
+  border-style: solid;
   background: var(--cui-surface-base);
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   overflow: hidden;
-}
-
-.cui-input:focus-within:not(.cui-input--disabled) {
-  border-color: var(--_input-focus-border);
-  box-shadow: 0 0 0 2px var(--_input-focus-ring);
 }
 
 .cui-input--disabled {
@@ -282,8 +286,12 @@ function prefixIsIcon(): boolean {
   flex: 1;
   min-width: 0;
   height: 100%;
-  padding: 0 var(--_input-px);
+  padding-block: 0;
   gap: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-input__inner) {
+  padding-inline: var(--cui-input-px, var(--_input-px));
 }
 
 /* --- Native input --- */
@@ -294,9 +302,12 @@ function prefixIsIcon(): boolean {
   border: none;
   outline: none;
   background: transparent;
-  font-size: var(--_input-font-size);
   font-family: inherit;
   color: var(--cui-text-body);
+}
+
+:where(.cui-input__native) {
+  font-size: var(--cui-input-font-size, var(--_input-font-size));
 }
 
 .cui-input__native::placeholder {
@@ -343,7 +354,10 @@ function prefixIsIcon(): boolean {
   align-items: center;
   flex-shrink: 0;
   color: var(--cui-text-secondary);
-  font-size: var(--_input-font-size);
+}
+
+:where(.cui-input__prefix, .cui-input__suffix) {
+  font-size: var(--cui-input-font-size, var(--_input-font-size));
 }
 
 /* --- Clear button --- */
@@ -402,11 +416,23 @@ function prefixIsIcon(): boolean {
 }
 
 .cui-input__prefix-button {
-  border-right: 1px solid var(--_input-border);
+  border-right-width: 1px;
+  border-right-style: solid;
 }
 
 .cui-input__suffix-button {
-  border-left: 1px solid var(--_input-border);
+  border-left-width: 1px;
+  border-left-style: solid;
+}
+
+/* The separators take the field's border colour, so one token recolours both. An invalid
+   field's stay red whatever the token says, as its outer border does. */
+:where(.cui-input__prefix-button) {
+  border-right-color: var(--cui-input-border, var(--_input-border));
+}
+
+:where(.cui-input__suffix-button) {
+  border-left-color: var(--cui-input-border, var(--_input-border));
 }
 
 /* Override button styles when merged into input */
@@ -432,8 +458,19 @@ function prefixIsIcon(): boolean {
   border-color: var(--cui-error);
 }
 
+.cui-input--error .cui-input__prefix-button {
+  border-right-color: var(--cui-error);
+}
+
+.cui-input--error .cui-input__suffix-button {
+  border-left-color: var(--cui-error);
+}
+
 .cui-input--error:focus-within {
   border-color: var(--cui-error);
+  /* The error ring, at normal specificity so a themed `--cui-input-focus-ring` (which
+     recolours the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
+     slot, as for CuiSelect and CuiCombobox (#454). */
   box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
 
