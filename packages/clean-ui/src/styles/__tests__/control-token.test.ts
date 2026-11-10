@@ -456,7 +456,8 @@ describe("no component stylesheet reads a private property directly (#454)", () 
 
     it(`${file} has no direct private read`, () => {
       const bare = privateReads(css)
-        .filter((r) => !r.through && !allowed.has(r.name))
+        // Through a token of its own component (`tabs-…` in `--cui-tabs-…`), not any public one.
+        .filter((r) => (!r.through || r.through.split("-")[0] !== r.name.split("-")[0]) && !allowed.has(r.name))
         .map((r) => `var(--_${r.name})`);
       expect(
         [...new Set(bare)],
