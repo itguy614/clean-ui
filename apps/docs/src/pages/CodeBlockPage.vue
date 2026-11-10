@@ -124,6 +124,18 @@ export function useDataGrid(options: UseDataGridOptions) {
           the <code>code</code> string exactly, including trailing whitespace.
         </li>
         <li>
+          The code is a real <code>&lt;pre&gt;&lt;code&gt;</code>, so assistive tech knows it
+          is code. The line-number gutter is <code>aria-hidden</code>, so a screen reader
+          reads the code and not "one const two x".
+        </li>
+        <li>
+          While the block overflows (a long line, or <code>maxHeight</code>), its
+          <code>&lt;pre&gt;</code> becomes a focusable <code>role="region"</code> named
+          "Scrollable code" (the <code>codeBlock.region</code> message, or your own
+          <code>aria-label</code> prop), so the arrow keys, Home and End scroll it
+          (WCAG 2.1.1). While the code fits, it adds no tab stop.
+        </li>
+        <li>
           Give a long or unlabelled block a heading or a <code>filename</code>. A page of
           several blocks with nothing between them is very hard to navigate by anything
           other than sight.

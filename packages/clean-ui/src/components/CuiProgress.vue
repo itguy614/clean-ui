@@ -192,17 +192,24 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   gap: calc(0.5rem * var(--cui-density-scale, 1));
 }
 
-/* Themeable (#333): zero specificity, so `--cui-progress-height` or a plain rule from a
-   consumer wins. */
+/* Themeable (#333, #454): zero specificity, so a `--cui-progress-*` token on a container or a
+   plain rule from a consumer wins. `--cui-progress-bg` is the track's tint (the circle's track
+   stroke) and `--cui-progress-color` the fill's. The circle's box is geometry tied to its SVG,
+   and the fill's position follows the value, so `--_progress-width`/`-height` (circle) and
+   `--_progress-percent` stay private. */
 :where(.cui-progress-bar__track) {
   height: var(--cui-progress-height, var(--_progress-height));
+  background: var(--cui-progress-bg, var(--_progress-bg));
 }
 
 .cui-progress-bar__track {
   flex: 1;
-  background: var(--_progress-bg);
   border-radius: 9999px;
   overflow: hidden;
+}
+
+:where(.cui-progress-bar__fill) {
+  background-color: var(--cui-progress-color, var(--_progress-color));
 }
 
 /* A full-width pill slid left inside the track, which clips it: the value moves it on the
@@ -210,7 +217,6 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
 .cui-progress-bar__fill {
   width: 100%;
   height: 100%;
-  background: var(--_progress-color);
   border-radius: 9999px;
   transform: translateX(calc(var(--_progress-percent, 0%) - 100%));
   transition: transform var(--cui-duration-slow) var(--cui-ease-out);
@@ -317,12 +323,15 @@ const circleLabelSize: Record<(typeof SUPPORTED_SIZES)[number], string> = {
   transform: rotate(-90deg);
 }
 
-.cui-progress-circle__track {
-  stroke: var(--_progress-bg);
+:where(.cui-progress-circle__track) {
+  stroke: var(--cui-progress-bg, var(--_progress-bg));
+}
+
+:where(.cui-progress-circle__fill) {
+  stroke: var(--cui-progress-color, var(--_progress-color));
 }
 
 .cui-progress-circle__fill {
-  stroke: var(--_progress-color);
   transition: stroke-dashoffset var(--cui-duration-slow) ease;
 }
 

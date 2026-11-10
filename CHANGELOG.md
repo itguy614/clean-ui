@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.10
+
+- **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
+  order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
+  (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
+  group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
+  unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
+- **A sortable header with a header slot no longer puts the slot inside the sort button.** The
+  slot content sits beside an icon-only sort button, named by the column's label (with its
+  group), so interactive content in a header slot is valid. A click on plain slot content still
+  sorts. A selector that targeted `.cui-data-grid-table__sort` around slot content no longer
+  matches it.
+
+### Fixed
+
+- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
+  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
+  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
+  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+
+### Added
+
+- **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
+  documented as constraints but read by nothing. Both take the forms the model uses
+  (`"HH:mm"` or `"hh:mm AM/PM"`). The steppers' bounds, and so their `aria-valuemin` and
+  `aria-valuemax`, follow the range and stop at it rather than wrapping; a typed or stepped
+  value is clamped to the nearest bound, nothing outside the range is committed, and an
+  AM/PM button with no selectable time is disabled. The model value stays `hh:mm AM/PM`. An
+  invalid or inverted range warns in development and is ignored.
+- `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
+- The column manager shows a lock, with an accessible name, on a frozen column
+  (`messages.dataGrid.frozenColumn`).
+- `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
+
+- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
+  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
+  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
+
+- **The form controls' stylesheets read their tokens through the public layer** (#454, part 1).
+  `CuiInput`, `CuiTextarea`, `CuiSelect`, `CuiCheckbox`, `CuiRadio`, `CuiToggle`, `CuiCombobox`
+  and `CuiProgress` painted and sized from private `--_<component>-*` properties directly, so
+  a container's token or a plain `.cui-input { … }` rule could not win over them. Each value
+  is now read as `var(--cui-<component>-<slot>, var(--_<component>-<slot>))` inside a
+  zero-specificity rule, and the slots are new public tokens: `--cui-input-{height,border,px,
+  font-size,focus-border,focus-ring}`, `--cui-textarea-{border,px,py,font-size,focus-border,
+  focus-ring}`, `--cui-select-{min-height,px,border,focus-border,focus-ring}`,
+  `--cui-checkbox-{border,bg,hover-border,focus-ring}`, `--cui-radio-{bg,border,color,
+  hover-border,hover-bg,hover-color,focus-ring}`, `--cui-toggle-{bg,color,hover-border,focus-ring}`,
+  `--cui-combobox-{border,focus-border,focus-ring}` and `--cui-progress-{bg,color}`. Nothing
+  changes unless you set one, apart from the invalid-field ring below. Geometry that follows
+  the size preset (a toggle's track and knob, a progress circle's box) stays private.
+  `--cui-select-font-size` now sizes the trigger as well as the options, as
+  `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
+  attached-button separators) whatever the token says.
+- **The rest of the components read their private tokens through the public layer, and a guard
+  keeps them there** (#454, part 2). `CuiAlert`, `CuiToast`, `CuiTabs` and `CuiTagInput` read
+  `--_<component>-*` properties directly in their stylesheets; they now go through new public
+  tokens inside zero-specificity rules, so a container token or a plain class rule wins:
+  `--cui-alert-focus-ring` and `--cui-toast-focus-ring` (the `glow` ring),
+  `--cui-tabs-color` (the active tab's text and underline bar), `--cui-tabs-focus-ring` and
+  `--cui-tag-input-border`. An icon's, a dismiss button's and a progress bar's own colours have
+  no slot in the vocabulary: they stay private, but their rules are zero specificity too, so a
+  plain `.cui-alert__icon { color }` wins. `CuiBanner`, `CuiListItem` and `CuiTooltip` already
+  read through the public layer. Nothing changes unless you set one: rendering is identical in
+  every variant, colour, state and mode. `CuiTabs` now emits its colour once on its root
+  instead of on each tab, and an invalid `CuiTagInput` carries `cui-tag-input__control--error`
+  and keeps the error colour whatever `--cui-tag-input-border` says. In `control-token.test.ts`
+  the guard now covers every component: a stylesheet that reads a `--_x-y` outside a public
+  token's fallback fails unless it is listed with a reason.
+- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
+  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
+  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
+
 ### Changed
 
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
@@ -19,15 +93,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-border` / `-radius` for the range trigger. The panel is teleported to `<body>`, so a
   `pressed-*` token has to be set on `:root` or `<body>`.
 
-### Added
+- **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-coloured focus ring** (#454),
+  as `CuiSelect` and `CuiCombobox` do. It showed the primary ring with a red border: the red
+  ring was declared but lost the cascade. `--cui-error-focus-ring` is its slot; a themed
+  `--cui-input-focus-ring` / `--cui-textarea-focus-ring` recolours the normal ring only.
 
-- **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
-  documented as constraints but read by nothing. Both take the forms the model uses
-  (`"HH:mm"` or `"hh:mm AM/PM"`). The steppers' bounds, and so their `aria-valuemin` and
-  `aria-valuemax`, follow the range and stop at it rather than wrapping; a typed or stepped
-  value is clamped to the nearest bound, nothing outside the range is committed, and an
-  AM/PM button with no selectable time is disabled. The model value stays `hh:mm AM/PM`. An
-  invalid or inverted range warns in development and is ignored.
+- **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
+  new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
+  Each line is a block `span` in `<code>`; the gutter is inside the `<pre>`. A selector
+  that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
+  `codeBlock.region` message name the scroll region; an `aria-label` attribute on
+  `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
+- `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
+  ("Reads · A1").
+- A frozen column group's header cell pins across its whole span on horizontal scroll.
+- **Shadows strengthen in dark mode on more surfaces** (#335). They were written as a black
+  literal, as faint on a dark surface as on a light one. They read the elevation tokens now,
+  so light mode is as before, give or take the differences below, and dark mode is darker.
+  CuiCard `elevated` is `xs` (unchanged in light); CuiPopover and the select, combobox and
+  tag-input panel are `md` (was a layered `0 8px 24px -4px / 0.12` + `0 2px 8px -2px / 0.08`:
+  now `0 4px 16px / 0.1`, one value shared with CuiDropdownMenu); CuiToast is `md` (was
+  `0 8px 24px / 0.15`); CuiSlideover is `lg` (was `0 16px 48px / 0.15`, now `/ 0.2`);
+  CuiDataGridBulkBar is `up` (unchanged in light). The Tabs pill, Toggle knob, Slider thumb
+  and ColorPicker handles keep their own.
+- **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
+- **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
+- `CuiTransferList` paints from a stylesheet instead of inline style objects, so a plain consumer rule or a container token restyles it with no `!important`. New tokens: `--cui-transfer-list-gap`, `-bg`, `-border`, `-radius`, `-px`, `-py`, `-font-size`, `-color`, `-pressed-bg` (a row marked for transfer). The DOM, classes and look are unchanged; its parts gain `cui-transfer-list__*` classes. `CuiMaskedInput` has no paint of its own (it renders a `CuiInput`), so it needed no change beyond being guarded (#469).
+- **`CuiColorPicker` is styled by a stylesheet instead of inline style objects (#467, part of #213).**
+  It looks the same. A plain rule such as `.cui-color-picker { width: 320px }` or a token on a
+  container now wins without `!important`. New tokens: `--cui-color-picker-width`, `-height`
+  (the gradient), `-font-size`, `-bg`, `-border` and `-radius`, alongside the existing `-focus-ring`.
+  The picker's frame radius now follows `--cui-radius-lg`, and its text field, swatches and
+  swatch-only preview follow `--cui-radius-sm`. The parts gained `cui-color-picker__*` classes
+  (and the root `cui-color-picker--disabled` while disabled); the DOM is otherwise unchanged.
+
+- **`CuiTreeView` is styled from a stylesheet (#468, part of #213).** Rows, chevrons, icons and
+  connector lines no longer carry inline paint, so a plain class rule or a container token now
+  restyles them without `!important`. New tokens: `--cui-tree-view-bg`, `-color`,
+  `-pressed-bg`, `-pressed-color`, `-border`, `-focus-ring`, `-radius`, `-px`, `-py`, `-gap`,
+  `-font-size` and `-height`. Rendering is unchanged, except that the row's corner radius now
+  follows `--cui-radius-sm` (default `0.25rem`, as before). The unexported `CuiTreeNode`'s `cfg`
+  prop is now `iconSize`.
 
 ## [1.9.0] - 2026-11-05
 

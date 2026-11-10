@@ -429,20 +429,37 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   position: relative;
 }
 
-/* --- Trigger --- */
+/* --- Trigger ---
+   Themeable (#333, #454): zero specificity, so a consumer's plain `.cui-select__trigger { … }`
+   or a `--cui-select-*` token on a container wins. The values are computed in the script and
+   emitted as private `--_select-*` properties; each is read back through its public token.
+   `min-height` is the control's height floor — it grows with its chips — so its slot is
+   `min-height`, as CuiCombobox's is.
+
+   `--cui-select-font-size` sizes the trigger and, through the listbox panel's prefix, the
+   option rows: one token for control plus options, as CuiCombobox and CuiTagInput do. */
 :where(.cui-select__trigger) {
   border-radius: var(--cui-select-radius, var(--_select-radius));
+  min-height: var(--cui-select-min-height, var(--_select-min-height));
+  padding-block: calc(0.25rem * var(--cui-density-scale, 1));
+  padding-inline: var(--cui-select-px, var(--_select-px));
+  border-color: var(--cui-select-border, var(--_select-border));
+  font-size: var(--cui-select-font-size, var(--_select-font-size));
+}
+
+/* After the resting rule: both are zero specificity, so the later one wins. */
+:where(.cui-select__trigger:focus-visible, .cui-select--open .cui-select__trigger) {
+  border-color: var(--cui-select-focus-border, var(--_select-focus-border));
+  box-shadow: 0 0 0 2px var(--cui-select-focus-ring, var(--_select-focus-ring));
 }
 
 .cui-select__trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--_select-min-height);
-  padding: calc(0.25rem * var(--cui-density-scale, 1)) var(--_select-px);
-  border: 1px solid var(--_select-border);
+  border-width: 1px;
+  border-style: solid;
   background: var(--cui-surface-base);
-  font-size: var(--_select-font-size);
   cursor: pointer;
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   gap: calc(0.5rem * var(--cui-density-scale, 1));
@@ -451,13 +468,6 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 
 .cui-select__trigger:focus-visible {
   outline: none;
-  border-color: var(--_select-focus-border);
-  box-shadow: 0 0 0 2px var(--_select-focus-ring);
-}
-
-.cui-select--open .cui-select__trigger {
-  border-color: var(--_select-focus-border);
-  box-shadow: 0 0 0 2px var(--_select-focus-ring);
 }
 
 .cui-select--error .cui-select__trigger {
@@ -482,7 +492,11 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   flex: 1;
   min-width: 0;
-  min-height: calc(var(--_select-min-height) - 0.75rem);
+}
+
+/* The trigger's floor less its own padding and borders. */
+:where(.cui-select__value) {
+  min-height: calc(var(--cui-select-min-height, var(--_select-min-height)) - 0.75rem);
 }
 
 .cui-select__label {
@@ -562,12 +576,18 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
 /* --- Group header --- */
 .cui-select__group-header {
   /* Inline padding matches the option rows', which follow the size (#216). */
-  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--_select-px) calc(0.25rem * var(--cui-density-scale, 1));
+  padding-block: calc(0.5rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cui-text-tertiary);
+}
+
+/* The header is teleported with the panel, so a token set on a container does not reach it;
+   one set on `:root`, or the private value it carries, does. */
+:where(.cui-select__group-header) {
+  padding-inline: var(--cui-select-px, var(--_select-px));
 }
 
 /* --- Option icon --- */

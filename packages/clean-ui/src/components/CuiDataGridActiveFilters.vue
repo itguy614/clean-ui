@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import CuiBadge from "./CuiBadge.vue";
 import CuiButton from "./CuiButton.vue";
 import { useMessages } from "../composables/useMessages";
@@ -8,11 +8,12 @@ import { useMessages } from "../composables/useMessages";
 const messages = useMessages();
 
 const grid = useDataGridState();
+const labelOf = useColumnLabel();
 
 const activeFilters = computed(() =>
   grid.filters.value.map((f) => {
     const col = grid.columns.find((c) => (c.filterKey ?? c.key) === f.key);
-    const label = col?.label ?? f.key;
+    const label = col ? labelOf(col) : f.key;
     const displayValue = Array.isArray(f.value) ? f.value.join(", ") : f.value;
     return { key: f.key, label, displayValue };
   }),

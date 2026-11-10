@@ -67,8 +67,13 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiPinInput.vue", issue: "#196" },
   { file: "CuiDatePicker.vue", issue: "#466" },
   { file: "CuiDateRangePicker.vue", issue: "#466" },
+  { file: "CuiColorPicker.vue", issue: "#467" },
   { file: "CuiModal.vue", issue: "#407" },
   { file: "CuiSlideover.vue", issue: "#407" },
+  { file: "CuiTransferList.vue", issue: "#469" },
+  { file: "CuiMaskedInput.vue", issue: "#469" },
+  { file: "CuiTreeView.vue", issue: "#468" },
+  { file: "CuiTreeNode.vue", issue: "#468" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -199,7 +204,9 @@ function isWholeWhere(selector: string): boolean {
   let depth = 0;
   for (let i = ":where".length; i < selector.length; i++) {
     if (selector[i] === "(") depth++;
-    else if (selector[i] === ")" && --depth === 0) return i === selector.length - 1;
+    // A pseudo-element cannot sit inside :where(), so `:where(.x)::after` is the whole-where
+    // form for it, at (0,0,1) rather than the (0,1,1) of `.x::after`.
+    else if (selector[i] === ")" && --depth === 0) return /^(::[\w-]+)?$/.test(selector.slice(i + 1));
   }
   return false;
 }
@@ -241,6 +248,250 @@ describe("converted stylesheets read every private property through its public t
         .flatMap(({ selectors }) => selectors)
         .filter((s) => targetsPart.test(s) && !isWholeWhere(s) && !s.includes(`${component}--error`));
       expect(offenders).toEqual([]);
+    });
+  }
+});
+
+/**
+ * #454 — the same read-through contract for a component whose stylesheet is its own
+ * `<style>` block. #333 converted what a template `:style` binding painted, but the
+ * stylesheets kept reading the private `--_<c>-<slot>` token directly (`height:
+ * var(--_input-height)`), so a consumer's container token or plain `.cui-input` rule could
+ * not win. A listed component must read EVERY private token as the fallback of its public
+ * one — `var(--cui-<c>-<slot>, var(--_<c>-<slot>))`, or nested in a fallback of one, as
+ * CuiBanner's border colour is inside `--cui-banner-border`'s — and wherever it does,
+ * inside a rule wrapped whole in `:where()`, so a consumer's plain rule at (0,1,0) wins too.
+ *
+ * `privateOnly` lists slots with no public layer ON PURPOSE, each with its reason: a size
+ * preset's geometry (a toggle's knob), a value that follows the data (a progress fill's
+ * position), a floating label's offset, a part's own colour that the closed slot vocabulary
+ * has no name for. They may be read bare, anywhere. An entry the stylesheet no longer reads
+ * is stale and fails.
+ *
+ * The converted list is the half that also checks `:where()`. The half below it,
+ * `PRIVATE_ONLY`, is the guard turned on everywhere: it covers every component, so a new one
+ * cannot add a direct private read.
+ */
+const TRANSFORM_ORIGIN =
+  "a floating panel scales from its trigger: a private value only, with no public token, since a consumer has nothing to restyle (CLAUDE.md, Motion)";
+const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the form field" };
+const PART_COLOUR = "a part's own colour has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
+const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
+  { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
+  { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
+  { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
+  { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
+  { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiToggle.vue",
+    component: "toggle",
+    privateOnly: {
+      height: "the track's height follows the size preset, with the knob and the track width (#333)",
+      "knob-size": "the knob's box follows the size preset (#333)",
+      active: "the pressed border has no slot in the vocabulary",
+    },
+    issue: "#454",
+  },
+  { file: "CuiCombobox.vue", component: "combobox", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiProgress.vue",
+    component: "progress",
+    privateOnly: {
+      width: "the circle's box is tied to its SVG",
+      height: "the circle's box is tied to its SVG (the bar's track reads --cui-progress-height)",
+      percent: "the fill's position follows the value",
+    },
+    issue: "#454",
+  },
+  {
+    file: "CuiAlert.vue",
+    component: "alert",
+    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR },
+    issue: "#454",
+  },
+  { file: "CuiBanner.vue", component: "banner", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiToast.vue",
+    component: "toast",
+    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR, "progress-bg": PART_COLOUR, "progress-bar": PART_COLOUR },
+    issue: "#454",
+  },
+  { file: "CuiTabs.vue", component: "tabs", privateOnly: {}, issue: "#454" },
+  { file: "CuiTagInput.vue", component: "tag-input", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiTooltip.vue",
+    component: "tooltip",
+    privateOnly: { "transform-origin": TRANSFORM_ORIGIN },
+    issue: "#454",
+  },
+];
+
+/** The text of every `<style>` block in an SFC, comments removed. */
+function sfcStyles(source: string): string {
+  return stripComments([...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n"));
+}
+
+/**
+ * Every `var(--_<name>…)` in a stylesheet, and the public token it is the fallback of, if
+ * any: the nearest enclosing `var(--cui-<token>, …)` call. `var(--cui-a, 1px solid
+ * var(--_a-b))` is through `a`; so is `var(--cui-a, calc(1px + var(--_a-b)))`.
+ */
+function privateReads(css: string): Array<{ name: string; through: string | undefined }> {
+  const reads: Array<{ name: string; through: string | undefined }> = [];
+  // One frame per open paren; `token` is set on a `var(--cui-…,` call.
+  const stack: Array<string | undefined> = [];
+  for (let i = 0; i < css.length; i++) {
+    if (css[i] === ")") {
+      stack.pop();
+      continue;
+    }
+    if (css[i] !== "(") continue;
+    const isVar = css.slice(Math.max(0, i - 3), i) === "var";
+    const argument = isVar ? /^\s*(--[\w-]+)/.exec(css.slice(i + 1, i + 80))?.[1] : undefined;
+    if (argument?.startsWith("--_")) reads.push({ name: argument.slice(3), through: [...stack].reverse().find((t) => t !== undefined) });
+    stack.push(argument?.startsWith("--cui-") && /^\s*--[\w-]+\s*,/.test(css.slice(i + 1, i + 80)) ? argument.slice(6) : undefined);
+  }
+  return reads;
+}
+
+describe("converted component stylesheets read every private property through its public token (#454)", () => {
+  for (const { file, component, privateOnly, issue } of CONVERTED_SFC_STYLESHEETS) {
+    const path = COMPONENTS.get(file);
+    const css = path ? sfcStyles(readFileSync(path, "utf-8")) : "";
+    const hint = `${file} (${issue}): read it as var(--cui-${component}-<slot>, var(--_${component}-<slot>)) inside a whole :where() rule, or list the slot in privateOnly with a reason`;
+
+    it(`${file} reads each --_${component}-<slot> only as the fallback of --cui-${component}-<slot>`, () => {
+      expect(path, `${file} is not a component`).toBeDefined();
+      const reads = privateReads(css).filter((r) => r.name.startsWith(`${component}-`));
+      // A scan that matched nothing would pass vacuously.
+      expect(reads.length).toBeGreaterThan(0);
+      const bare = reads
+        .filter((r) => !(r.name.slice(component.length + 1) in privateOnly))
+        .filter((r) => !r.through?.startsWith(`${component}-`))
+        .map((r) => `var(--_${r.name})`);
+      expect([...new Set(bare)], hint).toEqual([]);
+    });
+
+    it(`${file} wraps every rule that reads a public --cui-${component}-* token whole in :where()`, () => {
+      const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: splitSelectorList(m[1].trim()), body: m[2] }));
+      const reading = new RegExp(`var\\(\\s*--cui-${component}-`);
+      const selectors = rules.filter(({ body }) => reading.test(body)).flatMap(({ selectors }) => selectors);
+      expect(selectors.length).toBeGreaterThan(0);
+      expect(selectors.filter((s) => !isWholeWhere(s)), hint).toEqual([]);
+    });
+
+    it(`${file} keeps no stale privateOnly entry`, () => {
+      const stale = Object.keys(privateOnly).filter((slot) => !new RegExp(`var\\(\\s*--_${component}-${slot}(?![\\w-])`).test(css));
+      expect(stale).toEqual([]);
+    });
+  }
+});
+
+/**
+ * #454 — the guard on everywhere. A component's stylesheet may read a private
+ * `--_<x>-<y>` property only as (inside the fallback of) a public `--cui-…` token, unless
+ * the slot is listed here with a reason. Anything not converted above is checked too, so a
+ * new component cannot add a direct private read: it converts, or it is listed.
+ *
+ * Every entry is a slot read bare ON PURPOSE, and counts: one the stylesheet no longer reads
+ * fails as stale. A converted component's own `privateOnly` is allowed as well, so it is
+ * not repeated here.
+ */
+const GEOMETRY = "geometry or state computed by the component from a prop or the data; no slot in the vocabulary to name it";
+const LISTBOX_BY_DESIGN =
+  "CuiListboxPanel and CuiListboxOption read their consumer's public tokens by tokenPrefix and map them onto --_listbox-* ON PURPOSE (#137)";
+const PRIVATE_ONLY: Record<string, Record<string, string>> = {
+  "CuiAvatarGroup.vue": { "avatar-group-spacing": `the overlap follows the \`spacing\` prop (${GEOMETRY})` },
+  "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
+  "CuiContextMenu.vue": { "context-menu-transform-origin": TRANSFORM_ORIGIN },
+  "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
+  "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
+  "CuiPopover.vue": { "popover-transform-origin": TRANSFORM_ORIGIN },
+  // TODO(#454): CuiDataGrid is being reworked in #474; this is a sticky offset, so it likely stays.
+  "CuiDataGridTable.vue": { "data-grid-head-top": `a sticky offset measured from the first header row (${GEOMETRY})` },
+  "CuiFormField.vue": Object.fromEntries(
+    [
+      "label-color",
+      ...["px", "inset", "lead", "end", "color", "room", "scale", "fs", "origin-y", "drop", "rest-color"].map((s) => `float-${s}`),
+    ].map((slot) => [`form-field-${slot}`, "the floating label's geometry and colour state, declared and read inside this stylesheet"]),
+  ),
+  "CuiIcon.vue": {
+    "icon-width": `follows the \`size\` prop (${GEOMETRY})`,
+    "icon-height": `follows the \`size\` prop (${GEOMETRY})`,
+    "duotone-opacity": `follows the \`duotoneOpacity\` prop (${GEOMETRY})`,
+    "duotone-color": `follows the \`duotoneColor\` prop (${GEOMETRY})`,
+  },
+  "CuiInputStepper.vue": { "input-stepper-float-offset": "a floating label's line box, from the form field" },
+  "CuiToastProvider.vue": {
+    "toast-peek-transform": `a toast's place in the stack follows its index (${GEOMETRY})`,
+    "toast-peek-opacity": `a toast's place in the stack follows its index (${GEOMETRY})`,
+  },
+  // Merged by other PRs after this guard was written. Each is geometry the stylesheet reads
+  // behind no public token, as that component's own comment says; none is paint.
+  "CuiColorPicker.vue": Object.fromEntries(
+    ["radius-sm", "track-height", "thumb-size", "swatch-size", "thumb-blur"].map((s) => [
+      `color-picker-${s}`,
+      "the size preset's geometry, with no public token (see CuiColorPicker's rootVars comment)",
+    ]).concat(
+      ["hue", "value"].map((s) => [`color-picker-${s}`, "a colour that follows the picked value (the data), not a theme colour"]),
+    ),
+  ),
+  "CuiTreeNode.vue": {
+    "tree-view-depth": "this row's depth, from the data",
+    "tree-view-indent": "the size preset's indent step, with no public token (CuiTreeView emits it)",
+    "tree-view-icon-size": "the size preset's glyph size, with no public token (CuiTreeView emits it)",
+  },
+  "CuiTransferList.vue": {
+    "transfer-list-title-font-size": "a part's own size has no slot in the closed vocabulary (the option rows' font-size is public)",
+    "transfer-list-max-height": "follows the `height` prop",
+  },
+  // Its own token reads (--cui-list-radius, with CuiList's private --_list-radius as the
+  // fallback) are already through the public layer; the corner is a derivation of them.
+  "CuiListItem.vue": {
+    "list-corner": "declared in this stylesheet from var(--cui-list-radius, …): the corner shared by the first-child and last-child rules",
+  },
+  "CuiListboxPanel.vue": Object.fromEntries(
+    ["transform-origin", "bg", "border", "radius", "shadow", "padding"].map((s) => [`listbox-panel-${s}`, s === "transform-origin" ? TRANSFORM_ORIGIN : LISTBOX_BY_DESIGN]),
+  ),
+  "CuiListboxOption.vue": Object.fromEntries(
+    ["item-padding", "font-size", "item-color", "item-radius", "item-selected-bg", "item-focus-bg", "item-disabled-color"].map((s) => [`listbox-${s}`, LISTBOX_BY_DESIGN]),
+  ),
+};
+
+describe("no component stylesheet reads a private property directly (#454)", () => {
+  const converted = new Map(CONVERTED_SFC_STYLESHEETS.map((c) => [c.file, c]));
+
+  it("lists only components that exist, and only ones not already converted", () => {
+    expect(Object.keys(PRIVATE_ONLY).filter((file) => !COMPONENTS.has(file))).toEqual([]);
+    expect(Object.keys(PRIVATE_ONLY).filter((file) => converted.has(file))).toEqual([]);
+  });
+
+  for (const [file, path] of COMPONENTS) {
+    const css = sfcStyles(readFileSync(path, "utf-8"));
+    if (!css.includes("--_")) continue;
+    const own = converted.get(file);
+    const allowed = new Set([
+      ...Object.keys(PRIVATE_ONLY[file] ?? {}),
+      ...Object.keys(own?.privateOnly ?? {}).map((slot) => `${own!.component}-${slot}`),
+    ]);
+
+    it(`${file} has no direct private read`, () => {
+      const bare = privateReads(css)
+        // Through a token of its own component (`tabs-…` in `--cui-tabs-…`), not any public one.
+        .filter((r) => (!r.through || r.through.split("-")[0] !== r.name.split("-")[0]) && !allowed.has(r.name))
+        .map((r) => `var(--_${r.name})`);
+      expect(
+        [...new Set(bare)],
+        `${file}: read it as the fallback of a public token (var(--cui-<c>-<slot>, var(--_<c>-<slot>)), in a whole :where() rule), or list it in PRIVATE_ONLY with a reason`,
+      ).toEqual([]);
+    });
+  }
+
+  for (const [file, entries] of Object.entries(PRIVATE_ONLY)) {
+    it(`${file} keeps no stale exemption`, () => {
+      const path = COMPONENTS.get(file);
+      const bare = new Set(path ? privateReads(sfcStyles(readFileSync(path, "utf-8"))).filter((r) => !r.through).map((r) => r.name) : []);
+      expect(Object.keys(entries).filter((name) => !bare.has(name))).toEqual([]);
     });
   }
 });
