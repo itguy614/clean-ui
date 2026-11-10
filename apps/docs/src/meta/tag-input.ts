@@ -53,7 +53,7 @@ const meta: ComponentMeta = {
     { name: "--cui-tag-input-panel-bg", default: "var(--cui-surface-base)", description: "Suggestions panel background" },
     { name: "--cui-tag-input-panel-border", default: "1px solid var(--cui-border)", description: "Suggestions panel border" },
     { name: "--cui-tag-input-panel-radius", default: "0.5rem", description: "Suggestions panel corner radius" },
-    { name: "--cui-tag-input-panel-shadow", default: "two-layer drop shadow", description: "Suggestions panel shadow" },
+    { name: "--cui-tag-input-panel-shadow", default: "var(--cui-shadow-md)", description: "Suggestions panel shadow" },
     { name: "--cui-tag-input-panel-padding", default: "0.25rem", description: "Suggestions panel inner padding" },
     { name: "--cui-tag-input-item-padding", default: "0.4375rem 0.625rem", description: "Suggestion padding" },
     { name: "--cui-tag-input-item-radius", default: "0.25rem", description: "Suggestion corner radius" },

@@ -24,7 +24,7 @@ const slots = [
   { name: 'muted', token: '--cui-{role}-muted', desc: 'Desaturated — disabled, inactive' },
 ];
 
-const ELEVATIONS = ["sm", "md", "lg"] as const;
+const ELEVATIONS = ["xs", "sm", "md", "lg", "up"] as const;
 </script>
 
 <template>
@@ -202,8 +202,8 @@ const ELEVATIONS = ["sm", "md", "lg"] as const;
       <CuiCard>
         <CuiCardBody>
           <p class="mb-4 text-surface-600 dark:text-surface-400">
-            Three drop shadows, each stronger in dark mode, where a soft shadow would vanish
-            against a dark surface. Menus, the modal and the markdown editor use them. Override
+            Five drop shadows, each stronger in dark mode, where a soft shadow would vanish
+            against a dark surface. Cards, menus, popovers, toasts, the modal, the slideover and the markdown editor use them. Override
             one on a container, or on <code>:root</code> — and under <code>.dark</code> for dark
             mode, as with every semantic slot — to change every component at that level.
           </p>
@@ -219,9 +219,11 @@ const ELEVATIONS = ["sm", "md", "lg"] as const;
               </CuiCardBody>
             </CuiCard>
           </div>
-          <pre class="cui-pre"><code>--cui-shadow-sm   /* a small control floating over content */
---cui-shadow-md   /* a menu or anchored panel: dropdowns, context menu */
---cui-shadow-lg   /* a dialog: CuiModal */</code></pre>
+          <pre class="cui-pre"><code>--cui-shadow-xs   /* a card resting on the page: CuiCard elevated */
+--cui-shadow-sm   /* a small control floating over content */
+--cui-shadow-md   /* a menu or anchored panel: dropdowns, popover, listbox, toast */
+--cui-shadow-lg   /* a dialog or sheet: CuiModal, CuiSlideover */
+--cui-shadow-up   /* a bar docked to the bottom edge, shadow upward: DataGrid bulk bar */</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>

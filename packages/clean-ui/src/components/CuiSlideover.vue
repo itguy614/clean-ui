@@ -218,7 +218,7 @@ const themeScope = useScopedTheme(() => mounted.value);
 :where(.cui-slideover__panel) {
   border-radius: var(--cui-slideover-radius, 0);
   background: var(--cui-surface-base);
-  box-shadow: 0 16px 48px rgb(0 0 0 / 0.15);
+  box-shadow: var(--cui-shadow-lg);
 }
 
 :where(.cui-slideover__panel--left, .cui-slideover__panel--right) {
