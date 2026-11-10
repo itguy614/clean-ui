@@ -43,7 +43,7 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-divider-border", default: "1px <variant> var(--cui-border)", description: "The line's whole border shorthand (width, style, colour). Overrides the variant and color props" },
-    { name: "--cui-divider-color", default: "var(--cui-text-tertiary)", description: "The label's text colour. Overrides the color prop" },
+    { name: "--cui-divider-color", default: "var(--cui-text-tertiary)", description: "The label's text colour only, not the line (that is --cui-divider-border). Overrides the color prop" },
     { name: "--cui-divider-font-size", default: "0.75rem", description: "The label's text size" },
   ],
 };

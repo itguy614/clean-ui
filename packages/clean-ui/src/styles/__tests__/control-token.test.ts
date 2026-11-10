@@ -427,7 +427,7 @@ const STATIC_SFC_STYLESHEETS: Array<{ file: string; component: string; reason: s
   { file: "CuiModalHeader.vue", component: "modal-header", reason: "its state is the close button's :hover rule and static geometry", issue: "#489" },
   { file: "CuiModalBody.vue", component: "modal-body", reason: "static geometry; the only variants are modifier classes", issue: "#489" },
   { file: "CuiModalFooter.vue", component: "modal-footer", reason: "static geometry and paint", issue: "#489" },
-  { file: "CuiDataGridViewManager.vue", component: "data-grid-view-manager", reason: "the active view and a disabled item are modifier classes", issue: "#489" },
+  { file: "CuiDataGridViewManager.vue", component: "data-grid-view-manager", reason: "no dynamic part: the loaded view is a conditionally rendered check icon, painted by its own class", issue: "#489" },
 ];
 
 describe("converted component stylesheets with no dynamic part still read public tokens through :where() (#489)", () => {
