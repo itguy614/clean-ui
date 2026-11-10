@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiSelect from "./CuiSelect.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
@@ -10,6 +10,7 @@ import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();
 const grid = useDataGridState();
+const labelOf = useColumnLabel();
 
 // Local filter state — applied on "Apply" button
 const localFilters = ref<Record<string, string | string[]>>({});
@@ -130,13 +131,13 @@ const hasAnyValue = computed(() => {
         :key="col.key"
         class="cui-data-grid-filter-panel__field"
       >
-        <label class="cui-data-grid-filter-panel__label">{{ col.label }}</label>
+        <label class="cui-data-grid-filter-panel__label">{{ labelOf(col) }}</label>
 
         <!-- Text filter -->
         <CuiInput
           v-if="col.filterType === 'text' || !col.filterType"
           :model-value="getTextValue(col.filterKey ?? col.key)"
-          :placeholder="messages.dataGrid.filterColumn(col.label)"
+          :placeholder="messages.dataGrid.filterColumn(labelOf(col))"
           size="sm"
           @update:model-value="setTextValue(col.filterKey ?? col.key, $event)"
         />

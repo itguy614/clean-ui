@@ -7,12 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 1.10
+
+- **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
+  order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
+  (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
+  group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
+  unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
+- **A sortable header with a header slot no longer puts the slot inside the sort button.** The
+  slot content sits beside an icon-only sort button, named by the column's label (with its
+  group), so interactive content in a header slot is valid. A click on plain slot content still
+  sorts. A selector that targeted `.cui-data-grid-table__sort` around slot content no longer
+  matches it.
+
 ### Fixed
 
 - **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
 
 ### Added
 
+- `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
+- The column manager shows a lock, with an accessible name, on a frozen column
+  (`messages.dataGrid.frozenColumn`).
 - `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
 
 - **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
@@ -21,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
+  ("Reads · A1").
+- A frozen column group's header cell pins across its whole span on horizontal scroll.
 - **Shadows strengthen in dark mode on more surfaces** (#335). They were written as a black
   literal, as faint on a dark surface as on a light one. They read the elevation tokens now,
   so light mode is as before, give or take the differences below, and dark mode is darker.
