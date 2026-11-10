@@ -236,6 +236,29 @@ const messages = useMessages();
   border-radius: var(--cui-toast-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
 }
 
+/* A part's own colour has no slot in the vocabulary, so it stays a private token, but each
+   rule is zero specificity: a consumer's plain `.cui-toast__icon { color }` wins. */
+:where(.cui-toast__icon) {
+  color: var(--_toast-icon-color, currentColor);
+}
+
+:where(.cui-toast__dismiss) {
+  color: var(--_toast-dismiss-color, currentColor);
+}
+
+:where(.cui-toast__progress) {
+  background: var(--_toast-progress-bg, rgb(255 255 255 / 0.2));
+}
+
+:where(.cui-toast__progress-bar) {
+  background: var(--_toast-progress-bar, rgb(255 255 255 / 0.6));
+}
+
+/* The glow's ring: a pseudo-element, so :where() wraps its originating element. */
+:where(.cui-toast--glow)::after {
+  box-shadow: 0 0 12px 2px var(--cui-toast-focus-ring, var(--_toast-focus-ring));
+}
+
 .cui-toast {
   position: relative;
   display: flex;
@@ -244,7 +267,7 @@ const messages = useMessages();
   padding: calc(0.875rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   min-width: 280px;
   max-width: 420px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  box-shadow: var(--cui-shadow-md);
 }
 
 /* --- Icon --- */
@@ -282,11 +305,6 @@ const messages = useMessages();
   margin-top: calc(0.625rem * var(--cui-density-scale, 1));
 }
 
-/* --- Icon --- */
-.cui-toast__icon {
-  color: var(--_toast-icon-color, currentColor);
-}
-
 /* --- Dismiss --- */
 .cui-toast__dismiss {
   display: flex;
@@ -298,7 +316,6 @@ const messages = useMessages();
   border: none;
   background: none;
   cursor: pointer;
-  color: var(--_toast-dismiss-color, currentColor);
   padding: 0;
   border-radius: 0.25rem;
   opacity: 0.6;
@@ -317,7 +334,6 @@ const messages = useMessages();
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--_toast-progress-bg, rgb(255 255 255 / 0.2));
   /* Clips the bar to the toast's rounded bottom corners itself, so the toast needs no
      overflow: hidden — which would clip its glow (::after). */
   overflow: hidden;
@@ -331,7 +347,6 @@ const messages = useMessages();
 .cui-toast__progress-bar {
   width: 100%;
   height: 100%;
-  background: var(--_toast-progress-bar, rgb(255 255 255 / 0.6));
   border-radius: 0 3px 0 0;
   animation-name: cui-toast-countdown;
   animation-timing-function: linear;
@@ -362,7 +377,6 @@ const messages = useMessages();
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 12px 2px var(--_toast-focus-ring);
   pointer-events: none;
   animation: cui-glow-fade 2s ease-in-out infinite;
 }

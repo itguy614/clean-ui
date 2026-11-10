@@ -196,23 +196,27 @@ const floatingLabel = useFloatingLabel(
   flex-direction: column;
 }
 
-/* Themeable (#333): zero specificity, so a consumer's `.cui-textarea { border-radius }`
-   or `--cui-textarea-radius` on a container wins. */
+/* Themeable (#333, #454): zero specificity, so a consumer's `.cui-textarea { border-radius }`
+   or `--cui-textarea-radius` on a container wins. The values are computed in the script and
+   emitted as private `--_textarea-*` properties; each is read back through its public token. */
 :where(.cui-textarea) {
   border-radius: var(--cui-textarea-radius, var(--_textarea-radius));
+  border-color: var(--cui-textarea-border, var(--_textarea-border));
+}
+
+/* After the resting rule: both are zero specificity, so the later one wins. */
+:where(.cui-textarea:focus-within:not(.cui-textarea--disabled)) {
+  border-color: var(--cui-textarea-focus-border, var(--_textarea-focus-border));
+  box-shadow: 0 0 0 2px var(--cui-textarea-focus-ring, var(--_textarea-focus-ring));
 }
 
 .cui-textarea {
   display: flex;
-  border: 1px solid var(--_textarea-border);
+  border-width: 1px;
+  border-style: solid;
   background: var(--cui-surface-base);
   transition: border-color var(--cui-duration-fast) ease, box-shadow var(--cui-duration-fast) ease;
   overflow: hidden;
-}
-
-.cui-textarea:focus-within:not(.cui-textarea--disabled) {
-  border-color: var(--_textarea-focus-border);
-  box-shadow: 0 0 0 2px var(--_textarea-focus-ring);
 }
 
 .cui-textarea--disabled {
@@ -226,6 +230,9 @@ const floatingLabel = useFloatingLabel(
 
 .cui-textarea--error:focus-within {
   border-color: var(--cui-error);
+  /* The error ring, at normal specificity so a themed `--cui-textarea-focus-ring` (which
+     recolours the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
+     slot, as for CuiSelect and CuiCombobox (#454). */
   box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
 
@@ -236,12 +243,16 @@ const floatingLabel = useFloatingLabel(
   border: none;
   outline: none;
   background: transparent;
-  font-size: var(--_textarea-font-size);
   font-family: inherit;
   color: var(--cui-text-body);
-  padding: var(--_textarea-py) var(--_textarea-px);
   line-height: 1.6;
   resize: vertical;
+}
+
+:where(.cui-textarea__native) {
+  font-size: var(--cui-textarea-font-size, var(--_textarea-font-size));
+  padding-block: var(--cui-textarea-py, var(--_textarea-py));
+  padding-inline: var(--cui-textarea-px, var(--_textarea-px));
 }
 
 .cui-textarea__native::placeholder {

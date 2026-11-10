@@ -3,6 +3,7 @@ import { provide, toRef, computed } from "vue";
 import CuiToast from "./CuiToast.vue";
 import CuiButton from "./CuiButton.vue";
 import { POPOVER_Z_INDEX } from "../utils/position";
+import { pinOutOfFlow } from "../utils/motion";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import {
   ToastContextKey,
@@ -73,16 +74,14 @@ const containerStyle = computed(() => {
 });
 
 /**
- * A leaving toast is taken out of the flow (position: absolute, in its leave class) so the
- * rest can move into its place. In a flex container an absolute item would jump to the
- * start edge, so pin it where it is first: its offset in the container, and its width.
+ * A leaving toast is taken out of the flow (pinOutOfFlow sets position: absolute inline;
+ * the leave class repeats it) so the rest can move into its place. In a flex container an absolute item would jump to the
+ * start edge, so pin it where it is first (pinOutOfFlow).
  */
 function pinLeaving(el: Element) {
   const node = el as HTMLElement;
   moveFocusOutOf(node);
-  node.style.top = `${node.offsetTop}px`;
-  node.style.left = `${node.offsetLeft}px`;
-  node.style.width = `${node.offsetWidth}px`;
+  pinOutOfFlow(node);
 }
 
 // Focus in a toast that goes (dismissed, cleared, or pushed out by maxToasts) would fall to

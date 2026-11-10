@@ -51,7 +51,15 @@ const meta: ComponentMeta = {
     { name: "blur", signature: "() => void", description: "Blur the native textarea" },
   ],
 
-  tokens: [{ name: "--cui-textarea-radius", default: "per rounded", description: "Corner radius of the field" }],
+  tokens: [
+    { name: "--cui-textarea-radius", default: "per rounded", description: "Corner radius of the field" },
+    { name: "--cui-textarea-border", default: "var(--cui-border-strong)", description: "Border color (an invalid field keeps the error color)" },
+    { name: "--cui-textarea-px", default: "per size", description: "Horizontal padding of the text" },
+    { name: "--cui-textarea-py", default: "per size", description: "Vertical padding of the text" },
+    { name: "--cui-textarea-font-size", default: "per size", description: "Font size of the text" },
+    { name: "--cui-textarea-focus-border", default: "var(--cui-primary)", description: "Border color while focused" },
+    { name: "--cui-textarea-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
+  ],
 };
 
 export default meta;

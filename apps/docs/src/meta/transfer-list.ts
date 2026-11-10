@@ -28,6 +28,19 @@ const meta: ComponentMeta = {
   events: [
     { name: "update:modelValue", payload: "(string | number)[]", description: "Fires on transfer, reorder and drop. Always the full right-hand array, in display order" },
   ],
+
+  tokens: [
+    { name: "--cui-transfer-list-gap", default: "calc(0.5rem * density)", description: "Gap between the two panels and the move buttons" },
+    { name: "--cui-transfer-list-bg", default: "var(--cui-surface-base)", description: "Panel background" },
+    { name: "--cui-transfer-list-border", default: "1px solid var(--cui-border)", description: "Panel border shorthand" },
+    { name: "--cui-transfer-list-radius", default: "0.5rem", description: "Panel corner radius" },
+    { name: "--cui-transfer-list-px", default: "per size", description: "A row's horizontal padding" },
+    { name: "--cui-transfer-list-py", default: "per size", description: "A row's vertical padding" },
+    { name: "--cui-transfer-list-font-size", default: "per size", description: "A row's font size" },
+    { name: "--cui-transfer-list-color", default: "var(--cui-text-body)", description: "A row's text color" },
+    { name: "--cui-transfer-list-pressed-bg", default: "var(--cui-primary-bg)", description: "Background of a row marked for transfer" },
+    { name: "--cui-transfer-list-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus-visible outline color on a row" },
+  ],
 };
 
 export default meta;

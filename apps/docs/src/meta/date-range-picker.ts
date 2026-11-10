@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
     { name: "separator", type: "string", default: "→", description: "Text between the two fields" },
     { name: "startPlaceholder", type: "string", description: "Placeholder for the start field. Defaults to the format, lower-cased" },
     { name: "endPlaceholder", type: "string", description: "Placeholder for the end field. Defaults to the format, lower-cased" },
-    { name: "label", type: "string", description: "Label text above the control. It renders as plain text with no for association — see Known gaps" },
+    { name: "label", type: "string", description: "Label text above the control. It names both date inputs through aria-labelledby" },
     { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Trigger height, padding and font size, from the shared input scale, so it lines up with CuiInput, CuiDatePicker and CuiTimePicker" },
     disabledProp,
     hiddenProp,
@@ -29,6 +29,17 @@ const meta: ComponentMeta = {
 
   events: [
     { name: "update:modelValue", payload: "{ start, end }", description: "Fires once, when the second date completes the range. Picking start first does not emit" },
+  ],
+
+  tokens: [
+    { name: "--cui-date-range-picker-height", default: "per size", description: "Trigger height" },
+    { name: "--cui-date-range-picker-px", default: "per size", description: "Trigger horizontal padding" },
+    { name: "--cui-date-range-picker-font-size", default: "per size", description: "Font size of the start and end fields" },
+    { name: "--cui-date-range-picker-bg", default: "var(--cui-surface-base)", description: "Trigger background" },
+    { name: "--cui-date-range-picker-border", default: "var(--cui-border-strong)", description: "Trigger border color" },
+    { name: "--cui-date-range-picker-radius", default: "var(--cui-button-radius)", description: "Trigger corner radius" },
+    { name: "--cui-date-range-picker-pressed-bg", default: "var(--cui-primary)", description: "Background of the range's start and end days. Set it where the calendar can see it: the panel is teleported to <body>, so on :root or <body>, not on the picker's container" },
+    { name: "--cui-date-range-picker-pressed-color", default: "var(--cui-primary-text)", description: "Text color of the range's start and end days" },
   ],
 };
 

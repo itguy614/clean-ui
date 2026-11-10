@@ -7,6 +7,11 @@ const meta: ComponentMeta = {
     "Tabbed interface built from CuiTabs and CuiTab — underline or segmented, horizontal or vertical, with closeable tabs and animated panel transitions.",
   interactive: true,
 
+  tokens: [
+    { name: "--cui-tabs-color", default: "the color prop's role (--cui-primary)", description: "The active tab's text and its underline bar" },
+    { name: "--cui-tabs-focus-ring", default: "the color prop's role (--cui-primary)", description: "The outline drawn round a tab with keyboard focus" },
+  ],
+
   parts: [
     {
       name: "CuiTabs",
@@ -47,7 +52,7 @@ const meta: ComponentMeta = {
           name: "close",
           payload: "string",
           description:
-            "A closeable tab's close button was activated. Nothing is removed for you — drop the tab from your own list",
+            "A closeable tab's close button was clicked, or Delete or Backspace was pressed on the focused tab. Nothing is removed for you — drop the tab from your own list. A disabled tab never emits it",
         },
       ],
     },
