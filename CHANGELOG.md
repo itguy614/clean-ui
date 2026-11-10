@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
 
+### Changed
+
+- **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9
