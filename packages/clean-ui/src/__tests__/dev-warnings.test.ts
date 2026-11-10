@@ -8,7 +8,7 @@ import { expectExemptions, sourceFiles, where, type Exemption } from "../styles/
  *
  * 1. A bare `console.warn` / `console.error` is a finding. A diagnostic goes through
  *    `warnOnce` (utils/devWarn.ts), which is silent outside `__DEV__`.
- * 2. A call to `warnOnce` / `warnVariantColor` has both halves of the guard earlier just
+ * 2. A call to `warnOnce` / `warnVariantColor` / `warnDev` / the registry's `warnings.push` has both halves of the guard earlier just
  *    before it: `__DEV__` (safe where there is no `process`) and the literal `process.env.NODE_ENV
  *    !== "production"` a consumer's bundler replaces, which is what makes the call and its message
  *    string dead code the minifier drops. A guard only inside `warnOnce`, or `__DEV__` alone,
@@ -18,7 +18,9 @@ import { expectExemptions, sourceFiles, where, type Exemption } from "../styles/
 const strip = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|\s)\/\/[^\n]*/g, "$1");
 
 const CONSOLE = /\bconsole\.(warn|error)\s*\(/g;
-const WARN_CALL = /(?<![.\w]|function )(warnOnce|warnVariantColor)\s*\(/g;
+// `warnings.push(` is the editor's plugin-registry warning list, whose text is built where it is
+// pushed (#462); `warnDev(` is that package's sink, called with the text.
+const WARN_CALL = /(?<![.\w]|function )(warnOnce|warnVariantColor|warnDev|warnings\.push)\s*\(/g;
 const GUARD_WINDOW = 200;
 const STATIC_HALF = 'process.env.NODE_ENV !== "production"';
 
@@ -43,6 +45,10 @@ describe("the scans catch a violation", () => {
     expect(unguardedWarnCalls(`function f() {\n  if (${both}) warnOnce("x");\n}`)).toBe(0);
     // `__DEV__` alone keeps the string in a production bundle.
     expect(unguardedWarnCalls('function f() {\n  if (__DEV__) warnOnce("x");\n}')).toBe(1);
+    // The editor's registry builds its text where it pushes (#462).
+    expect(unguardedWarnCalls('if (x) {\n  warnings.push({ message: `a ${x}` });\n}')).toBe(1);
+    expect(unguardedWarnCalls('warnDev(`[X] ${m}`);')).toBe(1);
+    expect(unguardedWarnCalls(`if (${both} && x) {\n  warnings.push({ message: "a" });\n}`)).toBe(0);
     // A guard well before the call (here, another statement's) doesn't cover it.
     expect(unguardedWarnCalls(`if (${both}) { a(); }\n${"//".repeat(1)}\n${" ".repeat(250)}warnOnce("x");`)).toBe(1);
   });
@@ -53,7 +59,7 @@ const sources = sourceFiles(/\.(vue|ts)$/).map((f) => ({ name: where(f), src: re
 // The sinks behind `__DEV__`, and runtime failures a consumer wants in production too.
 const CONSOLE_EXEMPT: Record<string, Exemption> = {
   "clean-ui/src/utils/devWarn.ts": { count: 1, why: "warnOnce's own sink, behind __DEV__" },
-  "clean-ui-editor/src/duplicate-guard.ts": { count: 2, why: "its warnOnce sink and warnDev (plugin-registry warnings, whose prebuilt strings still ship: follow-up); both behind both guard halves" },
+  "clean-ui-editor/src/duplicate-guard.ts": { count: 2, why: "its warnOnce sink and warnDev (plugin-registry warnings, whose text is built under the guard at the call site, #462); both behind both guard halves" },
   "clean-ui/src/composables/useAsyncSearch.ts": { count: 1, why: "a failed consumer fetch; also surfaced as `error`, kept in production" },
   "clean-ui-editor/src/plugins/command-context.ts": { count: 1, why: "a plugin's dialog close threw on unmount: a runtime failure" },
   "clean-ui-editor/src/render/CuiMarkdownViewer.vue": { count: 1, why: "the consumer's adapter threw and the viewer fell back: a runtime failure" },
@@ -65,7 +71,7 @@ describe("dev warnings stay out of production (#369)", () => {
     expectExemptions(found, CONSOLE_EXEMPT);
   });
 
-  it("every warnOnce / warnVariantColor call is behind __DEV__", () => {
+  it("every warnOnce / warnVariantColor / warnDev / registry warning is behind __DEV__", () => {
     const found = Object.fromEntries(
       sources
         .filter((s) => !s.name.endsWith("utils/devWarn.ts"))

@@ -351,25 +351,31 @@
 
 /* ============================================================
    ELEVATION (#224)
-   Three drop shadows, stronger in dark mode where a soft one disappears against a dark
+   Drop shadows, stronger in dark mode where a soft one disappears against a dark
    surface. Black at an alpha, not a colour, so they stay on the root (and `.dark`) and
    don't re-resolve per theme scope. Override on `:root` or a container.
+     xs — a card resting on the page (CuiCard elevated); faint
      sm — a small control floating over content (the editor's mode toggle)
      md — a menu or anchored panel (dropdowns, context menu, autocomplete)
-     lg — a dialog (CuiModal)
+     lg — a dialog or sheet (CuiModal, CuiSlideover)
+     up — a bar docked to the bottom edge, shadow cast upward (CuiDataGridBulkBar)
    ============================================================ */
 
 :root {
+  --cui-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.04), 0 1px 4px rgb(0 0 0 / 0.03);
   --cui-shadow-sm: 0 2px 8px rgb(0 0 0 / 0.15);
   --cui-shadow-md: 0 4px 16px rgb(0 0 0 / 0.1);
   --cui-shadow-lg: 0 16px 48px rgb(0 0 0 / 0.2);
+  --cui-shadow-up: 0 -2px 12px rgb(0 0 0 / 0.15);
 }
 
 :root.dark,
 .dark {
+  --cui-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.25), 0 1px 4px rgb(0 0 0 / 0.2);
   --cui-shadow-sm: 0 2px 8px rgb(0 0 0 / 0.35);
   --cui-shadow-md: 0 4px 16px rgb(0 0 0 / 0.3);
   --cui-shadow-lg: 0 16px 48px rgb(0 0 0 / 0.4);
+  --cui-shadow-up: 0 -2px 12px rgb(0 0 0 / 0.35);
 }
 
 /* ============================================================

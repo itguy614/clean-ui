@@ -202,10 +202,10 @@
   transition-duration: var(--_transition-enter);
   transition-timing-function: var(--cui-ease-out);
 }
-:where([data-cui-transition-duration="fast"]) {
+:where([data-cui-transition-duration="fast"], .cui-transition-duration-fast) {
   --_transition-enter: var(--cui-duration-fast);
 }
-:where([data-cui-transition-duration="slow"]) {
+:where([data-cui-transition-duration="slow"], .cui-transition-duration-slow) {
   --_transition-enter: var(--cui-duration-slow);
 }
 
@@ -296,6 +296,21 @@
   .cui-transition-collapse-leave-to
 ) {
   grid-template-rows: 0fr;
+}
+
+/* CuiTransitionGroup (#447). Items that stay slide to their new place when a sibling
+   enters or leaves, by transform, over base on the on-screen-movement curve; a leaver is
+   pinned out of the flow (utils/motion pinOutOfFlow) so they can start at once. The
+   container is the leaver's offset parent. Under reduced motion the move class falls
+   under main.css's opacity-only rule (it is a cui-* class), so Vue sees no transform
+   transition and never runs the move: the items snap. */
+:where(.cui-transition-group) {
+  position: relative;
+}
+:where(.cui-transition-move) {
+  transition-property: transform;
+  transition-duration: var(--cui-duration-base);
+  transition-timing-function: var(--cui-ease-in-out);
 }
 
 /* Reduced motion removes the movement and keeps the fade: every preset fades in place.

@@ -111,7 +111,7 @@ function onClear() {
   border: 1px solid var(--cui-primary-border);
   color: var(--cui-primary);
   border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
-  box-shadow: 0 -2px 12px rgb(0 0 0 / 0.15);
+  box-shadow: var(--cui-shadow-up);
   max-width: 48rem;
   margin: 0 auto;
 }
