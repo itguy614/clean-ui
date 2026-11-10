@@ -41,9 +41,10 @@ withDefaults(defineProps<CuiModalBodyProps>(), {
   line-height: 1.6;
   color: var(--cui-modal-body-color, var(--cui-text-secondary));
 }
-/* After the base rule, so it wins at equal specificity; it drops the padding altogether, so
-   the padding tokens above cannot bring it back. */
-:where(.cui-modal-body__content--flush) {
+/* Structure, not paint, so it keeps normal specificity: `noPadding` outranked every consumer
+   rule when it was an inline `padding: 0`, and still does. It drops the padding altogether, so
+   the padding tokens above cannot bring it back either. */
+.cui-modal-body__content--flush {
   padding: 0;
 }
 </style>

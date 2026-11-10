@@ -112,6 +112,11 @@ const accent = computed(() => ({
   "--_confirm-dialog-border": `var(--cui-${cfg.value.role}-border)`,
   "--_confirm-dialog-color": `var(--cui-${cfg.value.role})`,
 }));
+// The prompt is a tinted box with no icon: it has no use for the colour.
+const promptAccent = computed(() => ({
+  "--_confirm-dialog-bg": accent.value["--_confirm-dialog-bg"],
+  "--_confirm-dialog-border": accent.value["--_confirm-dialog-border"],
+}));
 
 // `false` hides the tile; anything else falsy (unset, "") falls back to the variant's icon.
 // CuiIcon takes a name and a component as separate props, so forward by type.
@@ -175,7 +180,7 @@ function onCancel() {
     <CuiModalBody>
       <!-- Confirmation input -->
       <div v-if="confirmWord">
-        <div class="cui-confirm-dialog__prompt" :style="accent">
+        <div class="cui-confirm-dialog__prompt" :style="promptAccent">
           {{ confirmPrompt || defaultPrompt }}
         </div>
         <CuiInput

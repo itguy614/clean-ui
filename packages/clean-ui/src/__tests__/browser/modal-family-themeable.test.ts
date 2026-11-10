@@ -130,7 +130,8 @@ describe("the modal family is themeable (real browser, #489)", () => {
       expect(css(content, "color")).toBe("rgb(62, 62, 62)");
     });
 
-    it("noPadding stays flush whatever the padding tokens say", () => {
+    it("noPadding stays flush against a consumer rule and the padding tokens", () => {
+      consumerRule(".cui-modal-body__content { padding: 11px; }");
       const content = mountBody("--cui-modal-body-px: 17px; --cui-modal-body-py: 9px", { noPadding: true });
       expect(css(content, "padding-left")).toBe("0px");
       expect(css(content, "padding-top")).toBe("0px");
@@ -174,7 +175,7 @@ describe("the modal family is themeable (real browser, #489)", () => {
     it("writes only private properties inline", async () => {
       const q = await open();
       expect(inlineNames(q(".cui-confirm-dialog__icon"))).toEqual(["--_confirm-dialog-bg", "--_confirm-dialog-border", "--_confirm-dialog-color"]);
-      expect(inlineNames(q(".cui-confirm-dialog__prompt"))).toEqual(["--_confirm-dialog-bg", "--_confirm-dialog-border", "--_confirm-dialog-color"]);
+      expect(inlineNames(q(".cui-confirm-dialog__prompt"))).toEqual(["--_confirm-dialog-bg", "--_confirm-dialog-border"]);
       for (const part of ["header", "main", "title", "message", "close", "actions"]) {
         expect(q(`.cui-confirm-dialog__${part}`).getAttribute("style") ?? "", part).toBe("");
       }

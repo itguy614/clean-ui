@@ -66,7 +66,7 @@ const NO_PAINT: Record<string, string> = {
 /**
  * The backlog: still writes paint inline, with no stylesheet. `paint` is how many distinct
  * paint properties the scan finds. Convert one (as #484 did CuiCodeBlock) and delete its
- * entry; the follow-up that tracks them is #489.
+ * entry; they are converted in the #489 follow-ups.
  */
 const INLINE_PAINT: Record<string, { paint: number; reason: string }> = {
   "CuiDataGridColumnManager.vue": { paint: 4, reason: "static style attributes on the row, the drag handle and the group label" },
