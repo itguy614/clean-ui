@@ -83,6 +83,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
+  built a style object per day cell (42 a month) and every other part was inline too, so none
+  of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
+  zero specificity, and a day's state (selected, today, in range, outside the month, disabled)
+  is a modifier class. Nothing about how they look changes. New tokens:
+  `--cui-date-picker-pressed-bg` / `-pressed-color` and `--cui-date-range-picker-pressed-bg` /
+  `-pressed-color` for the selected day or the range's ends, and `--cui-date-range-picker-bg` /
+  `-border` / `-radius` for the range trigger. The panel is teleported to `<body>`, so a
+  `pressed-*` token has to be set on `:root` or `<body>`.
+
 - **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-coloured focus ring** (#454),
   as `CuiSelect` and `CuiCombobox` do. It showed the primary ring with a red border: the red
   ring was declared but lost the cascade. `--cui-error-focus-ring` is its slot; a themed
