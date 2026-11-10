@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `useColorMode()`: a persisted light, dark or system choice that sets the `dark` class on
+  `<html>` and follows `prefers-color-scheme` live while the mode is system, with
+  `restoreColorMode()` and `ssrColorModeInitScript` (a pre-paint `<head>` script). Lazy like
+  `useTheme`: importing the library reads no storage and adds no listener (#487).
 - `ssrDensityInitScript`: an inline `<head>` script that applies the stored density to
   `<html>` before first paint, beside `ssrThemeInitScript` (#463).
 - `restoreTheme()`: apply the stored theme once, without calling `useTheme()` (#463).
@@ -91,6 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Color Scheme page no longer says clean-ui leaves the dark toggle to you: `useColorMode()`
+  owns it, and `useColorScheme()` still only observes (#487). The docs sites' header color-mode
+  button is built on it and survives a refresh.
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
   built a style object per day cell (42 a month) and every other part was inline too, so none
   of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
