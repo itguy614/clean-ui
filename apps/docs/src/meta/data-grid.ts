@@ -13,7 +13,7 @@ const meta: ComponentMeta = {
       type: "(DataGridColumn | DataGridColumnGroup)[]",
       default: "— (required)",
       description:
-        "Column definitions: key, label, and the per-column sortable / filterable / align / width / sticky flags. A { label, children } group (no key) renders a spanning header over its leaf columns, in a two-row header; flat arrays work unchanged",
+        "Column definitions: key, label, and the per-column sortable / filterable / align / width / sticky flags (a sticky column should set width; without one it is measured after first paint). A { label, children } group (no key) renders a spanning header over its leaf columns, in a two-row header; flat arrays work unchanged",
     },
     {
       name: "data",

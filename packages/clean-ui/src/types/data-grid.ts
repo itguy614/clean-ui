@@ -28,7 +28,9 @@ export interface DataGridColumn {
   /** Prevent text wrapping */
   nowrap?: boolean;
   /**
-   * Freeze the column: pinned to the left edge during horizontal scroll (requires width).
+   * Freeze the column: pinned to the left edge during horizontal scroll. Set `width`: it is the source of truth for the
+   * offsets of the frozen columns after it. Without one the rendered header cell is measured after
+   * the first paint (so those columns shift into place), with a development warning.
    * Frozen columns are always the leftmost block, in declared order, and can't be reordered in
    * the column manager. A column group is frozen wholly or not at all: one that mixes frozen and
    * non-frozen leaves is unfrozen, with a development warning.
