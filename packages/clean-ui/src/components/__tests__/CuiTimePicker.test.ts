@@ -5,8 +5,8 @@ import { INPUT_SIZE_SCALE } from "../../utils/sizing";
 
 const triggerHeight = (size: "sm" | "md" | "lg") => {
   const wrapper = mount(CuiTimePicker, { props: { size } });
-  const trigger = wrapper.get(".cui-time-picker__trigger");
-  return (trigger.element as HTMLElement).style.height;
+  // The size preset is emitted as a private property on the root; the stylesheet reads it (#489).
+  return (wrapper.element as HTMLElement).style.getPropertyValue("--_time-picker-height");
 };
 
 describe("CuiTimePicker (#87)", () => {

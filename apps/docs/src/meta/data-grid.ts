@@ -85,6 +85,11 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-data-grid-group-border", default: "var(--cui-border)", description: "The rule on the left of each column group's first leaf (all but the first group), through the header and body" },
+    { name: "--cui-data-grid-column-manager-gap", default: "0.5rem × density", description: "Gap between a column manager row's handle, label and move buttons. The column manager is a teleported popover, so set the --cui-data-grid-column-manager-* tokens on :root or <body>, not on the grid's container" },
+    { name: "--cui-data-grid-column-manager-px", default: "0 (a group's leaves: 1.25rem × density)", description: "Start padding of a column manager row. Overriding it indents every row alike, group rows and leaves too" },
+    { name: "--cui-data-grid-column-manager-radius", default: "0.25rem", description: "Corner radius of a column manager row" },
+    { name: "--cui-data-grid-column-manager-border", default: "var(--cui-primary)", description: "Colour of the drop indicator line above the row a dragged column would land before" },
+    { name: "--cui-data-grid-view-manager-pressed-color", default: "var(--cui-primary)", description: "Colour of the check beside the loaded view in the saved-views menu. The menu is teleported: set it on :root or <body>, not on the grid's container" },
   ],
 
   slots: [

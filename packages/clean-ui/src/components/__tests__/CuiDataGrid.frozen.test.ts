@@ -72,7 +72,7 @@ describe("the column manager and frozen columns", () => {
     const over = fire(rowOf("EPC"), "dragover");
     expect(dt.dropEffect).toBe("none");
     expect(over.defaultPrevented).toBe(false);
-    expect(rowOf("EPC").style.borderTop).toContain("transparent");
+    expect(rowOf("EPC").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
   });
 
   it("freezes a group wholly: lock on the group and its leaves, none movable", async () => {

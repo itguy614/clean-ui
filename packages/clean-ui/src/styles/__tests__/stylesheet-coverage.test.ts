@@ -70,14 +70,11 @@ const NO_PAINT: Record<string, string> = {
  */
 const INLINE_PAINT: Record<string, { paint: number; reason: string }> = {
   "CuiConfirmDialog.vue": { paint: 6, reason: "title, message and button area are style objects" },
-  "CuiDataGridColumnManager.vue": { paint: 4, reason: "static style attributes on the row, the drag handle and the group label" },
-  "CuiDataGridViewManager.vue": { paint: 4, reason: "static style attributes on the view rows and the delete button" },
   "CuiDivider.vue": { paint: 5, reason: "the line, the label and the container are computed style objects" },
   "CuiKbd.vue": { paint: 7, reason: "the key cap is a style object" },
   "CuiModalBody.vue": { paint: 2, reason: "text colour and size in a style binding" },
   "CuiModalFooter.vue": { paint: 1, reason: "the footer background in a style binding" },
   "CuiModalHeader.vue": { paint: 6, reason: "the header and its close button, hover colours written from mouseenter and mouseleave" },
-  "CuiTimePicker.vue": { paint: 7, reason: "the field, the panel and the segments are style objects" },
   "CuiTimelineItem.vue": { paint: 5, reason: "the dot, the connector and the text are style objects" },
 };
 

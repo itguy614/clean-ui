@@ -217,7 +217,7 @@ describe("CuiDataGrid column groups", () => {
     const outside = fire(row("RSSI (dBm) · A1"), "dragover", dt);
     expect(dt.dropEffect).toBe("none");
     expect(outside.defaultPrevented).toBe(false);
-    expect(row("RSSI (dBm) · A1").style.borderTop).toContain("transparent");
+    expect(row("RSSI (dBm) · A1").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
     // a browser fires no drop on a refused target; a forced one changes nothing either
     fire(row("RSSI (dBm) · A1"), "drop", dt);
     expect(cellsOf(1).map((c) => c.text())).toEqual(["A1", "A2", "A3", "A1", "A2"]);

@@ -75,6 +75,9 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiTreeView.vue", issue: "#468" },
   { file: "CuiTreeNode.vue", issue: "#468" },
   { file: "CuiCodeBlock.vue", issue: "#484" },
+  { file: "CuiDataGridColumnManager.vue", issue: "#489" },
+  { file: "CuiDataGridViewManager.vue", issue: "#489" },
+  { file: "CuiTimePicker.vue", issue: "#489" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -311,6 +314,8 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     issue: "#454",
   },
   { file: "CuiBanner.vue", component: "banner", privateOnly: {}, issue: "#454" },
+  { file: "CuiDataGridColumnManager.vue", component: "data-grid-column-manager", privateOnly: {}, issue: "#489" },
+  { file: "CuiTimePicker.vue", component: "time-picker", privateOnly: {}, issue: "#489" },
   {
     file: "CuiCodeBlock.vue",
     component: "code-block",

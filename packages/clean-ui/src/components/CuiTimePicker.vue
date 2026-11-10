@@ -66,7 +66,17 @@ const labelledBy = computed(() => [props.label ? labelId : null, props.ariaLabel
 
 // Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
 // same `size` when placed side by side (#87).
-const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md);
+// The trigger's box comes from the shared input scale, so a time picker lines up with a
+// CuiInput, CuiDatePicker or CuiDateRangePicker of the same `size`. Emitted as private
+// properties, so `--cui-time-picker-*` on a container wins.
+const sizeVars = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md;
+  return {
+    "--_time-picker-height": s.height,
+    "--_time-picker-px": s.px,
+    "--_time-picker-font-size": s.fontSize,
+  };
+});
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -422,18 +432,8 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div class="cui-time-picker" ref="rootEl" v-show="!hidden">
-    <label
-      v-if="label"
-      :id="labelId"
-      :style="{
-        display: 'block',
-        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: 'var(--cui-text-secondary)',
-      }"
-    >{{ label }}</label>
+  <div class="cui-time-picker" ref="rootEl" v-show="!hidden" :style="sizeVars">
+    <label v-if="label" :id="labelId" class="cui-time-picker__label">{{ label }}</label>
 
     <CuiPopover
       v-model:visible="popoverVisible"
@@ -447,6 +447,11 @@ defineExpose({ el: rootEl, focus, blur });
       <div
         ref="triggerEl"
         class="cui-time-picker__trigger"
+        :class="{
+          'cui-time-picker__trigger--disabled': disabled,
+          'cui-time-picker__trigger--empty': !displayText,
+          'cui-time-picker__trigger--24h': format === '24',
+        }"
         role="combobox"
         aria-haspopup="dialog"
         :aria-expanded="popoverVisible"
@@ -456,35 +461,14 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-required="ariaRequired || undefined"
         :aria-labelledby="labelledBy"
         :tabindex="disabled ? -1 : 0"
-        @keydown="onTriggerKeydown"
-        :style="{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-          height: triggerDims.height,
-          padding: `0 ${triggerDims.px}`,
-          border: '1px solid var(--cui-border-strong, var(--cui-border))',
-          borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
-          background: 'var(--cui-surface-base, white)',
-          cursor: disabled ? 'default' : 'pointer',
-          opacity: disabled ? '0.5' : '1',
-          fontSize: triggerDims.fontSize,
-          color: displayText ? 'var(--cui-text-body)' : 'var(--cui-text-tertiary)',
-          minWidth: format === '24' ? '6rem' : '8rem',
-        }"
-      >
-        <CuiIcon name="clock" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', flexShrink: '0' }" />
-        <span>{{ displayText || inputPlaceholder }}</span>
+        @keydown="onTriggerKeydown"      >
+        <CuiIcon class="cui-time-picker__icon" name="clock" size="0.875rem" />
+        <span class="cui-time-picker__value">{{ displayText || inputPlaceholder }}</span>
       </div>
 
       <!-- Time picker popover -->
       <template #content>
-        <div
-          ref="panelEl"
-          class="cui-time-picker__panel"
-          @keydown="onPanelKeydown"
-          :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
-        >
+        <div ref="panelEl" class="cui-time-picker__panel" @keydown="onPanelKeydown">
           <!-- Hours -->
           <span :id="hoursNameId" hidden>{{ messages.timePicker?.hours }}</span>
           <span :id="minutesNameId" hidden>{{ messages.timePicker?.minutes }}</span>
@@ -502,7 +486,7 @@ defineExpose({ el: rootEl, focus, blur });
           />
 
           <!-- Separator -->
-          <span :style="{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--cui-text-body)', lineHeight: '1' }">:</span>
+          <span class="cui-time-picker__separator">:</span>
 
           <!-- Minutes -->
           <CuiInputStepper
@@ -519,32 +503,20 @@ defineExpose({ el: rootEl, focus, blur });
           />
 
           <!-- AM/PM toggle (12h only) -->
-          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: 'calc(0.125rem * var(--cui-density-scale, 1))', marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+          <div v-if="format === '12'" class="cui-time-picker__periods">
             <CuiButton
               variant="ghost"
               size="xs"
-              :style="{
-                fontWeight: period === 'AM' ? '700' : '400',
-                color: period === 'AM' ? 'var(--cui-primary)' : 'var(--cui-text-tertiary)',
-                background: period === 'AM' ? 'var(--cui-primary-bg)' : 'transparent',
-                borderRadius: '0.25rem',
-                minWidth: '2.5rem',
-              }"
               class="cui-time-picker__period"
+              :class="{ 'cui-time-picker__period--on': period === 'AM' }"
               :disabled="periodDisabled('AM')"
               @click="onPeriodClick('AM')"
             >{{ periodLabels.AM }}</CuiButton>
             <CuiButton
               variant="ghost"
               size="xs"
-              :style="{
-                fontWeight: period === 'PM' ? '700' : '400',
-                color: period === 'PM' ? 'var(--cui-primary)' : 'var(--cui-text-tertiary)',
-                background: period === 'PM' ? 'var(--cui-primary-bg)' : 'transparent',
-                borderRadius: '0.25rem',
-                minWidth: '2.5rem',
-              }"
               class="cui-time-picker__period"
+              :class="{ 'cui-time-picker__period--on': period === 'PM' }"
               :disabled="periodDisabled('PM')"
               @click="onPeriodClick('PM')"
             >{{ periodLabels.PM }}</CuiButton>
@@ -554,3 +526,106 @@ defineExpose({ el: rootEl, focus, blur });
     </CuiPopover>
   </div>
 </template>
+
+<style scoped>
+/* The time picker's paint. Themeable declarations sit inside :where(), so a consumer's plain
+   rule, or a --cui-time-picker-* token on a container, wins; structure stays at normal
+   specificity. The panel is teleported, but its content is this component's own, so the scope
+   still reaches it, and a token reaches it only from :root or <body>. The selected AM or PM is
+   the control's "on" state: pressed-bg / pressed-color. State rules follow their base rules,
+   since at zero specificity the source order decides. */
+:where(.cui-time-picker__label) {
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+.cui-time-picker__label {
+  display: block;
+}
+
+/* The trigger's box comes from the shared input scale (see sizeVars). */
+:where(.cui-time-picker__trigger) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  height: var(--cui-time-picker-height, var(--_time-picker-height));
+  padding: 0 var(--cui-time-picker-px, var(--_time-picker-px));
+  border: 1px solid var(--cui-time-picker-border, var(--cui-border-strong, var(--cui-border)));
+  border-radius: var(--cui-time-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  background: var(--cui-time-picker-bg, var(--cui-surface-base, white));
+  font-size: var(--cui-time-picker-font-size, var(--_time-picker-font-size));
+  color: var(--cui-time-picker-color, var(--cui-text-body));
+}
+.cui-time-picker__trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  min-width: 8rem;
+}
+.cui-time-picker__trigger--24h {
+  min-width: 6rem;
+}
+:where(.cui-time-picker__trigger--empty) {
+  color: var(--cui-text-tertiary);
+}
+:where(.cui-time-picker__trigger--disabled) {
+  opacity: 0.5;
+}
+.cui-time-picker__trigger--disabled {
+  cursor: default;
+}
+
+:where(.cui-time-picker__icon) {
+  color: var(--cui-text-tertiary);
+}
+.cui-time-picker__icon {
+  flex-shrink: 0;
+}
+
+.cui-time-picker__panel {
+  display: flex;
+  align-items: center;
+}
+:where(.cui-time-picker__panel) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-time-picker__separator) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cui-text-body);
+  line-height: 1;
+}
+
+.cui-time-picker__periods {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
+  margin-left: calc(0.25rem * var(--cui-density-scale, 1));
+}
+
+/* The AM and PM buttons are ghost CuiButtons, restyled through the button's own tokens. Hover
+   and active hold the resting look, as the inline style they replace did. */
+:where(.cui-time-picker__period) {
+  --cui-button-radius: 0.25rem;
+  --cui-button-bg: transparent;
+  --cui-button-color: var(--cui-text-tertiary);
+  --cui-button-hover-bg: var(--cui-button-bg);
+  --cui-button-hover-color: var(--cui-button-color);
+  --cui-button-active-bg: var(--cui-button-bg);
+}
+:where(.cui-time-picker__period--on) {
+  --cui-button-bg: var(--cui-time-picker-pressed-bg, var(--cui-primary-bg));
+  --cui-button-color: var(--cui-time-picker-pressed-color, var(--cui-primary));
+}
+.cui-time-picker__period {
+  min-width: 2.5rem;
+}
+/* Beats CuiButton's own weight, whichever stylesheet loads last. */
+.cui-button.cui-time-picker__period {
+  font-weight: 400;
+}
+.cui-button.cui-time-picker__period--on {
+  font-weight: 700;
+}
+</style>
