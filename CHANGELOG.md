@@ -62,7 +62,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
 - **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
 - `CuiTransferList` paints from a stylesheet instead of inline style objects, so a plain consumer rule or a container token restyles it with no `!important`. New tokens: `--cui-transfer-list-gap`, `-bg`, `-border`, `-radius`, `-px`, `-py`, `-font-size`, `-color`, `-pressed-bg` (a row marked for transfer). The DOM, classes and look are unchanged; its parts gain `cui-transfer-list__*` classes. `CuiMaskedInput` has no paint of its own (it renders a `CuiInput`), so it needed no change beyond being guarded (#469).
-
+- **`CuiColorPicker` is styled by a stylesheet instead of inline style objects (#467, part of #213).**
+  It looks the same. A plain rule such as `.cui-color-picker { width: 320px }` or a token on a
+  container now wins without `!important`. New tokens: `--cui-color-picker-width`, `-height`
+  (the gradient), `-font-size`, `-bg`, `-border` and `-radius`, alongside the existing `-focus-ring`.
+  The picker's frame radius now follows `--cui-radius-lg`, and its text field, swatches and
+  swatch-only preview follow `--cui-radius-sm`. The parts gained `cui-color-picker__*` classes
+  (and the root `cui-color-picker--disabled` while disabled); the DOM is otherwise unchanged.
 
 - **`CuiTreeView` is styled from a stylesheet (#468, part of #213).** Rows, chevrons, icons and
   connector lines no longer carry inline paint, so a plain class rule or a container token now
