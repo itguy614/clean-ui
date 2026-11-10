@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
+
 - **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
   each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
   to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
