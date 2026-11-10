@@ -123,7 +123,7 @@ const choice = useChoiceLabelling(props);
     <span
       class="cui-checkbox__indicator"
       :style="{
-        '--_checkbox-color': `var(--cui-${resolvedColor})`,
+        '--_checkbox-hover-border': `var(--cui-${resolvedColor})`,
         '--_checkbox-border': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor})` : `var(--cui-border-strong)`,
         '--_checkbox-bg': isChecked || (indeterminate && !isChecked) ? `var(--cui-${resolvedColor}-bg)` : 'transparent',
       }"
@@ -176,20 +176,33 @@ const choice = useChoiceLabelling(props);
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: 0.25rem;
-  border: 1px solid var(--_checkbox-border);
-  background: var(--_checkbox-bg);
+  border-width: 1px;
+  border-style: solid;
   transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
   margin-top: 0.125rem;
 }
 
-.cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator {
-  border-color: var(--_checkbox-color);
+/* Themeable (#454): zero specificity, so a consumer's plain `.cui-checkbox__indicator { … }`
+   or a `--cui-checkbox-*` token on a container wins. The indicator's border and fill are
+   resolved for its state in the script (checked, indeterminate, resting). */
+:where(.cui-checkbox__indicator) {
+  border-color: var(--cui-checkbox-border, var(--_checkbox-border));
+  background: var(--cui-checkbox-bg, var(--_checkbox-bg));
+}
+
+:where(.cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator) {
+  border-color: var(--cui-checkbox-hover-border, var(--_checkbox-hover-border));
 }
 
 .cui-checkbox:focus-visible {
-  outline: 2px solid var(--_checkbox-focus-ring);
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: 2px;
   border-radius: 0.25rem;
+}
+
+:where(.cui-checkbox:focus-visible) {
+  outline-color: var(--cui-checkbox-focus-ring, var(--_checkbox-focus-ring));
 }
 
 /* --- Icon --- */

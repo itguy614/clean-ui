@@ -39,7 +39,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
   to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
 
+- **The form controls' stylesheets read their tokens through the public layer** (#454, part 1).
+  `CuiInput`, `CuiTextarea`, `CuiSelect`, `CuiCheckbox`, `CuiRadio`, `CuiToggle`, `CuiCombobox`
+  and `CuiProgress` painted and sized from private `--_<component>-*` properties directly, so
+  a container's token or a plain `.cui-input { … }` rule could not win over them. Each value
+  is now read as `var(--cui-<component>-<slot>, var(--_<component>-<slot>))` inside a
+  zero-specificity rule, and the slots are new public tokens: `--cui-input-{height,border,px,
+  font-size,focus-border,focus-ring}`, `--cui-textarea-{border,px,py,font-size,focus-border,
+  focus-ring}`, `--cui-select-{min-height,px,border,focus-border,focus-ring}`,
+  `--cui-checkbox-{border,bg,hover-border,focus-ring}`, `--cui-radio-{bg,border,color,
+  hover-border,hover-bg,hover-color,focus-ring}`, `--cui-toggle-{bg,color,hover-border,focus-ring}`,
+  `--cui-combobox-{border,focus-border,focus-ring}` and `--cui-progress-{bg,color}`. Nothing
+  changes unless you set one, apart from the invalid-field ring below. Geometry that follows
+  the size preset (a toggle's track and knob, a progress circle's box) stays private.
+  `--cui-select-font-size` now sizes the trigger as well as the options, as
+  `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
+  attached-button separators) whatever the token says.
+
 ### Changed
+
+- **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-coloured focus ring** (#454),
+  as `CuiSelect` and `CuiCombobox` do. It showed the primary ring with a red border: the red
+  ring was declared but lost the cascade. `--cui-error-focus-ring` is its slot; a themed
+  `--cui-input-focus-ring` / `--cui-textarea-focus-ring` recolours the normal ring only.
 
 - **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
   new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.

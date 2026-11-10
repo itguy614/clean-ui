@@ -136,6 +136,13 @@ const meta: ComponentMeta = {
     { name: "--cui-radio-height", default: "per size", description: "Height of a radio in a button-variant group" },
     { name: "--cui-radio-px", default: "per size", description: "Horizontal padding of a radio in a button-variant group" },
     { name: "--cui-radio-font-size", default: "per size", description: "Font size of a radio in a button-variant group" },
+    { name: "--cui-radio-bg", default: "per state", description: "Fill of the indicator in every state (none until selected, by default); of a button-variant segment when selected or hovered" },
+    { name: "--cui-radio-border", default: "per state", description: "Border color of the indicator in every state" },
+    { name: "--cui-radio-color", default: "var(--cui-primary)", description: "Accent: the dot, and a button-variant segment's text" },
+    { name: "--cui-radio-hover-border", default: "var(--cui-primary)", description: "Border color of the indicator, or of an unselected button-variant segment, under the pointer" },
+    { name: "--cui-radio-hover-bg", default: "var(--cui-primary-solid)", description: "Fill of the selected button-variant segment under the pointer" },
+    { name: "--cui-radio-hover-color", default: "var(--cui-primary-text)", description: "Text of the selected button-variant segment under the pointer" },
+    { name: "--cui-radio-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
   ],
 };
 
