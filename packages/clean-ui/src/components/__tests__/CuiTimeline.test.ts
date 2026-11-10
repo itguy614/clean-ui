@@ -47,11 +47,11 @@ describe("CuiTimeline + CuiTimelineItem", () => {
   it("applies the per-item color to the dot background", () => {
     const wrapper = mount(makeHost({ secondExtra: 'color="success"' }));
     const items = wrapper.findAll('[role="listitem"]');
-    // first item defaults to primary; dot is the first descendant div with a border-radius:50% style
-    const firstDot = items[0].findAll("div").find((d) => d.attributes("style")?.includes("border-radius: 50%"));
-    const secondDot = items[1].findAll("div").find((d) => d.attributes("style")?.includes("border-radius: 50%"));
-    expect(firstDot?.attributes("style")).toContain("var(--cui-primary)");
-    expect(secondDot?.attributes("style")).toContain("var(--cui-success)");
+    // first item defaults to primary; the dot carries its colours as private properties (#489)
+    const firstDot = items[0].find(".cui-timeline-item__dot");
+    const secondDot = items[1].find(".cui-timeline-item__dot");
+    expect(firstDot.attributes("style")).toContain("--_timeline-item-bg: var(--cui-primary)");
+    expect(secondDot.attributes("style")).toContain("--_timeline-item-bg: var(--cui-success)");
     wrapper.unmount();
   });
 
@@ -68,8 +68,8 @@ describe("CuiTimeline + CuiTimelineItem", () => {
     // first item is not last (has connector), second item has last prop (no connector)
     const wrapper = mount(makeHost());
     const items = wrapper.findAll('[role="listitem"]');
-    const connectorsFirst = items[0].findAll("div").filter((d) => d.attributes("style")?.includes("width: 2px"));
-    const connectorsSecond = items[1].findAll("div").filter((d) => d.attributes("style")?.includes("width: 2px"));
+    const connectorsFirst = items[0].findAll(".cui-timeline-item__line");
+    const connectorsSecond = items[1].findAll(".cui-timeline-item__line");
     expect(connectorsFirst.length).toBe(1);
     expect(connectorsSecond.length).toBe(0);
     wrapper.unmount();

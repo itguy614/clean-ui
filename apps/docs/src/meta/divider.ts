@@ -40,6 +40,12 @@ const meta: ComponentMeta = {
       description: "Label content — a badge, an icon, a step counter. Takes the place of the label prop",
     },
   ],
+
+  tokens: [
+    { name: "--cui-divider-border", default: "1px <variant> var(--cui-border)", description: "The line's whole border shorthand (width, style, colour). Overrides the variant and color props" },
+    { name: "--cui-divider-color", default: "var(--cui-text-tertiary)", description: "The label's text colour. Overrides the color prop" },
+    { name: "--cui-divider-font-size", default: "0.75rem", description: "The label's text size" },
+  ],
 };
 
 export default meta;
