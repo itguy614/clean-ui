@@ -115,7 +115,7 @@ const meta: ComponentMeta = {
     { name: "--cui-select-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
     { name: "--cui-select-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
     { name: "--cui-select-panel-radius", default: "0.5rem", description: "Dropdown corner radius" },
-    { name: "--cui-select-panel-shadow", default: "two-layer drop shadow", description: "Dropdown shadow" },
+    { name: "--cui-select-panel-shadow", default: "var(--cui-shadow-md)", description: "Dropdown shadow" },
     { name: "--cui-select-panel-padding", default: "0.25rem", description: "Dropdown inner padding" },
     { name: "--cui-select-font-size", default: "per size", description: "Option font size" },
     { name: "--cui-select-item-padding", default: "per size", description: "Option padding" },

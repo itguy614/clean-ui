@@ -7,8 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
+  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
+  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
+
 ### Changed
 
+- **Shadows strengthen in dark mode on more surfaces** (#335). They were written as a black
+  literal, as faint on a dark surface as on a light one. They read the elevation tokens now,
+  so light mode is as before, give or take the differences below, and dark mode is darker.
+  CuiCard `elevated` is `xs` (unchanged in light); CuiPopover and the select, combobox and
+  tag-input panel are `md` (was a layered `0 8px 24px -4px / 0.12` + `0 2px 8px -2px / 0.08`:
+  now `0 4px 16px / 0.1`, one value shared with CuiDropdownMenu); CuiToast is `md` (was
+  `0 8px 24px / 0.15`); CuiSlideover is `lg` (was `0 16px 48px / 0.15`, now `/ 0.2`);
+  CuiDataGridBulkBar is `up` (unchanged in light). The Tabs pill, Toggle knob, Slider thumb
+  and ColorPicker handles keep their own.
 - **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
 
 ## [1.9.0] - 2026-11-05
