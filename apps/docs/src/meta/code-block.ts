@@ -43,7 +43,7 @@ const meta: ComponentMeta = {
     { name: "--cui-code-block-border", default: "var(--cui-border)", description: "The block's border colour" },
     { name: "--cui-code-block-radius", default: "0.5rem", description: "The block's corner radius" },
     { name: "--cui-code-block-color", default: "var(--color-surface-200)", description: "Code text colour" },
-    { name: "--cui-code-block-font-size", default: "0.8125rem (size)", description: "Code and line-number text size" },
+    { name: "--cui-code-block-font-size", default: "0.8125rem (size)", description: "Code and line-number text size. The line height and the header title size follow the size preset and have no token" },
     { name: "--cui-code-block-px", default: "1rem (size and density)", description: "Horizontal padding of the header, the gutter and the code" },
     { name: "--cui-code-block-py", default: "1rem (size and density)", description: "Vertical padding of the code area" },
     { name: "--cui-code-block-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring colour on the scrolling code area" },
