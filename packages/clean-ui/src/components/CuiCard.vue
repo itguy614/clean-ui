@@ -33,7 +33,7 @@ const cardStyle = computed(() => {
   if (props.variant === "elevated") {
     base["--_card-bg"] = "var(--cui-surface-base)";
     base["--_card-border"] = "1px solid var(--cui-border)";
-    base["--_card-shadow"] = "0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.03)";
+    base["--_card-shadow"] = "var(--cui-shadow-xs)";
   } else if (props.variant === "outline") {
     base["--_card-bg"] = "var(--cui-surface-base)";
     base["--_card-border"] = "1px solid var(--cui-border)";
