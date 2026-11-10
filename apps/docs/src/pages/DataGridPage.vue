@@ -551,8 +551,8 @@ function step(by: number) {
             columns. Open <strong>Columns</strong>: frozen columns show a lock instead of a
             drag handle, have no move buttons, and nothing can be dropped among them. The
             <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not): switch it on
-            and the grid unfreezes it, and in development warns in the console. Give every frozen
-            column a <code>width</code>: it is what the columns after it pin against. Without one the
+            and the grid unfreezes it, and in development warns in the console. Give frozen
+            columns a <code>width</code>: it is what the columns after it pin against. Without one the
             grid measures the rendered header cell after the first paint, so the columns frozen
             after it shift into place, and in development it warns.
           </p>

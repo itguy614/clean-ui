@@ -221,7 +221,8 @@ const tableMinWidth = computed(() => {
 // first paint uses what is declared only.
 const measuredWidths = shallowRef(new Map<string, number>());
 const unsizedFrozenKeys = computed(() =>
-  grid.visibleColumns.value.filter((c) => grid.isFrozen(c.key) && !toLength(c.width)).map((c) => c.key),
+  // The last frozen column's width feeds no offset, so it is never measured.
+  grid.visibleColumns.value.filter((c) => grid.isFrozen(c.key) && !toLength(c.width) && c.key !== lastStickyKey.value).map((c) => c.key),
 );
 
 // Sticky column offsets: each frozen column is pinned at the summed widths of
@@ -389,7 +390,7 @@ function observeHead() {
   for (const key of unsizedFrozenKeys.value) {
     if (__DEV__ && process.env.NODE_ENV !== "production") {
       warnOnce(
-        `[clean-ui] CuiDataGrid: frozen (sticky) column "${key}" has no width. Its width is measured after the first paint, ` +
+        `[clean-ui] CuiDataGrid: frozen (sticky) column "${key}" has no usable width (a px, rem or calc() length). Its width is measured after the first paint, ` +
           `so the columns frozen after it jump into place. Set width on every frozen column for a stable first layout.`,
       );
     }
@@ -404,7 +405,6 @@ function observeHead() {
   measureHead();
 }
 onMounted(observeHead);
-watch(unsizedFrozenKeys, observeHead, { flush: "post" });
 onBeforeUnmount(() => headObserver?.disconnect());
 
 // A frozen group is frozen wholly (the grid unfreezes a mixed one), so its spanning cell pins
@@ -475,6 +475,9 @@ const renderedRows = computed<DataGridRow[]>(() =>
 // A row is found by its place in renderedRows, not by rowKey, which may be missing or
 // repeated, and by this grid's own id, so a row of a grid nested in a cell is not ours.
 const gridId = useCuiId("data-grid");
+
+// headerRows too: a leaf can get a new <th> (moved between rows) with the same key set.
+watch([unsizedFrozenKeys, headerRows], observeHead, { flush: "post" });
 function rowWithActions(el: Element): DataGridRow | undefined {
   const [owner, index] = el.closest("[data-cui-grid-row]")?.getAttribute("data-cui-grid-row")?.split(":") ?? [];
   const row = owner === gridId ? renderedRows.value[Number(index)] : undefined;
