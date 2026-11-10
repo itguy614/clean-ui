@@ -48,7 +48,7 @@ export default defineNuxtConfig({
 const returns: PropRow[] = [
   {
     name: "mode",
-    type: "Ref<'light' | 'dark' | 'system'>",
+    type: "Readonly<Ref<'light' | 'dark' | 'system'>>",
     default: "'system'",
     description: "The chosen mode. Stored under cui-color-mode in localStorage; a missing or unknown stored value means system.",
   },
@@ -162,7 +162,9 @@ const returns: PropRow[] = [
         before the first paint. Put it in the <code class="cui-code">&lt;head&gt;</code>, before any
         stylesheets, beside the theme and density scripts. Under a strict CSP, give it your own nonce or
         hash. On the server <code class="cui-code">mode</code> is <code class="cui-code">system</code> and
-        <code class="cui-code">isDark</code> is false.
+        <code class="cui-code">isDark</code> is false. The stored mode is restored on the client before
+        hydration, so UI that prints <code class="cui-code">mode</code> or
+        <code class="cui-code">isDark</code> can mismatch the server HTML: render it after mount.
       </p>
       <pre class="cui-pre"><code class="cui-code">{{ ssrCode }}</code></pre>
     </div>

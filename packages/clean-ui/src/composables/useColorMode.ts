@@ -1,4 +1,4 @@
-import { computed, effectScope, onScopeDispose, ref, watch, type EffectScope } from "vue";
+import { computed, effectScope, onScopeDispose, readonly, ref, watch, type EffectScope } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import {
   COLOR_MODE_IDS,
@@ -48,14 +48,17 @@ function stopFollowingSystem() {
   query = null;
 }
 
-function followSystem() {
-  if (query) return;
+/** Start following the OS; returns whether the preference could be read at all. */
+function followSystem(): boolean {
+  if (query) return true;
   const q = darkQuery();
-  if (!q) return;
-  // Re-read: the OS may have changed while the listener was off.
+  // Old engines (Safari < 14) have matchMedia but only the legacy addListener: resolve once, don't follow.
+  if (!q) return false;
   systemDark.value = q.matches;
+  if (typeof q.addEventListener !== "function") return true;
   q.addEventListener("change", onSystemChange);
   query = q;
+  return true;
 }
 
 let restored = false;
@@ -83,14 +86,15 @@ export function restoreColorMode(): void {
   const stored = safeGetItem(COLOR_MODE_STORAGE_KEY);
   const valid = stored != null && VALID_MODES.has(stored);
   mode.value = valid ? (stored as ColorMode) : DEFAULT;
-  if (mode.value === "system") followSystem();
-  if (mode.value !== "system" || query) applyDark(isDark.value);
+  const resolvable = mode.value !== "system" || followSystem();
+  if (resolvable) applyDark(isDark.value);
   scope = effectScope(true);
   scope.run(() => {
     onScopeDispose(stopFollowingSystem);
     watch(mode, (next) => {
-      if (next === "system") followSystem();
-      else stopFollowingSystem();
+      if (next !== "system") stopFollowingSystem();
+      // Re-assert the class: another script may have changed it while isDark stayed the same.
+      if (next !== "system" || followSystem()) applyDark(isDark.value);
       safeSetItem(COLOR_MODE_STORAGE_KEY, next);
     });
     watch(isDark, applyDark);
@@ -127,8 +131,8 @@ export function useColorMode() {
   }
 
   return {
-    /** The chosen mode (reactive): "light", "dark" or "system" */
-    mode,
+    /** The chosen mode (reactive, read-only; change it with setMode): "light", "dark" or "system" */
+    mode: readonly(mode),
     /** The scheme in effect (reactive); for "system", what the OS prefers */
     isDark,
     /** Choose a mode */

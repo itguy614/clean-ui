@@ -208,6 +208,28 @@ describe("useColorMode: choosing", () => {
     expect(root().classList.contains("dark")).toBe(true);
   });
 
+  it("re-asserts the class on a mode change even when isDark does not change", async () => {
+    stubMatchMedia(false);
+    const { useColorMode } = await fresh();
+    const { setMode } = useColorMode();
+    setMode("light");
+    await nextTick();
+    root().classList.add("dark"); // another script
+    setMode("system");
+    await nextTick();
+    setMode("light");
+    await nextTick();
+    expect(root().classList.contains("dark")).toBe(false);
+  });
+
+  it("exposes mode read-only", async () => {
+    stubMatchMedia(false);
+    const { useColorMode } = await fresh();
+    const { mode } = useColorMode();
+    (mode as { value: string }).value = "purple";
+    expect(mode.value).toBe("system");
+  });
+
   it("toggle from system + light goes dark", async () => {
     stubMatchMedia(false);
     const { useColorMode } = await fresh();
@@ -230,6 +252,14 @@ describe("useColorMode: following the system", () => {
     mm.flip(false);
     await nextTick();
     expect(root().classList.contains("dark")).toBe(false);
+  });
+
+  it("resolves once, without throwing, where MediaQueryList has no addEventListener", async () => {
+    const legacy = vi.fn(() => ({ matches: true }));
+    Object.defineProperty(window, "matchMedia", { configurable: true, writable: true, value: legacy });
+    const { useColorMode } = await fresh();
+    expect(useColorMode().isDark.value).toBe(true);
+    expect(root().classList.contains("dark")).toBe(true);
   });
 
   it("adds no listener for a stored explicit mode", async () => {
