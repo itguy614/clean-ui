@@ -64,6 +64,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CuiTransferList` paints from a stylesheet instead of inline style objects, so a plain consumer rule or a container token restyles it with no `!important`. New tokens: `--cui-transfer-list-gap`, `-bg`, `-border`, `-radius`, `-px`, `-py`, `-font-size`, `-color`, `-pressed-bg` (a row marked for transfer). The DOM, classes and look are unchanged; its parts gain `cui-transfer-list__*` classes. `CuiMaskedInput` has no paint of its own (it renders a `CuiInput`), so it needed no change beyond being guarded (#469).
 
 
+- **`CuiTreeView` is styled from a stylesheet (#468, part of #213).** Rows, chevrons, icons and
+  connector lines no longer carry inline paint, so a plain class rule or a container token now
+  restyles them without `!important`. New tokens: `--cui-tree-view-bg`, `-color`,
+  `-pressed-bg`, `-pressed-color`, `-border`, `-focus-ring`, `-radius`, `-px`, `-py`, `-gap`,
+  `-font-size` and `-height`. Rendering is unchanged, except that the row's corner radius now
+  follows `--cui-radius-sm` (default `0.25rem`, as before). The unexported `CuiTreeNode`'s `cfg`
+  prop is now `iconSize`.
+
 ## [1.9.0] - 2026-11-05
 
 ### Upgrading to 1.9
