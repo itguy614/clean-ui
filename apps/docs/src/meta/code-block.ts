@@ -24,6 +24,12 @@ const meta: ComponentMeta = {
     { name: "copyable", type: "boolean", default: "true", description: "Show the copy button, which copies code exactly" },
     { name: "maxHeight", type: "string", description: "Any CSS length. Past it the code area scrolls instead of growing" },
     {
+      name: "ariaLabel",
+      type: "string",
+      default: "Scrollable code",
+      description: "The code region's accessible name while the block scrolls. The default is the codeBlock.region message",
+    },
+    {
       name: "size",
       type: "xs | sm | md | lg | xl",
       default: "md",

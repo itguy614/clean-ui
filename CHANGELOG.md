@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
+  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
+  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
+  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
 - **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
 
 ### Added
@@ -37,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
+  new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
+  Each line is a block `span` in `<code>`; the gutter is inside the `<pre>`. A selector
+  that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
+  `codeBlock.region` message name the scroll region; an `aria-label` attribute on
+  `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
 - `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
   ("Reads · A1").
 - A frozen column group's header cell pins across its whole span on horizontal scroll.
