@@ -50,13 +50,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--cui-checkbox-{border,bg,hover-border,focus-ring}`, `--cui-radio-{bg,border,color,
   hover-border,hover-bg,hover-color,focus-ring}`, `--cui-toggle-{bg,color,hover-border,focus-ring}`,
   `--cui-combobox-{border,focus-border,focus-ring}` and `--cui-progress-{bg,color}`. Nothing
-  changes unless you set one: rendering is identical in every size, state and mode. Geometry
-  that follows the size preset (a toggle's track and knob, a progress circle's box) and
-  `CuiSelect`'s trigger font size (`--cui-select-font-size` already sizes its options) stay
-  private. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
+  changes unless you set one, apart from the invalid-field ring below. Geometry that follows
+  the size preset (a toggle's track and knob, a progress circle's box) stays private.
+  `--cui-select-font-size` now sizes the trigger as well as the options, as
+  `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
   attached-button separators) whatever the token says.
 
 ### Changed
+
+- **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-coloured focus ring** (#454),
+  as `CuiSelect` and `CuiCombobox` do. It showed the primary ring with a red border: the red
+  ring was declared but lost the cascade. `--cui-error-focus-ring` is its slot; a themed
+  `--cui-input-focus-ring` / `--cui-textarea-focus-ring` recolours the normal ring only.
 
 - **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
   new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.

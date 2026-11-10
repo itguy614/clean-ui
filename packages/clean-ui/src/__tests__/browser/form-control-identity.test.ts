@@ -23,6 +23,10 @@ import baseline from "./form-control-identity.baseline.json";
  * dark, focus, hover, error, disabled, checked and density states that move paint. Real
  * browser: jsdom computes none of this.
  *
+ * Intentional change: an invalid, focused Input and Textarea show the error-coloured focus ring
+ * (`input-md-error-focus`, `textarea-md-error-focus`), as Select and Combobox do. Until #454 they
+ * showed the primary ring: the red one was declared but lost the cascade.
+ *
  * To re-record, empty the baseline: each missing scenario prints its snapshot before failing.
  */
 
@@ -145,6 +149,7 @@ add("textarea-md-dark", { kind: "textarea", mode: "dark", make: () => wrap(CuiTe
 add("textarea-md-focus", { kind: "textarea", state: "focus", at: "textarea", ring: [".cui-textarea", "box-shadow"], make: () => wrap(CuiTextarea, { modelValue: "x" }) });
 add("textarea-md-focus-dark", { kind: "textarea", mode: "dark", state: "focus", at: "textarea", ring: [".cui-textarea", "box-shadow"], make: () => wrap(CuiTextarea, { modelValue: "x", color: "warning" }) });
 add("textarea-md-error", { kind: "textarea", make: () => wrap(CuiTextarea, { modelValue: "x", error: true }) });
+add("textarea-md-error-focus", { kind: "textarea", state: "focus", at: "textarea", ring: [".cui-textarea", "box-shadow"], make: () => wrap(CuiTextarea, { modelValue: "x", error: true }) });
 add("textarea-md-disabled", { kind: "textarea", make: () => wrap(CuiTextarea, { modelValue: "x", disabled: true }) });
 add("textarea-md-density", { kind: "textarea", density: "0.75", make: () => wrap(CuiTextarea, { modelValue: "x" }) });
 

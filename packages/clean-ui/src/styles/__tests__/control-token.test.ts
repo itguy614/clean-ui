@@ -268,12 +268,7 @@ describe("converted stylesheets read every private property through its public t
 const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the form field" };
 const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
-  {
-    file: "CuiSelect.vue",
-    component: "select",
-    privateOnly: { "font-size": "--cui-select-font-size already sizes the option rows (the listbox panel reads it by prefix)" },
-    issue: "#454",
-  },
+  { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
   { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
   { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },

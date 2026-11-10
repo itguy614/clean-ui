@@ -466,11 +466,12 @@ function prefixIsIcon(): boolean {
   border-left-color: var(--cui-error);
 }
 
-/* The ring stays the field's own (`--cui-input-focus-ring`), error or not. A red one was
-   declared here, but it lost the cascade to the ring rule above and never showed; with the
-   ring now zero-specificity it would, repainting every invalid field focused (#454). */
 .cui-input--error:focus-within {
   border-color: var(--cui-error);
+  /* The error ring, at normal specificity so a themed `--cui-input-focus-ring` (which
+     recolours the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
+     slot, as for CuiSelect and CuiCombobox (#454). */
+  box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }
 
 .cui-input__error {

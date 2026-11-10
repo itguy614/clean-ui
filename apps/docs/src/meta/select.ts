@@ -122,7 +122,7 @@ const meta: ComponentMeta = {
     { name: "--cui-select-panel-radius", default: "0.5rem", description: "Dropdown corner radius" },
     { name: "--cui-select-panel-shadow", default: "var(--cui-shadow-md)", description: "Dropdown shadow" },
     { name: "--cui-select-panel-padding", default: "0.25rem", description: "Dropdown inner padding" },
-    { name: "--cui-select-font-size", default: "per size", description: "Option font size" },
+    { name: "--cui-select-font-size", default: "per size", description: "Trigger and option font size" },
     { name: "--cui-select-item-padding", default: "per size", description: "Option padding" },
     { name: "--cui-select-item-radius", default: "0.25rem", description: "Option corner radius" },
     { name: "--cui-select-item-color", default: "var(--cui-text-body)", description: "Option text color" },

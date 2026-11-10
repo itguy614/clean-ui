@@ -436,16 +436,15 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
    `min-height` is the control's height floor — it grows with its chips — so its slot is
    `min-height`, as CuiCombobox's is.
 
-   The trigger's font size has no public token on purpose: `--cui-select-font-size` already
-   sizes the option rows (the listbox panel reads it by prefix), so making it the trigger's
-   too would restyle everyone who set it. A plain rule on the trigger still wins. */
+   `--cui-select-font-size` sizes the trigger and, through the listbox panel's prefix, the
+   option rows: one token for control plus options, as CuiCombobox and CuiTagInput do. */
 :where(.cui-select__trigger) {
   border-radius: var(--cui-select-radius, var(--_select-radius));
   min-height: var(--cui-select-min-height, var(--_select-min-height));
   padding-block: calc(0.25rem * var(--cui-density-scale, 1));
   padding-inline: var(--cui-select-px, var(--_select-px));
   border-color: var(--cui-select-border, var(--_select-border));
-  font-size: var(--_select-font-size);
+  font-size: var(--cui-select-font-size, var(--_select-font-size));
 }
 
 /* After the resting rule: both are zero specificity, so the later one wins. */
