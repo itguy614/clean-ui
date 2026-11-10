@@ -119,6 +119,9 @@ describe("CuiTreeView", () => {
 });
 
 describe("CuiTreeView chevron hit target", () => {
+  const rootVar = (wrapper: VueWrapper, slot: string) =>
+    (wrapper.element as HTMLElement).style.getPropertyValue(`--_tree-view-${slot}`);
+
   function chevronFor(wrapper: VueWrapper, id: string | number) {
     return rowFor(wrapper, id).find<HTMLElement>(".cui-tree-node__chevron").element;
   }
@@ -131,12 +134,11 @@ describe("CuiTreeView chevron hit target", () => {
     ["lg", "1rem"],
   ])("floors the %s chevron box at 24px while the glyph stays %s", (size, iconSize) => {
     const wrapper = mount(CuiTreeView, { props: { ...baseProps, size } });
-    const chevron = chevronFor(wrapper, "fruits");
 
     // Against the helper, not a copy of the string it happens to emit today: the point
-    // of the assertion is that the floor comes from scaleControlHeight at all.
-    expect(chevron.style.width).toBe(scaleControlHeight(iconSize));
-    expect(chevron.style.height).toBe(chevron.style.width);
+    // of the assertion is that the floor comes from scaleControlHeight at all. The box is
+    // sized by the stylesheet from the root's private property (#468).
+    expect(rootVar(wrapper, "height")).toBe(scaleControlHeight(iconSize));
 
     // the caret glyph itself is unchanged — read the icon's size prop, since
     // the rendered phosphor svg carries its dimensions differently
@@ -153,19 +155,19 @@ describe("CuiTreeView chevron hit target", () => {
     const parent = chevronFor(wrapper, "fruits");
     const leaf = chevronFor(wrapper, "apple");
 
-    expect(leaf.style.width).toBe(parent.style.width);
-    expect(leaf.style.height).toBe(parent.style.height);
+    // The same class, so the same stylesheet box (sized once, on the root)...
+    expect(leaf.className).toBe(parent.className.replace(" cui-tree-node__chevron--expanded", ""));
     // ...but a leaf draws no caret
     expect(leaf.querySelector("svg")).toBeNull();
   });
 
   it("keeps the caret optically in place by offsetting the wider box", () => {
     const wrapper = mount(CuiTreeView, { props: { ...baseProps, size: "sm" } });
-    const chevron = chevronFor(wrapper, "fruits");
 
-    // negative margin == -(hitSize - iconSize)/2, so the glyph's centre doesn't
-    // move and stays aligned with the showLines connectors
-    expect(chevron.style.marginLeft).toBe(`calc((0.75rem - ${scaleControlHeight("0.75rem")}) / 2)`);
+    // The stylesheet's margin is -(hitSize - iconSize)/2, so the glyph's centre doesn't
+    // move and stays aligned with the showLines connectors: it reads both from the root.
+    expect(rootVar(wrapper, "icon-size")).toBe("0.75rem");
+    expect(rootVar(wrapper, "height")).toBe(scaleControlHeight("0.75rem"));
   });
 
   it("still toggles expansion when the chevron box is clicked", async () => {
