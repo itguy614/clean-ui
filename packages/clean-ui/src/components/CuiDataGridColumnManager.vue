@@ -57,6 +57,9 @@ function isFrozenRow(row: Row): boolean {
 const frozenUnits = computed(() => grid.columnUnits.value.filter(grid.isFrozenUnit).length);
 const indexOfKey = (key: string) => grid.columnState.value.findIndex((cs) => cs.key === key);
 
+// A leaf sits one step in from its group's row; a group row and a loose column sit flush.
+const LEAF_INDENT = { "--_data-grid-column-manager-px": "calc(1.25rem * var(--cui-density-scale, 1))" };
+
 // --- Drag ---
 // A leaf moves only among its own group's leaves; a group or a loose column moves among the
 // groups and loose columns. Anything else is refused here too (no indicator, dropEffect none),
@@ -149,20 +152,21 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
       {{ messages.dataGrid.columns }}
     </CuiButton>
     <template #content>
-      <div class="cui-data-grid-column-manager__list" style="display: flex; flex-direction: column; gap: calc(0.125rem * var(--cui-density-scale, 1));">
+      <div class="cui-data-grid-column-manager__list">
         <div
           v-for="row in rows"
           :key="row.id"
           class="cui-data-grid-column-manager__row"
-          :class="[`cui-data-grid-column-manager__row--${row.kind}`, { 'cui-data-grid-column-manager__row--frozen': isFrozenRow(row) }]"
+          :class="[
+            `cui-data-grid-column-manager__row--${row.kind}`,
+            {
+              'cui-data-grid-column-manager__row--frozen': isFrozenRow(row),
+              'cui-data-grid-column-manager__row--dragging': dragging?.id === row.id,
+              'cui-data-grid-column-manager__row--drop': dropId === row.id,
+            },
+          ]"
           :draggable="isFrozenRow(row) ? 'false' : 'true'"
-          style="display: flex; align-items: center; gap: calc(0.5rem * var(--cui-density-scale, 1)); padding: calc(0.375rem * var(--cui-density-scale, 1)) 0; border-radius: 0.25rem;"
-          :style="{
-            cursor: isFrozenRow(row) ? 'default' : 'grab',
-            opacity: dragging?.id === row.id ? 0.5 : 1,
-            borderTop: dropId === row.id ? '2px solid var(--cui-primary)' : '2px solid transparent',
-            paddingInlineStart: row.kind === 'leaf' ? 'calc(1.25rem * var(--cui-density-scale, 1))' : undefined,
-          }"
+          :style="row.kind === 'leaf' ? LEAF_INDENT : undefined"
           @dragstart="onDragStart($event, row)"
           @dragover="onDragOver($event, row)"
           @dragleave="onDragLeave"
@@ -171,18 +175,17 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
         >
           <CuiIcon
             v-if="isFrozenRow(row)"
-            class="cui-data-grid-column-manager__lock"
+            class="cui-data-grid-column-manager__lock cui-data-grid-column-manager__handle"
             :icon="PhLock"
             size="0.875rem"
             role="img"
             :aria-label="messages.dataGrid.frozenColumn(nameOf(row))"
-            style="color: var(--cui-text-tertiary); flex-shrink: 0;"
           />
-          <CuiIcon v-else name="dots-six-vertical" size="0.875rem" style="color: var(--cui-text-tertiary); flex-shrink: 0;" />
-          <span v-if="row.kind === 'group'" class="cui-data-grid-column-manager__group" style="flex: 1; font-weight: 600;">{{ row.group.label }}</span>
+          <CuiIcon v-else class="cui-data-grid-column-manager__handle" name="dots-six-vertical" size="0.875rem" />
+          <span v-if="row.kind === 'group'" class="cui-data-grid-column-manager__group">{{ row.group.label }}</span>
           <CuiCheckbox
             v-else
-            style="flex: 1;"
+            class="cui-data-grid-column-manager__check"
             :model-value="grid.columnState.value[indexOfKey(row.key)].visible"
             @update:model-value="grid.toggleColumnVisibility(row.key)"
           >
@@ -190,7 +193,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
             <span aria-hidden="true">{{ getLabel(row.key) }}</span>
             <span class="cui-sr-only">{{ nameOf(row) }}</span>
           </CuiCheckbox>
-          <span v-if="!isFrozenRow(row)" style="display: flex; flex-shrink: 0;">
+          <span v-if="!isFrozenRow(row)" class="cui-data-grid-column-manager__actions">
             <CuiButton
               variant="ghost"
               size="xs"
@@ -218,3 +221,63 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
     </template>
   </CuiPopover>
 </template>
+
+<style scoped>
+/* The column list's paint. Themeable declarations sit inside :where(), so a consumer's plain
+   rule, or a --cui-data-grid-column-manager-* token set on :root or <body> (the panel is a
+   teleported popover, so a container's token never reaches it), wins; structure stays at normal
+   specificity. State rules follow their base rules, since at zero specificity the source order
+   decides. A leaf is indented under its group's row through --_data-grid-column-manager-px,
+   which the component emits on that row only. */
+.cui-data-grid-column-manager__list {
+  display: flex;
+  flex-direction: column;
+}
+:where(.cui-data-grid-column-manager__list) {
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
+}
+
+.cui-data-grid-column-manager__row {
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+:where(.cui-data-grid-column-manager__row) {
+  gap: var(--cui-data-grid-column-manager-gap, calc(0.5rem * var(--cui-density-scale, 1)));
+  padding-block: calc(0.375rem * var(--cui-density-scale, 1));
+  padding-inline-start: var(--cui-data-grid-column-manager-px, var(--_data-grid-column-manager-px, 0));
+  border-radius: var(--cui-data-grid-column-manager-radius, 0.25rem);
+  /* The drop indicator's line: always there, transparent, so a row never shifts when one lands. */
+  border-top: 2px solid transparent;
+}
+.cui-data-grid-column-manager__row--frozen {
+  cursor: default;
+}
+/* Being dragged, and the row it would drop in front of. */
+:where(.cui-data-grid-column-manager__row--dragging) {
+  opacity: 0.5;
+}
+:where(.cui-data-grid-column-manager__row--drop) {
+  border-top-color: var(--cui-data-grid-column-manager-border, var(--cui-primary));
+}
+
+:where(.cui-data-grid-column-manager__handle) {
+  color: var(--cui-text-tertiary);
+}
+.cui-data-grid-column-manager__handle {
+  flex-shrink: 0;
+}
+
+:where(.cui-data-grid-column-manager__group) {
+  font-weight: 600;
+}
+.cui-data-grid-column-manager__group,
+.cui-data-grid-column-manager__check {
+  flex: 1;
+}
+
+.cui-data-grid-column-manager__actions {
+  display: flex;
+  flex-shrink: 0;
+}
+</style>
