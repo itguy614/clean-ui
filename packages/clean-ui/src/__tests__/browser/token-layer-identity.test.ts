@@ -204,6 +204,16 @@ describe("Alert, Banner, Toast, Tabs, ListItem and TagInput look the same as bef
   });
   afterAll(() => document.getElementById("cui-tokens-454b")?.remove());
 
+  // The pointer stays where the last hover left it, which can be over the next scenario's
+  // dismiss button. Park it on a corner element before each one.
+  let parking: HTMLElement;
+  beforeAll(() => {
+    parking = document.createElement("div");
+    parking.style.cssText = "position: fixed; right: 0; bottom: 0; width: 8px; height: 8px";
+    document.body.append(parking);
+  });
+  afterAll(() => parking.remove());
+
   const wrappers: VueWrapper[] = [];
   const hosts: HTMLElement[] = [];
   afterEach(() => {
@@ -215,6 +225,7 @@ describe("Alert, Banner, Toast, Tabs, ListItem and TagInput look the same as bef
 
   for (const [name, scenario] of Object.entries(SCENARIOS)) {
     it(name, async () => {
+      await userEvent.hover(parking);
       const host = document.createElement("div");
       if (scenario.mode === "dark") host.className = "dark";
       host.style.width = "500px";
