@@ -104,6 +104,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-px` and `-py`. A guard now requires every component to have a `<style>` block or an
   explicit, justified exemption (#213).
 
+- **The date, date-range and time pickers, and any `CuiPopover` with `no-arrow`, now open 4px
+  from their trigger, 6px closer than before (#486).** They had `CuiPopover`'s 10px default,
+  which leaves room for an arrow they don't draw, while a Combobox or Select sat 4px away. One
+  shared `PANEL_OFFSET` now sets the gap for every arrowless trigger-anchored panel. A popover
+  with an arrow keeps 10px, and `CuiTooltip` keeps 8px (arrow or not); an explicit `offset` is
+  unchanged. A visual change only.
 
 - The Color Scheme page no longer says clean-ui leaves the dark toggle to you: `useColorMode()`
   owns it, and `useColorScheme()` still only observes (#487). The docs sites' header color-mode

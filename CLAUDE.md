@@ -312,6 +312,7 @@ should not need a later "make it consistent" PR.
 - CuiTooltip uses `usePopover` (Floating UI) — reactive positioning works here because tooltip has a show delay
 - CuiDropdown uses synchronous `computeDropdownPosition()` — avoids the async Floating UI timing issue with `v-if`
 - CuiSelect, CuiCombobox and CuiTagInput use the same `computeDropdownPosition()` with `{ matchWidth: true, maxHeight }` — never write a local positioner (#204)
+- **One gap for trigger-anchored panels:** `PANEL_OFFSET` (4px, `utils/position.ts`) is the distance from trigger to panel for every panel without an arrow — `computeDropdownPosition` users and `CuiPopover` with `noArrow` (so the date, date-range and time pickers) alike. A panel that draws an arrow keeps a larger gap, because the arrow needs the room: `CuiPopover` with an arrow 10px. `CuiTooltip` keeps its own 8px, arrow or not (a hover hint, not a field's panel). Never hand-pick a gap for a new arrowless panel; `__tests__/browser/panel-gap.test.ts` measures every one, flipped included (#486).
 - Dropdown closes on scroll by default; `pinned` prop keeps it open and repositions
 - Dropdown has animated close: `isClosing` state plays exit animation before removing from DOM
 - Sub-menus inherit parent trigger mode by default, `trigger` prop to override
