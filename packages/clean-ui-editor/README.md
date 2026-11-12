@@ -125,6 +125,9 @@ import { CuiMarkdownViewer } from "@itguy614/clean-ui-editor/render";
 | `@itguy614/clean-ui-editor/render` | `CuiMarkdownViewer`, `serializeMarkdownToHtml`, render adapters — the markdown→HTML serializer |
 | `@itguy614/clean-ui-editor/codemirror` | CodeMirror building blocks, for advanced/custom setups |
 
+These four are the whole public surface: the `exports` map is explicit, so any other path
+(`@itguy614/clean-ui-editor/messages.js`, `/plugins/...`) does not resolve.
+
 ## Documentation
 
 Part of the clean-ui project: **https://itguy614.github.io/clean-ui/**

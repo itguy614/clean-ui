@@ -71,20 +71,18 @@ export interface CuiMarkdownEditorMessages {
   linkDialogUrlPlaceholder: string;
   linkDialogTextLabel: string;
   linkDialogTextPlaceholder: string;
-  linkDialogCancel: string;
-  linkDialogInsert: string;
-  linkDialogUrlRequired: string;
-  linkDialogUrlSchemeNotAllowed: string;
 
   imageDialogTitle: string;
   imageDialogUrlLabel: string;
   imageDialogUrlPlaceholder: string;
   imageDialogAltLabel: string;
   imageDialogAltPlaceholder: string;
-  imageDialogCancel: string;
-  imageDialogInsert: string;
-  imageDialogUrlRequired: string;
-  imageDialogUrlSchemeNotAllowed: string;
+
+  /** Shared by the link and image dialogs (one `UrlDialog`): the strings that read the same for both. */
+  urlDialogCancel: string;
+  urlDialogInsert: string;
+  urlDialogUrlRequired: string;
+  urlDialogUrlSchemeNotAllowed: string;
 
   /** FR28: a pasted image file was refused outright (no upload affordance). */
   pasteRejectedImage: string;
@@ -123,20 +121,17 @@ export const defaultMarkdownEditorMessages: CuiMarkdownEditorMessages = {
   linkDialogUrlPlaceholder: "https://example.com",
   linkDialogTextLabel: "Text",
   linkDialogTextPlaceholder: "Link text",
-  linkDialogCancel: "Cancel",
-  linkDialogInsert: "Insert",
-  linkDialogUrlRequired: "A URL is required.",
-  linkDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
 
   imageDialogTitle: "Insert image",
   imageDialogUrlLabel: "Image URL",
   imageDialogUrlPlaceholder: "https://example.com/image.png",
   imageDialogAltLabel: "Alt text",
   imageDialogAltPlaceholder: "Describes the image",
-  imageDialogCancel: "Cancel",
-  imageDialogInsert: "Insert",
-  imageDialogUrlRequired: "A URL is required.",
-  imageDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
+
+  urlDialogCancel: "Cancel",
+  urlDialogInsert: "Insert",
+  urlDialogUrlRequired: "A URL is required.",
+  urlDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
 
   pasteRejectedImage: "Pasted images aren't supported yet — insert an image by URL instead.",
   maxLengthExceeded: (overage, limit) =>
@@ -184,8 +179,9 @@ const URL_DIALOG_TEXT_KEYS = {
 } as const satisfies Record<UrlDialogKind, Record<"label" | "placeholder", keyof CuiMarkdownEditorMessages>>;
 
 /**
- * One dialog's strings, from that kind's `linkDialog*` or `imageDialog*` keys. The catalog
- * keeps a full set per kind, so a host can word the two differently.
+ * One dialog's strings: the title, URL field and second field from that kind's `linkDialog*` or
+ * `imageDialog*` keys, and the buttons and errors, which read the same for both, from the shared
+ * `urlDialog*` keys.
  */
 export function pickUrlDialogMessages(messages: CuiMarkdownEditorMessages, kind: UrlDialogKind): UrlDialogMessages {
   const text = URL_DIALOG_TEXT_KEYS[kind];
@@ -195,9 +191,9 @@ export function pickUrlDialogMessages(messages: CuiMarkdownEditorMessages, kind:
     urlPlaceholder: messages[`${kind}DialogUrlPlaceholder`],
     textLabel: messages[text.label],
     textPlaceholder: messages[text.placeholder],
-    cancel: messages[`${kind}DialogCancel`],
-    insert: messages[`${kind}DialogInsert`],
-    urlRequired: messages[`${kind}DialogUrlRequired`],
-    urlSchemeNotAllowed: messages[`${kind}DialogUrlSchemeNotAllowed`],
+    cancel: messages.urlDialogCancel,
+    insert: messages.urlDialogInsert,
+    urlRequired: messages.urlDialogUrlRequired,
+    urlSchemeNotAllowed: messages.urlDialogUrlSchemeNotAllowed,
   };
 }

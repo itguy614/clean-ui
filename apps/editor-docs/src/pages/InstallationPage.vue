@@ -65,7 +65,7 @@ app.mount("#app");</code></pre>
           already pulls in its CSS as a side effect — nothing else to add. If your bundler tree-shakes
           side-effect-free imports, make sure <code class="cui-code">sideEffects</code> in your own
           build config doesn't strip it (this package's own <code class="cui-code">package.json</code>
-          declares its CSS and icon-registration modules as side effects for exactly this reason).
+          declares its CSS as a side effect for exactly this reason).
         </p>
       </CuiCardBody>
     </CuiCard>
@@ -79,6 +79,45 @@ app.mount("#app");</code></pre>
           plugin you author that references its own icon name follows the same rule clean-ui
           components do: register it, or pass a component directly to <code class="cui-code">CuiIcon</code>.
         </p>
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
+      <CuiCardHeader title="Entry points" />
+      <CuiCardBody>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-bottom: 0.75rem;">
+          The package's <code class="cui-code">exports</code> map lists four entries, and nothing else
+          can be imported. Deep paths into <code class="cui-code">dist</code> (for example
+          <code class="cui-code">@itguy614/clean-ui-editor/messages.js</code>) are refused.
+        </p>
+        <PropTable
+          :props="[
+            { name: '@itguy614/clean-ui-editor', type: 'entry', description: 'CuiMarkdownEditor, the plugin API, built-in plugins, messages.' },
+            { name: '@itguy614/clean-ui-editor/styles', type: 'entry', description: 'The editor stylesheet.' },
+            { name: '@itguy614/clean-ui-editor/render', type: 'entry', description: 'CuiMarkdownViewer, serializeMarkdownToHtml, render adapters.' },
+            { name: '@itguy614/clean-ui-editor/codemirror', type: 'entry', description: 'CodeMirror building blocks for raw-tier plugins.' },
+          ]"
+        />
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
+      <CuiCardHeader title="Upgrading to 2.0" />
+      <CuiCardBody>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-bottom: 0.75rem;">
+          Two breaking changes. First, import only from the four entries above; any
+          <code class="cui-code">@itguy614/clean-ui-editor/&lt;path&gt;</code> that is not one of them stops
+          resolving. Second, the link and image dialogs share four message keys instead of keeping a
+          copy each:
+        </p>
+        <PropTable
+          :props="[
+            { name: 'linkDialogCancel, imageDialogCancel', type: 'urlDialogCancel', description: 'The Cancel button of both dialogs.' },
+            { name: 'linkDialogInsert, imageDialogInsert', type: 'urlDialogInsert', description: 'The Insert button of both dialogs.' },
+            { name: 'linkDialogUrlRequired, imageDialogUrlRequired', type: 'urlDialogUrlRequired', description: 'The empty-URL error.' },
+            { name: 'linkDialogUrlSchemeNotAllowed, imageDialogUrlSchemeNotAllowed', type: 'urlDialogUrlSchemeNotAllowed', description: 'The disallowed-scheme error.' },
+          ]"
+        />
       </CuiCardBody>
     </CuiCard>
 
