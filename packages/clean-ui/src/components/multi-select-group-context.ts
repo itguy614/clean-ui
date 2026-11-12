@@ -1,5 +1,5 @@
 import { inject, provide, type InjectionKey, type Ref } from "vue";
-import type { CuiAutoOrientation, CuiColor, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import type { CuiAutoOrientation, CuiColor, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps, FormControlProps } from "../types/common";
 
 /**
  * Shared context for multi-select groups (CheckboxGroup, ToggleGroup).
@@ -21,19 +21,15 @@ export const CheckboxGroupKey: InjectionKey<MultiSelectGroupContext> = Symbol("c
 export const ToggleGroupKey: InjectionKey<MultiSelectGroupContext> = Symbol("toggle-group");
 
 /** The props CuiCheckboxGroup and CuiToggleGroup share — all of them (#206). */
-export interface MultiSelectGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, DisableableProps {
+export interface MultiSelectGroupProps extends AriaLabelableProps,
+    HideableProps,
+    ColorableProps,
+    DisableableProps,
+    Pick<FormControlProps, "readonly" | "error" | "errorMessage" | "label"> {
   /** Array of selected values */
   modelValue?: Array<string | number>;
   /** Layout orientation — auto: horizontal for ≤2 options, vertical for 3+ */
   orientation?: CuiAutoOrientation;
-  /** Make every option readonly */
-  readonly?: boolean;
-  /** Show error state */
-  error?: boolean;
-  /** Error message displayed below the group */
-  errorMessage?: string;
-  /** Accessible label for the group */
-  label?: string;
 }
 
 /**
