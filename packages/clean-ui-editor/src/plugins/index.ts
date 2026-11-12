@@ -34,5 +34,6 @@ export {
   type CollectOpener,
   type CollectSettle,
   type ConstructLookup,
+  type EditorLine,
   type EditorSelectionRange,
 } from "./types";

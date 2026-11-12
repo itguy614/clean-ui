@@ -45,6 +45,7 @@ export {
   type CollectOpener,
   type CollectSettle,
   type ConstructLookup,
+  type EditorLine,
   type EditorSelectionRange,
   type PluginErrorInfo,
 } from "./plugins";

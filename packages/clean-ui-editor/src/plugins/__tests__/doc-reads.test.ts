@@ -23,8 +23,13 @@ function setup(anchor: number, head?: number) {
     state: EditorState.create({ doc: DOC, selection: EditorSelection.single(anchor, head), extensions: [cuiMarkdownLanguage.extension] }),
     parent: document.body,
   });
-  const toString = vi.spyOn(Object.getPrototypeOf(view.state.doc), "toString");
-  return { context: createCommandContext(() => view!), toString };
+  // DOC spans many lines, so this is the multi-node `Text` that real documents are.
+  const proto = Object.getPrototypeOf(view.state.doc);
+  const toString = vi.spyOn(proto, "toString");
+  // A flatten by another route (`sliceDoc(0)`, `sliceString`) is a read of the whole document too.
+  const sliceString = vi.spyOn(proto, "sliceString");
+  const wholeDocSlices = () => sliceString.mock.calls.filter(([from = 0, to = DOC.length]) => to - from >= DOC.length);
+  return { context: createCommandContext(() => view!), toString, wholeDocSlices };
 }
 
 const commands = DEFAULT_PLUGINS.flatMap((plugin) => Object.entries(plugin.commands));
@@ -38,17 +43,19 @@ describe("whole-document reads", () => {
     ["a collapsed cursor", 20, undefined],
     ["a multi-line selection", 3, 400],
   ])("no built-in isActive copies the document, for %s", (_name, anchor, head) => {
-    const { context, toString } = setup(anchor, head);
+    const { context, toString, wholeDocSlices } = setup(anchor, head);
     for (const [, spec] of commands) spec.isActive?.(context);
     expect(toString).not.toHaveBeenCalled();
+    expect(wholeDocSlices()).toEqual([]);
   });
 
   it("no built-in command copies the document when it runs", () => {
     for (const [id, spec] of commands) {
       if (id === "link" || id === "image") continue; // open a dialog
-      const { context, toString } = setup(12, 30);
+      const { context, toString, wholeDocSlices } = setup(12, 30);
       spec.run(context);
       expect(toString, id).not.toHaveBeenCalled();
+      expect(wholeDocSlices(), id).toEqual([]);
       view!.destroy();
     }
   });

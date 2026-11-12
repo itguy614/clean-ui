@@ -85,6 +85,13 @@ describe("buildRegistry", () => {
     expect([...result.registry.decorationNodes]).toEqual(["Emphasis"]);
   });
 
+  it("warns about a spec still using the 1.x `decorations` field, which is ignored", () => {
+    const legacy = definePlugin({ id: "legacy", commands: {}, decorations: [{ node: "Emphasis" }] } as never);
+    const result = buildRegistry([legacy]);
+    expect(result.ok && [...result.registry.decorationNodes]).toEqual([]);
+    expect(result.ok && result.registry.warnings.some((w) => w.message.includes("decorationNodes"))).toBe(true);
+  });
+
   it("a raw extension using an explicit Prec override is passed through untouched (escapes the precedence model)", () => {
     const marker = {};
     const withRaw = definePlugin({ id: "raw", commands: {}, extensions: [marker as never] });

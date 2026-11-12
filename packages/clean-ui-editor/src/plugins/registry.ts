@@ -103,6 +103,13 @@ export function buildRegistry(plugins: readonly CuiEditorPlugin[]): BuildRegistr
     for (const construct of plugin.constructs ?? []) constructs.add(construct);
     paste.push(...(plugin.paste ?? []));
     for (const node of plugin.decorationNodes ?? []) decorationNodes.add(node);
+    // `definePlugin` stamps the current API version on a 1.x spec, so the version
+    // check cannot catch it: its markers would silently stop being hidden.
+    if (__DEV__ && process.env.NODE_ENV !== "production" && "decorations" in plugin) {
+      warnings.push({
+        message: `Plugin "${plugin.id}" declares \`decorations\`, which was renamed \`decorationNodes\` (a list of node names) in plugin API version 2 and is now ignored.`,
+      });
+    }
     // Grouped per plugin (nested), not flattened — CodeMirror's Extension
     // tree accepts arbitrary nesting, and keeping each plugin's raw
     // extensions as their own subtree is what "installed separately" (FR21a)
