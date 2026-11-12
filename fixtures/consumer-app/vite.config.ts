@@ -13,6 +13,7 @@ import { resolve } from "node:path";
 const BASELINE_ALIASES: Record<string, Record<string, string>> = {
   "@itguy614/clean-ui": {
     "@itguy614/clean-ui/styles": resolve(__dirname, "baseline-stub.css"),
+    "@itguy614/clean-ui/icons/generated/caret-down": resolve(__dirname, "baseline-stub-icon.ts"),
     "@itguy614/clean-ui": resolve(__dirname, "baseline-stub.ts"),
   },
   "@itguy614/clean-ui-editor": {

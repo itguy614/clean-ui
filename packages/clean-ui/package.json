@@ -43,6 +43,10 @@
       "types": "./dist/icons/builtin.d.ts",
       "import": "./dist/icons/builtin.js"
     },
+    "./icons/generated/*": {
+      "types": "./dist/icons/generated/*.d.ts",
+      "import": "./dist/icons/generated/*.js"
+    },
     "./*": "./dist/*"
   },
   "files": [

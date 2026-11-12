@@ -18,11 +18,10 @@
  * which is committed and hand-updated; this script never rewrites it, so a
  * regression fails loudly instead of quietly raising its own ceiling.
  */
-import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { gzipSync } from "node:zlib";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
+import { FIXTURE_DIR, SCENARIOS, analyzeBuild, buildScenario } from "./fixture-scenarios.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const BUDGET_FILE = resolve(ROOT, "fixtures/size-budget.json");
@@ -30,14 +29,6 @@ const BUDGET_FILE = resolve(ROOT, "fixtures/size-budget.json");
 function fail(message) {
   console.error(`\n✗ check-bundle-budget: ${message}\n`);
   process.exit(1);
-}
-
-function gzipTotal(distDir) {
-  const assetsDir = join(distDir, "assets");
-  if (!existsSync(assetsDir)) return 0;
-  return readdirSync(assetsDir)
-    .filter((file) => file.endsWith(".js") || file.endsWith(".css"))
-    .reduce((total, file) => total + gzipSync(readFileSync(join(assetsDir, file))).length, 0);
 }
 
 if (!existsSync(BUDGET_FILE)) fail(`${BUDGET_FILE} does not exist.`);
@@ -69,13 +60,21 @@ for (const entry of entries) {
   }
   const label = `${pkg} ${scenario}`;
   console.log(`[check-bundle-budget] ${label}: building with the real package...`);
-  const withPackage = gzipTotal(buildScenario(scenario));
+  const withPackage = analyzeBuild(buildScenario(scenario));
   console.log(`[check-bundle-budget] ${label}: building with the baseline stub...`);
-  const baseline = gzipTotal(buildScenario(scenario, { baseline: pkg }));
-  const delta = withPackage - baseline;
+  const baselineBuild = analyzeBuild(buildScenario(scenario, { baseline: pkg }));
+  const delta = withPackage.gzip - baselineBuild.gzip;
   console.log(
-    `[check-bundle-budget] ${label}: with-package: ${format(withPackage)}, baseline: ${format(baseline)}, ` +
+    `[check-bundle-budget] ${label}: with-package: ${format(withPackage.gzip)}, baseline: ${format(baselineBuild.gzip)}, ` +
       `delta: ${format(delta)}, budget: ${format(entry.gzipBytes)}`,
+  );
+  // Where the delta went (#207): js (everything but icon path data), css, and icons (the path data
+  // alone, as its marginal gzip cost). The three sum to the delta. A budget stays on the total.
+  const area = (key) => withPackage[key] - baselineBuild[key];
+  console.log(
+    `[check-bundle-budget] ${label}: by area: js ${format(area("js"))}, css ${format(area("css"))}, ` +
+      `icons ${format(area("icons"))} (${withPackage.paths - baselineBuild.paths} SVG paths, ` +
+      `${format(withPackage.pathBytes - baselineBuild.pathBytes)} raw)`,
   );
   if (delta > entry.gzipBytes) {
     over.push(

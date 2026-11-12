@@ -15,7 +15,15 @@ type Weighted = Component & { iconWeights: string[] };
 const pascal = (name: string) => "Ph" + name.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join("");
 const phosphorIcon = (name: string) => (phosphor as unknown as Record<string, Component>)[pascal(name)];
 
-const CASES = Object.entries(BUILTIN_ICONS).flatMap(([name, icon]) =>
+const modules = import.meta.glob<Record<string, Component>>("../generated/*.ts", { eager: true });
+// Every generated icon: the built-ins and the markdown editor's.
+const ALL_GENERATED: Record<string, Component> = Object.fromEntries(
+  Object.entries(modules)
+    .filter(([path]) => !path.endsWith("/index.ts"))
+    .map(([path, mod]) => [path.match(/([^/]+)\.ts$/)![1], Object.values(mod)[0]]),
+);
+
+const CASES = Object.entries(ALL_GENERATED).flatMap(([name, icon]) =>
   (icon as Weighted).iconWeights.map((weight) => [name, weight] as const),
 );
 
@@ -31,12 +39,17 @@ afterEach(() => {
  */
 describe("generated built-in icons draw what Phosphor draws", () => {
   it("covers the set the library draws", () => {
-    expect(CASES.length).toBeGreaterThan(55);
+    expect(CASES.length).toBeGreaterThan(65);
+  });
+
+  it("keeps the editor's icons out of the opt-in name map", () => {
+    expect(Object.keys(BUILTIN_ICONS)).not.toContain("text-b");
+    expect(Object.keys(ALL_GENERATED)).toContain("text-b");
   });
 
   it.each(CASES)("%s at %s: identical markup to the Phosphor component", (name, weight) => {
     const props = { weight, size: "1.25rem", color: "currentColor" };
-    const builtin = mount(BUILTIN_ICONS[name], { props }).html();
+    const builtin = mount(ALL_GENERATED[name], { props }).html();
     const original = mount(phosphorIcon(name), { props }).html();
     expect(original, `${pascal(name)} not found in @phosphor-icons/vue`).toBeTruthy();
     expect(builtin).toBe(original);

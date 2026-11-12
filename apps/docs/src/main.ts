@@ -4,6 +4,9 @@ import { createCleanUI, restoreColorMode, restoreDensity, restoreTheme } from "@
 // arbitrary Phosphor names to show what's available, so it accepts the full icon
 // package. An app should instead register the handful of icons it uses — see the
 // "Tree-shaking" section on the Icons page.
+// The library's own names (caret-down, check, …) resolve synchronously from icons/builtin (#207);
+// the lazy resolver then covers every other name.
+import "@itguy614/clean-ui/icons/builtin";
 import "@itguy614/clean-ui/icons/lazy";
 import router from "./router";
 import App from "./App.vue";

@@ -5,6 +5,9 @@ import { createCleanUI, restoreColorMode, restoreDensity, restoreTheme } from "@
 // the full icon package rather than curating a list — the editor's own
 // toolbar icons are separately registered by @itguy614/clean-ui-editor
 // itself and don't need this at all.
+// The library's own names (caret-down, check, …) resolve synchronously from icons/builtin (#207);
+// the lazy resolver then covers every other name.
+import "@itguy614/clean-ui/icons/builtin";
 import "@itguy614/clean-ui/icons/lazy";
 import router from "./router";
 import App from "./App.vue";

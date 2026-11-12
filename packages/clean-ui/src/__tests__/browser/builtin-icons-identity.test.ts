@@ -15,6 +15,12 @@ import { registerBuiltinIcons } from "../../icons/builtin";
  */
 const pascal = (name: string) => "Ph" + name.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join("");
 const SIZE = 48;
+const modules = import.meta.glob<Record<string, Component>>("../../icons/generated/*.ts", { eager: true });
+const ALL_GENERATED: Record<string, Component> = Object.fromEntries(
+  Object.entries(modules)
+    .filter(([path]) => !path.endsWith("/index.ts"))
+    .map(([path, mod]) => [path.match(/([^/]+)\.ts$/)![1], Object.values(mod)[0]]),
+);
 const mounted: { unmount(): void }[] = [];
 afterEach(() => mounted.splice(0).forEach((w) => w.unmount()));
 
@@ -46,13 +52,14 @@ function render(icon: Component, weight: string): SVGSVGElement {
 
 describe("built-in icons are pixel-identical to the Phosphor icons they replace (real browser)", () => {
   registerBuiltinIcons();
-  const cases = Object.entries(BUILTIN_ICONS).flatMap(([name, icon]) =>
+  // Every generated icon: the built-ins and the markdown editor's.
+  const cases = Object.entries(ALL_GENERATED).flatMap(([name, icon]) =>
     ((icon as { iconWeights: string[] }).iconWeights).map((weight) => [name, weight] as const),
   );
 
   it.each(cases)("%s at %s", async (name, weight) => {
     const original = (phosphor as unknown as Record<string, Component>)[pascal(name)];
-    const mine = await pixels(render(BUILTIN_ICONS[name], weight));
+    const mine = await pixels(render(ALL_GENERATED[name], weight));
     const theirs = await pixels(render(original, weight));
     // Not a blank raster on both sides.
     expect(mine.some((v, i) => i % 4 === 3 && v > 0), `${name} drew nothing`).toBe(true);
