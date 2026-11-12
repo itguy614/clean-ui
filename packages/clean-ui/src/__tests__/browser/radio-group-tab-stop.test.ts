@@ -150,6 +150,26 @@ describe("CuiRadioGroup single tab stop (real browser, #231)", () => {
     expect(model.value).toBe("b");
   });
 
+  it("keeps the stop on the focused radio through a re-render in a readonly group", async () => {
+    const { wrapper, radio } = render({ readonly: true, value: "b" });
+    radio("b").focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(radio("c"));
+    await wrapper.vm.$forceUpdate();
+    await nextTick();
+    expect(radio("c").tabIndex).toBe(0);
+    expect(radio("b").tabIndex).toBe(-1);
+  });
+
+  it("returns the stop to the first radio when the selection is cleared", async () => {
+    const { model, radio } = render({ value: "d" });
+    expect(radio("d").tabIndex).toBe(0);
+    model.value = undefined;
+    await nextTick();
+    await nextTick();
+    expect(["a", "b", "c", "d", "e"].filter((id) => radio(id).tabIndex === 0)).toEqual(["a"]);
+  });
+
   it("a disabled group is skipped entirely", async () => {
     const { el } = render({ groupDisabled: true, value: "b" });
     expect(await tabStops(el)).toEqual([]);

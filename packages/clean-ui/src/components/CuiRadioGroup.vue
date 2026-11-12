@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUpdated, provide, toRef, useTemplateRef, watch } from "vue";
+import { computed, onMounted, provide, toRef, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
@@ -77,14 +77,15 @@ const roving = useRovingFocus({
   manageTabindex: true,
 });
 
-// The stop follows the selection, however it changed.
+// The stop follows the selection when it changes (not on every render: a readonly group, or a
+// parent that applies the change late, leaves focus on a radio that isn't the checked one),
+// and goes back to the first enabled radio when it is cleared.
 function syncStopToChecked() {
   const radios = Array.from(groupRef.value?.querySelectorAll<HTMLElement>('[role="radio"]') ?? []);
   const checked = radios.findIndex((el) => el.getAttribute("aria-checked") === "true");
-  if (checked !== -1) roving.activeIndex.value = checked;
+  roving.activeIndex.value = Math.max(checked, 0);
 }
 onMounted(syncStopToChecked);
-onUpdated(syncStopToChecked);
 watch(() => props.modelValue, syncStopToChecked, { flush: "post" });
 
 // Selection follows focus. A readonly group moves focus but selects nothing (`select`

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
-import { h } from "vue";
+import { createSSRApp, h } from "vue";
+import { renderToString } from "@vue/server-renderer";
 import CuiRadioGroup from "../CuiRadioGroup.vue";
 import CuiRadio from "../CuiRadio.vue";
 import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
@@ -97,6 +98,16 @@ describe("CuiRadioGroup tab stop (#231)", () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.findAll('[role="radio"]').map((r) => r.attributes("tabindex"))).toEqual(["-1", "0", "-1"]);
     wrapper.unmount();
+  });
+
+  it("renders a tab stop on the checked radio on the server, so it is reachable before hydration", async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(CuiRadioGroup, { modelValue: "b" }, () => ["a", "b", "c"].map((v) => h(CuiRadio, { value: v, label: v }))),
+      }),
+    );
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
   });
 
   it("leaves a standalone radio at its own tab stop", () => {
