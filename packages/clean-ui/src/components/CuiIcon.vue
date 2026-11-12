@@ -109,7 +109,8 @@ const drawnWeight = computed<IconWeight>(() => {
 });
 
 watchEffect(() => {
-  if (drawnWeight.value === props.weight || !iconComponent.value) return;
+  // The "?" fallback is regular-only too, but the unknown-name warning is the one to read.
+  if (drawnWeight.value === props.weight || !iconComponent.value || iconComponent.value === FALLBACK_ICON) return;
   if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[CuiIcon] the built-in "${props.name ?? (iconComponent.value as { name?: string }).name}" icon carries only the weights clean-ui draws, so weight="${props.weight}" draws regular. ` +
       `For the full weights, register the Phosphor icon over the name (registerIcons({ name: PhFoo })) or pass it: <CuiIcon :icon="PhFoo" weight="${props.weight}" />.`,

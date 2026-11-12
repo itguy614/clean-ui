@@ -83,7 +83,7 @@ export function resolveRoleIcon(
   /** The app's or the nearest provider's role icons (#149), above the global ones. */
   provided?: Partial<Record<CuiColor, CuiRoleIcon>>,
 ): { icon: Component | null; text: string | null } {
-  const chosen = icon || (provided?.[color] ?? overrides[color] ?? COLOR_ICON_MAP[color]);
+  const chosen = icon || (provided?.[color] ?? overrides[color] ?? COLOR_ICON_MAP[color] ?? IconInfo);
   if (typeof chosen !== "string") return { icon: chosen, text: null };
   const registered = resolveRegisteredIcon(chosen);
   return registered ? { icon: registered, text: null } : { icon: null, text: chosen };

@@ -5,6 +5,7 @@ import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
+import { hasIcon } from "../icons/registry";
 import { IconStar } from "../icons/generated/star";
 import { IconStarHalf } from "../icons/generated/star-half";
 
@@ -76,8 +77,11 @@ function getStarState(index: number): "filled" | "half" | "empty" {
 // name resolves through the registry.
 function iconProps(state: "filled" | "half" | "empty") {
   const name = state === "half" ? props.halfIcon : props.icon;
-  if (name === "star") return { icon: IconStar };
-  if (name === "star-half") return { icon: IconStarHalf };
+  // A name the app registered (over the built-in, say) wins; the defaults need no registration.
+  if (!hasIcon(name)) {
+    if (name === "star") return { icon: IconStar };
+    if (name === "star-half") return { icon: IconStarHalf };
+  }
   return { name };
 }
 

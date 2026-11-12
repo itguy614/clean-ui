@@ -54,6 +54,14 @@ describe("built-in icons: the structure", () => {
     expect(offenders, "pass the icon: <CuiIcon :icon=\"IconCaretDown\" />").toEqual([]);
   });
 
+  it("no component passes a built-in name as a string icon prop to another component", () => {
+    const offenders: string[] = [];
+    for (const file of components()) {
+      for (const m of readFileSync(file, "utf8").matchAll(/<Cui\w+\b[^>]*?(?<![:\w-])icon="([a-z0-9-]+)"/g)) offenders.push(`${rel(file)}: icon="${m[1]}"`);
+    }
+    expect(offenders, "pass the component: :icon=\"IconMagnifyingGlass\"").toEqual([]);
+  });
+
   it("nothing reachable from the barrel loads the built-in names, the lazy resolver or the icon set", () => {
     const seen = new Set<string>();
     const queue = [join(SRC, "index.ts")];

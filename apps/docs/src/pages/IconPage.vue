@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { CuiAlert, CuiCard, CuiCardBody, CuiIcon, CuiFlex, CuiStack } from "@itguy614/clean-ui";
+import { BUILTIN_ICONS } from "@itguy614/clean-ui/icons/builtin";
 import PropTable from "../components/PropTable.vue";
 import Example from "../components/Example.vue";
+
+const builtinCount = Object.keys(BUILTIN_ICONS).length;
 
 const commonIcons = [
   "house", "gear", "user", "users", "envelope", "bell", "magnifying-glass",
@@ -27,7 +30,7 @@ const commonIcons = [
       <h1 class="text-4xl font-bold">Icons</h1>
       <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
         Phosphor icons with consistent sizing and color inheritance. clean-ui ships the
-        55 it draws itself; any other Phosphor icon, in all 6 weights, is one import away.
+        {{ builtinCount }} it draws itself; any other Phosphor icon, in all 6 weights, is one import away.
       </p>
     </div>
 
@@ -55,7 +58,7 @@ const commonIcons = [
             <p>
               Each clean-ui component imports the icon it draws and hands the component to
               <code class="cui-code">CuiIcon</code>, so the icons you pay for follow the components
-              you use. The 55 built-in icons are generated from Phosphor's SVG assets and draw
+              you use. The {{ builtinCount }} built-in icons are generated from Phosphor's SVG assets and draw
               exactly what Phosphor draws, but carry only the weights clean-ui itself uses:
             </p>
             <ul class="list-disc pl-6">
@@ -79,7 +82,7 @@ registerIcons({ "caret-down": PhCaretDown });
             <p>
               The built-in names are not registered by default. Import them once to use
               <code class="cui-code">name="caret-down"</code>, an <code class="cui-code">icon: "user"</code>
-              option, or <code class="cui-code">&lt;CuiAlert icon="check-circle"&gt;</code> (about 6 kB gzip for all of
+              option, or <code class="cui-code">&lt;CuiAlert icon="check-circle"&gt;</code> (a few kB gzip for all of
               them), or import a single icon:
             </p>
             <pre class="cui-pre"><code class="cui-code">import "@itguy614/clean-ui/icons/builtin"; // every built-in name

@@ -134,6 +134,14 @@ describe("CuiIcon with built-in icons: name, icon and weight", () => {
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
+  it("an unknown name with a weight warns about the name only, not the weights", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mount(CuiIcon, { props: { name: "no-such-icon-xyz", weight: "bold" } });
+    const message = warn.mock.calls.flat().join("\n");
+    expect(message).toContain("unknown icon");
+    expect(message).not.toContain("carries only the weights");
+  });
+
   it("does not warn for a supported weight", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mount(CuiIcon, { props: { icon: IconCircle, weight: "fill" } });
