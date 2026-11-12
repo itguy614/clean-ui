@@ -27,11 +27,16 @@ export default defineConfig({
   },
   build: {
     lib: {
-      // Two entries: the barrel, plus the opt-in lazy icon resolver. The latter
-      // is unreachable from the barrel by design (importing it would drag the
-      // whole icon package into every consumer bundle), so it needs its own
-      // entry or Rollup never emits it for the "./icons/lazy" export.
-      entry: [resolve(__dirname, "src/index.ts"), resolve(__dirname, "src/icons/lazy.ts")],
+      // Three entries: the barrel, plus the two opt-in icon registrations: the lazy
+      // any-name resolver and the built-in names (#207). Both are unreachable from the
+      // barrel by design (importing either would drag a whole icon set into every
+      // consumer bundle), so each needs its own entry or Rollup never emits it for the
+      // "./icons/lazy" and "./icons/builtin" exports.
+      entry: [
+        resolve(__dirname, "src/index.ts"),
+        resolve(__dirname, "src/icons/lazy.ts"),
+        resolve(__dirname, "src/icons/builtin.ts"),
+      ],
       formats: ["es"],
     },
     rollupOptions: {

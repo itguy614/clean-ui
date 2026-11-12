@@ -39,6 +39,10 @@
       "types": "./dist/icons/lazy.d.ts",
       "import": "./dist/icons/lazy.js"
     },
+    "./icons/builtin": {
+      "types": "./dist/icons/builtin.d.ts",
+      "import": "./dist/icons/builtin.js"
+    },
     "./*": "./dist/*"
   },
   "files": [
@@ -49,6 +53,8 @@
   "sideEffects": [
     "**/*.css",
     "./dist/icons/lazy.js",
+    "./dist/icons/builtin.js",
+    "./src/icons/builtin.ts",
     "./dist/duplicate-guard.js",
     "./src/duplicate-guard.ts"
   ],
@@ -61,9 +67,12 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "@phosphor-icons/vue": "^2.2.1"
   },
   "devDependencies": {
+    "@phosphor-icons/core": "2.1.1",
+    "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vitest/browser": "3.2.4",
@@ -80,7 +89,11 @@
     "vue-tsc": "^2.2.0"
   },
   "dependencies": {
-    "@floating-ui/vue": "^1.1.11",
-    "@phosphor-icons/vue": "^2.2.1"
+    "@floating-ui/vue": "^1.1.11"
+  },
+  "peerDependenciesMeta": {
+    "@phosphor-icons/vue": {
+      "optional": true
+    }
   }
 }
