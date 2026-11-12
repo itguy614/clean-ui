@@ -16,6 +16,8 @@ function walk(dir: string): string[] {
   });
 }
 
+/** Every <CuiIcon …> opening tag in a template. */
+const ICON_TAG = /<CuiIcon\b(?:"[^"]*"|'[^']*'|[^>"'])*?\/?>/g;
 const components = () => walk(join(SRC, "components")).filter((f) => f.endsWith(".vue"));
 const rel = (file: string) => file.replace(SRC + "/", "");
 
@@ -43,7 +45,7 @@ describe("built-in icons: the structure", () => {
     const offenders: string[] = [];
     for (const file of components()) {
       const src = readFileSync(file, "utf8");
-      for (const tag of src.match(/<CuiIcon\b(?:"[^"]*"|'[^']*'|[^>"'])*?\/?>/g) ?? []) {
+      for (const tag of src.match(ICON_TAG) ?? []) {
         if (/(?<![:\w-])name="[a-z0-9-]+"/.test(tag) || /:name="[^"]*'[a-z0-9-]+'/.test(tag)) {
           offenders.push(`${rel(file)}: ${tag.replace(/\s+/g, " ").slice(0, 80)}`);
         }
@@ -124,7 +126,7 @@ describe("generated icons", () => {
       expect((BUILTIN_ICONS[name] as { iconWeights: string[] }).iconWeights).toContain(weight);
     }
     for (const file of components()) {
-      for (const tag of readFileSync(file, "utf8").match(/<CuiIcon\b(?:"[^"]*"|'[^']*'|[^>"'])*?\/?>/g) ?? []) {
+      for (const tag of readFileSync(file, "utf8").match(ICON_TAG) ?? []) {
         const weight = tag.match(/(?<![:\w-])weight="(\w+)"/)?.[1];
         const icon = tag.match(/:icon="Icon(\w+)"/)?.[1];
         if (!weight || !icon) continue;
