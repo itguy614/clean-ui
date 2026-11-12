@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-12
+
 ### Upgrading to 1.10
 
 - **Importing the library no longer applies the stored theme.** `useTheme` is now lazy, as
@@ -14,25 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module-level watcher at import. The stored theme is restored on the first `useTheme()` call.
   An app that relied on the import-time restore and does not call `useTheme()` before first
   paint must call the new `restoreTheme()` at startup (or use `ssrThemeInitScript`).
+
 - **`CuiDataGrid` frozen (`sticky`) columns are now always the leftmost block, in declared
   order, and can't be reordered.** A grid whose `sticky` columns were declared out of order
   (or whose saved view stored them elsewhere) now gets them pulled to the front. A column
   group is frozen wholly or not at all: one mixing `sticky` and non-`sticky` leaves is
   unfrozen, with a development warning. Mark every leaf of a group `sticky`, or none.
+
 - **A sortable header with a header slot no longer puts the slot inside the sort button.** The
   slot content sits beside an icon-only sort button, named by the column's label (with its
   group), so interactive content in a header slot is valid. A click on plain slot content still
   sorts. A selector that targeted `.cui-data-grid-table__sort` around slot content no longer
   matches it.
-
-### Fixed
-
-- **`CuiDataGrid`: a frozen column with no `width` no longer has the next one pinned on top of it** (#485). The grid measures the rendered header cell of a frozen column that declares no usable `width` and pins later frozen columns (and frozen group headers) after it, updating on resize, column hide/show, density and font load. A declared `width` still wins. In development, a frozen column without a `width` warns once: set `width` for a stable first layout.
-- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
-  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
-  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
-  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
-- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
 
 ### Added
 
@@ -40,9 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<html>` and follows `prefers-color-scheme` live while the mode is system, with
   `restoreColorMode()` and `ssrColorModeInitScript` (a pre-paint `<head>` script). Lazy like
   `useTheme`: importing the library reads no storage and adds no listener (#487).
+
 - `ssrDensityInitScript`: an inline `<head>` script that applies the stored density to
   `<html>` before first paint, beside `ssrThemeInitScript` (#463).
+
 - `restoreTheme()`: apply the stored theme once, without calling `useTheme()` (#463).
+
 - **`CuiTimePicker`: `minTime` and `maxTime` now work (#178).** They were declared and
   documented as constraints but read by nothing. Both take the forms the model uses
   (`"HH:mm"` or `"hh:mm AM/PM"`). The steppers' bounds, and so their `aria-valuemin` and
@@ -50,9 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value is clamped to the nearest bound, nothing outside the range is committed, and an
   AM/PM button with no selectable time is disabled. The model value stays `hh:mm AM/PM`. An
   invalid or inverted range warns in development and is ignored.
+
 - `CuiDataGrid`'s `#card` slot receives `columnLabel(key)`, a column's label with its group.
+
 - The column manager shows a lock, with an accessible name, on a frozen column
   (`messages.dataGrid.frozenColumn`).
+
 - `CuiTransitionGroup`: the `CuiTransition` presets for lists, with a move transition for the items that stay and leavers pinned out of the flow (#447).
 
 - **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--cui-select-font-size` now sizes the trigger as well as the options, as
   `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
   attached-button separators) whatever the token says.
+
 - **The rest of the components read their private tokens through the public layer, and a guard
   keeps them there** (#454, part 2). `CuiAlert`, `CuiToast`, `CuiTabs` and `CuiTagInput` read
   `--_<component>-*` properties directly in their stylesheets; they now go through new public
@@ -90,9 +92,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and keeps the error colour whatever `--cui-tag-input-border` says. In `control-token.test.ts`
   the guard now covers every component: a stylesheet that reads a `--_x-y` outside a public
   token's fallback fails unless it is listed with a reason.
-- **`--cui-shadow-xs` and `--cui-shadow-up`** join the elevation tokens (`-sm`, `-md`, `-lg`),
-  each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
-  to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
 
 - **Tokens for the ten components that moved to a stylesheet (#489):**
   `--cui-divider-border` / `-color` / `-font-size`; `--cui-kbd-bg` / `-color` / `-border` /
@@ -136,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Color Scheme page no longer says clean-ui leaves the dark toggle to you: `useColorMode()`
   owns it, and `useColorScheme()` still only observes (#487). The docs sites' header color-mode
   button is built on it and survives a refresh.
+
 - **`CuiDatePicker` and `CuiDateRangePicker` paint from a stylesheet (#466).** The calendar
   built a style object per day cell (42 a month) and every other part was inline too, so none
   of it could be restyled without `!important`. The static paint is in a scoped stylesheet at
@@ -157,9 +157,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that targeted the old `div` structure no longer matches. New `ariaLabel` prop and
   `codeBlock.region` message name the scroll region; an `aria-label` attribute on
   `<CuiCodeBlock>` is that prop now, and no longer falls through to the root element. The look is unchanged.
+
 - `CuiDataGrid`'s active-filter chips and filter panel show a grouped column's group name
   ("Reads · A1").
+
 - A frozen column group's header cell pins across its whole span on horizontal scroll.
+
 - **Shadows strengthen in dark mode on more surfaces** (#335). They were written as a black
   literal, as faint on a dark surface as on a light one. They read the elevation tokens now,
   so light mode is as before, give or take the differences below, and dark mode is darker.
@@ -169,9 +172,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `0 8px 24px / 0.15`); CuiSlideover is `lg` (was `0 16px 48px / 0.15`, now `/ 0.2`);
   CuiDataGridBulkBar is `up` (unchanged in light). The Tabs pill, Toggle knob, Slider thumb
   and ColorPicker handles keep their own.
+
 - **`CuiTabs` tab structure** (#153): each tab is now a wrapper `div.cui-tabs__tab` (`role="presentation"`, carrying the active/disabled/`--closeable` modifiers and the paint) around `button.cui-tabs__tab-button` (the `role="tab"` element, which now carries the padding) and the sibling `button.cui-tabs__tab-close`. A consumer selector such as `button.cui-tabs__tab`, `.cui-tabs__tab > .cui-tabs__tab-close`, or a padding override on `.cui-tabs__tab` no longer matches. New message `tabs.closeNamedTab(label)`; `tabs.closeTab` is now only the fallback for a tab with no label.
+
 - **Editor: the plugin-registry warning texts no longer ship in a production build (#462).** `buildRegistry` builds its duplicate-plugin, command and keybinding warnings, and `CuiMarkdownEditor` its `warnDev` call, behind `__DEV__ && process.env.NODE_ENV !== "production"`, so a consumer's bundler drops the strings and `registry.warnings` is empty in production. Development builds warn as before. The `no-dev-warnings` fixture guarantee now covers them.
+
 - `CuiTransferList` paints from a stylesheet instead of inline style objects, so a plain consumer rule or a container token restyles it with no `!important`. New tokens: `--cui-transfer-list-gap`, `-bg`, `-border`, `-radius`, `-px`, `-py`, `-font-size`, `-color`, `-pressed-bg` (a row marked for transfer). The DOM, classes and look are unchanged; its parts gain `cui-transfer-list__*` classes. `CuiMaskedInput` has no paint of its own (it renders a `CuiInput`), so it needed no change beyond being guarded (#469).
+
 - **`CuiColorPicker` is styled by a stylesheet instead of inline style objects (#467, part of #213).**
   It looks the same. A plain rule such as `.cui-color-picker { width: 320px }` or a token on a
   container now wins without `!important`. New tokens: `--cui-color-picker-width`, `-height`
@@ -187,6 +194,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-font-size` and `-height`. Rendering is unchanged, except that the row's corner radius now
   follows `--cui-radius-sm` (default `0.25rem`, as before). The unexported `CuiTreeNode`'s `cfg`
   prop is now `iconSize`.
+
+- **`restoreTheme()` and `restoreDensity()` apply the stored value whenever one is stored** (#463),
+  so the stored choice always wins: a stored default or `navy` theme strips a stale preset class
+  from `<html>`, and a stored default density strips a stale `cui-density-*` class. A custom
+  class such as `cui-theme-acme` is left alone, and a class an init script already set is
+  re-asserted in the same step, with no paint between.
+
+### Fixed
+
+- **`CuiDataGrid`: a frozen column with no `width` no longer has the next one pinned on top of it** (#485). The grid measures the rendered header cell of a frozen column that declares no usable `width` and pins later frozen columns (and frozen group headers) after it, updating on resize, column hide/show, density and font load. A declared `width` still wins. In development, a frozen column without a `width` warns once: set `width` for a stable first layout.
+
+- **`CuiCodeBlock` is keyboard-scrollable and reads as code** (#163). While the block
+  overflows, its `<pre>` is a focusable `role="region"` named "Scrollable code" (WCAG
+  2.1.1), and adds no tab stop while the code fits. The line-number gutter is
+  `aria-hidden`, so a screen reader no longer reads the numbers into the code.
+
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+
+### Tooling
+
+- **Bundle budgets** in `fixtures/size-budget.json`: the grid scenario's is 128 kB (was 120 kB)
+  and the basic scenario's is 69 kB (was 65 kB), gzip. The stylesheet conversions move paint
+  out of inline JS into the shared CSS sheet that every scenario loads.
+
+- **New guards:** every component has a `<style>` block or a justified exemption (#213); a
+  component's stylesheet may read a private `--_x-y` only through its own public token
+  (#454); `import-side-effects.test.ts` asserts that importing the barrel does no `cui-*`
+  storage access, `<html>` class change or `matchMedia` listener (#463, #487); and the
+  `theme-tree-shakes`, `density-tree-shakes` and `color-mode-tree-shakes` fixture guarantees.
 
 ## [1.9.0] - 2026-11-05
 
