@@ -1,4 +1,4 @@
-import { defineComponent, h, type Component, type VNode } from "vue";
+import { defineComponent, h, renderSlot, type Component, type VNode } from "vue";
 import type { IconWeight } from "../components/CuiIcon.vue";
 
 /** A child of the icon's `<g>`: a path's `d`, or any other element as `[tag, attrs]`. */
@@ -42,7 +42,9 @@ export function defineIcon(name: string, weights: IconWeights): BuiltinIcon {
             transform: props.mirrored ? "scale(-1, 1)" : undefined,
           },
           [
-            ...(slots.default?.() ?? []),
+            // renderSlot, as Phosphor does: an empty slot still leaves its fragment anchors in the DOM,
+            // so a built-in's DOM is the same as the component it replaces, not only its pixels.
+            renderSlot(slots, "default"),
             h(
               "g",
               shapes.map((shape): VNode => (typeof shape === "string" ? h("path", { d: shape }) : h(shape[0], shape[1]))),

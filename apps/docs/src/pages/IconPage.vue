@@ -26,9 +26,8 @@ const commonIcons = [
     <div>
       <h1 class="text-4xl font-bold">Icons</h1>
       <p class="mt-2 text-lg text-surface-600 dark:text-surface-400">
-        Wrapper around <code class="cui-code">@phosphor-icons/vue</code> with
-        consistent sizing, color inheritance, and duotone support.
-        Over 9,000 icons with 6 weight variants.
+        Phosphor icons with consistent sizing and color inheritance. clean-ui ships the
+        55 it draws itself; any other Phosphor icon, in all 6 weights, is one import away.
       </p>
     </div>
 
@@ -36,9 +35,9 @@ const commonIcons = [
       <h2 class="mb-4 text-2xl font-semibold">Props</h2>
       <PropTable
         :props="[
-          { name: 'name', type: 'string', default: '-', description: 'Phosphor icon name in kebab-case (e.g. check, warning-circle). Resolved from the built-in set plus anything you registered' },
-          { name: 'icon', type: 'Component', default: '-', description: 'A Phosphor component passed directly, e.g. :icon=&quot;PhRocket&quot;. Takes precedence over name' },
-          { name: 'weight', type: 'thin | light | regular | bold | fill | duotone', default: 'regular', description: 'Icon weight/style' },
+          { name: 'name', type: 'string', default: '-', description: 'Icon name in kebab-case (e.g. check, warning-circle). Resolved from registerIcons(), which holds the built-in names once you import @itguy614/clean-ui/icons/builtin' },
+          { name: 'icon', type: 'Component', default: '-', description: 'An icon component passed directly: a built-in (IconCaretDown) or a Phosphor component (:icon=&quot;PhRocket&quot;). Keeps every weight it carries. Takes precedence over name' },
+          { name: 'weight', type: 'thin | light | regular | bold | fill | duotone', default: 'regular', description: 'Icon weight/style. A built-in icon carries only the weights clean-ui draws (see Built-in icons and weights)' },
           { name: 'size', type: 'xs | sm | md | lg | xl | string', default: 'md', description: 'Size (named or custom CSS value)' },
           { name: 'color', type: 'string', default: 'currentColor', description: 'Icon color (inherits from parent by default)' },
           { name: 'duotoneColor', type: 'string', default: '-', description: 'Secondary color for duotone weight' },
@@ -49,15 +48,57 @@ const commonIcons = [
     </div>
 
     <div>
-      <h2 class="mb-4 text-2xl font-semibold">Tree-shaking</h2>
+      <h2 id="built-in" class="mb-4 text-2xl font-semibold">Built-in icons and weights</h2>
       <CuiCard variant="outline">
         <CuiCardBody>
           <CuiStack spacing="4">
             <p>
-              Phosphor ships ~1,500 Vue components. clean-ui statically imports only the
-              <strong>52 icons its own components draw</strong>, so that's all you pay for by
-              default. Icon names beyond that set need to reach your bundle somehow — the
-              library can't know them in advance.
+              Each clean-ui component imports the icon it draws and hands the component to
+              <code class="cui-code">CuiIcon</code>, so the icons you pay for follow the components
+              you use. The 55 built-in icons are generated from Phosphor's SVG assets and draw
+              exactly what Phosphor draws, but carry only the weights clean-ui itself uses:
+            </p>
+            <ul class="list-disc pl-6">
+              <li><strong>regular</strong> for every icon</li>
+              <li><strong>bold</strong> for <code class="cui-code">check</code> and <code class="cui-code">minus</code> (checkboxes)</li>
+              <li><strong>fill</strong> for <code class="cui-code">circle</code> (the radio dot), <code class="cui-code">star</code> and <code class="cui-code">star-half</code></li>
+            </ul>
+            <p>
+              <code class="cui-code">weight="duotone"</code>, <code class="cui-code">thin</code> or
+              <code class="cui-code">light</code> on a built-in name draws the regular weight, and warns
+              in development. For the full six weights, use the Phosphor component itself:
+            </p>
+            <pre class="cui-pre"><code class="cui-code">import { PhCaretDown } from "@phosphor-icons/vue";
+
+// pass it directly: every weight it carries works
+&lt;CuiIcon :icon="PhCaretDown" weight="duotone" /&gt;
+
+// or register it over the built-in name
+registerIcons({ "caret-down": PhCaretDown });
+&lt;CuiIcon name="caret-down" weight="duotone" /&gt;</code></pre>
+            <p>
+              The built-in names are not registered by default. Import them once to use
+              <code class="cui-code">name="caret-down"</code>, an <code class="cui-code">icon: "user"</code>
+              option, or <code class="cui-code">&lt;CuiAlert icon="check-circle"&gt;</code> (about 6 kB gzip for all of
+              them), or import a single icon:
+            </p>
+            <pre class="cui-pre"><code class="cui-code">import "@itguy614/clean-ui/icons/builtin"; // every built-in name
+
+import { IconCaretDown } from "@itguy614/clean-ui/icons/generated/caret-down";
+&lt;CuiIcon :icon="IconCaretDown" /&gt; // just this one</code></pre>
+          </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Beyond the built-ins</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <CuiStack spacing="4">
+            <p>
+              Phosphor ships ~1,500 Vue components, and an icon name beyond the built-in set has
+              to reach your bundle somehow: the library can't know it in advance.
             </p>
 
             <div>
@@ -93,7 +134,7 @@ registerIcons({ rocket: PhRocket, "github-logo": PhGithubLogo });
               <CuiFlex gap="6" class="mt-3 text-sm" wrap="wrap">
                 <div>
                   <div style="color: var(--cui-text-secondary)">default</div>
-                  <div><strong>124 kB</strong> gzip · 52 icons</div>
+                  <div><strong>only the icons the components you use draw</strong></div>
                 </div>
                 <div>
                   <div style="color: var(--cui-text-secondary)">with icons/lazy</div>
@@ -104,11 +145,33 @@ registerIcons({ rocket: PhRocket, "github-logo": PhGithubLogo });
 
             <CuiAlert color="info" title="This site opts in">
               The gallery below renders arbitrary Phosphor names to show what's available, so
-              the docs import <code class="cui-code">icons/lazy</code>. An unregistered name in
-              an app without it renders a <code class="cui-code">?</code> glyph and logs how to
-              register it.
+              the docs import <code class="cui-code">icons/builtin</code> and
+              <code class="cui-code">icons/lazy</code>. An unregistered name in an app without them
+              renders a <code class="cui-code">?</code> glyph and logs how to register it.
             </CuiAlert>
           </CuiStack>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
+      <h2 id="upgrading" class="mb-4 text-2xl font-semibold">Upgrading from 1.x</h2>
+      <CuiCard variant="outline">
+        <CuiCardBody>
+          <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
+            In 1.x every built-in name resolved without any setup, with all six weights. In 2.0 the
+            components still render their own icons with no setup, but the <em>names</em> are an
+            opt-in and the weights are the ones clean-ui draws. One line restores the names:
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import "@itguy614/clean-ui/icons/builtin";</code></pre>
+          <p class="mt-3 mb-2 text-sm" style="color: var(--cui-text-secondary)">
+            If you used <code class="cui-code">weight="duotone"</code> (or thin, light) on a built-in
+            name, register the Phosphor component over it, or pass it with
+            <code class="cui-code">:icon</code>, as shown above. <code class="cui-code">BUILTIN_ICONS</code>
+            moved from the main entry to <code class="cui-code">@itguy614/clean-ui/icons/builtin</code>, and
+            <code class="cui-code">@phosphor-icons/vue</code> is now an optional peer dependency, needed only
+            when you use Phosphor components yourself.
+          </p>
         </CuiCardBody>
       </CuiCard>
     </div>
@@ -118,30 +181,31 @@ registerIcons({ rocket: PhRocket, "github-logo": PhGithubLogo });
       <CuiCard variant="outline">
         <CuiCardBody>
           <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
-            <code class="cui-code">BUILTIN_ICONS</code> is the library's own name → component map
-            (the icons its components draw). <code class="cui-code">hasIcon(name)</code> reports
-            whether a name resolves statically — built-in or passed to
-            <code class="cui-code">registerIcons()</code> — without the
+            <code class="cui-code">hasIcon(name)</code> reports whether a name resolves statically —
+            registered with <code class="cui-code">registerIcons()</code>, or built in once you have
+            imported <code class="cui-code">icons/builtin</code> — without the
             <code class="cui-code">icons/lazy</code> fallback. Use it to guard icon names that come
-            from data.
+            from data. <code class="cui-code">BUILTIN_ICONS</code>, exported by
+            <code class="cui-code">icons/builtin</code>, is the library's own name → component map.
           </p>
-          <pre class="cui-pre"><code class="cui-code">import { BUILTIN_ICONS, hasIcon } from "@itguy614/clean-ui";
+          <pre class="cui-pre"><code class="cui-code">import { hasIcon } from "@itguy614/clean-ui";
+import { BUILTIN_ICONS } from "@itguy614/clean-ui/icons/builtin";
 
-Object.keys(BUILTIN_ICONS); // ["caret-down", "check", "info", ...]
+Object.keys(BUILTIN_ICONS); // ["arrow-counter-clockwise", "bookmark-simple", ...]
 
-hasIcon("check");  // true  — built in
+hasIcon("check");  // true  — once icons/builtin is imported
 hasIcon("rocket"); // false — until registerIcons({ rocket: PhRocket })
 
 const name = hasIcon(row.icon) ? row.icon : "question";</code></pre>
           <p class="mt-3 mb-2 text-sm" style="color: var(--cui-text-secondary)">
             <code class="cui-code">registeredIconNames()</code> lists every name that resolves
-            statically, built-in and registered, sorted: an icon picker's options, say. And
+            statically, sorted: an icon picker's options, say. And
             <code class="cui-code">setIconFallbackResolver(resolver)</code> installs what runs for a
             name that doesn't — an async <code class="cui-code">(name) =&gt; Promise&lt;Component | undefined&gt;</code>.
             <code class="cui-code">@itguy614/clean-ui/icons/lazy</code> is one, over every Phosphor
             icon; pass <code class="cui-code">null</code> to remove it.
           </p>
-          <pre class="cui-pre"><code class="cui-code">registeredIconNames(); // ["caret-down", "check", ..., "rocket"]
+          <pre class="cui-pre"><code class="cui-code">registeredIconNames(); // ["check", ..., "rocket"]
 
 // Resolve unknown names from your own icon set instead of Phosphor's
 setIconFallbackResolver(async (name) => (await import("./my-icons"))[name]);</code></pre>
@@ -156,24 +220,24 @@ setIconFallbackResolver(async (name) => (await import("./my-icons"))[name]);</co
           <p class="mb-2 text-sm" style="color: var(--cui-text-secondary)">
             <code class="cui-code">CuiAlert</code>, <code class="cui-code">CuiToast</code> and
             <code class="cui-code">CuiBanner</code> pick a default icon from their color role.
-            <code class="cui-code">COLOR_ICON_MAP</code> holds the library defaults
+            <code class="cui-code">COLOR_ICON_MAP</code> holds the library defaults, as built-in
+            components that need no registration
             (<code class="cui-code">success</code> → <code class="cui-code">check-circle</code>,
             <code class="cui-code">error</code> → <code class="cui-code">warning-octagon</code>,
             <code class="cui-code">warning</code> → <code class="cui-code">warning-circle</code>,
             everything else → <code class="cui-code">info</code>).
             <code class="cui-code">registerRoleIcons()</code> overrides them app-wide, instead of
             passing <code class="cui-code">icon</code> to every instance. It is reactive, and a
-            per-instance <code class="cui-code">icon</code> prop still wins. The name must resolve
-            (built in, or registered with <code class="cui-code">registerIcons()</code>) — otherwise
-            it renders as literal text.
+            per-instance <code class="cui-code">icon</code> prop still wins. An override is a
+            component, or a string: a name that resolves (registered with
+            <code class="cui-code">registerIcons()</code>, or built in once
+            <code class="cui-code">icons/builtin</code> is imported) draws that icon, and any other
+            string, such as an emoji, renders as literal text.
           </p>
-          <pre class="cui-pre"><code class="cui-code">import { registerIcons, registerRoleIcons, COLOR_ICON_MAP } from "@itguy614/clean-ui";
-import { PhSiren, PhSealCheck } from "@phosphor-icons/vue";
+          <pre class="cui-pre"><code class="cui-code">import { registerRoleIcons } from "@itguy614/clean-ui";
+import { PhSiren } from "@phosphor-icons/vue";
 
-COLOR_ICON_MAP.error; // "warning-octagon" — the library default
-
-registerIcons({ siren: PhSiren, "seal-check": PhSealCheck });
-registerRoleIcons({ error: "siren", success: "seal-check" });</code></pre>
+registerRoleIcons({ error: PhSiren, success: "🎉" });</code></pre>
         </CuiCardBody>
       </CuiCard>
     </div>
@@ -201,7 +265,7 @@ registerRoleIcons({ error: "siren", success: "seal-check" });</code></pre>
 <CuiIcon name=&quot;house&quot; weight=&quot;bold&quot; />
 <CuiIcon name=&quot;house&quot; weight=&quot;duotone&quot; />`">
           <CuiStack spacing="3">
-            <CuiFlex gap="6" class="items-center" v-for="icon in ['house', 'heart', 'star', 'bell']" :key="icon">
+            <CuiFlex gap="6" class="items-center" v-for="icon in ['house', 'heart', 'smiley', 'bell']" :key="icon">
               <div class="w-20 text-sm text-surface-500">{{ icon }}</div>
               <CuiIcon :name="icon" weight="thin" size="lg" />
               <CuiIcon :name="icon" weight="light" size="lg" />
@@ -273,11 +337,11 @@ registerRoleIcons({ error: "siren", success: "seal-check" });</code></pre>
         <!-- Explicit Color -->
         <Example title="Explicit Color Prop" :code="`<CuiIcon name=&quot;heart&quot; weight=&quot;fill&quot; color=&quot;var(--cui-error)&quot; />
 <CuiIcon name=&quot;star&quot; weight=&quot;fill&quot; color=&quot;var(--cui-warning)&quot; />
-<CuiIcon name=&quot;check-circle&quot; weight=&quot;fill&quot; color=&quot;var(--cui-success)&quot; />`">
+<CuiIcon name=&quot;seal-check&quot; weight=&quot;fill&quot; color=&quot;var(--cui-success)&quot; />`">
           <CuiFlex gap="4" class="items-center">
             <CuiIcon name="heart" size="lg" weight="fill" color="var(--cui-error)" />
             <CuiIcon name="star" size="lg" weight="fill" color="var(--cui-warning)" />
-            <CuiIcon name="check-circle" size="lg" weight="fill" color="var(--cui-success)" />
+            <CuiIcon name="seal-check" size="lg" weight="fill" color="var(--cui-success)" />
           </CuiFlex>
         </Example>
 
@@ -295,8 +359,8 @@ registerRoleIcons({ error: "siren", success: "seal-check" });</code></pre>
             <div class="text-sm text-surface-500">Custom duotone color + opacity:</div>
             <CuiFlex gap="6" class="items-center">
               <CuiIcon name="heart" weight="duotone" size="xl" color="var(--cui-error)" duotone-color="var(--cui-error)" :duotone-opacity="0.4" />
-              <CuiIcon name="star" weight="duotone" size="xl" color="var(--cui-warning)" duotone-color="var(--cui-warning)" :duotone-opacity="0.5" />
-              <CuiIcon name="check-circle" weight="duotone" size="xl" color="var(--cui-success)" duotone-color="var(--cui-success)" :duotone-opacity="0.3" />
+              <CuiIcon name="lightning" weight="duotone" size="xl" color="var(--cui-warning)" duotone-color="var(--cui-warning)" :duotone-opacity="0.5" />
+              <CuiIcon name="seal-check" weight="duotone" size="xl" color="var(--cui-success)" duotone-color="var(--cui-success)" :duotone-opacity="0.3" />
             </CuiFlex>
           </CuiStack>
         </Example>

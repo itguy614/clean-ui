@@ -13,7 +13,11 @@
 - pnpm monorepo: `packages/clean-ui` (library) + `apps/docs` (docs site)
 - Vue 3.5+ / TypeScript / Tailwind CSS v4 / Vite 6
 - Component prefix: `Cui` (CuiButton, CuiGrid, etc.)
-- Icons: Phosphor Icons via `@phosphor-icons/vue`, wrapped in `CuiIcon`. **Every icon the library renders *by name* must be statically imported into `src/icons/builtin.ts`** (new components pass the icon component instead — see "Conventions ahead of migration") — `CuiIcon` has no dynamic import, so an unlisted name renders the `?` glyph. `src/icons/__tests__/builtin.test.ts` fails if you forget. Consumers add their own via `registerIcons()` or `<CuiIcon :icon="PhFoo" />`; the old any-name behavior is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
+- Icons: Phosphor Icons, wrapped in `CuiIcon`. **A component imports the generated icon it draws and passes the component** (`import { IconCaretDown } from "../icons/generated/caret-down"`, `<CuiIcon :icon="IconCaretDown" />`), never a name string for its own icons and never `@phosphor-icons/vue`; `src/icons/__tests__/builtin.test.ts` fails on both.
+  - The files in `src/icons/generated/` are **generated, never hand-edited**. `node scripts/generate-icons.mjs` writes one tiny `defineIcon()` module per icon from `@phosphor-icons/core` (a devDependency), carrying only the weights the library draws: regular for all, bold for `check`/`minus`, fill for `circle`/`star`/`star-half`. A new icon, or a new weight (a `weight="x"` on a built-in icon), is an edit to `ICONS` in that script, then regenerate and commit. The test fails on any diff, and `src/__tests__/browser/builtin-icons-identity.test.ts` checks every output pixel for pixel against the Phosphor component.
+  - Names are an opt-in. `registerIcons()` starts empty; `icons/builtin.ts` (`@itguy614/clean-ui/icons/builtin`) registers every built-in name, and nothing reachable from the barrel imports it (the test checks). `icons/fallback.ts` holds `FALLBACK_ICON`.
+  - A weight a built-in icon does not carry draws regular and warns in development. Consumers get the full six weights by passing a Phosphor component (`<CuiIcon :icon="PhFoo" weight="duotone" />`) or registering one over the name. Any-name lookup is opt-in at `@itguy614/clean-ui/icons/lazy` (pulls in all ~1500 icons).
+  - The fixture's `icon-paths` guarantee caps SVG path literals per page, and `check-bundle-budget.mjs` reports bytes by area (js / css / icons).
 - Positioning: `@floating-ui/vue` for tooltips and popovers; `computeDropdownPosition` (`utils/position.ts`) for every trigger-anchored panel: dropdowns, select, combobox, tag input
 
 ## Build & Dev
@@ -261,13 +265,14 @@ should not need a later "make it consistent" PR.
   families migrate when touched.)
 - **Icons are `string | Component`.** A public icon prop accepts a registered name *or* an
   icon component. Internally a component imports the Phosphor icon it draws and passes the
-  component — `<CuiIcon :icon="PhCaretDown" />` — never a name, so the icons a consumer pays
-  for follow the components they use (#207 restructures the existing ones). Names still
+  component — `<CuiIcon :icon="IconCaretDown" />` — never a name, so the icons a consumer pays
+  for follow the components they use (#207 did this for the existing ones). Names still
   resolve through `registerIcons()` for consumers and JSON-driven configs. `CuiIcon` itself
   takes the two forms as separate props (`name: string`, `icon: Component`), so forward a
   union prop by type — a string to `name`, anything else to `icon` — rather than binding it
-  to `:icon` whole. (`RoleIconProps.icon` on Alert/Toast/Banner is still `string`-only and
-  also renders unregistered strings as text, e.g. an emoji; it widens in #207.)
+  to `:icon` whole. (`RoleIconProps.icon` on Alert/Toast/Banner is `string | Component`: a
+  component renders as itself, a registered name as its icon, and any other string as text,
+  e.g. an emoji. Their defaults, `COLOR_ICON_MAP`, are components.)
 - **Collapsed content** (Accordion, Fieldset, TreeView via `CuiTreeNode`, and any future collapsible such as sidebar groups) is hidden with
   `hidden="until-found"` — out of the tab order and the accessibility tree, still reachable
   by find-in-page, which auto-expands it via `beforematch` — falling back to `inert` plus
@@ -374,7 +379,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 1. Read this file first. Follow established patterns.
 2. Create the `.vue` file in `src/components/`. If it needs shared context, create a `{name}-context.ts` file (NOT exports in the .vue file).
 3. **Give the root element a `cui-*` class** — kebab-case of the component name (`CuiTreeView` → `cui-tree-view`). The scoped base in `styles/preflight.css` only reaches an element carrying such a class *and its descendants*, so a root without one renders its whole subtree outside the reset: no `box-sizing: border-box`, no `font: inherit` on form controls. It fails silently for anyone using Tailwind (their preflight covers it) and only breaks for consumers who supply no global reset of their own. Every top-level root counts — a `v-if`/`v-else` chain needs the class on each branch (see `CuiDivider`, which has three). A root that is not an element — `<Teleport>`, `<Transition>`, `<slot />`, or another Cui component that renders one of those — cannot take it: put the class on the element actually rendered, and add the file to the exemption list in `src/styles/__tests__/preflight.test.ts` with the reason. Passing a class to a component with a non-element root doesn't just get dropped, it makes Vue warn. That test fails on any unclassed root, and on a stale exemption.
-4. Use `CuiIcon` for all icons (never inline SVGs). In a new component, import the Phosphor icon and pass the component (`<CuiIcon :icon="PhCaretDown" />`); a public icon prop is typed `string | Component` (see "Conventions ahead of migration"). Only an icon referenced by *name* needs an entry in `src/icons/builtin.ts`.
+4. Use `CuiIcon` for all icons (never inline SVGs). In a new component, import the generated icon and pass the component (`<CuiIcon :icon="IconCaretDown" />`); a public icon prop is typed `string | Component` (see "Conventions ahead of migration"). An icon not generated yet is an entry in `ICONS` in `scripts/generate-icons.mjs`, then `node scripts/generate-icons.mjs`; never import `@phosphor-icons/vue` in a component.
 5. Import sizes from `utils/sizing.ts`, not local maps.
 6. Use `var(--cui-surface-base)` for backgrounds, `var(--cui-border)` for borders.
 7. Use semantic color slots (`--cui-{color}-bg`, `--cui-{color}-border`, etc.) — never hardcoded oklch values that would break themes.

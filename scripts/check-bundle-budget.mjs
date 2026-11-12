@@ -17,6 +17,10 @@
  * and diff the gzip totals. Budgets are read from fixtures/size-budget.json,
  * which is committed and hand-updated; this script never rewrites it, so a
  * regression fails loudly instead of quietly raising its own ceiling.
+ *
+ * Each scenario also prints its delta by area (#207): js, css and icons, where icons is what the
+ * SVG path data costs the JS (see analyzeBuild in scripts/fixture-scenarios.mjs). Only the total
+ * is budgeted; the split says where a change landed.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
