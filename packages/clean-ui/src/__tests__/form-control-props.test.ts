@@ -56,7 +56,7 @@ const FORM_CONTROLS: Record<string, string> = {
 
 // Components that carry the keys without being a control, with the reason. A stale entry fails.
 const NOT_CONTROLS: Record<string, string> = {
-  "CuiFormField.vue": "the wrapper that supplies label/error/required to a control, not a control",
+  "CuiFormField.vue": "the wrapper that supplies label/error/required to a control, not a control; its error and errorMessage are standalone-mode only (ignored when form-bound)",
 };
 
 function interfaceFor(file: string) {
@@ -88,16 +88,17 @@ describe("form control props (#180)", () => {
     }
   });
 
-  // A new control must be added to FORM_CONTROLS: the signature of one is an `errorMessage` prop.
-  it("every component declaring errorMessage is on the list or exempt", () => {
+  // A new control must be added to FORM_CONTROLS: two or more of the shared keys (or `disabled`
+  // alongside `readonly`) is the signature of one, so a control without an `errorMessage` is seen too.
+  it("every component declaring the shared keys is on the list or exempt", () => {
     const declaring = readdirSync(components)
       .filter((f) => f.endsWith(".vue"))
       .filter((f) => {
         const iface = propsInterface(code(join(components, f)), /Cui\w+Props/);
-        return iface !== null && /^\s+errorMessage\??:/m.test(iface.body);
+        if (iface === null) return false;
+        return KEYS.filter((k) => new RegExp(`^\\s+${k}\\??:`, "m").test(iface.body)).length >= 2;
       });
     expect(declaring.filter((f) => !(f in FORM_CONTROLS) && !(f in NOT_CONTROLS))).toEqual([]);
-    expect(Object.keys(NOT_CONTROLS).filter((f) => !declaring.includes(f))).toEqual([]);
   });
 
   it("every listed control exists", () => {

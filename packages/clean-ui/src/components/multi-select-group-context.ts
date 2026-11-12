@@ -21,7 +21,8 @@ export const CheckboxGroupKey: InjectionKey<MultiSelectGroupContext> = Symbol("c
 export const ToggleGroupKey: InjectionKey<MultiSelectGroupContext> = Symbol("toggle-group");
 
 /** The props CuiCheckboxGroup and CuiToggleGroup share — all of them (#206). */
-export interface MultiSelectGroupProps extends AriaLabelableProps,
+export interface MultiSelectGroupProps
+  extends AriaLabelableProps,
     HideableProps,
     ColorableProps,
     DisableableProps,
