@@ -89,11 +89,11 @@ function onReset() {
         {{ messages.dataGrid.views }}
         <CuiBadge
           v-if="grid.isDirty.value"
+          class="cui-data-grid-view-manager__dirty"
           dot
           color="warning"
           animation="pulse"
           size="sm"
-          style="margin-left: 0.25rem;"
         />
       </CuiButton>
     </CuiDropdownTrigger>
@@ -107,19 +107,19 @@ function onReset() {
           :close-on-select="true"
           @select="onLoadView(view.id)"
         >
-          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            <span style="display: flex; align-items: center; gap: calc(0.375rem * var(--cui-density-scale, 1));">
+          <div class="cui-data-grid-view-manager__view">
+            <span class="cui-data-grid-view-manager__view-name">
               <CuiIcon
                 v-if="viewManager.activeViewId.value === view.id"
+                class="cui-data-grid-view-manager__active"
                 name="check"
                 size="0.75rem"
-                style="color: var(--cui-primary);"
               />
               {{ view.name }}
             </span>
             <button
               type="button"
-              style="border: none; background: none; cursor: pointer; padding: calc(0.125rem * var(--cui-density-scale, 1)); color: var(--cui-text-tertiary); opacity: 0.6;"
+              class="cui-data-grid-view-manager__delete"
               :aria-label="messages.dataGrid.deleteView?.(view.name)"
               @click.stop="onRemove(view.id)"
             >
@@ -137,23 +137,23 @@ function onReset() {
         :close-on-select="false"
         @select="onSaveCurrent"
       >
-        <CuiIcon name="floppy-disk" size="0.875rem" style="color: var(--cui-text-secondary);" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="floppy-disk" size="0.875rem" />
         {{ messages.dataGrid.saveCurrent }}
       </CuiDropdownItem>
 
       <CuiDropdownItem :close-on-select="false" @select="showSaveAs = !showSaveAs">
-        <CuiIcon name="floppy-disk" size="0.875rem" style="color: var(--cui-text-secondary);" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="floppy-disk" size="0.875rem" />
         {{ messages.dataGrid.saveAs }}
       </CuiDropdownItem>
 
-      <div v-if="showSaveAs" style="padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1)); display: flex; gap: calc(0.375rem * var(--cui-density-scale, 1));">
+      <div v-if="showSaveAs" class="cui-data-grid-view-manager__save">
         <span :id="viewNameId" class="cui-sr-only">{{ messages.dataGrid.viewName }}</span>
         <CuiInput
           v-model="newViewName"
+          class="cui-data-grid-view-manager__name"
           :aria-labelledby="viewNameId"
           :placeholder="messages.dataGrid.viewName"
           size="sm"
-          style="flex: 1;"
           @keydown.enter="onSaveAs"
         />
         <CuiButton
@@ -168,9 +168,60 @@ function onReset() {
 
       <CuiDropdownDivider />
       <CuiDropdownItem @select="onReset">
-        <CuiIcon name="arrow-counter-clockwise" size="0.875rem" style="color: var(--cui-text-secondary);" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="arrow-counter-clockwise" size="0.875rem" />
         {{ messages.dataGrid.resetViews }}
       </CuiDropdownItem>
     </CuiDropdownMenu>
   </CuiDropdown>
 </template>
+
+<style scoped>
+/* The saved-views menu's paint. Themeable declarations sit inside :where(), so a consumer's
+   plain rule, or a --cui-data-grid-view-manager-* token set on :root or <body> (the menu is
+   teleported, so a container's token never reaches it), wins; structure stays at normal
+   specificity. */
+.cui-data-grid-view-manager__dirty {
+  margin-left: 0.25rem;
+}
+
+.cui-data-grid-view-manager__view {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.cui-data-grid-view-manager__view-name {
+  display: flex;
+  align-items: center;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+/* The check beside the loaded view: the control's "on" state. */
+:where(.cui-data-grid-view-manager__active) {
+  color: var(--cui-data-grid-view-manager-pressed-color, var(--cui-primary));
+}
+
+:where(.cui-data-grid-view-manager__delete) {
+  padding: calc(0.125rem * var(--cui-density-scale, 1));
+  border: none;
+  background: none;
+  color: var(--cui-text-tertiary);
+  opacity: 0.6;
+}
+.cui-data-grid-view-manager__delete {
+  cursor: pointer;
+}
+
+:where(.cui-data-grid-view-manager__action-icon) {
+  color: var(--cui-text-secondary);
+}
+
+.cui-data-grid-view-manager__save {
+  display: flex;
+  gap: calc(0.375rem * var(--cui-density-scale, 1));
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1));
+}
+.cui-data-grid-view-manager__name {
+  flex: 1;
+}
+</style>

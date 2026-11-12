@@ -42,12 +42,22 @@ const props = withDefaults(defineProps<CuiCodeBlockProps>(), {
 
 const lines = computed(() => props.code.split("\n"));
 
-const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { fontSize: string; lineHeight: string; padding: string; headerFont: string }> = {
-  sm: { fontSize: "0.75rem", lineHeight: "1.6", padding: scaleDensity("0.75rem"), headerFont: "0.6875rem" },
-  md: { fontSize: "0.8125rem", lineHeight: "1.65", padding: scaleDensity("1rem"), headerFont: "0.75rem" },
-  lg: { fontSize: "0.875rem", lineHeight: "1.7", padding: scaleDensity("1.25rem"), headerFont: "0.8125rem" },
+const sizeConfig: Record<(typeof SUPPORTED_SIZES)[number], { text: string; leading: string; inset: string; header: string }> = {
+  sm: { text: "0.75rem", leading: "1.6", inset: scaleDensity("0.75rem"), header: "0.6875rem" },
+  md: { text: "0.8125rem", leading: "1.65", inset: scaleDensity("1rem"), header: "0.75rem" },
+  lg: { text: "0.875rem", leading: "1.7", inset: scaleDensity("1.25rem"), header: "0.8125rem" },
 };
 const cfg = computed(() => sizeConfig[clampSize(props.size, SUPPORTED_SIZES)]);
+
+// The size preset reaches the stylesheet as private properties, which it reads back through
+// the public `--cui-code-block-*` tokens (CLAUDE.md, "Themeable Properties").
+const rootVars = computed(() => ({
+  "--_code-block-px": cfg.value.inset,
+  "--_code-block-py": cfg.value.inset,
+  "--_code-block-font-size": cfg.value.text,
+  "--_code-block-line-height": cfg.value.leading,
+  "--_code-block-header-font-size": cfg.value.header,
+}));
 
 const headerLabel = computed(() => props.filename || props.language || "");
 
@@ -64,49 +74,18 @@ const area = useScrollArea({
 </script>
 
 <template>
-  <div
-    class="cui-code-block"
-    v-show="!hidden"
-    :style="{
-      borderRadius: '0.5rem',
-      overflow: 'hidden',
-      border: '1px solid var(--cui-border)',
-      background: 'var(--color-surface-950, #1a1a2e)',
-    }"
-  >
+  <div class="cui-code-block" v-show="!hidden" :style="rootVars">
     <!-- Header -->
-    <div
-      v-if="headerLabel || copyable"
-      :style="{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: `calc(0.375rem * var(--cui-density-scale, 1)) ${cfg.padding}`,
-        background: 'rgba(255,255,255,0.04)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-      }"
-    >
+    <div v-if="headerLabel || copyable" class="cui-code-block__header">
       <span
         v-if="headerLabel"
-        :style="{
-          fontSize: cfg.headerFont,
-          fontWeight: '500',
-          color: 'var(--color-surface-400, #999)',
-          fontFamily: 'var(--cui-font-mono, monospace)',
-          textTransform: language && !filename ? 'uppercase' : 'none',
-          letterSpacing: language && !filename ? '0.04em' : 'normal',
-        }"
+        class="cui-code-block__title"
+        :class="{ 'cui-code-block__title--language': language && !filename }"
       >
         {{ headerLabel }}
       </span>
       <span v-else />
-      <CuiCopyButton
-        v-if="copyable"
-        :value="code"
-        size="xs"
-        variant="ghost"
-        :style="{ color: 'var(--color-surface-400, #999)' }"
-      />
+      <CuiCopyButton v-if="copyable" class="cui-code-block__copy" :value="code" size="xs" variant="ghost" />
     </div>
 
     <!-- Code area: the <pre> scrolls. The gutter is decoration, hidden from assistive tech, so a
@@ -115,92 +94,153 @@ const area = useScrollArea({
       :ref="area.setScroller"
       class="cui-code-block__pre"
       v-bind="area.scrollerAttrs.value"
-      :style="{
-        display: 'flex',
-        margin: '0',
-        overflow: 'auto',
-        maxHeight: maxHeight || undefined,
-        padding: `${cfg.padding} 0`,
-        background: 'transparent',
-        font: 'inherit',
-      }"
+      :style="{ maxHeight: maxHeight || undefined }"
     >
       <!-- Line numbers -->
-      <span
-        v-if="lineNumbers"
-        class="cui-code-block__gutter"
-        aria-hidden="true"
-        :style="{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          paddingRight: 'calc(0.75rem * var(--cui-density-scale, 1))',
-          paddingLeft: cfg.padding,
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-          marginRight: 'calc(0.75rem * var(--cui-density-scale, 1))',
-          userSelect: 'none',
-          flexShrink: '0',
-        }"
-      >
+      <span v-if="lineNumbers" class="cui-code-block__gutter" aria-hidden="true">
         <span
           v-for="(_, i) in lines"
           :key="i"
-          :style="{
-            fontSize: cfg.fontSize,
-            lineHeight: cfg.lineHeight,
-            fontFamily: 'var(--cui-font-mono, monospace)',
-            color: highlightSet.has(startLine + i)
-              ? 'var(--color-surface-200, #ccc)'
-              : 'var(--color-surface-600, #555)',
-            minWidth: `${String(startLine + lines.length - 1).length}ch`,
-          }"
+          class="cui-code-block__number"
+          :class="{ 'cui-code-block__number--highlight': highlightSet.has(startLine + i) }"
+          :style="{ minWidth: `${String(startLine + lines.length - 1).length}ch` }"
         >{{ startLine + i }}</span>
       </span>
 
       <!-- Code content. No whitespace between <code> and its lines: inside a <pre> it would
            render as blank lines. Each line ends in a real newline, so the text copies and
            reads as source whatever the browser does between blocks. -->
-      <code
-        class="cui-code-block__code"
-        :style="{
-          display: 'block',
-          flex: '1 0 auto',
-          background: 'transparent',
-          font: 'inherit',
-          color: 'inherit',
-          padding: `0 ${cfg.padding} 0 ${lineNumbers ? '0' : cfg.padding}`,
-        }"
-      ><span
+      <code class="cui-code-block__code" :class="{ 'cui-code-block__code--numbered': lineNumbers }"><span
           v-for="(line, i) in lines"
           :key="i"
-          :style="{
-            display: 'block',
-            fontSize: cfg.fontSize,
-            lineHeight: cfg.lineHeight,
-            fontFamily: 'var(--cui-font-mono, monospace)',
-            color: 'var(--color-surface-200, #e0e0e0)',
-            whiteSpace: 'pre',
-            background: highlightSet.has(startLine + i)
-              ? 'rgba(255,255,255,0.06)'
-              : 'transparent',
-            marginLeft: highlightSet.has(startLine + i) ? 'calc(-0.5rem * var(--cui-density-scale, 1))' : '0',
-            marginRight: highlightSet.has(startLine + i) ? 'calc(-0.5rem * var(--cui-density-scale, 1))' : '0',
-            paddingLeft: highlightSet.has(startLine + i) ? 'calc(0.5rem * var(--cui-density-scale, 1))' : '0',
-            paddingRight: highlightSet.has(startLine + i) ? 'calc(0.5rem * var(--cui-density-scale, 1))' : '0',
-            borderLeft: highlightSet.has(startLine + i)
-              ? '2px solid var(--cui-primary)'
-              : '2px solid transparent',
-            borderRadius: '2px',
-          }"
+          class="cui-code-block__line"
+          :class="{ 'cui-code-block__line--highlight': highlightSet.has(startLine + i) }"
         >{{ line || " " }}{{ i < lines.length - 1 ? "\n" : "" }}</span></code>
     </pre>
   </div>
 </template>
 
 <style scoped>
+/*
+ * Every themeable rule is a whole :where(), so a consumer's plain `.cui-code-block { … }` at
+ * (0,1,0) wins without !important; structure (display, overflow, white-space) keeps normal
+ * specificity. The block is a dark panel in light and dark mode alike, so its colours read
+ * the surface scale and fixed white tints rather than the mode-swapping semantic slots.
+ */
+.cui-code-block {
+  overflow: hidden;
+}
+/* The mono face is structural, at normal specificity: `.cui-typography * { font-family }` is
+   (0,1,0), and a consumer who wants another face sets --cui-font-mono. */
+.cui-code-block__title,
+.cui-code-block__number,
+.cui-code-block__line {
+  font-family: var(--cui-font-mono, monospace);
+}
+:where(.cui-code-block) {
+  border-radius: var(--cui-code-block-radius, 0.5rem);
+  border: 1px solid var(--cui-code-block-border, var(--cui-border));
+  background: var(--cui-code-block-bg, var(--color-surface-950, #1a1a2e));
+}
+
+.cui-code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+:where(.cui-code-block__header) {
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) var(--cui-code-block-px, var(--_code-block-px));
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+:where(.cui-code-block__title) {
+  font-size: var(--_code-block-header-font-size);
+  font-weight: 500;
+  color: var(--color-surface-400, #999);
+  text-transform: none;
+  letter-spacing: normal;
+}
+:where(.cui-code-block__title--language) {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+/* Kept as it was inline: this colours the copy button's wrapper (what the status text inherits),
+   not the button, which paints itself from --cui-button-color. Greying the button would change
+   how the block looks, so it is left for a deliberate change. */
+:where(.cui-code-block__copy) {
+  color: var(--color-surface-400, #999);
+}
+
+.cui-code-block__pre {
+  display: flex;
+  margin: 0;
+  overflow: auto;
+  font: inherit;
+}
+:where(.cui-code-block__pre) {
+  padding: var(--cui-code-block-py, var(--_code-block-py)) 0;
+  background: transparent;
+}
 /* The ring sits inside the block: the root clips (overflow: hidden), so an outer one is cut. */
 :where(.cui-code-block__pre:focus-visible) {
   outline: 2px solid var(--cui-code-block-focus-ring, var(--cui-primary-focus-ring));
   outline-offset: -2px;
+}
+
+.cui-code-block__gutter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  user-select: none;
+  flex-shrink: 0;
+}
+:where(.cui-code-block__gutter) {
+  padding-right: calc(0.75rem * var(--cui-density-scale, 1));
+  padding-left: var(--cui-code-block-px, var(--_code-block-px));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  margin-right: calc(0.75rem * var(--cui-density-scale, 1));
+}
+:where(.cui-code-block__number) {
+  font-size: var(--cui-code-block-font-size, var(--_code-block-font-size));
+  line-height: var(--_code-block-line-height);
+  color: var(--color-surface-600, #555);
+}
+:where(.cui-code-block__number--highlight) {
+  color: var(--color-surface-200, #ccc);
+}
+
+.cui-code-block__code {
+  display: block;
+  flex: 1 0 auto;
+  font: inherit;
+}
+:where(.cui-code-block__code) {
+  background: transparent;
+  color: inherit;
+  padding: 0 var(--cui-code-block-px, var(--_code-block-px));
+}
+:where(.cui-code-block__code--numbered) {
+  padding-left: 0;
+}
+
+.cui-code-block__line {
+  display: block;
+  white-space: pre;
+}
+:where(.cui-code-block__line) {
+  font-size: var(--cui-code-block-font-size, var(--_code-block-font-size));
+  line-height: var(--_code-block-line-height);
+  color: var(--cui-code-block-color, var(--color-surface-200, #e0e0e0));
+  background: transparent;
+  border-left: 2px solid transparent;
+  border-radius: 2px;
+}
+/* A highlighted line bleeds past the code's padding, so its tint reaches the gutter. */
+:where(.cui-code-block__line--highlight) {
+  background: rgba(255, 255, 255, 0.06);
+  margin-inline: calc(-0.5rem * var(--cui-density-scale, 1));
+  padding-inline: calc(0.5rem * var(--cui-density-scale, 1));
+  border-left: 2px solid var(--cui-primary);
 }
 </style>

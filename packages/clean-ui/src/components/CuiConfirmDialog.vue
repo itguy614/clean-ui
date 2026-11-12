@@ -92,18 +92,31 @@ watch(
   },
 );
 
-const variantConfig: Record<ConfirmDialogVariant, { color: CuiColor; icon: Component }> = {
-  danger: { color: "error", icon: PhWarningCircle },
-  warning: { color: "warning", icon: PhWarning },
-  info: { color: "info", icon: PhInfo },
+const variantConfig: Record<ConfirmDialogVariant, { role: CuiColor; icon: Component }> = {
+  danger: { role: "error", icon: PhWarningCircle },
+  warning: { role: "warning", icon: PhWarning },
+  info: { role: "info", icon: PhInfo },
   // Not PhQuestion: that is CuiIcon's fallback glyph for an unknown name, so a routine
   // confirm would look like a broken icon and an `icon` typo would go unnoticed.
-  primary: { color: "primary", icon: PhSealQuestion },
+  primary: { role: "primary", icon: PhSealQuestion },
 };
 
 const cfg = computed(() => variantConfig[props.variant]);
 
-const resolvedConfirmColor = computed(() => props.confirmColor ?? cfg.value.color);
+const resolvedConfirmColor = computed(() => props.confirmColor ?? cfg.value.role);
+
+// The variant's tint, for the icon tile and the typed-word prompt: private properties the
+// stylesheet reads back through `--cui-confirm-dialog-bg` / `-border` / `-color`.
+const accent = computed(() => ({
+  "--_confirm-dialog-bg": `var(--cui-${cfg.value.role}-bg)`,
+  "--_confirm-dialog-border": `var(--cui-${cfg.value.role}-border)`,
+  "--_confirm-dialog-color": `var(--cui-${cfg.value.role})`,
+}));
+// The prompt is a tinted box with no icon: it has no use for the colour.
+const promptAccent = computed(() => ({
+  "--_confirm-dialog-bg": accent.value["--_confirm-dialog-bg"],
+  "--_confirm-dialog-border": accent.value["--_confirm-dialog-border"],
+}));
 
 // `false` hides the tile; anything else falsy (unset, "") falls back to the variant's icon.
 // CuiIcon takes a name and a component as separate props, so forward by type.
@@ -140,87 +153,26 @@ function onCancel() {
 <template>
   <CuiModal class="cui-confirm-dialog" :hidden="hidden" :visible="visible" size="sm" no-close-button :aria-labelledby="titleId" :initial-focus="initialFocus" :return-focus="returnFocus" @update:visible="emit('update:visible', $event)" @after-enter="emit('after-enter')" @after-leave="emit('after-leave')">
     <!-- Custom header with icon badge -->
-    <div
-      :style="{
-        padding: 'calc(1.25rem * var(--cui-density-scale, 1)) calc(1.5rem * var(--cui-density-scale, 1)) 0',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 'calc(0.875rem * var(--cui-density-scale, 1))',
-      }"
-    >
+    <div class="cui-confirm-dialog__header">
       <!-- Icon badge -->
-      <div
-        v-if="tileIcon"
-        class="cui-confirm-dialog__icon"
-        aria-hidden="true"
-        :style="{
-          width: '2.5rem',
-          height: '2.5rem',
-          borderRadius: '0.625rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: '0',
-          background: `var(--cui-${cfg.color}-bg)`,
-          color: `var(--cui-${cfg.color})`,
-          border: `1px solid var(--cui-${cfg.color}-border)`,
-        }"
-      >
+      <div v-if="tileIcon" class="cui-confirm-dialog__icon" aria-hidden="true" :style="accent">
         <CuiIcon v-bind="tileIcon" size="1.25rem" />
       </div>
 
-      <div style="flex: 1; min-width: 0;">
+      <div class="cui-confirm-dialog__main">
         <!-- Title -->
-        <component
-          :is="headingTag"
-          :id="titleId"
-          class="cui-confirm-dialog__title"
-          :style="{
-            fontSize: '1.0625rem',
-            fontWeight: '600',
-            lineHeight: '1.3',
-            color: 'var(--cui-text-emphasis)',
-            margin: 'calc(0.125rem * var(--cui-density-scale, 1)) 0 0',
-          }"
-        >
+        <component :is="headingTag" :id="titleId" class="cui-confirm-dialog__title">
           {{ resolvedTitle }}
         </component>
 
         <!-- Message -->
-        <div
-          v-if="message || $slots.default"
-          :style="{
-            fontSize: '0.875rem',
-            color: 'var(--cui-text-secondary)',
-            lineHeight: '1.55',
-            marginTop: 'calc(0.375rem * var(--cui-density-scale, 1))',
-          }"
-        >
+        <div v-if="message || $slots.default" class="cui-confirm-dialog__message">
           <slot>{{ message }}</slot>
         </div>
       </div>
 
       <!-- Close button -->
-      <button
-        type="button"
-        :style="{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1.75rem',
-          height: '1.75rem',
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          color: 'var(--cui-text-tertiary)',
-          borderRadius: '0.25rem',
-          flexShrink: '0',
-          marginTop: 'calc(-0.125rem * var(--cui-density-scale, 1))',
-          marginRight: 'calc(-0.25rem * var(--cui-density-scale, 1))',
-        }"
-        :aria-label="messages.close"
-        @click="onCancel"
-      >
+      <button type="button" class="cui-confirm-dialog__close" :aria-label="messages.close" @click="onCancel">
         <CuiIcon name="x" size="1rem" />
       </button>
     </div>
@@ -228,18 +180,7 @@ function onCancel() {
     <CuiModalBody>
       <!-- Confirmation input -->
       <div v-if="confirmWord">
-        <div
-          :style="{
-            fontSize: '0.8125rem',
-            color: 'var(--cui-text-secondary)',
-            marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))',
-            lineHeight: '1.4',
-            padding: 'calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
-            background: `var(--cui-${cfg.color}-bg)`,
-            borderRadius: '0.375rem',
-            border: `1px solid var(--cui-${cfg.color}-border)`,
-          }"
-        >
+        <div class="cui-confirm-dialog__prompt" :style="promptAccent">
           {{ confirmPrompt || defaultPrompt }}
         </div>
         <CuiInput
@@ -252,7 +193,7 @@ function onCancel() {
     </CuiModalBody>
 
     <CuiModalFooter>
-      <div style="display: flex; gap: calc(0.5rem * var(--cui-density-scale, 1)); justify-content: flex-end;">
+      <div class="cui-confirm-dialog__actions">
         <CuiButton variant="outline" size="sm" @click="onCancel">
           {{ resolvedCancelText }}
         </CuiButton>
@@ -264,18 +205,7 @@ function onCancel() {
           @click="onConfirm"
         >
           <template v-if="loading" #prefix>
-            <span
-              class="cui-confirm-dialog__spinner"
-              :style="{
-                display: 'inline-block',
-                width: '0.875rem',
-                height: '0.875rem',
-                border: '2px solid currentColor',
-                borderTopColor: 'transparent',
-                borderRadius: '50%',
-                animation: 'cui-spin 0.75s linear infinite',
-              }"
-            />
+            <span class="cui-confirm-dialog__spinner" />
           </template>
           {{ resolvedConfirmText }}
         </CuiButton>
@@ -283,3 +213,105 @@ function onCancel() {
     </CuiModalFooter>
   </CuiModal>
 </template>
+
+<style scoped>
+/*
+ * Every themeable rule is a whole :where(), so a consumer's plain `.cui-confirm-dialog__title { … }`
+ * at (0,1,0) wins without !important; structure (display, flex, size) keeps normal specificity.
+ * The icon tile and the typed-word prompt share the variant's tint, which the component emits as
+ * private --_confirm-dialog-bg / -border / -color and these rules read through the public tokens.
+ */
+.cui-confirm-dialog__header {
+  display: flex;
+  align-items: flex-start;
+}
+:where(.cui-confirm-dialog__header) {
+  gap: var(--cui-confirm-dialog-gap, calc(0.875rem * var(--cui-density-scale, 1)));
+  padding: calc(1.25rem * var(--cui-density-scale, 1)) var(--cui-confirm-dialog-px, calc(1.5rem * var(--cui-density-scale, 1))) 0;
+}
+
+.cui-confirm-dialog__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+:where(.cui-confirm-dialog__icon) {
+  border-radius: 0.625rem;
+  background: var(--cui-confirm-dialog-bg, var(--_confirm-dialog-bg));
+  color: var(--cui-confirm-dialog-color, var(--_confirm-dialog-color));
+  border: 1px solid var(--cui-confirm-dialog-border, var(--_confirm-dialog-border));
+}
+
+.cui-confirm-dialog__main {
+  flex: 1;
+  min-width: 0;
+}
+
+:where(.cui-confirm-dialog__title) {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--cui-text-emphasis);
+  margin: calc(0.125rem * var(--cui-density-scale, 1)) 0 0;
+}
+
+:where(.cui-confirm-dialog__message) {
+  font-size: 0.875rem;
+  color: var(--cui-text-secondary);
+  line-height: 1.55;
+  margin-top: calc(0.375rem * var(--cui-density-scale, 1));
+}
+
+.cui-confirm-dialog__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: pointer;
+}
+:where(.cui-confirm-dialog__close) {
+  padding: 0;
+  border: none;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--cui-text-tertiary);
+  margin-top: calc(-0.125rem * var(--cui-density-scale, 1));
+  margin-right: calc(-0.25rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-confirm-dialog__prompt) {
+  font-size: 0.8125rem;
+  color: var(--cui-text-secondary);
+  margin-bottom: calc(0.5rem * var(--cui-density-scale, 1));
+  line-height: 1.4;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+  background: var(--cui-confirm-dialog-bg, var(--_confirm-dialog-bg));
+  border-radius: 0.375rem;
+  border: 1px solid var(--cui-confirm-dialog-border, var(--_confirm-dialog-border));
+}
+
+.cui-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+:where(.cui-confirm-dialog__actions) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+.cui-confirm-dialog__spinner {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+:where(.cui-confirm-dialog__spinner) {
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cui-spin 0.75s linear infinite;
+}
+</style>

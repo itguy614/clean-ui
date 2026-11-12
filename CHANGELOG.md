@@ -94,7 +94,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each with a stronger dark value. `xs` is a card resting on the page; `up` is a bar docked
   to the bottom edge, shadow cast upward. Override on `:root` (and `.dark`) like the others.
 
+- **Tokens for the ten components that moved to a stylesheet (#489):**
+  `--cui-divider-border` / `-color` / `-font-size`; `--cui-kbd-bg` / `-color` / `-border` /
+  `-radius` / `-font-size` / `-px` / `-py`; `--cui-timeline-item-bg` / `-color` / `-border` /
+  `-gap`; `--cui-modal-header-bg` / `-color` / `-gap` / `-px` / `-font-size` / `-hover-bg` /
+  `-hover-color`; `--cui-modal-body-color` / `-px` / `-py` / `-font-size`;
+  `--cui-modal-footer-bg` / `-gap` / `-px`; `--cui-confirm-dialog-bg` / `-border` / `-color` /
+  `-gap` / `-px`; `--cui-time-picker-bg` / `-color` / `-border` / `-radius` / `-height` / `-px` /
+  `-font-size` / `-pressed-bg` / `-pressed-color`; `--cui-data-grid-column-manager-gap` / `-px` /
+  `-radius` / `-border`; `--cui-data-grid-view-manager-pressed-color`.
+
 ### Changed
+
+- **Ten more components paint from a stylesheet (#489):** `CuiDivider`, `CuiKbd`,
+  `CuiTimelineItem`, `CuiModalHeader`, `CuiModalBody`, `CuiModalFooter`, `CuiConfirmDialog`,
+  `CuiTimePicker`, `CuiDataGridColumnManager` and `CuiDataGridViewManager` wrote their colours,
+  borders and type in style objects and style attributes, so none could be restyled without
+  `!important`. The paint is now zero-specificity rules in each component's stylesheet, so a plain
+  class rule or a `--cui-*` token wins. Nothing about how they look changes. The time picker's
+  and the confirm dialog's panels are teleported to `<body>`, so a token for them has to be set on
+  `:root` or `<body>`. Two details: the `.cui-kbd` typography helper in `main.css` now skips
+  `CuiKbd` (`.cui-kbd:where(:not(.cui-kbd--keycap))`, same specificity), which paints itself; and
+  `CuiModalHeader`'s close-button hover is a CSS `:hover` rule, not `mouseenter` and `mouseleave`
+  handlers that wrote inline colours.
+
+- **`CuiCodeBlock` paints from a stylesheet (#484).** Its padding, background, border and text
+  colours were inline style objects, so none could be restyled without `!important`. They are
+  now zero-specificity rules in its stylesheet, with the size preset passed as private
+  properties, and a highlighted line or number is a modifier class. Nothing about how it looks
+  changes. New tokens: `--cui-code-block-bg`, `-border`, `-radius`, `-color`, `-font-size`,
+  `-px` and `-py`. A guard now requires every component to have a `<style>` block or an
+  explicit, justified exemption (#213).
 
 - **The date, date-range and time pickers, and any `CuiPopover` with `no-arrow`, now open 4px
   from their trigger, 6px closer than before (#486).** They had `CuiPopover`'s 10px default,

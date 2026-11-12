@@ -38,7 +38,7 @@ describe("CuiCodeBlock structure (#163)", () => {
     w = mount(CuiCodeBlock, { props: { code: CODE, lineNumbers: true }, attachTo: document.body });
     const gutter = w.find(".cui-code-block__gutter");
     expect(gutter.attributes("aria-hidden")).toBe("true");
-    expect(gutter.attributes("style")).toContain("user-select: none");
+    // `user-select: none` is in the stylesheet now: code-block-identity.test.ts (browser) pins it.
     expect(gutter.text()).toContain("1");
     // The gutter is not inside <code>: the numbers are never part of the code's text.
     expect(w.find("code").element.contains(gutter.element)).toBe(false);
