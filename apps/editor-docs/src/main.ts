@@ -9,6 +9,9 @@ import "@itguy614/clean-ui/icons/lazy";
 import router from "./router";
 import App from "./App.vue";
 import "./styles/main.css";
+// This site's theme switcher offers every preset, and the non-default palettes are opt-in
+// stylesheets (#220): load them all from workspace source (see apps/docs/src/main.ts).
+import.meta.glob("../../../packages/clean-ui/src/styles/themes/*.css", { eager: true });
 
 // Importing the library no longer applies the stored theme, density or color mode (#209, #463, #487): apply
 // them before anything renders.

@@ -28,6 +28,12 @@ import Example from "../components/Example.vue";
 import { computed, ref } from "vue";
 
 const { theme, presets, setTheme } = useTheme();
+const themeImports = computed(() =>
+  [
+    "import '@itguy614/clean-ui/styles'            // Navy, the default: always",
+    ...presets.filter((p) => p.id !== "default").map((p) => `import '@itguy614/clean-ui/themes/${p.id}.css'`),
+  ].join("\n"),
+);
 const demoRadio = ref("option1");
 const demoCheck = ref(true);
 const demoToggle = ref(true);
@@ -101,7 +107,33 @@ setTheme('default') // back to Navy, the default (no class on &lt;html&gt;)
     </div>
 
     <div>
-      <h2 id="theme-presets" class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
+      <h2 id="loading-theme-css" class="mb-4 text-2xl font-semibold">Loading a Theme's CSS</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            <code class="cui-code">@itguy614/clean-ui/styles</code> holds the default Navy theme only. Every other
+            theme is its own opt-in stylesheet of about 2 kB: import the ones your app uses, in any order, after
+            <code class="cui-code">styles</code>. Each works on <code class="cui-code">&lt;html&gt;</code> and on a scoped
+            subtree, in light and dark. This site imports all of them.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">{{ themeImports }}</code></pre>
+          <p class="mb-3 mt-4 text-surface-600 dark:text-surface-400">
+            With no bundler (a plain <code class="cui-code">&lt;link&gt;</code>), or to offer every theme without listing
+            them, load the all-in-one stylesheet <em>instead of</em> <code class="cui-code">styles</code>:
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import '@itguy614/clean-ui/styles/all.css'</code></pre>
+          <p class="mt-4 text-surface-600 dark:text-surface-400">
+            A theme class whose file was not imported styles nothing, and the page stays Navy. In development,
+            <code class="cui-code">setTheme()</code> warns once and names the file to import. Upgrading from 1.x, where
+            <code class="cui-code">styles</code> held every theme: import each theme you use, or switch to
+            <code class="cui-code">styles/all.css</code>.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <div>
+      <h2 id="theme-presets"class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
       <CuiCard>
         <CuiCardBody>
           <p class="mb-3 text-surface-600 dark:text-surface-400">

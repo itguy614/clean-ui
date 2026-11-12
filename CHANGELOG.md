@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 2.0
+
+- **The seven non-default themes are opt-in stylesheets.** `@itguy614/clean-ui/styles` now holds
+  the default Navy theme only (about 9 kB raw, 1.3 kB gzip smaller); Mono, Forest, Amber, Azure,
+  Teal, Violet and Ruby are `@itguy614/clean-ui/themes/<name>.css`, about 2 kB each. An app that
+  uses a non-default theme must import `@itguy614/clean-ui/themes/<name>.css`, or switch to the
+  all-in-one `@itguy614/clean-ui/styles/all.css` (every theme: use it instead of `styles`).
+  Without the file a `cui-theme-<name>` class styles nothing, and in development `setTheme()`
+  warns once and names the file to import (#220).
+
 ## [1.10.0] - 2026-11-12
 
 ### Upgrading to 1.10

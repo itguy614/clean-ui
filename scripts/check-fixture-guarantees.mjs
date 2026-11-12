@@ -265,6 +265,22 @@ const GUARANTEES = [
     },
   },
   {
+    id: "theme-css-opt-in",
+    name: "the built stylesheet holds exactly the non-default themes the page imports (#220)",
+    check(distDir, scenario) {
+      // Only the page's own `themes` (see scripts/fixture-scenarios.mjs): `@itguy614/clean-ui/styles`
+      // is the default theme, and each other palette arrives through its own import.
+      const css = readBuiltAssets(distDir, [".css"]);
+      const found = [...new Set([...css.matchAll(/\.cui-theme-([a-z][a-z0-9-]*)/g)].map((m) => m[1]))]
+        .filter((id) => id !== "default" && id !== "navy")
+        .sort();
+      const expected = [...(SCENARIOS[scenario].themes ?? [])].sort();
+      return found.join() === expected.join()
+        ? null
+        : `the built CSS has theme classes [${found}], but this page imports [${expected}].`;
+    },
+  },
+  {
     id: "single-vue",
     scope: "install",
     name: "vue: exactly one installed copy (single-instance dependency)",
@@ -336,7 +352,7 @@ for (const { id, name, scope, check } of GUARANTEES) {
   }
   for (const [scenario, { skipGuarantees = {} }] of Object.entries(SCENARIOS)) {
     const label = `${name} [${scenario}]`;
-    const failure = runCheck(check, builds[scenario]);
+    const failure = runCheck(check, builds[scenario], scenario);
     if (!(id in skipGuarantees)) {
       report(label, failure);
     } else if (failure) {

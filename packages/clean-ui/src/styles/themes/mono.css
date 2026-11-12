@@ -1,0 +1,54 @@
+/* ============================================================
+   Mono theme — opt-in (#220). Import after `@itguy614/clean-ui/styles`:
+     @import "@itguy614/clean-ui/themes/mono.css";
+   Apply with `<html class="cui-theme-mono">` or on any ancestor (`setTheme("mono")`).
+   The `--cui-theme-mono` marker is how `useTheme` tells, in development, that this
+   file was loaded; it styles nothing. Safe in any order relative to other theme files.
+   Source of the palette for the all-in-one stylesheet too: edit here only.
+   ============================================================ */
+
+/* --- Mono: near-black primary, pure neutral surface --- */
+.cui-theme-mono {
+  --cui-theme-mono: 1;
+
+  --color-primary-50:  oklch(0.900 0.003 270);
+  --color-primary-100: oklch(0.843 0.003 270);
+  --color-primary-200: oklch(0.742 0.003 270);
+  --color-primary-300: oklch(0.608 0.003 270);
+  --color-primary-400: oklch(0.435 0.003 270);
+  --color-primary-500: oklch(0.270 0.003 270);
+  --color-primary-600: oklch(0.230 0.003 270);
+  --color-primary-700: oklch(0.196 0.003 270);
+  --color-primary-800: oklch(0.170 0.003 270);
+  --color-primary-900: oklch(0.145 0.003 270);
+  --color-primary-950: oklch(0.120 0.003 270);
+
+  /* Light mode: neutral surface — smooth monotonic curve */
+  --color-surface-50:  oklch(0.983 0.002 270);
+  --color-surface-100: oklch(0.960 0.002 270);
+  --color-surface-200: oklch(0.900 0.002 270);
+  --color-surface-300: oklch(0.850 0.002 270);
+  --color-surface-400: oklch(0.780 0.002 270);
+  --color-surface-500: oklch(0.720 0.002 270);
+  --color-surface-600: oklch(0.620 0.002 270);
+  --color-surface-700: oklch(0.500 0.002 270);
+  --color-surface-800: oklch(0.380 0.002 270);
+  --color-surface-900: oklch(0.270 0.002 270);
+  --color-surface-950: oklch(0.196 0.002 270);
+}
+
+.dark .cui-theme-mono,
+.cui-theme-mono.dark.dark,
+.cui-theme-mono .dark {
+  --color-surface-50:  oklch(0.983 0.003 270);
+  --color-surface-100: oklch(0.960 0.003 270);
+  --color-surface-200: oklch(0.900 0.003 270);
+  --color-surface-300: oklch(0.850 0.003 270);
+  --color-surface-400: oklch(0.780 0.003 270);
+  --color-surface-500: oklch(0.720 0.003 270);
+  --color-surface-600: oklch(0.620 0.003 270);
+  --color-surface-700: oklch(0.500 0.003 270);
+  --color-surface-800: oklch(0.380 0.003 270);
+  --color-surface-900: oklch(0.270 0.003 270);
+  --color-surface-950: oklch(0.196 0.003 270);
+}

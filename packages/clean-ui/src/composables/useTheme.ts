@@ -1,6 +1,10 @@
 import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { THEME_CLASS_PREFIX, THEME_STORAGE_KEY } from "../ssr-constants";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+
+// Module-scoped, so the library doesn't pull Node's global types into its own build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface ThemePreset {
   id: string;
@@ -50,7 +54,23 @@ function applyTheme(themeId: string) {
 
   if (themeId !== "default") {
     root.classList.add(`${CLASS_PREFIX}${themeId}`);
+    // A consumer's own `cui-theme-<brand>` is not a preset: nothing of ours to import.
+    if (THEME_PRESETS.some((p) => p.id === themeId)) warnIfStylesheetMissing(themeId);
   }
+}
+
+/**
+ * Development only (#220): the seven non-default palettes are opt-in stylesheets, so a theme
+ * whose file was not imported is a class that styles nothing and the page stays Navy. Each
+ * file declares a `--cui-theme-<id>` marker on its class; read it back from `<html>`.
+ * A stylesheet still loading when this runs reads as missing: import them ahead of the app.
+ */
+function warnIfStylesheetMissing(themeId: string) {
+  const marker = `--cui-theme-${themeId}`;
+  if (__DEV__ && process.env.NODE_ENV !== "production" && !getComputedStyle(document.documentElement).getPropertyValue(marker).trim()) warnOnce(
+    `[clean-ui] setTheme("${themeId}"): the "${themeId}" theme's stylesheet is not loaded, so it has no effect. ` +
+      `Import it: @itguy614/clean-ui/themes/${themeId}.css (or the all-in-one @itguy614/clean-ui/styles/all.css).`,
+  );
 }
 
 let restored = false;

@@ -16,7 +16,7 @@
  * summary. This module still does its own per-theme printing exactly as before —
  * only the pass/fail bookkeeping and final summary moved to the generic runner.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { contrastRatio, toHex, grade, mixOklab } from "./color-math.mjs";
@@ -53,7 +53,7 @@ function ruleBlocks(css) {
  * pass, so this throws instead.
  */
 function requireBlock(block, what) {
-  if (!block) throw new Error(`check-contrast: could not find ${what} in themes.css`);
+  if (!block) throw new Error(`check-contrast: could not find ${what} in themes.css or themes/*.css`);
   return block.body;
 }
 
@@ -68,7 +68,16 @@ function buildScale(vars, prefix) {
 }
 
 function parseAllThemes() {
-  const themesCss = readFileSync(resolve(__dirname, "../../packages/clean-ui/src/styles/themes.css"), "utf-8");
+  // Navy's dark block is in themes.css; each other palette is its own opt-in file (#220), and
+  // the audit reads them all, whether or not a consumer imports them.
+  const stylesDir = resolve(__dirname, "../../packages/clean-ui/src/styles");
+  const themesCss = [
+    readFileSync(resolve(stylesDir, "themes.css"), "utf-8"),
+    ...readdirSync(resolve(stylesDir, "themes"))
+      .filter((f) => f.endsWith(".css"))
+      .sort()
+      .map((f) => readFileSync(resolve(stylesDir, "themes", f), "utf-8")),
+  ].join("\n");
   // The default color scale (@theme) lives in its own single-source file,
   // imported by both the library and the docs (see theme.css / issue #35).
   const themeCss = readFileSync(resolve(__dirname, "../../packages/clean-ui/src/styles/theme.css"), "utf-8");
