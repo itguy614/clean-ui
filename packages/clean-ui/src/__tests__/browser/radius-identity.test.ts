@@ -48,7 +48,7 @@ import baseline from "./radius-identity.baseline.json";
  * `var(--cui-button-radius, var(--cui-radius-md, 0.375rem))` chains, must not change a single
  * corner at default settings. `radius-identity.baseline.json` holds the computed border radii
  * of every element each scenario renders, recorded from develop at 1.10.0 BEFORE the change:
- * every `rounded` value of every component that takes the prop, and the default look of the
+ * every `rounded` value of every component that takes the prop (class names were later dropped from the descriptors, mechanically; `tabs-segmented` was added with the Tabs rule rewrite, its 6px track and 4px tabs checked by hand against develop's calc), and the default look of the
  * other components whose stylesheets carried a radius chain or a literal. Real browser: jsdom
  * computes none of this.
  *
@@ -149,6 +149,9 @@ add("pagination", { make: () => wrap(CuiPagination, { currentPage: 2, totalPages
 add("pin-input", { make: () => wrap(CuiPinInput, { modelValue: "12", length: 4 }) });
 add("tabs", {
   make: () => wrap(CuiTabs, { modelValue: "a" }, { default: () => [h(CuiTab, { value: "a", label: "A" }), h(CuiTab, { value: "b", label: "B" })] }),
+});
+add("tabs-segmented", {
+  make: () => wrap(CuiTabs, { modelValue: "a", variant: "segmented" }, { default: () => [h(CuiTab, { value: "a", label: "A" }), h(CuiTab, { value: "b", label: "B" })] }),
 });
 add("toast", { make: () => wrap(CuiToast, { title: "T", description: "D", dismissible: true, showProgress: true, autoDismiss: 0 }) });
 add("tooltip", { make: () => wrap(CuiTooltip, { text: "Tip", visible: true }, { default: () => h("button", "Trigger") }) });

@@ -15,7 +15,7 @@ export interface CuiFieldsetProps extends HideableProps, ColorableProps, Disable
   description?: string;
   /** Visual variant: bordered outline, tinted subtle fill, or chrome-less ghost */
   variant?: FieldsetVariant;
-  /** Border radius (mirrors CuiButton) */
+  /** Border radius, from the shared scale */
   rounded?: CuiRounded;
   /** Allow collapsing the fieldset content */
   collapsible?: boolean;

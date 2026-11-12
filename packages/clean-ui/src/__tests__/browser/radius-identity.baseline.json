@@ -75,6 +75,7 @@
 "select-sm":["div 4px 4px 4px 4px"],
 "select-sm-open":["div 4px 4px 4px 4px","div 8px 8px 8px 8px","div 4px 4px 4px 4px","div 4px 4px 4px 4px"],
 "tabs":["button 4px 4px 4px 4px","button 4px 4px 4px 4px"],
+"tabs-segmented":["div 6px 6px 6px 6px","div 6px 6px 6px 6px","div 6px 6px 6px 6px","div 4px 4px 4px 4px","div 4px 4px 4px 4px","button 4px 4px 4px 4px","button 4px 4px 4px 4px"],
 "tag-input-full":["div 9999px 9999px 9999px 9999px","span 9999px 9999px 9999px 9999px","button 50% 50% 50% 50%"],
 "tag-input-lg":["div 8px 8px 8px 8px","span 9999px 9999px 9999px 9999px","button 50% 50% 50% 50%"],
 "tag-input-md":["div 6px 6px 6px 6px","span 9999px 9999px 9999px 9999px","button 50% 50% 50% 50%"],

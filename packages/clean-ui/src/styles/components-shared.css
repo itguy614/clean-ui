@@ -71,7 +71,7 @@
    the `rounded` prop or `--cui-input-radius`, both inherited from the field, since the button
    sits inside it; the inner side is squared by a `--flat-*` rule below. */
 .cui-button.cui-button--inset {
-  border-radius: calc(var(--cui-input-radius, var(--_input-radius, var(--cui-control-group-radius, var(--cui-radius-md, 0.375rem)))) - 1px);
+  border-radius: calc(var(--cui-input-radius, var(--_input-radius, var(--cui-radius-md, 0.375rem))) - 1px);
 }
 
 .cui-button.cui-button--flat-right {
