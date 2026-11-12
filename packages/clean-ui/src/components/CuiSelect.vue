@@ -14,6 +14,9 @@ import CuiListboxStatus from "./CuiListboxStatus.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE, nestedSize, scaleDensity } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCheck } from "../icons/generated/check";
+import { IconX } from "../icons/generated/x";
 
 export interface SelectOption {
   value: string | number;
@@ -338,9 +341,9 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
               :aria-label="messages.clear"
             @click.stop="clear"
           >
-            <CuiIcon name="x" size="0.75rem" />
+            <CuiIcon :icon="IconX" size="0.75rem" />
           </button>
-          <CuiIcon name="caret-down" size="1rem" class="cui-select__chevron" :class="{ 'cui-select__chevron--open': isOpen }" />
+          <CuiIcon :icon="IconCaretDown" size="1rem" class="cui-select__chevron" :class="{ 'cui-select__chevron--open': isOpen }" />
         </div>
       </div>
 
@@ -397,7 +400,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
           >
             <!-- Checkbox for multi-select only -->
             <span v-if="multiple" class="cui-select__check">
-              <CuiIcon v-if="isSelected(opt.value)" name="check" size="1rem" :color="color" />
+              <CuiIcon v-if="isSelected(opt.value)" :icon="IconCheck" size="1rem" :color="color" />
             </span>
             <span class="cui-select__option-label">
               <slot name="option" :option="opt">

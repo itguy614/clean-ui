@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CuiIcon from "./CuiIcon.vue";
 import type { DisableableProps } from "../types/common";
+import { IconCheck } from "../icons/generated/check";
 
 export interface CuiDropdownCheckItemProps extends DisableableProps {
   /** v-model boolean */
@@ -41,7 +42,7 @@ function onKeydown(e: KeyboardEvent) {
     @keydown="onKeydown"
   >
     <span class="cui-dropdown-check-item__check">
-      <CuiIcon v-if="modelValue" name="check" size="0.875rem" weight="bold" />
+      <CuiIcon v-if="modelValue" :icon="IconCheck" size="0.875rem" weight="bold" />
     </span>
     <span class="cui-dropdown-check-item__label"><slot /></span>
   </div>

@@ -12,6 +12,7 @@ import { useLocale } from "../composables/useLocale";
 import { dayPeriodLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
+import { IconClock } from "../icons/generated/clock";
 
 // Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
 declare const process: { env: { NODE_ENV?: string } };
@@ -461,7 +462,7 @@ defineExpose({ el: rootEl, focus, blur });
         :tabindex="disabled ? -1 : 0"
         @keydown="onTriggerKeydown"
       >
-        <CuiIcon class="cui-time-picker__icon" name="clock" size="0.875rem" />
+        <CuiIcon class="cui-time-picker__icon" :icon="IconClock" size="0.875rem" />
         <span class="cui-time-picker__value">{{ displayText || inputPlaceholder }}</span>
       </div>
 

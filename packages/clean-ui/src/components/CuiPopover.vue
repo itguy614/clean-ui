@@ -12,6 +12,7 @@ import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { RADIUS_SCALE } from "../utils/sizing";
+import { IconX } from "../icons/generated/x";
 
 export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 
@@ -274,7 +275,7 @@ const messages = useMessages();
             :aria-label="messages.close"
             @click.stop="doHide"
           >
-            <CuiIcon name="x" size="0.8125rem" />
+            <CuiIcon :icon="IconX" size="0.8125rem" />
           </button>
         </div>
 

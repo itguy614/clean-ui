@@ -3,6 +3,7 @@ import { inject, computed } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import { DropdownRadioKey } from "./dropdown-context";
 import type { DisableableProps } from "../types/common";
+import { IconCircle } from "../icons/generated/circle";
 
 export interface CuiDropdownRadioItemProps extends DisableableProps {
   /** Value for this radio item */
@@ -41,7 +42,7 @@ function onKeydown(e: KeyboardEvent) {
     @keydown="onKeydown"
   >
     <span class="cui-dropdown-radio-item__check">
-      <CuiIcon v-if="isSelected" name="circle" size="0.5rem" weight="fill" />
+      <CuiIcon v-if="isSelected" :icon="IconCircle" size="0.5rem" weight="fill" />
     </span>
     <span class="cui-dropdown-radio-item__label"><slot /></span>
   </div>

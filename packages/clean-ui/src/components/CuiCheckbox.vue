@@ -4,6 +4,8 @@ import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { CheckboxGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import { IconCheck } from "../icons/generated/check";
+import { IconMinus } from "../icons/generated/minus";
 
 export interface CuiCheckboxProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
   /** The value this checkbox represents (group mode) */
@@ -129,9 +131,9 @@ const choice = useChoiceLabelling(props);
       }"
     >
       <!-- Checkmark -->
-      <CuiIcon v-if="isChecked" name="check" weight="bold" size="0.875rem" :color="`var(--cui-${resolvedColor})`" class="cui-checkbox__icon" />
+      <CuiIcon v-if="isChecked" :icon="IconCheck" weight="bold" size="0.875rem" :color="`var(--cui-${resolvedColor})`" class="cui-checkbox__icon" />
       <!-- Indeterminate dash -->
-      <CuiIcon v-else-if="indeterminate" name="minus" weight="bold" size="0.875rem" :color="`var(--cui-${resolvedColor})`" class="cui-checkbox__icon" />
+      <CuiIcon v-else-if="indeterminate" :icon="IconMinus" weight="bold" size="0.875rem" :color="`var(--cui-${resolvedColor})`" class="cui-checkbox__icon" />
     </span>
 
     <!-- Label + description -->

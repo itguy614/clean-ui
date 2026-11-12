@@ -11,6 +11,7 @@ declare const process: { env: { NODE_ENV?: string } };
 import { useMessages } from "../composables/useMessages";
 import { RADIUS_SCALE } from "../utils/sizing";
 import { subtreeTransition } from "../utils/motion";
+import { IconX } from "../icons/generated/x";
 
 export type AlertVariant = "solid" | "subtle" | "outline";
 export type AlertEntrance = "fade" | "slide-down" | "slide-left" | "none";
@@ -148,7 +149,7 @@ const messages = useMessages();
     <div v-if="!noIcon" class="cui-alert__icon">
       <slot name="icon">
         <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
-        <CuiIcon v-else :name="roleIcon.name!" size="1.25rem" />
+        <CuiIcon v-else :icon="roleIcon.icon!" size="1.25rem" />
       </slot>
     </div>
 
@@ -171,7 +172,7 @@ const messages = useMessages();
       :aria-label="messages.dismiss"
       @click="dismiss"
     >
-      <CuiIcon name="x" size="0.875rem" />
+      <CuiIcon :icon="IconX" size="0.875rem" />
     </button>
   </div>
   </Transition>

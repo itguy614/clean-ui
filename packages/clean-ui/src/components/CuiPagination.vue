@@ -6,6 +6,8 @@ import type { HideableProps, ColorableProps, SizeableProps } from "../types/comm
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { IconCaretLeft } from "../icons/generated/caret-left";
+import { IconCaretRight } from "../icons/generated/caret-right";
 
 export interface LaravelPaginatorMeta {
   current_page: number;
@@ -186,7 +188,7 @@ const perPageSelectOptions = computed(() =>
           :aria-label="messages.pagination.previous"
           @click="goTo(page - 1)"
         >
-          <CuiIcon name="caret-left" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon :icon="IconCaretLeft" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
 
         <!-- Page numbers -->
@@ -222,7 +224,7 @@ const perPageSelectOptions = computed(() =>
           :aria-label="messages.pagination.next"
           @click="goTo(page + 1)"
         >
-          <CuiIcon name="caret-right" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
+          <CuiIcon :icon="IconCaretRight" :size="clampedSize === 'sm' ? '0.75rem' : '1rem'" />
         </button>
       </nav>
     </div>

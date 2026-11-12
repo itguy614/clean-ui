@@ -9,6 +9,14 @@ import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
+import { IconCaretDoubleLeft } from "../icons/generated/caret-double-left";
+import { IconCaretDoubleRight } from "../icons/generated/caret-double-right";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretLeft } from "../icons/generated/caret-left";
+import { IconCaretRight } from "../icons/generated/caret-right";
+import { IconCaretUp } from "../icons/generated/caret-up";
+import { IconDotsSixVertical } from "../icons/generated/dots-six-vertical";
+import { IconMagnifyingGlass } from "../icons/generated/magnifying-glass";
 
 export interface TransferListItem {
   value: string | number;
@@ -341,12 +349,12 @@ const moveButtons = computed(() => {
   const t = messages.value.transferList;
   const idx = reorderIndex.value;
   return [
-    { key: "to-target", label: t.moveSelectedTo(targetLabel.value), icon: "caret-right", idle: movableToTarget.value.length === 0, run: moveToTarget },
-    { key: "all-to-target", label: t.moveAllTo(targetLabel.value), icon: "caret-double-right", idle: movableAllToTarget.value.length === 0, run: moveAllToTarget },
-    { key: "to-source", label: t.moveSelectedTo(sourceLabel.value), icon: "caret-left", idle: movableToSource.value.length === 0, run: moveToSource },
-    { key: "all-to-source", label: t.moveAllTo(sourceLabel.value), icon: "caret-double-left", idle: targetItems.value.length === 0, run: moveAllToSource },
-    { key: "up", label: t.moveUp, icon: "caret-up", idle: idx <= 0, run: () => reorder(-1), gapBefore: true },
-    { key: "down", label: t.moveDown, icon: "caret-down", idle: idx === -1 || idx === props.modelValue.length - 1, run: () => reorder(1) },
+    { key: "to-target", label: t.moveSelectedTo(targetLabel.value), icon: IconCaretRight, idle: movableToTarget.value.length === 0, run: moveToTarget },
+    { key: "all-to-target", label: t.moveAllTo(targetLabel.value), icon: IconCaretDoubleRight, idle: movableAllToTarget.value.length === 0, run: moveAllToTarget },
+    { key: "to-source", label: t.moveSelectedTo(sourceLabel.value), icon: IconCaretLeft, idle: movableToSource.value.length === 0, run: moveToSource },
+    { key: "all-to-source", label: t.moveAllTo(sourceLabel.value), icon: IconCaretDoubleLeft, idle: targetItems.value.length === 0, run: moveAllToSource },
+    { key: "up", label: t.moveUp, icon: IconCaretUp, idle: idx <= 0, run: () => reorder(-1), gapBefore: true },
+    { key: "down", label: t.moveDown, icon: IconCaretDown, idle: idx === -1 || idx === props.modelValue.length - 1, run: () => reorder(1) },
   ];
 });
 
@@ -386,7 +394,7 @@ const rootStyle = computed(() => ({
       <div v-if="filterable" class="cui-transfer-list__filter">
         <span :id="ids.sourceFilter" class="cui-sr-only">{{ messages.transferList.filter(sourceLabel) }}</span>
         <CuiInput v-model="sourceSearch" :placeholder="sourceFilterLabel" size="sm" :aria-labelledby="ids.sourceFilter" :disabled="disabled">
-          <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
+          <template #prefix><CuiIcon :icon="IconMagnifyingGlass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
@@ -424,7 +432,7 @@ const rootStyle = computed(() => ({
             @dragend="onDragEnd"
             @dragover="onDragOverItem($event, item.value, 'source')"
           >
-            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
+            <CuiIcon :icon="IconDotsSixVertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
             <slot name="item" :item="item" :side="'source'">
               <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
               <div class="cui-transfer-list__item-body">
@@ -455,7 +463,7 @@ const rootStyle = computed(() => ({
           :disabled="disabled || b.idle"
           @click="b.run"
         >
-          <CuiIcon :name="b.icon" size="0.875rem" />
+          <CuiIcon :icon="b.icon" size="0.875rem" />
         </CuiButton>
       </template>
     </CuiToolbar>
@@ -469,7 +477,7 @@ const rootStyle = computed(() => ({
       <div v-if="filterable" class="cui-transfer-list__filter">
         <span :id="ids.targetFilter" class="cui-sr-only">{{ messages.transferList.filter(targetLabel) }}</span>
         <CuiInput v-model="targetSearch" :placeholder="targetFilterLabel" size="sm" :aria-labelledby="ids.targetFilter" :disabled="disabled">
-          <template #prefix><CuiIcon name="magnifying-glass" size="0.75rem" /></template>
+          <template #prefix><CuiIcon :icon="IconMagnifyingGlass" size="0.75rem" /></template>
         </CuiInput>
       </div>
       <div
@@ -507,7 +515,7 @@ const rootStyle = computed(() => ({
             @dragend="onDragEnd"
             @dragover="onDragOverItem($event, item.value, 'target')"
           >
-            <CuiIcon name="dots-six-vertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
+            <CuiIcon :icon="IconDotsSixVertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
             <slot name="item" :item="item" :side="'target'">
               <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
               <div class="cui-transfer-list__item-body">

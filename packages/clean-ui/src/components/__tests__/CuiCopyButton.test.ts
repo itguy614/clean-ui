@@ -3,6 +3,8 @@ import { mount } from "@vue/test-utils";
 import CuiCopyButton from "../CuiCopyButton.vue";
 import CuiButton from "../CuiButton.vue";
 import CuiIcon from "../CuiIcon.vue";
+import { IconCheck } from "../../icons/generated/check";
+import { IconCopy } from "../../icons/generated/copy";
 
 describe("CuiCopyButton", () => {
   let writeText: ReturnType<typeof vi.fn>;
@@ -33,12 +35,12 @@ describe("CuiCopyButton", () => {
   it("enters the copied state after a successful copy", async () => {
     const wrapper = mount(CuiCopyButton, { props: { value: "abc" } });
     // before copy: copy icon, configured color
-    expect(wrapper.getComponent(CuiIcon).props("name")).toBe("copy");
+    expect(wrapper.getComponent(CuiIcon).props("icon")).toBe(IconCopy);
     expect(wrapper.getComponent(CuiButton).props("color")).toBe("primary");
 
     await wrapper.getComponent(CuiButton).trigger("click");
     await vi.waitFor(() => {
-      expect(wrapper.getComponent(CuiIcon).props("name")).toBe("check");
+      expect(wrapper.getComponent(CuiIcon).props("icon")).toBe(IconCheck);
     });
     // copied state swaps the button color to success
     expect(wrapper.getComponent(CuiButton).props("color")).toBe("success");
@@ -49,12 +51,12 @@ describe("CuiCopyButton", () => {
     const wrapper = mount(CuiCopyButton, { props: { value: "abc", resetDelay: 1500 } });
     await wrapper.getComponent(CuiButton).trigger("click");
     await vi.waitFor(() => {
-      expect(wrapper.getComponent(CuiIcon).props("name")).toBe("check");
+      expect(wrapper.getComponent(CuiIcon).props("icon")).toBe(IconCheck);
     });
 
     vi.advanceTimersByTime(1500);
     await wrapper.vm.$nextTick();
-    expect(wrapper.getComponent(CuiIcon).props("name")).toBe("copy");
+    expect(wrapper.getComponent(CuiIcon).props("icon")).toBe(IconCopy);
     expect(wrapper.getComponent(CuiButton).props("color")).toBe("primary");
     wrapper.unmount();
   });
@@ -65,7 +67,7 @@ describe("CuiCopyButton", () => {
     });
     await wrapper.getComponent(CuiButton).trigger("click");
     await vi.waitFor(() => {
-      expect(wrapper.getComponent(CuiIcon).props("name")).toBe("check");
+      expect(wrapper.getComponent(CuiIcon).props("icon")).toBe(IconCheck);
     });
     // tooltip text prop flips to the copied variant
     const tooltip = wrapper.findAllComponents({ name: "CuiTooltip" })[0];

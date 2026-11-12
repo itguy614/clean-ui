@@ -7,7 +7,7 @@ import {
   getIconFallbackResolver,
   type IconFallbackResolver,
 } from "../icons/registry";
-import { FALLBACK_ICON } from "../icons/builtin";
+import { FALLBACK_ICON } from "../icons/fallback";
 import { __DEV__, warnOnce } from "../utils/devWarn";
 // Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
 declare const process: { env: { NODE_ENV?: string } };
@@ -17,19 +17,26 @@ export type IconSize = CuiSize | (string & {});
 
 export interface CuiIconProps extends HideableProps {
   /**
-   * Phosphor icon name in kebab-case (e.g. "check", "warning-circle").
-   * Resolved from the built-in set and anything passed to `registerIcons()`.
-   * An unregistered name still renders, via a lazy import of the whole Phosphor
-   * package — which is not tree-shakeable, so it warns in the console.
+   * Icon name in kebab-case (e.g. "check", "warning-circle"), resolved against
+   * `registerIcons()` and, once `@itguy614/clean-ui/icons/builtin` is imported, the
+   * library's built-in names. An unregistered name renders the "?" glyph and warns in
+   * development, unless `@itguy614/clean-ui/icons/lazy` is imported to resolve any name
+   * from the whole Phosphor package (not tree-shakeable).
    */
   name?: string;
   /**
-   * A Phosphor component passed directly, e.g. `:icon="PhRocket"`. The simplest
-   * tree-shakeable path — the consumer's own static import. Takes precedence
-   * over `name`.
+   * An icon component passed directly: a built-in (`IconCaretDown`) or a Phosphor
+   * component (`:icon="PhRocket"`). The simplest tree-shakeable path — your own static
+   * import, which keeps every weight the component carries (a full Phosphor component:
+   * all six). Takes precedence over `name`.
    */
   icon?: Component;
-  /** Icon weight/style */
+  /**
+   * Icon weight/style. A built-in icon carries only the weights the library draws
+   * (regular for all, bold for check and minus, fill for circle, star and star-half);
+   * any other weight on one draws regular and warns in development. A full Phosphor
+   * component carries all six.
+   */
   weight?: IconWeight;
   /** Icon size — named scale (xs–xl) or custom CSS value */
   size?: IconSize;
@@ -69,9 +76,9 @@ function toPascalCase(name: string): string {
  * Icons resolve in three steps:
  *
  * 1. `:icon` — a component handed straight to us.
- * 2. `name` against the built-in set + `registerIcons()`. Synchronous, so the
- *    icon renders on first paint and during SSR (both sides read the same static
- *    map, so there's nothing to mismatch).
+ * 2. `name` against `registerIcons()`, which holds the built-in names only if the app
+ *    imported `icons/builtin`. Synchronous, so the icon renders on first paint and
+ *    during SSR (both sides read the same static map, so there's nothing to mismatch).
  * 3. Neither — the fallback glyph, plus a warning naming the fix.
  *
  * There is deliberately NO `import("@phosphor-icons/vue")` here: a bundler that
@@ -94,12 +101,29 @@ const staticIcon = computed<Component | null>(() => {
 
 const iconComponent = computed<Component | null>(() => staticIcon.value ?? asyncResolved.value);
 
+// A built-in icon lists the weights it carries (`iconWeights`, see icons/define-icon.ts);
+// any other component (a full Phosphor icon) carries every weight, so it is trusted.
+const drawnWeight = computed<IconWeight>(() => {
+  const carried = (iconComponent.value as { iconWeights?: readonly IconWeight[] } | null)?.iconWeights;
+  return carried && !carried.includes(props.weight) ? "regular" : props.weight;
+});
+
+watchEffect(() => {
+  if (drawnWeight.value === props.weight || !iconComponent.value) return;
+  if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
+    `[CuiIcon] the built-in "${props.name ?? (iconComponent.value as { name?: string }).name}" icon carries only the weights clean-ui draws, so weight="${props.weight}" draws regular. ` +
+      `For the full weights, register the Phosphor icon over the name (registerIcons({ name: PhFoo })) or pass it: <CuiIcon :icon="PhFoo" weight="${props.weight}" />.`,
+  );
+});
+
 function warnUnknown(name: string) {
   if (__DEV__ && process.env.NODE_ENV !== "production") warnOnce(
     `[CuiIcon] unknown icon "${name}". Register it so it ships with your bundle:\n` +
       `  import { registerIcons } from "@itguy614/clean-ui";\n` +
       `  import { ${toPascalCase(name)} } from "@phosphor-icons/vue";\n` +
       `  registerIcons({ "${name}": ${toPascalCase(name)} });\n` +
+      `Or, for the library's own icon names:\n` +
+      `  import "@itguy614/clean-ui/icons/builtin";\n` +
       `Or, to resolve any name at runtime (pulls in the whole icon package):\n` +
       `  import "@itguy614/clean-ui/icons/lazy";`,
   );
@@ -150,7 +174,7 @@ watchEffect(() => {
 const wrapperStyle = computed(() => {
   const style: Record<string, string> = {};
 
-  if (props.weight === "duotone") {
+  if (drawnWeight.value === "duotone") {
     if (props.duotoneColor) {
       style["--_duotone-color"] = props.duotoneColor;
     }
@@ -165,13 +189,13 @@ const wrapperStyle = computed(() => {
   <span
     v-show="!hidden"
     class="cui-icon"
-    :class="{ 'cui-icon--duotone': weight === 'duotone' }"
+    :class="{ 'cui-icon--duotone': drawnWeight === 'duotone' }"
     :style="wrapperStyle"
   >
     <component
       v-if="iconComponent"
       :is="iconComponent"
-      :weight="weight"
+      :weight="drawnWeight"
       :size="resolvedSize"
       :color="resolveColor(color)"
     />
