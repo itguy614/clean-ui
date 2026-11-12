@@ -105,7 +105,7 @@ const messages = useMessages();
 :where(.cui-modal-header__close) {
   padding: 0;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
   background: none;
   color: var(--cui-text-tertiary);
   margin-top: calc(-0.125rem * var(--cui-density-scale, 1));

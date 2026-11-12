@@ -57,6 +57,10 @@ const meta: ComponentMeta = {
   events: [
     { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
   ],
+
+  tokens: [
+    { name: "--cui-popover-radius", default: "per rounded", description: "Panel corner radius" },
+  ],
 };
 
 export default meta;

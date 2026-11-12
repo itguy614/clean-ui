@@ -65,6 +65,10 @@ const meta: ComponentMeta = {
       ],
     },
   ],
+
+  tokens: [
+    { name: "--cui-accordion-radius", default: "var(--cui-radius-md)", description: "Corner radius of the accordion" },
+  ],
 };
 
 export default meta;

@@ -549,7 +549,7 @@ defineExpose({ el: rootEl, focus, blur });
   height: var(--cui-time-picker-height, var(--_time-picker-height));
   padding: 0 var(--cui-time-picker-px, var(--_time-picker-px));
   border: 1px solid var(--cui-time-picker-border, var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-time-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-time-picker-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-time-picker-bg, var(--cui-surface-base, white));
   font-size: var(--cui-time-picker-font-size, var(--_time-picker-font-size));
   color: var(--cui-time-picker-color, var(--cui-text-body));

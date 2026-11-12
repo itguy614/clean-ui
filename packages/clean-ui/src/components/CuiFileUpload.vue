@@ -269,7 +269,6 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
       :style="{
         display: 'block',
         border: `2px dashed ${isDragging ? `var(--cui-${color})` : 'var(--cui-border)'}`,
-        borderRadius: '0.625rem',
         padding: 'calc(1.5rem * var(--cui-density-scale, 1))',
         textAlign: 'center',
         cursor: disabled ? 'default' : 'pointer',
@@ -310,12 +309,12 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
       <div
         v-for="(entry, i) in files"
         :key="entry.id"
+        class="cui-file-upload__item"
         :style="{
           display: 'flex',
           alignItems: 'center',
           gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
           padding: 'calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-          borderRadius: '0.375rem',
           border: '1px solid var(--cui-border)',
           marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
           background: 'var(--cui-surface-base, white)',
@@ -381,6 +380,14 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
 }
 
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+/* The drop zone's 0.625rem is between the scale's md and lg, so it keeps its own token
+   rather than moving a step (#294); a listed file is a plain `md` row. */
+:where(.cui-file-upload__zone) {
+  border-radius: var(--cui-file-upload-radius, 0.625rem);
+}
+:where(.cui-file-upload__item) {
+  border-radius: var(--cui-radius-md, 0.375rem);
+}
 /* The input is hidden; the drop zone it is labelled by shows that it has focus. */
 :where(.cui-file-upload__input:focus-visible + .cui-file-upload__zone),
 :where(.cui-file-upload__remove:focus-visible) {

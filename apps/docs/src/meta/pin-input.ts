@@ -65,7 +65,7 @@ const meta: ComponentMeta = {
     { name: "--cui-pin-input-color", default: "var(--cui-text-body)", description: "Character color" },
     { name: "--cui-pin-input-bg", default: "var(--cui-surface-base)", description: "Box background" },
     { name: "--cui-pin-input-border", default: "1px solid var(--cui-border-strong)", description: "Box border" },
-    { name: "--cui-pin-input-radius", default: "var(--cui-button-radius)", description: "Box corner radius" },
+    { name: "--cui-pin-input-radius", default: "var(--cui-radius-md)", description: "Box corner radius" },
     { name: "--cui-pin-input-focus-border", default: "var(--cui-{color})", description: "Border of the box the caret is in" },
     { name: "--cui-pin-input-focus-ring", default: "var(--cui-{color}-focus-ring)", description: "Ring around the box the caret is in" },
   ],

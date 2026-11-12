@@ -144,14 +144,21 @@ export const FLOATING_LABEL_SCALE: Readonly<
 
 /**
  * The shared `rounded` scale (#201): the `rounded` prop's lookup over the `--cui-radius-*`
- * tokens. `md` still reads `--cui-button-radius` first — the cross-reference main.css's
- * radius-scale note describes (#141), so a card's `md` corners follow the button token.
- * Decoupling it changes behaviour; see #294.
+ * tokens. `md` reads `--cui-radius-md` and nothing else (#294): a card's, modal's or alert's
+ * `md` corners no longer follow `--cui-button-radius`, which is CuiButton's own token (its
+ * rule reads it first, ahead of this value). A component restyles itself through its own
+ * `--cui-<component>-radius`; the scale moves them all together.
+ *
+ * A stylesheet cannot import this constant, so a CSS rule that wants a scale step writes it
+ * once, in exactly this shape and with its own token first:
+ * `var(--cui-<component>-radius, var(--cui-radius-md, 0.375rem))`.
+ * `styles/__tests__/radius-scale.test.ts` enforces both the shape and that the defaults here
+ * and in `main.css` agree.
  */
 export const RADIUS_SCALE: Readonly<Record<CuiRounded, string>> = {
   none: "0",
   sm: "var(--cui-radius-sm, 0.25rem)",
-  md: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+  md: "var(--cui-radius-md, 0.375rem)",
   lg: "var(--cui-radius-lg, 0.5rem)",
   full: "9999px",
 };

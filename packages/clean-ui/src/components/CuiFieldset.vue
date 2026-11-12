@@ -71,8 +71,9 @@ const rootStyle = computed(() => {
   const bgToken =
     c === "surface" ? "var(--cui-surface-bg)" : `var(--cui-${c}-bg)`;
 
+  // Private, read back through `--cui-fieldset-radius` by the stylesheet (#294).
   const style: Record<string, string> = {
-    borderRadius: RADIUS_SCALE[props.rounded],
+    "--_fieldset-radius": RADIUS_SCALE[props.rounded],
   };
 
   if (props.variant === "ghost") {
@@ -149,6 +150,11 @@ const rootStyle = computed(() => {
 </template>
 
 <style scoped>
+/* Paint, so zero specificity: `--cui-fieldset-radius` or a plain `.cui-fieldset { border-radius }` wins. */
+:where(.cui-fieldset) {
+  border-radius: var(--cui-fieldset-radius, var(--_fieldset-radius));
+}
+
 .cui-fieldset {
   padding: calc(1.25rem * var(--cui-density-scale, 1));
   margin: 0;

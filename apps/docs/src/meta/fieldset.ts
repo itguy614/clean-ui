@@ -25,6 +25,10 @@ const meta: ComponentMeta = {
   events: [
     { name: "update:expanded", payload: "boolean", description: "Fires when the legend's toggle is pressed, or find-in-page opens the section" },
   ],
+
+  tokens: [
+    { name: "--cui-fieldset-radius", default: "per rounded", description: "Corner radius" },
+  ],
 };
 
 export default meta;

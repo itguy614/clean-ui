@@ -138,7 +138,7 @@ const area = useScrollArea({
   font-family: var(--cui-font-mono, monospace);
 }
 :where(.cui-code-block) {
-  border-radius: var(--cui-code-block-radius, 0.5rem);
+  border-radius: var(--cui-code-block-radius, var(--cui-radius-lg, 0.5rem));
   border: 1px solid var(--cui-code-block-border, var(--cui-border));
   background: var(--cui-code-block-bg, var(--color-surface-950, #1a1a2e));
 }

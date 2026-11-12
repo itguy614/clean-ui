@@ -110,7 +110,7 @@ function onClear() {
   background: var(--cui-primary-bg);
   border: 1px solid var(--cui-primary-border);
   color: var(--cui-primary);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-data-grid-bulk-bar-radius, var(--cui-radius-md, 0.375rem));
   box-shadow: var(--cui-shadow-up);
   max-width: 48rem;
   margin: 0 auto;

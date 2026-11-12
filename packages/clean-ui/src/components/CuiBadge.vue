@@ -64,7 +64,8 @@ const badgeStyle = computed(() => {
     base.border = "1px solid transparent";
   }
 
-  base.borderRadius = RADIUS_SCALE[props.rounded];
+  // Private, read back through `--cui-badge-radius` by the stylesheet (#294).
+  base["--_badge-radius"] = RADIUS_SCALE[props.rounded];
 
   return base;
 });
@@ -120,6 +121,11 @@ const messages = useMessages();
 
 <style scoped>
 /* --- Base --- */
+/* Paint, so zero specificity: `--cui-badge-radius` or a plain `.cui-badge { border-radius }` wins. */
+:where(.cui-badge) {
+  border-radius: var(--cui-badge-radius, var(--_badge-radius));
+}
+
 .cui-badge {
   display: inline-flex;
   align-items: center;

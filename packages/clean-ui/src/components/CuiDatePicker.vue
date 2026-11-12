@@ -509,7 +509,7 @@ defineExpose({ el: rootEl, focus, blur });
 :where(.cui-date-picker__day) {
   width: 2rem;
   height: 2rem;
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
   font-size: 0.8125rem;
   color: var(--cui-text-body);
 }
@@ -521,7 +521,7 @@ defineExpose({ el: rootEl, focus, blur });
 }
 :where(.cui-date-picker__option) {
   padding: calc(0.5rem * var(--cui-density-scale, 1));
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
   font-size: 0.8125rem;
   font-weight: 400;
   color: var(--cui-text-body);

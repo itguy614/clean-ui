@@ -44,7 +44,7 @@ function slashMenuSpec() {
   return {
     [tip]: {
       border: "1px solid var(--cui-border)",
-      borderRadius: "var(--cui-button-radius, var(--cui-radius-md, 0.375rem))",
+      borderRadius: "var(--cui-radius-md, 0.375rem)",
       background: "var(--cui-surface-base)",
       boxShadow: "var(--cui-shadow-md, 0 4px 16px rgb(0 0 0 / 0.1))", // fallback: a clean-ui before 1.4
       overflow: "hidden",

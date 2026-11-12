@@ -150,7 +150,8 @@ const panelStyle = computed(() => {
     zIndex: POPOVER_Z_INDEX,
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
-    borderRadius: RADIUS_SCALE[props.rounded],
+    // Private, read back through `--cui-popover-radius` by the stylesheet (#294).
+    "--_popover-radius": RADIUS_SCALE[props.rounded],
     boxShadow: "var(--cui-shadow-md)",
     minWidth: "12rem",
     maxWidth: "24rem",
@@ -319,5 +320,6 @@ const messages = useMessages();
 /* Grows out of the trigger, whichever side it opened on after flipping (#262). */
 :where(.cui-popover__panel) {
   transform-origin: var(--_popover-transform-origin);
+  border-radius: var(--cui-popover-radius, var(--_popover-radius));
 }
 </style>

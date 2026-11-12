@@ -133,6 +133,8 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
+    { name: "--cui-radio-radius", default: "var(--cui-radius-md)", description: "Corner radius of a radio in a button-variant group" },
+    { name: "--cui-control-group-radius", default: "var(--cui-radius-md)", description: "Corner radius of a radio, checkbox or toggle group's error container (set it on the group)" },
     { name: "--cui-radio-height", default: "per size", description: "Height of a radio in a button-variant group" },
     { name: "--cui-radio-px", default: "per size", description: "Horizontal padding of a radio in a button-variant group" },
     { name: "--cui-radio-font-size", default: "per size", description: "Font size of a radio in a button-variant group" },

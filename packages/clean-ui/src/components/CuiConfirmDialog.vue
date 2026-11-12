@@ -239,7 +239,7 @@ function onCancel() {
   height: 2.5rem;
 }
 :where(.cui-confirm-dialog__icon) {
-  border-radius: 0.625rem;
+  border-radius: var(--cui-confirm-dialog-icon-radius, 0.625rem);
   background: var(--cui-confirm-dialog-bg, var(--_confirm-dialog-bg));
   color: var(--cui-confirm-dialog-color, var(--_confirm-dialog-color));
   border: 1px solid var(--cui-confirm-dialog-border, var(--_confirm-dialog-border));
@@ -291,7 +291,7 @@ function onCancel() {
   line-height: 1.4;
   padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
   background: var(--cui-confirm-dialog-bg, var(--_confirm-dialog-bg));
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
   border: 1px solid var(--cui-confirm-dialog-border, var(--_confirm-dialog-border));
 }
 

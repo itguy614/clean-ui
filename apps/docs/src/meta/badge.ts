@@ -36,6 +36,10 @@ const meta: ComponentMeta = {
       description: "Fires when the remove button is activated. The badge does not remove itself — you own the list",
     },
   ],
+
+  tokens: [
+    { name: "--cui-badge-radius", default: "per rounded", description: "Corner radius" },
+  ],
 };
 
 export default meta;

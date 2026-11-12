@@ -183,8 +183,9 @@ function snapshot(host: HTMLElement): string[] {
       const cs = getComputedStyle(el);
       const radii = [cs.borderTopLeftRadius, cs.borderTopRightRadius, cs.borderBottomRightRadius, cs.borderBottomLeftRadius];
       if (radii.every((r) => r === "0px")) continue;
-      const cls = [...el.classList].filter((c) => c.startsWith("cui-")).slice(0, 2).join(".");
-      out.push(`${el.tagName.toLowerCase()}${cls ? "." + cls : ""} ${radii.join(" ")}`);
+      // The tag, not the classes: a component may gain a class to carry a rule without that
+      // being a change to how it looks.
+      out.push(`${el.tagName.toLowerCase()} ${radii.join(" ")}`);
     }
   }
   return out;
