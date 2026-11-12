@@ -33,7 +33,7 @@ function patternPrefix(match: RegExp) {
 function linesInRange(context: CommandContext, from: number, to: number): EditorLine[] {
   const lines = [context.lineAt(from)];
   // A line ending before `to` has a next line: `to` is within the document.
-  for (let line = lines[0]; line.to < to; ) lines.push((line = context.lineAt(line.to + 1)));
+  while (lines[lines.length - 1].to < to) lines.push(context.lineAt(lines[lines.length - 1].to + 1));
   return lines;
 }
 

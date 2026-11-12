@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 2.0
+
+- **`decorations` on a plugin is now `decorationNodes`, and `DecorationRule` is gone.** It only
+  ever was a node-name allowlist for the built-in reveal layer, not an extension point, and the
+  new name says so. Migrate `decorations: [{ node: "Emphasis" }]` to `decorationNodes: ["Emphasis"]`.
+  `PLUGIN_API_VERSION` is now `2`, so a plugin built against 1 (still using `decorations`) is
+  rejected at registration instead of silently losing its decorations; rebuild it with
+  `definePlugin()` from 2.0. `PluginRegistry.decorations` is likewise `decorationNodes`, a
+  `Set<string>`. A new decoration is written as a CodeMirror extension in `extensions`.
+
+### Added
+
+- **`CommandContext.sliceDoc(from, to)` and `lineAt(pos)`** read a range or a line without copying
+  the whole document. The built-in commands use them, so a keystroke or arrow press no longer
+  copies the document once per toolbar button. `context.doc` stays, documented as the O(document)
+  escape hatch.
+
 ## [1.10.0] - 2026-11-12
 
 ### Upgrading to 1.10
