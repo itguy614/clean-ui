@@ -209,8 +209,8 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
           callout: {
             run(context: CommandContext) {
               const found = context.lookupConstruct("FencedCode");
-              if (found?.status === "unknown") return true;
-              if (found?.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
+              if (found.status === "unknown") return true;
+              if (found.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
               else context.wrapSelection(":::\n", "\n:::");
               return true;
             },

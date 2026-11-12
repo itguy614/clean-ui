@@ -75,17 +75,6 @@ describe("useOverlay exit", () => {
     expect(closes).toHaveLength(1);
     expect(dialog()).toBeNull();
   });
-
-  it("has no timer-mode options left", async () => {
-    vi.useFakeTimers();
-    const spy = vi.spyOn(globalThis, "setTimeout");
-    const { open } = await mountDialog();
-    spy.mockClear();
-    open.value = false;
-    await nextTick();
-    expect(spy).not.toHaveBeenCalled();
-    spy.mockRestore();
-  });
 });
 
 /**

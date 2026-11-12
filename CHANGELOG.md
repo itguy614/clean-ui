@@ -23,8 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `lookupConstruct` is required.** Use `context.lookupConstruct(name)`, which returns
   `{ status: "inside", range } | { status: "outside" } | { status: "unknown" }`; it reports
   "unknown" separately where `findConstructRange` read it as `null`. A hand-built test double
-  must provide `lookupConstruct`. `PLUGIN_API_VERSION` is now `2`, so a plugin built with
-  `definePlugin` against 1.x is rejected at registration until rebuilt.
+  must provide `lookupConstruct`. `PLUGIN_API_VERSION` is now `2`: `definePlugin` stamps it, so
+  a plugin that carries a literal `apiVersion: 1` is rejected at registration.
 
 ## [1.10.0] - 2026-11-12
 
