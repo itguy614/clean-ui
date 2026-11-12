@@ -7,7 +7,7 @@ import type { CuiMarkdownEditorMessages } from "../messages";
  * built against an older version is rejected at registration (FR22a) rather
  * than failing later at a missing/renamed helper.
  */
-export const PLUGIN_API_VERSION = 1;
+export const PLUGIN_API_VERSION = 2;
 
 export interface EditorSelectionRange {
   readonly from: number;
@@ -76,22 +76,8 @@ export interface CommandContext {
    * of the nearest such ancestor if so. `"unknown"` means the cursor's block
    * isn't parsed far enough to say (past the parse time cap): a command
    * should then change nothing and return `true`, as the built-ins do.
-   *
-   * Always present on the context the editor passes to a command. Optional in
-   * the type only so a test double built by hand against 1.6 still compiles
-   * and runs; call it as `context.lookupConstruct?.(name)`. Required in 2.0
-   * (#416).
    */
-  lookupConstruct?(nodeName: string): ConstructLookup;
-  /**
-   * The range of the nearest ancestor syntax node named `nodeName` enclosing
-   * the current selection head, or `null` if the cursor isn't inside one —
-   * or if that can't be known yet, which this form can't tell apart.
-   *
-   * @deprecated Use {@link CommandContext.lookupConstruct}, which reports
-   * "unknown" separately. Removed in 2.0 (#416).
-   */
-  findConstructRange(nodeName: string): { from: number; to: number } | null;
+  lookupConstruct(nodeName: string): ConstructLookup;
   /** This package's resolved message catalog (task 5.2.2), for a command
    * that needs the host's strings outside any component — e.g. to pass them
    * as plain props to a dialog. A dialog app given `cleanUI` below can also

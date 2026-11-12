@@ -1,5 +1,4 @@
 import type { CommandContext, PluginCommandSpec } from "../types";
-import { lookupConstructIn } from "../command-context";
 
 export interface ToggleInlineOptions {
   /** The `@lezer/markdown` node name this construct parses as (e.g.
@@ -19,7 +18,7 @@ export interface ToggleInlineOptions {
  */
 export function toggleInlineCommand({ nodeName, marker }: ToggleInlineOptions): PluginCommandSpec {
   function run(context: CommandContext): boolean {
-    const found = lookupConstructIn(context, nodeName);
+    const found = context.lookupConstruct(nodeName);
     // Not parsed far enough to tell: wrapping could nest the markers. Do
     // nothing, but report it handled so the shortcut doesn't reach the browser.
     if (found.status === "unknown") return true;
@@ -34,6 +33,6 @@ export function toggleInlineCommand({ nodeName, marker }: ToggleInlineOptions): 
 
   return {
     run,
-    isActive: (context) => lookupConstructIn(context, nodeName).status === "inside",
+    isActive: (context) => context.lookupConstruct(nodeName).status === "inside",
   };
 }
