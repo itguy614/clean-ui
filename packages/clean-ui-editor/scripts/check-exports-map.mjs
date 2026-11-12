@@ -11,8 +11,8 @@
  * Imports go through the package's own name (self-reference), so Node applies the real
  * `exports` map: the same resolution a consumer gets.
  */
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -49,9 +49,18 @@ for (const [key, value] of entries) {
   }
 }
 
-// Paths the old wildcard exposed (internal modules, deep files) must now be refused by Node.
-const mustBeRefused = ["messages.js", "plugins/registry.js", "components/CuiMarkdownEditor.vue.js", "duplicate-guard.js", "icons.js", "clean-ui-editor.css", "package.json"];
-for (const path of mustBeRefused) {
+// Every other file the build emitted must be refused: that is what the old wildcard exposed.
+// Walks `dist`, so a new internal module is covered without anyone listing it.
+const published = new Set(entries.flatMap(([, value]) => targets(value)).map((file) => resolve(packageDir, file)));
+function walk(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = resolve(dir, entry.name);
+    return entry.isDirectory() ? walk(full) : [full];
+  });
+}
+for (const file of walk(resolve(packageDir, "dist"))) {
+  if (published.has(file) || !file.endsWith(".js")) continue;
+  const path = relative(resolve(packageDir, "dist"), file).split(sep).join("/");
   if (declared.has(`./${path}`)) continue;
   try {
     await import(`${pkg.name}/${path}`);
