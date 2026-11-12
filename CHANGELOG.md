@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading to 2.0
+
+- **A radio group is now a single tab stop; use arrow keys to move between options, as the ARIA radiogroup pattern specifies.** `CuiRadioGroup` (and its `buttons` variant) is entered once with `Tab`, on the checked radio or the first enabled one, and left with the next `Tab`. Update any focus-order test or keyboard walkthrough that tabbed through each radio. A standalone `CuiRadio` is unchanged. (#231)
+
 ## [1.10.0] - 2026-11-12
 
 ### Upgrading to 1.10

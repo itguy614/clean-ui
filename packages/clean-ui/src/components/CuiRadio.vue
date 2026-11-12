@@ -153,7 +153,8 @@ const choice = useChoiceLabelling(props);
     :aria-labelledby="choice.labelledBy()"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled || isReadonly || undefined"
-    :tabindex="isDisabled ? -1 : 0"
+    :data-cui-focusable-disabled="isReadonly && !isDisabled ? '' : undefined"
+    :tabindex="group ? undefined : isDisabled ? -1 : 0"
     @click="select"
     @keydown="onKeydown"
   >

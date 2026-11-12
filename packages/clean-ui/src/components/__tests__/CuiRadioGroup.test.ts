@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { h } from "vue";
 import CuiRadioGroup from "../CuiRadioGroup.vue";
 import CuiRadio from "../CuiRadio.vue";
+import { describeRovingFocusContract } from "../../composables/__tests__/roving-focus-contract";
 
 function mountGroup(props: Record<string, unknown> = {}) {
   return mount(CuiRadioGroup, {
@@ -71,5 +72,35 @@ describe("CuiRadioGroup", () => {
     const buttons = wrapper.findAll("button.cui-radio-button");
     await buttons[2].trigger("click");
     expect(wrapper.emitted("update:modelValue")![0]).toEqual(["c"]);
+  });
+});
+
+// #231 — a radio group is one tab stop; arrows move (and select) with wrapping.
+describeRovingFocusContract("CuiRadioGroup", {
+  mount: () => mount(CuiRadioGroup, {
+    props: { modelValue: "a" },
+    attachTo: document.body,
+    slots: { default: () => ["a", "b", "c"].map((v) => h(CuiRadio, { value: v, label: v })) },
+  }),
+  items: () => [...document.querySelectorAll<HTMLElement>('[role="radio"]')],
+  orientation: "vertical",
+  wrap: true,
+});
+
+describe("CuiRadioGroup tab stop (#231)", () => {
+  it("puts the stop on the checked radio, and -1 on the rest", async () => {
+    const wrapper = mount(CuiRadioGroup, {
+      props: { modelValue: "b" },
+      attachTo: document.body,
+      slots: { default: () => ["a", "b", "c"].map((v) => h(CuiRadio, { value: v, label: v })) },
+    });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findAll('[role="radio"]').map((r) => r.attributes("tabindex"))).toEqual(["-1", "0", "-1"]);
+    wrapper.unmount();
+  });
+
+  it("leaves a standalone radio at its own tab stop", () => {
+    const wrapper = mount(CuiRadio, { props: { value: "x", label: "X" } });
+    expect(wrapper.get('[role="radio"]').attributes("tabindex")).toBe("0");
   });
 });
