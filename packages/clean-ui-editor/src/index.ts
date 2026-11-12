@@ -42,7 +42,6 @@ export {
   type ToolbarEntry,
   type KeymapEntry,
   type PasteRule,
-  type DecorationRule,
   type CollectOpener,
   type CollectSettle,
   type ConstructLookup,

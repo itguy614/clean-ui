@@ -13,7 +13,7 @@ export const codeFencePlugin = definePlugin({
         if (found.status === "unknown") return true;
         if (found.status === "inside") {
           const { from, to } = found.range;
-          const block = context.doc.slice(from, to);
+          const block = context.sliceDoc(from, to);
           const firstNewline = block.indexOf("\n");
           const lastNewline = block.lastIndexOf("\n");
           const inner = firstNewline === -1 || lastNewline <= firstNewline ? "" : block.slice(firstNewline + 1, lastNewline);
@@ -33,7 +33,7 @@ export const codeFencePlugin = definePlugin({
   },
   toolbar: [{ command: "codeFence" }],
   constructs: ["FencedCode"],
-  decorations: [{ node: "FencedCode" }],
+  decorationNodes: ["FencedCode"],
   paste: [
     {
       selector: "pre",

@@ -33,6 +33,33 @@ describe("createCommandContext", () => {
     expect(() => context.doc).toThrow(/unmounted/);
   });
 
+  describe("sliceDoc and lineAt", () => {
+    it("sliceDoc reads a range, clamped to the document, and follows the live document", () => {
+      view = makeView("hello\nworld");
+      const context = createCommandContext(() => view!);
+      expect(context.sliceDoc(1, 4)).toBe("ell");
+      expect(context.sliceDoc(5, 99)).toBe("\nworld");
+      view.dispatch({ changes: { from: 0, insert: ">> " } });
+      expect(context.sliceDoc(0, 5)).toBe(">> he");
+    });
+
+    it("lineAt reports the line's bounds and text, without its break", () => {
+      view = makeView("one\n\nthree");
+      const context = createCommandContext(() => view!);
+      expect(context.lineAt(0)).toEqual({ from: 0, to: 3, text: "one" });
+      expect(context.lineAt(3)).toEqual({ from: 0, to: 3, text: "one" });
+      expect(context.lineAt(4)).toEqual({ from: 4, to: 4, text: "" });
+      expect(context.lineAt(10)).toEqual({ from: 5, to: 10, text: "three" });
+      expect(() => context.lineAt(99)).toThrow(RangeError);
+    });
+
+    it("throw a clear error after the view is gone", () => {
+      const context = createCommandContext(() => null);
+      expect(() => context.sliceDoc(0, 1)).toThrow(/unmounted/);
+      expect(() => context.lineAt(0)).toThrow(/unmounted/);
+    });
+  });
+
   describe("insertAtCursor", () => {
     it("inserts at an empty (collapsed) selection and places the cursor after the insertion", () => {
       view = makeView("ab");
@@ -332,6 +359,8 @@ describe("createCommandContext", () => {
         replaceRanges: unused,
         collect: unused,
         findConstructRange: () => ({ from: 0, to: doc.length }),
+        sliceDoc: (from, to) => doc.slice(from, to),
+        lineAt: unused,
         messages: defaultMarkdownEditorMessages,
         cleanUI: { provideTo() {} },
       };

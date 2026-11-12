@@ -172,6 +172,13 @@ export function createCommandContext(
       const { from, to } = requireView().state.selection.main;
       return { from, to, empty: from === to };
     },
+    sliceDoc(from, to) {
+      return requireView().state.sliceDoc(from, to);
+    },
+    lineAt(pos) {
+      const { from, to, text } = requireView().state.doc.lineAt(pos);
+      return { from, to, text };
+    },
     insertAtCursor(text) {
       const { from, to } = requireView().state.selection.main;
       replaceRange(from, to, text);

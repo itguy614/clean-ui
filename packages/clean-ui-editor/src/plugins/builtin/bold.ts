@@ -9,6 +9,6 @@ export const boldPlugin = definePlugin({
   toolbar: [{ command: "bold" }],
   keymap: [{ key: "Mod-b", command: "bold" }],
   constructs: ["StrongEmphasis"],
-  decorations: [{ node: "StrongEmphasis" }],
+  decorationNodes: ["StrongEmphasis"],
   paste: [{ selector: "strong, b", produces: "StrongEmphasis", degradeTo: "plainText", toMarkdown: (_el, c) => `**${c}**` }],
 });

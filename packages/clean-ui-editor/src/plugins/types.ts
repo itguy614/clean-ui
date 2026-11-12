@@ -7,7 +7,17 @@ import type { CuiMarkdownEditorMessages } from "../messages";
  * built against an older version is rejected at registration (FR22a) rather
  * than failing later at a missing/renamed helper.
  */
-export const PLUGIN_API_VERSION = 1;
+export const PLUGIN_API_VERSION = 2;
+
+/** A document line as `CommandContext.lineAt` reports it. */
+export interface EditorLine {
+  /** Offset of the line start. */
+  readonly from: number;
+  /** Offset of the line end, excluding the line break. */
+  readonly to: number;
+  /** The line's text, without its line break. */
+  readonly text: string;
+}
 
 export interface EditorSelectionRange {
   readonly from: number;
@@ -53,8 +63,21 @@ export type ConstructLookup =
  * dialog").
  */
 export interface CommandContext {
+  /**
+   * The whole document as a string. Every read copies the entire document, so
+   * it is the escape hatch, not the default: an `isActive` runs on every
+   * keystroke and selection change, and reading this there costs O(document)
+   * per call. Prefer {@link CommandContext.sliceDoc} and
+   * {@link CommandContext.lineAt}, which read only what they ask for.
+   */
   readonly doc: string;
   readonly selection: EditorSelectionRange;
+  /** The text between two offsets, clamped to the document. Reads only that
+   * range, so it is safe in an `isActive`. */
+  sliceDoc(from: number, to: number): string;
+  /** The line containing `pos` (`0` to the document length), without copying
+   * the rest of the document. Throws a `RangeError` for a position outside it. */
+  lineAt(pos: number): EditorLine;
   /** Inserts at the cursor (or replaces a non-empty selection), placing the
    * cursor immediately after the inserted text. */
   insertAtCursor(text: string): void;
@@ -152,12 +175,6 @@ export interface PasteRule {
   degradeTo: "plainText" | string;
 }
 
-export interface DecorationRule {
-  /** A `@lezer/markdown` parser node name this rule's marker-hiding behaviour
-   * applies to (e.g. `"Emphasis"`). */
-  node: string;
-}
-
 export interface CuiEditorPluginSpec {
   readonly id: string;
   readonly commands: Record<string, PluginCommandSpec>;
@@ -167,7 +184,17 @@ export interface CuiEditorPluginSpec {
    * the union of every loaded plugin's declared constructs. */
   readonly constructs?: string[];
   readonly paste?: PasteRule[];
-  readonly decorations?: DecorationRule[];
+  /**
+   * A node-name allowlist, nothing more: `@lezer/markdown` node names (e.g.
+   * `"Emphasis"`) whose markers the built-in reveal layer hides and shows. It
+   * adds no decoration of its own, and a plugin cannot supply one here: a
+   * genuinely new decoration (a highlight, a widget) goes through the raw
+   * `extensions` field.
+   *
+   * It overlaps `constructs` (the construct policy, which also gates paste
+   * conversion): a node a plugin owns is normally listed in both.
+   */
+  readonly decorationNodes?: string[];
   /** Raw CodeMirror escape hatch (FR17) — the one field in this record that
    * is intentionally CodeMirror-typed; every other field is plain data so a
    * plugin author never needs to resolve CodeMirror's types to use them. */

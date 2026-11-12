@@ -394,10 +394,10 @@ function resolveCspNonce(): string | undefined {
 }
 
 /** FR27/FR29: the reveal layer only decorates constructs the active plugins
- * actually declare via `decorations` — excluding a plugin means its markers
+ * actually declare via `decorationNodes` — excluding a plugin means its markers
  * stay literal, unstyled text. */
 function activeConstructsFromRegistry(registry: PluginRegistry): ReadonlySet<string> {
-  return new Set(registry.decorations.map((rule) => rule.node));
+  return registry.decorationNodes;
 }
 
 /** `wysiwyg` gets the reveal layer (hidden markers, revealed on caret entry);

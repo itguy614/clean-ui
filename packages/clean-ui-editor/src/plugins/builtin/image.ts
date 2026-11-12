@@ -22,7 +22,7 @@ export const imagePlugin = definePlugin({
   },
   toolbar: [{ command: "image" }],
   constructs: ["Image"],
-  decorations: [{ node: "Image" }],
+  decorationNodes: ["Image"],
   paste: [
     {
       selector: "img[src]",
