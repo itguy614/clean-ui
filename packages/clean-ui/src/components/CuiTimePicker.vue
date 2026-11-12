@@ -5,12 +5,16 @@ import CuiInputStepper from "./CuiInputStepper.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { __DEV__, warnOnce } from "../utils/devWarn";
 import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { dayPeriodLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
+
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export type TimePickerFormat = "12" | "24";
 
@@ -21,9 +25,13 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   format?: TimePickerFormat;
   /** Minute step increment */
   minuteStep?: number;
-  /** Minimum time (HH:mm) */
+  /**
+   * Earliest selectable time, in the same forms the model accepts: "HH:mm" or
+   * "hh:mm AM/PM". An invalid value, or a range with min after max, warns in
+   * development and is ignored.
+   */
   minTime?: string;
-  /** Maximum time (HH:mm) */
+  /** Latest selectable time. Same form as `minTime`. */
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
@@ -56,9 +64,17 @@ const hoursNameId = useCuiId("time-picker-hours");
 const minutesNameId = useCuiId("time-picker-minutes");
 const labelledBy = computed(() => [props.label ? labelId : null, props.ariaLabelledby].filter(Boolean).join(" ") || undefined);
 
-// Match CuiInput/CuiDatePicker's box for the trigger so pickers line up at the
-// same `size` when placed side by side (#87).
-const triggerDims = computed(() => INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md);
+// The trigger's box comes from the shared input scale, so a time picker lines up with a
+// CuiInput, CuiDatePicker or CuiDateRangePicker of the same `size`. Emitted as private
+// properties, so `--cui-time-picker-*` on a container wins.
+const sizeVars = computed(() => {
+  const s = INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md;
+  return {
+    "--_time-picker-height": s.height,
+    "--_time-picker-px": s.px,
+    "--_time-picker-font-size": s.fontSize,
+  };
+});
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -92,9 +108,12 @@ function parseTime(val: string) {
   // Try "hh:mm AM/PM"
   const m12 = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (m12) {
-    hours.value = parseInt(m12[1]);
+    const h = parseInt(m12[1]);
+    const p = m12[3].toUpperCase() as "AM" | "PM";
+    // A 24h picker holds the hour on the 24h clock, so "03:00 PM" is 15 there.
+    hours.value = props.format === "24" ? (h % 12) + (p === "PM" ? 12 : 0) : h;
     minutes.value = parseInt(m12[2]);
-    period.value = m12[3].toUpperCase() as "AM" | "PM";
+    period.value = p;
   }
 }
 
@@ -109,7 +128,69 @@ function formatOutput(labels?: { AM: string; PM: string }): string {
   return `${String(hours.value).padStart(2, "0")}:${String(minutes.value).padStart(2, "0")} ${labels ? labels[period.value] : period.value}`;
 }
 
+/** Minutes since midnight for a 24h clock time, or a 12h one with its period. */
+function toMinutes(h: number, m: number, p: "AM" | "PM"): number {
+  return (props.format === "12" ? (h % 12) + (p === "PM" ? 12 : 0) : h) * 60 + m;
+}
+
+/** A "HH:mm" or "hh:mm AM/PM" string as minutes since midnight, or null if it is neither. */
+function parseClock(val: string): number | null {
+  const m24 = val.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) {
+    const h = parseInt(m24[1]);
+    const m = parseInt(m24[2]);
+    return h <= 23 && m <= 59 ? h * 60 + m : null;
+  }
+  const m12 = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (m12) {
+    const h = parseInt(m12[1]);
+    const m = parseInt(m12[2]);
+    return h >= 1 && h <= 12 && m <= 59 ? (h % 12) * 60 + m + (m12[3].toUpperCase() === "PM" ? 720 : 0) : null;
+  }
+  return null;
+}
+
+/**
+ * The selectable range in minutes since midnight, or null when there is none to enforce:
+ * neither bound set, or the bounds are unusable. A bad range is ignored whole rather than
+ * half-applied, so one typo cannot silently narrow the picker.
+ */
+const range = computed<{ lo: number; hi: number } | null>(() => {
+  if (!props.minTime && !props.maxTime) return null;
+  const lo = props.minTime ? parseClock(props.minTime) : 0;
+  const hi = props.maxTime ? parseClock(props.maxTime) : 1439;
+  if (lo === null || hi === null || lo > hi) {
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnOnce(
+        `[clean-ui] CuiTimePicker: ignoring minTime="${props.minTime ?? ""}" maxTime="${props.maxTime ?? ""}". ` +
+          `Use "HH:mm" or "hh:mm AM/PM", with minTime not after maxTime.`,
+      );
+    }
+    return null;
+  }
+  return { lo, hi };
+});
+
+/** Hold the current time inside the range, moving it to the nearest bound. */
+function clampToRange() {
+  if (!range.value) return;
+  const total = toMinutes(hours.value, minutes.value, period.value);
+  const next = Math.min(Math.max(total, range.value.lo), range.value.hi);
+  if (next === total) return;
+  const h24 = Math.floor(next / 60);
+  if (props.format === "12") {
+    period.value = h24 >= 12 ? "PM" : "AM";
+    hours.value = h24 % 12 || 12;
+  } else {
+    hours.value = h24;
+  }
+  minutes.value = next % 60;
+}
+
 function emitValue() {
+  // Nothing outside the range is ever committed, however it got here: a typed hour, a
+  // stepper, the AM/PM buttons, or Enter on a value that arrived out of range.
+  clampToRange();
   emit("update:modelValue", formatOutput());
 }
 
@@ -124,17 +205,90 @@ const inputPlaceholder = computed(() =>
   props.placeholder ?? (props.format === "24" ? "hh:mm" : `hh:mm ${periodLabels.value.AM}`),
 );
 
-// Hour/minute limits
-const hourMin = computed(() => props.format === "12" ? 1 : 0);
-const hourMax = computed(() => props.format === "12" ? 12 : 23);
+// Hour/minute limits. With a range, the steppers' bounds (and so their aria-valuemin/max)
+// are the range's, and they stop there rather than wrapping.
+const currentHour24 = computed(() => Math.floor(toMinutes(hours.value, minutes.value, period.value) / 60));
+
+/**
+ * The displayed hours that hold a selectable minute, in the current period in 12h, in
+ * clock order. Null without a range.
+ */
+const validHours = computed<number[] | null>(() => {
+  if (!range.value) return null;
+  const shown: number[] = [];
+  for (let h = 0; h < 24; h++) {
+    if (h * 60 + 59 < range.value.lo || h * 60 > range.value.hi) continue;
+    if (props.format === "12") {
+      if ((h >= 12) !== (period.value === "PM")) continue;
+      shown.push(h % 12 || 12);
+    } else {
+      shown.push(h);
+    }
+  }
+  return shown.length ? shown : null;
+});
+
+const hourMin = computed(() =>
+  validHours.value ? Math.min(...validHours.value) : props.format === "12" ? 1 : 0);
+const hourMax = computed(() =>
+  validHours.value ? Math.max(...validHours.value) : props.format === "12" ? 12 : 23);
+
+const minuteBounds = computed(() => {
+  const r = range.value;
+  const h = currentHour24.value;
+  // An hour outside the range (a model value that arrived out of range) has no bounds of
+  // its own: keep every minute reachable rather than invert the stepper.
+  if (!r || h * 60 + 59 < r.lo || h * 60 > r.hi) return { min: 0, max: 59 };
+  return { min: Math.max(r.lo - h * 60, 0), max: Math.min(r.hi - h * 60, 59) };
+});
+
+/**
+ * A 12h range that includes 12 reads 12, 1, 2 ... in clock order, which numeric bounds can
+ * only express by wrapping from 12 to 1. Every other range stops at its ends: wrapping
+ * past one would jump out of it.
+ */
+const hoursWrap = computed(() =>
+  !range.value || (props.format === "12" && !!validHours.value && validHours.value.length > 1 && validHours.value.includes(12)));
+const minutesWrap = computed(() => minuteBounds.value.min === 0 && minuteBounds.value.max === 59);
+
+/** An AM/PM button is disabled when no time in that half of the day is selectable. */
+function periodDisabled(p: "AM" | "PM"): boolean {
+  if (!range.value) return false;
+  return p === "AM" ? range.value.lo >= 720 : range.value.hi < 720;
+}
 
 function onHourChange(val: number) {
+  const valid = validHours.value;
+  if (valid && !valid.includes(val)) {
+    // One arrow step onto an hour the range excludes moves on to the next selectable hour
+    // in that direction (12h wraps, as the clock does) instead of snapping to a bound.
+    const mod = props.format === "12" ? 12 : 24;
+    const delta = (val - hours.value + mod) % mod;
+    // 24h does not wrap, so a typed hour past an end is clamped rather than skipped over.
+    const dir = props.format === "24" ? 0 : delta === 1 ? 1 : delta === mod - 1 ? -1 : 0;
+    if (dir) {
+      for (let k = 1; k < mod; k++) {
+        const raw = (((hours.value + dir * k) % mod) + mod) % mod;
+        const cand = props.format === "12" ? raw || 12 : raw;
+        if (valid.includes(cand)) {
+          val = cand;
+          break;
+        }
+      }
+      if (val !== hours.value && !valid.includes(val)) return;
+    }
+  }
   hours.value = val;
   emitValue();
 }
 
 function onMinuteChange(val: number) {
   minutes.value = val;
+  emitValue();
+}
+
+function onPeriodClick(p: "AM" | "PM") {
+  period.value = p;
   emitValue();
 }
 
@@ -154,7 +308,7 @@ const panelEl = useTemplateRef<HTMLElement>("panelEl");
 let cachedFields: HTMLElement[] = [];
 function panelFields(): HTMLElement[] {
   if (cachedFields.length === 0) {
-    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period') ?? [])];
+    cachedFields = [...(panelEl.value?.querySelectorAll<HTMLElement>('[role="spinbutton"], .cui-time-picker__period:not(:disabled)') ?? [])];
   }
   return cachedFields;
 }
@@ -276,18 +430,8 @@ defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
-  <div class="cui-time-picker" ref="rootEl" v-show="!hidden">
-    <label
-      v-if="label"
-      :id="labelId"
-      :style="{
-        display: 'block',
-        marginBottom: 'calc(0.25rem * var(--cui-density-scale, 1))',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: 'var(--cui-text-secondary)',
-      }"
-    >{{ label }}</label>
+  <div class="cui-time-picker" ref="rootEl" v-show="!hidden" :style="sizeVars">
+    <label v-if="label" :id="labelId" class="cui-time-picker__label">{{ label }}</label>
 
     <CuiPopover
       v-model:visible="popoverVisible"
@@ -301,6 +445,11 @@ defineExpose({ el: rootEl, focus, blur });
       <div
         ref="triggerEl"
         class="cui-time-picker__trigger"
+        :class="{
+          'cui-time-picker__trigger--disabled': disabled,
+          'cui-time-picker__trigger--empty': !displayText,
+          'cui-time-picker__trigger--24h': format === '24',
+        }"
         role="combobox"
         aria-haspopup="dialog"
         :aria-expanded="popoverVisible"
@@ -311,34 +460,14 @@ defineExpose({ el: rootEl, focus, blur });
         :aria-labelledby="labelledBy"
         :tabindex="disabled ? -1 : 0"
         @keydown="onTriggerKeydown"
-        :style="{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-          height: triggerDims.height,
-          padding: `0 ${triggerDims.px}`,
-          border: '1px solid var(--cui-border-strong, var(--cui-border))',
-          borderRadius: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))',
-          background: 'var(--cui-surface-base, white)',
-          cursor: disabled ? 'default' : 'pointer',
-          opacity: disabled ? '0.5' : '1',
-          fontSize: triggerDims.fontSize,
-          color: displayText ? 'var(--cui-text-body)' : 'var(--cui-text-tertiary)',
-          minWidth: format === '24' ? '6rem' : '8rem',
-        }"
       >
-        <CuiIcon name="clock" size="0.875rem" :style="{ color: 'var(--cui-text-tertiary)', flexShrink: '0' }" />
-        <span>{{ displayText || inputPlaceholder }}</span>
+        <CuiIcon class="cui-time-picker__icon" name="clock" size="0.875rem" />
+        <span class="cui-time-picker__value">{{ displayText || inputPlaceholder }}</span>
       </div>
 
       <!-- Time picker popover -->
       <template #content>
-        <div
-          ref="panelEl"
-          class="cui-time-picker__panel"
-          @keydown="onPanelKeydown"
-          :style="{ display: 'flex', alignItems: 'center', gap: 'calc(0.5rem * var(--cui-density-scale, 1))', padding: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
-        >
+        <div ref="panelEl" class="cui-time-picker__panel" @keydown="onPanelKeydown">
           <!-- Hours -->
           <span :id="hoursNameId" hidden>{{ messages.timePicker?.hours }}</span>
           <span :id="minutesNameId" hidden>{{ messages.timePicker?.minutes }}</span>
@@ -351,54 +480,44 @@ defineExpose({ el: rootEl, focus, blur });
             orientation="vertical"
             size="sm"
             :pad="2"
-            wrap
+            :wrap="hoursWrap"
             @update:model-value="onHourChange"
           />
 
           <!-- Separator -->
-          <span :style="{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--cui-text-body)', lineHeight: '1' }">:</span>
+          <span class="cui-time-picker__separator">:</span>
 
           <!-- Minutes -->
           <CuiInputStepper
             :aria-labelledby="minutesNameId"
             :model-value="minutes"
-            :min="0"
-            :max="59"
+            :min="minuteBounds.min"
+            :max="minuteBounds.max"
             :step="minuteStep"
             orientation="vertical"
             size="sm"
             :pad="2"
-            wrap
+            :wrap="minutesWrap"
             @update:model-value="onMinuteChange"
           />
 
           <!-- AM/PM toggle (12h only) -->
-          <div v-if="format === '12'" :style="{ display: 'flex', flexDirection: 'column', gap: 'calc(0.125rem * var(--cui-density-scale, 1))', marginLeft: 'calc(0.25rem * var(--cui-density-scale, 1))' }">
+          <div v-if="format === '12'" class="cui-time-picker__periods">
             <CuiButton
               variant="ghost"
               size="xs"
-              :style="{
-                fontWeight: period === 'AM' ? '700' : '400',
-                color: period === 'AM' ? 'var(--cui-primary)' : 'var(--cui-text-tertiary)',
-                background: period === 'AM' ? 'var(--cui-primary-bg)' : 'transparent',
-                borderRadius: '0.25rem',
-                minWidth: '2.5rem',
-              }"
               class="cui-time-picker__period"
-              @click="period = 'AM'; emitValue()"
+              :class="{ 'cui-time-picker__period--on': period === 'AM' }"
+              :disabled="periodDisabled('AM')"
+              @click="onPeriodClick('AM')"
             >{{ periodLabels.AM }}</CuiButton>
             <CuiButton
               variant="ghost"
               size="xs"
-              :style="{
-                fontWeight: period === 'PM' ? '700' : '400',
-                color: period === 'PM' ? 'var(--cui-primary)' : 'var(--cui-text-tertiary)',
-                background: period === 'PM' ? 'var(--cui-primary-bg)' : 'transparent',
-                borderRadius: '0.25rem',
-                minWidth: '2.5rem',
-              }"
               class="cui-time-picker__period"
-              @click="period = 'PM'; emitValue()"
+              :class="{ 'cui-time-picker__period--on': period === 'PM' }"
+              :disabled="periodDisabled('PM')"
+              @click="onPeriodClick('PM')"
             >{{ periodLabels.PM }}</CuiButton>
           </div>
         </div>
@@ -406,3 +525,106 @@ defineExpose({ el: rootEl, focus, blur });
     </CuiPopover>
   </div>
 </template>
+
+<style scoped>
+/* The time picker's paint. Themeable declarations sit inside :where(), so a consumer's plain
+   rule, or a --cui-time-picker-* token on a container, wins; structure stays at normal
+   specificity. The panel is teleported, but its content is this component's own, so the scope
+   still reaches it, and a token reaches it only from :root or <body>. The selected AM or PM is
+   the control's "on" state: pressed-bg / pressed-color. State rules follow their base rules,
+   since at zero specificity the source order decides. */
+:where(.cui-time-picker__label) {
+  margin-bottom: calc(0.25rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cui-text-secondary);
+}
+.cui-time-picker__label {
+  display: block;
+}
+
+/* The trigger's box comes from the shared input scale (see sizeVars). */
+:where(.cui-time-picker__trigger) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  height: var(--cui-time-picker-height, var(--_time-picker-height));
+  padding: 0 var(--cui-time-picker-px, var(--_time-picker-px));
+  border: 1px solid var(--cui-time-picker-border, var(--cui-border-strong, var(--cui-border)));
+  border-radius: var(--cui-time-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  background: var(--cui-time-picker-bg, var(--cui-surface-base, white));
+  font-size: var(--cui-time-picker-font-size, var(--_time-picker-font-size));
+  color: var(--cui-time-picker-color, var(--cui-text-body));
+}
+.cui-time-picker__trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  min-width: 8rem;
+}
+.cui-time-picker__trigger--24h {
+  min-width: 6rem;
+}
+:where(.cui-time-picker__trigger--empty) {
+  color: var(--cui-text-tertiary);
+}
+:where(.cui-time-picker__trigger--disabled) {
+  opacity: 0.5;
+}
+.cui-time-picker__trigger--disabled {
+  cursor: default;
+}
+
+:where(.cui-time-picker__icon) {
+  color: var(--cui-text-tertiary);
+}
+.cui-time-picker__icon {
+  flex-shrink: 0;
+}
+
+.cui-time-picker__panel {
+  display: flex;
+  align-items: center;
+}
+:where(.cui-time-picker__panel) {
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1));
+}
+
+:where(.cui-time-picker__separator) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cui-text-body);
+  line-height: 1;
+}
+
+.cui-time-picker__periods {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.125rem * var(--cui-density-scale, 1));
+  margin-left: calc(0.25rem * var(--cui-density-scale, 1));
+}
+
+/* The AM and PM buttons are ghost CuiButtons, restyled through the button's own tokens. Hover
+   and active hold the resting look, as the inline style they replace did. */
+:where(.cui-time-picker__period) {
+  --cui-button-radius: 0.25rem;
+  --cui-button-bg: transparent;
+  --cui-button-color: var(--cui-text-tertiary);
+  --cui-button-hover-bg: var(--cui-button-bg);
+  --cui-button-hover-color: var(--cui-button-color);
+  --cui-button-active-bg: var(--cui-button-bg);
+}
+:where(.cui-time-picker__period--on) {
+  --cui-button-bg: var(--cui-time-picker-pressed-bg, var(--cui-primary-bg));
+  --cui-button-color: var(--cui-time-picker-pressed-color, var(--cui-primary));
+}
+.cui-time-picker__period {
+  min-width: 2.5rem;
+}
+/* Beats CuiButton's own weight, whichever stylesheet loads last. */
+.cui-button.cui-time-picker__period {
+  font-weight: 400;
+}
+.cui-button.cui-time-picker__period--on {
+  font-weight: 700;
+}
+</style>

@@ -9,7 +9,9 @@ import {
   type InjectionKey,
   type Ref,
 } from "vue";
-import { CLASS_PREFIX } from "./useTheme";
+// Not from ./useTheme: that module is the composable, which an overlay-only page must not
+// bundle (#463).
+import { THEME_CLASS_PREFIX as CLASS_PREFIX } from "../ssr-constants";
 import { DARK_CLASS } from "./useColorScheme";
 
 /**

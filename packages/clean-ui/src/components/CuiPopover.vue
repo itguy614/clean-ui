@@ -4,7 +4,7 @@ import { useCuiId } from "../composables/useCuiId";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useLayerStack } from "../composables/useLayerStack";
-import { POPOVER_Z_INDEX } from "../utils/position";
+import { POPOVER_Z_INDEX, PANEL_OFFSET } from "../utils/position";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -28,7 +28,7 @@ export interface CuiPopoverProps extends HideableProps, DisableableProps {
   hideDelay?: number;
   /** Hide the arrow */
   noArrow?: boolean;
-  /** Distance from trigger (px) */
+  /** Distance from trigger (px). Defaults to the shared panel offset (4) with `noArrow`, 10 with an arrow. */
   offset?: number;
   /** Fixed width (e.g., "320px") */
   width?: string;
@@ -77,7 +77,9 @@ watch(
 
 const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, currentSide, transformOrigin, isPositioned } = usePopover({
   placement: computed(() => props.placement),
-  offsetDistance: computed(() => props.offset ?? 10),
+  // An arrowless panel is trigger-anchored like a field listbox and sits the same PANEL_OFFSET
+  // from it; the arrow's 8px square needs the larger gap (#486).
+  offsetDistance: computed(() => props.offset ?? (props.noArrow ? PANEL_OFFSET : 10)),
   arrow: !props.noArrow,
 });
 
@@ -149,7 +151,7 @@ const panelStyle = computed(() => {
     background: "var(--cui-surface-base)",
     border: "1px solid var(--cui-border)",
     borderRadius: RADIUS_SCALE[props.rounded],
-    boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
+    boxShadow: "var(--cui-shadow-md)",
     minWidth: "12rem",
     maxWidth: "24rem",
     overflow: "hidden",

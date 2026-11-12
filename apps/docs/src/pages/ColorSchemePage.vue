@@ -104,7 +104,7 @@ const returns: PropRow[] = [
         <p><strong>Try:</strong></p>
         <ul>
           <li>Turn on <em>Dark class on the panel</em>: the panel and the reading inside it go dark; the reading outside stays light.</li>
-          <li>Switch the whole site to dark with the dark-mode button in the header, which toggles <code class="cui-code">dark</code> on <code class="cui-code">&lt;html&gt;</code>: both readings go dark, because every element is now beneath a <code class="cui-code">dark</code> ancestor.</li>
+          <li>Switch the whole site to dark with the color-mode button in the header, which sets <code class="cui-code">dark</code> on <code class="cui-code">&lt;html&gt;</code>: both readings go dark, because every element is now beneath a <code class="cui-code">dark</code> ancestor.</li>
           <li>With the page dark, the panel switch does nothing visible — a <code class="cui-code">dark</code> class can only darken a subtree, never lighten one.</li>
         </ul>
       </CuiCardBody>
@@ -128,8 +128,8 @@ const returns: PropRow[] = [
         disagree, and both are right. All call sites share one <code class="cui-code">MutationObserver</code>
         on the document, added with the first mounted caller and disconnected when the last one unmounts.
         It reacts to class changes — not to the target ref pointing at a different element, and not to the
-        operating system's <code class="cui-code">prefers-color-scheme</code>, which clean-ui does not read
-        by itself.
+        operating system's <code class="cui-code">prefers-color-scheme</code> directly, only to the class
+        that <code class="cui-code">useColorMode()</code> (or your own code) sets from it.
       </p>
     </div>
 
@@ -142,10 +142,11 @@ const returns: PropRow[] = [
         dark form, selected by the <code class="cui-code">dark</code> class.
       </p>
       <p>
-        clean-ui does not add or remove <code class="cui-code">dark</code> itself; your app does, from a
-        toggle, a stored preference or a <code class="cui-code">prefers-color-scheme</code> media query (this
-        site's header toggles it on <code class="cui-code">&lt;html&gt;</code>).
-        <code class="cui-code">useColorScheme()</code> only reads it.
+        <code class="cui-code">useColorScheme()</code> only reads the <code class="cui-code">dark</code>
+        class. To choose it, use <RouterLink to="/composables/color-mode"><code class="cui-code">useColorMode()</code></RouterLink>:
+        it owns the light, dark and system toggle, remembers the choice and sets the class on
+        <code class="cui-code">&lt;html&gt;</code> (this site's header uses it). An app that manages the class
+        itself still works: <code class="cui-code">useColorScheme()</code> sees every change.
       </p>
     </div>
 

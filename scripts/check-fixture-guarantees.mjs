@@ -96,7 +96,8 @@ function packageSources() {
 
 /**
  * The text of every dev warning, read from the source (#369): the static fragments of every
- * string passed to `warnOnce(` or `warnVariantColor(`, plus the fragments of devWarn.ts itself
+ * string passed to `warnOnce(`, `warnVariantColor(`, the editor's `warnDev(` or its plugin
+ * registry's `warnings.push(` (#462), plus the fragments of devWarn.ts itself
  * (where warnVariantColor builds its messages). A new warning is covered without anyone listing
  * it. Fragments are split at `${…}` holes, escapes and quotes, since a minifier re-spells those,
  * and only the long ones kept, so one can't match by chance.
@@ -118,7 +119,7 @@ function devWarningStrings() {
       fragments(code.replace(/^import .*$/gm, "").replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ""));
       continue;
     }
-    for (const call of code.matchAll(/(?<![.\w]|function )(?:warnOnce|warnVariantColor)\s*\(/g)) {
+    for (const call of code.matchAll(/(?<![.\w]|function )(?:warnOnce|warnVariantColor|warnDev|warnings\.push)\s*\(/g)) {
       const start = call.index + call[0].length;
       let depth = 1;
       let i = start;
@@ -217,6 +218,34 @@ const GUARANTEES = [
       const js = readBuiltAssets(distDir, [".js"]);
       return /["'`]cui-density-?["'`]/.test(js)
         ? "found useDensity's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
+    id: "theme-tree-shakes",
+    name: "an app that never uses the theme composable bundles none of it (#463)",
+    check(distDir) {
+      // useTheme's storage key as a string literal, which only that module has (the class
+      // prefix `cui-theme-` is shared with the overlays' scoped-theme code, so it is not
+      // looked for). A page that doesn't call useTheme must not carry it: a sideEffects
+      // entry for it, or work at import time, is back. (The basic page uses it on purpose,
+      // and skips this in scripts/fixture-scenarios.mjs.)
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-theme["'`]/.test(js)
+        ? "found useTheme's storage key in the built JS — the module was kept though nothing uses it."
+        : null;
+    },
+  },
+  {
+    id: "color-mode-tree-shakes",
+    name: "an app that never uses the colour mode composable bundles none of it (#487)",
+    check(distDir) {
+      // useColorMode's storage key as a string literal, which only that module has. No
+      // fixture page uses it, so a hit means the module was kept: a sideEffects entry for
+      // it, or work at import time, is back.
+      const js = readBuiltAssets(distDir, [".js"]);
+      return /["'`]cui-color-mode["'`]/.test(js)
+        ? "found useColorMode's storage key in the built JS — the module was kept though nothing uses it."
         : null;
     },
   },

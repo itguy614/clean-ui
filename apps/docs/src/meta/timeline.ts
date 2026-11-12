@@ -37,6 +37,13 @@ const meta: ComponentMeta = {
       ],
     },
   ],
+
+  tokens: [
+    { name: "--cui-timeline-item-bg", default: "var(--cui-<color>) (dot), var(--cui-<color>-bg) (icon)", description: "The dot's fill. Overrides the color prop" },
+    { name: "--cui-timeline-item-color", default: "var(--cui-<color>)", description: "The icon's colour inside the dot" },
+    { name: "--cui-timeline-item-border", default: "var(--cui-surface-base) (dot), var(--cui-<color>-border) (icon)", description: "The dot's border colour" },
+    { name: "--cui-timeline-item-gap", default: "0.875rem (density)", description: "Space between the marker column and the content" },
+  ],
 };
 
 export default meta;

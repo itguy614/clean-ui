@@ -67,6 +67,11 @@ function onTabClick(tab: TabDefinition) {
   keyed.value = keyedButtons.value = false;
   activate(tab.value);
 }
+/** A click on the tab's own area around its button (the gap by a close button) is a click on the tab. */
+function onTabAreaClick(tab: TabDefinition) {
+  onTabClick(tab);
+  tabElement(tab.value)?.focus({ preventScroll: true });
+}
 const areaRef = ref<InstanceType<typeof CuiScrollArea> | null>(null);
 
 // Sync external v-model
@@ -111,6 +116,8 @@ function activate(value: string) {
 }
 
 function close(value: string) {
+  // A disabled tab can't be closed, by a click or a key.
+  if (tabs.value.find((t) => t.value === value)?.disabled) return;
   emit("close", value);
 }
 
@@ -155,7 +162,46 @@ const nav = useListNavigation({
   rtl: () => !!barRef.value && getComputedStyle(barRef.value).direction === "rtl",
 });
 
+/**
+ * Delete or Backspace on a closeable tab closes it (APG). The *focused* tab, not the active
+ * one: focus can rest on a tab the selection isn't on, or on its close button. Focus then
+ * goes to the next tab, else the previous, so the keyboard isn't left on a removed element.
+ */
+function closeFromKey(e: KeyboardEvent): boolean {
+  if ((e.key !== "Delete" && e.key !== "Backspace") || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return false;
+  const value = (e.target as Element | null)
+    ?.closest<HTMLElement>(".cui-tabs__tab")
+    ?.querySelector<HTMLElement>('[role="tab"]')?.dataset.cuiTabValue;
+  const list = tabs.value;
+  const at = list.findIndex((t) => t.value === value);
+  if (at < 0 || !list[at].closeable) return false;
+  e.preventDefault();
+  // A held key repeats: one press closes one tab.
+  if (e.repeat || list[at].disabled) return true;
+  const closing = list[at].value;
+  const neighbour = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
+  close(closing);
+  if (neighbour) {
+    nextTick(() => {
+      // `close` is a request: if the consumer kept the tab (a confirm, a refusal), so does focus.
+      if (tabs.value.some((t) => t.value === closing)) return;
+      // The selection went with the tab and nothing took it over: the neighbour does, or the
+      // bar would be left with no tab stop and arrow keys that do nothing.
+      if (!tabs.value.some((t) => t.value === activeTab.value)) {
+        keyed.value = keyedButtons.value = true;
+        activate(neighbour.value);
+      }
+      const el = tabElement(neighbour.value);
+      el?.focus({ preventScroll: true });
+      const scroller = areaRef.value?.el;
+      if (el && scroller) scrollIntoViewWithin(scroller, el, "instant");
+    });
+  }
+  return true;
+}
+
 function onKeydown(e: KeyboardEvent) {
+  if (closeFromKey(e)) return;
   const list = tabs.value;
   const from = list.findIndex((t) => t.value === activeTab.value);
   if (from < 0) return;
@@ -190,7 +236,7 @@ function onKeydown(e: KeyboardEvent) {
  */
 function tabElement(value: string): HTMLElement | null {
   const id = tabId(value);
-  return [...(barRef.value?.children ?? [])].find((el): el is HTMLElement => el.id === id) ?? null;
+  return [...(barRef.value?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [])].find((el) => el.id === id) ?? null;
 }
 
 // The one way the bar brings the active tab into view — keyboard nav, v-model
@@ -220,6 +266,10 @@ const messages = useMessages();
       `cui-tabs--${variant}`,
       `cui-tabs--${orientation}`,
     ]"
+    :style="{
+      '--_tabs-color': `var(--cui-${color})`,
+      '--_tabs-focus-ring': `var(--cui-${color})`,
+    }"
   >
     <!-- Tab bar -->
     <div class="cui-tabs__bar-outer">
@@ -239,42 +289,50 @@ const messages = useMessages();
         @keydown="onKeydown"
         @pointermove="keyedButtons = false"
       >
-        <button
+        <div
           v-for="tab in tabs"
           :key="tab.value"
-          type="button"
-          :data-cui-tab-value="tab.value"
           class="cui-tabs__tab"
           :class="{
             'cui-tabs__tab--active': activeTab === tab.value,
             'cui-tabs__tab--disabled': tab.disabled,
+            'cui-tabs__tab--closeable': tab.closeable,
           }"
-          :style="{
-            '--_tab-color': `var(--cui-${color})`,
-          }"
-          role="tab"
-          :id="tabId(tab.value)"
-          :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
-          :aria-selected="activeTab === tab.value"
-          :aria-disabled="tab.disabled || undefined"
-          :tabindex="activeTab === tab.value ? 0 : -1"
-          @click="onTabClick(tab)"
+          role="presentation"
+          @click.self="onTabAreaClick(tab)"
         >
-          <span class="cui-tabs__tab-content">
-            <component :is="tab.labelSlot" v-if="tab.labelSlot" />
-            <template v-else>{{ tab.label }}</template>
-          </span>
+          <button
+            type="button"
+            :data-cui-tab-value="tab.value"
+            class="cui-tabs__tab-button"
+            role="tab"
+            :id="tabId(tab.value)"
+            :aria-controls="keepAlive || activeTab === tab.value ? panelId(tab.value) : undefined"
+            :aria-selected="activeTab === tab.value"
+            :aria-disabled="tab.disabled || undefined"
+            :tabindex="activeTab === tab.value ? 0 : -1"
+            @click="onTabClick(tab)"
+          >
+            <span class="cui-tabs__tab-content">
+              <component :is="tab.labelSlot" v-if="tab.labelSlot" />
+              <template v-else>{{ tab.label }}</template>
+            </span>
+          </button>
+          <!-- A sibling of the tab button, never inside it: a button can't contain one. Out of
+               the tab sequence (Delete on the focused tab closes it), but pointer and
+               virtual-cursor reachable. -->
           <button
             v-if="tab.closeable"
             type="button"
             class="cui-tabs__tab-close"
-            :aria-label="messages.tabs.closeTab"
+            :aria-label="tab.label ? messages.tabs.closeNamedTab(tab.label) : messages.tabs.closeTab"
+            :disabled="tab.disabled"
             tabindex="-1"
-            @click.stop="close(tab.value)"
+            @click="close(tab.value)"
           >
             <CuiIcon name="x" size="0.75rem" />
           </button>
-        </button>
+        </div>
       </div>
       </CuiScrollArea>
     </div>
@@ -393,16 +451,46 @@ const messages = useMessages();
   gap: calc(0.25rem * var(--cui-density-scale, 1));
 }
 
+/* --- Themeable (#454) ---
+   Zero specificity, so a consumer's own rule wins. The resting colour is in here too: the
+   active rules below are zero specificity as well and win by coming after it, where a normal
+   `.cui-tabs__tab { color }` would outrank them. The hover colour stays at normal
+   specificity, as it always has, so it still beats the active colour. */
+:where(.cui-tabs__tab) {
+  color: var(--cui-text-secondary);
+}
+
+/* --- Underline active --- */
+:where(.cui-tabs--underline .cui-tabs__tab--active) {
+  color: var(--cui-tabs-color, var(--_tabs-color));
+}
+
+:where(.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__tab--active) {
+  box-shadow: inset 0 -2px 0 0 var(--cui-tabs-color, var(--_tabs-color));
+}
+
+:where(.cui-tabs--underline.cui-tabs--vertical .cui-tabs__tab--active) {
+  box-shadow: inset -2px 0 0 0 var(--cui-tabs-color, var(--_tabs-color));
+}
+
+/* --- Segmented active --- */
+:where(.cui-tabs--segmented .cui-tabs__tab--active) {
+  color: var(--cui-tabs-color, var(--_tabs-color));
+}
+
+/* The keyboard focus ring: the tab's outline, drawn when its button has focus. */
+:where(.cui-tabs__tab:has(.cui-tabs__tab-button:focus-visible)) {
+  outline-color: var(--cui-tabs-focus-ring, var(--_tabs-focus-ring));
+}
+
 /* --- Tab button --- */
 .cui-tabs__tab {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   gap: calc(0.375rem * var(--cui-density-scale, 1));
-  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--cui-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -427,33 +515,40 @@ const messages = useMessages();
   cursor: not-allowed;
 }
 
-.cui-tabs__tab:focus-visible {
-  outline: 2px solid var(--_tab-color);
+/* The tab button is the inner element: it carries the padding (so the whole tab is its hit
+   area) and resets itself, while the wrapper paints the tab. */
+.cui-tabs__tab-button {
+  flex: 1 1 auto;
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: inherit;
+  white-space: inherit;
+  text-align: start;
+  outline: none;
+}
+
+/* A close button follows the label, so the label's trailing padding moves past it. */
+.cui-tabs__tab--closeable .cui-tabs__tab-button {
+  padding-inline-end: 0;
+}
+
+.cui-tabs__tab:has(.cui-tabs__tab-button:focus-visible) {
+  outline-width: 2px;
+  outline-style: solid;
   outline-offset: -2px;
   border-radius: 0.25rem;
 }
 
-/* --- Underline active --- */
-.cui-tabs--underline .cui-tabs__tab--active {
-  color: var(--_tab-color);
-}
-
-.cui-tabs--underline.cui-tabs--horizontal .cui-tabs__tab--active {
-  box-shadow: inset 0 -2px 0 0 var(--_tab-color);
-}
-
-.cui-tabs--underline.cui-tabs--vertical .cui-tabs__tab--active {
-  box-shadow: inset -2px 0 0 0 var(--_tab-color);
-}
-
-/* --- Segmented active --- */
+/* --- Segmented --- */
 .cui-tabs--segmented .cui-tabs__tab {
   border-radius: calc(var(--cui-button-radius, var(--cui-radius-md, 0.375rem)) - 0.125rem);
 }
 
 .cui-tabs--segmented .cui-tabs__tab--active {
   background: var(--cui-surface-base);
-  color: var(--_tab-color);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
 }
 
@@ -468,11 +563,15 @@ const messages = useMessages();
   color: var(--cui-text-tertiary);
   padding: calc(0.125rem * var(--cui-density-scale, 1));
   border-radius: 0.25rem;
-  margin: calc(-0.125rem * var(--cui-density-scale, 1)) calc(-0.25rem * var(--cui-density-scale, 1)) calc(-0.125rem * var(--cui-density-scale, 1)) 0;
+  margin-inline-end: calc(0.75rem * var(--cui-density-scale, 1));
   transition: color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
 }
 
-.cui-tabs__tab-close:hover {
+.cui-tabs__tab-close:disabled {
+  cursor: not-allowed;
+}
+
+.cui-tabs__tab-close:hover:not(:disabled) {
   color: var(--cui-text-body);
   background: var(--cui-surface-dark-bg);
 }

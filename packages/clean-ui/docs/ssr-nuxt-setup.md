@@ -5,29 +5,31 @@
 Add the inline init script to your `<head>` **before** any stylesheets in `nuxt.config.ts`:
 
 ```ts
-import { ssrThemeInitScript } from '@itguy614/clean-ui'
+import { ssrThemeInitScript, ssrDensityInitScript, ssrColorModeInitScript } from '@itguy614/clean-ui'
 
 export default defineNuxtConfig({
   app: {
     head: {
       script: [
-        {
-          children: ssrThemeInitScript,
-          type: 'text/javascript',
-        },
+        { children: ssrThemeInitScript, type: 'text/javascript' },
+        { children: ssrDensityInitScript, type: 'text/javascript' },
+        { children: ssrColorModeInitScript, type: 'text/javascript' },
       ],
     },
   },
 })
 ```
 
-This reads `cui-theme` from `localStorage` and applies the correct theme class
-to `<html>` before the first paint — no flash.
+This reads `cui-theme`, `cui-density` and `cui-color-mode` from `localStorage` and
+applies the matching classes to `<html>` before the first paint — no flash. A
+colour mode of `system` (or none stored) follows `prefers-color-scheme`.
 
-> Dark mode is class-based (toggle `.dark` on `<html>`). The library doesn't
-> persist a dark preference itself, so if your app stores one, add a matching
-> line to the init script (read your key, toggle the `dark` class) to avoid a
-> dark-mode flash too.
+Importing the library applies neither setting: the stored theme and density are
+restored on the first `useTheme()` / `useDensity()` / `useColorMode()` call. With
+the scripts above you need nothing more. Without them, call `restoreTheme()`,
+`restoreDensity()` and `restoreColorMode()` at startup if the stored choice must apply before anything calls the composables.
+
+> Under a strict CSP, give each inline script your own nonce or hash.
 
 ## 2. Icon rendering under SSR
 
@@ -48,13 +50,15 @@ guarded by one of:
 - `try/catch` around `localStorage` calls in case of private browsing or
   SSR environments
 
-## 4. What `useTheme` returns
+## 4. What the composables return
 
 ```ts
-const { theme, isDark, setTheme, toggleDark, setDark } = useTheme()
+const { theme, setTheme } = useTheme()
+const { mode, isDark, setMode, toggle } = useColorMode()
 ```
 
 - `theme` — reactive ref to the current preset ID (e.g. `"forest"`, `"mono"`, `"default"`)
-- `isDark` — reactive boolean for dark mode
 - `setTheme(id)` — switch theme preset
-- `toggleDark()` / `setDark(bool)` — toggle or explicitly set dark mode
+- `mode` — `"light"`, `"dark"` or `"system"` (the default)
+- `isDark` — the resolved scheme as a reactive boolean; on the server it is `false`
+- `setMode(mode)` / `toggle()` — choose a mode, or flip the resolved scheme

@@ -329,10 +329,10 @@ defineExpose({ el: wrapperRef, focus, blur });
     <div
       ref="controlRef"
       class="cui-tag-input__control"
-      :class="{ 'cui-tag-input__control--disabled': disabled }"
+      :class="{ 'cui-tag-input__control--disabled': disabled, 'cui-tag-input__control--error': error }"
       :style="{
         '--_tag-input-radius': RADIUS_SCALE[rounded],
-        '--_tag-input-border': error ? 'var(--cui-error)' : 'var(--cui-border-strong, var(--cui-border))',
+        '--_tag-input-border': 'var(--cui-border-strong, var(--cui-border))',
       }"
       @click="inputRef?.focus()"
     >
@@ -444,9 +444,20 @@ defineExpose({ el: wrapperRef, focus, blur });
   min-height: var(--cui-tag-input-min-height, var(--_tag-input-min-height));
   padding: var(--cui-tag-input-padding, var(--_tag-input-padding));
   border-radius: var(--cui-tag-input-radius, var(--_tag-input-radius));
-  border: var(--cui-tag-input-border-width, 1px) solid var(--_tag-input-border);
+  border: var(--cui-tag-input-border-width, 1px) solid var(--cui-tag-input-border, var(--_tag-input-border));
   background: var(--cui-tag-input-bg, var(--cui-surface-base, white));
   font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+}
+
+:where(.cui-tag-input__input) {
+  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
+  color: var(--cui-tag-input-color, var(--cui-text-body));
+}
+
+/* An invalid field keeps its error colour whatever a consumer's token says, so a themed
+   border cannot hide it. Normal specificity, on purpose. */
+.cui-tag-input__control--error {
+  border-color: var(--cui-error);
 }
 
 /* The panel and its option rows are painted by CuiListboxPanel, from this component's
@@ -486,8 +497,6 @@ defineExpose({ el: wrapperRef, focus, blur });
   background: transparent;
   padding: 0;
   font-family: inherit;
-  font-size: var(--cui-tag-input-font-size, var(--_tag-input-font-size));
-  color: var(--cui-tag-input-color, var(--cui-text-body));
   /* A determinate line-height, so the field's intrinsic height cannot push the control
      past the shared scale's height — see the matching note in CuiCombobox (#123). */
   line-height: 1.25;

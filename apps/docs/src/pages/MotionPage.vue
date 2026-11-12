@@ -23,6 +23,7 @@ import {
   CuiSlider,
   CuiProgress,
   CuiTransition,
+  CuiTransitionGroup,
   CuiInput,
   useToast,
   motionDuration,
@@ -135,7 +136,7 @@ dismiss(id);
 <!-- An alert emits dismiss once its exit has played -->
 <CuiAlert dismissible title="Saved" @dismiss="…" />`;
 
-// CuiTransition (#397): the presets, an inline editor swap, and a raw-class list.
+// CuiTransition (#397) and CuiTransitionGroup (#447): the presets, an inline editor swap, and a list.
 type Preset = "fade" | "fade-slide" | "grow" | "collapse";
 type Side = "top" | "bottom" | "start" | "end";
 const preset = ref<Preset>("fade-slide");
@@ -153,6 +154,22 @@ const rows = ref([
 ]);
 const addRow = () => rows.value.unshift({ id: nextRow++, label: `New task ${nextRow - 1}` });
 const removeRow = (id: number) => (rows.value = rows.value.filter((r) => r.id !== id));
+
+const GROUP_PROPS: PropRow[] = [
+  { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "As for CuiTransition. collapse wants each item to hold one child element, which it clips. A leaving item is out of the flow, so its siblings take its space at once (they glide there); the leaver itself fades" },
+  { name: "side", type: '"top" | "bottom" | "start" | "end"', default: '"bottom"', description: "fade-slide only: the edge items slide in from" },
+  { name: "duration", type: '"fast" | "base" | "slow"', default: '"base"', description: "The enter's duration token. The exit always runs over fast" },
+  { name: "tag", type: "string", description: "The element to render, as for Vue's <TransitionGroup>. With none, the items render straight into the parent. A tag gets position: relative, which is where a leaving item is pinned: give a list a tag (and no table-row items)" },
+  { name: "appear", type: "boolean", default: "false", description: "Also play the enter on first render" },
+  { name: "moveClass", type: "string", default: '"cui-transition-move"', description: "The class an item that stays takes while it slides into place" },
+  { name: "@before-enter, @after-enter, @before-leave, @after-leave …", type: "Vue transition events", description: "Passed through to <TransitionGroup>" },
+];
+
+const groupCode = `<!-- Every item needs a key. A leaver is taken out of the flow where it stands,
+     so the rest slide up while it fades. -->
+<CuiTransitionGroup tag="ul" preset="collapse">
+  <li v-for="row in rows" :key="row.id"><div>{{ row.label }}</div></li>
+</CuiTransitionGroup>`;
 
 const TRANSITION_PROPS: PropRow[] = [
   { name: "preset", type: '"fade" | "fade-slide" | "grow" | "collapse"', default: '"fade"', description: "The motion. fade-slide moves 0.5rem, grow scales from 0.95, collapse animates the height with grid-template-rows, which makes the element a grid and clips its one child (a focus ring or shadow at its edge is cut off; give it padding). Content rendered open at mount takes its preset styling at its first toggle: add appear to have it from the start" },
@@ -179,14 +196,12 @@ const transitionCode = `<!-- One child, shown with v-if or v-show -->
   <div v-show="open"><div>Anything, of any height</div></div>
 </CuiTransition>`;
 
-const rawCode = `<!-- Without the component: the preset classes, on a raw <Transition>
+const rawCode = `<!-- Without the components: the preset classes, on a raw <Transition>
      or <TransitionGroup>. name is cui-transition-<preset> -->
-<!-- A list: collapse takes the row's space with it, so the others glide.
-     The row carries .cui-transition-collapse and wraps its content in one child. -->
-<TransitionGroup name="cui-transition-collapse" tag="ul">
-  <li v-for="row in rows" :key="row.id" class="cui-transition-collapse">
-    <div>{{ row.label }}</div>
-  </li>
+<!-- A raw list needs its own move class and a leaver out of the flow (position: absolute
+     on -leave-active); CuiTransitionGroup does both. -->
+<TransitionGroup name="cui-transition-fade" tag="ul" move-class="cui-transition-move">
+  <li v-for="row in rows" :key="row.id">{{ row.label }}</li>
 </TransitionGroup>
 
 <!-- Side: .cui-transition-side-top | -bottom | -start | -end on the element -->
@@ -406,26 +421,37 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
       </CuiStack>
     </Example>
 
-    <Example title="The preset classes, on a raw Transition" :code="rawCode">
+    <Example title="CuiTransitionGroup" :code="groupCode">
       <CuiStack spacing="3">
         <p class="text-sm" style="color: var(--cui-text-secondary);">
-          Every preset is also a set of classes:
-          <code class="cui-code">cui-transition-fade</code>, <code class="cui-code">-fade-slide</code>,
-          <code class="cui-code">-grow</code> and <code class="cui-code">-collapse</code>, to use as a
-          <code class="cui-code">&lt;Transition name&gt;</code>. That is the way into a
-          <code class="cui-code">&lt;TransitionGroup&gt;</code>. Add and remove a row here: the
-          others glide into place.
+          A list whose items come and go: the same presets, by item. A leaving item fades out
+          where it stands, taken out of the flow, and the rest slide up into its place over
+          <code class="cui-code">base</code>, by transform only. Under reduced motion they
+          snap there and the items still fade. Add and remove a row here, with the preset
+          picked above. Give each item a <code class="cui-code">key</code>.
         </p>
         <CuiButton variant="outline" @click="addRow">Add a row</CuiButton>
-        <TransitionGroup name="cui-transition-collapse" tag="ul" style="list-style: none; padding: 0; margin: 0; max-width: 24rem;">
-          <li v-for="row in rows" :key="row.id" class="cui-transition-collapse">
+        <CuiTransitionGroup tag="ul" :preset="preset" :side="side" style="list-style: none; padding: 0; margin: 0; max-width: 24rem;">
+          <li v-for="row in rows" :key="row.id">
             <CuiFlex gap="3" class="items-center justify-between" style="padding: 0.375rem 0;">
               <span>{{ row.label }}</span>
               <CuiButton size="xs" variant="ghost" color="error" @click="removeRow(row.id)">Remove</CuiButton>
             </CuiFlex>
           </li>
-        </TransitionGroup>
+        </CuiTransitionGroup>
+        <PropTable :props="GROUP_PROPS" />
       </CuiStack>
+    </Example>
+
+    <Example title="The preset classes, on a raw Transition" :code="rawCode">
+      <p class="text-sm" style="color: var(--cui-text-secondary);">
+        Every preset is also a set of classes:
+        <code class="cui-code">cui-transition-fade</code>, <code class="cui-code">-fade-slide</code>,
+        <code class="cui-code">-grow</code> and <code class="cui-code">-collapse</code>, to use as a
+        <code class="cui-code">&lt;Transition name&gt;</code> or
+        <code class="cui-code">&lt;TransitionGroup name&gt;</code> of your own. The components are
+        the shorter way.
+      </p>
     </Example>
 
     <Example title="Only transform and opacity animate">

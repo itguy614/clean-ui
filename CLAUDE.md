@@ -241,6 +241,7 @@ jarring appear/disappear. "It looks nice" is not one.
 - `composables/useLayerStack.ts` — the shared Escape stack (#278). Every overlay registers with `useLayerStack({ active, onEscape })` while open; one document listener hands Escape to the most recently opened layer only, except that a layer opening outside the topmost modal (by component tree) goes beneath it. Modal-type overlays pass `modal: true`. Never add your own document Escape listener to an overlay. An inner widget that closes its own popup on Escape (select, combobox) must `preventDefault()` it, so the stack leaves the enclosing modal open.
 - `composables/usePopover.ts` — wraps @floating-ui/vue (used by Tooltip)
 - `composables/useTheme.ts` — theme switching, localStorage persistence
+- `composables/useColorMode.ts` — persisted light/dark/system choice; owns the `dark` class on `<html>` (`useColorScheme` only observes it), lazy like `useTheme`/`useDensity` (`restoreColorMode()`). Its key, class and query live in `ssr-constants.ts`, shared with `ssrColorModeInitScript` — never hand-write them elsewhere
 - `composables/useToast.ts` — programmatic toast API
 - `styles/components-shared.css` — classes components carry beside their own, imported by `main.css` and by the browser test setup: `.cui-sr-only` (visually hidden, still announced), `.cui-control-group*` (the radio/checkbox/toggle group layout) and `.cui-field-error` (an error message's paint; the gap above it is the control's own layout). Never hand-write these — `styles/__tests__/shared-classes.test.ts` fails on a copy in either package (#217).
 - Shared keyframes in `main.css`: `cui-spin`, `cui-pulse`, `cui-glow`, `cui-glow-fade`, `cui-shake`, `cui-bounce`, `cui-fade-in`, `cui-scale-in`. A glow is `cui-glow-fade` on an `::after` carrying a static shadow, since `cui-glow` animates `box-shadow`, which repaints every frame. Components reference these — never define local `@keyframes` for shared animations.
@@ -311,6 +312,7 @@ should not need a later "make it consistent" PR.
 - CuiTooltip uses `usePopover` (Floating UI) — reactive positioning works here because tooltip has a show delay
 - CuiDropdown uses synchronous `computeDropdownPosition()` — avoids the async Floating UI timing issue with `v-if`
 - CuiSelect, CuiCombobox and CuiTagInput use the same `computeDropdownPosition()` with `{ matchWidth: true, maxHeight }` — never write a local positioner (#204)
+- **One gap for trigger-anchored panels:** `PANEL_OFFSET` (4px, `utils/position.ts`) is the distance from trigger to panel for every panel without an arrow — `computeDropdownPosition` users and `CuiPopover` with `noArrow` (so the date, date-range and time pickers) alike. A panel that draws an arrow keeps a larger gap, because the arrow needs the room: `CuiPopover` with an arrow 10px. `CuiTooltip` keeps its own 8px, arrow or not (a hover hint, not a field's panel). Never hand-pick a gap for a new arrowless panel; `__tests__/browser/panel-gap.test.ts` measures every one, flipped included (#486).
 - Dropdown closes on scroll by default; `pinned` prop keeps it open and repositions
 - Dropdown has animated close: `isClosing` state plays exit animation before removing from DOM
 - Sub-menus inherit parent trigger mode by default, `trigger` prop to override
@@ -348,7 +350,7 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 
 ## Docs Site
 - Dogfoods the library: CuiGrid for layout, CuiCard for content panels, `cui-typography` on main content, CuiButton/CuiIcon everywhere
-- Theme switcher + dark mode toggle + debug toggle in header
+- Theme switcher + color-mode button (`useColorMode`) + debug toggle in header
 - `ShowDebugKey` InjectionKey in `apps/docs/src/keys.ts`, provided in App.vue, injected via computed in pages
 - `CuiToastProvider` wraps the app in App.vue
 - Navigation groups: Getting Started → Foundations → Layout → Form Controls → Actions → Feedback → Data Display → Navigation → Overlay → Composables

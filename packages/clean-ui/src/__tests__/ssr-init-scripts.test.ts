@@ -1,0 +1,185 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { nextTick } from "vue";
+import { ssrDensityInitScript } from "../ssr-density-init";
+import { ssrThemeInitScript } from "../ssr-theme-init";
+import { ssrColorModeInitScript } from "../ssr-color-mode-init";
+import { useColorMode, disposeColorMode } from "../composables/useColorMode";
+import { DENSITY_PRESETS, useDensity } from "../composables/useDensity";
+import { CLASS_PREFIX, useTheme } from "../composables/useTheme";
+import {
+  COLOR_MODE_STORAGE_KEY,
+  DARK_CLASS,
+  DARK_SCHEME_QUERY,
+  DENSITY_CLASS_PREFIX,
+  DENSITY_IDS,
+  DENSITY_STORAGE_KEY,
+  THEME_CLASS_PREFIX,
+  THEME_STORAGE_KEY,
+} from "../ssr-constants";
+
+const root = () => document.documentElement;
+const run = (script: string) => new Function(script)();
+
+beforeEach(() => {
+  localStorage.clear();
+  root().className = "";
+});
+afterEach(() => {
+  localStorage.clear();
+  root().className = "";
+});
+
+describe("ssrDensityInitScript (#463)", () => {
+  it.each(["compact", "comfortable"])("applies a stored %s density before first paint", (id) => {
+    localStorage.setItem("cui-density", id);
+    run(ssrDensityInitScript);
+    expect(root().className).toBe(`cui-density-${id}`);
+  });
+
+  it.each(["default", "huge", "__proto__", "compact "])("ignores a stored %j", (value) => {
+    localStorage.setItem("cui-density", value);
+    root().className = "consumer-class";
+    run(ssrDensityInitScript);
+    expect(root().className).toBe("consumer-class");
+  });
+
+  it("does nothing, and does not throw, with no stored value", () => {
+    run(ssrDensityInitScript);
+    expect(root().className).toBe("");
+  });
+
+  it("does not throw when storage throws", () => {
+    const original = Object.getOwnPropertyDescriptor(window, "localStorage")!;
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("blocked");
+      },
+    });
+    try {
+      expect(() => run(ssrDensityInitScript)).not.toThrow();
+    } finally {
+      Object.defineProperty(window, "localStorage", original);
+    }
+  });
+
+  it("agrees with useDensity on key, class names and ids", async () => {
+    expect(DENSITY_PRESETS.map((p) => p.id)).toEqual([...DENSITY_IDS]);
+    // Restore first (nothing stored), so each setDensity below is a real change from the
+    // previous value and its watcher writes the key and class.
+    useDensity();
+    for (const id of DENSITY_IDS.filter((i) => i !== "default")) {
+      root().className = "";
+      localStorage.setItem(DENSITY_STORAGE_KEY, id);
+      run(ssrDensityInitScript);
+      const fromScript = root().className;
+      root().className = "";
+      localStorage.removeItem(DENSITY_STORAGE_KEY);
+      useDensity().setDensity(id);
+      await nextTick();
+      // The composable writes the same key and the same class the script read and added.
+      expect(localStorage.getItem(DENSITY_STORAGE_KEY)).toBe(id);
+      expect(root().className).toBe(fromScript);
+      expect(fromScript).toBe(DENSITY_CLASS_PREFIX + id);
+    }
+  });
+});
+
+describe("ssrThemeInitScript and useTheme share constants (#463)", () => {
+  it("adds the class useTheme would, from the key useTheme writes", async () => {
+    useTheme().setTheme("forest");
+    await nextTick();
+    expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("forest");
+    root().className = "";
+    run(ssrThemeInitScript);
+    expect(root().className).toBe(`${THEME_CLASS_PREFIX}forest`);
+    expect(CLASS_PREFIX).toBe(THEME_CLASS_PREFIX);
+  });
+});
+
+describe("ssrColorModeInitScript and useColorMode share constants", () => {
+  function osPrefers(dark: boolean | null) {
+    const mm =
+      dark === null
+        ? undefined
+        : (q: string) => ({
+            matches: q === DARK_SCHEME_QUERY && dark,
+            addEventListener() {},
+            removeEventListener() {},
+          });
+    Object.defineProperty(window, "matchMedia", { configurable: true, writable: true, value: mm });
+  }
+  afterEach(() => {
+    disposeColorMode();
+    delete (window as { matchMedia?: unknown }).matchMedia;
+  });
+
+  it("applies the class a stored mode resolves to, as the composable does", async () => {
+    for (const [stored, os] of [
+      ["dark", false],
+      ["light", true],
+      ["system", true],
+      ["system", false],
+      ["garbage", true],
+      [null, true],
+      [null, false],
+    ] as const) {
+      osPrefers(os);
+      localStorage.clear();
+      if (stored) localStorage.setItem(COLOR_MODE_STORAGE_KEY, stored);
+      root().className = "";
+      run(ssrColorModeInitScript);
+      const fromScript = root().classList.contains(DARK_CLASS);
+      root().className = "";
+      disposeColorMode();
+      expect(useColorMode().isDark.value, `${stored} / os ${os}`).toBe(fromScript);
+      expect(root().classList.contains(DARK_CLASS), `${stored} / os ${os}`).toBe(fromScript);
+    }
+  });
+
+  it("writes the key the script reads", async () => {
+    osPrefers(false);
+    useColorMode().setMode("dark");
+    await nextTick();
+    expect(localStorage.getItem(COLOR_MODE_STORAGE_KEY)).toBe("dark");
+    root().className = "";
+    run(ssrColorModeInitScript);
+    expect(root().classList.contains(DARK_CLASS)).toBe(true);
+  });
+
+  it("removes a stale class for light", () => {
+    osPrefers(true);
+    localStorage.setItem(COLOR_MODE_STORAGE_KEY, "light");
+    root().className = "consumer dark";
+    run(ssrColorModeInitScript);
+    expect(root().className).toBe("consumer");
+  });
+
+  it("without matchMedia, an explicit mode still applies and system leaves the page alone", () => {
+    osPrefers(null);
+    localStorage.setItem(COLOR_MODE_STORAGE_KEY, "dark");
+    run(ssrColorModeInitScript);
+    expect(root().className).toBe("dark");
+    localStorage.clear();
+    root().className = "dark";
+    run(ssrColorModeInitScript);
+    expect(root().className).toBe("dark");
+  });
+
+  it("still follows the OS when storage throws, and does not throw", () => {
+    osPrefers(true);
+    const original = Object.getOwnPropertyDescriptor(window, "localStorage")!;
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new Error("blocked");
+      },
+    });
+    try {
+      expect(() => run(ssrColorModeInitScript)).not.toThrow();
+      expect(root().classList.contains(DARK_CLASS)).toBe(true);
+    } finally {
+      Object.defineProperty(window, "localStorage", original);
+    }
+  });
+});

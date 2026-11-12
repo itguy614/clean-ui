@@ -15,10 +15,7 @@ import { fileURLToPath } from "node:url";
 const COMPONENTS = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Known dead props, each with the issue that fixes or removes it. A stale entry fails too.
-const EXEMPT: Record<string, string> = {
-  "CuiTimePicker.vue:minTime": "#178",
-  "CuiTimePicker.vue:maxTime": "#178",
-};
+const EXEMPT: Record<string, string> = {};
 
 function deadProps(file: string): string[] {
   const source = readFileSync(join(COMPONENTS, file), "utf8");

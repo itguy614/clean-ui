@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useDataGridState } from "../composables/useDataGrid";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import { useVirtualScroll } from "../composables/useVirtualScroll";
 import { useEventListener } from "../composables/useEventListener";
 import { useListNavigation } from "../composables/useListNavigation";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 import { RESTORE_FOCUS_ATTR } from "../utils/focusRestore";
+import { __DEV__, warnOnce } from "../utils/devWarn";
 import type { DataGridColumn, DataGridColumnGroup, DataGridRow, DataGridRowAction, DataGridBulkAction } from "../types/data-grid";
 import CuiTable from "./CuiTable.vue";
 import CuiTableHead from "./CuiTableHead.vue";
@@ -22,6 +23,9 @@ import CuiDropdownItem from "./CuiDropdownItem.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiContextMenu from "./CuiContextMenu.vue";
 import type { SizeableProps } from "../types/common";
+
+// Module-scoped, so the library doesn't pull Node's global types into its own build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface CuiDataGridTableProps extends SizeableProps {
   rowKey?: string;
@@ -59,6 +63,12 @@ export interface CuiDataGridTableProps extends SizeableProps {
    * CuiDataGrid decides — a row-click listener, or its rowClickable override.
    */
   rowsInteractive?: boolean;
+  /**
+   * Whether a column's header content is the consumer's own (a header slot) rather than its
+   * label. Such content may be interactive, so a sortable one is not wrapped in the sort
+   * button: it sits beside it (#461).
+   */
+  customHeader?: (key: string) => boolean;
 }
 
 const props = withDefaults(defineProps<CuiDataGridTableProps>(), {
@@ -79,6 +89,7 @@ const emit = defineEmits<{
 }>();
 
 const grid = useDataGridState();
+const columnLabel = useColumnLabel();
 
 const hasBulkActions = computed(() => (props.bulkActions?.length ?? 0) > 0);
 
@@ -205,6 +216,15 @@ const tableMinWidth = computed(() => {
   ]);
 });
 
+// Rendered widths of the frozen columns that declare no usable `width` (#485), read from
+// their header cells (see the observer below). Empty on the server and before mount, so a
+// first paint uses what is declared only.
+const measuredWidths = shallowRef(new Map<string, number>());
+const unsizedFrozenKeys = computed(() =>
+  // The last frozen column's width feeds no offset, so it is never measured.
+  grid.visibleColumns.value.filter((c) => grid.isFrozen(c.key) && !toLength(c.width) && c.key !== lastStickyKey.value).map((c) => c.key),
+);
+
 // Sticky column offsets: each frozen column is pinned at the summed widths of
 // the frozen columns before it, starting after the bulk-select column.
 const stickyColumnOffsets = computed(() => {
@@ -212,10 +232,11 @@ const stickyColumnOffsets = computed(() => {
   const before = hasBulkActions.value ? [SELECT_COLUMN_WIDTH] : [];
 
   for (const col of grid.visibleColumns.value) {
-    if (!col.sticky) continue;
+    if (!grid.isFrozen(col.key)) continue;
     offsets.set(col.key, sumLengths(before));
-    // Sticky without a usable width contributes nothing to later offsets.
-    const width = toLength(col.width);
+    // A declared width is the source of truth; without one, the measured header cell (#485).
+    const measured = measuredWidths.value.get(col.key);
+    const width = toLength(col.width) ?? (measured ? `${measured}px` : undefined);
     if (width) before.push(width);
   }
   return offsets;
@@ -225,7 +246,7 @@ const stickyColumnOffsets = computed(() => {
 const lastStickyKey = computed(() => {
   const cols = grid.visibleColumns.value;
   for (let i = cols.length - 1; i >= 0; i--) {
-    if (cols[i].sticky) return cols[i].key;
+    if (grid.isFrozen(cols[i].key)) return cols[i].key;
   }
   return null;
 });
@@ -287,7 +308,7 @@ function headerCellStyle(col: { key: string }) {
 // with every leaf hidden gets none.
 type HeadCell =
   | { kind: "leaf"; key: string; col: DataGridColumn; rowspan?: number; groupId?: string }
-  | { kind: "group"; key: string; group: DataGridColumnGroup; span: number };
+  | { kind: "group"; key: string; group: DataGridColumnGroup; span: number; firstKey: string; lastKey: string };
 
 const headerRows = computed<HeadCell[][]>(() => {
   const top: HeadCell[] = [];
@@ -303,8 +324,9 @@ const headerRows = computed<HeadCell[][]>(() => {
     if (last?.kind === "group" && last.group === group) {
       cell = last;
       cell.span += 1;
+      cell.lastKey = col.key;
     } else {
-      cell = { kind: "group", key: `${gridId}-group-${top.length}`, group, span: 1 };
+      cell = { kind: "group", key: `${gridId}-group-${top.length}`, group, span: 1, firstKey: col.key, lastKey: col.key };
       top.push(cell);
     }
     second.push({ kind: "leaf", key: col.key, col, groupId: cell.key });
@@ -348,14 +370,59 @@ const auxRowspan = computed(() => (headerRows.value.length > 1 ? 2 : undefined))
 const headRow1 = ref<HTMLElement | null>(null);
 const headRow1Height = ref(0);
 let headObserver: ResizeObserver | undefined;
-onMounted(() => {
+// One observer for the first header row's height and the unsized frozen columns' widths.
+// Pinning only moves a cell, never resizes it, and a column's offset depends on the columns
+// before it alone, so the widths settle left to right with no loop.
+function measureHead() {
   const el = headRow1.value;
-  if (!el || typeof ResizeObserver === "undefined") return;
+  if (!el) return;
   headRow1Height.value = el.offsetHeight;
-  headObserver = new ResizeObserver(() => (headRow1Height.value = el.offsetHeight));
+  const next = new Map<string, number>();
+  for (const th of el.closest("thead")?.querySelectorAll<HTMLElement>("[data-cui-col]") ?? []) {
+    if (unsizedFrozenKeys.value.includes(th.dataset.cuiCol!)) next.set(th.dataset.cuiCol!, th.getBoundingClientRect().width);
+  }
+  const prev = measuredWidths.value;
+  if (next.size !== prev.size || [...next].some(([k, w]) => Math.abs(w - (prev.get(k) ?? -1)) > 0.01)) measuredWidths.value = next;
+}
+function observeHead() {
+  const el = headRow1.value;
+  if (!el) return;
+  for (const key of unsizedFrozenKeys.value) {
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnOnce(
+        `[clean-ui] CuiDataGrid: frozen (sticky) column "${key}" has no usable width (a px, rem or calc() length). Its width is measured after the first paint, ` +
+          `so the columns frozen after it jump into place. Set width on every frozen column for a stable first layout.`,
+      );
+    }
+  }
+  if (typeof ResizeObserver === "undefined") return;
+  headObserver?.disconnect();
+  headObserver ??= new ResizeObserver(measureHead);
   headObserver.observe(el);
-});
+  el.closest("thead")?.querySelectorAll<HTMLElement>("[data-cui-col]").forEach((th) => {
+    if (unsizedFrozenKeys.value.includes(th.dataset.cuiCol!)) headObserver!.observe(th);
+  });
+  measureHead();
+}
+onMounted(observeHead);
 onBeforeUnmount(() => headObserver?.disconnect());
+
+// A frozen group is frozen wholly (the grid unfreezes a mixed one), so its spanning cell pins
+// across its whole span at its first leaf's offset, the way its leaves do.
+function groupHeaderStyle(cell: Extract<HeadCell, { kind: "group" }>) {
+  return headerPinStyle(stickyColumnOffsets.value.get(cell.firstKey), cell.lastKey === lastStickyKey.value);
+}
+
+// A header slot sits beside the sort button, not in it, but a click on its plain content still
+// sorts, as the whole cell did. A click on interactive content in the slot is that content's own,
+// and the sort button handles its own click.
+const INTERACTIVE =
+  "a, button, input, select, textarea, label, summary, [role='button'], [role='link'], [role='menuitem'], [tabindex], [contenteditable='true']";
+function onSortGroupClick(e: MouseEvent, key: string) {
+  const hit = (e.target as Element | null)?.closest(INTERACTIVE);
+  if (hit && (e.currentTarget as Element).contains(hit)) return;
+  grid.applySort(key);
+}
 
 function leafHeaderStyle(cell: Extract<HeadCell, { kind: "leaf" }>) {
   const style = headerCellStyle(cell.col);
@@ -408,6 +475,9 @@ const renderedRows = computed<DataGridRow[]>(() =>
 // A row is found by its place in renderedRows, not by rowKey, which may be missing or
 // repeated, and by this grid's own id, so a row of a grid nested in a cell is not ours.
 const gridId = useCuiId("data-grid");
+
+// headerRows too: a leaf can get a new <th> (moved between rows) with the same key set.
+watch([unsizedFrozenKeys, headerRows], observeHead, { flush: "post" });
 function rowWithActions(el: Element): DataGridRow | undefined {
   const [owner, index] = el.closest("[data-cui-grid-row]")?.getAttribute("data-cui-grid-row")?.split(":") ?? [];
   const row = owner === gridId ? renderedRows.value[Number(index)] : undefined;
@@ -535,7 +605,7 @@ const totalCols = computed(() => {
               align="center"
               :colspan="cell.span"
               scope="colgroup"
-              :style="headerPinStyle(undefined)"
+              :style="groupHeaderStyle(cell)"
             >
               {{ cell.group.label }}
             </CuiTableCell>
@@ -545,6 +615,7 @@ const totalCols = computed(() => {
                 'cui-data-grid-table__head-leaf': cell.groupId,
                 'cui-data-grid-table__group-start': groupStarts.keys.has(cell.key),
               }"
+              :data-cui-col="cell.key"
               :headers="cell.groupId"
               :align="cell.col.align"
               :width="cell.col.width"
@@ -554,9 +625,32 @@ const totalCols = computed(() => {
               :aria-sort="cell.col.sortable ? ariaSort(cell.col) : undefined"
             >
               <!-- A sortable header's label is a button, so the sort is reachable by keyboard;
-                   the <th> says which way it's sorted (aria-sort). -->
+                   the <th> says which way it's sorted (aria-sort). A header slot may hold
+                   interactive content, which must not nest in a button: it sits beside a sort
+                   button named by the label. -->
+              <div
+                v-if="cell.col.sortable && customHeader?.(cell.col.key)"
+                class="cui-data-grid-table__sort-group"
+                @click="onSortGroupClick($event, cell.col.key)"
+                :style="{ justifyContent: cell.col.align === 'right' ? 'flex-end' : cell.col.align === 'center' ? 'center' : 'flex-start' }"
+              >
+                <slot name="header" :column="cell.col">{{ cell.col.label }}</slot>
+                <button
+                  type="button"
+                  class="cui-data-grid-table__sort cui-data-grid-table__sort--icon"
+                  :aria-label="columnLabel(cell.col)"
+                  @click="grid.applySort(cell.col.key)"
+                >
+                  <CuiIcon
+                    :name="sortIcon(cell.col)"
+                    size="0.875rem"
+                    aria-hidden="true"
+                    :style="{ opacity: sortDirection(cell.col) ? '1' : '0.3' }"
+                  />
+                </button>
+              </div>
               <button
-                v-if="cell.col.sortable"
+                v-else-if="cell.col.sortable"
                 type="button"
                 class="cui-data-grid-table__sort"
                 :style="{ justifyContent: cell.col.align === 'right' ? 'flex-end' : cell.col.align === 'center' ? 'center' : 'flex-start' }"
@@ -722,6 +816,13 @@ const totalCols = computed(() => {
 
 /* The header's own text, as a button: it inherits the cell's font and alignment. */
 /* The whole cell's width, so the click target is the header, not just its label. */
+.cui-data-grid-table__sort-group {
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  gap: calc(0.25rem * var(--cui-density-scale, 1));
+}
 .cui-data-grid-table__sort {
   display: flex;
   width: 100%;
@@ -733,5 +834,9 @@ const totalCols = computed(() => {
   cursor: pointer;
   user-select: none;
   text-align: inherit;
+}
+/* Beside a header slot, the button is just the sort icon */
+.cui-data-grid-table__sort.cui-data-grid-table__sort--icon {
+  width: auto;
 }
 </style>

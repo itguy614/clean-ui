@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { nextTick } from "vue";
+import { spyStorage } from "../../__tests__/storage-spy";
 import { useDensity, DENSITY_PRESETS } from "../useDensity";
 
 const densityClasses = () =>
@@ -73,8 +74,8 @@ describe("useDensity at import and first use", () => {
   it("does nothing at import, even with a density stored", async () => {
     localStorage.setItem("cui-density", "comfortable");
     document.documentElement.className = "cui-density-compact";
-    const getItem = vi.spyOn(Storage.prototype, "getItem");
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const getItem = spyStorage("getItem");
+    const setItem = spyStorage("setItem");
     await freshImport();
     expect(document.documentElement.className, "the consumer's own class").toBe("cui-density-compact");
     expect(getItem).not.toHaveBeenCalled();
@@ -83,7 +84,7 @@ describe("useDensity at import and first use", () => {
 
   it("leaves <html> and localStorage alone on first use when nothing is stored", async () => {
     document.documentElement.className = "cui-density-compact";
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const setItem = spyStorage("setItem");
     const { useDensity } = await freshImport();
     useDensity();
     await nextTick();
@@ -116,6 +117,30 @@ describe("useDensity at import and first use", () => {
     document.documentElement.className = "";
     restoreDensity();
     expect(densityClasses(), "a second call does nothing").toEqual([]);
+  });
+
+  it("a stored default strips a stale density class", async () => {
+    localStorage.setItem("cui-density", "default");
+    document.documentElement.className = "cui-density-compact consumer-class";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("consumer-class");
+  });
+
+  it("a stored default with no class to strip changes nothing", async () => {
+    localStorage.setItem("cui-density", "default");
+    document.documentElement.className = "consumer-class";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("consumer-class");
+  });
+
+  it("a script-set class matching the stored density stays, once", async () => {
+    localStorage.setItem("cui-density", "compact");
+    document.documentElement.className = "cui-density-compact";
+    const { restoreDensity } = await freshImport();
+    restoreDensity();
+    expect(document.documentElement.className).toBe("cui-density-compact");
   });
 
   it("persists a change made after the first caller's component unmounted", async () => {
