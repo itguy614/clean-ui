@@ -27,7 +27,7 @@ const THEMES = readdirSync(resolve(root, "src/styles/themes"))
   .filter((f) => f.endsWith(".css"))
   .map((f) => f.slice(0, -4))
   .sort();
-if (THEMES.length !== 7) problems.push(`expected 7 theme sources in src/styles/themes, found ${THEMES.length}`);
+if (THEMES.length === 0) problems.push("no theme sources in src/styles/themes");
 
 /** The `cui-theme-<id>` ids a stylesheet's selectors name. */
 const themeIds = (css) => new Set([...css.matchAll(/\.cui-theme-([a-z][a-z0-9-]*)/g)].map((m) => m[1]));

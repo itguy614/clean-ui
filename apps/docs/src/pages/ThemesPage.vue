@@ -133,7 +133,7 @@ setTheme('default') // back to Navy, the default (no class on &lt;html&gt;)
     </div>
 
     <div>
-      <h2 id="theme-presets"class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
+      <h2 id="theme-presets" class="mb-4 text-2xl font-semibold">THEME_PRESETS</h2>
       <CuiCard>
         <CuiCardBody>
           <p class="mb-3 text-surface-600 dark:text-surface-400">
