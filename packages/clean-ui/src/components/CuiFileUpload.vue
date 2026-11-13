@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, useTemplateRef, type Component } from "vue";
-import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
@@ -28,7 +28,12 @@ export interface FileEntry {
   type: string;
 }
 
-export interface CuiFileUploadProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
+export interface CuiFileUploadProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Accepted file types (e.g., ".pdf,.docx", "image/*") */
   accept?: string;
   /** Allow multiple files */
@@ -39,8 +44,6 @@ export interface CuiFileUploadProps extends NativeControlProps, HideableProps, C
   maxFiles?: number;
   /** Auto-emit on drop/select (true) or require explicit upload button (false) */
   autoUpload?: boolean;
-  /** Label */
-  label?: string;
   /** Drag zone helper text */
   dragText?: string;
   /** Browse button text */

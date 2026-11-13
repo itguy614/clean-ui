@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
 import { useFloatingLabel } from "./form-field-context";
 import CuiButton from "./CuiButton.vue";
@@ -12,7 +12,13 @@ import { IconPlus } from "../icons/generated/plus";
 
 export type InputStepperOrientation = "horizontal" | "vertical";
 
-export interface CuiInputStepperProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputStepperProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -23,8 +29,6 @@ export interface CuiInputStepperProps extends NativeControlProps, HideableProps,
   step?: number;
   /** Orientation */
   orientation?: InputStepperOrientation;
-  /** Label displayed above */
-  label?: string;
   /** Pad value with leading zeros to this width */
   pad?: number;
   /** Wrap around from max to min and vice versa */

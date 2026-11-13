@@ -58,14 +58,14 @@ describe("buildRegistry", () => {
     expect(result.registry.warnings.some((w) => w.message.includes('"dup"'))).toBe(true);
   });
 
-  it("collects toolbar, constructs, paste, decorations and extensions across every plugin", () => {
+  it("collects toolbar, constructs, paste, decoration nodes and extensions across every plugin", () => {
     const a = definePlugin({
       id: "a",
       commands: { cmdA: { run: () => true } },
       toolbar: [{ command: "cmdA" }],
       constructs: ["Emphasis"],
       paste: [{ selector: "em", toMarkdown: (_el, c) => `*${c}*`, produces: "Emphasis", degradeTo: "plainText" }],
-      decorations: [{ node: "Emphasis" }],
+      decorationNodes: ["Emphasis"],
       extensions: [],
     });
     const b = definePlugin({
@@ -82,7 +82,14 @@ describe("buildRegistry", () => {
     expect(result.registry.toolbar).toEqual([{ command: "cmdA" }, { command: "cmdB" }]);
     expect([...result.registry.constructs]).toEqual(["Emphasis", "StrongEmphasis"]);
     expect(result.registry.paste).toHaveLength(1);
-    expect(result.registry.decorations).toEqual([{ node: "Emphasis" }]);
+    expect([...result.registry.decorationNodes]).toEqual(["Emphasis"]);
+  });
+
+  it("warns about a spec still using the 1.x `decorations` field, which is ignored", () => {
+    const legacy = definePlugin({ id: "legacy", commands: {}, decorations: [{ node: "Emphasis" }] } as never);
+    const result = buildRegistry([legacy]);
+    expect(result.ok && [...result.registry.decorationNodes]).toEqual([]);
+    expect(result.ok && result.registry.warnings.some((w) => w.message.includes("decorationNodes"))).toBe(true);
   });
 
   it("a raw extension using an explicit Prec override is passed through untouched (escapes the precedence model)", () => {

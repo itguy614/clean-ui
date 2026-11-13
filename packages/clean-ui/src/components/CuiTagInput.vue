@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
-import type { CuiColor, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { CuiColor, HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox, followHighlight } from "../composables/useListbox";
@@ -24,7 +24,13 @@ export interface TagOption {
   [key: string]: unknown;
 }
 
-export interface CuiTagInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTagInputProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "error" | "errorMessage"> {
   /** Selected tags */
   modelValue?: string[];
   /** Predefined tag suggestions */
@@ -41,12 +47,6 @@ export interface CuiTagInputProps extends NativeControlProps, HideableProps, Col
   maxTags?: number;
   /** Placeholder */
   placeholder?: string;
-  /** Label */
-  label?: string;
-  /** Error state */
-  error?: boolean;
-  /** Error message */
-  errorMessage?: string;
   /** No suggestions text */
   noSuggestionsText?: string;
   /** Text shown when allowCreate and no match found */

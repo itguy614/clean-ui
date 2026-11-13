@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Text, computed, onBeforeUpdate, ref, useSlots, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInputAttachment from "./CuiInputAttachment.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
@@ -22,7 +22,13 @@ export type InputType =
   | "number"
   | "range";
 
-export interface CuiInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "readonly"> {
   /** v-model binding. `string | number` so `type="number"` / `v-model.number` bind without a cast. */
   modelValue?: string | number;
   /** Input type */
@@ -31,12 +37,6 @@ export interface CuiInputProps extends NativeControlProps, HideableProps, Colora
   placeholder?: string;
   /** Show clear button when input has value */
   clearable?: boolean;
-  /** Show error state (red border + message) */
-  error?: boolean;
-  /** Error message displayed below the input */
-  errorMessage?: string;
-  /** Readonly state */
-  readonly?: boolean;
   /** Border radius */
   rounded?: CuiRounded;
 }

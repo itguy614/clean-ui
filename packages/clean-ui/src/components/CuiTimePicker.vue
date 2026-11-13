@@ -6,7 +6,7 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import { __DEV__, warnOnce } from "../utils/devWarn";
-import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps, FormControlProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { dayPeriodLabels } from "../utils/locale";
@@ -19,7 +19,12 @@ declare const process: { env: { NODE_ENV?: string } };
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
+export interface CuiTimePickerProps
+  extends NativeControlProps,
+    HideableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -36,8 +41,6 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
-  /** Label */
-  label?: string;
 }
 
 const props = withDefaults(defineProps<CuiTimePickerProps>(), {

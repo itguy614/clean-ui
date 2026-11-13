@@ -1,5 +1,4 @@
 import { definePlugin } from "../define-plugin";
-import { lookupConstructIn } from "../command-context";
 import { openUrlDialog } from "./dialogs/open-url-dialog";
 import { markdownLink } from "./link-markdown";
 
@@ -15,14 +14,14 @@ export const imagePlugin = definePlugin({
         });
         return true;
       },
-      isActive: (context) => lookupConstructIn(context, "Image").status === "inside",
+      isActive: (context) => context.lookupConstruct("Image").status === "inside",
       label: "Image",
       icon: "image",
     },
   },
   toolbar: [{ command: "image" }],
   constructs: ["Image"],
-  decorations: [{ node: "Image" }],
+  decorationNodes: ["Image"],
   paste: [
     {
       selector: "img[src]",

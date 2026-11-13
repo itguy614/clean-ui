@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
-import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox, followHighlight } from "../composables/useListbox";
@@ -35,7 +35,13 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiComboboxProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "error" | "errorMessage"> {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -54,12 +60,6 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
   maxVisible?: number;
   /** Loading state (external) */
   loading?: boolean;
-  /** Label */
-  label?: string;
-  /** Error state */
-  error?: boolean;
-  /** Error message */
-  errorMessage?: string;
   /** No results text */
   noResultsText?: string;
   /** Border radius */

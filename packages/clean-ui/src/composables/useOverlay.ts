@@ -3,10 +3,7 @@ import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../uti
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
 import { usePresence } from "./usePresence";
-import { __DEV__, warnOnce } from "../utils/devWarn";
-// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
-declare const process: { env: { NODE_ENV?: string } };
-import { afterAnimations, motionDuration, type MotionDuration } from "../utils/motion";
+import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
 
@@ -17,30 +14,6 @@ export interface UseOverlayOptions {
   dialogRef: Ref<HTMLElement | undefined> | ShallowRef<HTMLElement | null> | Readonly<ShallowRef<HTMLElement | null>>;
   /** Whether closing via Escape/backdrop is blocked */
   persistent: () => boolean;
-  /**
-   * @deprecated Has no effect: overlays always stack, and the shared layer stack closes only
-   * the topmost on Escape (#285). It never did anything — it only cleared a set nothing read.
-   * Removed in 2.0.
-   */
-  allowNested?: () => boolean;
-  /** The component using it, for the deprecation warning — "CuiModal". Defaults to "useOverlay". */
-  name?: string;
-  /**
-   * @deprecated With `exit: "timer"` only, which 2.0 drops: use `exit: "transition"`.
-   * How long the exit animation runs before the overlay is removed: a motion token's name
-   * (#261), read from the dialog element when it closes so a container's override counts,
-   * or a fixed number of ms. Defaults to `"base"`.
-   */
-  animationDuration?: MotionDuration | number;
-  /**
-   * How the overlay knows its exit has finished (#263). `"timer"` (the default, kept for
-   * existing callers; deprecated, and `"transition"` becomes the default in 2.0) waits
-   * `animationDuration`. `"transition"` waits for the returned `onAfterLeave()`, called from
-   * a `<Transition>`'s `after-leave`: the panel is rendered `v-if` mounted and `v-show`
-   * `isVisible`, so a re-open mid-exit reverses rather than restarting, and nothing waits on
-   * a hand-copied duration. CuiModal and CuiSlideover use it.
-   */
-  exit?: "timer" | "transition";
   /** Called to emit update:open */
   onUpdateOpen: (value: boolean) => void;
   /** Called to emit close */
@@ -75,8 +48,6 @@ export function useOverlay(options: UseOverlayOptions) {
     open: getOpen,
     dialogRef,
     persistent: getPersistent,
-    animationDuration = "base",
-    exit = "timer",
     onUpdateOpen,
     onClose,
     rootRef = dialogRef,
@@ -85,12 +56,6 @@ export function useOverlay(options: UseOverlayOptions) {
     onOpened,
     onClosed,
   } = options;
-
-  if (__DEV__ && process.env.NODE_ENV !== "production" && options.allowNested !== undefined) {
-    warnOnce(
-      `[clean-ui] ${options.name ?? "useOverlay"}: \`allowNested\` is deprecated and has no effect — overlays always stack, and Escape closes only the topmost (#285). Remove it; it goes in 2.0.`,
-    );
-  }
 
   const isVisible = ref(false);
   const isAnimating = ref(false);
@@ -124,16 +89,8 @@ export function useOverlay(options: UseOverlayOptions) {
   // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
   // only if nothing has happened since it began: closed mid-entry, it never "opened".
   let entry = 0;
-  /** `exit: "timer"`'s pending close, cancelled by a re-open mid-exit (#339). */
-  let exitTimer: ReturnType<typeof setTimeout> | null = null;
 
   function openOverlay() {
-    // Re-opened mid-exit: the old timer would still hide it and report a close, and the
-    // consumer's echo of that close would start another.
-    if (exitTimer !== null) {
-      clearTimeout(exitTimer);
-      exitTimer = null;
-    }
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -211,23 +168,13 @@ export function useOverlay(options: UseOverlayOptions) {
     isOpen.value = false;
     entry++;
 
-    if (exit === "transition") {
-      // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
-      isVisible.value = false;
-      return;
-    }
-
-    // Wait for exit animation
-    exitTimer = setTimeout(() => {
-      exitTimer = null;
-      isVisible.value = false;
-      finishClose();
-    }, typeof animationDuration === "number" ? animationDuration : motionDuration(animationDuration, dialogRef.value));
+    // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
+    isVisible.value = false;
   }
 
   /**
-   * For `exit: "transition"`: the `<Transition>`'s `after-leave`. Mounted until then, as
-   * `mounted`. A leave that a re-open cancelled never calls it.
+   * The `<Transition>`'s `after-leave` (the exit is a transition, never a timer). Mounted
+   * until then, as `mounted`. A leave that a re-open cancelled never calls it.
    */
   const { present: mounted, onAfterLeave: unmount } = usePresence(() => isVisible.value);
   function onAfterLeave() {

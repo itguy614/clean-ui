@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, useTemplateRef } from "vue";
 import CuiInput from "./CuiInput.vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 
 export interface MaskToken {
   pattern: RegExp;
 }
 
-export interface CuiMaskedInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiMaskedInputProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "readonly"> {
   /** Raw value (no separators) */
   modelValue?: string;
   /** Mask pattern: # = digit, A = letter, * = alphanumeric, others are literal */
@@ -20,12 +26,6 @@ export interface CuiMaskedInputProps extends NativeControlProps, HideableProps, 
   placeholder?: string;
   /** Show clear button */
   clearable?: boolean;
-  /** Error state */
-  error?: boolean;
-  /** Error message */
-  errorMessage?: string;
-  /** Readonly */
-  readonly?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiMaskedInputProps>(), {

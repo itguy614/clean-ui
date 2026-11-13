@@ -3,23 +3,22 @@ import { computed, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { CheckboxGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
-import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, FormControlProps, NativeControlProps } from "../types/common";
 import { IconCheck } from "../icons/generated/check";
 import { IconMinus } from "../icons/generated/minus";
 
-export interface CuiCheckboxProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
+export interface CuiCheckboxProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "description" | "readonly"> {
   /** The value this checkbox represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
   modelValue?: boolean;
-  /** Label text (or use default slot) */
-  label?: string;
-  /** Description text (or use #description slot) */
-  description?: string;
   /** Indeterminate state (visual only, e.g. "select all" partial) */
   indeterminate?: boolean;
-  /** Readonly state */
-  readonly?: boolean;
   /** Hide the component */
   hidden?: boolean;
 }
