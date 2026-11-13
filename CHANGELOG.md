@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading to 2.0
 
+- **`useOverlay`'s `exit: "timer"` mode is removed, and with it the `exit`, `animationDuration`
+  and `name` options.** The exit is always a `<Transition>`: render the overlay
+  `v-if="mounted" v-show="isVisible"` inside `<Transition v-bind="subtreeTransition"
+  @after-leave="onAfterLeave">` (what `CuiModal` does). A caller that passed `exit: "transition"`
+  just drops the option; one that relied on the default timer moves to the `<Transition>`.
+- **`allowNested` is removed from `CuiModal`, `CuiSlideover` and `useOverlay`.** It has had no
+  effect since 1.x (overlays always stack, and Escape closes only the topmost): delete it. A
+  leftover `allow-nested` now falls through as a plain attribute.
+- **`isClosing` is removed from `DropdownContext`** (and `NEVER_CLOSING` with it). It was always
+  `false`; a hand-provided context needs no replacement field.
+- **`@itguy614/clean-ui-editor`: `CommandContext.findConstructRange` is removed, and
+  `lookupConstruct` is required.** Use `context.lookupConstruct(name)`, which returns
+  `{ status: "inside", range } | { status: "outside" } | { status: "unknown" }`; it reports
+  "unknown" separately where `findConstructRange` read it as `null`. A hand-built test double
+  must provide `lookupConstruct`. `PLUGIN_API_VERSION` is now `2`: `definePlugin` stamps it, so
+  a plugin that carries a literal `apiVersion: 1` is rejected at registration.
+
 - **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
   prop name, type, default and runtime behaviour is unchanged (checked by diffing each
   component's resolved props before and after). A control still has only the props it had; it
