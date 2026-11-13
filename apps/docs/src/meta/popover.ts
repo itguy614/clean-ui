@@ -57,6 +57,14 @@ const meta: ComponentMeta = {
   events: [
     { name: "update:visible", payload: "boolean", description: "Open state changed — what v-model:visible binds to" },
   ],
+
+  tokens: [
+    { name: "--cui-popover-radius", default: "per rounded", description: "Panel corner radius" },
+    { name: "--cui-popover-bg", default: "var(--cui-surface-base)", description: "Fill of the panel, and of its arrow with it" },
+    { name: "--cui-popover-border", default: "1px solid var(--cui-border)", description: "Border of the panel, and of its arrow with it" },
+    { name: "--cui-popover-color", default: "var(--cui-text-secondary)", description: "Text colour of the body" },
+    { name: "--cui-popover-width", default: "the width prop", description: "Fixed width of the panel, ahead of the width prop. The panel is teleported to <body>, so set every --cui-popover-* token on :root or <body>, not on the trigger's container" },
+  ],
 };
 
 export default meta;

@@ -126,7 +126,7 @@ Every color, radius, and typography value is a `--cui-*` custom property. Overri
 
 ```css
 :root {
-  --cui-button-radius: 0.5rem;
+  --cui-radius-md: 0.5rem; /* every md corner; --cui-button-radius moves buttons only */
 }
 
 /* Or re-map a whole color scale for a custom brand theme */

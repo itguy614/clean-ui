@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading to 2.0
 
+- **`rounded="md"` no longer follows `--cui-button-radius`.** The shared radius scale's `md`
+  step reads `--cui-radius-md` and nothing else, so a card, modal, alert, fieldset, popover or
+  input at the default radius stays put when you set the button token. Default rendering is
+  unchanged. `--cui-button-radius` now restyles buttons only (`CuiButton` reads it ahead of the
+  scale). If you set it to round or square the whole UI, set `--cui-radius-md` instead, or a
+  component's own `--cui-<component>-radius` (new for Accordion, ContextMenu, DropdownMenu,
+  DropdownSub, Pagination, Radio buttons, Tabs, the DataGrid bulk bar, filter panel and view
+  toggle, Badge, Fieldset and Popover; the radio/checkbox/toggle error container reads
+  `--cui-control-group-radius`). Parts that carried a fixed length now read the scale, with the
+  same default: the date pickers' day cells and options, a listed file in `CuiFileUpload`, the
+  `CuiConfirmDialog` prompt, `CuiModalHeader`'s close button and `CuiTooltip` follow
+  `--cui-radius-md`; `CuiCodeBlock` and the select, combobox and tag-input dropdown panel follow
+  `--cui-radius-lg`; the markdown editor's code lines and slash menu follow `--cui-radius-md`.
+
+- **`CuiBadge`, `CuiFieldset` and `CuiPopover` take their paint from tokens, not inline styles.**
+  `--cui-badge-bg|color|border|radius`, `--cui-fieldset-bg|border|radius` and
+  `--cui-popover-bg|border|color|width|radius` now restyle them, and a plain
+  `.cui-badge { … }` rule wins without `!important`; their rendering is unchanged. A popover's
+  panel (and its arrow, which follows `--cui-popover-bg` and `--cui-popover-border`) is teleported
+  to `<body>`: set its tokens on `:root` or `<body>`, not on the trigger's container. Also new:
+  `--cui-tabs-tab-radius` (a segmented tab's corner, which is `--cui-tabs-radius` less 0.125rem
+  unless set) and `--cui-file-upload-row-radius` (a listed file's row; the drop zone keeps
+  `--cui-file-upload-radius`).
+
+
 - **Built-in icon names are an opt-in, and the built-in icons carry fewer weights (#207).**
   The components still draw their own icons with no setup, but a name such as
   `<CuiIcon name="caret-down" />`, an `icon: "user"` option, or `<CuiAlert icon="check-circle">`

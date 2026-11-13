@@ -419,6 +419,31 @@ setTheme('teal')
       </CuiCard>
     </div>
 
+    <!-- Corner radius -->
+    <div>
+      <h2 id="corner-radius" class="mb-4 text-2xl font-semibold">Corner radius</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            Corners come from one scale, <code>--cui-radius-sm</code> (0.25rem),
+            <code>--cui-radius-md</code> (0.375rem) and <code>--cui-radius-lg</code> (0.5rem), which the
+            <code>rounded</code> prop picks from. Override a step to move every component that uses
+            it, or a component's own <code>--cui-&lt;component&gt;-radius</code> to move just that one,
+            which wins over the scale (each component's token table lists its own). <code>--cui-button-radius</code> is the button's own
+            token: it restyles buttons and nothing else, so a card or modal at
+            <code>rounded="md"</code> does not follow it.
+          </p>
+          <pre class="cui-pre"><code>:root {
+  --cui-radius-md: 0.5rem;     /* every md corner: buttons, cards, inputs, menus ... */
+}
+.toolbar {
+  --cui-button-radius: 9999px; /* buttons in this container only */
+  --cui-card-radius: 1rem;     /* one component */
+}</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
     <!-- SSR -->
     <div>
       <h2 id="ssr-theme-init" class="mb-4 text-2xl font-semibold">Server-rendered pages</h2>

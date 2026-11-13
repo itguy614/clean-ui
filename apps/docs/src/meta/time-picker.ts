@@ -34,7 +34,7 @@ const meta: ComponentMeta = {
     { name: "--cui-time-picker-color", default: "var(--cui-text-body)", description: "Trigger text colour (an empty trigger shows its placeholder in --cui-text-tertiary)" },
     { name: "--cui-time-picker-bg", default: "var(--cui-surface-base)", description: "Trigger background" },
     { name: "--cui-time-picker-border", default: "var(--cui-border-strong)", description: "Trigger border color" },
-    { name: "--cui-time-picker-radius", default: "var(--cui-button-radius)", description: "Trigger corner radius" },
+    { name: "--cui-time-picker-radius", default: "var(--cui-radius-md)", description: "Trigger corner radius" },
     { name: "--cui-time-picker-pressed-bg", default: "var(--cui-primary-bg)", description: "Background of the selected AM or PM button. Set it where the panel can see it: the panel is teleported to <body>, so on :root or <body>, not on the picker's container" },
     { name: "--cui-time-picker-pressed-color", default: "var(--cui-primary)", description: "Text color of the selected AM or PM button" },
   ],

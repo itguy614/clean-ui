@@ -84,6 +84,9 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
+    { name: "--cui-data-grid-bulk-bar-radius", default: "var(--cui-radius-md)", description: "Corner radius of the bulk-action bar" },
+    { name: "--cui-data-grid-filter-panel-radius", default: "var(--cui-radius-md)", description: "Corner radius of the filter panel" },
+    { name: "--cui-data-grid-view-toggle-radius", default: "var(--cui-radius-md)", description: "Corner radius of the table/card view toggle" },
     { name: "--cui-data-grid-group-border", default: "var(--cui-border)", description: "The rule on the left of each column group's first leaf (all but the first group), through the header and body" },
     { name: "--cui-data-grid-column-manager-gap", default: "0.5rem × density", description: "Gap between a column manager row's handle, label and move buttons. The column manager is a teleported popover, so set the --cui-data-grid-column-manager-* tokens on :root or <body>, not on the grid's container" },
     { name: "--cui-data-grid-column-manager-px", default: "0 (a group's leaves: 1.25rem × density)", description: "Start padding of a column manager row. Overriding it indents every row alike, group rows and leaves too" },

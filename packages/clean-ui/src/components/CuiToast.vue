@@ -234,7 +234,7 @@ const messages = useMessages();
   background: var(--cui-toast-bg, var(--_toast-bg));
   color: var(--cui-toast-color, var(--_toast-color));
   border: var(--cui-toast-border, var(--_toast-border, none));
-  border-radius: var(--cui-toast-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-toast-radius, var(--cui-radius-md, 0.375rem));
 }
 
 /* A part's own colour has no slot in the vocabulary, so it stays a private token, but each

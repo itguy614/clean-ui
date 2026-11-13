@@ -56,6 +56,7 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
+    { name: "--cui-pagination-radius", default: "var(--cui-radius-md)", description: "Corner radius of a page button" },
     { name: "--cui-pagination-hover-border", default: "surface-300 (light) / surface-600 (dark)", description: "Border of a page button on hover" },
   ],
 };

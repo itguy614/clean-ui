@@ -195,7 +195,7 @@ const hasAnyValue = computed(() => {
   width: 16rem;
   flex-shrink: 0;
   border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-data-grid-filter-panel-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-surface-base);
   display: flex;
   flex-direction: column;

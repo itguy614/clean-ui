@@ -140,6 +140,11 @@ const meta: ComponentMeta = {
       slots: [{ name: "default", description: "Group label text. Non-interactive, and skipped by arrow keys" }],
     },
   ],
+
+  tokens: [
+    { name: "--cui-dropdown-menu-radius", default: "var(--cui-radius-md)", description: "Corner radius of the menu panel" },
+    { name: "--cui-dropdown-sub-radius", default: "var(--cui-radius-md)", description: "Corner radius of a sub-menu panel" },
+  ],
 };
 
 export default meta;

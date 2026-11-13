@@ -30,7 +30,7 @@ const meta: ComponentMeta = {
     { name: "--cui-input-stepper-field-width", default: "3 × font size", description: "Width of the numeric field" },
     { name: "--cui-input-stepper-font-size", default: "per size", description: "Value and label font size" },
     { name: "--cui-input-stepper-border", default: "1px solid var(--cui-border-strong)", description: "Control border" },
-    { name: "--cui-input-stepper-radius", default: "var(--cui-button-radius)", description: "Corner radius" },
+    { name: "--cui-input-stepper-radius", default: "var(--cui-radius-md)", description: "Corner radius" },
     { name: "--cui-input-stepper-bg", default: "var(--cui-surface-base)", description: "Field background" },
     { name: "--cui-input-stepper-color", default: "var(--cui-text-body)", description: "Value color" },
     { name: "--cui-input-stepper-label-color", default: "var(--cui-text-secondary)", description: "Label color" },

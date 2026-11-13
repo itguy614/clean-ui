@@ -402,7 +402,7 @@ defineExpose({ el: rootEl, focus, blur });
   color: var(--cui-pin-input-color, var(--cui-text-body));
   background: var(--cui-pin-input-bg, var(--cui-surface-base, white));
   border: var(--cui-pin-input-border, 1px solid var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-pin-input-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-pin-input-radius, var(--cui-radius-md, 0.375rem));
 }
 
 /* The box the caret is in. No transition: typing moves it on every keystroke (#269). */
