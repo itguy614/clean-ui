@@ -1,4 +1,7 @@
 import type { DeepPartialMessages } from "@itguy614/clean-ui";
+import { __DEV__, warnDev } from "./duplicate-guard";
+
+declare const process: { env: { NODE_ENV?: string } };
 
 /**
  * Task 5.2.2: every user-visible string this package renders lives here, so
@@ -139,11 +142,38 @@ export const defaultMarkdownEditorMessages: CuiMarkdownEditorMessages = {
   counter: (length, limit) => `${length}/${limit}`,
 };
 
+/** The per-kind dialog keys 2.0 replaced (#398), each with the shared key that took its place. */
+const LEGACY_MESSAGE_KEYS: Record<string, string> = {
+  linkDialogCancel: "urlDialogCancel",
+  imageDialogCancel: "urlDialogCancel",
+  linkDialogInsert: "urlDialogInsert",
+  imageDialogInsert: "urlDialogInsert",
+  linkDialogUrlRequired: "urlDialogUrlRequired",
+  imageDialogUrlRequired: "urlDialogUrlRequired",
+  linkDialogUrlSchemeNotAllowed: "urlDialogUrlSchemeNotAllowed",
+  imageDialogUrlSchemeNotAllowed: "urlDialogUrlSchemeNotAllowed",
+};
+const warnedLegacyKeys = new Set<string>();
+
+/** Development only (called behind the guard): a removed key is still ignored, but no longer silently. */
+function warnLegacyMessageKeys(override: object): void {
+  for (const [removed, replacement] of Object.entries(LEGACY_MESSAGE_KEYS)) {
+    if (!(removed in override) || warnedLegacyKeys.has(removed)) continue;
+    warnedLegacyKeys.add(removed);
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnDev(`[CuiMarkdownEditor] The message key "${removed}" was removed in 2.0 and is ignored. Use "${replacement}", which words both the link and image dialogs.`);
+    }
+  }
+}
+
 /** Overlays a host's `markdownEditor` override (if any) onto the English
  * defaults. Every field is a flat leaf (string or function), so this is a
  * plain shallow spread — no nested-object merge needed, unlike clean-ui's
  * own `mergeMessages` (which exists for namespaces with grouped fields). */
 export function mergeMarkdownEditorMessages(override?: DeepPartialMessages["markdownEditor"]): CuiMarkdownEditorMessages {
+  // Every path a consumer's messages take into the editor (the provider, the `messages` prop,
+  // a direct call) ends here, so this is the one place to tell them a key was removed.
+  if (override && __DEV__ && process.env.NODE_ENV !== "production") warnLegacyMessageKeys(override);
   return override ? { ...defaultMarkdownEditorMessages, ...override } : defaultMarkdownEditorMessages;
 }
 

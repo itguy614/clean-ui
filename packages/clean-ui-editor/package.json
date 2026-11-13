@@ -39,7 +39,8 @@
     "./codemirror": {
       "types": "./dist/codemirror.d.ts",
       "import": "./dist/codemirror.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",

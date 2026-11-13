@@ -61,11 +61,15 @@ app.mount("#app");</code></pre>
       <CuiCardHeader title="3. Import the stylesheet" />
       <CuiCardBody>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-bottom: 0.75rem;">
-          Importing <code class="cui-code">CuiMarkdownEditor</code> from the package's default entry
-          already pulls in its CSS as a side effect — nothing else to add. If your bundler tree-shakes
-          side-effect-free imports, make sure <code class="cui-code">sideEffects</code> in your own
-          build config doesn't strip it (this package's own <code class="cui-code">package.json</code>
-          declares its CSS as a side effect for exactly this reason).
+          Importing <code class="cui-code">CuiMarkdownEditor</code> does <strong>not</strong> load any
+          CSS: the package's JavaScript imports no stylesheet. Import both once, in your app's entry
+          (clean-ui's for the library, the editor's for the editor):
+        </p>
+        <pre class="cui-pre"><code class="cui-code">import "@itguy614/clean-ui/styles";
+import "@itguy614/clean-ui-editor/styles";</code></pre>
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
+          <code class="cui-code">@itguy614/clean-ui-editor/styles</code> is the only path to the
+          editor's CSS; the file name inside <code class="cui-code">dist</code> is not importable.
         </p>
       </CuiCardBody>
     </CuiCard>
@@ -86,7 +90,7 @@ app.mount("#app");</code></pre>
       <CuiCardHeader title="Entry points" />
       <CuiCardBody>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-bottom: 0.75rem;">
-          The package's <code class="cui-code">exports</code> map lists four entries, and nothing else
+          The package's <code class="cui-code">exports</code> map lists five entries, and nothing else
           can be imported. Deep paths into <code class="cui-code">dist</code> (for example
           <code class="cui-code">@itguy614/clean-ui-editor/messages.js</code>) are refused.
         </p>
@@ -96,6 +100,7 @@ app.mount("#app");</code></pre>
             { name: '@itguy614/clean-ui-editor/styles', type: 'entry', description: 'The editor stylesheet.' },
             { name: '@itguy614/clean-ui-editor/render', type: 'entry', description: 'CuiMarkdownViewer, serializeMarkdownToHtml, render adapters.' },
             { name: '@itguy614/clean-ui-editor/codemirror', type: 'entry', description: 'CodeMirror building blocks for raw-tier plugins.' },
+            { name: '@itguy614/clean-ui-editor/package.json', type: 'entry', description: 'The package manifest, for tooling that reads the installed version.' },
           ]"
         />
       </CuiCardBody>
@@ -105,7 +110,7 @@ app.mount("#app");</code></pre>
       <CuiCardHeader title="Upgrading to 2.0" />
       <CuiCardBody>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-bottom: 0.75rem;">
-          Two breaking changes. First, import only from the four entries above; any
+          Two breaking changes. First, import only from the five entries above; any
           <code class="cui-code">@itguy614/clean-ui-editor/&lt;path&gt;</code> that is not one of them stops
           resolving. Second, the link and image dialogs share four message keys instead of keeping a
           copy each:
@@ -118,6 +123,11 @@ app.mount("#app");</code></pre>
             { name: 'linkDialogUrlSchemeNotAllowed, imageDialogUrlSchemeNotAllowed', type: 'urlDialogUrlSchemeNotAllowed', description: 'The disallowed-scheme error.' },
           ]"
         />
+        <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.75rem;">
+          The old keys are ignored, not mapped: a dialog you reworded through them reads the
+          English default until you rename them. In development, passing one logs a warning (once per
+          key) naming the key to use instead; TypeScript reports it as an unknown key.
+        </p>
       </CuiCardBody>
     </CuiCard>
 

@@ -28,6 +28,11 @@ function targets(value) {
 const entries = Object.entries(pkg.exports ?? {});
 const declared = new Set(entries.map(([key]) => key));
 
+// The documented surface: dropping one is as breaking as exposing a new one.
+for (const key of [".", "./styles", "./render", "./codemirror", "./package.json"]) {
+  if (!declared.has(key)) failures.push(`exports["${key}"] is part of the documented surface but is not declared`);
+}
+
 for (const [key, value] of entries) {
   if (key.includes("*")) failures.push(`exports["${key}"] is a pattern: list each public entry by name`);
   for (const file of targets(value)) {
@@ -46,6 +51,18 @@ for (const [key, value] of entries) {
     await import(specifier);
   } catch (error) {
     failures.push(`"${specifier}" is declared but does not import: ${error instanceof Error ? error.message : error}`);
+  }
+}
+
+// Non-JS entries cannot be imported in Node, but they must resolve through the map.
+for (const [key, value] of entries) {
+  if (typeof value !== "string") continue;
+  const specifier = `${pkg.name}/${key.slice(2)}`;
+  try {
+    const url = import.meta.resolve(specifier);
+    if (!url.endsWith(value.replace(/^\.\//, ""))) failures.push(`"${specifier}" resolves to ${url}, not ${value}`);
+  } catch (error) {
+    failures.push(`"${specifier}" is declared but does not resolve: ${error instanceof Error ? error.message : error}`);
   }
 }
 
