@@ -1,5 +1,4 @@
 {
-  "$comment": "The one list of themes (#220). THEME_PRESETS, the build, the checks, the contrast audit and package.json's exports derive from it. Adding a theme: add src/styles/themes/<id>.css, add a line here, run `pnpm --filter @itguy614/clean-ui sync:themes`. Array order is the `presets` order. `cascade` orders the all-in-one stylesheet (the old clean-ui.css order, kept so nested themes resolve ties as before); the default has none, it lives in themes.css.",
   "themes": [
     { "id": "mono", "label": "Mono", "description": "Monochrome", "cascade": 7 },
     { "id": "default", "label": "Navy", "description": "Navy blue (base scale)", "default": true, "aliases": ["navy"] },
