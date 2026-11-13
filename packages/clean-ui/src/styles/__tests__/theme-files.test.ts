@@ -69,6 +69,7 @@ describe("the one theme list (#220)", () => {
   it("syncing the exports is idempotent, and repairs a drifted map", () => {
     const once = syncExports(pkg.exports, themes);
     expect(once).toEqual(pkg.exports);
+    expect(Object.keys(once)).toEqual(Object.keys(pkg.exports)); // order too: no churn in the diff
     expect(Object.keys(syncExports(once, themes))).toEqual(Object.keys(once));
     const fake = [...themes, { id: "fake", label: "Fake", description: "x", cascade: 99 }];
     const grown = syncExports(pkg.exports, fake);
