@@ -2,6 +2,7 @@ import { effectScope, ref, watch } from "vue";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { THEME_CLASS_PREFIX, THEME_STORAGE_KEY } from "../ssr-constants";
 import { __DEV__, warnOnce } from "../utils/devWarn";
+import themeList from "../styles/themes/themes.json";
 
 // Module-scoped, so the library doesn't pull Node's global types into its own build.
 declare const process: { env: { NODE_ENV?: string } };
@@ -12,16 +13,9 @@ export interface ThemePreset {
   description: string;
 }
 
-export const THEME_PRESETS: ThemePreset[] = [
-  { id: "mono", label: "Mono", description: "Monochrome" },
-  { id: "default", label: "Navy", description: "Navy blue (base scale)" },
-  { id: "forest", label: "Forest", description: "Natural green" },
-  { id: "amber", label: "Amber", description: "Warm orange with warm grays" },
-  { id: "azure", label: "Azure", description: "Vibrant blue" },
-  { id: "teal", label: "Teal", description: "Cool teal" },
-  { id: "violet", label: "Violet", description: "Rich purple" },
-  { id: "ruby", label: "Ruby", description: "Bold red" },
-];
+// The one list of themes is styles/themes/themes.json (#220): the presets, the opt-in files, the
+// build, the checks and package.json's exports all derive from it. The shape is unchanged.
+export const THEME_PRESETS: ThemePreset[] = themeList.themes.map(({ id, label, description }) => ({ id, label, description }));
 
 const STORAGE_KEY = THEME_STORAGE_KEY;
 export const CLASS_PREFIX = THEME_CLASS_PREFIX;

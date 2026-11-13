@@ -111,15 +111,10 @@ function parseAllThemes() {
     darkSurface: buildScale(defaultDarkVars, "color-surface-"),
   });
 
-  const themeConfigs = [
-    { id: "forest", name: "Forest" },
-    { id: "amber", name: "Amber" },
-    { id: "azure", name: "Azure" },
-    { id: "teal", name: "Teal" },
-    { id: "violet", name: "Violet" },
-    { id: "ruby", name: "Ruby" },
-    { id: "mono", name: "Mono" },
-  ];
+  // From the one theme list (themes.json), so a theme added there is audited with no edit here.
+  const themeConfigs = JSON.parse(readFileSync(resolve(stylesDir, "themes/themes.json"), "utf-8"))
+    .themes.filter((t) => !t.default)
+    .map((t) => ({ id: t.id, name: t.label }));
 
   for (const cfg of themeConfigs) {
     const own = blocks.filter((b) => themeClass(b.selector, cfg.id));

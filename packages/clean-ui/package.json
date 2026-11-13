@@ -63,6 +63,7 @@
   "scripts": {
     "build": "vite build && node scripts/build-theme-css.mjs && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
+    "sync:themes": "node scripts/sync-theme-exports.mjs",
     "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs && node scripts/check-theme-css.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
