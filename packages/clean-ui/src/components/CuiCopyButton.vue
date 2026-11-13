@@ -7,6 +7,8 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiTooltip from "./CuiTooltip.vue";
 import { useCopyToClipboard } from "../composables/useCopyToClipboard";
 import { useMessages } from "../composables/useMessages";
+import { IconCheck } from "../icons/generated/check";
+import { IconCopy } from "../icons/generated/copy";
 
 const SUPPORTED_SIZES = ["xs", "sm", "md"] as const;
 
@@ -65,7 +67,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
     >
       <template #prefix>
         <CuiIcon
-          :name="copied ? 'check' : 'copy'"
+          :icon="copied ? IconCheck : IconCopy"
           :size="iconSize[clampedSize]"
           :style="{ transition: 'transform var(--cui-duration-fast) var(--cui-ease-out)', transform: copied ? 'scale(1.1)' : 'scale(1)' }"
         />

@@ -7,6 +7,8 @@ import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { IconPushPin } from "../icons/generated/push-pin";
+import { IconX } from "../icons/generated/x";
 
 const messages = useMessages();
 const grid = useDataGridState();
@@ -117,10 +119,10 @@ const hasAnyValue = computed(() => {
           :style="{ color: grid.filterPanelPinned.value ? 'var(--cui-primary)' : undefined }"
           @click="grid.toggleFilterPanelPin()"
         >
-          <CuiIcon name="push-pin" size="0.875rem" />
+          <CuiIcon :icon="IconPushPin" size="0.875rem" />
         </CuiButton>
         <CuiButton variant="ghost" size="xs" @click="grid.toggleFilterPanel()">
-          <CuiIcon name="x" size="0.875rem" />
+          <CuiIcon :icon="IconX" size="0.875rem" />
         </CuiButton>
       </div>
     </div>

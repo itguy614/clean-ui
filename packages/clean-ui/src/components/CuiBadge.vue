@@ -7,6 +7,7 @@ import { __DEV__, warnVariantColor } from "../utils/devWarn";
 declare const process: { env: { NODE_ENV?: string } };
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { IconX } from "../icons/generated/x";
 
 export type BadgeVariant = "solid" | "subtle" | "outline";
 export type BadgeAnimation = "pulse" | "bounce" | "ping" | "none";
@@ -116,7 +117,7 @@ const messages = useMessages();
       :aria-label="messages.remove"
       @click.stop="emit('remove')"
     >
-      <CuiIcon name="x" :size="clampedSize === 'sm' ? '0.625rem' : '0.75rem'" />
+      <CuiIcon :icon="IconX" :size="clampedSize === 'sm' ? '0.625rem' : '0.75rem'" />
     </button>
   </span>
 </template>

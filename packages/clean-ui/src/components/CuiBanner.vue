@@ -8,6 +8,7 @@ import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { safeGetItem, safeSetItem } from "../utils/storage";
 import { useMessages } from "../composables/useMessages";
+import { IconX } from "../icons/generated/x";
 
 export type BannerPosition = "top" | "bottom" | "inline";
 export type BannerVariant = "solid" | "subtle";
@@ -101,7 +102,7 @@ const containerStyle = computed(() => {
     <span v-if="!noIcon" class="cui-banner__icon">
       <slot name="icon">
         <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
-        <CuiIcon v-else :name="roleIcon.name!" size="1.125rem" />
+        <CuiIcon v-else :icon="roleIcon.icon!" size="1.125rem" />
       </slot>
     </span>
 
@@ -124,7 +125,7 @@ const containerStyle = computed(() => {
       :aria-label="messages.dismiss"
       @click="dismiss"
     >
-      <CuiIcon name="x" size="0.875rem" />
+      <CuiIcon :icon="IconX" size="0.875rem" />
     </CuiButton>
   </div>
 </template>

@@ -7,6 +7,7 @@ import { resolveRoleIcon } from "../utils/colorIconMap";
 import { useCleanUIDefaults } from "../utils/configure";
 import { resolveLiveRegion } from "../utils/liveRegion";
 import { useMessages } from "../composables/useMessages";
+import { IconX } from "../icons/generated/x";
 
 export interface CuiToastProps extends HideableProps, ColorableProps, LiveRegionProps, RoleIconProps {
   /** Title text */
@@ -184,7 +185,7 @@ const messages = useMessages();
     <div v-if="!noIcon" class="cui-toast__icon">
       <slot name="icon">
         <template v-if="roleIcon.text">{{ roleIcon.text }}</template>
-        <CuiIcon v-else :name="roleIcon.name!" size="1.25rem" />
+        <CuiIcon v-else :icon="roleIcon.icon!" size="1.25rem" />
       </slot>
     </div>
 
@@ -207,7 +208,7 @@ const messages = useMessages();
       :aria-label="messages.dismiss"
       @click="dismiss"
     >
-      <CuiIcon name="x" size="0.875rem" />
+      <CuiIcon :icon="IconX" size="0.875rem" />
     </button>
 
     <!-- Progress bar -->

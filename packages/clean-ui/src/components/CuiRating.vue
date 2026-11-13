@@ -5,6 +5,9 @@ import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
+import { hasIcon } from "../icons/registry";
+import { IconStar } from "../icons/generated/star";
+import { IconStarHalf } from "../icons/generated/star-half";
 
 export interface CuiRatingProps
   extends HideableProps,
@@ -71,9 +74,16 @@ function getStarState(index: number): "filled" | "half" | "empty" {
   return "empty";
 }
 
-function getIconName(state: "filled" | "half" | "empty"): string {
-  if (state === "half") return props.halfIcon;
-  return props.icon;
+// The default icons are the built-in ones, which need no name registration (#207); a custom
+// name resolves through the registry.
+function iconProps(state: "filled" | "half" | "empty") {
+  const name = state === "half" ? props.halfIcon : props.icon;
+  // A name the app registered (over the built-in, say) wins; the defaults need no registration.
+  if (!hasIcon(name)) {
+    if (name === "star") return { icon: IconStar };
+    if (name === "star-half") return { icon: IconStarHalf };
+  }
+  return { name };
 }
 
 function getIconWeight(state: "filled" | "half" | "empty"): "fill" | "regular" {
@@ -247,7 +257,7 @@ defineExpose({ el: rootEl, focus, blur });
         @mousemove="onStarHover(i, $event)"
       >
         <CuiIcon
-          :name="getIconName(getStarState(i))"
+          v-bind="iconProps(getStarState(i))"
           :weight="getIconWeight(getStarState(i))"
           :size="cfg.iconSize"
           :style="{ color: starColor(getStarState(i)), transition: 'color var(--cui-duration-press) ease' }"

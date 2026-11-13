@@ -3,6 +3,7 @@ import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useHeadingLevel } from "../utils/configure";
+import { IconX } from "../icons/generated/x";
 
 export interface CuiModalHeaderProps extends HideableProps, TitleAsProps {
   /** Convenience: title text */
@@ -46,7 +47,7 @@ const messages = useMessages();
       <slot name="actions" />
     </div>
     <button v-if="!noCloseButton" type="button" class="cui-modal-header__close" :aria-label="messages.close" @click="emit('close')">
-      <CuiIcon name="x" size="1rem" />
+      <CuiIcon :icon="IconX" size="1rem" />
     </button>
   </div>
 </template>

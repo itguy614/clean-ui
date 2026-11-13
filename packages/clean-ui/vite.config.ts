@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 // Read (not import) package.json — importing it would put it under vue-tsc's
 // rootDir-checked program; reading it here keeps that entirely out of `src`.
@@ -27,11 +27,21 @@ export default defineConfig({
   },
   build: {
     lib: {
-      // Two entries: the barrel, plus the opt-in lazy icon resolver. The latter
-      // is unreachable from the barrel by design (importing it would drag the
-      // whole icon package into every consumer bundle), so it needs its own
-      // entry or Rollup never emits it for the "./icons/lazy" export.
-      entry: [resolve(__dirname, "src/index.ts"), resolve(__dirname, "src/icons/lazy.ts")],
+      // Three entries: the barrel, plus the two opt-in icon registrations: the lazy
+      // any-name resolver and the built-in names (#207). Both are unreachable from the
+      // barrel by design (importing either would drag a whole icon set into every
+      // consumer bundle), so each needs its own entry or Rollup never emits it for the
+      // "./icons/lazy" and "./icons/builtin" exports.
+      // And every generated icon: one importable as `@itguy614/clean-ui/icons/generated/<name>`,
+      // which the markdown editor's icons need and nothing in the barrel reaches.
+      entry: [
+        resolve(__dirname, "src/index.ts"),
+        resolve(__dirname, "src/icons/lazy.ts"),
+        resolve(__dirname, "src/icons/builtin.ts"),
+        ...readdirSync(resolve(__dirname, "src/icons/generated"))
+          .filter((file) => file.endsWith(".ts"))
+          .map((file) => resolve(__dirname, "src/icons/generated", file)),
+      ],
       formats: ["es"],
     },
     rollupOptions: {

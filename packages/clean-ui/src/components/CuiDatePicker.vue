@@ -17,6 +17,9 @@ import { useLocale } from "../composables/useLocale";
 import { fullDateLabel, monthNames, monthYearLabel, weekdayLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
+import { IconCalendarBlank } from "../icons/generated/calendar-blank";
+import { IconCaretLeft } from "../icons/generated/caret-left";
+import { IconCaretRight } from "../icons/generated/caret-right";
 
 const messages = useMessages();
 const locale = useLocale();
@@ -261,7 +264,7 @@ defineExpose({ el: rootEl, focus, blur });
         @update:model-value="onInputChange"
       >
         <template #suffix>
-          <CuiIcon name="calendar-blank" size="0.875rem" class="cui-date-picker__icon" />
+          <CuiIcon :icon="IconCalendarBlank" size="0.875rem" class="cui-date-picker__icon" />
         </template>
       </CuiMaskedInput>
 
@@ -274,7 +277,7 @@ defineExpose({ el: rootEl, focus, blur });
             <!-- Header: nav + month/year -->
             <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
-                <CuiIcon name="caret-left" size="0.875rem" />
+                <CuiIcon :icon="IconCaretLeft" size="0.875rem" />
               </CuiButton>
               <div class="cui-date-picker__header-title">
                 <CuiButton variant="ghost" size="xs" class="cui-date-picker__title-btn" @click="viewMode = 'months'">
@@ -285,7 +288,7 @@ defineExpose({ el: rootEl, focus, blur });
                 </CuiButton>
               </div>
               <CuiButton variant="ghost" size="xs" @click="nextMonth">
-                <CuiIcon name="caret-right" size="0.875rem" />
+                <CuiIcon :icon="IconCaretRight" size="0.875rem" />
               </CuiButton>
             </div>
 
@@ -334,13 +337,13 @@ defineExpose({ el: rootEl, focus, blur });
           <template v-else-if="viewMode === 'months'">
             <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="viewYear--">
-                <CuiIcon name="caret-left" size="0.875rem" />
+                <CuiIcon :icon="IconCaretLeft" size="0.875rem" />
               </CuiButton>
               <CuiButton variant="ghost" size="xs" class="cui-date-picker__title-btn" @click="viewMode = 'years'">
                 {{ viewYear }}
               </CuiButton>
               <CuiButton variant="ghost" size="xs" @click="viewYear++">
-                <CuiIcon name="caret-right" size="0.875rem" />
+                <CuiIcon :icon="IconCaretRight" size="0.875rem" />
               </CuiButton>
             </div>
 
@@ -371,13 +374,13 @@ defineExpose({ el: rootEl, focus, blur });
           <template v-else-if="viewMode === 'years'">
             <div class="cui-date-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevYearRange">
-                <CuiIcon name="caret-left" size="0.875rem" />
+                <CuiIcon :icon="IconCaretLeft" size="0.875rem" />
               </CuiButton>
               <span class="cui-date-picker__years-range">
                 {{ yearRangeStart }} – {{ yearRangeEnd }}
               </span>
               <CuiButton variant="ghost" size="xs" @click="nextYearRange">
-                <CuiIcon name="caret-right" size="0.875rem" />
+                <CuiIcon :icon="IconCaretRight" size="0.875rem" />
               </CuiButton>
             </div>
 

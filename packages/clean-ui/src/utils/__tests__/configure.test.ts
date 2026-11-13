@@ -8,6 +8,9 @@ import CuiAlert from "../../components/CuiAlert.vue";
 import CuiConfigProvider from "../../components/CuiConfigProvider.vue";
 import { configureCleanUI, __clearHeadingLevels } from "../configure";
 import { resolveRoleIcon, __clearRoleIcons } from "../colorIconMap";
+import { registerBuiltinIcons } from "../../icons/builtin";
+import { __clearRegisteredIcons } from "../../icons/registry";
+import { IconXCircle } from "../../icons/generated/x-circle";
 import { createCleanUI } from "../../index";
 
 /**
@@ -15,6 +18,7 @@ import { createCleanUI } from "../../index";
  * also taken by `createCleanUI()`. A component's own prop still wins.
  */
 afterEach(() => {
+  __clearRegisteredIcons();
   __clearHeadingLevels();
   __clearRoleIcons();
   document.body.innerHTML = "";
@@ -53,7 +57,9 @@ describe("configureCleanUI: the global fallback", () => {
     configureCleanUI({ headingLevels: { cardHeader: "h2" } });
     configureCleanUI({ headingLevels: { emptyState: "h4" }, roleIcons: { error: "x-circle" } });
     expect(cardTag(mount(CuiCardHeader, { props: { title: "T" } }))).toBe("H2");
-    expect(resolveRoleIcon(undefined, "error")).toEqual({ name: "x-circle", text: null });
+    // A string names a registered icon; the built-in names are an opt-in (#207).
+    registerBuiltinIcons();
+    expect(resolveRoleIcon(undefined, "error")).toEqual({ icon: IconXCircle, text: null });
   });
 });
 
@@ -78,7 +84,7 @@ describe("per app: createCleanUI options", () => {
   });
 
   it("set role icons for that app", () => {
-    const a = mountInApp({ roleIcons: { error: "x-circle" } }, () => h(CuiAlert, { color: "error", title: "T" }));
+    const a = mountInApp({ roleIcons: { error: IconXCircle } }, () => h(CuiAlert, { color: "error", title: "T" }));
     const b = mountInApp({}, () => h(CuiAlert, { color: "error", title: "T" }));
     expect(a.el.innerHTML).not.toBe(b.el.innerHTML);
     a.app.unmount();
