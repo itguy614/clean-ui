@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to `urlDialogUrlSchemeNotAllowed`. One key now words both dialogs; the old keys are a type error
   and have no effect (#398).
 
+- **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
+  prop name, type, default and runtime behaviour is unchanged (checked by diffing each
+  component's resolved props before and after). A control still has only the props it had; it
+  `Pick`s them.
+
+### Changed
+
+- Form controls extend `FormControlProps` instead of re-declaring `label`, `description`,
+  `error`, `errorMessage`, `required` and `readonly`; a test fails on a copy (#180).
+  The shared props' doc comments (IDE hover) are now `FormControlProps`' own.
+
 ## [1.10.0] - 2026-11-12
 
 ### Upgrading to 1.10
