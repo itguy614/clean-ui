@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
-import { defineComponent, h, nextTick, ref, shallowRef } from "vue";
+import { defineComponent, h, nextTick, ref, shallowRef, Transition, vShow, withDirectives } from "vue";
 import { useOverlay } from "../useOverlay";
+import { subtreeTransition } from "../../utils/motion";
 
 /**
  * #339 — on an Escape or backdrop close, `close` fired twice: the consumer's v-model echo
@@ -29,12 +30,16 @@ async function mountDialog(children: () => ReturnType<typeof h>[] = () => [h("bu
         persistent: () => false,
         onUpdateOpen: (v) => (open.value = v),
         onClose: () => closes.push(1),
-        animationDuration: 10,
       });
       return () =>
-        overlay.isVisible.value
-          ? h("div", { ref: dialogRef, tabindex: -1, role: "dialog", onKeydown: overlay.onKeydown }, children())
-          : null;
+        h(Transition, { ...subtreeTransition, onAfterLeave: overlay.onAfterLeave }, () =>
+          overlay.mounted.value
+            ? withDirectives(
+                h("div", { ref: dialogRef, tabindex: -1, role: "dialog", onKeydown: overlay.onKeydown }, children()),
+                [[vShow, overlay.isVisible.value]],
+              )
+            : null,
+        );
     },
   });
   w = mount(Dialog, { attachTo: document.body });
@@ -60,26 +65,24 @@ describe("useOverlay close", () => {
   });
 });
 
-describe("useOverlay re-opened mid-exit", () => {
-  it("cancels the old exit, so it neither hides the dialog nor reports a close", async () => {
-    vi.useFakeTimers();
+describe("useOverlay exit", () => {
+  it("is a transition only: the close is reported once the panel has left, and it unmounts", async () => {
     const { open, closes, dialog } = await mountDialog();
-    await vi.advanceTimersByTimeAsync(50);
+    expect(dialog()).not.toBeNull();
     open.value = false;
     await nextTick();
-    open.value = true;
-    await vi.advanceTimersByTimeAsync(100);
-    expect(dialog(), "still open").not.toBeNull();
-    expect(closes).toHaveLength(0);
+    await nextTick();
+    expect(closes).toHaveLength(1);
+    expect(dialog()).toBeNull();
   });
 });
 
 /**
- * #374 — `onOpened` / `onClosed` and `initialFocus` / `returnFocus`, on the deprecated
- * `exit: "timer"` path that CuiModal and CuiSlideover no longer take (their real-transition
- * cases are in the browser suite, overlay-focus-events.test.ts).
+ * #374 — `onOpened` / `onClosed` and `initialFocus` / `returnFocus`. In jsdom the transition
+ * hooks finish at once; the real-transition cases are in the browser suite
+ * (overlay-focus-events.test.ts).
  */
-describe("useOverlay lifecycle and focus targets (timer exit)", () => {
+describe("useOverlay lifecycle and focus targets", () => {
   it("focuses initialFocus, then reports opened; returns focus to returnFocus, then reports closed", async () => {
     vi.useFakeTimers();
     const opener = document.createElement("button");
@@ -95,8 +98,7 @@ describe("useOverlay lifecycle and focus targets (timer exit)", () => {
           open: () => open.value,
           dialogRef,
           persistent: () => false,
-          animationDuration: 10,
-          initialFocus: () => ".second",
+            initialFocus: () => ".second",
           returnFocus: () => target,
           onUpdateOpen: (v) => (open.value = v),
           onClose: () => log.push("close"),
@@ -104,9 +106,14 @@ describe("useOverlay lifecycle and focus targets (timer exit)", () => {
           onClosed: () => log.push(`closed:${document.activeElement === target}`),
         });
         return () =>
-          overlay.isVisible.value
-            ? h("div", { ref: dialogRef, tabindex: -1 }, [h("button", { class: "first" }), h("button", { class: "second" })])
-            : null;
+          h(Transition, { ...subtreeTransition, onAfterLeave: overlay.onAfterLeave }, () =>
+            overlay.mounted.value
+              ? withDirectives(
+                  h("div", { ref: dialogRef, tabindex: -1 }, [h("button", { class: "first" }), h("button", { class: "second" })]),
+                  [[vShow, overlay.isVisible.value]],
+                )
+              : null,
+          );
       },
     });
     w = mount(Dialog, { attachTo: document.body });

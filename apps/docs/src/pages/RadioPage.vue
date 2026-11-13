@@ -56,7 +56,7 @@ const dynamicField = ref({
       <p class="text-surface-700 dark:text-surface-300">
         <code>CuiRadioGroup</code> renders a <code>div[role="radiogroup"]</code>; each
         <code>CuiRadio</code> is a <code>&lt;label&gt;</code> carrying
-        <code>role="radio"</code> and <code>tabindex="0"</code>, or a
+        <code>role="radio"</code>, or a
         <code>&lt;button role="radio"&gt;</code> under <code>variant="buttons"</code>. The
         hidden native <code>&lt;input type="radio"&gt;</code> inside each one is
         <code>aria-hidden</code> and exists only so the group serializes with a native form
@@ -65,9 +65,17 @@ const dynamicField = ref({
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           The group handles arrow keys: <kbd>↓</kbd>/<kbd>→</kbd> move to the next radio,
-          <kbd>↑</kbd>/<kbd>←</kbd> to the previous, wrapping at both ends. Moving also
+          <kbd>↑</kbd>/<kbd>←</kbd> to the previous, <kbd>Home</kbd>/<kbd>End</kbd> to the
+          first and last, wrapping at both ends and skipping disabled radios. Moving also
           selects, which is the expected behaviour for a radio group. Space and Enter select
           the focused radio.
+        </li>
+        <li>
+          A group is a <strong>single tab stop</strong> (the ARIA radiogroup pattern): one
+          <kbd>Tab</kbd> enters it, on the checked radio (or the first enabled one when none is
+          checked), and the next <kbd>Tab</kbd> leaves it. Use the arrow keys to move between
+          options. This holds for <code>variant="buttons"</code> too. A standalone
+          <code>CuiRadio</code>, outside a group, keeps its own tab stop.
         </li>
         <li>
           <code>aria-checked</code> tracks the selection, and the focus ring sits on the
@@ -100,12 +108,6 @@ const dynamicField = ref({
         <code>#description</code> slot), the control is named by its label alone — unless you
         pass <code>aria-labelledby</code> — and described by the description, which comes before
         any <code>aria-describedby</code> you pass; it is not read as part of the name. (The <code>buttons</code> variant renders no description.)
-      </p>
-      <p class="text-surface-700 dark:text-surface-300">
-        <strong>Known gap.</strong> Every radio has <code>tabindex="0"</code>, so
-        <kbd>Tab</kbd> steps through each option in turn rather than entering the group once
-        and moving on. In a long group, give the surrounding form fewer tab stops elsewhere,
-        or prefer <code>variant="buttons"</code> where the segment count is small.
       </p>
     </template>
 

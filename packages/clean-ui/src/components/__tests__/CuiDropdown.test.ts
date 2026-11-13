@@ -76,7 +76,7 @@ describe("CuiDropdown behavior", () => {
     item!.click();
     expect(onSelect).toHaveBeenCalledTimes(1);
 
-    // closeOnSelect defaults true -> closeAll() -> isClosing -> 150ms timer.
+    // closeOnSelect defaults true -> closeAll(); the panel's exit is a <Transition>, not a timer.
     vi.advanceTimersByTime(200);
     await wrapper.vm.$nextTick();
     expect(menuInBody()).toBeNull();

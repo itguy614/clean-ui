@@ -3,7 +3,7 @@ import { computed, nextTick, ref } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useListbox } from "../composables/useListbox";
 import { useCuiId } from "../composables/useCuiId";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
@@ -23,7 +23,13 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface CuiSelectProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiSelectProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "readonly"> {
   /** Selected value (single) or values (multiple) */
   modelValue?: string | number | null | Array<string | number>;
   /** Options — array of strings or { value, label, group?, disabled? } objects */
@@ -38,12 +44,6 @@ export interface CuiSelectProps extends NativeControlProps, HideableProps, Color
   loading?: boolean;
   /** Text shown when no options available */
   noOptionsText?: string;
-  /** Error state */
-  error?: boolean;
-  /** Error message */
-  errorMessage?: string;
-  /** Readonly */
-  readonly?: boolean;
   /** Border radius */
   rounded?: CuiRounded;
 }
