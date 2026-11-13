@@ -2,25 +2,25 @@
 import { computed, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { ToggleGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, FormControlProps, NativeControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
 
 const messages = useMessages();
 
-export interface CuiToggleProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiToggleProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "description" | "readonly"> {
   /** The value this toggle represents (group mode) */
   value?: string | number;
   /** v-model binding (standalone boolean mode) */
   modelValue?: boolean;
-  /** Label text (or use default slot) */
-  label?: string;
-  /** Description text (or use #description slot) */
-  description?: string;
   /** Show ON/OFF labels inside the track (only visible at md and lg sizes) */
   showLabels?: boolean;
-  /** Readonly state */
-  readonly?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiToggleProps>(), {

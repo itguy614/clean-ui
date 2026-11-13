@@ -4,9 +4,9 @@ import { StateField, StateEffect, Facet } from "@codemirror/state";
  * FR27/FR29: the reveal layer only hides markers for constructs whose
  * owning plugin is actually loaded — excluding a plugin (e.g. italic) means
  * its markers stay unstyled, literal text, not merely "no toolbar button
- * for it." Driven from the active plugin registry's `decorations` (see
+ * for it." Driven from the active plugin registry's `decorationNodes` (see
  * `CuiMarkdownEditor.vue`'s `pluginsCompartment` wiring), not a hardcoded
- * list — a third-party plugin's own `decorations: [{node: "..."}]` entry
+ * list — a third-party plugin's own `decorationNodes: ["..."]` entry
  * works automatically, since `reveal-plugin.ts`'s marker-hiding mechanism is
  * already generic over any node name.
  */

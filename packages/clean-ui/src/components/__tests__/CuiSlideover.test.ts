@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import CuiSlideover from "../CuiSlideover.vue";
 
-// useOverlay closes via setTimeout(animationDuration=250) before emitting
-// update:visible=false, so timers must be faked for deterministic close assertions.
+// Timers are faked so the open's requestAnimationFrame/nextTick steps are deterministic.
 describe("CuiSlideover", () => {
   beforeEach(() => {
     vi.useFakeTimers();

@@ -13,6 +13,6 @@ export const strikethroughPlugin = definePlugin({
   toolbar: [{ command: "strikethrough" }],
   keymap: [{ key: "Mod-Shift-x", command: "strikethrough" }],
   constructs: ["Strikethrough"],
-  decorations: [{ node: "Strikethrough" }],
+  decorationNodes: ["Strikethrough"],
   paste: [{ selector: "s, del, strike", produces: "Strikethrough", degradeTo: "plainText", toMarkdown: (_el, c) => `~~${c}~~` }],
 });

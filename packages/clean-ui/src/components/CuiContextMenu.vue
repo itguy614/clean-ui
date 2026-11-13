@@ -5,7 +5,7 @@ import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
-import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 import { usePresence } from "../composables/usePresence";
@@ -387,7 +387,6 @@ function closeSiblingSubMenus(except?: () => void) {
 provide(DropdownContextKey, {
   ownerId: contextMenuId,
   isOpen,
-  isClosing: NEVER_CLOSING,
   trigger: ref("click" as DropdownTrigger),
   triggerEl: wrapperRef,
   placement: ref("bottom" as DropdownPlacement),

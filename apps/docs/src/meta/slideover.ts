@@ -52,11 +52,6 @@ const meta: ComponentMeta = {
           description: "Block closing via Escape and backdrop click. The X button still closes",
         },
         { name: "noCloseButton", type: "boolean", default: "false", description: "Hide the X close button in simple mode" },
-        {
-          name: "allowNested",
-          type: "boolean",
-          description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0",
-        },
         ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,
