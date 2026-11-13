@@ -80,6 +80,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PluginRegistry.decorations` is likewise `decorationNodes`, a `Set<string>`. A new decoration
   is written as a CodeMirror extension in `extensions`.
 
+- **`@itguy614/clean-ui-editor` has an explicit `exports` map.** The `"./*": "./dist/*"` wildcard is
+  gone, and with it every deep import. Import only from `@itguy614/clean-ui-editor`,
+  `@itguy614/clean-ui-editor/styles`, `@itguy614/clean-ui-editor/render` and
+  `@itguy614/clean-ui-editor/codemirror` (and `/package.json`, for tooling that reads the manifest). A path such as `@itguy614/clean-ui-editor/messages.js`,
+  `/clean-ui-editor.css` (use `/styles`) or `/plugins/...` no longer resolves. If you need something
+  only a deep path gave you, ask for it to be exported from an entry (#229).
+
+- **The link and image dialogs share four message keys.** In a `markdownEditor` messages override,
+  rename `linkDialogCancel` and `imageDialogCancel` to `urlDialogCancel`, `linkDialogInsert` and
+  `imageDialogInsert` to `urlDialogInsert`, `linkDialogUrlRequired` and `imageDialogUrlRequired` to
+  `urlDialogUrlRequired`, and `linkDialogUrlSchemeNotAllowed` and `imageDialogUrlSchemeNotAllowed`
+  to `urlDialogUrlSchemeNotAllowed`. One key now words both dialogs; the old keys are a type error
+  and have no effect, and in development passing one logs a warning (once per key) naming the
+  replacement (#398).
+
 - **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
   prop name, type, default and runtime behaviour is unchanged (checked by diffing each
   component's resolved props before and after). A control still has only the props it had; it

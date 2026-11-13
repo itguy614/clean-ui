@@ -38,3 +38,33 @@ test("CuiConfigProvider's messages prop type-checks a markdownEditor override �
   const wrongShape: DeepPartialMessages = { markdownEditor: { toolbarBold: 42 } };
   expectTypeOf(wrongShape).toMatchTypeOf<DeepPartialMessages>();
 });
+
+test("the shared URL dialog strings are one key each; the old per-kind keys are gone (#398)", () => {
+  const shared: DeepPartialMessages = {
+    markdownEditor: {
+      urlDialogCancel: "Annuler",
+      urlDialogInsert: "Insérer",
+      urlDialogUrlRequired: "Une URL est requise.",
+      urlDialogUrlSchemeNotAllowed: "Ce schéma d'URL n'est pas autorisé.",
+    },
+  };
+  expectTypeOf(shared).toMatchTypeOf<DeepPartialMessages>();
+
+  // @ts-expect-error renamed to urlDialogCancel
+  const linkCancel: DeepPartialMessages = { markdownEditor: { linkDialogCancel: "Annuler" } };
+  // @ts-expect-error renamed to urlDialogCancel
+  const imageCancel: DeepPartialMessages = { markdownEditor: { imageDialogCancel: "Annuler" } };
+  // @ts-expect-error renamed to urlDialogInsert
+  const linkInsert: DeepPartialMessages = { markdownEditor: { linkDialogInsert: "Insérer" } };
+  // @ts-expect-error renamed to urlDialogInsert
+  const imageInsert: DeepPartialMessages = { markdownEditor: { imageDialogInsert: "Insérer" } };
+  // @ts-expect-error renamed to urlDialogUrlRequired
+  const linkRequired: DeepPartialMessages = { markdownEditor: { linkDialogUrlRequired: "x" } };
+  // @ts-expect-error renamed to urlDialogUrlRequired
+  const imageRequired: DeepPartialMessages = { markdownEditor: { imageDialogUrlRequired: "x" } };
+  // @ts-expect-error renamed to urlDialogUrlSchemeNotAllowed
+  const linkScheme: DeepPartialMessages = { markdownEditor: { linkDialogUrlSchemeNotAllowed: "x" } };
+  // @ts-expect-error renamed to urlDialogUrlSchemeNotAllowed
+  const imageScheme: DeepPartialMessages = { markdownEditor: { imageDialogUrlSchemeNotAllowed: "x" } };
+  expectTypeOf([linkCancel, imageCancel, linkInsert, imageInsert, linkRequired, imageRequired, linkScheme, imageScheme]).toMatchTypeOf<DeepPartialMessages[]>();
+});
