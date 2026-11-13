@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, FormControlProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
 
-export interface CuiRatingProps extends HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiRatingProps
+  extends HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "readonly"> {
   /** Current value */
   modelValue?: number;
   /** Maximum rating */
@@ -17,12 +22,8 @@ export interface CuiRatingProps extends HideableProps, ColorableProps, SizeableP
   icon?: string;
   /** Icon for half state (only used when half=true) */
   halfIcon?: string;
-  /** Readonly (display only, no interaction) */
-  readonly?: boolean;
   /** Show the numeric value */
   showValue?: boolean;
-  /** Label */
-  label?: string;
   /** Allow clearing to 0 by clicking current value */
   clearable?: boolean;
 }
