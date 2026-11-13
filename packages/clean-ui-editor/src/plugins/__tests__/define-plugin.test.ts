@@ -8,6 +8,10 @@ describe("definePlugin", () => {
     expect(plugin.apiVersion).toBe(PLUGIN_API_VERSION);
   });
 
+  it("is on plugin API version 2: removing CommandContext.findConstructRange broke the v1 contract", () => {
+    expect(PLUGIN_API_VERSION).toBe(2);
+  });
+
   it("declaring every field preserves them all on the returned record", () => {
     const run = () => true;
     const plugin = definePlugin({
