@@ -3,20 +3,19 @@ import { computed, inject, ref } from "vue";
 import { useButtonGroupMember } from "../composables/useButtonGroup";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { RadioGroupKey, type RadioGroupContext } from "./radio-context";
-import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, DisableableProps, FormControlProps, NativeControlProps } from "../types/common";
 import { BUTTON_SIZE_SCALE } from "../utils/sizing";
 
-export interface CuiRadioProps extends NativeControlProps, HideableProps, ColorableProps, DisableableProps {
+export interface CuiRadioProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "description" | "readonly"> {
   /** The value this radio represents */
   value: string | number | boolean;
   /** v-model binding (standalone mode) */
   modelValue?: string | number | boolean;
-  /** Label text (or use default slot) */
-  label?: string;
-  /** Description text (or use #description slot) */
-  description?: string;
-  /** Readonly state */
-  readonly?: boolean;
 }
 
 const props = withDefaults(defineProps<CuiRadioProps>(), {

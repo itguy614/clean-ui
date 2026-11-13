@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { computed, provide, toRef } from "vue";
 import { useCuiId } from "../composables/useCuiId";
-import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps } from "../types/common";
+import type { CuiAutoOrientation, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps, FormControlProps } from "../types/common";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useAutoOrientation } from "../composables/useAutoOrientation";
 import CuiButtonGroup from "./CuiButtonGroup.vue";
 import { RadioGroupKey, type RadioGroupVariant } from "./radio-context";
 
-export interface CuiRadioGroupProps extends AriaLabelableProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiRadioGroupProps
+  extends AriaLabelableProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "label" | "readonly"> {
   /** Selected value */
   modelValue?: string | number | boolean;
   /** Shared name attribute for all radios */
@@ -16,14 +22,6 @@ export interface CuiRadioGroupProps extends AriaLabelableProps, HideableProps, C
   orientation?: CuiAutoOrientation;
   /** Visual variant — "default" for classic radios, "buttons" for button group */
   variant?: RadioGroupVariant;
-  /** Make all radios readonly */
-  readonly?: boolean;
-  /** Show error state */
-  error?: boolean;
-  /** Error message displayed below the group */
-  errorMessage?: string;
-  /** Accessible label for the group */
-  label?: string;
 }
 
 const props = withDefaults(defineProps<CuiRadioGroupProps>(), {
