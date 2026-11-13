@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 import themeCss from "../../styles/theme.css?raw";
 
 /**
@@ -16,7 +17,7 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
   beforeAll(() => {
     const style = document.createElement("style");
     style.id = "cui-tokens";
-    style.textContent = main;
+    style.textContent = main + allThemesCss;
     document.head.append(style);
   });
   afterAll(() => document.getElementById("cui-tokens")?.remove());
