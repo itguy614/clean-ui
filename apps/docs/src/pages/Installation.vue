@@ -41,6 +41,23 @@ app.mount('#app')</code></pre>
     </div>
 
     <div>
+      <h2 id="other-themes" class="mb-4 text-2xl font-semibold">Import the Themes You Use</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        <code>@itguy614/clean-ui/styles</code> carries the default Navy theme, light and dark. The
+        other seven palettes are opt-in files of about 2 kB each, so an app pays only for the ones
+        it uses. A theme class whose file is not imported styles nothing, and in development
+        <code>setTheme()</code> warns.
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import '@itguy614/clean-ui/styles'
+import '@itguy614/clean-ui/themes/forest.css'   // mono, forest, amber, azure, teal, violet, ruby</code></pre>
+      <p class="mb-3 mt-4 text-surface-600 dark:text-surface-400">
+        With no bundler, or to offer every theme without listing them, use the all-in-one
+        stylesheet (it replaces <code>styles</code>, it does not go with it):
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import '@itguy614/clean-ui/styles/all.css'</code></pre>
+    </div>
+
+    <div>
       <h2 id="configure-defaults" class="mb-4 text-2xl font-semibold">Configure App-wide Defaults</h2>
       <p class="mb-3 text-surface-600 dark:text-surface-400">
         Some choices an application makes once rather than at every call site. Pass them to

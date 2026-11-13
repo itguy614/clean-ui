@@ -16,11 +16,15 @@ async function freshUseTheme() {
   return (await freshModule()).useTheme;
 }
 
+// jsdom loads no theme stylesheet, so applying a preset logs the #220 "not loaded" warning;
+// these tests are about classes, and useTheme-stylesheet.test.ts is about the warning.
 describe("useTheme (#85)", () => {
   beforeEach(() => {
     localStorage.clear();
     root().className = "";
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
+  afterEach(() => vi.restoreAllMocks());
 
   it("does not strip a consumer's custom cui-theme-* class", async () => {
     root().classList.add("cui-theme-acme");
@@ -96,6 +100,7 @@ describe("useTheme at import and first use (#463)", () => {
   beforeEach(() => {
     localStorage.clear();
     root().className = "";
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
   afterEach(() => vi.restoreAllMocks());
 

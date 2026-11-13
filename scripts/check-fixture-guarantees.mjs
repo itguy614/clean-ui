@@ -75,6 +75,7 @@ function findInstalledCopies(root, packageName) {
 }
 
 const PACKAGES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../packages");
+const THEMES_JSON = join(PACKAGES_DIR, "clean-ui/src/styles/themes/themes.json");
 
 /** Every non-test source file of every workspace package. */
 function packageSources() {
@@ -282,6 +283,27 @@ const GUARANTEES = [
         return `found ${present.length} development warning fragment(s) in the production bundle, e.g. "${present[0]}".`;
       }
       return null;
+    },
+  },
+  {
+    id: "theme-css-opt-in",
+    name: "the built stylesheet holds exactly the non-default themes the page imports (#220)",
+    check(distDir, scenario) {
+      // Only the page's own `themes` (see scripts/fixture-scenarios.mjs): `@itguy614/clean-ui/styles`
+      // is the default theme, and each other palette arrives through its own import.
+      const css = readBuiltAssets(distDir, [".css"]);
+      // The default's names and the valid ids come from the one theme list (themes.json).
+      const list = JSON.parse(readFileSync(THEMES_JSON, "utf-8")).themes;
+      const navy = list.filter((t) => t.default).flatMap((t) => [t.id, ...(t.aliases ?? [])]);
+      const found = [...new Set([...css.matchAll(/\.cui-theme-([a-z][a-z0-9-]*)/g)].map((m) => m[1]))]
+        .filter((id) => !navy.includes(id))
+        .sort();
+      const expected = [...(SCENARIOS[scenario].themes ?? [])].sort();
+      const unknown = expected.filter((id) => !list.some((t) => t.id === id && !t.default));
+      if (unknown.length) return `scripts/fixture-scenarios.mjs names theme(s) [${unknown}] that themes.json does not list.`;
+      return found.join() === expected.join()
+        ? null
+        : `the built CSS has theme classes [${found}], but this page imports [${expected}].`;
     },
   },
   {

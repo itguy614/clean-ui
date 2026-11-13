@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 import { installTokens } from "../../../../../config/test/browser-helpers";
 import CuiInput from "../../components/CuiInput.vue";
 import CuiSelect from "../../components/CuiSelect.vue";
@@ -22,7 +23,7 @@ import CuiDateRangePicker from "../../components/CuiDateRangePicker.vue";
 describe("form controls line up (real browser)", () => {
   let removeTokens: () => void;
   beforeAll(() => {
-    removeTokens = installTokens(main);
+    removeTokens = installTokens(main + allThemesCss);
   });
   afterAll(() => removeTokens());
 

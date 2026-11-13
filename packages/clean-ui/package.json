@@ -35,6 +35,14 @@
       "import": "./dist/index.js"
     },
     "./styles": "./dist/clean-ui.css",
+    "./styles/all.css": "./dist/styles/all.css",
+    "./themes/mono.css": "./dist/themes/mono.css",
+    "./themes/forest.css": "./dist/themes/forest.css",
+    "./themes/amber.css": "./dist/themes/amber.css",
+    "./themes/azure.css": "./dist/themes/azure.css",
+    "./themes/teal.css": "./dist/themes/teal.css",
+    "./themes/violet.css": "./dist/themes/violet.css",
+    "./themes/ruby.css": "./dist/themes/ruby.css",
     "./icons/lazy": {
       "types": "./dist/icons/lazy.d.ts",
       "import": "./dist/icons/lazy.js"
@@ -63,9 +71,10 @@
     "./src/duplicate-guard.ts"
   ],
   "scripts": {
-    "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
+    "build": "vite build && node scripts/build-theme-css.mjs && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs",
+    "sync:themes": "node scripts/sync-theme-exports.mjs",
+    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs && node scripts/check-theme-css.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
