@@ -25,6 +25,7 @@ import {
   useColorScheme,
   useFieldDescribedBy,
   type AriaLabelableProps,
+  type FormControlProps,
 } from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
@@ -129,6 +130,16 @@ type AriaContractHolds = [AriaCopy] extends [AriaLabelableProps]
   : never;
 const ariaContractHolds: AriaContractHolds = true;
 void ariaContractHolds;
+
+// The same holds for the shared form-control props (#180): declared by hand above (`error`,
+// `errorMessage`, `required`, `readonly`, `disabled`) for the same reason, so a drift from
+// `FormControlProps` fails the build the same way.
+type FormKeys = "error" | "errorMessage" | "required" | "readonly" | "disabled";
+type FormCopy = Pick<CuiMarkdownEditorProps, FormKeys>;
+type FormContract = Pick<FormControlProps, FormKeys>;
+type FormContractHolds = [FormCopy] extends [FormContract] ? ([FormContract] extends [FormCopy] ? true : never) : never;
+const formContractHolds: FormContractHolds = true;
+void formContractHolds;
 
 const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
   modelValue: "",

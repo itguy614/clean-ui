@@ -17,12 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `definePlugin()` from 2.0. `PluginRegistry.decorations` is likewise `decorationNodes`, a
   `Set<string>`. A new decoration is written as a CodeMirror extension in `extensions`.
 
+- **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
+  prop name, type, default and runtime behaviour is unchanged (checked by diffing each
+  component's resolved props before and after). A control still has only the props it had; it
+  `Pick`s them.
+
 ### Added
 
 - **`CommandContext.sliceDoc(from, to)` and `lineAt(pos)`** read a range or a line without copying
   the whole document. The built-in commands use them, so a keystroke or arrow press no longer
   copies the document once per toolbar button. `context.doc` stays, documented as the O(document)
   escape hatch.
+
+### Changed
+
+- Form controls extend `FormControlProps` instead of re-declaring `label`, `description`,
+  `error`, `errorMessage`, `required` and `readonly`; a test fails on a copy (#180).
+  The shared props' doc comments (IDE hover) are now `FormControlProps`' own.
 
 ## [1.10.0] - 2026-11-12
 
