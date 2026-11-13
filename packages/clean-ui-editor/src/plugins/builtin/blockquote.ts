@@ -13,7 +13,7 @@ export const blockquotePlugin = definePlugin({
   toolbar: [{ command: "blockquote" }],
   keymap: [{ key: "Mod-Shift-.", command: "blockquote" }],
   constructs: ["Blockquote"],
-  decorations: [{ node: "Blockquote" }],
+  decorationNodes: ["Blockquote"],
   paste: [
     {
       selector: "blockquote",

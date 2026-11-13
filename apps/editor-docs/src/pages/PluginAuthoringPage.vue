@@ -23,7 +23,7 @@ const timestampPlugin: CuiEditorPlugin = definePlugin({
 });
 
 // --- The raw-tier worked example: highlighting a plain word, something ----
-// --- the declarative `decorations` field (one syntax-tree node name) -----
+// --- the declarative `decorationNodes` field (a node-name allowlist) ------
 // --- has no way to express at all. -----------------------------------------
 const todoMark = Decoration.mark({ class: "docs-todo-highlight" });
 
@@ -99,7 +99,7 @@ const overrideDoc = ref("Type something, then press Mod-Z (Cmd/Ctrl+Z) — a raw
     <CuiAlert color="info" title="Stability differs by tier">
       The declarative tier (<code class="cui-code">commands</code>, <code class="cui-code">toolbar</code>,
       <code class="cui-code">keymap</code>, <code class="cui-code">constructs</code>,
-      <code class="cui-code">paste</code>, <code class="cui-code">decorations</code>) is protected
+      <code class="cui-code">paste</code>, <code class="cui-code">decorationNodes</code>) is protected
       across this package's semver majors. The raw tier (<code class="cui-code">extensions</code>) is
       CodeMirror's own API, tracked at whatever CodeMirror major this package currently depends on —
       it can break in a <em>minor</em> release of this package if CodeMirror itself changes underneath
@@ -158,14 +158,17 @@ export const boldPlugin = definePlugin({
   toolbar: [{ command: "bold" }],
   keymap: [{ key: "Mod-b", command: "bold" }],
   constructs: ["StrongEmphasis"],
-  decorations: [{ node: "StrongEmphasis" }],
+  decorationNodes: ["StrongEmphasis"],
   paste: [{ selector: "strong, b", produces: "StrongEmphasis", degradeTo: "plainText", toMarkdown: (_el, c) => `**${c}**` }],
 });</code></pre>
       <p class="mt-3 text-sm" style="color: var(--cui-text-secondary);">
         <code class="cui-code">constructs</code> is what makes excluding this plugin actually remove
         the construct (not just its toolbar button) — see the Editor reference's
-        "construct excluded" example. <code class="cui-code">decorations</code> tells the reveal layer
-        which syntax node to hide markers for. <code class="cui-code">paste</code> converts a real
+        "construct excluded" example. <code class="cui-code">decorationNodes</code> is an allowlist
+        of syntax node names the built-in reveal layer hides markers for; it adds no decoration of
+        its own. It overlaps <code class="cui-code">constructs</code>, so a node a plugin owns is
+        normally in both. A genuinely new decoration goes through
+        <code class="cui-code">extensions</code>, below. <code class="cui-code">paste</code> converts a real
         <code class="cui-code">&lt;strong&gt;</code>/<code class="cui-code">&lt;b&gt;</code> element
         back to markdown, degrading to plain text if the construct isn't loaded.
       </p>
@@ -202,7 +205,7 @@ export const strikePlugin = definePlugin({
         if (found.status === "unknown") return true; // can't tell yet: change nothing
         if (found.status === "inside") {
           const { from, to } = found.range;
-          context.replaceRange(from, to, context.doc.slice(from + 2, to - 2)); // strip the "~~"
+          context.replaceRange(from, to, context.sliceDoc(from + 2, to - 2)); // strip the "~~"
         } else {
           context.wrapSelection("~~", "~~");
         }
@@ -219,6 +222,21 @@ export const strikePlugin = definePlugin({
         (<code class="cui-code">findConstructRange</code>, which read "unknown" as "outside", is gone in
         plugin API version 2.)
       </p>
+    </div>
+
+    <div>
+      <h2 class="mb-4 text-2xl font-semibold">Reading the document</h2>
+      <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        An <code class="cui-code">isActive</code> runs for every toolbar command on every keystroke
+        and every selection change, so what it reads matters. Read only what you need:
+      </p>
+      <ul class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
+        <li><code class="cui-code">context.lineAt(pos)</code>: the line containing <code class="cui-code">pos</code> as <code class="cui-code">{ from, to, text }</code>, without its line break.</li>
+        <li><code class="cui-code">context.sliceDoc(from, to)</code>: the text between two offsets, clamped to the document.</li>
+        <li><code class="cui-code">context.doc</code>: the whole document as a string. Every read copies all of it, so treat it as the escape hatch and keep it out of <code class="cui-code">isActive</code>.</li>
+      </ul>
+      <pre class="cui-pre"><code class="cui-code">// "Is the cursor's line a quote?" without copying the document
+isActive: (context) =&gt; context.lineAt(context.selection.from).text.startsWith("&gt; "),</code></pre>
     </div>
 
     <div>
@@ -261,8 +279,9 @@ export const strikePlugin = definePlugin({
       <h2 class="mb-4 text-2xl font-semibold">The raw tier: a CodeMirror extension</h2>
       <p class="mb-4 text-sm" style="color: var(--cui-text-secondary);">
         Highlighting every occurrence of a specific <em>word</em> (not a syntax construct) is
-        something the declarative <code class="cui-code">decorations</code> field genuinely cannot
-        express — it decorates one named syntax-tree node, not an arbitrary text pattern. This is
+        something the declarative <code class="cui-code">decorationNodes</code> field genuinely cannot
+        express — it only names the syntax-tree nodes the reveal layer hides markers for, and is not
+        a decoration extension point. This is
         exactly the kind of thing the raw tier exists for. CodeMirror itself comes from this package's
         own subpath, <code class="cui-code">@itguy614/clean-ui-editor/codemirror</code> — importing it
         from anywhere else risks a second CodeMirror instance loading alongside the editor's own,
