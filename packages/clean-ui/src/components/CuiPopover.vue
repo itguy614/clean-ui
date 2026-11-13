@@ -236,6 +236,7 @@ const messages = useMessages();
         <!-- Header -->
         <div
           v-if="hasHeader()"
+          class="cui-popover__header"
           :style="{
             display: 'flex',
             alignItems: 'flex-start',
@@ -249,7 +250,7 @@ const messages = useMessages();
                children laid out as direct flex items of the header row, as before. -->
           <div :id="headerId" style="display: contents">
             <slot name="header">
-              <span :style="{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
+              <span class="cui-popover__title" :style="{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
                 {{ title }}
               </span>
             </slot>
@@ -257,6 +258,7 @@ const messages = useMessages();
           <button
             v-if="closable"
             type="button"
+            class="cui-popover__close"
             :style="{
               display: 'inline-flex',
               alignItems: 'center',
@@ -281,6 +283,7 @@ const messages = useMessages();
 
         <!-- Body -->
         <div
+          class="cui-popover__body"
           :style="{
             padding: hasHeader() ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
             fontSize: '0.875rem',
@@ -294,6 +297,7 @@ const messages = useMessages();
         <!-- Footer -->
         <div
           v-if="hasFooter()"
+          class="cui-popover__footer"
           :style="{
             padding: '0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
           }"
@@ -305,6 +309,7 @@ const messages = useMessages();
         <div
           v-if="!noArrow"
           ref="arrowRef"
+          class="cui-popover__arrow"
           :style="{
             ...arrowElStyle,
             clipPath: arrowClipPaths[currentSide] || undefined,
