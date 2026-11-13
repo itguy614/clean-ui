@@ -5,6 +5,7 @@ import { useCuiId } from "../composables/useCuiId";
 import { useCollapsible } from "../composables/useCollapsible";
 import type { CuiRounded, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { RADIUS_SCALE } from "../utils/sizing";
+import { IconCaretDown } from "../icons/generated/caret-down";
 
 export type FieldsetVariant = "outline" | "subtle" | "ghost";
 
@@ -115,7 +116,7 @@ const rootStyle = computed(() => {
         @click="toggle"
       >
         <CuiIcon
-          name="caret-down"
+          :icon="IconCaretDown"
           size="1rem"
           class="cui-fieldset__chevron"
           :class="{ 'cui-fieldset__chevron--collapsed': !isExpanded }"

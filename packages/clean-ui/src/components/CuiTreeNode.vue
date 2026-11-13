@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick } from "vue";
 import { useCollapsible } from "../composables/useCollapsible";
 import CuiIcon from "./CuiIcon.vue";
 import type { TreeNode } from "./CuiTreeView.vue";
+import { IconCaretRight } from "../icons/generated/caret-right";
 
 const props = defineProps<{
   node: TreeNode;
@@ -118,7 +119,7 @@ function onNodeClick() {
         :class="{ 'cui-tree-node__chevron--expanded': isExpanded }"
         @click="hasChildren && onChevronClick($event)"
       >
-        <CuiIcon v-if="hasChildren" class="cui-tree-node__caret" name="caret-right" :size="iconSize" />
+        <CuiIcon v-if="hasChildren" class="cui-tree-node__caret" :icon="IconCaretRight" :size="iconSize" />
       </div>
 
       <!-- Node icon -->

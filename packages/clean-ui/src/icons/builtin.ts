@@ -1,147 +1,44 @@
 /**
- * Every icon the library's own components can render, imported statically.
+ * Opt-in name registration for the library's built-in icons (#207).
  *
- * Static named imports are the only shape `@phosphor-icons/vue` can tree-shake:
- * it ships no per-icon entry points, and the previous
- * `(await import("@phosphor-icons/vue"))[computedKey]` lookup forced bundlers to
- * retain all ~1500 icons. Listing the bounded set here caps what a consumer can
- * possibly pay for at what clean-ui actually draws.
+ * ```ts
+ * import "@itguy614/clean-ui/icons/builtin";
+ * ```
  *
- * Every entry in this object is reachable, so bundlers keep all of them — that's
- * the deliberate trade: ~50 icons, zero configuration. Consumers add their own
- * with `registerIcons()` (tree-shakeable, since they import statically too) or
- * pass a component straight to `<CuiIcon :icon="PhFoo" />`.
+ * Registers every icon clean-ui draws itself under its kebab-case name, so
+ * `<CuiIcon name="caret-down" />`, an `icon: "user"` option on a select, or
+ * `<CuiAlert icon="check-circle">` resolve to the built-ins. Nothing imports this module
+ * by default, and the components do not need it: each one imports the icon it draws and
+ * passes the component to `CuiIcon` (`<CuiIcon :icon="IconCaretDown" />`), so the icons a
+ * consumer pays for follow the components it uses. Importing this adds all ~55 (about
+ * 6 kB gzip), which is the point of keeping it separate, like `icons/lazy`.
  *
- * `src/icons/__tests__/builtin.test.ts` scans the components and the dynamic
- * lookup tables and fails if a name the library can render is missing here, so
- * this can't silently drift back to the full-set import.
+ * The built-in set carries only the weights the library itself draws: regular for all
+ * of them, bold for `check` and `minus`, fill for `circle`, `star` and `star-half`.
+ * `weight="duotone"` (or thin, light) on one of these names draws the regular weight
+ * and warns in development. For the full six weights, register the Phosphor component
+ * over the name:
+ *
+ * ```ts
+ * import { registerIcons } from "@itguy614/clean-ui";
+ * import { PhCaretDown } from "@phosphor-icons/vue";
+ * registerIcons({ "caret-down": PhCaretDown });
+ * ```
+ *
+ * Or pass a component directly: `<CuiIcon :icon="PhCaretDown" weight="duotone" />`.
  */
-import {
-  PhArrowCounterClockwise,
-  PhBookmarkSimple,
-  PhCalendarBlank,
-  PhCaretDoubleLeft,
-  PhCaretDoubleRight,
-  PhCaretDown,
-  PhCaretLeft,
-  PhCaretRight,
-  PhCaretUp,
-  PhCaretUpDown,
-  PhCheck,
-  PhCheckCircle,
-  PhCircle,
-  PhCircleNotch,
-  PhClock,
-  PhCloudArrowUp,
-  PhColumns,
-  PhCopy,
-  PhDotsNine,
-  PhDotsSixVertical,
-  PhDotsThree,
-  PhEye,
-  PhEyeSlash,
-  PhFile,
-  PhFileDoc,
-  PhFilePdf,
-  PhFileText,
-  PhFileXls,
-  PhFileZip,
-  PhFloppyDisk,
-  PhFunnel,
-  PhImage,
-  PhInfo,
-  PhMagnifyingGlass,
-  PhMinus,
-  PhMusicNote,
-  PhPlus,
-  PhPushPin,
-  PhQuestion,
-  PhSpinnerGap,
-  PhSquaresFour,
-  PhStar,
-  PhStarHalf,
-  PhTable,
-  PhTrash,
-  PhUploadSimple,
-  PhUser,
-  PhVideoCamera,
-  PhWarning,
-  PhWarningCircle,
-  PhWarningOctagon,
-  PhX,
-  PhXCircle,
-} from "@phosphor-icons/vue";
-import type { Component } from "vue";
+import { hasIcon, registerIcons } from "./registry";
+import { BUILTIN_ICONS } from "./generated";
 
-/** kebab-case icon name → Phosphor component. */
-export const BUILTIN_ICONS: Record<string, Component> = {
-  // --- Carets / navigation ---
-  "caret-down": PhCaretDown,
-  "caret-left": PhCaretLeft,
-  "caret-right": PhCaretRight,
-  "caret-up": PhCaretUp,
-  "caret-up-down": PhCaretUpDown, // CuiDataGrid unsorted column
-  "caret-double-left": PhCaretDoubleLeft,
-  "caret-double-right": PhCaretDoubleRight,
+export * from "./generated";
 
-  // --- Controls / actions ---
-  check: PhCheck,
-  copy: PhCopy,
-  "dots-nine": PhDotsNine,
-  "dots-six-vertical": PhDotsSixVertical,
-  "dots-three": PhDotsThree,
-  eye: PhEye,
-  "eye-slash": PhEyeSlash,
-  "floppy-disk": PhFloppyDisk,
-  funnel: PhFunnel,
-  "magnifying-glass": PhMagnifyingGlass,
-  minus: PhMinus,
-  plus: PhPlus,
-  "push-pin": PhPushPin,
-  trash: PhTrash,
-  "upload-simple": PhUploadSimple,
-  x: PhX,
-  "arrow-counter-clockwise": PhArrowCounterClockwise,
-  "bookmark-simple": PhBookmarkSimple,
+/**
+ * Register the built-in names. Called when this module is imported; exported as well so
+ * the intent can be explicit at a call site. Registrations made earlier by the app win,
+ * because it only fills names that are not registered yet.
+ */
+export function registerBuiltinIcons(): void {
+  registerIcons(Object.fromEntries(Object.entries(BUILTIN_ICONS).filter(([name]) => !hasIcon(name))));
+}
 
-  // --- Status (COLOR_ICON_MAP) ---
-  "check-circle": PhCheckCircle,
-  info: PhInfo,
-  warning: PhWarning,
-  "warning-circle": PhWarningCircle,
-  "warning-octagon": PhWarningOctagon,
-  "x-circle": PhXCircle,
-
-  // --- Structure / display ---
-  "calendar-blank": PhCalendarBlank,
-  circle: PhCircle,
-  "circle-notch": PhCircleNotch,
-  clock: PhClock,
-  columns: PhColumns,
-  "spinner-gap": PhSpinnerGap,
-  "squares-four": PhSquaresFour,
-  table: PhTable,
-  user: PhUser,
-
-  // --- CuiRating defaults ---
-  star: PhStar,
-  "star-half": PhStarHalf,
-
-  // --- CuiFileUpload's fileIcon() ---
-  "cloud-arrow-up": PhCloudArrowUp,
-  file: PhFile,
-  "file-doc": PhFileDoc,
-  "file-pdf": PhFilePdf,
-  "file-text": PhFileText,
-  "file-xls": PhFileXls,
-  "file-zip": PhFileZip,
-  image: PhImage,
-  "music-note": PhMusicNote,
-  "video-camera": PhVideoCamera,
-
-  // --- Fallback for an unknown name ---
-  question: PhQuestion,
-};
-
-/** Rendered when a name can't be resolved at all. */
-export const FALLBACK_ICON = PhQuestion;
+registerBuiltinIcons();

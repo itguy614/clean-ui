@@ -8,6 +8,7 @@ import CuiToolbar from "./CuiToolbar.vue";
 import { useMessages } from "../composables/useMessages";
 import { usePresence } from "../composables/usePresence";
 import { panelTransition } from "../utils/motion";
+import { IconX } from "../icons/generated/x";
 
 const messages = useMessages();
 
@@ -82,7 +83,7 @@ function onClear() {
           </div>
 
           <CuiButton class="cui-data-grid-bulk-bar__clear" variant="ghost" size="xs" @click="onClear">
-            <template #prefix><CuiIcon name="x" size="0.75rem" /></template>
+            <template #prefix><CuiIcon :icon="IconX" size="0.75rem" /></template>
             {{ messages.clear }}
           </CuiButton>
         </CuiToolbar>

@@ -86,9 +86,9 @@ export const liveProp: PropRow = {
 export const roleIconProps: PropRow[] = [
   {
     name: "icon",
-    type: "string",
+    type: "string | Component",
     description:
-      "Replace the role icon. A name in the static icon registry renders that icon; anything else — an emoji, a character — renders as text",
+      "Replace the role icon. A component renders as that icon; a name in the static icon registry (registerIcons(), or the built-ins after importing @itguy614/clean-ui/icons/builtin) renders that icon; any other string — an emoji, a character — renders as text",
   },
   { name: "noIcon", type: "boolean", default: "false", description: "Hide the role icon entirely" },
 ];

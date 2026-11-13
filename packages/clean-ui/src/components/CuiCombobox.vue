@@ -15,6 +15,8 @@ import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
 import CuiFormValues from "./CuiFormValues.vue";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCheck } from "../icons/generated/check";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -412,7 +414,7 @@ function optionClass(index: number, option: ComboboxOption) {
       <!-- Right icons -->
       <div class="cui-combobox__affix">
         <CuiSpinner v-if="isLoading" size="xs" />
-        <CuiIcon v-else name="caret-down" size="0.875rem" class="cui-combobox__chevron" :class="{ 'cui-combobox__chevron--open': isOpen }" />
+        <CuiIcon v-else :icon="IconCaretDown" size="0.875rem" class="cui-combobox__chevron" :class="{ 'cui-combobox__chevron--open': isOpen }" />
       </div>
     </div>
 
@@ -488,7 +490,7 @@ function optionClass(index: number, option: ComboboxOption) {
 
           <CuiIcon
             v-if="selectedSet.has(option.value)"
-            name="check"
+            :icon="IconCheck"
             size="0.875rem"
             :color="color"
             class="cui-combobox__option-check"

@@ -8,6 +8,9 @@ import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 import { useFloatingLabel } from "./form-field-context";
 import { slotNodes } from "../utils/vnodes";
+import { IconEye } from "../icons/generated/eye";
+import { IconEyeSlash } from "../icons/generated/eye-slash";
+import { IconX } from "../icons/generated/x";
 
 export type InputType =
   | "text"
@@ -204,7 +207,7 @@ function prefixIsIcon(): boolean {
           :aria-label="messages.input.clear"
           @click="clear"
         >
-          <CuiIcon name="x" size="0.75rem" />
+          <CuiIcon :icon="IconX" size="0.75rem" />
         </button>
 
         <!-- Password toggle -->
@@ -216,9 +219,9 @@ function prefixIsIcon(): boolean {
           @click="passwordVisible = !passwordVisible"
         >
           <!-- Eye open -->
-          <CuiIcon v-if="!passwordVisible" name="eye" size="1rem" />
+          <CuiIcon v-if="!passwordVisible" :icon="IconEye" size="1rem" />
           <!-- Eye closed -->
-          <CuiIcon v-else name="eye-slash" size="1rem" />
+          <CuiIcon v-else :icon="IconEyeSlash" size="1rem" />
         </button>
 
         <!-- Suffix slot (icons/text inside input) -->

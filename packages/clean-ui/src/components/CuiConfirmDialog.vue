@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, type Component } from "vue";
-import { PhInfo, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
 import { useCuiId } from "../composables/useCuiId";
 import type { CuiColor, HideableProps, OverlayFocusProps, TitleAsProps } from "../types/common";
 import CuiModal from "./CuiModal.vue";
@@ -11,6 +10,11 @@ import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 import { useHeadingLevel } from "../utils/configure";
+import { IconInfo } from "../icons/generated/info";
+import { IconSealQuestion } from "../icons/generated/seal-question";
+import { IconWarning } from "../icons/generated/warning";
+import { IconWarningCircle } from "../icons/generated/warning-circle";
+import { IconX } from "../icons/generated/x";
 
 export type ConfirmDialogVariant = "danger" | "warning" | "info" | "primary";
 
@@ -93,12 +97,12 @@ watch(
 );
 
 const variantConfig: Record<ConfirmDialogVariant, { role: CuiColor; icon: Component }> = {
-  danger: { role: "error", icon: PhWarningCircle },
-  warning: { role: "warning", icon: PhWarning },
-  info: { role: "info", icon: PhInfo },
-  // Not PhQuestion: that is CuiIcon's fallback glyph for an unknown name, so a routine
+  danger: { role: "error", icon: IconWarningCircle },
+  warning: { role: "warning", icon: IconWarning },
+  info: { role: "info", icon: IconInfo },
+  // Not IconQuestion: that is CuiIcon's fallback glyph for an unknown name, so a routine
   // confirm would look like a broken icon and an `icon` typo would go unnoticed.
-  primary: { role: "primary", icon: PhSealQuestion },
+  primary: { role: "primary", icon: IconSealQuestion },
 };
 
 const cfg = computed(() => variantConfig[props.variant]);
@@ -173,7 +177,7 @@ function onCancel() {
 
       <!-- Close button -->
       <button type="button" class="cui-confirm-dialog__close" :aria-label="messages.close" @click="onCancel">
-        <CuiIcon name="x" size="1rem" />
+        <CuiIcon :icon="IconX" size="1rem" />
       </button>
     </div>
 

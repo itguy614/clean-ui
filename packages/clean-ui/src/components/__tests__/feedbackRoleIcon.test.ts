@@ -1,10 +1,15 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
-import { h } from "vue";
+import { h, toRaw } from "vue";
 import CuiBanner from "../CuiBanner.vue";
 import CuiAlert from "../CuiAlert.vue";
 import CuiToast from "../CuiToast.vue";
 import CuiIcon from "../CuiIcon.vue";
+import { registerBuiltinIcons } from "../../icons/builtin";
+import { __clearRegisteredIcons } from "../../icons/registry";
+import { IconCheckCircle } from "../../icons/generated/check-circle";
+import { IconInfo } from "../../icons/generated/info";
+import { IconWarningOctagon } from "../../icons/generated/warning-octagon";
 import { COLOR_ICON_MAP, registerRoleIcons, __clearRoleIcons } from "../../utils/colorIconMap";
 
 /**
@@ -12,6 +17,10 @@ import { COLOR_ICON_MAP, registerRoleIcons, __clearRoleIcons } from "../../utils
  * replace it. All three feedback components now take the same `icon` prop and an `#icon`
  * slot.
  */
+// The built-in names are an opt-in (#207); the defaults and a component override need none.
+beforeEach(() => registerBuiltinIcons());
+afterEach(() => __clearRegisteredIcons());
+
 describe("feedback components: the role icon can be replaced", () => {
   // Scoped to the role-icon container: Banner and Toast also render a dismiss ✕, so
   // asking the whole component for "a CuiIcon" finds that one instead.
@@ -21,7 +30,7 @@ describe("feedback components: the role icon can be replaced", () => {
     ["CuiToast", CuiToast, ".cui-toast__icon"],
   ])("%s", (_name, component, iconSelector) => {
     const slot = (w: ReturnType<typeof mount>) => w.find(iconSelector);
-    const glyph = (w: ReturnType<typeof mount>) => slot(w).findComponent(CuiIcon).props("name");
+    const glyph = (w: ReturnType<typeof mount>) => slot(w).findComponent(CuiIcon).props("icon");
     it("defaults to the role's icon", () => {
       const w = mount(component as never, { props: { color: "success" } });
       expect(glyph(w)).toBe(COLOR_ICON_MAP.success);
@@ -29,7 +38,26 @@ describe("feedback components: the role icon can be replaced", () => {
 
     it("renders a registered name from the icon prop", () => {
       const w = mount(component as never, { props: { color: "error", icon: "check-circle" } });
-      expect(glyph(w)).toBe("check-circle");
+      expect(glyph(w)).toBe(IconCheckCircle);
+    });
+
+    it("renders a component from the icon prop, registered or not", () => {
+      const Mine = { render: () => h("svg") };
+      const w = mount(component as never, { props: { color: "error", icon: Mine } });
+      expect(toRaw(glyph(w))).toBe(Mine);
+    });
+
+    it("needs no registration for the role's default icon", () => {
+      __clearRegisteredIcons();
+      const w = mount(component as never, { props: { color: "success" } });
+      expect(glyph(w)).toBe(IconCheckCircle);
+    });
+
+    it("renders a built-in name as text until the built-in names are registered", () => {
+      __clearRegisteredIcons();
+      const w = mount(component as never, { props: { color: "error", icon: "check-circle" } });
+      expect(slot(w).text()).toContain("check-circle");
+      expect(slot(w).findComponent(CuiIcon).exists()).toBe(false);
     });
 
     it("renders anything else as text, so an emoji still works", () => {
@@ -60,7 +88,8 @@ describe("COLOR_ICON_MAP", () => {
     // A cross reads as "close", and beside a dismissible component's own ✕ it renders as
     // a second close button. Reusing `warning-circle` would instead leave colour as the
     // only thing separating error from warning (WCAG 1.4.1).
-    expect(COLOR_ICON_MAP.error).toBe("warning-octagon");
+    expect(COLOR_ICON_MAP.error).toBe(IconWarningOctagon);
+    expect(COLOR_ICON_MAP.error).not.toBe(COLOR_ICON_MAP.warning);
   });
 
 
@@ -76,7 +105,7 @@ describe("registerRoleIcons", () => {
 
     for (const component of [CuiBanner, CuiAlert, CuiToast]) {
       const w = mount(component as never, { props: { color: "error" } });
-      expect(w.findComponent(CuiIcon).props("name")).toBe("check-circle");
+      expect(w.findComponent(CuiIcon).props("icon")).toBe(IconCheckCircle);
     }
   });
 
@@ -84,14 +113,14 @@ describe("registerRoleIcons", () => {
     registerRoleIcons({ error: "check-circle" });
 
     const w = mount(CuiAlert, { props: { color: "success" } });
-    expect(w.findComponent(CuiIcon).props("name")).toBe(COLOR_ICON_MAP.success);
+    expect(w.findComponent(CuiIcon).props("icon")).toBe(COLOR_ICON_MAP.success);
   });
 
   it("still loses to an explicit icon prop", () => {
     registerRoleIcons({ error: "check-circle" });
 
     const w = mount(CuiAlert, { props: { color: "error", icon: "info" } });
-    expect(w.findComponent(CuiIcon).props("name")).toBe("info");
+    expect(w.findComponent(CuiIcon).props("icon")).toBe(IconInfo);
   });
 
   it("renders an unregistered override as text rather than a ? glyph", () => {

@@ -5,9 +5,13 @@ import CuiPopover from "./CuiPopover.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiIcon from "./CuiIcon.vue";
-import { PhLock } from "@phosphor-icons/vue";
 import type { DataGridColumnGroup } from "../types/data-grid";
 import { useMessages } from "../composables/useMessages";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretUp } from "../icons/generated/caret-up";
+import { IconColumns } from "../icons/generated/columns";
+import { IconDotsSixVertical } from "../icons/generated/dots-six-vertical";
+import { IconLock } from "../icons/generated/lock";
 
 const messages = useMessages();
 
@@ -148,7 +152,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
 <template>
   <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="240px" :title="messages.dataGrid.columns">
     <CuiButton variant="outline" size="sm">
-      <template #prefix><CuiIcon name="columns" size="0.875rem" /></template>
+      <template #prefix><CuiIcon :icon="IconColumns" size="0.875rem" /></template>
       {{ messages.dataGrid.columns }}
     </CuiButton>
     <template #content>
@@ -176,12 +180,12 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
           <CuiIcon
             v-if="isFrozenRow(row)"
             class="cui-data-grid-column-manager__lock cui-data-grid-column-manager__handle"
-            :icon="PhLock"
+            :icon="IconLock"
             size="0.875rem"
             role="img"
             :aria-label="messages.dataGrid.frozenColumn(nameOf(row))"
           />
-          <CuiIcon v-else class="cui-data-grid-column-manager__handle" name="dots-six-vertical" size="0.875rem" />
+          <CuiIcon v-else class="cui-data-grid-column-manager__handle" :icon="IconDotsSixVertical" size="0.875rem" />
           <span v-if="row.kind === 'group'" class="cui-data-grid-column-manager__group">{{ row.group.label }}</span>
           <CuiCheckbox
             v-else
@@ -202,7 +206,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
               :aria-label="messages.dataGrid.moveUp(nameOf(row))"
               @click="move(row, -1)"
             >
-              <CuiIcon name="caret-up" size="0.875rem" aria-hidden="true" />
+              <CuiIcon :icon="IconCaretUp" size="0.875rem" aria-hidden="true" />
             </CuiButton>
             <CuiButton
               variant="ghost"
@@ -212,7 +216,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
               :aria-label="messages.dataGrid.moveDown(nameOf(row))"
               @click="move(row, 1)"
             >
-              <CuiIcon name="caret-down" size="0.875rem" aria-hidden="true" />
+              <CuiIcon :icon="IconCaretDown" size="0.875rem" aria-hidden="true" />
             </CuiButton>
           </span>
         </div>

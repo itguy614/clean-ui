@@ -3,6 +3,8 @@
 // ("mixin" props — composed via `interface X extends ...`)
 // ============================================================
 
+import type { Component } from "vue";
+
 /** Semantic color roles. The three `surface*` entries are neutral
  *  intensity steps (all mode-aware). */
 export type CuiColor =
@@ -128,14 +130,22 @@ export interface OverlayFocusProps {
   returnFocus?: CuiFocusTarget | false;
 }
 
+/**
+ * An icon a role can render: a component (`IconCheckCircle`, `PhSiren`), or a string — a name
+ * in the static icon registry (`registerIcons()`, or the built-in names once
+ * `@itguy614/clean-ui/icons/builtin` is imported), otherwise literal text such as an emoji.
+ */
+export type CuiRoleIcon = string | Component;
+
 export interface RoleIconProps {
   /**
-   * Replace the role icon. A name in the static icon registry (built-ins plus
-   * `registerIcons()`) renders that icon; anything else — an emoji, a character —
-   * renders as text. A name resolvable only through the optional lazy resolver is not
-   * known statically and renders as text.
+   * Replace the role icon. A component renders as that icon. A string naming an icon in the
+   * static registry (`registerIcons()`, or the built-ins after importing
+   * `@itguy614/clean-ui/icons/builtin`) renders that icon; any other string, such as an emoji
+   * or a character, renders as text. A name resolvable only through the optional lazy resolver
+   * is not known statically and renders as text.
    */
-  icon?: string;
+  icon?: CuiRoleIcon;
   /** Hide the role icon entirely. */
   noIcon?: boolean;
 }

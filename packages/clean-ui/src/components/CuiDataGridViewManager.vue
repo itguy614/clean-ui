@@ -15,6 +15,11 @@ import CuiInput from "./CuiInput.vue";
 import CuiBadge from "./CuiBadge.vue";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { IconArrowCounterClockwise } from "../icons/generated/arrow-counter-clockwise";
+import { IconBookmarkSimple } from "../icons/generated/bookmark-simple";
+import { IconCheck } from "../icons/generated/check";
+import { IconFloppyDisk } from "../icons/generated/floppy-disk";
+import { IconTrash } from "../icons/generated/trash";
 
 // The save-as field's name: its placeholder is none (#373).
 const viewNameId = useCuiId("grid-view-name");
@@ -85,7 +90,7 @@ function onReset() {
   <CuiDropdown class="cui-data-grid-view-manager">
     <CuiDropdownTrigger>
       <CuiButton variant="outline" size="sm">
-        <template #prefix><CuiIcon name="bookmark-simple" size="0.875rem" /></template>
+        <template #prefix><CuiIcon :icon="IconBookmarkSimple" size="0.875rem" /></template>
         {{ messages.dataGrid.views }}
         <CuiBadge
           v-if="grid.isDirty.value"
@@ -112,7 +117,7 @@ function onReset() {
               <CuiIcon
                 v-if="viewManager.activeViewId.value === view.id"
                 class="cui-data-grid-view-manager__active"
-                name="check"
+                :icon="IconCheck"
                 size="0.75rem"
               />
               {{ view.name }}
@@ -123,7 +128,7 @@ function onReset() {
               :aria-label="messages.dataGrid.deleteView?.(view.name)"
               @click.stop="onRemove(view.id)"
             >
-              <CuiIcon name="trash" size="0.75rem" />
+              <CuiIcon :icon="IconTrash" size="0.75rem" />
             </button>
           </div>
         </CuiDropdownItem>
@@ -137,12 +142,12 @@ function onReset() {
         :close-on-select="false"
         @select="onSaveCurrent"
       >
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="floppy-disk" size="0.875rem" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" />
         {{ messages.dataGrid.saveCurrent }}
       </CuiDropdownItem>
 
       <CuiDropdownItem :close-on-select="false" @select="showSaveAs = !showSaveAs">
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="floppy-disk" size="0.875rem" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" />
         {{ messages.dataGrid.saveAs }}
       </CuiDropdownItem>
 
@@ -168,7 +173,7 @@ function onReset() {
 
       <CuiDropdownDivider />
       <CuiDropdownItem @select="onReset">
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" name="arrow-counter-clockwise" size="0.875rem" />
+        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconArrowCounterClockwise" size="0.875rem" />
         {{ messages.dataGrid.resetViews }}
       </CuiDropdownItem>
     </CuiDropdownMenu>

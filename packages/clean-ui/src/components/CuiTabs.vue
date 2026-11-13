@@ -14,6 +14,7 @@ import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
 import { scrollIntoViewWithin } from "../utils/scroll";
 import { useListNavigation } from "../composables/useListNavigation";
+import { IconX } from "../icons/generated/x";
 
 export interface CuiTabsProps extends HideableProps, ColorableProps {
   /** Active tab value */
@@ -330,7 +331,7 @@ const messages = useMessages();
             tabindex="-1"
             @click="close(tab.value)"
           >
-            <CuiIcon name="x" size="0.75rem" />
+            <CuiIcon :icon="IconX" size="0.75rem" />
           </button>
         </div>
       </div>

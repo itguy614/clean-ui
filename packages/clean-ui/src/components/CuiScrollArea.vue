@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, type Component } from "vue";
-import { PhCaretDown, PhCaretLeft, PhCaretRight, PhCaretUp } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useScrollArea } from "../composables/useScrollArea";
 import type { HideableProps } from "../types/common";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretLeft } from "../icons/generated/caret-left";
+import { IconCaretRight } from "../icons/generated/caret-right";
+import { IconCaretUp } from "../icons/generated/caret-up";
 
 /**
  * A scroll container with edge fades and optional overflow indicators (#143). A thin shell
@@ -67,10 +70,10 @@ const shown = (edge: Edge) => props.indicatorVisibility === "always" || hasMore(
 // The carets point at their edge: in a right-to-left page a horizontal start is on the right.
 const defaultIcons = computed<Record<Edge, Component>>(() =>
   props.orientation === "vertical"
-    ? { start: PhCaretUp, end: PhCaretDown }
+    ? { start: IconCaretUp, end: IconCaretDown }
     : area.rtl.value
-      ? { start: PhCaretRight, end: PhCaretLeft }
-      : { start: PhCaretLeft, end: PhCaretRight },
+      ? { start: IconCaretRight, end: IconCaretLeft }
+      : { start: IconCaretLeft, end: IconCaretRight },
 );
 
 /** CuiIcon takes a name and a component as separate props. */

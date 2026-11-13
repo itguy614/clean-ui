@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading to 2.0
 
+- **Built-in icon names are an opt-in, and the built-in icons carry fewer weights (#207).**
+  The components still draw their own icons with no setup, but a name such as
+  `<CuiIcon name="caret-down" />`, an `icon: "user"` option, or `<CuiAlert icon="check-circle">`
+  no longer resolves until you import the names once: `import "@itguy614/clean-ui/icons/builtin";`.
+  The built-in icons carry only the weights clean-ui draws (regular for all, bold for `check` and
+  `minus`, fill for `circle`, `star` and `star-half`). `weight="duotone"`, `thin` or `light` on a
+  built-in name now draws regular, with a development warning; for the full six weights, pass the
+  Phosphor component (`<CuiIcon :icon="PhCaretDown" weight="duotone" />`) or register it over the
+  name (`registerIcons({ "caret-down": PhCaretDown })`).
+- **`BUILTIN_ICONS` moved** from `@itguy614/clean-ui` to `@itguy614/clean-ui/icons/builtin`, and
+  `COLOR_ICON_MAP` now holds icon components, not names. `@phosphor-icons/vue` is an optional peer
+  dependency instead of a dependency: install it to register or pass Phosphor components, or to use
+  `@itguy614/clean-ui/icons/lazy`.
 - **The seven non-default themes are opt-in stylesheets.** `@itguy614/clean-ui/styles` now holds
   the default Navy theme only (about 9 kB raw, 1.3 kB gzip smaller); Mono, Forest, Amber, Azure,
   Teal, Violet and Ruby are `@itguy614/clean-ui/themes/<name>.css`, about 2 kB each. An app that
@@ -62,6 +75,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Form controls extend `FormControlProps` instead of re-declaring `label`, `description`,
   `error`, `errorMessage`, `required` and `readonly`; a test fails on a copy (#180).
   The shared props' doc comments (IDE hover) are now `FormControlProps`' own.
+- **The icon set shrinks every page** (#207). Each component imports the icon it draws as a
+  generated render-function module (`icons/generated/`, from `@phosphor-icons/core`, regular weight
+  plus the bold and fill the library draws) instead of every icon with all six Phosphor weights, so a
+  page carries path data only for the icons its components draw. In the consumer fixture the
+  basic page costs 32.3 kB gzip instead of 68.2, and the data-grid page 94.3 instead of 127.3. A
+  single icon is importable as `@itguy614/clean-ui/icons/generated/<name>`.
+- `RoleIconProps.icon` (CuiAlert, CuiToast, CuiBanner), `roleIcons` in `createCleanUI`,
+  `configureCleanUI` and `CuiConfigProvider`, and `registerRoleIcons()` accept `string | Component`;
+  an unregistered string still renders as text.
+- The bundle budget script reports each scenario by area (js, css, icons), and a new fixture
+  guarantee caps SVG path literals per page.
+- `@itguy614/clean-ui-editor` imports its toolbar icons from clean-ui's generated set (regular
+  weight) and no longer depends on `@phosphor-icons/vue`.
 
 ## [1.10.0] - 2026-11-12
 

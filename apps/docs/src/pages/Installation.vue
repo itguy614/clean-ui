@@ -65,12 +65,13 @@ import '@itguy614/clean-ui/themes/forest.css'   // mono, forest, amber, azure, t
         two server-rendered requests, keep their own. A component's own prop still wins.
       </p>
       <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { createCleanUI } from '@itguy614/clean-ui'
+import { PhSiren } from '@phosphor-icons/vue'
 
 app.use(createCleanUI({
   // Every card here sits under the page's h1, so its title is an h2
   headingLevels: { cardHeader: 'h2' },
-  // A different glyph for errors: any registered icon name
-  roleIcons: { error: 'x-circle' },
+  // A different glyph for errors: an icon component, or a registered icon name
+  roleIcons: { error: PhSiren },
 }))</code></pre>
       <ul class="mt-3 list-disc space-y-1 pl-5 text-surface-600 dark:text-surface-400">
         <li>
