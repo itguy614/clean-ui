@@ -33,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unless set) and `--cui-file-upload-row-radius` (a listed file's row; the drop zone keeps
   `--cui-file-upload-radius`).
 
+- **The seven non-default themes are opt-in stylesheets.** `@itguy614/clean-ui/styles` now holds
+  the default Navy theme only (about 9 kB raw, 1.3 kB gzip smaller); Mono, Forest, Amber, Azure,
+  Teal, Violet and Ruby are `@itguy614/clean-ui/themes/<name>.css`, about 2 kB each. An app that
+  uses a non-default theme must import `@itguy614/clean-ui/themes/<name>.css`, or switch to the
+  all-in-one `@itguy614/clean-ui/styles/all.css` (every theme: use it instead of `styles`).
+  Without the file a `cui-theme-<name>` class styles nothing, and in development `setTheme()`
+  warns once and names the file to import (#220).
+
 - **`useOverlay`'s `exit: "timer"` mode is removed, and with it the `exit`, `animationDuration`
   and `name` options.** The exit is always a `<Transition>`: render the overlay
   `v-if="mounted" v-show="isVisible"` inside `<Transition v-bind="subtreeTransition"

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { h, nextTick, type Component } from "vue";
 import { mount } from "@vue/test-utils";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 import themeCss from "../../styles/theme.css?raw";
 import { frames, injectStyle, mountHosts } from "../../../../../config/test/browser-helpers";
 // @ts-ignore -- an untyped script module, shared with the contrast audit (tests are not type-checked)
@@ -27,6 +28,7 @@ describe("CuiFormField floating label (real browser)", () => {
     // `--color-*` drops the controls' borders and leaves the labels' colours inherited.
     // Transitions finish at once, so a measurement is of the state, not a frame on the way.
     removeStyle = injectStyle(`${main}
+      ${allThemesCss}
       ${themeCss.replace(/@theme\s*\{/, ":root {")}
       :root { --cui-duration-fast: 0ms; }
       body { background: var(--cui-surface-base); }`);

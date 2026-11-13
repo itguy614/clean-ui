@@ -14,7 +14,9 @@
  * happens to load the sheets the other way round.
  */
 import "../../styles/editor.css";
-import "@itguy614/clean-ui/styles";
+// The all-in-one: the scoped-theme tests here use violet and ruby, which `styles` no longer
+// carries (#220). Same cascade position as `styles`.
+import "@itguy614/clean-ui/styles/all.css";
 
 // The built-in plugins' icons, for the same reason the jsdom setup registers them: tests
 // import components directly, bypassing the barrel that registers them as a side effect.

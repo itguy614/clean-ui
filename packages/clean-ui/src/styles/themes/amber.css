@@ -1,0 +1,54 @@
+/* ============================================================
+   Amber theme — opt-in (#220). Import after `@itguy614/clean-ui/styles`:
+     @import "@itguy614/clean-ui/themes/amber.css";
+   Apply with `<html class="cui-theme-amber">` or on any ancestor (`setTheme("amber")`).
+   The `--cui-theme-amber` marker is how `useTheme` tells, in development, that this
+   file was loaded; it styles nothing. Safe in any order relative to other theme files.
+   Source of the palette for the all-in-one stylesheet too: edit here only.
+   ============================================================ */
+
+/* --- Amber: warm orange primary (hue 60) + warm gray surface --- */
+.cui-theme-amber {
+  --cui-theme-amber: 1;
+
+  --color-primary-50:  #FFF7F0;
+  --color-primary-100: #FFECD9;
+  --color-primary-200: #FFD4AD;
+  --color-primary-300: #B87430;
+  --color-primary-400: #C06A10;
+  --color-primary-500: #A65800;
+  --color-primary-600: #934E00;
+  --color-primary-700: #7A4100;
+  --color-primary-800: #633500;
+  --color-primary-900: #4D2900;
+  --color-primary-950: #3D2100;
+
+  /* Light mode: warm gray — smooth monotonic curve */
+  --color-surface-50:  oklch(0.983 0.006 60);
+  --color-surface-100: oklch(0.960 0.006 60);
+  --color-surface-200: oklch(0.900 0.008 60);
+  --color-surface-300: oklch(0.850 0.008 60);
+  --color-surface-400: oklch(0.780 0.008 60);
+  --color-surface-500: oklch(0.720 0.010 60);
+  --color-surface-600: oklch(0.620 0.010 60);
+  --color-surface-700: oklch(0.500 0.012 60);
+  --color-surface-800: oklch(0.380 0.012 60);
+  --color-surface-900: oklch(0.270 0.015 60);
+  --color-surface-950: oklch(0.196 0.015 60);
+}
+
+.dark .cui-theme-amber,
+.cui-theme-amber.dark.dark,
+.cui-theme-amber .dark {
+  --color-surface-50:  oklch(0.983 0.006 60);
+  --color-surface-100: oklch(0.960 0.006 60);
+  --color-surface-200: oklch(0.900 0.008 60);
+  --color-surface-300: oklch(0.850 0.008 60);
+  --color-surface-400: oklch(0.780 0.008 60);
+  --color-surface-500: oklch(0.720 0.010 60);
+  --color-surface-600: oklch(0.620 0.010 60);
+  --color-surface-700: oklch(0.500 0.012 60);
+  --color-surface-800: oklch(0.380 0.012 60);
+  --color-surface-900: oklch(0.270 0.015 60);
+  --color-surface-950: oklch(0.196 0.015 60);
+}

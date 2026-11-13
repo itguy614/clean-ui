@@ -8,6 +8,11 @@ import "@itguy614/clean-ui/icons/lazy";
 import router from "./router";
 import App from "./App.vue";
 import "./styles/main.css";
+// The theme switcher offers all eight, and seven palettes are opt-in stylesheets (#220): a
+// consumer imports `@itguy614/clean-ui/themes/<name>.css` per theme they use, or the one
+// all-in-one `@itguy614/clean-ui/styles/all.css`. The docs load every theme from workspace
+// source, by glob, so a theme added to the library appears here without an edit.
+import.meta.glob("../../../packages/clean-ui/src/styles/themes/*.css", { eager: true });
 
 // Importing the library no longer applies the stored theme, density or color mode (#209, #463, #487): apply
 // them before anything renders.

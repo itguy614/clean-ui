@@ -30,6 +30,10 @@ export const SCENARIOS = {
   grid: { input: "grid.html", outDir: "dist-grid", skipGuarantees: {} },
   editor: { input: "editor.html", outDir: "dist-editor", skipGuarantees: {} },
   render: { input: "render.html", outDir: "dist-render", skipGuarantees: {} },
+  // Not budgeted: two opt-in theme files imported on top of the default stylesheet (#220).
+  // `themes` lists the non-default themes whose CSS the page imports; every other scenario
+  // imports none, so the guarantee `theme-css-opt-in` fails if a theme leaks into `styles`.
+  themes: { input: "themes.html", outDir: "dist-themes", themes: ["forest", "ruby"], skipGuarantees: {} },
 };
 
 /**
