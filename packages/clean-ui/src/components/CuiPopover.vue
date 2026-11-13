@@ -146,20 +146,15 @@ const hasFooter = () => !!slots.footer;
 const headerId = useCuiId("popover-title");
 
 const panelStyle = computed(() => {
+  // Paint is the stylesheet's, read through `--cui-popover-<slot>`: the radius and the width
+  // preset are the only computed parts, emitted as private properties (#294).
   const s: Record<string, string> = {
     zIndex: POPOVER_Z_INDEX,
-    background: "var(--cui-surface-base)",
-    border: "1px solid var(--cui-border)",
-    // Private, read back through `--cui-popover-radius` by the stylesheet (#294).
     "--_popover-radius": RADIUS_SCALE[props.rounded],
-    boxShadow: "var(--cui-shadow-md)",
-    minWidth: "12rem",
-    maxWidth: "24rem",
-    overflow: "hidden",
     // Read back as transform-origin below, so the panel grows out of its trigger (#262).
     "--_popover-transform-origin": transformOrigin.value,
   };
-  if (props.width) s.width = props.width;
+  if (props.width) s["--_popover-width"] = props.width;
   return s;
 });
 
@@ -183,15 +178,8 @@ const hiddenUntilPositioned = computed(() => {
   return styles;
 });
 
-const arrowElStyle = computed(() => ({
-  width: "8px",
-  height: "8px",
-  background: "var(--cui-surface-base)",
-  border: "1px solid var(--cui-border)",
-  transform: "rotate(45deg)",
-  position: "absolute" as const,
-  ...arrowStyle.value,
-}));
+// Only the placement: the arrow's size and paint are the stylesheet's.
+const arrowElStyle = computed(() => ({ ...arrowStyle.value }));
 
 // Clip-path per side so arrow doesn't poke through rounded corners
 const arrowClipPaths: Record<string, string> = {
@@ -237,20 +225,13 @@ const messages = useMessages();
         <div
           v-if="hasHeader()"
           class="cui-popover__header"
-          :style="{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 'calc(0.5rem * var(--cui-density-scale, 1))',
-            padding: 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))',
-          }"
         >
           <!-- The id sits on a wrapper so slotted header content is named too, and the
                close button is left out of the name. display: contents keeps the slot's
                children laid out as direct flex items of the header row, as before. -->
           <div :id="headerId" style="display: contents">
             <slot name="header">
-              <span class="cui-popover__title" :style="{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--cui-text-body)' }">
+              <span class="cui-popover__title">
                 {{ title }}
               </span>
             </slot>
@@ -259,21 +240,6 @@ const messages = useMessages();
             v-if="closable"
             type="button"
             class="cui-popover__close"
-            :style="{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '1.375rem',
-              height: '1.375rem',
-              border: 'none',
-              background: 'none',
-              borderRadius: '0.25rem',
-              color: 'var(--cui-text-tertiary)',
-              cursor: 'pointer',
-              flexShrink: '0',
-              marginTop: 'calc(-0.0625rem * var(--cui-density-scale, 1))',
-              marginRight: 'calc(-0.125rem * var(--cui-density-scale, 1))',
-            }"
             :aria-label="messages.close"
             @click.stop="doHide"
           >
@@ -284,12 +250,7 @@ const messages = useMessages();
         <!-- Body -->
         <div
           class="cui-popover__body"
-          :style="{
-            padding: hasHeader() ? 'calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))' : 'calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1))',
-            fontSize: '0.875rem',
-            lineHeight: '1.55',
-            color: 'var(--cui-text-secondary)',
-          }"
+          :class="{ 'cui-popover__body--headed': hasHeader() }"
         >
           <slot name="content" />
         </div>
@@ -298,9 +259,6 @@ const messages = useMessages();
         <div
           v-if="hasFooter()"
           class="cui-popover__footer"
-          :style="{
-            padding: '0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1))',
-          }"
         >
           <slot name="footer" />
         </div>
@@ -323,8 +281,84 @@ const messages = useMessages();
 
 <style scoped>
 /* Grows out of the trigger, whichever side it opened on after flipping (#262). */
+/* Paint, so zero specificity: a `--cui-popover-*` token or a plain rule wins. The panel is
+   teleported to <body>, so a token set on the trigger's container does not reach it: set it on
+   :root or <body>. */
 :where(.cui-popover__panel) {
   transform-origin: var(--_popover-transform-origin);
+  background: var(--cui-popover-bg, var(--cui-surface-base));
+  border: var(--cui-popover-border, 1px solid var(--cui-border));
   border-radius: var(--cui-popover-radius, var(--_popover-radius));
+  box-shadow: var(--cui-shadow-md);
+  /* A fixed width from the `width` prop; unset, the panel is as wide as its content. */
+  width: var(--cui-popover-width, var(--_popover-width));
+}
+
+.cui-popover__panel {
+  min-width: 12rem;
+  max-width: 24rem;
+  overflow: hidden;
+}
+
+.cui-popover__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
+  padding: calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
+}
+
+/* A part's own text colour: a plain rule wins. */
+:where(.cui-popover__title) {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cui-text-body);
+}
+
+.cui-popover__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  margin-top: calc(-0.0625rem * var(--cui-density-scale, 1));
+  margin-right: calc(-0.125rem * var(--cui-density-scale, 1));
+}
+:where(.cui-popover__close) {
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: var(--cui-text-tertiary);
+}
+
+.cui-popover__body {
+  padding: calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1));
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.cui-popover__body--headed {
+  padding: calc(0.25rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+}
+:where(.cui-popover__body) {
+  color: var(--cui-popover-color, var(--cui-text-secondary));
+}
+
+.cui-popover__footer {
+  padding: 0 calc(0.875rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1));
+}
+
+/* The arrow takes the panel's fill and border, so the two always match. Its place along the
+   panel comes from the placement engine, inline. */
+.cui-popover__arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+}
+:where(.cui-popover__arrow) {
+  background: var(--cui-popover-bg, var(--cui-surface-base));
+  border: var(--cui-popover-border, 1px solid var(--cui-border));
 }
 </style>

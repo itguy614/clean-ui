@@ -71,20 +71,21 @@ const rootStyle = computed(() => {
   const bgToken =
     c === "surface" ? "var(--cui-surface-bg)" : `var(--cui-${c}-bg)`;
 
-  // Private, read back through `--cui-fieldset-radius` by the stylesheet (#294).
+  // Private `--_fieldset-<slot>` properties, read back through `--cui-fieldset-<slot>` by the
+  // stylesheet (#294): an inline paint declaration would outrank a consumer's own rule.
   const style: Record<string, string> = {
     "--_fieldset-radius": RADIUS_SCALE[props.rounded],
   };
 
   if (props.variant === "ghost") {
-    style.border = "none";
-    style.background = "transparent";
+    style["--_fieldset-border"] = "none";
+    style["--_fieldset-bg"] = "transparent";
   } else if (props.variant === "subtle") {
-    style.border = `1px solid ${borderToken}`;
-    style.background = bgToken;
+    style["--_fieldset-border"] = `1px solid ${borderToken}`;
+    style["--_fieldset-bg"] = bgToken;
   } else {
-    style.border = `1px solid ${borderToken}`;
-    style.background = "transparent";
+    style["--_fieldset-border"] = `1px solid ${borderToken}`;
+    style["--_fieldset-bg"] = "transparent";
   }
 
   return style;
@@ -150,8 +151,10 @@ const rootStyle = computed(() => {
 </template>
 
 <style scoped>
-/* Paint, so zero specificity: `--cui-fieldset-radius` or a plain `.cui-fieldset { border-radius }` wins. */
+/* Paint, so zero specificity: a `--cui-fieldset-*` token or a plain `.cui-fieldset { … }` rule wins. */
 :where(.cui-fieldset) {
+  background: var(--cui-fieldset-bg, var(--_fieldset-bg));
+  border: var(--cui-fieldset-border, var(--_fieldset-border));
   border-radius: var(--cui-fieldset-radius, var(--_fieldset-radius));
 }
 

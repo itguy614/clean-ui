@@ -39,6 +39,9 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-badge-radius", default: "per rounded", description: "Corner radius" },
+    { name: "--cui-badge-bg", default: "per variant and color", description: "Fill (none for the outline variant)" },
+    { name: "--cui-badge-color", default: "per variant and color", description: "Text colour" },
+    { name: "--cui-badge-border", default: "per variant and color", description: "The border shorthand: 1px solid transparent, or the role's border for outline" },
   ],
 };
 

@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--cui-radius-md`; `CuiCodeBlock` and the select, combobox and tag-input dropdown panel follow
   `--cui-radius-lg`; the markdown editor's code lines and slash menu follow `--cui-radius-md`.
 
+- **`CuiBadge`, `CuiFieldset` and `CuiPopover` take their paint from tokens, not inline styles.**
+  `--cui-badge-bg|color|border|radius`, `--cui-fieldset-bg|border|radius` and
+  `--cui-popover-bg|border|color|width|radius` now restyle them, and a plain
+  `.cui-badge { … }` rule wins without `!important`; their rendering is unchanged. A popover's
+  panel (and its arrow, which follows `--cui-popover-bg` and `--cui-popover-border`) is teleported
+  to `<body>`: set its tokens on `:root` or `<body>`, not on the trigger's container. Also new:
+  `--cui-tabs-tab-radius` (a segmented tab's corner, which is `--cui-tabs-radius` less 0.125rem
+  unless set) and `--cui-file-upload-row-radius` (a listed file's row; the drop zone keeps
+  `--cui-file-upload-radius`).
+
 - **`useOverlay`'s `exit: "timer"` mode is removed, and with it the `exit`, `animationDuration`
   and `name` options.** The exit is always a `<Transition>`: render the overlay
   `v-if="mounted" v-show="isVisible"` inside `<Transition v-bind="subtreeTransition"

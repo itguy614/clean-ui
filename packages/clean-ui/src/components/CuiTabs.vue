@@ -547,8 +547,13 @@ const messages = useMessages();
 }
 
 /* --- Segmented --- */
+/* A tab sits in the track's padding, so its corner is the track's less 0.125rem (concentric
+   corners). The sum is a private property and the corner reads it through
+   `--cui-tabs-tab-radius`, so a consumer who sets a value the sum cannot take (a unitless `0`
+   is no length) sets the tab's own corner and is done. A percentage is fine: `calc(50% - …)`. */
 :where(.cui-tabs--segmented .cui-tabs__tab) {
-  border-radius: calc(var(--cui-tabs-radius, var(--cui-radius-md, 0.375rem)) - 0.125rem);
+  --_tabs-tab-radius: calc(var(--cui-tabs-radius, var(--cui-radius-md, 0.375rem)) - 0.125rem);
+  border-radius: var(--cui-tabs-tab-radius, var(--_tabs-tab-radius));
 }
 
 .cui-tabs--segmented .cui-tabs__tab--active {

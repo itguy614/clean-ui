@@ -28,6 +28,8 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-fieldset-radius", default: "per rounded", description: "Corner radius" },
+    { name: "--cui-fieldset-bg", default: "per variant and color", description: "Fill (none for outline and ghost)" },
+    { name: "--cui-fieldset-border", default: "per variant and color", description: "The border shorthand (none for ghost)" },
   ],
 };
 

@@ -13,6 +13,9 @@ import CuiInput from "../../components/CuiInput.vue";
 import CuiModal from "../../components/CuiModal.vue";
 import CuiPagination from "../../components/CuiPagination.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
+import CuiTabs from "../../components/CuiTabs.vue";
+import CuiTab from "../../components/CuiTab.vue";
+import CuiFileUpload from "../../components/CuiFileUpload.vue";
 import CuiTooltip from "../../components/CuiTooltip.vue";
 
 /**
@@ -133,6 +136,70 @@ describe("the radius scale and the button token are separate (#294, real browser
   it("keeps the scale's other steps on their tokens", async () => {
     expect(await radiusOf(CuiCard, { rounded: "lg" }, "--cui-radius-lg: 14px; --cui-button-radius: 3px", ":scope", slot)).toBe("14px");
     expect(await radiusOf(CuiCard, { rounded: "sm" }, "--cui-radius-sm: 2px; --cui-button-radius: 3px", ":scope", slot)).toBe("2px");
+  });
+
+  describe("segmented tabs", () => {
+    const tabs = [() => h(CuiTab, { value: "a", label: "A" }), () => h(CuiTab, { value: "b", label: "B" })];
+    const radii = async (style: string) => {
+      const tab = ".cui-tabs--segmented .cui-tabs__tab";
+      const slots = { default: () => tabs.map((t) => t()) };
+      const track = await radiusOf(CuiTabs, { modelValue: "a", variant: "segmented" }, style, ".cui-tabs__bar-outer", slots);
+      const one = await radiusOf(CuiTabs, { modelValue: "a", variant: "segmented" }, style, tab, slots);
+      return { track, tab: one };
+    };
+
+    it("keeps the default: a track at md, its tabs 2px inside it", async () => {
+      expect(await radii("")).toEqual({ track: "6px", tab: "4px" });
+    });
+
+    it("lets --cui-tabs-tab-radius set the tab's corner on its own", async () => {
+      expect(await radii("--cui-tabs-radius: 10px; --cui-tabs-tab-radius: 7px")).toEqual({ track: "10px", tab: "7px" });
+    });
+
+    it("derives the tab's corner from --cui-tabs-radius, and from --cui-radius-md behind it", async () => {
+      expect(await radii("--cui-tabs-radius: 10px")).toEqual({ track: "10px", tab: "8px" });
+      expect(await radii("--cui-radius-md: 12px")).toEqual({ track: "12px", tab: "10px" });
+    });
+
+    it("squares the tabs with a unitless 0 track, offers the tab token as the way out, and takes a percentage", async () => {
+      expect(await radii("--cui-tabs-radius: 0")).toEqual({ track: "0px", tab: "0px" });
+      expect(await radii("--cui-tabs-radius: 0; --cui-tabs-tab-radius: 0.125rem")).toEqual({ track: "0px", tab: "2px" });
+      // A percentage is a valid corner, and subtracting a length from one is valid too.
+      expect((await radii("--cui-tabs-radius: 50%")).tab).not.toBe("0px");
+    });
+  });
+
+  describe("CuiFileUpload", () => {
+    async function parts(style: string) {
+      const host = document.createElement("div");
+      host.setAttribute("style", style);
+      document.body.append(host);
+      hosts.push(host);
+      wrappers.push(mount(CuiFileUpload, { props: { label: "Files" }, attachTo: host }));
+      const input = host.querySelector<HTMLInputElement>("input[type=file]")!;
+      const dt = new DataTransfer();
+      dt.items.add(new File(["x"], "a.txt", { type: "text/plain" }));
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      await nextTick();
+      const zone = getComputedStyle(host.querySelector(".cui-file-upload__zone")!).borderTopLeftRadius;
+      const row = getComputedStyle(host.querySelector(".cui-file-upload__item")!).borderTopLeftRadius;
+      return { zone, row };
+    }
+
+    it("keeps the defaults: a 0.625rem zone and an md row", async () => {
+      expect(await parts("")).toEqual({ zone: "10px", row: "6px" });
+    });
+
+    it("sets the zone and the rows through separate tokens", async () => {
+      expect(await parts("--cui-file-upload-radius: 14px")).toEqual({ zone: "14px", row: "6px" });
+      expect(await parts("--cui-file-upload-row-radius: 3px")).toEqual({ zone: "10px", row: "3px" });
+    });
+
+    it("moves the rows with --cui-radius-md, and never the zone", async () => {
+      expect(await parts("--cui-radius-md: 9px")).toEqual({ zone: "10px", row: "9px" });
+      expect(await parts("--cui-radius-md: 9px; --cui-file-upload-row-radius: 2px")).toEqual({ zone: "10px", row: "2px" });
+    });
   });
 
   describe("an input's attached buttons", () => {

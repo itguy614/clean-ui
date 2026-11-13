@@ -37,6 +37,7 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-file-upload-radius", default: "0.625rem", description: "Corner radius of the drop zone" },
+    { name: "--cui-file-upload-row-radius", default: "var(--cui-radius-md)", description: "Corner radius of a listed file's row" },
   ],
 };
 

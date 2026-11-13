@@ -389,7 +389,7 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
   border-radius: var(--cui-file-upload-radius, 0.625rem);
 }
 :where(.cui-file-upload__item) {
-  border-radius: var(--cui-radius-md, 0.375rem);
+  border-radius: var(--cui-file-upload-row-radius, var(--cui-radius-md, 0.375rem));
 }
 /* The input is hidden; the drop zone it is labelled by shows that it has focus. */
 :where(.cui-file-upload__input:focus-visible + .cui-file-upload__zone),

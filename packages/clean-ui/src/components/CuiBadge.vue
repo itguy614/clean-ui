@@ -49,29 +49,31 @@ const badgeStyle = computed(() => {
 
   const base: Record<string, string> = {};
 
+  // Private `--_badge-<slot>` properties, read back through `--cui-badge-<slot>` by the
+  // stylesheet (#294): an inline paint declaration would outrank a consumer's own rule.
   if (v === "solid") {
-    base.background = `var(--cui-${c}-solid, var(--cui-${c}))`;
-    base.color = `var(--cui-${c}-text)`;
-    base.border = "1px solid transparent";
+    base["--_badge-bg"] = `var(--cui-${c}-solid, var(--cui-${c}))`;
+    base["--_badge-color"] = `var(--cui-${c}-text)`;
+    base["--_badge-border"] = "1px solid transparent";
   } else if (v === "outline") {
-    base.background = "transparent";
-    base.color = `var(--cui-${c})`;
-    base.border = `1px solid var(--cui-${c}-border)`;
+    base["--_badge-bg"] = "transparent";
+    base["--_badge-color"] = `var(--cui-${c})`;
+    base["--_badge-border"] = `1px solid var(--cui-${c}-border)`;
   } else {
     // subtle
-    base.background = `var(--cui-${c}-bg)`;
-    base.color = `var(--cui-${c})`;
-    base.border = "1px solid transparent";
+    base["--_badge-bg"] = `var(--cui-${c}-bg)`;
+    base["--_badge-color"] = `var(--cui-${c})`;
+    base["--_badge-border"] = "1px solid transparent";
   }
 
-  // Private, read back through `--cui-badge-radius` by the stylesheet (#294).
   base["--_badge-radius"] = RADIUS_SCALE[props.rounded];
 
   return base;
 });
 
+// The dot and its ping ring are a part of their own, painted in the role's colour.
 const dotStyle = computed(() => ({
-  background: `var(--cui-${props.color})`,
+  "--_badge-dot-bg": `var(--cui-${props.color})`,
 }));
 
 const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
@@ -121,9 +123,18 @@ const messages = useMessages();
 
 <style scoped>
 /* --- Base --- */
-/* Paint, so zero specificity: `--cui-badge-radius` or a plain `.cui-badge { border-radius }` wins. */
+/* Paint, so zero specificity: a `--cui-badge-*` token or a plain `.cui-badge { … }` rule wins.
+   The dot has none of it: `.cui-badge--dot` below squares it off at normal specificity. */
 :where(.cui-badge) {
+  background: var(--cui-badge-bg, var(--_badge-bg));
+  color: var(--cui-badge-color, var(--_badge-color));
+  border: var(--cui-badge-border, var(--_badge-border));
   border-radius: var(--cui-badge-radius, var(--_badge-radius));
+}
+
+/* The dot's fill is the role's colour, not a slot: a part's own colour (a plain rule wins). */
+:where(.cui-badge__dot, .cui-badge__ping) {
+  background: var(--_badge-dot-bg);
 }
 
 .cui-badge {
