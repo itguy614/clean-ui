@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prop name, type, default and runtime behaviour is unchanged (checked by diffing each
   component's resolved props before and after). A control still has only the props it had; it
   `Pick`s them.
+- **A radio group is now a single tab stop; use arrow keys to move between options, as the ARIA radiogroup pattern specifies.** `CuiRadioGroup` (and its `buttons` variant) is entered once with `Tab`, on the checked radio or the first enabled one, and left with the next `Tab`. Update any focus-order test or keyboard walkthrough that tabbed through each radio. A standalone `CuiRadio` is unchanged. (#231)
+  In a right-to-left page `useRovingFocus` swaps ArrowLeft and ArrowRight (the old handler ignored
+  direction), and Home and End now move to the first and last radio and select it.
 
 ### Changed
 
