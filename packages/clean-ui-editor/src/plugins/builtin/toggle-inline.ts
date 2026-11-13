@@ -24,7 +24,7 @@ export function toggleInlineCommand({ nodeName, marker }: ToggleInlineOptions): 
     if (found.status === "unknown") return true;
     if (found.status === "inside") {
       const { from, to } = found.range;
-      context.replaceRange(from, to, context.doc.slice(from + marker.length, to - marker.length));
+      context.replaceRange(from, to, context.sliceDoc(from + marker.length, to - marker.length));
     } else {
       context.wrapSelection(marker, marker);
     }

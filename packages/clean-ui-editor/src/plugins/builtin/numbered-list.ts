@@ -13,7 +13,7 @@ export const numberedListPlugin = definePlugin({
   toolbar: [{ command: "numberedList" }],
   keymap: [{ key: "Mod-Shift-7", command: "numberedList" }],
   constructs: ["OrderedList"],
-  decorations: [{ node: "OrderedList" }],
+  decorationNodes: ["OrderedList"],
   paste: [
     {
       selector: "ol > li",

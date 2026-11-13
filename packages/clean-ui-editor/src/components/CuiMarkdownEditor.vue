@@ -404,17 +404,10 @@ function resolveCspNonce(): string | undefined {
   return document.querySelector('meta[name="csp-nonce"]')?.getAttribute("content") ?? undefined;
 }
 
-/** FR27/FR29: the reveal layer only decorates constructs the active plugins
- * actually declare via `decorations` — excluding a plugin means its markers
- * stay literal, unstyled text. */
-function activeConstructsFromRegistry(registry: PluginRegistry): ReadonlySet<string> {
-  return new Set(registry.decorations.map((rule) => rule.node));
-}
-
 /** `wysiwyg` gets the reveal layer (hidden markers, revealed on caret entry);
  * `source` stays the base editor with nothing added, per FR4. */
 function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
-  return mode === "wysiwyg" ? [revealExtension(activeConstructsFromRegistry(currentRegistry))] : [];
+  return mode === "wysiwyg" ? [revealExtension(currentRegistry.decorationNodes)] : [];
 }
 
 /**
@@ -624,7 +617,7 @@ watch(
         // present in wysiwyg mode, so only worth updating there; dispatching
         // an effect an inactive StateField doesn't have is a harmless no-op,
         // but the guard keeps this from doing pointless work in source mode.
-        ...(currentMode.value === "wysiwyg" ? [setActiveConstructsEffect.of(activeConstructsFromRegistry(currentRegistry))] : []),
+        ...(currentMode.value === "wysiwyg" ? [setActiveConstructsEffect.of(currentRegistry.decorationNodes)] : []),
       ],
     });
   },
