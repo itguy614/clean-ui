@@ -35,9 +35,25 @@
       "import": "./dist/index.js"
     },
     "./styles": "./dist/clean-ui.css",
+    "./styles/all.css": "./dist/styles/all.css",
+    "./themes/mono.css": "./dist/themes/mono.css",
+    "./themes/forest.css": "./dist/themes/forest.css",
+    "./themes/amber.css": "./dist/themes/amber.css",
+    "./themes/azure.css": "./dist/themes/azure.css",
+    "./themes/teal.css": "./dist/themes/teal.css",
+    "./themes/violet.css": "./dist/themes/violet.css",
+    "./themes/ruby.css": "./dist/themes/ruby.css",
     "./icons/lazy": {
       "types": "./dist/icons/lazy.d.ts",
       "import": "./dist/icons/lazy.js"
+    },
+    "./icons/builtin": {
+      "types": "./dist/icons/builtin.d.ts",
+      "import": "./dist/icons/builtin.js"
+    },
+    "./icons/generated/*": {
+      "types": "./dist/icons/generated/*.d.ts",
+      "import": "./dist/icons/generated/*.js"
     },
     "./*": "./dist/*"
   },
@@ -49,21 +65,27 @@
   "sideEffects": [
     "**/*.css",
     "./dist/icons/lazy.js",
+    "./dist/icons/builtin.js",
+    "./src/icons/builtin.ts",
     "./dist/duplicate-guard.js",
     "./src/duplicate-guard.ts"
   ],
   "scripts": {
-    "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
+    "build": "vite build && node scripts/build-theme-css.mjs && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs",
+    "sync:themes": "node scripts/sync-theme-exports.mjs",
+    "check:imports": "node scripts/check-dist-imports.mjs . && node scripts/check-native-esm.mjs && node scripts/check-theme-css.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "@phosphor-icons/vue": "^2.2.1"
   },
   "devDependencies": {
+    "@phosphor-icons/core": "2.1.1",
+    "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.1.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "@vitest/browser": "3.2.4",
@@ -80,7 +102,11 @@
     "vue-tsc": "^2.2.0"
   },
   "dependencies": {
-    "@floating-ui/vue": "^1.1.11",
-    "@phosphor-icons/vue": "^2.2.1"
+    "@floating-ui/vue": "^1.1.11"
+  },
+  "peerDependenciesMeta": {
+    "@phosphor-icons/vue": {
+      "optional": true
+    }
   }
 }

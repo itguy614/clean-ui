@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, useTemplateRef } from "vue";
+import { ref, computed, nextTick, useTemplateRef, type Component } from "vue";
 import type { HideableProps, ColorableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
@@ -7,6 +7,18 @@ import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { formatBytes } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
+import { IconCloudArrowUp } from "../icons/generated/cloud-arrow-up";
+import { IconUploadSimple } from "../icons/generated/upload-simple";
+import { IconX } from "../icons/generated/x";
+import { IconFile } from "../icons/generated/file";
+import { IconFileDoc } from "../icons/generated/file-doc";
+import { IconFilePdf } from "../icons/generated/file-pdf";
+import { IconFileText } from "../icons/generated/file-text";
+import { IconFileXls } from "../icons/generated/file-xls";
+import { IconFileZip } from "../icons/generated/file-zip";
+import { IconImage } from "../icons/generated/image";
+import { IconMusicNote } from "../icons/generated/music-note";
+import { IconVideoCamera } from "../icons/generated/video-camera";
 
 export interface FileEntry {
   file: File;
@@ -72,16 +84,16 @@ const locale = useLocale();
 // Sizes in the library's locale (#337): "1.5 MB", "1,5 MB" in German.
 const formatSize = (bytes: number) => formatBytes(bytes, locale.value);
 
-function fileIcon(type: string): string {
-  if (type.startsWith("image/")) return "image";
-  if (type.startsWith("video/")) return "video-camera";
-  if (type.startsWith("audio/")) return "music-note";
-  if (type.includes("pdf")) return "file-pdf";
-  if (type.includes("zip") || type.includes("compressed") || type.includes("archive")) return "file-zip";
-  if (type.includes("spreadsheet") || type.includes("csv") || type.includes("excel")) return "file-xls";
-  if (type.includes("document") || type.includes("word")) return "file-doc";
-  if (type.includes("text") || type.includes("json") || type.includes("xml")) return "file-text";
-  return "file";
+function fileIcon(type: string): Component {
+  if (type.startsWith("image/")) return IconImage;
+  if (type.startsWith("video/")) return IconVideoCamera;
+  if (type.startsWith("audio/")) return IconMusicNote;
+  if (type.includes("pdf")) return IconFilePdf;
+  if (type.includes("zip") || type.includes("compressed") || type.includes("archive")) return IconFileZip;
+  if (type.includes("spreadsheet") || type.includes("csv") || type.includes("excel")) return IconFileXls;
+  if (type.includes("document") || type.includes("word")) return IconFileDoc;
+  if (type.includes("text") || type.includes("json") || type.includes("xml")) return IconFileText;
+  return IconFile;
 }
 
 function validateFile(file: File): string | null {
@@ -272,7 +284,6 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
       :style="{
         display: 'block',
         border: `2px dashed ${isDragging ? `var(--cui-${color})` : 'var(--cui-border)'}`,
-        borderRadius: '0.625rem',
         padding: 'calc(1.5rem * var(--cui-density-scale, 1))',
         textAlign: 'center',
         cursor: disabled ? 'default' : 'pointer',
@@ -286,7 +297,7 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
       @drop="onDrop"
     >
       <CuiIcon
-        name="cloud-arrow-up"
+        :icon="IconCloudArrowUp"
         size="2rem"
         :style="{ color: isDragging ? `var(--cui-${color})` : 'var(--cui-text-tertiary)', marginBottom: 'calc(0.5rem * var(--cui-density-scale, 1))' }"
       />
@@ -313,18 +324,18 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
       <div
         v-for="(entry, i) in files"
         :key="entry.id"
+        class="cui-file-upload__item"
         :style="{
           display: 'flex',
           alignItems: 'center',
           gap: 'calc(0.625rem * var(--cui-density-scale, 1))',
           padding: 'calc(0.5rem * var(--cui-density-scale, 1)) calc(0.625rem * var(--cui-density-scale, 1))',
-          borderRadius: '0.375rem',
           border: '1px solid var(--cui-border)',
           marginBottom: 'calc(0.375rem * var(--cui-density-scale, 1))',
           background: 'var(--cui-surface-base, white)',
         }"
       >
-        <CuiIcon :name="fileIcon(entry.type)" size="1.25rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
+        <CuiIcon :icon="fileIcon(entry.type)" size="1.25rem" :style="{ flexShrink: '0', color: 'var(--cui-text-secondary)' }" />
         <div :style="{ flex: '1', minWidth: '0' }">
           <div :style="{ fontSize: '0.8125rem', fontWeight: '500', color: 'var(--cui-text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }">
             {{ entry.name }}
@@ -354,7 +365,7 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
           :disabled="disabled"
           @click="onRemove(entry.id, i)"
         >
-          <CuiIcon name="x" size="0.75rem" />
+          <CuiIcon :icon="IconX" size="0.75rem" />
         </button>
       </div>
 
@@ -366,7 +377,7 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
         <div :style="{ display: 'flex', gap: 'calc(0.375rem * var(--cui-density-scale, 1))' }">
           <CuiButton variant="ghost" size="xs" :disabled="disabled" @click="onClearAll">{{ messages.clearAll }}</CuiButton>
           <CuiButton v-if="!autoUpload" variant="solid" size="xs" :color="color" :disabled="disabled" @click="onUploadClick">
-            <template #prefix><CuiIcon name="upload-simple" size="0.75rem" /></template>
+            <template #prefix><CuiIcon :icon="IconUploadSimple" size="0.75rem" /></template>
             {{ uploadLabel }}
           </CuiButton>
         </div>
@@ -384,6 +395,14 @@ const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload
 }
 
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
+/* The drop zone's 0.625rem is between the scale's md and lg, so it keeps its own token
+   rather than moving a step (#294); a listed file is a plain `md` row. */
+:where(.cui-file-upload__zone) {
+  border-radius: var(--cui-file-upload-radius, 0.625rem);
+}
+:where(.cui-file-upload__item) {
+  border-radius: var(--cui-file-upload-row-radius, var(--cui-radius-md, 0.375rem));
+}
 /* The input is hidden; the drop zone it is labelled by shows that it has focus. */
 :where(.cui-file-upload__input:focus-visible + .cui-file-upload__zone),
 :where(.cui-file-upload__remove:focus-visible) {

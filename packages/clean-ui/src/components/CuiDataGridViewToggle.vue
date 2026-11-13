@@ -3,6 +3,8 @@ import { useDataGridState } from "../composables/useDataGrid";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { IconSquaresFour } from "../icons/generated/squares-four";
+import { IconTable } from "../icons/generated/table";
 
 const grid = useDataGridState();
 // Icon-only, so named, with the active view pressed (#161).
@@ -19,7 +21,7 @@ const messages = useMessages();
       :style="{ background: grid.viewMode.value === 'grid' ? 'var(--cui-primary-bg)' : undefined }"
       @click="grid.setViewMode('grid')"
     >
-      <CuiIcon name="table" size="0.875rem" />
+      <CuiIcon :icon="IconTable" size="0.875rem" />
     </CuiButton>
     <CuiButton
       variant="ghost"
@@ -29,7 +31,7 @@ const messages = useMessages();
       :style="{ background: grid.viewMode.value === 'card' ? 'var(--cui-primary-bg)' : undefined }"
       @click="grid.setViewMode('card')"
     >
-      <CuiIcon name="squares-four" size="0.875rem" />
+      <CuiIcon :icon="IconSquaresFour" size="0.875rem" />
     </CuiButton>
   </div>
 </template>
@@ -40,7 +42,7 @@ const messages = useMessages();
   align-items: center;
   gap: calc(0.125rem * var(--cui-density-scale, 1));
   border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-data-grid-view-toggle-radius, var(--cui-radius-md, 0.375rem));
   padding: calc(0.125rem * var(--cui-density-scale, 1));
 }
 </style>

@@ -36,6 +36,7 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null;
 // Register with parent so siblings can close us
 const unregister = parentCtx?.registerSubMenu(() => close());
 import { onUnmounted } from "vue";
+import { IconCaretRight } from "../icons/generated/caret-right";
 onUnmounted(() => unregister?.());
 
 function position() {
@@ -141,7 +142,7 @@ function onPanelKeydown(e: KeyboardEvent) {
         <slot name="icon" />
       </span>
       <span class="cui-dropdown-sub__label"><slot /></span>
-      <CuiIcon name="caret-right" size="0.75rem" class="cui-dropdown-sub__arrow" />
+      <CuiIcon :icon="IconCaretRight" size="0.75rem" class="cui-dropdown-sub__arrow" />
     </div>
 
     <!-- Sub-menu panel -->
@@ -219,7 +220,7 @@ function onPanelKeydown(e: KeyboardEvent) {
 .cui-dropdown-sub__menu {
   min-width: 10rem;
   padding: calc(0.25rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-dropdown-sub-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);

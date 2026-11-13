@@ -317,7 +317,7 @@ const choice = useChoiceLabelling(props);
    does a consumer's plain `.cui-radio-button { … }` or a `--cui-radio-*` token (#454). The
    state rules follow in the order they cascade: resting, hover, selected, selected and hovered. */
 :where(.cui-radio-button) {
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-radio-radius, var(--cui-radius-md, 0.375rem));
   height: var(--cui-radio-height, var(--_radio-height));
   padding-left: var(--cui-radio-px, var(--_radio-px));
   padding-right: var(--cui-radio-px, var(--_radio-px));

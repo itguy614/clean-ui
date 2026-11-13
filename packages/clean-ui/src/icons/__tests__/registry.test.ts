@@ -2,6 +2,8 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { defineComponent, h, nextTick } from "vue";
 import CuiIcon from "../../components/CuiIcon.vue";
+import { registerBuiltinIcons } from "../builtin";
+import { IconCheck } from "../generated/check";
 import {
   registerIcons,
   hasIcon,
@@ -30,14 +32,23 @@ describe("registerIcons", () => {
     expect(hasIcon("rocket")).toBe(true);
   });
 
-  it("lists registered names alongside the built-ins", () => {
+  it("lists only what was registered: the built-in names are an opt-in (#207)", () => {
+    expect(registeredIconNames()).toEqual([]);
     registerIcons({ rocket: FakeIcon });
-    const names = registeredIconNames();
-    expect(names).toContain("rocket");
-    expect(names).toContain("check"); // built-in
+    expect(registeredIconNames()).toEqual(["rocket"]);
+    registerBuiltinIcons();
+    expect(registeredIconNames()).toContain("check");
+    expect(registeredIconNames()).toContain("rocket");
+  });
+
+  it("registerBuiltinIcons does not take a name the app already registered", () => {
+    registerIcons({ check: FakeIcon });
+    registerBuiltinIcons();
+    expect(mount(CuiIcon, { props: { name: "check" } }).find("[data-fake]").exists()).toBe(true);
   });
 
   it("lets a registration override a built-in of the same name", () => {
+    registerBuiltinIcons();
     const wrapper = mount(CuiIcon, { props: { name: "check" } });
     expect(wrapper.find("[data-fake]").exists()).toBe(false);
 
@@ -59,7 +70,19 @@ describe("registerIcons", () => {
 });
 
 describe("CuiIcon resolution", () => {
+  it("draws the fallback glyph for a built-in name until the built-in names are registered", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const wrapper = mount(CuiIcon, { props: { name: "star-half" } });
+    expect(wrapper.find("svg").exists()).toBe(true);
+    expect(warn.mock.calls.flat().join("\n")).toContain("@itguy614/clean-ui/icons/builtin");
+  });
+
+  it("renders a component passed directly with no registration at all", () => {
+    expect(mount(CuiIcon, { props: { icon: IconCheck } }).find("svg").exists()).toBe(true);
+  });
+
   it("renders a built-in name synchronously — no await needed", () => {
+    registerBuiltinIcons();
     // The point of the static map: an icon is present on first render, which is
     // also what lets it render during SSR.
     const wrapper = mount(CuiIcon, { props: { name: "check" } });
@@ -92,6 +115,7 @@ describe("CuiIcon resolution", () => {
   });
 
   it("does not warn for a built-in name", async () => {
+    registerBuiltinIcons();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mount(CuiIcon, { props: { name: "check" } });
     await flushPromises();
@@ -100,6 +124,7 @@ describe("CuiIcon resolution", () => {
   });
 
   it("switches synchronously when the name prop changes between built-ins", async () => {
+    registerBuiltinIcons();
     const wrapper = mount(CuiIcon, { props: { name: "check" } });
     const first = wrapper.find("svg").html();
 
@@ -144,6 +169,7 @@ describe("opt-in fallback resolver", () => {
   });
 
   it("prefers a registered icon over the resolver", async () => {
+    registerBuiltinIcons();
     const resolver = vi.fn(async () => FakeIcon);
     setIconFallbackResolver(resolver);
     mount(CuiIcon, { props: { name: "check" } }); // built-in

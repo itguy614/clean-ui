@@ -7,6 +7,8 @@ import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
+import { IconPushPin } from "../icons/generated/push-pin";
+import { IconX } from "../icons/generated/x";
 
 const messages = useMessages();
 const grid = useDataGridState();
@@ -117,10 +119,10 @@ const hasAnyValue = computed(() => {
           :style="{ color: grid.filterPanelPinned.value ? 'var(--cui-primary)' : undefined }"
           @click="grid.toggleFilterPanelPin()"
         >
-          <CuiIcon name="push-pin" size="0.875rem" />
+          <CuiIcon :icon="IconPushPin" size="0.875rem" />
         </CuiButton>
         <CuiButton variant="ghost" size="xs" @click="grid.toggleFilterPanel()">
-          <CuiIcon name="x" size="0.875rem" />
+          <CuiIcon :icon="IconX" size="0.875rem" />
         </CuiButton>
       </div>
     </div>
@@ -193,7 +195,7 @@ const hasAnyValue = computed(() => {
   width: 16rem;
   flex-shrink: 0;
   border: 1px solid var(--cui-border);
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-data-grid-filter-panel-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-surface-base);
   display: flex;
   flex-direction: column;

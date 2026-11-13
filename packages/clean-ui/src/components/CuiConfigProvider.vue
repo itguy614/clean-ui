@@ -3,13 +3,13 @@ import { computed, inject, provide } from "vue";
 import { CuiConfigKey, type CuiHeadingLevels } from "./config-context";
 import { defaultMessages, mergeMessages, type CuiMessages, type DeepPartialMessages } from "../messages";
 import { useCleanUIDefaultsProvider } from "../utils/configure";
-import type { CuiColor } from "../types/common";
+import type { CuiColor, CuiRoleIcon } from "../types/common";
 
 export interface CuiConfigProviderProps {
   /** Heading levels for the titled components inside (#149), over the app's. */
   headingLevels?: Partial<CuiHeadingLevels>;
   /** Role icons for the feedback components inside (#149), over the app's. */
-  roleIcons?: Partial<Record<CuiColor, string>>;
+  roleIcons?: Partial<Record<CuiColor, CuiRoleIcon>>;
   /** The locale for dates, month and weekday names, file sizes and AM/PM labels inside (#337), over the app's. */
   locale?: string;
   /**

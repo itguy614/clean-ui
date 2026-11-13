@@ -19,7 +19,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FIXTURE_DIR, SCENARIOS, buildScenario } from "./fixture-scenarios.mjs";
+import { FIXTURE_DIR, SCENARIOS, SVG_PATH_DATA, buildScenario } from "./fixture-scenarios.mjs";
 
 const FIXTURE_NODE_MODULES = join(FIXTURE_DIR, "node_modules");
 
@@ -75,6 +75,7 @@ function findInstalledCopies(root, packageName) {
 }
 
 const PACKAGES_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../packages");
+const THEMES_JSON = join(PACKAGES_DIR, "clean-ui/src/styles/themes/themes.json");
 
 /** Every non-test source file of every workspace package. */
 function packageSources() {
@@ -146,8 +147,8 @@ const GUARANTEES = [
     check(distDir) {
       const js = readBuiltAssets(distDir, [".js"]);
       const distinctIcons = new Set(js.match(/Ph[A-Z][A-Za-z0-9]*/g) ?? []);
-      // The curated built-in set (src/icons/builtin.ts) is ~50 icons today and
-      // grows slowly; the regression this guards is the *entire*
+      // Nothing in a build should name a Phosphor component any more (the built-ins are
+      // generated, see icon-paths below); the regression this guards is the *entire*
       // @phosphor-icons/vue package (~1500+) leaking in via the lazy resolver
       // or a stray dynamic import — nowhere near this threshold either way.
       const THRESHOLD = 150;
@@ -155,6 +156,26 @@ const GUARANTEES = [
         return (
           `found ${distinctIcons.size} distinct Phosphor icon identifiers (over ${THRESHOLD}) — ` +
           `looks like the full icon package leaked in, not the curated built-in set.`
+        );
+      }
+      return null;
+    },
+  },
+  {
+    id: "icon-paths",
+    name: "built icon path data stays within the page's limit (#207)",
+    check(distDir, scenario) {
+      // Counts SVG path literals, whichever way they are spelled (a Phosphor `d:"M…"` or a
+      // generated built-in's bare string). Each icon the page draws costs one per weight it
+      // carries: with clean-ui 1.x's six-weight components, one rendered icon put ~360 paths
+      // (~25 kB gzip) in the bundle; the generated built-ins carry only the weights the
+      // library draws.
+      const max = SCENARIOS[scenario].maxIconPaths;
+      const paths = (readBuiltAssets(distDir, [".js"]).match(SVG_PATH_DATA) ?? []).length;
+      if (paths >= max) {
+        return (
+          `found ${paths} SVG path literals (the limit is under ${max}) — an icon with weights the library ` +
+          `never draws, or the full icon package, is in the bundle. See scripts/fixture-scenarios.mjs.`
         );
       }
       return null;
@@ -265,6 +286,27 @@ const GUARANTEES = [
     },
   },
   {
+    id: "theme-css-opt-in",
+    name: "the built stylesheet holds exactly the non-default themes the page imports (#220)",
+    check(distDir, scenario) {
+      // Only the page's own `themes` (see scripts/fixture-scenarios.mjs): `@itguy614/clean-ui/styles`
+      // is the default theme, and each other palette arrives through its own import.
+      const css = readBuiltAssets(distDir, [".css"]);
+      // The default's names and the valid ids come from the one theme list (themes.json).
+      const list = JSON.parse(readFileSync(THEMES_JSON, "utf-8")).themes;
+      const navy = list.filter((t) => t.default).flatMap((t) => [t.id, ...(t.aliases ?? [])]);
+      const found = [...new Set([...css.matchAll(/\.cui-theme-([a-z][a-z0-9-]*)/g)].map((m) => m[1]))]
+        .filter((id) => !navy.includes(id))
+        .sort();
+      const expected = [...(SCENARIOS[scenario].themes ?? [])].sort();
+      const unknown = expected.filter((id) => !list.some((t) => t.id === id && !t.default));
+      if (unknown.length) return `scripts/fixture-scenarios.mjs names theme(s) [${unknown}] that themes.json does not list.`;
+      return found.join() === expected.join()
+        ? null
+        : `the built CSS has theme classes [${found}], but this page imports [${expected}].`;
+    },
+  },
+  {
     id: "single-vue",
     scope: "install",
     name: "vue: exactly one installed copy (single-instance dependency)",
@@ -336,7 +378,7 @@ for (const { id, name, scope, check } of GUARANTEES) {
   }
   for (const [scenario, { skipGuarantees = {} }] of Object.entries(SCENARIOS)) {
     const label = `${name} [${scenario}]`;
-    const failure = runCheck(check, builds[scenario]);
+    const failure = runCheck(check, builds[scenario], scenario);
     if (!(id in skipGuarantees)) {
       report(label, failure);
     } else if (failure) {

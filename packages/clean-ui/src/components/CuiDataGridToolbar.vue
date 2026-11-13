@@ -11,6 +11,7 @@ import CuiIcon from "./CuiIcon.vue";
 import CuiBadge from "./CuiBadge.vue";
 import CuiToolbar from "./CuiToolbar.vue";
 import { useMessages } from "../composables/useMessages";
+import { IconFunnel } from "../icons/generated/funnel";
 
 const messages = useMessages();
 
@@ -50,7 +51,7 @@ const activeFilterCount = computed(() => grid.filters.value.length);
         :style="{ background: grid.filterPanelOpen.value ? 'var(--cui-primary-bg)' : undefined }"
         @click="grid.toggleFilterPanel()"
       >
-        <template #prefix><CuiIcon name="funnel" size="0.875rem" /></template>
+        <template #prefix><CuiIcon :icon="IconFunnel" size="0.875rem" /></template>
         {{ messages.dataGrid.filters }}
         <CuiBadge
           v-if="activeFilterCount > 0"

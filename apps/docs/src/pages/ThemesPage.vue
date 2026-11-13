@@ -28,6 +28,12 @@ import Example from "../components/Example.vue";
 import { computed, ref } from "vue";
 
 const { theme, presets, setTheme } = useTheme();
+const themeImports = computed(() =>
+  [
+    "import '@itguy614/clean-ui/styles'            // Navy, the default: always",
+    ...presets.filter((p) => p.id !== "default").map((p) => `import '@itguy614/clean-ui/themes/${p.id}.css'`),
+  ].join("\n"),
+);
 const demoRadio = ref("option1");
 const demoCheck = ref(true);
 const demoToggle = ref(true);
@@ -98,6 +104,32 @@ setTheme('default') // back to Navy, the default (no class on &lt;html&gt;)
           description: p.description,
         }))"
       />
+    </div>
+
+    <div>
+      <h2 id="loading-theme-css" class="mb-4 text-2xl font-semibold">Loading a Theme's CSS</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            <code class="cui-code">@itguy614/clean-ui/styles</code> holds the default Navy theme only. Every other
+            theme is its own opt-in stylesheet of about 2 kB: import the ones your app uses, in any order, after
+            <code class="cui-code">styles</code>. Each works on <code class="cui-code">&lt;html&gt;</code> and on a scoped
+            subtree, in light and dark. This site imports all of them.
+          </p>
+          <pre class="cui-pre"><code class="cui-code">{{ themeImports }}</code></pre>
+          <p class="mb-3 mt-4 text-surface-600 dark:text-surface-400">
+            With no bundler (a plain <code class="cui-code">&lt;link&gt;</code>), or to offer every theme without listing
+            them, load the all-in-one stylesheet <em>instead of</em> <code class="cui-code">styles</code>:
+          </p>
+          <pre class="cui-pre"><code class="cui-code">import '@itguy614/clean-ui/styles/all.css'</code></pre>
+          <p class="mt-4 text-surface-600 dark:text-surface-400">
+            A theme class whose file was not imported styles nothing, and the page stays Navy. In development,
+            <code class="cui-code">setTheme()</code> warns once and names the file to import. Upgrading from 1.x, where
+            <code class="cui-code">styles</code> held every theme: import each theme you use, or switch to
+            <code class="cui-code">styles/all.css</code>.
+          </p>
+        </CuiCardBody>
+      </CuiCard>
     </div>
 
     <div>
@@ -382,6 +414,31 @@ setTheme('teal')
   /* Optionally override surface for a different neutral feel */
   --color-surface-50: #fafaf9;
   /* ... */
+}</code></pre>
+        </CuiCardBody>
+      </CuiCard>
+    </div>
+
+    <!-- Corner radius -->
+    <div>
+      <h2 id="corner-radius" class="mb-4 text-2xl font-semibold">Corner radius</h2>
+      <CuiCard>
+        <CuiCardBody>
+          <p class="mb-3 text-surface-600 dark:text-surface-400">
+            Corners come from one scale, <code>--cui-radius-sm</code> (0.25rem),
+            <code>--cui-radius-md</code> (0.375rem) and <code>--cui-radius-lg</code> (0.5rem), which the
+            <code>rounded</code> prop picks from. Override a step to move every component that uses
+            it, or a component's own <code>--cui-&lt;component&gt;-radius</code> to move just that one,
+            which wins over the scale (each component's token table lists its own). <code>--cui-button-radius</code> is the button's own
+            token: it restyles buttons and nothing else, so a card or modal at
+            <code>rounded="md"</code> does not follow it.
+          </p>
+          <pre class="cui-pre"><code>:root {
+  --cui-radius-md: 0.5rem;     /* every md corner: buttons, cards, inputs, menus ... */
+}
+.toolbar {
+  --cui-button-radius: 9999px; /* buttons in this container only */
+  --cui-card-radius: 1rem;     /* one component */
 }</code></pre>
         </CuiCardBody>
       </CuiCard>

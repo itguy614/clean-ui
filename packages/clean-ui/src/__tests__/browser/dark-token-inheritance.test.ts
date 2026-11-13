@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 
 /**
  * #121 — dark-mode tokens must be declared on the element carrying `dark`, not
@@ -10,14 +11,14 @@ import main from "../../styles/main.css?inline";
  * `getComputedStyle` resolves, neither of which jsdom models.
  *
  * `main.css?inline`, whose `@import`s Vite has already inlined, so this brings
- * `themes.css` with it. Source stylesheets, not the built one — these are plain
+ * the default theme with it (the others are `allThemesCss`). Source stylesheets, not the built one — these are plain
  * CSS, so the test needs no prior build.
  */
 describe("dark-mode tokens inherit (real browser)", () => {
   beforeAll(() => {
     const style = document.createElement("style");
     style.id = "cui-tokens";
-    style.textContent = main;
+    style.textContent = main + allThemesCss;
     document.head.append(style);
   });
 

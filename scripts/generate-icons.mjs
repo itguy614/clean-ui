@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+/**
+ * Generates the built-in icon components (packages/clean-ui/src/icons/generated/) from
+ * Phosphor's SVG assets (@phosphor-icons/core, a devDependency: never shipped) (#207).
+ *
+ * The library draws regular, bold (check marks) and fill (the radio dot, a filled star),
+ * so each icon carries only the weights the library itself draws, not the six that
+ * `@phosphor-icons/vue` bundles per icon (~3.4 kB each). Every output is a tiny module
+ * calling `defineIcon()` with path data, so a component imports exactly the icons it draws.
+ *
+ * Usage:
+ *   node scripts/generate-icons.mjs           write the files
+ *   node scripts/generate-icons.mjs --check   write nothing; exit 1 if a file would change
+ *
+ * To add an icon, or a weight for one, edit ICONS below and run it. The icon test
+ * regenerates into memory and fails on a diff, so a hand-edited or stale file cannot be
+ * committed.
+ */
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const PKG = join(ROOT, "packages/clean-ui");
+
+export const GENERATED_DIR = join(PKG, "src/icons/generated");
+
+const REGULAR = ["regular"];
+/** icon name (kebab-case, what `name` takes) -> the weights the library draws. */
+export const ICONS = {
+  "arrow-counter-clockwise": REGULAR,
+  "bookmark-simple": REGULAR,
+  "calendar-blank": REGULAR,
+  "caret-double-left": REGULAR,
+  "caret-double-right": REGULAR,
+  "caret-down": REGULAR,
+  "caret-left": REGULAR,
+  "caret-right": REGULAR,
+  "caret-up": REGULAR,
+  "caret-up-down": REGULAR,
+  check: ["regular", "bold"], // bold: CuiCheckbox, CuiDropdownCheckItem
+  "check-circle": REGULAR,
+  circle: ["regular", "fill"], // fill: CuiDropdownRadioItem's dot
+  "circle-notch": REGULAR,
+  clock: REGULAR,
+  "cloud-arrow-up": REGULAR,
+  columns: REGULAR,
+  copy: REGULAR,
+  "dots-nine": REGULAR,
+  "dots-six-vertical": REGULAR,
+  "dots-three": REGULAR,
+  eye: REGULAR,
+  "eye-slash": REGULAR,
+  file: REGULAR,
+  "file-doc": REGULAR,
+  "file-pdf": REGULAR,
+  "file-text": REGULAR,
+  "file-xls": REGULAR,
+  "file-zip": REGULAR,
+  "floppy-disk": REGULAR,
+  funnel: REGULAR,
+  image: REGULAR,
+  info: REGULAR,
+  lock: REGULAR,
+  "magnifying-glass": REGULAR,
+  minus: ["regular", "bold"], // bold: CuiCheckbox's indeterminate dash
+  "music-note": REGULAR,
+  plus: REGULAR,
+  "push-pin": REGULAR,
+  question: REGULAR,
+  "seal-question": REGULAR,
+  "spinner-gap": REGULAR,
+  "squares-four": REGULAR,
+  star: ["regular", "fill"], // CuiRating draws filled stars
+  "star-half": ["regular", "fill"],
+  table: REGULAR,
+  trash: REGULAR,
+  "upload-simple": REGULAR,
+  user: REGULAR,
+  "video-camera": REGULAR,
+  warning: REGULAR,
+  "warning-circle": REGULAR,
+  "warning-octagon": REGULAR,
+  x: REGULAR,
+  "x-circle": REGULAR,
+};
+
+/**
+ * Icons the markdown editor (packages/clean-ui-editor) draws that clean-ui itself does not.
+ * Generated beside the built-ins and imported by the editor through the public
+ * `@itguy614/clean-ui/icons/generated/<name>` subpath, so the editor ships regular-weight
+ * path data too, not six weights of each. They are NOT in BUILTIN_ICONS (the opt-in name map),
+ * which stays the icons clean-ui's own components draw. `eye`, `minus` and `image` are
+ * built-ins and the editor imports those as well.
+ */
+export const EDITOR_ICONS = Object.fromEntries(
+  [
+    "code",
+    "code-block",
+    "link",
+    "list-bullets",
+    "list-checks",
+    "list-numbers",
+    "quotes",
+    "text-b",
+    "text-h-one",
+    "text-h-three",
+    "text-h-two",
+    "text-italic",
+    "text-strikethrough",
+  ].map((name) => [name, REGULAR]),
+);
+
+const ALL_ICONS = { ...ICONS, ...EDITOR_ICONS };
+
+const WEIGHT_ORDER = ["thin", "light", "regular", "bold", "fill", "duotone"];
+
+const pascal = (name) => name.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join("");
+
+const require = createRequire(join(PKG, "package.json"));
+const coreDir = resolve(dirname(require.resolve("@phosphor-icons/core")), "..");
+const corePkg = JSON.parse(readFileSync(join(coreDir, "package.json"), "utf8"));
+const ASSETS = join(coreDir, "assets");
+
+/** Child elements of a Phosphor SVG: a bare path is its `d` string, anything else `[tag, attrs]`. */
+function parseSvg(svg, label) {
+  const inner = svg.match(/<svg\b[^>]*>([\s\S]*)<\/svg>/)?.[1];
+  if (inner === undefined) throw new Error(`${label}: not an <svg>`);
+  const children = [];
+  for (const m of inner.matchAll(/<(\w+)\b([^>]*?)\/>/g)) {
+    const attrs = Object.fromEntries([...m[2].matchAll(/([\w:-]+)="([^"]*)"/g)].map((a) => [a[1], a[2]]));
+    if (m[1] === "path" && Object.keys(attrs).join() === "d") children.push(attrs.d);
+    else children.push([m[1], attrs]);
+  }
+  if (!children.length || inner.replace(/<(\w+)\b[^>]*?\/>/g, "").trim()) {
+    throw new Error(`${label}: unsupported SVG content`);
+  }
+  return children;
+}
+
+const q = (s) => JSON.stringify(s);
+const renderChild = (c) =>
+  typeof c === "string"
+    ? q(c)
+    : `[${q(c[0])}, { ${Object.entries(c[1]).map(([k, v]) => `${q(k)}: ${q(v)}`).join(", ")} }]`;
+
+function renderModule(name) {
+  const weights = ALL_ICONS[name].slice().sort((a, b) => WEIGHT_ORDER.indexOf(a) - WEIGHT_ORDER.indexOf(b));
+  const body = weights
+    .map((weight) => {
+      const file = join(ASSETS, weight, weight === "regular" ? `${name}.svg` : `${name}-${weight}.svg`);
+      const children = parseSvg(readFileSync(file, "utf8"), `${name} (${weight})`);
+      return `  ${weight}: [\n${children.map((c) => `    ${renderChild(c)},`).join("\n")}\n  ],`;
+    })
+    .join("\n");
+  return (
+    `// Generated by scripts/generate-icons.mjs from @phosphor-icons/core ${corePkg.version}. Do not edit.\n` +
+    `import { defineIcon } from "../define-icon";\n\n` +
+    `export const Icon${pascal(name)} = /* @__PURE__ */ defineIcon(${q(pascal(name))}, {\n${body}\n});\n`
+  );
+}
+
+/** file name -> contents, for every generated file. */
+export function generate() {
+  const files = {};
+  const names = Object.keys(ICONS);
+  for (const name of Object.keys(ALL_ICONS)) files[`${name}.ts`] = renderModule(name);
+  files["index.ts"] =
+    `// Generated by scripts/generate-icons.mjs. Do not edit.\n` +
+    `// For the opt-in name registration (icons/builtin.ts) and the docs: no component imports it.\n` +
+    `import type { Component } from "vue";\n` +
+    names.map((n) => `import { Icon${pascal(n)} } from "./${n}";`).join("\n") +
+    `\n\nexport {\n${names.map((n) => `  Icon${pascal(n)},`).join("\n")}\n};\n\n` +
+    `/** kebab-case icon name -> built-in component. */\n` +
+    `export const BUILTIN_ICONS: Record<string, Component> = {\n` +
+    names.map((n) => `  ${/^[a-z]+$/.test(n) ? n : q(n)}: Icon${pascal(n)},`).join("\n") +
+    "\n};\n";
+  return files;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const files = generate();
+  const existing = existsSync(GENERATED_DIR) ? readdirSync(GENERATED_DIR) : [];
+  const stale = existing.filter((f) => !(f in files));
+  const changed = Object.entries(files).filter(
+    ([f, c]) => !existsSync(join(GENERATED_DIR, f)) || readFileSync(join(GENERATED_DIR, f), "utf8") !== c,
+  );
+  if (process.argv.includes("--check")) {
+    if (stale.length || changed.length) {
+      console.error(
+        `generate-icons: out of date: ${[...changed.map(([f]) => f), ...stale].join(", ")}. ` +
+          `Run node scripts/generate-icons.mjs.`,
+      );
+      process.exit(1);
+    }
+    console.log("generate-icons: up to date.");
+  } else {
+    mkdirSync(GENERATED_DIR, { recursive: true });
+    for (const f of stale) rmSync(join(GENERATED_DIR, f));
+    for (const [f, c] of changed) writeFileSync(join(GENERATED_DIR, f), c);
+    console.log(`generate-icons: wrote ${changed.length} file(s), removed ${stale.length}.`);
+  }
+}

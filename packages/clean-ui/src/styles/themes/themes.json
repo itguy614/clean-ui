@@ -1,0 +1,12 @@
+{
+  "themes": [
+    { "id": "mono", "label": "Mono", "description": "Monochrome", "cascade": 7 },
+    { "id": "default", "label": "Navy", "description": "Navy blue (base scale)", "default": true, "aliases": ["navy"] },
+    { "id": "forest", "label": "Forest", "description": "Natural green", "cascade": 1 },
+    { "id": "amber", "label": "Amber", "description": "Warm orange with warm grays", "cascade": 2 },
+    { "id": "azure", "label": "Azure", "description": "Vibrant blue", "cascade": 3 },
+    { "id": "teal", "label": "Teal", "description": "Cool teal", "cascade": 4 },
+    { "id": "violet", "label": "Violet", "description": "Rich purple", "cascade": 5 },
+    { "id": "ruby", "label": "Ruby", "description": "Bold red", "cascade": 6 }
+  ]
+}

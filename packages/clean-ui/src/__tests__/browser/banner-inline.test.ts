@@ -137,8 +137,8 @@ describe("the shared radius scale (real browser)", () => {
   });
 
   it("reaches components that alias it through their own token", () => {
-    // `--cui-button-radius` is now an alias for `--cui-radius-md`, so moving the scale
-    // moves buttons too — that is what makes it shared rather than a fourth token.
+    // A button's `md` corner reads `--cui-radius-md` behind its own `--cui-button-radius`, so
+    // moving the scale moves buttons too — that is what makes it shared (#294).
     const host = document.createElement("div");
     host.setAttribute("style", "--cui-radius-md: 9px");
     document.body.append(host);

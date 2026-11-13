@@ -5,6 +5,7 @@ import { useCuiId } from "../composables/useCuiId";
 import { useCollapsible } from "../composables/useCollapsible";
 import type { CuiRounded, HideableProps, ColorableProps, DisableableProps } from "../types/common";
 import { RADIUS_SCALE } from "../utils/sizing";
+import { IconCaretDown } from "../icons/generated/caret-down";
 
 export type FieldsetVariant = "outline" | "subtle" | "ghost";
 
@@ -15,7 +16,7 @@ export interface CuiFieldsetProps extends HideableProps, ColorableProps, Disable
   description?: string;
   /** Visual variant: bordered outline, tinted subtle fill, or chrome-less ghost */
   variant?: FieldsetVariant;
-  /** Border radius (mirrors CuiButton) */
+  /** Border radius, from the shared scale */
   rounded?: CuiRounded;
   /** Allow collapsing the fieldset content */
   collapsible?: boolean;
@@ -71,19 +72,21 @@ const rootStyle = computed(() => {
   const bgToken =
     c === "surface" ? "var(--cui-surface-bg)" : `var(--cui-${c}-bg)`;
 
+  // Private `--_fieldset-<slot>` properties, read back through `--cui-fieldset-<slot>` by the
+  // stylesheet (#294): an inline paint declaration would outrank a consumer's own rule.
   const style: Record<string, string> = {
-    borderRadius: RADIUS_SCALE[props.rounded],
+    "--_fieldset-radius": RADIUS_SCALE[props.rounded],
   };
 
   if (props.variant === "ghost") {
-    style.border = "none";
-    style.background = "transparent";
+    style["--_fieldset-border"] = "none";
+    style["--_fieldset-bg"] = "transparent";
   } else if (props.variant === "subtle") {
-    style.border = `1px solid ${borderToken}`;
-    style.background = bgToken;
+    style["--_fieldset-border"] = `1px solid ${borderToken}`;
+    style["--_fieldset-bg"] = bgToken;
   } else {
-    style.border = `1px solid ${borderToken}`;
-    style.background = "transparent";
+    style["--_fieldset-border"] = `1px solid ${borderToken}`;
+    style["--_fieldset-bg"] = "transparent";
   }
 
   return style;
@@ -115,7 +118,7 @@ const rootStyle = computed(() => {
         @click="toggle"
       >
         <CuiIcon
-          name="caret-down"
+          :icon="IconCaretDown"
           size="1rem"
           class="cui-fieldset__chevron"
           :class="{ 'cui-fieldset__chevron--collapsed': !isExpanded }"
@@ -149,6 +152,13 @@ const rootStyle = computed(() => {
 </template>
 
 <style scoped>
+/* Paint, so zero specificity: a `--cui-fieldset-*` token or a plain `.cui-fieldset { … }` rule wins. */
+:where(.cui-fieldset) {
+  background: var(--cui-fieldset-bg, var(--_fieldset-bg));
+  border: var(--cui-fieldset-border, var(--_fieldset-border));
+  border-radius: var(--cui-fieldset-radius, var(--_fieldset-radius));
+}
+
 .cui-fieldset {
   padding: calc(1.25rem * var(--cui-density-scale, 1));
   margin: 0;

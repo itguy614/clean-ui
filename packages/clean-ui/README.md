@@ -99,6 +99,18 @@ Dark mode is the `dark` class on any ancestor:
 <html class="dark cui-theme-azure"> … </html>
 ```
 
+Navy is in `@itguy614/clean-ui/styles`. Each other theme is an opt-in stylesheet, so an app
+pays only for the ones it uses: import them after `styles`, in any order. Without the file a
+theme class styles nothing (in development `setTheme()` warns and names it).
+
+```ts
+import "@itguy614/clean-ui/styles";
+import "@itguy614/clean-ui/themes/forest.css"; // mono, forest, amber, azure, teal, violet, ruby
+```
+
+With no bundler, or to offer every theme, load `@itguy614/clean-ui/styles/all.css` instead of
+`styles`: it is `styles` plus all seven. (Upgrading from 1.x: this is the one-line way back.)
+
 Switch themes reactively with the `useTheme` composable (persists to `localStorage`):
 
 ```ts
@@ -114,7 +126,7 @@ Every color, radius, and typography value is a `--cui-*` custom property. Overri
 
 ```css
 :root {
-  --cui-button-radius: 0.5rem;
+  --cui-radius-md: 0.5rem; /* every md corner; --cui-button-radius moves buttons only */
 }
 
 /* Or re-map a whole color scale for a custom brand theme */

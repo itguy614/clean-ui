@@ -5,6 +5,10 @@ import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
 import { useFloatingLabel } from "./form-field-context";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretUp } from "../icons/generated/caret-up";
+import { IconMinus } from "../icons/generated/minus";
+import { IconPlus } from "../icons/generated/plus";
 
 export type InputStepperOrientation = "horizontal" | "vertical";
 
@@ -220,7 +224,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="decrement"
       >
-        <CuiIcon name="minus" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconMinus" :size="cfg.iconSize" />
       </CuiButton>
       <input
         ref="inputH"
@@ -252,7 +256,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="increment"
       >
-        <CuiIcon name="plus" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconPlus" :size="cfg.iconSize" />
       </CuiButton>
     </div>
 
@@ -267,7 +271,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="increment"
       >
-        <CuiIcon name="caret-up" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconCaretUp" :size="cfg.iconSize" />
       </CuiButton>
       <input
         ref="inputV"
@@ -298,7 +302,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="decrement"
       >
-        <CuiIcon name="caret-down" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconCaretDown" :size="cfg.iconSize" />
       </CuiButton>
     </div>
   </div>
@@ -311,7 +315,7 @@ defineExpose({ el: rootEl, focus, blur });
 :where(.cui-input-stepper__control) {
   height: var(--cui-input-stepper-height, var(--_input-stepper-height));
   border: var(--cui-input-stepper-border, 1px solid var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-input-stepper-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-input-stepper-radius, var(--cui-radius-md, 0.375rem));
 }
 
 :where(.cui-input-stepper__field) {

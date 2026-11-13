@@ -6,8 +6,12 @@ import CuiModal from "../CuiModal.vue";
 import CuiButton from "../CuiButton.vue";
 import CuiInput from "../CuiInput.vue";
 import CuiIcon from "../CuiIcon.vue";
-import { PhInfo, PhRocket, PhSealQuestion, PhWarning, PhWarningCircle } from "@phosphor-icons/vue";
-import { FALLBACK_ICON } from "../../icons/builtin";
+import { PhRocket } from "@phosphor-icons/vue";
+import { FALLBACK_ICON } from "../../icons/fallback";
+import { IconInfo } from "../../icons/generated/info";
+import { IconSealQuestion } from "../../icons/generated/seal-question";
+import { IconWarning } from "../../icons/generated/warning";
+import { IconWarningCircle } from "../../icons/generated/warning-circle";
 
 // CuiConfirmDialog wraps CuiModal, which teleports content into <body> and opens
 // on mount via an onMounted/nextTick flush — so await flushPromises() before
@@ -104,11 +108,11 @@ describe("CuiConfirmDialog", () => {
 
     // The default (no variant) and the three pre-#375 variants must render as before.
     it.each([
-      [undefined, "error", PhWarningCircle],
-      ["danger", "error", PhWarningCircle],
-      ["warning", "warning", PhWarning],
-      ["info", "info", PhInfo],
-      ["primary", "primary", PhSealQuestion],
+      [undefined, "error", IconWarningCircle],
+      ["danger", "error", IconWarningCircle],
+      ["warning", "warning", IconWarning],
+      ["info", "info", IconInfo],
+      ["primary", "primary", IconSealQuestion],
     ] as const)("variant %s sets the tile and confirm button colour and the icon", async (variant, color, icon) => {
       const wrapper = await open(variant ? { variant } : {});
       expect(tile()).not.toBeNull();

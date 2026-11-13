@@ -18,7 +18,7 @@ const size1 = ref(50);
   <template #second>Right panel</template>
 </CuiResizablePanels>`"
       >
-        <div style="height: 250px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
+        <div style="height: 250px; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); overflow: hidden;">
           <CuiResizablePanels @resize="size1 = $event">
             <template #first>
               <div style="padding: 1rem; height: 100%;">
@@ -72,7 +72,7 @@ const size1 = ref(50);
 <template #first>Top panel</template>
 <template #second>Bottom panel</template>
 </CuiResizablePanels>`">
-        <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
+        <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); overflow: hidden;">
           <CuiResizablePanels orientation="vertical" :initial-size="40">
             <template #first>
               <div style="padding: 1rem; height: 100%;">
@@ -91,7 +91,7 @@ const size1 = ref(50);
       </Example>
 
       <Example title="Asymmetric with Min Sizes" :code="`<CuiResizablePanels :initial-size=&quot;30&quot; :min-first=&quot;150&quot; :min-second=&quot;200&quot; />`">
-        <div style="height: 200px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
+        <div style="height: 200px; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); overflow: hidden;">
           <CuiResizablePanels :initial-size="30" :min-first="150" :min-second="200">
             <template #first>
               <div style="padding: 1rem; height: 100%;">
@@ -110,7 +110,7 @@ const size1 = ref(50);
       </Example>
 
       <Example title="Collapsible First Panel" :code="`<CuiResizablePanels :initial-size=&quot;30&quot; :min-first=&quot;60&quot; :collapse-threshold=&quot;80&quot; />`">
-        <div style="height: 200px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
+        <div style="height: 200px; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); overflow: hidden;">
           <CuiResizablePanels :initial-size="30" :collapse-threshold="80" :min-first="60">
             <template #first>
               <div style="padding: 1rem; height: 100%;">
@@ -138,7 +138,7 @@ const size1 = ref(50);
   </CuiResizablePanels>
 </template>
 </CuiResizablePanels>`">
-        <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); overflow: hidden;">
+        <div style="height: 300px; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); overflow: hidden;">
           <CuiResizablePanels :initial-size="35" :min-first="150">
             <template #first>
               <div style="padding: 0.75rem; height: 100%; font-family: var(--cui-font-mono, monospace); font-size: 0.75rem; background: var(--color-surface-950); color: var(--color-surface-300); overflow: auto;">

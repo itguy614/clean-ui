@@ -8,7 +8,7 @@ const MENU = ["File", "Edit", "View", "Insert", "Format", "Tools", "Table", "Win
 const ITEMS = Array.from({ length: 24 }, (_, i) => `Notification ${i + 1}`);
 
 const frame =
-  "border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius, 0.375rem); background: var(--cui-surface-base);";
+  "border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); background: var(--cui-surface-base);";
 </script>
 
 <template>

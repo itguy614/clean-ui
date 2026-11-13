@@ -15,6 +15,7 @@ import CuiFormValues from "./CuiFormValues.vue";
 import { useMessages } from "../composables/useMessages";
 import CuiBadge from "./CuiBadge.vue";
 import CuiSpinner from "./CuiSpinner.vue";
+import { IconPlus } from "../icons/generated/plus";
 
 export interface TagOption {
   value: string;
@@ -428,7 +429,7 @@ defineExpose({ el: wrapperRef, focus, blur });
         @select="createTag"
         @hover="focusedIndex = filteredSuggestions.length"
       >
-        <CuiIcon name="plus" size="0.75rem" />
+        <CuiIcon :icon="IconPlus" size="0.75rem" />
         <span>{{ createLabel }}</span>
       </CuiListboxOption>
     </CuiListboxPanel>
