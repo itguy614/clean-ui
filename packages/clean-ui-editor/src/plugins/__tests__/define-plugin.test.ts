@@ -21,7 +21,7 @@ describe("definePlugin", () => {
       keymap: [{ key: "Mod-k", command: "doThing" }],
       constructs: ["Emphasis"],
       paste: [{ selector: "em", toMarkdown: (_el, children) => `*${children}*`, produces: "Emphasis", degradeTo: "plainText" }],
-      decorations: [{ node: "Emphasis" }],
+      decorationNodes: ["Emphasis"],
       extensions: [],
     });
 
@@ -31,7 +31,7 @@ describe("definePlugin", () => {
     expect(plugin.keymap).toEqual([{ key: "Mod-k", command: "doThing" }]);
     expect(plugin.constructs).toEqual(["Emphasis"]);
     expect(plugin.paste).toHaveLength(1);
-    expect(plugin.decorations).toEqual([{ node: "Emphasis" }]);
+    expect(plugin.decorationNodes).toEqual(["Emphasis"]);
     expect(plugin.extensions).toEqual([]);
   });
 });

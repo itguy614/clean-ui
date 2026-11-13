@@ -33,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "unknown" separately where `findConstructRange` read it as `null`. A hand-built test double
   must provide `lookupConstruct`. `PLUGIN_API_VERSION` is now `2`: `definePlugin` stamps it, so
   a plugin that carries a literal `apiVersion: 1` is rejected at registration.
+- **`decorations` on a plugin is now `decorationNodes`, and `DecorationRule` is gone.** It only
+  ever was a node-name allowlist for the built-in reveal layer, not an extension point, and the
+  new name says so. Migrate `decorations: [{ node: "Emphasis" }]` to `decorationNodes: ["Emphasis"]`.
+  The rename rides on the `PLUGIN_API_VERSION` 2 bump above, so a plugin built against 1 is
+  rejected at registration; rebuild it with `definePlugin()` from 2.0, and a spec still using
+  `decorations` gets a development warning instead of silently losing its decorations.
+  `PluginRegistry.decorations` is likewise `decorationNodes`, a `Set<string>`. A new decoration
+  is written as a CodeMirror extension in `extensions`.
 
 - **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
   prop name, type, default and runtime behaviour is unchanged (checked by diffing each
@@ -41,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A radio group is now a single tab stop; use arrow keys to move between options, as the ARIA radiogroup pattern specifies.** `CuiRadioGroup` (and its `buttons` variant) is entered once with `Tab`, on the checked radio or the first enabled one, and left with the next `Tab`. Update any focus-order test or keyboard walkthrough that tabbed through each radio. A standalone `CuiRadio` is unchanged. (#231)
   In a right-to-left page `useRovingFocus` swaps ArrowLeft and ArrowRight (the old handler ignored
   direction), and Home and End now move to the first and last radio and select it.
+
+### Added
+
+- **`CommandContext.sliceDoc(from, to)` and `lineAt(pos)`** read a range or a line without copying
+  the whole document. The built-in commands use them, so a keystroke or arrow press no longer
+  copies the document once per toolbar button. `context.doc` stays, documented as the O(document)
+  escape hatch.
 
 ### Changed
 

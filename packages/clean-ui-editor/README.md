@@ -14,7 +14,7 @@ Themed entirely with clean-ui's `--cui-*` tokens, so it inherits your theme and 
 ## Features
 
 - **Two modes** — `wysiwyg` (hidden syntax markers, revealed near the cursor) and `source` (raw markdown), switchable at runtime via `v-model:mode`.
-- **Declarative plugin API** — `definePlugin()` composes commands, toolbar buttons, keymaps, paste rules, and decorations. Ships a full default set (bold, italic, headings, lists, task lists, quotes, code fences, links, images, table paste, …).
+- **Declarative plugin API** — `definePlugin()` composes commands, toolbar buttons, keymaps, paste rules, and the syntax nodes whose markers the reveal layer hides. Ships a full default set (bold, italic, headings, lists, task lists, quotes, code fences, links, images, table paste, …).
 - **Safe HTML rendering** — an opt-in `/render` subpath (`CuiMarkdownViewer`, `serializeMarkdownToHtml`) with a `TrustedHtml` contract, kept out of the core entry so the editor never bundles the serializer unless you ask for it.
 - **Tree-shakeable subpath exports** — `/render` and `/codemirror` are separate entries; importing the editor barrel doesn't pull in the renderer or re-export CodeMirror.
 - **Localizable** — every command label / built-in string overridable via the message catalog.

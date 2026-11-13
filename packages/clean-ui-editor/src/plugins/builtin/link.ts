@@ -10,7 +10,7 @@ const URL_LOOKING_PATTERN = /^(https?:\/\/|mailto:)\S+$/i;
 function computeInitial(context: CommandContext): Partial<UrlDialogValues> {
   const { from, to, empty } = context.selection;
   if (empty) return {};
-  const selected = context.doc.slice(from, to);
+  const selected = context.sliceDoc(from, to);
   // The text field is one line: an <input> would drop the breaks and run the words together.
   return URL_LOOKING_PATTERN.test(selected) ? { url: selected } : { text: foldLineBreaks(selected) };
 }
@@ -39,7 +39,7 @@ export const linkPlugin = definePlugin({
   toolbar: [{ command: "link" }],
   keymap: [{ key: "Mod-k", command: "link" }],
   constructs: ["Link"],
-  decorations: [{ node: "Link" }],
+  decorationNodes: ["Link"],
   paste: [
     {
       selector: "a[href]",

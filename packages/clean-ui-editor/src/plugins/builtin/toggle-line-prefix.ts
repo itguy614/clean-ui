@@ -1,5 +1,4 @@
-import type { CommandContext, PluginCommandSpec } from "../types";
-import { linesInRange } from "./line-utils";
+import type { CommandContext, EditorLine, PluginCommandSpec } from "../types";
 
 /** The prefix added to a line that lacks it. A function receives the line's
  * index within the selection, for a prefix that counts (`"1. "`, `"2. "`, …). */
@@ -29,6 +28,15 @@ function patternPrefix(match: RegExp) {
   };
 }
 
+/** Every line touched by `[from, to]`, in document order. A collapsed cursor
+ * still yields the one line it sits on. */
+function linesInRange(context: CommandContext, from: number, to: number): EditorLine[] {
+  const lines = [context.lineAt(from)];
+  // A line ending before `to` has a next line: `to` is within the document.
+  while (lines[lines.length - 1].to < to) lines.push(context.lineAt(lines[lines.length - 1].to + 1));
+  return lines;
+}
+
 /**
  * The line-level sibling of `toggleInlineCommand`: toggles a prefix on every
  * line the selection touches. If every line already has it, it is stripped
@@ -41,11 +49,11 @@ export function toggleLinePrefixCommand(options: ToggleLinePrefixOptions): Plugi
   const insert = options.insert ?? (match as string);
   const matchedPrefix = typeof match === "string" ? literalPrefix(match) : patternPrefix(match);
   const prefixFor = typeof insert === "string" ? () => insert : insert;
-  const selectedLines = (context: CommandContext) => linesInRange(context.doc, context.selection.from, context.selection.to);
+  const selectedLines = (context: CommandContext) => linesInRange(context, context.selection.from, context.selection.to);
 
   return {
     run(context) {
-      const lines = selectedLines(context).map((line) => ({ start: line.start, prefix: matchedPrefix(line.text) }));
+      const lines = selectedLines(context).map((line) => ({ start: line.from, prefix: matchedPrefix(line.text) }));
       const allPrefixed = lines.every((line) => line.prefix !== null);
 
       context.replaceRanges(
