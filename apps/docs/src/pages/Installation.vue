@@ -152,6 +152,24 @@ import '@itguy614/clean-ui/styles'</code></pre>
     </div>
 
     <div>
+      <h2 id="supported-entry-points" class="mb-4 text-2xl font-semibold">Supported Import Paths</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        Import from these paths only: <code class="cui-code">@itguy614/clean-ui</code> (components,
+        composables and types), <code class="cui-code">/styles</code>, <code class="cui-code">/styles/all.css</code>,
+        <code class="cui-code">/themes/&lt;name&gt;.css</code>, <code class="cui-code">/icons/builtin</code>,
+        <code class="cui-code">/icons/lazy</code> and <code class="cui-code">/icons/generated/&lt;name&gt;</code>.
+      </p>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        Deep imports of anything else in the package, such as
+        <code class="cui-code">@itguy614/clean-ui/components/CuiButton.vue.js</code> or
+        <code class="cui-code">@itguy614/clean-ui/utils/...</code>, happen to resolve today but are
+        <strong>not supported</strong>: they are internal files, and a path can be renamed, moved or stop
+        resolving in any release. A later major release will close them off. If you need something only a
+        deep path gives you, open an issue and we will export it.
+      </p>
+    </div>
+
+    <div>
       <h2 class="mb-4 text-2xl font-semibold">TypeScript Support</h2>
       <p class="mb-3 text-surface-600 dark:text-surface-400">
         Clean UI is written in TypeScript and includes full type definitions. No additional configuration needed!

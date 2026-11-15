@@ -83,6 +83,26 @@ import "@itguy614/clean-ui/styles";
 </template>
 ```
 
+### Supported entry points
+
+Import from these paths only:
+
+| Path | What it is |
+|---|---|
+| `@itguy614/clean-ui` | Every component, composable and type |
+| `@itguy614/clean-ui/styles` | The stylesheet: tokens, the default Navy theme, preflight, typography |
+| `@itguy614/clean-ui/styles/all.css` | The same plus every theme (no bundler, or SSR) |
+| `@itguy614/clean-ui/themes/<name>.css` | One opt-in theme (`mono`, `forest`, `amber`, `azure`, `teal`, `violet`, `ruby`) |
+| `@itguy614/clean-ui/icons/builtin` | Registers the built-in icon names for `name="..."` lookups |
+| `@itguy614/clean-ui/icons/lazy` | Registers any Phosphor icon by name (pulls in the full set) |
+| `@itguy614/clean-ui/icons/generated/<name>` | One built-in icon component |
+
+Deep imports of anything else in the package (for example `@itguy614/clean-ui/components/CuiButton.vue.js`
+or `@itguy614/clean-ui/utils/...`) happen to resolve today, but they are **not supported**: those
+files are internal, and a path can be renamed, moved or stop resolving in any release, minor
+included. A later major release will close them off. If you need something only a deep path gives
+you, [open an issue](https://github.com/itguy614/clean-ui/issues) and we'll export it properly.
+
 ## Theming
 
 Eight presets ship out of the box: **Navy** (default), Mono, Forest, Amber, Azure, Teal, Violet, and Ruby.
