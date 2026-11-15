@@ -40,7 +40,7 @@
       "types": "./dist/codemirror.d.ts",
       "import": "./dist/codemirror.js"
     },
-    "./*": "./dist/*"
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -48,14 +48,12 @@
     "LICENSE"
   ],
   "sideEffects": [
-    "**/*.css",
-    "./dist/icons.js",
-    "./src/icons.ts"
+    "**/*.css"
   ],
   "scripts": {
     "build": "vite build && vue-tsc --emitDeclarationOnly && node ../../scripts/report-bundle-size.mjs && node scripts/check-render-subpath-isolation.mjs",
     "size": "node ../../scripts/report-bundle-size.mjs",
-    "check:imports": "node ../clean-ui/scripts/check-dist-imports.mjs .",
+    "check:imports": "node ../clean-ui/scripts/check-dist-imports.mjs . && node scripts/check-exports-map.mjs",
     "test": "vitest run --project jsdom --project ssr",
     "test:browser": "vitest run --project browser",
     "test:watch": "vitest"
