@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-15
+
 ### Upgrading to 2.0
+
+- **`@itguy614/clean-ui-editor` 2.0 needs `@itguy614/clean-ui` 2.0.** Its peer range is now
+  `^2.0.0`: the editor imports clean-ui's generated icon modules
+  (`@itguy614/clean-ui/icons/generated/*`, new in 2.0). Upgrade both packages together.
 
 - **`rounded="md"` no longer follows `--cui-button-radius`.** The shared radius scale's `md`
   step reads `--cui-radius-md` and nothing else, so a card, modal, alert, fieldset, popover or
@@ -33,7 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unless set) and `--cui-file-upload-row-radius` (a listed file's row; the drop zone keeps
   `--cui-file-upload-radius`).
 
-
 - **Built-in icon names are an opt-in, and the built-in icons carry fewer weights (#207).**
   The components still draw their own icons with no setup, but a name such as
   `<CuiIcon name="caret-down" />`, an `icon: "user"` option, or `<CuiAlert icon="check-circle">`
@@ -43,10 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   built-in name now draws regular, with a development warning; for the full six weights, pass the
   Phosphor component (`<CuiIcon :icon="PhCaretDown" weight="duotone" />`) or register it over the
   name (`registerIcons({ "caret-down": PhCaretDown })`).
+
 - **`BUILTIN_ICONS` moved** from `@itguy614/clean-ui` to `@itguy614/clean-ui/icons/builtin`, and
   `COLOR_ICON_MAP` now holds icon components, not names. `@phosphor-icons/vue` is an optional peer
   dependency instead of a dependency: install it to register or pass Phosphor components, or to use
   `@itguy614/clean-ui/icons/lazy`.
+
 - **The seven non-default themes are opt-in stylesheets.** `@itguy614/clean-ui/styles` now holds
   the default Navy theme only (about 9 kB raw, 1.3 kB gzip smaller); Mono, Forest, Amber, Azure,
   Teal, Violet and Ruby are `@itguy614/clean-ui/themes/<name>.css`, about 2 kB each. An app that
@@ -60,17 +67,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `v-if="mounted" v-show="isVisible"` inside `<Transition v-bind="subtreeTransition"
   @after-leave="onAfterLeave">` (what `CuiModal` does). A caller that passed `exit: "transition"`
   just drops the option; one that relied on the default timer moves to the `<Transition>`.
+
 - **`allowNested` is removed from `CuiModal`, `CuiSlideover` and `useOverlay`.** It has had no
   effect since 1.x (overlays always stack, and Escape closes only the topmost): delete it. A
   leftover `allow-nested` now falls through as a plain attribute.
+
 - **`isClosing` is removed from `DropdownContext`** (and `NEVER_CLOSING` with it). It was always
   `false`; a hand-provided context needs no replacement field.
+
 - **`@itguy614/clean-ui-editor`: `CommandContext.findConstructRange` is removed, and
   `lookupConstruct` is required.** Use `context.lookupConstruct(name)`, which returns
   `{ status: "inside", range } | { status: "outside" } | { status: "unknown" }`; it reports
   "unknown" separately where `findConstructRange` read it as `null`. A hand-built test double
   must provide `lookupConstruct`. `PLUGIN_API_VERSION` is now `2`: `definePlugin` stamps it, so
   a plugin that carries a literal `apiVersion: 1` is rejected at registration.
+
 - **`decorations` on a plugin is now `decorationNodes`, and `DecorationRule` is gone.** It only
   ever was a node-name allowlist for the built-in reveal layer, not an extension point, and the
   new name says so. Migrate `decorations: [{ node: "Emphasis" }]` to `decorationNodes: ["Emphasis"]`.
@@ -99,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prop name, type, default and runtime behaviour is unchanged (checked by diffing each
   component's resolved props before and after). A control still has only the props it had; it
   `Pick`s them.
+
 - **A radio group is now a single tab stop; use arrow keys to move between options, as the ARIA radiogroup pattern specifies.** `CuiRadioGroup` (and its `buttons` variant) is entered once with `Tab`, on the checked radio or the first enabled one, and left with the next `Tab`. Update any focus-order test or keyboard walkthrough that tabbed through each radio. A standalone `CuiRadio` is unchanged. (#231)
   In a right-to-left page `useRovingFocus` swaps ArrowLeft and ArrowRight (the old handler ignored
   direction), and Home and End now move to the first and last radio and select it.
@@ -115,19 +127,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Form controls extend `FormControlProps` instead of re-declaring `label`, `description`,
   `error`, `errorMessage`, `required` and `readonly`; a test fails on a copy (#180).
   The shared props' doc comments (IDE hover) are now `FormControlProps`' own.
+
 - **The icon set shrinks every page** (#207). Each component imports the icon it draws as a
   generated render-function module (`icons/generated/`, from `@phosphor-icons/core`, regular weight
   plus the bold and fill the library draws) instead of every icon with all six Phosphor weights, so a
   page carries path data only for the icons its components draw. In the consumer fixture the
-  basic page costs 32.3 kB gzip instead of 68.2, and the data-grid page 94.3 instead of 127.3. A
+  basic page costs about 31 kB gzip instead of 68, and the data-grid page about 93 instead of 127. A
   single icon is importable as `@itguy614/clean-ui/icons/generated/<name>`.
+
 - `RoleIconProps.icon` (CuiAlert, CuiToast, CuiBanner), `roleIcons` in `createCleanUI`,
   `configureCleanUI` and `CuiConfigProvider`, and `registerRoleIcons()` accept `string | Component`;
   an unregistered string still renders as text.
+
 - The bundle budget script reports each scenario by area (js, css, icons), and a new fixture
   guarantee caps SVG path literals per page.
+
 - `@itguy614/clean-ui-editor` imports its toolbar icons from clean-ui's generated set (regular
   weight) and no longer depends on `@phosphor-icons/vue`.
+
+- **Deep imports of `@itguy614/clean-ui` internals are documented as unsupported** (#504). The
+  README and the Installation page list the supported entry points. The `./*` wildcard in the
+  exports map still resolves deep paths in 2.x, but they may change in any release and a later
+  major release will remove it.
+
+### Tooling
+
+- **Bundle budgets** in `fixtures/size-budget.json` were reset after the icon rework: basic 33 kB
+  (was 69), grid 94 kB (was 128) and editor 151 kB (was 160), render unchanged at 25 kB, gzip.
+
+- **New guards:** form controls extend `FormControlProps` and may not re-declare its props; the
+  radius guard scans `<style>` blocks, templates and the editor package, and `--cui-button-radius`
+  is read only by `CuiButton`; the editor's `exports` map is checked for wildcards and for every
+  reachable module (`check-exports-map.mjs`); the theme list is one file (`themes.json`) that the
+  presets, the build, the exports (`pnpm sync:themes`) and the checks derive from; no component
+  imports `@phosphor-icons/vue` or names a built-in icon by string, and the fixture caps SVG
+  paths per page; and `check-bundle-budget` reports each scenario by area.
 
 ## [1.10.0] - 2026-11-12
 
