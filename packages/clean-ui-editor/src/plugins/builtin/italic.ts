@@ -9,6 +9,6 @@ export const italicPlugin = definePlugin({
   toolbar: [{ command: "italic" }],
   keymap: [{ key: "Mod-i", command: "italic" }],
   constructs: ["Emphasis"],
-  decorations: [{ node: "Emphasis" }],
+  decorationNodes: ["Emphasis"],
   paste: [{ selector: "em, i", produces: "Emphasis", degradeTo: "plainText", toMarkdown: (_el, c) => `*${c}*` }],
 });

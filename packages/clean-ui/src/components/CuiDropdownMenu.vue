@@ -96,7 +96,7 @@ function onKeydown(e: KeyboardEvent) {
 
 .cui-dropdown-menu {
   padding: calc(0.25rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-dropdown-menu-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);

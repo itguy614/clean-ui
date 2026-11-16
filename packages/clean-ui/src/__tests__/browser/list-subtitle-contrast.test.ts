@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { userEvent } from "@vitest/browser/context";
 import { defineComponent, h } from "vue";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 import CuiList from "../../components/CuiList.vue";
 import CuiListItem from "../../components/CuiListItem.vue";
 
@@ -41,7 +42,7 @@ describe("CuiList subtitle contrast (real browser)", () => {
   beforeAll(() => {
     const style = document.createElement("style");
     style.id = "cui-tokens";
-    style.textContent = main;
+    style.textContent = main + allThemesCss;
     document.head.append(style);
   });
   afterAll(() => document.getElementById("cui-tokens")?.remove());

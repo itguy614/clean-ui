@@ -365,7 +365,7 @@ const theme = ref("system");
         <Example title="Real-World: Overflow Menu" :code="`<CuiDropdown>
   <CuiDropdownTrigger>
     <CuiButton variant=&quot;ghost&quot; size=&quot;sm&quot; icon aria-label=&quot;More actions&quot;>
-      <CuiIcon name=&quot;dots-three&quot; size=&quot;md&quot; weight=&quot;bold&quot; />
+      <CuiIcon name=&quot;dots-three&quot; size=&quot;md&quot; />
     </CuiButton>
   </CuiDropdownTrigger>
   <CuiDropdownMenu min-width=&quot;14rem&quot;>
@@ -383,7 +383,7 @@ const theme = ref("system");
           <CuiDropdown>
             <CuiDropdownTrigger>
               <CuiButton variant="ghost" size="sm" aria-label="More actions">
-                <CuiIcon name="dots-three" size="md" weight="bold" />
+                <CuiIcon name="dots-three" size="md" />
               </CuiButton>
             </CuiDropdownTrigger>
             <CuiDropdownMenu min-width="14rem">

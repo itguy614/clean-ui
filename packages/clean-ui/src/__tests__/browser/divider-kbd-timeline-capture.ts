@@ -10,6 +10,8 @@ import CuiDivider from "../../components/CuiDivider.vue";
 import CuiKbd from "../../components/CuiKbd.vue";
 import CuiTimeline from "../../components/CuiTimeline.vue";
 import CuiTimelineItem from "../../components/CuiTimelineItem.vue";
+// The timeline scenarios name their icon ("check"); the built-in names are an opt-in (#207).
+import "../../icons/builtin";
 
 const round = (n: number) => Math.round(n * 100) / 100;
 

@@ -31,7 +31,20 @@ the scripts above you need nothing more. Without them, call `restoreTheme()`,
 
 > Under a strict CSP, give each inline script your own nonce or hash.
 
-## 2. Icon rendering under SSR
+## 2. Theme stylesheets
+
+`@itguy614/clean-ui/styles` carries the default Navy theme. A stored theme other than Navy
+(`ssrThemeInitScript` puts its class on `<html>`) styles nothing unless its CSS is loaded too:
+add `@itguy614/clean-ui/themes/<name>.css` for each theme you offer, or load the all-in-one
+`@itguy614/clean-ui/styles/all.css` in place of `styles`. In Nuxt:
+
+```ts
+export default defineNuxtConfig({
+  css: ['@itguy614/clean-ui/styles/all.css'], // or 'styles' plus the themes you use
+})
+```
+
+## 3. Icon rendering under SSR
 
 `CuiIcon` loads icon components inside `onMounted`, which only runs in the
 browser. This means:
@@ -40,7 +53,7 @@ browser. This means:
 - On the client, the icon is fetched and rendered once the page hydrates
 - No extra configuration needed
 
-## 3. No SSR-unsafe DOM access
+## 4. No SSR-unsafe DOM access
 
 All `window`, `document`, and `localStorage` access across the library is
 guarded by one of:
@@ -50,7 +63,7 @@ guarded by one of:
 - `try/catch` around `localStorage` calls in case of private browsing or
   SSR environments
 
-## 4. What the composables return
+## 5. What the composables return
 
 ```ts
 const { theme, setTheme } = useTheme()

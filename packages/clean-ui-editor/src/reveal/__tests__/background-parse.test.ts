@@ -140,7 +140,8 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     view.dispatch({ selection: EditorSelection.cursor(pos) });
     expect(syntaxTree(view.state).length).toBeLessThan(pos);
 
-    const range = createCommandContext(() => view!).findConstructRange("Emphasis");
+    const found = createCommandContext(() => view!).lookupConstruct("Emphasis");
+    const range = found.status === "inside" ? found.range : null;
 
     expect(range).toEqual({ from: pos - 3, to: pos - 3 + "*emphasis*".length });
     // Bounded by the cursor's block, not the document: nowhere near the end was parsed.
@@ -161,7 +162,8 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     view.dispatch({ selection: EditorSelection.cursor(pos) });
     expect(syntaxTree(view.state).length).toBeLessThan(pos);
 
-    const range = createCommandContext(() => view!).findConstructRange("FencedCode");
+    const found = createCommandContext(() => view!).lookupConstruct("FencedCode");
+    const range = found.status === "inside" ? found.range : null;
 
     expect(range).toEqual({ from: fenceFrom, to: doc.indexOf("\n\nafter") });
   });
@@ -176,7 +178,8 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
     const listFrom = DOC.length;
     view.dispatch({ selection: EditorSelection.cursor(listFrom + 5) }); // in item 1
 
-    const range = createCommandContext(() => view!).findConstructRange("BulletList");
+    const found = createCommandContext(() => view!).lookupConstruct("BulletList");
+    const range = found.status === "inside" ? found.range : null;
 
     expect(range).toEqual({ from: listFrom, to: doc.indexOf("\n\nafter") });
   });
@@ -193,13 +196,8 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
       });
     });
 
-    it("the deprecated lookup reports nothing, never a shorter range", () => {
-      const range = onASlowMachine(() => createCommandContext(() => view!).findConstructRange("FencedCode"));
-      expect(range).toBeNull();
-    });
-
     it("lookupConstruct reports unknown, never outside or a shorter range (#405)", () => {
-      const found = onASlowMachine(() => createCommandContext(() => view!).lookupConstruct!("FencedCode"));
+      const found = onASlowMachine(() => createCommandContext(() => view!).lookupConstruct("FencedCode"));
       expect(found).toEqual({ status: "unknown" });
     });
 
@@ -210,9 +208,9 @@ describe("a command's construct lookup past the parsed tree (#256)", () => {
         commands: {
           callout: {
             run(context: CommandContext) {
-              const found = context.lookupConstruct?.("FencedCode");
-              if (found?.status === "unknown") return true;
-              if (found?.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
+              const found = context.lookupConstruct("FencedCode");
+              if (found.status === "unknown") return true;
+              if (found.status === "inside") context.replaceRange(found.range.from, found.range.to, "");
               else context.wrapSelection(":::\n", "\n:::");
               return true;
             },
@@ -266,7 +264,6 @@ describe("a state with no language", () => {
     // The clock is frozen, so a loop waiting on the cap would never end.
     view = new EditorView({ state: EditorState.create({ doc: "*emphasis*", selection: EditorSelection.cursor(3) }), parent: document.body });
     const context = createCommandContext(() => view!);
-    expect(context.findConstructRange("Emphasis")).toBeNull();
-    expect(context.lookupConstruct!("Emphasis")).toEqual({ status: "outside" });
+    expect(context.lookupConstruct("Emphasis")).toEqual({ status: "outside" });
   });
 });

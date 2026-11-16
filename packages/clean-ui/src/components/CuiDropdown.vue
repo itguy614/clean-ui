@@ -8,7 +8,7 @@ import { inMenuPanels, menuPanels, restoreMenuFocus, type MenuEdge } from "../ut
 import { __DEV__, warnOnce } from "../utils/devWarn";
 // Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
 declare const process: { env: { NODE_ENV?: string } };
-import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 
 export interface CuiDropdownProps extends HideableProps, DisableableProps {
@@ -151,7 +151,6 @@ function closeSiblingSubMenus(except?: () => void) {
 
 provide(DropdownContextKey, {
   isOpen,
-  isClosing: NEVER_CLOSING,
   trigger: toRef(props, "trigger"),
   triggerEl,
   placement: toRef(props, "placement"),

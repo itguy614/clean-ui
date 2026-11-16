@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createApp, defineComponent, h, nextTick, type App } from "vue";
 import main from "../../styles/main.css?inline";
+import { allThemesCss } from "./theme-css";
 import {
   frames,
   injectStyle,
@@ -36,7 +37,7 @@ import { useCleanUIContext, type CleanUIContext } from "../../composables/useCle
  */
 describe("teleported panels keep the theme scope they were opened from (real browser)", () => {
   let removeTokens: () => void;
-  beforeAll(() => (removeTokens = injectStyle(main)));
+  beforeAll(() => (removeTokens = injectStyle(main + allThemesCss)));
   afterAll(() => removeTokens());
   const fixtures = mountHosts();
   const cleanups: Array<() => void> = [];
@@ -169,7 +170,7 @@ describe("teleported panels keep the theme scope they were opened from (real bro
   });
 
   it("draws a scoped theme plus dark in that theme, not the page theme's dark scale", async () => {
-    // The page is ruby (later in themes.css than violet) and the dark class sits further out
+    // The page is ruby (later in the all-in-one than violet) and the dark class sits further out
     // than the violet box. The panel carries both classes on one element, which also matches
     // ruby's `.cui-theme-ruby .dark`: the same-element form has to outrank it.
     const html = document.documentElement;

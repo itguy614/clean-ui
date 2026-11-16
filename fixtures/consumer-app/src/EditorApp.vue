@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { IconCaretDown } from "@itguy614/clean-ui/icons/generated/caret-down";
 import { CuiButton, CuiIcon } from "@itguy614/clean-ui";
 import { CuiMarkdownEditor } from "@itguy614/clean-ui-editor";
 
@@ -10,7 +11,7 @@ const content = ref("# Hello\n\nStart typing **markdown**…");
   <!-- clean-ui is a peer: the page uses it in both builds, so the baseline carries clean-ui's
        own base cost (CuiIcon's built-in icons among it) and the delta is what the editor adds. -->
   <CuiButton @click="content = ''">
-    <template #prefix><CuiIcon name="caret-down" /></template>
+    <template #prefix><CuiIcon :icon="IconCaretDown" /></template>
     Clear
   </CuiButton>
   <CuiMarkdownEditor v-model="content" placeholder="Write something…" />

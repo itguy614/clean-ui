@@ -41,6 +41,23 @@ app.mount('#app')</code></pre>
     </div>
 
     <div>
+      <h2 id="other-themes" class="mb-4 text-2xl font-semibold">Import the Themes You Use</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        <code>@itguy614/clean-ui/styles</code> carries the default Navy theme, light and dark. The
+        other seven palettes are opt-in files of about 2 kB each, so an app pays only for the ones
+        it uses. A theme class whose file is not imported styles nothing, and in development
+        <code>setTheme()</code> warns.
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import '@itguy614/clean-ui/styles'
+import '@itguy614/clean-ui/themes/forest.css'   // mono, forest, amber, azure, teal, violet, ruby</code></pre>
+      <p class="mb-3 mt-4 text-surface-600 dark:text-surface-400">
+        With no bundler, or to offer every theme without listing them, use the all-in-one
+        stylesheet (it replaces <code>styles</code>, it does not go with it):
+      </p>
+      <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import '@itguy614/clean-ui/styles/all.css'</code></pre>
+    </div>
+
+    <div>
       <h2 id="configure-defaults" class="mb-4 text-2xl font-semibold">Configure App-wide Defaults</h2>
       <p class="mb-3 text-surface-600 dark:text-surface-400">
         Some choices an application makes once rather than at every call site. Pass them to
@@ -48,12 +65,13 @@ app.mount('#app')</code></pre>
         two server-rendered requests, keep their own. A component's own prop still wins.
       </p>
       <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { createCleanUI } from '@itguy614/clean-ui'
+import { PhSiren } from '@phosphor-icons/vue'
 
 app.use(createCleanUI({
   // Every card here sits under the page's h1, so its title is an h2
   headingLevels: { cardHeader: 'h2' },
-  // A different glyph for errors: any registered icon name
-  roleIcons: { error: 'x-circle' },
+  // A different glyph for errors: an icon component, or a registered icon name
+  roleIcons: { error: PhSiren },
 }))</code></pre>
       <ul class="mt-3 list-disc space-y-1 pl-5 text-surface-600 dark:text-surface-400">
         <li>
@@ -131,6 +149,24 @@ function openDialog() {
       </p>
       <pre class="overflow-x-auto rounded-lg bg-surface-900 p-4 text-sm text-surface-100"><code>import { CuiButton, CuiGrid } from '@itguy614/clean-ui'
 import '@itguy614/clean-ui/styles'</code></pre>
+    </div>
+
+    <div>
+      <h2 id="supported-entry-points" class="mb-4 text-2xl font-semibold">Supported Import Paths</h2>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        Import from these paths only: <code class="cui-code">@itguy614/clean-ui</code> (components,
+        composables and types), <code class="cui-code">/styles</code>, <code class="cui-code">/styles/all.css</code>,
+        <code class="cui-code">/themes/&lt;name&gt;.css</code>, <code class="cui-code">/icons/builtin</code>,
+        <code class="cui-code">/icons/lazy</code> and <code class="cui-code">/icons/generated/&lt;name&gt;</code>.
+      </p>
+      <p class="mb-3 text-surface-600 dark:text-surface-400">
+        Deep imports of anything else in the package, such as
+        <code class="cui-code">@itguy614/clean-ui/components/CuiButton.vue.js</code> or
+        <code class="cui-code">@itguy614/clean-ui/utils/...</code>, happen to resolve today but are
+        <strong>not supported</strong>: they are internal files, and a path can be renamed, moved or stop
+        resolving in any release. A later major release will close them off. If you need something only a
+        deep path gives you, open an issue and we will export it.
+      </p>
     </div>
 
     <div>

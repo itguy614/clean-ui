@@ -33,6 +33,33 @@ describe("createCommandContext", () => {
     expect(() => context.doc).toThrow(/unmounted/);
   });
 
+  describe("sliceDoc and lineAt", () => {
+    it("sliceDoc reads a range, clamped to the document, and follows the live document", () => {
+      view = makeView("hello\nworld");
+      const context = createCommandContext(() => view!);
+      expect(context.sliceDoc(1, 4)).toBe("ell");
+      expect(context.sliceDoc(5, 99)).toBe("\nworld");
+      view.dispatch({ changes: { from: 0, insert: ">> " } });
+      expect(context.sliceDoc(0, 5)).toBe(">> he");
+    });
+
+    it("lineAt reports the line's bounds and text, without its break", () => {
+      view = makeView("one\n\nthree");
+      const context = createCommandContext(() => view!);
+      expect(context.lineAt(0)).toEqual({ from: 0, to: 3, text: "one" });
+      expect(context.lineAt(3)).toEqual({ from: 0, to: 3, text: "one" });
+      expect(context.lineAt(4)).toEqual({ from: 4, to: 4, text: "" });
+      expect(context.lineAt(10)).toEqual({ from: 5, to: 10, text: "three" });
+      expect(() => context.lineAt(99)).toThrow(RangeError);
+    });
+
+    it("throw a clear error after the view is gone", () => {
+      const context = createCommandContext(() => null);
+      expect(() => context.sliceDoc(0, 1)).toThrow(/unmounted/);
+      expect(() => context.lineAt(0)).toThrow(/unmounted/);
+    });
+  });
+
   describe("insertAtCursor", () => {
     it("inserts at an empty (collapsed) selection and places the cursor after the insertion", () => {
       view = makeView("ab");
@@ -248,13 +275,19 @@ describe("createCommandContext", () => {
     });
   });
 
-  describe("findConstructRange", () => {
+  /** The range `lookupConstruct` found, or null when it didn't find the cursor inside one. */
+  const rangeOf = (context: CommandContext, name: string) => {
+    const found = context.lookupConstruct(name);
+    return found.status === "inside" ? found.range : null;
+  };
+
+  describe("lookupConstruct, as a range", () => {
     it("returns null when the cursor is outside any instance of the construct", () => {
       view = makeMarkdownView("plain text **bold** more text");
       view.dispatch({ selection: { anchor: 3 } });
       const context = createCommandContext(() => view!);
 
-      expect(context.findConstructRange("StrongEmphasis")).toBeNull();
+      expect(rangeOf(context, "StrongEmphasis")).toBeNull();
     });
 
     it("returns the enclosing range when the cursor is inside the construct", () => {
@@ -263,7 +296,7 @@ describe("createCommandContext", () => {
       view.dispatch({ selection: { anchor: doc.indexOf("bold") + 2 } });
       const context = createCommandContext(() => view!);
 
-      const range = context.findConstructRange("StrongEmphasis");
+      const range = rangeOf(context, "StrongEmphasis");
       expect(range).not.toBeNull();
       expect(doc.slice(range!.from, range!.to)).toBe("**bold**");
     });
@@ -274,7 +307,7 @@ describe("createCommandContext", () => {
       view.dispatch({ selection: { anchor: doc.length } });
       const context = createCommandContext(() => view!);
 
-      const range = context.findConstructRange("StrongEmphasis");
+      const range = rangeOf(context, "StrongEmphasis");
       expect(range).toEqual({ from: 0, to: doc.length });
     });
 
@@ -287,8 +320,8 @@ describe("createCommandContext", () => {
       // At this exact boundary, at least one of the two should resolve
       // (never both null), proving side -1/+1 resolution actually works
       // rather than silently always missing.
-      const emphasis = context.findConstructRange("Emphasis");
-      const strong = context.findConstructRange("StrongEmphasis");
+      const emphasis = rangeOf(context, "Emphasis");
+      const strong = rangeOf(context, "StrongEmphasis");
       expect(emphasis !== null || strong !== null).toBe(true);
     });
   });
@@ -300,7 +333,7 @@ describe("createCommandContext", () => {
       view.dispatch({ selection: { anchor: 3 } });
       const context = createCommandContext(() => view!);
 
-      expect(context.lookupConstruct!("StrongEmphasis")).toEqual({ status: "outside" });
+      expect(context.lookupConstruct("StrongEmphasis")).toEqual({ status: "outside" });
     });
 
     it("reports inside, with the enclosing range, when it is", () => {
@@ -309,14 +342,13 @@ describe("createCommandContext", () => {
       view.dispatch({ selection: { anchor: doc.indexOf("bold") + 2 } });
       const context = createCommandContext(() => view!);
 
-      const found = context.lookupConstruct!("StrongEmphasis");
+      const found = context.lookupConstruct("StrongEmphasis");
       expect(found.status).toBe("inside");
       if (found.status !== "inside") return;
       expect(doc.slice(found.range.from, found.range.to)).toBe("**bold**");
-      expect(context.findConstructRange("StrongEmphasis")).toEqual(found.range);
     });
 
-    it("leaves a built-in working on a context built by hand without it, as in 1.6", () => {
+    it("leaves a built-in working on a context built by hand", () => {
       // A plugin author's test double: createCommandContext isn't exported from the package.
       const doc = "**bold**";
       const replaced: string[] = [];
@@ -331,7 +363,9 @@ describe("createCommandContext", () => {
         replaceRange: (_from, _to, text) => void replaced.push(text),
         replaceRanges: unused,
         collect: unused,
-        findConstructRange: () => ({ from: 0, to: doc.length }),
+        lookupConstruct: () => ({ status: "inside", range: { from: 0, to: doc.length } }),
+        sliceDoc: (from, to) => doc.slice(from, to),
+        lineAt: unused,
         messages: defaultMarkdownEditorMessages,
         cleanUI: { provideTo() {} },
       };

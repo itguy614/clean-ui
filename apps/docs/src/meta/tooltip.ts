@@ -58,7 +58,7 @@ const meta: ComponentMeta = {
     { name: "--cui-tooltip-color", default: "surface-100, or the colour role's -text", description: "Text colour" },
     { name: "--cui-tooltip-px", default: "0.625rem × density", description: "Horizontal padding" },
     { name: "--cui-tooltip-py", default: "0.375rem × density", description: "Vertical padding" },
-    { name: "--cui-tooltip-radius", default: "0.375rem", description: "Corner radius" },
+    { name: "--cui-tooltip-radius", default: "var(--cui-radius-md)", description: "Corner radius" },
     { name: "--cui-tooltip-font-size", default: "0.8125rem", description: "Text size" },
   ],
 };

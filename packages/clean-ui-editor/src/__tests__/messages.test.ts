@@ -56,18 +56,43 @@ describe("pickUrlDialogMessages", () => {
     });
   });
 
-  it("reads each kind's own keys, even where the defaults coincide", () => {
-    // Cancel, Insert and the two errors read the same in English for both kinds, so the
-    // defaults alone can't tell a picker reading the wrong kind's key. Every dialog key
-    // here holds its own name.
+  it("reads the kind's own keys for the distinct strings and the shared urlDialog* keys for the rest", () => {
+    // Every dialog key here holds its own name, so a picker reading the wrong key shows.
     const own = Object.fromEntries(
       Object.keys(defaultMarkdownEditorMessages)
-        .filter((k) => /^(link|image)Dialog/.test(k))
+        .filter((k) => /^(link|image|url)Dialog/.test(k))
         .map((k) => [k, k]),
     );
     const catalog = mergeMarkdownEditorMessages(own);
-    expect(Object.values(pickUrlDialogMessages(catalog, "link"))).toEqual(Object.keys(own).filter((k) => k.startsWith("link")));
-    expect(Object.values(pickUrlDialogMessages(catalog, "image"))).toEqual(Object.keys(own).filter((k) => k.startsWith("image")));
+    const shared = {
+      cancel: "urlDialogCancel",
+      insert: "urlDialogInsert",
+      urlRequired: "urlDialogUrlRequired",
+      urlSchemeNotAllowed: "urlDialogUrlSchemeNotAllowed",
+    };
+    expect(pickUrlDialogMessages(catalog, "link")).toEqual({
+      title: "linkDialogTitle",
+      urlLabel: "linkDialogUrlLabel",
+      urlPlaceholder: "linkDialogUrlPlaceholder",
+      textLabel: "linkDialogTextLabel",
+      textPlaceholder: "linkDialogTextPlaceholder",
+      ...shared,
+    });
+    expect(pickUrlDialogMessages(catalog, "image")).toEqual({
+      title: "imageDialogTitle",
+      urlLabel: "imageDialogUrlLabel",
+      urlPlaceholder: "imageDialogUrlPlaceholder",
+      textLabel: "imageDialogAltLabel",
+      textPlaceholder: "imageDialogAltPlaceholder",
+      ...shared,
+    });
+  });
+
+  it("no longer carries a per-kind copy of the shared strings", () => {
+    const keys = Object.keys(defaultMarkdownEditorMessages);
+    for (const kind of ["link", "image"]) {
+      for (const name of ["Cancel", "Insert", "UrlRequired", "UrlSchemeNotAllowed"]) expect(keys).not.toContain(`${kind}Dialog${name}`);
+    }
   });
 });
 

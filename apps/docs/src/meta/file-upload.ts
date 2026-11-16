@@ -34,6 +34,11 @@ const meta: ComponentMeta = {
     { name: "blur", signature: "() => void", description: "Blur the file input" },
     { name: "el", signature: "HTMLElement | null", description: "The root element" },
   ],
+
+  tokens: [
+    { name: "--cui-file-upload-radius", default: "0.625rem", description: "Corner radius of the drop zone" },
+    { name: "--cui-file-upload-row-radius", default: "var(--cui-radius-md)", description: "Corner radius of a listed file's row" },
+  ],
 };
 
 export default meta;

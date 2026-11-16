@@ -1,8 +1,9 @@
 import { shallowReactive, type Component } from "vue";
-import { BUILTIN_ICONS } from "./builtin";
 
 /**
- * Icon registry — the tree-shakeable path for icons beyond the built-in set.
+ * Icon registry — how a name resolves to an icon, for `<CuiIcon name="…" />` and every
+ * string icon prop. Starts empty: the library's own components pass the icons they draw as
+ * components, and the built-in names are an opt-in (`@itguy614/clean-ui/icons/builtin`).
  *
  * Consumers statically import the Phosphor components they use and register them
  * by the same kebab-case name they pass to `<CuiIcon name="…" />`, so their
@@ -26,15 +27,15 @@ const registered = shallowReactive<Record<string, Component>>({});
 
 /**
  * Register icons by name. Later calls override earlier ones for the same name,
- * and a registered name also overrides the built-in of that name.
+ * including the built-in of that name (`icons/builtin`).
  */
 export function registerIcons(icons: Record<string, Component>): void {
   Object.assign(registered, icons);
 }
 
-/** Look a name up: registered first, then the library's built-in set. */
+/** Look a name up in what has been registered. */
 export function resolveRegisteredIcon(name: string): Component | undefined {
-  return registered[name] ?? BUILTIN_ICONS[name];
+  return registered[name];
 }
 
 /** Whether a name resolves without the lazy fallback (i.e. is tree-shakeable). */
@@ -42,12 +43,12 @@ export function hasIcon(name: string): boolean {
   return resolveRegisteredIcon(name) !== undefined;
 }
 
-/** Names currently resolvable statically — built-in plus registered. */
+/** Names currently resolvable statically. */
 export function registeredIconNames(): string[] {
-  return [...new Set([...Object.keys(BUILTIN_ICONS), ...Object.keys(registered)])].sort();
+  return Object.keys(registered).sort();
 }
 
-/** Test seam: drop consumer registrations, leaving the built-ins. */
+/** Test seam: drop every registration. */
 export function __clearRegisteredIcons(): void {
   for (const key of Object.keys(registered)) delete registered[key];
 }

@@ -23,6 +23,7 @@ import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
 import type { HideableProps, SizeableProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
+import { IconMagnifyingGlass } from "../icons/generated/magnifying-glass";
 
 export interface CuiDataGridProps<T extends object = DataGridRow> extends HideableProps, SizeableProps {
   /** Column definitions */
@@ -277,7 +278,7 @@ const messages = useMessages();
     <div v-else-if="grid.displayData.value.length === 0">
       <slot name="empty">
         <CuiEmptyState
-          icon="magnifying-glass"
+          :icon="IconMagnifyingGlass"
           :title="messages.dataGrid.noResultsTitle"
           :description="messages.dataGrid.noResultsDescription"
           size="md"

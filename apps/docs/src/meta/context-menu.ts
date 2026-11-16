@@ -64,6 +64,10 @@ const meta: ComponentMeta = {
     { name: "close", signature: "() => void", description: "Close the menu" },
     { name: "isOpen", signature: "boolean", description: "Whether the menu is currently open" },
   ],
+
+  tokens: [
+    { name: "--cui-context-menu-radius", default: "var(--cui-radius-md)", description: "Corner radius of the menu panel" },
+  ],
 };
 
 export default meta;

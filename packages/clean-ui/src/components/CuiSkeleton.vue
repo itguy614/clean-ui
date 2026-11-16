@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<CuiSkeletonProps>(), {
 });
 
 // Its own scale, not utils/sizing's RADIUS_SCALE: md and lg are fixed values rather than
-// following --cui-button-radius / --cui-radius-lg.
+// following --cui-radius-md / --cui-radius-lg.
 const radiusMap: Record<SkeletonRounded, string> = {
   none: "0",
   sm: "var(--cui-radius-sm, 0.25rem)",

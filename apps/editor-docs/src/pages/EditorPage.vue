@@ -249,7 +249,7 @@ const themeCode = computed(() => {
             { name: '--cui-markdown-editor-border', type: 'color', default: 'var(--cui-border-strong)', description: 'The control\'s border at rest.' },
             { name: '--cui-markdown-editor-focus-border', type: 'color', default: 'var(--cui-primary)', description: 'The border while the editor has focus.' },
             { name: '--cui-markdown-editor-focus-ring', type: 'color', default: 'var(--cui-primary-focus-ring)', description: 'The 2px ring drawn outside the border while the editor has focus.' },
-            { name: '--cui-markdown-editor-radius', type: 'length', default: 'var(--cui-button-radius, var(--cui-radius-md, 0.375rem))', description: 'The control\'s corner radius. The toolbar follows it, so their corners always match. Unset, it follows clean-ui\'s shared control radius, like CuiInput.' },
+            { name: '--cui-markdown-editor-radius', type: 'length', default: 'var(--cui-radius-md, 0.375rem)', description: 'The control\'s corner radius. The toolbar follows it, so their corners always match. Unset, it follows clean-ui\'s shared control radius, like CuiInput.' },
           ]"
         />
         <Example title="Overriding the tokens on a container" :code="themeCode">

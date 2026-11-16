@@ -17,6 +17,8 @@
   "compilerOptions": {
     "paths": {
       "@itguy614/clean-ui": ["../packages/clean-ui/src/index.ts"],
+      "@itguy614/clean-ui/icons/builtin": ["../packages/clean-ui/src/icons/builtin.ts"],
+      "@itguy614/clean-ui/icons/generated/*": ["../packages/clean-ui/src/icons/generated/*.ts"],
       "@itguy614/clean-ui/icons/lazy": ["../packages/clean-ui/src/icons/lazy.ts"],
       "@itguy614/clean-ui-editor": ["../packages/clean-ui-editor/src/index.ts"],
       "@itguy614/clean-ui-editor/render": ["../packages/clean-ui-editor/src/render.ts"],

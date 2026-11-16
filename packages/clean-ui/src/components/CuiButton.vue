@@ -16,6 +16,7 @@ import type {
   SizeableProps,
   DisableableProps,
 } from "../types/common";
+import { IconCircleNotch } from "../icons/generated/circle-notch";
 
 export type ButtonVariant = "solid" | "outline" | "dash" | "ghost";
 
@@ -277,7 +278,7 @@ const buttonStyle = computed(() => {
 
     <!-- Spinner overlay -->
     <span v-if="loading" class="cui-button__spinner" aria-hidden="true">
-      <CuiIcon name="circle-notch" size="1em" class="cui-button__spinner-svg" />
+      <CuiIcon :icon="IconCircleNotch" size="1em" class="cui-button__spinner-svg" />
     </span>
 
     <!-- Default content -->

@@ -123,7 +123,7 @@ export default defineNuxtConfig({
             <CuiRadio value="comfortable" label="Comfortable" />
           </CuiRadioGroup>
 
-          <div :class="demoClass" style="border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius); padding: 1rem;">
+          <div :class="demoClass" style="border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); padding: 1rem;">
             <CuiStack spacing="4">
               <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <CuiButton variant="solid" color="primary">Save</CuiButton>

@@ -8,7 +8,7 @@ import { listBulletPlugin } from "./list-bullet-plugin";
  * construct policy (FR27/FR29), granularity tracking and the marker-hiding
  * decoration layer. `source` mode adds none of this — nothing hidden, per
  * FR4. `initialConstructs` is the node-name set the currently active plugins
- * declare via `decorations` (see `CuiMarkdownEditor.vue`). */
+ * declare via `decorationNodes` (see `CuiMarkdownEditor.vue`). */
 export function revealExtension(initialConstructs: ReadonlySet<string>): Extension {
   return [
     ...activeConstructsExtension(initialConstructs),

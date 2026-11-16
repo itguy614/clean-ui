@@ -23,6 +23,10 @@ import CuiDropdownItem from "./CuiDropdownItem.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiContextMenu from "./CuiContextMenu.vue";
 import type { SizeableProps } from "../types/common";
+import { IconDotsThree } from "../icons/generated/dots-three";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretUp } from "../icons/generated/caret-up";
+import { IconCaretUpDown } from "../icons/generated/caret-up-down";
 
 // Module-scoped, so the library doesn't pull Node's global types into its own build.
 declare const process: { env: { NODE_ENV?: string } };
@@ -136,7 +140,7 @@ function sortDirection(col: { key: string; sortKey?: string }): "asc" | "desc" |
 
 function sortIcon(col: { key: string; sortKey?: string }) {
   const dir = sortDirection(col);
-  return dir === "asc" ? "caret-up" : dir === "desc" ? "caret-down" : "caret-up-down";
+  return dir === "asc" ? IconCaretUp : dir === "desc" ? IconCaretDown : IconCaretUpDown;
 }
 
 /**
@@ -642,7 +646,7 @@ const totalCols = computed(() => {
                   @click="grid.applySort(cell.col.key)"
                 >
                   <CuiIcon
-                    :name="sortIcon(cell.col)"
+                    :icon="sortIcon(cell.col)"
                     size="0.875rem"
                     aria-hidden="true"
                     :style="{ opacity: sortDirection(cell.col) ? '1' : '0.3' }"
@@ -658,7 +662,7 @@ const totalCols = computed(() => {
               >
                 <slot name="header" :column="cell.col">{{ cell.col.label }}</slot>
                 <CuiIcon
-                  :name="sortIcon(cell.col)"
+                  :icon="sortIcon(cell.col)"
                   size="0.875rem"
                   aria-hidden="true"
                   :style="{ opacity: sortDirection(cell.col) ? '1' : '0.3' }"
@@ -730,7 +734,7 @@ const totalCols = computed(() => {
             <CuiDropdown v-if="rowActions(row).length > 0">
               <CuiDropdownTrigger>
                 <CuiButton variant="ghost" size="xs" style="opacity: 0.4;" :aria-label="messages.dataGrid.rowActions(labelOf(row, idx))">
-                  <CuiIcon name="dots-three" size="1rem" />
+                  <CuiIcon :icon="IconDotsThree" size="1rem" />
                 </CuiButton>
               </CuiDropdownTrigger>
               <CuiDropdownMenu>

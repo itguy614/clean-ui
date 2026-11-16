@@ -5,6 +5,7 @@ import CuiInput from "./CuiInput.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 import { useCuiId } from "../composables/useCuiId";
+import { IconMagnifyingGlass } from "../icons/generated/magnifying-glass";
 
 export interface CuiDataGridSearchProps {
   /** ms after the last keystroke; 0 searches at once. */
@@ -71,7 +72,7 @@ function onClear() {
       @keydown.escape="onClear"
     >
       <template #prefix>
-        <CuiIcon name="magnifying-glass" size="0.875rem" />
+        <CuiIcon :icon="IconMagnifyingGlass" size="0.875rem" />
       </template>
     </CuiInput>
   </div>

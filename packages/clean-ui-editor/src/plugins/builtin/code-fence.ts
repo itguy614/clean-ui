@@ -1,19 +1,18 @@
 import { definePlugin } from "../define-plugin";
-import { lookupConstructIn } from "../command-context";
 
 export const codeFencePlugin = definePlugin({
   id: "cui-code-fence",
   commands: {
     codeFence: {
       run(context) {
-        const found = lookupConstructIn(context, "FencedCode");
+        const found = context.lookupConstruct("FencedCode");
         // Not parsed far enough to tell: a fence inserted inside an open
         // block would close it early and flip everything below it. Do
         // nothing, but report it handled so no other binding runs instead.
         if (found.status === "unknown") return true;
         if (found.status === "inside") {
           const { from, to } = found.range;
-          const block = context.doc.slice(from, to);
+          const block = context.sliceDoc(from, to);
           const firstNewline = block.indexOf("\n");
           const lastNewline = block.lastIndexOf("\n");
           const inner = firstNewline === -1 || lastNewline <= firstNewline ? "" : block.slice(firstNewline + 1, lastNewline);
@@ -26,14 +25,14 @@ export const codeFencePlugin = definePlugin({
         }
         return true;
       },
-      isActive: (context) => lookupConstructIn(context, "FencedCode").status === "inside",
+      isActive: (context) => context.lookupConstruct("FencedCode").status === "inside",
       label: "Code block",
       icon: "code-block",
     },
   },
   toolbar: [{ command: "codeFence" }],
   constructs: ["FencedCode"],
-  decorations: [{ node: "FencedCode" }],
+  decorationNodes: ["FencedCode"],
   paste: [
     {
       selector: "pre",

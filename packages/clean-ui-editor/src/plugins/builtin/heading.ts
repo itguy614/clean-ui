@@ -1,13 +1,9 @@
 import { definePlugin } from "../define-plugin";
-import { lineBoundsAt } from "./line-utils";
 import type { CommandContext, PluginCommandSpec } from "../types";
 
 const HEADING_PATTERN = /^#{1,6} /;
 
-function currentLine(context: CommandContext) {
-  const { start, end } = lineBoundsAt(context.doc, context.selection.from);
-  return { start, end, text: context.doc.slice(start, end) };
-}
+const currentLine = (context: CommandContext) => context.lineAt(context.selection.from);
 
 /**
  * Line-prefix detection (a plain regex over the current line), not the
@@ -20,7 +16,7 @@ function headingCommand(level: 1 | 2 | 3): PluginCommandSpec {
 
   return {
     run(context) {
-      const { start, text } = currentLine(context);
+      const { from: start, text } = currentLine(context);
       const match = text.match(HEADING_PATTERN);
       if (match && match[0] === prefix) {
         context.replaceRange(start, start + prefix.length, "");
@@ -41,7 +37,7 @@ export const heading1Plugin = definePlugin({
   toolbar: [{ command: "heading1" }],
   keymap: [{ key: "Mod-Alt-1", command: "heading1" }],
   constructs: ["ATXHeading1"],
-  decorations: [{ node: "ATXHeading1" }],
+  decorationNodes: ["ATXHeading1"],
   paste: [{ selector: "h1", produces: "ATXHeading1", degradeTo: "plainText", toMarkdown: (_el, c) => `# ${c}` }],
 });
 
@@ -51,7 +47,7 @@ export const heading2Plugin = definePlugin({
   toolbar: [{ command: "heading2" }],
   keymap: [{ key: "Mod-Alt-2", command: "heading2" }],
   constructs: ["ATXHeading2"],
-  decorations: [{ node: "ATXHeading2" }],
+  decorationNodes: ["ATXHeading2"],
   paste: [{ selector: "h2", produces: "ATXHeading2", degradeTo: "plainText", toMarkdown: (_el, c) => `## ${c}` }],
 });
 
@@ -61,6 +57,6 @@ export const heading3Plugin = definePlugin({
   toolbar: [{ command: "heading3" }],
   keymap: [{ key: "Mod-Alt-3", command: "heading3" }],
   constructs: ["ATXHeading3"],
-  decorations: [{ node: "ATXHeading3" }],
+  decorationNodes: ["ATXHeading3"],
   paste: [{ selector: "h3", produces: "ATXHeading3", degradeTo: "plainText", toMarkdown: (_el, c) => `### ${c}` }],
 });

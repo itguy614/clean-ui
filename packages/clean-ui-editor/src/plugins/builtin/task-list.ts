@@ -17,7 +17,7 @@ export const taskListPlugin = definePlugin({
   },
   toolbar: [{ command: "taskList" }],
   constructs: ["Task"],
-  decorations: [{ node: "Task" }],
+  decorationNodes: ["Task"],
   paste: [
     {
       selector: "li:has(> input[type='checkbox'])",

@@ -36,7 +36,7 @@ describe("size props", () => {
     (f) => {
       const dir = join(dirname(fileURLToPath(import.meta.url)), "../components");
       const src = script(readFileSync(join(dir, f), "utf8"));
-      expect(src).toMatch(/export interface Cui\w+Props extends [^{]*\bSizeableProps\b/);
+      expect(src).toMatch(/export interface Cui\w+Props\s+extends [^{]*\bSizeableProps\b/);
       expect(src).not.toMatch(/^\s+size\?:/m);
     },
   );

@@ -2,11 +2,17 @@
 import { computed, ref, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { usePointerDrag } from "../composables/usePointerDrag";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
 
-export interface CuiSliderProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiSliderProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -15,8 +21,6 @@ export interface CuiSliderProps extends NativeControlProps, HideableProps, Color
   max?: number;
   /** Step increment */
   step?: number;
-  /** Label text */
-  label?: string;
   /** Show the current value */
   showValue?: boolean;
   /** Format function for displayed value */

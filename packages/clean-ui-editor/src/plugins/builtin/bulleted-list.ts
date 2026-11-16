@@ -13,7 +13,7 @@ export const bulletedListPlugin = definePlugin({
   toolbar: [{ command: "bulletedList" }],
   keymap: [{ key: "Mod-Shift-8", command: "bulletedList" }],
   constructs: ["BulletList"],
-  decorations: [{ node: "BulletList" }],
+  decorationNodes: ["BulletList"],
   paste: [
     {
       // Excludes task items — taskListPlugin's own rule claims those.

@@ -2,10 +2,11 @@
 import { computed, ref, useTemplateRef, watch } from "vue";
 import type { HideableProps, SizeableProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
-import { PhCheck, PhWarning } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useMessages } from "../composables/useMessages";
 import { useRovingFocus } from "../composables/useRovingFocus";
+import { IconCheck } from "../icons/generated/check";
+import { IconWarning } from "../icons/generated/warning";
 
 export type StepperOrientation = "horizontal" | "vertical";
 export type StepStatus = "complete" | "current" | "upcoming" | "error";
@@ -269,8 +270,8 @@ const items = computed(() =>
         >
           <!-- Circle -->
           <span :style="circleStyle(status)" aria-hidden="true">
-            <CuiIcon v-if="status === 'complete'" :icon="PhCheck" :size="cfg.iconSize" />
-            <CuiIcon v-else-if="status === 'error'" :icon="PhWarning" :size="cfg.iconSize" />
+            <CuiIcon v-if="status === 'complete'" :icon="IconCheck" :size="cfg.iconSize" />
+            <CuiIcon v-else-if="status === 'error'" :icon="IconWarning" :size="cfg.iconSize" />
             <CuiIcon v-else-if="step.icon" :name="step.icon" :size="cfg.iconSize" />
             <span v-else>{{ index + 1 }}</span>
           </span>

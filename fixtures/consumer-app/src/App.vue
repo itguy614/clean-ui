@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IconCaretDown } from "@itguy614/clean-ui/icons/generated/caret-down";
 import { CuiButton, CuiIcon, useTheme, version } from "@itguy614/clean-ui";
 
 const { theme, setTheme } = useTheme();
@@ -9,7 +10,7 @@ const { theme, setTheme } = useTheme();
     <p>clean-ui version: {{ version }}</p>
     <p>theme: {{ theme }}</p>
     <CuiButton @click="setTheme('forest')">
-      <template #prefix><CuiIcon name="caret-down" /></template>
+      <template #prefix><CuiIcon :icon="IconCaretDown" /></template>
       Hello from a packed tarball
     </CuiButton>
   </main>

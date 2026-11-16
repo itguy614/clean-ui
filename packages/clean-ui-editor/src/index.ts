@@ -42,10 +42,10 @@ export {
   type ToolbarEntry,
   type KeymapEntry,
   type PasteRule,
-  type DecorationRule,
   type CollectOpener,
   type CollectSettle,
   type ConstructLookup,
+  type EditorLine,
   type EditorSelectionRange,
   type PluginErrorInfo,
 } from "./plugins";

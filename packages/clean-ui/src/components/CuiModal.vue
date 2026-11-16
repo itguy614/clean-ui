@@ -32,11 +32,6 @@ export interface CuiModalProps extends HideableProps, TitleAsProps, OverlayFocus
   persistent?: boolean;
   /** Hide the X close button */
   noCloseButton?: boolean;
-  /**
-   * @deprecated Has no effect — overlays always stack, and Escape closes only the topmost
-   * (#285). Removed in 2.0.
-   */
-  allowNested?: boolean;
   /** Backdrop opacity */
   backdropOpacity?: number;
   /** Backdrop blur */
@@ -62,8 +57,6 @@ const props = withDefaults(defineProps<CuiModalProps>(), {
   size: "md",
   persistent: false,
   noCloseButton: false,
-  // `undefined`, not Vue's boolean `false`, so the deprecation warning fires only when passed.
-  allowNested: undefined,
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
@@ -91,11 +84,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
-  // Deprecated (#285): passed on only so useOverlay can warn that it does nothing.
-  allowNested: props.allowNested === undefined ? undefined : () => props.allowNested!,
-  name: "CuiModal",
   // Its exit is a <Transition> below, which reports back through onAfterLeave (#263).
-  exit: "transition",
   onUpdateOpen: (v) => emit("update:visible", v),
   onClose: () => emit("close"),
   rootRef: overlayRef,

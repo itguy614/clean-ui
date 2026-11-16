@@ -4,20 +4,20 @@
     {
       "package": "@itguy614/clean-ui",
       "scenario": "basic",
-      "gzipBytes": 70656,
-      "measured": "2026-11-10"
+      "gzipBytes": 33792,
+      "measured": "2026-11-13"
     },
     {
       "package": "@itguy614/clean-ui",
       "scenario": "grid",
-      "gzipBytes": 131072,
-      "measured": "2026-11-10"
+      "gzipBytes": 96256,
+      "measured": "2026-11-13"
     },
     {
       "package": "@itguy614/clean-ui-editor",
       "scenario": "editor",
-      "gzipBytes": 163840,
-      "measured": "2026-11-03"
+      "gzipBytes": 154624,
+      "measured": "2026-11-13"
     },
     {
       "package": "@itguy614/clean-ui-editor",

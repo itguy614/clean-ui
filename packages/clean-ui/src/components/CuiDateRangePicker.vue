@@ -10,12 +10,15 @@ import {
   toDateValue, dateToIso, addDays,
   type DisabledDateRange,
 } from "../utils/date";
-import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps, FormControlProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { fullDateLabel, monthNames, monthYearLabel, weekdayLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import { IconCalendarBlank } from "../icons/generated/calendar-blank";
+import { IconCaretLeft } from "../icons/generated/caret-left";
+import { IconCaretRight } from "../icons/generated/caret-right";
 
 export type DateRangePickerValueType = "iso" | "date";
 
@@ -24,7 +27,12 @@ export interface DateRangeValue {
   end: string | Date | null;
 }
 
-export interface CuiDateRangePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
+export interface CuiDateRangePickerProps
+  extends NativeControlProps,
+    HideableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Current range value */
   modelValue?: DateRangeValue;
   /** Display format pattern */
@@ -49,8 +57,6 @@ export interface CuiDateRangePickerProps extends NativeControlProps, HideablePro
   startPlaceholder?: string;
   /** Placeholder for end input */
   endPlaceholder?: string;
-  /** Label */
-  label?: string;
 }
 
 const props = withDefaults(defineProps<CuiDateRangePickerProps>(), {
@@ -279,7 +285,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
         :class="{ 'cui-date-range-picker__trigger--disabled': disabled }"
         :style="sizeVars"
       >
-        <CuiIcon name="calendar-blank" size="0.875rem" class="cui-date-range-picker__icon" />
+        <CuiIcon :icon="IconCalendarBlank" size="0.875rem" class="cui-date-range-picker__icon" />
         <input
           ref="startInput"
           @focus="openedFrom = 'start'"
@@ -327,7 +333,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           <template v-if="viewMode === 'days'">
             <div class="cui-date-range-picker__header">
               <CuiButton variant="ghost" size="xs" @click="prevMonth">
-                <CuiIcon name="caret-left" size="0.875rem" />
+                <CuiIcon :icon="IconCaretLeft" size="0.875rem" />
               </CuiButton>
               <div class="cui-date-range-picker__header-title">
                 <CuiButton variant="ghost" size="xs" class="cui-date-range-picker__title-btn" @click="viewMode = 'months'">
@@ -338,7 +344,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
                 </CuiButton>
               </div>
               <CuiButton variant="ghost" size="xs" @click="nextMonth">
-                <CuiIcon name="caret-right" size="0.875rem" />
+                <CuiIcon :icon="IconCaretRight" size="0.875rem" />
               </CuiButton>
             </div>
 
@@ -374,9 +380,9 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           <!-- MONTHS VIEW -->
           <template v-else-if="viewMode === 'months'">
             <div class="cui-date-range-picker__header">
-              <CuiButton variant="ghost" size="xs" @click="viewYear--"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
+              <CuiButton variant="ghost" size="xs" @click="viewYear--"><CuiIcon :icon="IconCaretLeft" size="0.875rem" /></CuiButton>
               <CuiButton variant="ghost" size="xs" class="cui-date-range-picker__title-btn" @click="viewMode = 'years'">{{ viewYear }}</CuiButton>
-              <CuiButton variant="ghost" size="xs" @click="viewYear++"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
+              <CuiButton variant="ghost" size="xs" @click="viewYear++"><CuiIcon :icon="IconCaretRight" size="0.875rem" /></CuiButton>
             </div>
             <div
               ref="gridRef"
@@ -401,9 +407,9 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
           <!-- YEARS VIEW -->
           <template v-else-if="viewMode === 'years'">
             <div class="cui-date-range-picker__header">
-              <CuiButton variant="ghost" size="xs" @click="prevYearRange"><CuiIcon name="caret-left" size="0.875rem" /></CuiButton>
+              <CuiButton variant="ghost" size="xs" @click="prevYearRange"><CuiIcon :icon="IconCaretLeft" size="0.875rem" /></CuiButton>
               <span class="cui-date-range-picker__years-range">{{ yearRangeStart }} – {{ yearRangeEnd }}</span>
-              <CuiButton variant="ghost" size="xs" @click="nextYearRange"><CuiIcon name="caret-right" size="0.875rem" /></CuiButton>
+              <CuiButton variant="ghost" size="xs" @click="nextYearRange"><CuiIcon :icon="IconCaretRight" size="0.875rem" /></CuiButton>
             </div>
             <div
               ref="gridRef"
@@ -472,7 +478,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   height: var(--cui-date-range-picker-height, var(--_date-range-picker-height));
   padding: 0 var(--cui-date-range-picker-px, var(--_date-range-picker-px));
   border: 1px solid var(--cui-date-range-picker-border, var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-date-range-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-date-range-picker-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-date-range-picker-bg, var(--cui-surface-base, white));
 }
 .cui-date-range-picker__trigger {
@@ -583,7 +589,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   height: 2rem;
   font-size: 0.8125rem;
   color: var(--cui-text-body);
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
 }
 .cui-date-range-picker__day {
   position: relative;
@@ -594,7 +600,7 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
 }
 :where(.cui-date-range-picker__option) {
   padding: calc(0.5rem * var(--cui-density-scale, 1));
-  border-radius: 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem);
   font-size: 0.8125rem;
   color: var(--cui-text-body);
 }
@@ -623,10 +629,10 @@ function dayState(day: { date: Date; inMonth: boolean; disabled: boolean }) {
   font-weight: 600;
 }
 :where(.cui-date-range-picker__day--start) {
-  border-radius: 0.375rem 0 0 0.375rem;
+  border-radius: var(--cui-radius-md, 0.375rem) 0 0 var(--cui-radius-md, 0.375rem);
 }
 :where(.cui-date-range-picker__day--end) {
-  border-radius: 0 0.375rem 0.375rem 0;
+  border-radius: 0 var(--cui-radius-md, 0.375rem) var(--cui-radius-md, 0.375rem) 0;
 }
 :where(.cui-date-range-picker__day--disabled) {
   color: var(--cui-text-tertiary);

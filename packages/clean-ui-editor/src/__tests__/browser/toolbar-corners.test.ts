@@ -20,7 +20,7 @@ describe("the editor toolbar carries the control's corners to its scroller (real
 
   /** An editor narrow enough that the default toolbar overflows, with a known radius. */
   async function editor(radius: string) {
-    const host = fixtures.host({ cssText: `width: 240px; --cui-button-radius: ${radius};` });
+    const host = fixtures.host({ cssText: `width: 240px; --cui-radius-md: ${radius};` });
     const wrapper = fixtures.track(mount(CuiMarkdownEditor, { props: { modelValue: "" }, attachTo: host }));
     // The scroll area measures its overflow after mount.
     await frames(2);

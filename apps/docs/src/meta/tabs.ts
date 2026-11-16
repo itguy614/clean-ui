@@ -8,6 +8,8 @@ const meta: ComponentMeta = {
   interactive: true,
 
   tokens: [
+    { name: "--cui-tabs-radius", default: "var(--cui-radius-md)", description: "Corner radius of the segmented variant's track. Its tabs are 0.125rem less" },
+    { name: "--cui-tabs-tab-radius", default: "--cui-tabs-radius less 0.125rem", description: "Corner radius of a tab in the segmented variant, on its own. Set it when --cui-tabs-radius is a value the subtraction cannot take, such as a unitless 0" },
     { name: "--cui-tabs-color", default: "the color prop's role (--cui-primary)", description: "The active tab's text and its underline bar" },
     { name: "--cui-tabs-focus-ring", default: "the color prop's role (--cui-primary)", description: "The outline drawn round a tab with keyboard focus" },
   ],

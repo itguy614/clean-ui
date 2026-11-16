@@ -4,6 +4,7 @@ import type { CuiSize, HideableProps, ColorableProps, SizeableProps } from "../t
 import CuiIcon from "./CuiIcon.vue";
 import { scaleDensity } from "../utils/sizing";
 import { useMessages } from "../composables/useMessages";
+import { IconUser } from "../icons/generated/user";
 
 export type AvatarShape = "circle" | "rounded";
 export type AvatarStatus = "online" | "offline" | "away" | "busy";
@@ -137,7 +138,8 @@ const pingStyle = computed(() => {
     </span>
 
     <!-- Icon fallback -->
-    <CuiIcon v-else :name="icon || 'user'" :size="cfg.icon" />
+    <CuiIcon v-else-if="icon" :name="icon" :size="cfg.icon" />
+    <CuiIcon v-else :icon="IconUser" :size="cfg.icon" />
 
     <!-- Status ping ring (expanding ring behind the dot) -->
     <span v-if="pingStyle" class="cui-avatar__ping" :style="pingStyle" />

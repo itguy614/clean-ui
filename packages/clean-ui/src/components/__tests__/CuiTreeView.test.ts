@@ -144,7 +144,7 @@ describe("CuiTreeView chevron hit target", () => {
     // the rendered phosphor svg carries its dimensions differently
     const caret = wrapper
       .findAllComponents(CuiIcon)
-      .find((c) => c.props("name") === "caret-right")!;
+      .find((c) => (c.props("icon") as { name?: string } | undefined)?.name === "CuiIconCaretRight")!;
     expect(caret.props("size")).toBe(iconSize);
   });
 

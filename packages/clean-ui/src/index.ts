@@ -1,7 +1,7 @@
-import { readonly, shallowRef, type App } from "vue";
+import { readonly, shallowRef, type App, type Ref } from "vue";
 import type { CleanUIOptions } from "./types";
 import { mergeDefaults } from "./utils/configure";
-import { CuiDefaultsKey } from "./components/config-context";
+import { CuiDefaultsKey, type ResolvedCleanUIConfig } from "./components/config-context";
 
 // Detect a second, different-version copy of clean-ui in the same page — see
 // duplicate-guard.ts. Runs as early as possible, before anything else loads.
@@ -126,6 +126,7 @@ export type {
   CuiOrientation,
   CuiVariant,
   CuiColorOrCss,
+  CuiRoleIcon,
   CuiTitleAs,
   HideableProps,
   ColorableProps,
@@ -326,9 +327,9 @@ export type {
 
 // Composable exports
 // Icon registry — register statically-imported Phosphor icons so they tree-shake.
-// The lazy any-name resolver is NOT re-exported here on purpose: importing it
-// would pull the whole icon package into every consumer bundle. It lives at
-// "@itguy614/clean-ui/icons/lazy".
+// Neither the built-in name registration nor the lazy any-name resolver is re-exported
+// here on purpose: importing either would pull a whole icon set into every consumer
+// bundle. They live at "@itguy614/clean-ui/icons/builtin" and "@itguy614/clean-ui/icons/lazy".
 export {
   registerIcons,
   hasIcon,
@@ -336,7 +337,6 @@ export {
   setIconFallbackResolver,
   type IconFallbackResolver,
 } from "./icons/registry";
-export { BUILTIN_ICONS } from "./icons/builtin";
 // Role → icon for the feedback components. Overridable app-wide, the same way colours
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
@@ -366,7 +366,8 @@ export function createCleanUI(options: CleanUIOptions = {}) {
       // This app's defaults (#149): provided, so two apps — or two server-rendered requests —
       // keep their own. configureCleanUI() is the global fallback beneath them.
       // Fixed at install: the options object is read once.
-      app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))));
+      // The cast: readonly() unwraps an icon component's type into a structural one (#207).
+      app.provide(CuiDefaultsKey, readonly(shallowRef(mergeDefaults(undefined, options))) as unknown as Readonly<Ref<ResolvedCleanUIConfig>>);
       app.component("CuiButton", CuiButton);
       app.component("CuiButtonGroup", CuiButtonGroup);
       app.component("CuiToolbar", CuiToolbar);

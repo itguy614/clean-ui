@@ -3,9 +3,9 @@ import { ref, computed, useTemplateRef } from "vue";
 import { usePointerDrag } from "../composables/usePointerDrag";
 import { useCuiId } from "../composables/useCuiId";
 import { useMessages } from "../composables/useMessages";
-import { PhDotsNine } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { CuiOrientation, HideableProps } from "../types/common";
+import { IconDotsNine } from "../icons/generated/dots-nine";
 
 export interface CuiResizablePanelsProps extends HideableProps {
   /** Split orientation */
@@ -301,7 +301,7 @@ defineExpose({
     >
       <div :style="handleLineStyle" />
       <div :style="gripStyle" aria-hidden="true">
-        <CuiIcon :icon="PhDotsNine" size="1.25rem" />
+        <CuiIcon :icon="IconDotsNine" size="1.25rem" />
       </div>
     </div>
 

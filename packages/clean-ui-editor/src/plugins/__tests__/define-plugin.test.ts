@@ -8,6 +8,10 @@ describe("definePlugin", () => {
     expect(plugin.apiVersion).toBe(PLUGIN_API_VERSION);
   });
 
+  it("is on plugin API version 2: removing CommandContext.findConstructRange broke the v1 contract", () => {
+    expect(PLUGIN_API_VERSION).toBe(2);
+  });
+
   it("declaring every field preserves them all on the returned record", () => {
     const run = () => true;
     const plugin = definePlugin({
@@ -17,7 +21,7 @@ describe("definePlugin", () => {
       keymap: [{ key: "Mod-k", command: "doThing" }],
       constructs: ["Emphasis"],
       paste: [{ selector: "em", toMarkdown: (_el, children) => `*${children}*`, produces: "Emphasis", degradeTo: "plainText" }],
-      decorations: [{ node: "Emphasis" }],
+      decorationNodes: ["Emphasis"],
       extensions: [],
     });
 
@@ -27,7 +31,7 @@ describe("definePlugin", () => {
     expect(plugin.keymap).toEqual([{ key: "Mod-k", command: "doThing" }]);
     expect(plugin.constructs).toEqual(["Emphasis"]);
     expect(plugin.paste).toHaveLength(1);
-    expect(plugin.decorations).toEqual([{ node: "Emphasis" }]);
+    expect(plugin.decorationNodes).toEqual(["Emphasis"]);
     expect(plugin.extensions).toEqual([]);
   });
 });

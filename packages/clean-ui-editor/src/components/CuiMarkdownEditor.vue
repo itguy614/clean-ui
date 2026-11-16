@@ -25,6 +25,7 @@ import {
   useColorScheme,
   useFieldDescribedBy,
   type AriaLabelableProps,
+  type FormControlProps,
 } from "@itguy614/clean-ui";
 import CuiMarkdownEditorToolbar from "./CuiMarkdownEditorToolbar.vue";
 import { cuiMarkdownLanguage } from "../language/markdown-language";
@@ -129,6 +130,16 @@ type AriaContractHolds = [AriaCopy] extends [AriaLabelableProps]
   : never;
 const ariaContractHolds: AriaContractHolds = true;
 void ariaContractHolds;
+
+// The same holds for the shared form-control props (#180): declared by hand above (`error`,
+// `errorMessage`, `required`, `readonly`, `disabled`) for the same reason, so a drift from
+// `FormControlProps` fails the build the same way.
+type FormKeys = "error" | "errorMessage" | "required" | "readonly" | "disabled";
+type FormCopy = Pick<CuiMarkdownEditorProps, FormKeys>;
+type FormContract = Pick<FormControlProps, FormKeys>;
+type FormContractHolds = [FormCopy] extends [FormContract] ? ([FormContract] extends [FormCopy] ? true : never) : never;
+const formContractHolds: FormContractHolds = true;
+void formContractHolds;
 
 const props = withDefaults(defineProps<CuiMarkdownEditorProps>(), {
   modelValue: "",
@@ -393,17 +404,10 @@ function resolveCspNonce(): string | undefined {
   return document.querySelector('meta[name="csp-nonce"]')?.getAttribute("content") ?? undefined;
 }
 
-/** FR27/FR29: the reveal layer only decorates constructs the active plugins
- * actually declare via `decorations` — excluding a plugin means its markers
- * stay literal, unstyled text. */
-function activeConstructsFromRegistry(registry: PluginRegistry): ReadonlySet<string> {
-  return new Set(registry.decorations.map((rule) => rule.node));
-}
-
 /** `wysiwyg` gets the reveal layer (hidden markers, revealed on caret entry);
  * `source` stays the base editor with nothing added, per FR4. */
 function buildModeExtensions(mode: CuiMarkdownEditorMode): Extension[] {
-  return mode === "wysiwyg" ? [revealExtension(activeConstructsFromRegistry(currentRegistry))] : [];
+  return mode === "wysiwyg" ? [revealExtension(currentRegistry.decorationNodes)] : [];
 }
 
 /**
@@ -613,7 +617,7 @@ watch(
         // present in wysiwyg mode, so only worth updating there; dispatching
         // an effect an inactive StateField doesn't have is a harmless no-op,
         // but the guard keeps this from doing pointless work in source mode.
-        ...(currentMode.value === "wysiwyg" ? [setActiveConstructsEffect.of(activeConstructsFromRegistry(currentRegistry))] : []),
+        ...(currentMode.value === "wysiwyg" ? [setActiveConstructsEffect.of(currentRegistry.decorationNodes)] : []),
       ],
     });
   },

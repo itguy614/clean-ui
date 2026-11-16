@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, type Component } from "vue";
 import type { HideableProps, ColorableProps, SizeableProps, TitleAsProps } from "../types/common";
 import { clampSize, scaleDensity } from "../utils/sizing";
 import CuiIcon from "./CuiIcon.vue";
@@ -8,8 +8,8 @@ import { useHeadingLevel } from "../utils/configure";
 const SUPPORTED_SIZES = ["sm", "md", "lg"] as const;
 
 export interface CuiEmptyStateProps extends HideableProps, ColorableProps, SizeableProps, TitleAsProps {
-  /** Phosphor icon name */
-  icon?: string;
+  /** An icon component, or a registered icon name */
+  icon?: string | Component;
   /** Heading text */
   title?: string;
   /** Supporting text below the title */
@@ -58,7 +58,7 @@ const circleStyle = computed(() => ({
     <div v-if="icon || $slots.icon" class="cui-empty-state__icon-area">
       <slot name="icon">
         <div class="cui-empty-state__circle" :style="circleStyle">
-          <CuiIcon :name="icon!" :size="cfg.icon" />
+          <CuiIcon v-bind="typeof icon === 'string' ? { name: icon } : { icon }" :size="cfg.icon" />
         </div>
       </slot>
     </div>

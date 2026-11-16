@@ -16,7 +16,6 @@ const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClic
   dialogRef: dialogEl,
   persistent: () => persistent.value,
   // The exit is the <Transition> below, so nothing waits on a copied duration (#263).
-  exit: "transition",
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => (lastClosed.value = new Date().toLocaleTimeString()),
 });
@@ -29,7 +28,6 @@ const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClic
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => false,
-  exit: "transition",
   onUpdateOpen: (value) => (open.value = value),
   onClose: () => {},
 });
@@ -73,25 +71,6 @@ const options = [
     type: "() => boolean",
     description:
       "When true, Escape and backdrop clicks are ignored. The overlay still takes the Escape, so a layer beneath doesn't close instead. Calling closeOverlay() still closes it.",
-  },
-  {
-    name: "allowNested",
-    type: "() => boolean",
-    description: "Deprecated, and has no effect: overlays always stack, and Escape closes only the topmost (#285). Warns when passed; removed in 2.0.",
-  },
-  {
-    name: "animationDuration",
-    type: 'number | "instant" | "press" | "fast" | "base" | "slow"',
-    default: '"base"',
-    description:
-      "With exit: \"timer\", how long the exit runs: a motion token's name, read from the dialog when it closes, or ms. The element stays mounted (isVisible) this long after closing begins, then the callbacks run.",
-  },
-  {
-    name: "exit",
-    type: '"timer" | "transition"',
-    default: '"timer"',
-    description:
-      "How it knows the exit has finished. \"transition\" waits for onAfterLeave from a <Transition> instead of a timer: render the overlay v-if=\"mounted\" v-show=\"isVisible\" inside <Transition :css=\"false\" @leave=\"afterAnimations\" @after-leave=\"onAfterLeave\">, and a re-open mid-exit reverses instead of restarting. CuiModal and CuiSlideover use it.",
   },
   {
     name: "onUpdateOpen",
@@ -138,17 +117,17 @@ const returns = [
   {
     name: "isVisible",
     type: "Ref<boolean>",
-    description: 'Whether the overlay is shown. With exit: "transition", bind it with v-show, inside v-if="mounted". With the timer, render while it is true (v-if): it turns off after the exit animation.',
+    description: 'Whether the overlay is shown. Bind it with v-show, inside v-if="mounted".',
   },
   {
     name: "mounted",
     type: "Ref<boolean>",
-    description: 'With exit: "transition", render the overlay while this is true (v-if), and show it on isVisible (v-show). It turns on at open and off once the exit has played.',
+    description: 'Render the overlay while this is true (v-if), and show it on isVisible (v-show). It turns on at open and off once the exit has played.',
   },
   {
     name: "onAfterLeave",
     type: "() => void",
-    description: 'With exit: "transition", the <Transition>\'s after-leave: the exit has played, so it unmounts and the callbacks run. A leave a re-open cancelled never calls it.',
+    description: 'The <Transition>\'s after-leave: the exit has played, so it unmounts and the callbacks run. A leave a re-open cancelled never calls it.',
   },
   {
     name: "isAnimating",

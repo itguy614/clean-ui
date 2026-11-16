@@ -6,19 +6,25 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { INPUT_SIZE_SCALE } from "../utils/sizing";
 import { __DEV__, warnOnce } from "../utils/devWarn";
-import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps } from "../types/common";
+import type { HideableProps, DisableableProps, NativeControlProps, SizeableProps, FormControlProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
 import { useLocale } from "../composables/useLocale";
 import { dayPeriodLabels } from "../utils/locale";
 import { useCuiId } from "../composables/useCuiId";
 import { useFloatingLabelProvider } from "./form-field-context";
+import { IconClock } from "../icons/generated/clock";
 
 // Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
 declare const process: { env: { NODE_ENV?: string } };
 
 export type TimePickerFormat = "12" | "24";
 
-export interface CuiTimePickerProps extends NativeControlProps, HideableProps, DisableableProps, SizeableProps {
+export interface CuiTimePickerProps
+  extends NativeControlProps,
+    HideableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Time value as "HH:mm" (24h) or "hh:mm AM/PM" (12h) */
   modelValue?: string;
   /** Clock format */
@@ -35,8 +41,6 @@ export interface CuiTimePickerProps extends NativeControlProps, HideableProps, D
   maxTime?: string;
   /** Placeholder */
   placeholder?: string;
-  /** Label */
-  label?: string;
 }
 
 const props = withDefaults(defineProps<CuiTimePickerProps>(), {
@@ -461,7 +465,7 @@ defineExpose({ el: rootEl, focus, blur });
         :tabindex="disabled ? -1 : 0"
         @keydown="onTriggerKeydown"
       >
-        <CuiIcon class="cui-time-picker__icon" name="clock" size="0.875rem" />
+        <CuiIcon class="cui-time-picker__icon" :icon="IconClock" size="0.875rem" />
         <span class="cui-time-picker__value">{{ displayText || inputPlaceholder }}</span>
       </div>
 
@@ -549,7 +553,7 @@ defineExpose({ el: rootEl, focus, blur });
   height: var(--cui-time-picker-height, var(--_time-picker-height));
   padding: 0 var(--cui-time-picker-px, var(--_time-picker-px));
   border: 1px solid var(--cui-time-picker-border, var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-time-picker-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-time-picker-radius, var(--cui-radius-md, 0.375rem));
   background: var(--cui-time-picker-bg, var(--cui-surface-base, white));
   font-size: var(--cui-time-picker-font-size, var(--_time-picker-font-size));
   color: var(--cui-time-picker-color, var(--cui-text-body));

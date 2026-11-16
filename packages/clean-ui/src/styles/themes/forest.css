@@ -1,0 +1,54 @@
+/* ============================================================
+   Forest theme — opt-in (#220). Import after `@itguy614/clean-ui/styles`:
+     @import "@itguy614/clean-ui/themes/forest.css";
+   Apply with `<html class="cui-theme-forest">` or on any ancestor (`setTheme("forest")`).
+   The `--cui-theme-forest` marker is how `useTheme` tells, in development, that this
+   file was loaded; it styles nothing. Safe in any order relative to other theme files.
+   Source of the palette for the all-in-one stylesheet too: edit here only.
+   ============================================================ */
+
+/* --- Forest: natural green primary (hue 150) --- */
+.cui-theme-forest {
+  --cui-theme-forest: 1;
+
+  --color-primary-50:  #EDF7F0;
+  --color-primary-100: #D7EDDE;
+  --color-primary-200: #A8D6B5;
+  --color-primary-300: #5A9E72;
+  --color-primary-400: #3D7D53;
+  --color-primary-500: #2B5C3C;
+  --color-primary-600: #265234;
+  --color-primary-700: #21472D;
+  --color-primary-800: #1C3D26;
+  --color-primary-900: #17331F;
+  --color-primary-950: #142C1B;
+
+  /* Light mode: smooth curve with green tint */
+  --color-surface-50:  oklch(0.983 0.005 150);
+  --color-surface-100: oklch(0.960 0.005 150);
+  --color-surface-200: oklch(0.900 0.006 150);
+  --color-surface-300: oklch(0.850 0.008 150);
+  --color-surface-400: oklch(0.780 0.008 150);
+  --color-surface-500: oklch(0.720 0.008 150);
+  --color-surface-600: oklch(0.620 0.010 150);
+  --color-surface-700: oklch(0.500 0.010 150);
+  --color-surface-800: oklch(0.380 0.010 150);
+  --color-surface-900: oklch(0.270 0.010 150);
+  --color-surface-950: oklch(0.196 0.010 150);
+}
+
+.dark .cui-theme-forest,
+.cui-theme-forest.dark.dark,
+.cui-theme-forest .dark {
+  --color-surface-50:  oklch(0.983 0.006 150);
+  --color-surface-100: oklch(0.960 0.006 150);
+  --color-surface-200: oklch(0.900 0.008 150);
+  --color-surface-300: oklch(0.850 0.008 150);
+  --color-surface-400: oklch(0.780 0.008 150);
+  --color-surface-500: oklch(0.720 0.010 150);
+  --color-surface-600: oklch(0.620 0.010 150);
+  --color-surface-700: oklch(0.500 0.012 150);
+  --color-surface-800: oklch(0.380 0.012 150);
+  --color-surface-900: oklch(0.270 0.015 150);
+  --color-surface-950: oklch(0.196 0.015 150);
+}

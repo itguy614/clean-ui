@@ -85,6 +85,9 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiDivider.vue", issue: "#489" },
   { file: "CuiKbd.vue", issue: "#489" },
   { file: "CuiTimelineItem.vue", issue: "#489" },
+  { file: "CuiBadge.vue", issue: "#294" },
+  { file: "CuiFieldset.vue", issue: "#294" },
+  { file: "CuiPopover.vue", issue: "#294" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },
@@ -343,6 +346,14 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     issue: "#454",
   },
   { file: "CuiTabs.vue", component: "tabs", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiBadge.vue",
+    component: "badge",
+    privateOnly: { "dot-bg": "the dot and its ping ring paint in the role's colour, a part's own with no slot in the closed vocabulary; the rule is whole :where(), so a consumer's plain rule wins" },
+    issue: "#294",
+  },
+  { file: "CuiFieldset.vue", component: "fieldset", privateOnly: {}, issue: "#294" },
+  { file: "CuiPopover.vue", component: "popover", privateOnly: { "transform-origin": TRANSFORM_ORIGIN }, issue: "#294" },
   { file: "CuiTagInput.vue", component: "tag-input", privateOnly: {}, issue: "#454" },
   {
     file: "CuiTooltip.vue",
@@ -478,7 +489,6 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiDateRangePicker.vue": { "date-range-picker-field-width": `the start and end fields are as wide as the \`format\` prop's text (${GEOMETRY})` },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
-  "CuiPopover.vue": { "popover-transform-origin": TRANSFORM_ORIGIN },
   // TODO(#454): CuiDataGrid is being reworked in #474; this is a sticky offset, so it likely stays.
   "CuiDataGridTable.vue": { "data-grid-head-top": `a sticky offset measured from the first header row (${GEOMETRY})` },
   "CuiFormField.vue": Object.fromEntries(

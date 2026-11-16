@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
 import { useClickOutside } from "../composables/useClickOutside";
-import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { ColorableProps, SizeableProps, DisableableProps, HideableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize, scaleDensity, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useListbox, followHighlight } from "../composables/useListbox";
@@ -15,6 +15,8 @@ import CuiListboxPanel from "./CuiListboxPanel.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import CuiListboxStatus from "./CuiListboxStatus.vue";
 import CuiFormValues from "./CuiFormValues.vue";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCheck } from "../icons/generated/check";
 
 export interface ComboboxOption {
   /** Unique value */
@@ -33,7 +35,13 @@ export interface ComboboxOption {
   [key: string]: unknown;
 }
 
-export interface CuiComboboxProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiComboboxProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label" | "error" | "errorMessage"> {
   /** Selected value(s) — string/number for single, array for multiple */
   modelValue?: string | number | (string | number)[] | null;
   /** Static options */
@@ -52,12 +60,6 @@ export interface CuiComboboxProps extends NativeControlProps, HideableProps, Col
   maxVisible?: number;
   /** Loading state (external) */
   loading?: boolean;
-  /** Label */
-  label?: string;
-  /** Error state */
-  error?: boolean;
-  /** Error message */
-  errorMessage?: string;
   /** No results text */
   noResultsText?: string;
   /** Border radius */
@@ -412,7 +414,7 @@ function optionClass(index: number, option: ComboboxOption) {
       <!-- Right icons -->
       <div class="cui-combobox__affix">
         <CuiSpinner v-if="isLoading" size="xs" />
-        <CuiIcon v-else name="caret-down" size="0.875rem" class="cui-combobox__chevron" :class="{ 'cui-combobox__chevron--open': isOpen }" />
+        <CuiIcon v-else :icon="IconCaretDown" size="0.875rem" class="cui-combobox__chevron" :class="{ 'cui-combobox__chevron--open': isOpen }" />
       </div>
     </div>
 
@@ -488,7 +490,7 @@ function optionClass(index: number, option: ComboboxOption) {
 
           <CuiIcon
             v-if="selectedSet.has(option.value)"
-            name="check"
+            :icon="IconCheck"
             size="0.875rem"
             :color="color"
             class="cui-combobox__option-check"

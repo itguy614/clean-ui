@@ -9,7 +9,7 @@ export const inlineCodePlugin = definePlugin({
   toolbar: [{ command: "inlineCode" }],
   keymap: [{ key: "Mod-e", command: "inlineCode" }],
   constructs: ["InlineCode"],
-  decorations: [{ node: "InlineCode" }],
+  decorationNodes: ["InlineCode"],
   paste: [
     {
       // Excludes <code> inside <pre> — that's a fenced code BLOCK,

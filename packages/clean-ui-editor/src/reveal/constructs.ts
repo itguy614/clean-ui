@@ -4,7 +4,7 @@
  * empirically against `@lezer/markdown`'s actual parse tree (not guessed
  * from docs) — so a single generic rule identifies a construct's markers
  * regardless of which construct it is. Which construct *node names* the
- * reveal layer acts on at all is the active plugin registry's `decorations`
+ * reveal layer acts on at all is the active plugin registry's `decorationNodes`
  * policy (FR27/FR29), not a hardcoded list here — see `construct-policy.ts`.
  *
  * `TaskMarker` (the GFM task-list checkbox, e.g. `[ ]`/`[x]`) is the one

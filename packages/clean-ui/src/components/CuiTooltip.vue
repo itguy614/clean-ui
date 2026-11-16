@@ -297,7 +297,7 @@ const tooltipStyle = computed(() => ({
   color: var(--cui-tooltip-color, var(--_tooltip-color));
   padding: var(--cui-tooltip-py, calc(0.375rem * var(--cui-density-scale, 1)))
     var(--cui-tooltip-px, calc(0.625rem * var(--cui-density-scale, 1)));
-  border-radius: var(--cui-tooltip-radius, 0.375rem);
+  border-radius: var(--cui-tooltip-radius, var(--cui-radius-md, 0.375rem));
   font-size: var(--cui-tooltip-font-size, 0.8125rem);
 }
 

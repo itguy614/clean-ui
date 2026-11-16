@@ -25,17 +25,6 @@ interface ContextInternals {
 }
 const internals = new WeakMap<CommandContext, ContextInternals>();
 
-/**
- * `context.lookupConstruct`, for the built-in commands. A context built by hand
- * (a 1.x test double) may lack it, since it is optional until 2.0; its
- * `findConstructRange` answers then, with no "unknown" to report.
- */
-export function lookupConstructIn(context: CommandContext, nodeName: string): ConstructLookup {
-  if (context.lookupConstruct) return context.lookupConstruct(nodeName);
-  const range = context.findConstructRange(nodeName);
-  return range ? { status: "inside", range } : OUTSIDE;
-}
-
 /** Runs an `isActive` query in peek mode: lookups parse for a few
  * milliseconds at most instead of blocking the render. Re-entrant. */
 export function peeking<T>(context: CommandContext, query: () => T): T {
@@ -147,12 +136,6 @@ export function createCommandContext(
     return OUTSIDE;
   }
 
-  /** Deprecated (#405): "unknown" reads as absent here, as it always has. */
-  function findConstructRange(nodeName: string): { from: number; to: number } | null {
-    const result = lookupConstruct(nodeName);
-    return result.status === "inside" ? result.range : null;
-  }
-
   function replaceRange(from: number, to: number, text: string): void {
     const view = requireView();
     view.dispatch(
@@ -171,6 +154,13 @@ export function createCommandContext(
     get selection() {
       const { from, to } = requireView().state.selection.main;
       return { from, to, empty: from === to };
+    },
+    sliceDoc(from, to) {
+      return requireView().state.sliceDoc(from, to);
+    },
+    lineAt(pos) {
+      const { from, to, text } = requireView().state.doc.lineAt(pos);
+      return { from, to, text };
     },
     insertAtCursor(text) {
       const { from, to } = requireView().state.selection.main;
@@ -229,7 +219,6 @@ export function createCommandContext(
       }
     },
     lookupConstruct,
-    findConstructRange,
     get messages() {
       return getMessages();
     },

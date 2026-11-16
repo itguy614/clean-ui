@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { computed, watch, nextTick, onMounted, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import { TEXTAREA_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
 import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useFloatingLabel } from "./form-field-context";
 
-export interface CuiTextareaProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiTextareaProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "readonly"> {
   /** v-model binding */
   modelValue?: string;
   /** Placeholder text */
@@ -18,12 +24,6 @@ export interface CuiTextareaProps extends NativeControlProps, HideableProps, Col
   maxRows?: number;
   /** Maximum character length — shows counter when set */
   maxLength?: number;
-  /** Show error state */
-  error?: boolean;
-  /** Error message below textarea */
-  errorMessage?: string;
-  /** Readonly */
-  readonly?: boolean;
   /** Border radius */
   rounded?: CuiRounded;
 }

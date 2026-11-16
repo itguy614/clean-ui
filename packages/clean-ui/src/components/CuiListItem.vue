@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, useAttrs, useTemplateRef, type Component, type ComponentPublicInstance } from "vue";
-import { PhCaretRight } from "@phosphor-icons/vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { DisableableProps, HideableProps } from "../types/common";
 import { useListContext } from "./list-context";
 import { disabledLink } from "../utils/disabled-link";
+import { IconCaretRight } from "../icons/generated/caret-right";
 
 export interface CuiListItemProps extends HideableProps, DisableableProps {
   /** Primary line. Kept to one line, cut off with "…". */
@@ -165,7 +165,7 @@ defineExpose({ el, focus, blur });
         <slot name="trailing" />
       </span>
       <span v-else-if="chevron" class="cui-list-item__trailing cui-list-item__chevron" aria-hidden="true">
-        <CuiIcon :icon="PhCaretRight" size="sm" />
+        <CuiIcon :icon="IconCaretRight" size="sm" />
       </span>
     </component>
   </component>

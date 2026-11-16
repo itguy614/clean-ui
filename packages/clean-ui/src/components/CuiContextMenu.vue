@@ -5,7 +5,7 @@ import { useClickOutside } from "../composables/useClickOutside";
 import { useEventListener } from "../composables/useEventListener";
 import { useLayerStack } from "../composables/useLayerStack";
 import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
-import { DropdownContextKey, NEVER_CLOSING, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
+import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
 import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
 import { usePresence } from "../composables/usePresence";
@@ -387,7 +387,6 @@ function closeSiblingSubMenus(except?: () => void) {
 provide(DropdownContextKey, {
   ownerId: contextMenuId,
   isOpen,
-  isClosing: NEVER_CLOSING,
   trigger: ref("click" as DropdownTrigger),
   triggerEl: wrapperRef,
   placement: ref("bottom" as DropdownPlacement),
@@ -467,7 +466,7 @@ defineExpose({ open, openAt, close, isOpen });
 
 .cui-context-menu__panel {
   padding: calc(0.25rem * var(--cui-density-scale, 1));
-  border-radius: var(--cui-button-radius, var(--cui-radius-md, 0.375rem));
+  border-radius: var(--cui-context-menu-radius, var(--cui-radius-md, 0.375rem));
   border: 1px solid var(--cui-border);
   background: var(--cui-surface-base);
   box-shadow: var(--cui-shadow-md);

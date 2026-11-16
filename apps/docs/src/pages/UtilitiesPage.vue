@@ -37,7 +37,7 @@ import Example from "../components/Example.vue";
 </div>`">
           <div
             class="cui-scrollbar"
-            style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius); padding: 0.75rem;"
+            style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); padding: 0.75rem;"
           >
             <p v-for="n in 14" :key="n" style="font-size: 0.875rem; margin: 0 0 0.5rem;">
               Scrollable row {{ n }} — the scrollbar stays visible while this box overflows.
@@ -50,7 +50,7 @@ import Example from "../components/Example.vue";
 </div>`">
           <div
             class="cui-scrollbar cui-scrollbar-thin"
-            style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-button-radius); padding: 0.75rem;"
+            style="max-height: 8rem; overflow-y: auto; border: 1px solid var(--cui-border); border-radius: var(--cui-radius-md, 0.375rem); padding: 0.75rem;"
           >
             <p v-for="n in 14" :key="n" style="font-size: 0.875rem; margin: 0 0 0.5rem;">
               Scrollable row {{ n }} — slimmer bar.

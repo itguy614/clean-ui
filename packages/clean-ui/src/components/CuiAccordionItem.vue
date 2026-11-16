@@ -5,6 +5,7 @@ import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
 import { AccordionContextKey } from "./accordion-context";
 import type { HideableProps, DisableableProps } from "../types/common";
+import { IconCaretDown } from "../icons/generated/caret-down";
 
 export interface CuiAccordionItemProps extends HideableProps, DisableableProps {
   /** Unique value for this item */
@@ -87,7 +88,7 @@ const triggerId = `${itemId}-trigger`;
         <slot name="header">{{ label }}</slot>
       </span>
       <CuiIcon
-        name="caret-down"
+        :icon="IconCaretDown"
         size="1rem"
         class="cui-accordion-item__chevron"
         :class="{ 'cui-accordion-item__chevron--open': isOpen }"

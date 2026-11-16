@@ -1,4 +1,7 @@
 import type { DeepPartialMessages } from "@itguy614/clean-ui";
+import { __DEV__, warnDev } from "./duplicate-guard";
+
+declare const process: { env: { NODE_ENV?: string } };
 
 /**
  * Task 5.2.2: every user-visible string this package renders lives here, so
@@ -71,20 +74,18 @@ export interface CuiMarkdownEditorMessages {
   linkDialogUrlPlaceholder: string;
   linkDialogTextLabel: string;
   linkDialogTextPlaceholder: string;
-  linkDialogCancel: string;
-  linkDialogInsert: string;
-  linkDialogUrlRequired: string;
-  linkDialogUrlSchemeNotAllowed: string;
 
   imageDialogTitle: string;
   imageDialogUrlLabel: string;
   imageDialogUrlPlaceholder: string;
   imageDialogAltLabel: string;
   imageDialogAltPlaceholder: string;
-  imageDialogCancel: string;
-  imageDialogInsert: string;
-  imageDialogUrlRequired: string;
-  imageDialogUrlSchemeNotAllowed: string;
+
+  /** Shared by the link and image dialogs (one `UrlDialog`): the strings that read the same for both. */
+  urlDialogCancel: string;
+  urlDialogInsert: string;
+  urlDialogUrlRequired: string;
+  urlDialogUrlSchemeNotAllowed: string;
 
   /** FR28: a pasted image file was refused outright (no upload affordance). */
   pasteRejectedImage: string;
@@ -123,20 +124,17 @@ export const defaultMarkdownEditorMessages: CuiMarkdownEditorMessages = {
   linkDialogUrlPlaceholder: "https://example.com",
   linkDialogTextLabel: "Text",
   linkDialogTextPlaceholder: "Link text",
-  linkDialogCancel: "Cancel",
-  linkDialogInsert: "Insert",
-  linkDialogUrlRequired: "A URL is required.",
-  linkDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
 
   imageDialogTitle: "Insert image",
   imageDialogUrlLabel: "Image URL",
   imageDialogUrlPlaceholder: "https://example.com/image.png",
   imageDialogAltLabel: "Alt text",
   imageDialogAltPlaceholder: "Describes the image",
-  imageDialogCancel: "Cancel",
-  imageDialogInsert: "Insert",
-  imageDialogUrlRequired: "A URL is required.",
-  imageDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
+
+  urlDialogCancel: "Cancel",
+  urlDialogInsert: "Insert",
+  urlDialogUrlRequired: "A URL is required.",
+  urlDialogUrlSchemeNotAllowed: "This URL scheme isn't allowed.",
 
   pasteRejectedImage: "Pasted images aren't supported yet — insert an image by URL instead.",
   maxLengthExceeded: (overage, limit) =>
@@ -144,11 +142,38 @@ export const defaultMarkdownEditorMessages: CuiMarkdownEditorMessages = {
   counter: (length, limit) => `${length}/${limit}`,
 };
 
+/** The per-kind dialog keys 2.0 replaced (#398), each with the shared key that took its place. */
+const LEGACY_MESSAGE_KEYS: Record<string, string> = {
+  linkDialogCancel: "urlDialogCancel",
+  imageDialogCancel: "urlDialogCancel",
+  linkDialogInsert: "urlDialogInsert",
+  imageDialogInsert: "urlDialogInsert",
+  linkDialogUrlRequired: "urlDialogUrlRequired",
+  imageDialogUrlRequired: "urlDialogUrlRequired",
+  linkDialogUrlSchemeNotAllowed: "urlDialogUrlSchemeNotAllowed",
+  imageDialogUrlSchemeNotAllowed: "urlDialogUrlSchemeNotAllowed",
+};
+const warnedLegacyKeys = new Set<string>();
+
+/** Development only (called behind the guard): a removed key is still ignored, but no longer silently. */
+function warnLegacyMessageKeys(override: object): void {
+  for (const [removed, replacement] of Object.entries(LEGACY_MESSAGE_KEYS)) {
+    if (!(removed in override) || warnedLegacyKeys.has(removed)) continue;
+    warnedLegacyKeys.add(removed);
+    if (__DEV__ && process.env.NODE_ENV !== "production") {
+      warnDev(`[CuiMarkdownEditor] The message key "${removed}" was removed in 2.0 and is ignored. Use "${replacement}", which words both the link and image dialogs.`);
+    }
+  }
+}
+
 /** Overlays a host's `markdownEditor` override (if any) onto the English
  * defaults. Every field is a flat leaf (string or function), so this is a
  * plain shallow spread — no nested-object merge needed, unlike clean-ui's
  * own `mergeMessages` (which exists for namespaces with grouped fields). */
 export function mergeMarkdownEditorMessages(override?: DeepPartialMessages["markdownEditor"]): CuiMarkdownEditorMessages {
+  // Every path a consumer's messages take into the editor (the provider, the `messages` prop,
+  // a direct call) ends here, so this is the one place to tell them a key was removed.
+  if (override && __DEV__ && process.env.NODE_ENV !== "production") warnLegacyMessageKeys(override);
   return override ? { ...defaultMarkdownEditorMessages, ...override } : defaultMarkdownEditorMessages;
 }
 
@@ -184,8 +209,9 @@ const URL_DIALOG_TEXT_KEYS = {
 } as const satisfies Record<UrlDialogKind, Record<"label" | "placeholder", keyof CuiMarkdownEditorMessages>>;
 
 /**
- * One dialog's strings, from that kind's `linkDialog*` or `imageDialog*` keys. The catalog
- * keeps a full set per kind, so a host can word the two differently.
+ * One dialog's strings: the title, URL field and second field from that kind's `linkDialog*` or
+ * `imageDialog*` keys, and the buttons and errors, which read the same for both, from the shared
+ * `urlDialog*` keys.
  */
 export function pickUrlDialogMessages(messages: CuiMarkdownEditorMessages, kind: UrlDialogKind): UrlDialogMessages {
   const text = URL_DIALOG_TEXT_KEYS[kind];
@@ -195,9 +221,9 @@ export function pickUrlDialogMessages(messages: CuiMarkdownEditorMessages, kind:
     urlPlaceholder: messages[`${kind}DialogUrlPlaceholder`],
     textLabel: messages[text.label],
     textPlaceholder: messages[text.placeholder],
-    cancel: messages[`${kind}DialogCancel`],
-    insert: messages[`${kind}DialogInsert`],
-    urlRequired: messages[`${kind}DialogUrlRequired`],
-    urlSchemeNotAllowed: messages[`${kind}DialogUrlSchemeNotAllowed`],
+    cancel: messages.urlDialogCancel,
+    insert: messages.urlDialogInsert,
+    urlRequired: messages.urlDialogUrlRequired,
+    urlSchemeNotAllowed: messages.urlDialogUrlSchemeNotAllowed,
   };
 }

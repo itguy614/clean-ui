@@ -1,5 +1,5 @@
 import { ref, type InjectionKey, type Ref } from "vue";
-import type { CuiColor, LiveRegionMode } from "../types/common";
+import type { CuiColor, CuiRoleIcon, LiveRegionMode } from "../types/common";
 import type { AlertAnimation } from "./CuiAlert.vue";
 
 export type ToastPosition =
@@ -41,8 +41,8 @@ export interface ToastOptions {
   showProgress?: boolean;
   /** Persistent animation */
   animation?: AlertAnimation;
-  /** Custom icon (emoji or text) */
-  icon?: string;
+  /** Custom icon: a component, a registered name, or emoji / text */
+  icon?: CuiRoleIcon;
   /** Hide the default role icon */
   noIcon?: boolean;
   /**
@@ -80,7 +80,7 @@ export interface ToastInstance
     Pick<ToastOptions, "pauseOnHover" | "pauseOnFocus" | "pauseWhenInactive"> {
   title?: string;
   description?: string;
-  icon?: string;
+  icon?: CuiRoleIcon;
   live?: LiveRegionMode;
   action?: ToastAction;
   createdAt: number;

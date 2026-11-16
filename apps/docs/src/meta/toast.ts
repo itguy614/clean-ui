@@ -76,7 +76,7 @@ const meta: ComponentMeta = {
     { name: "--cui-toast-bg", default: "per variant: the role's -bg (subtle), surface-base (outline), solid", description: "Background" },
     { name: "--cui-toast-color", default: "per variant", description: "Text colour" },
     { name: "--cui-toast-border", default: "1px solid, the role's -border (none when solid)", description: "Border" },
-    { name: "--cui-toast-radius", default: "--cui-button-radius", description: "Corner radius" },
+    { name: "--cui-toast-radius", default: "var(--cui-radius-md)", description: "Corner radius" },
     { name: "--cui-toast-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon, dismiss and progress colours have no token: a plain `.cui-toast__icon`, `__dismiss`, `__progress` or `__progress-bar` rule wins" },
   ],
 };

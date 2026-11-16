@@ -1,0 +1,55 @@
+/* ============================================================
+   Ruby theme — opt-in (#220). Import after `@itguy614/clean-ui/styles`:
+     @import "@itguy614/clean-ui/themes/ruby.css";
+   Apply with `<html class="cui-theme-ruby">` or on any ancestor (`setTheme("ruby")`).
+   The `--cui-theme-ruby` marker is how `useTheme` tells, in development, that this
+   file was loaded; it styles nothing. Safe in any order relative to other theme files.
+   Source of the palette for the all-in-one stylesheet too: edit here only.
+   ============================================================ */
+
+/* --- Ruby: bold red primary (hue 25) --- */
+
+.cui-theme-ruby {
+  --cui-theme-ruby: 1;
+
+  --color-primary-50:  #FEF2F2;
+  --color-primary-100: #FDE2E2;
+  --color-primary-200: #F9BCBD;
+  --color-primary-300: #C44548;
+  --color-primary-400: #B32C30;
+  --color-primary-500: #9B1F23;
+  --color-primary-600: #8A1B1F;
+  --color-primary-700: #78181B;
+  --color-primary-800: #661417;
+  --color-primary-900: #541013;
+  --color-primary-950: #480E11;
+
+  /* Light mode: smooth curve with warm red tint */
+  --color-surface-50:  oklch(0.983 0.005 25);
+  --color-surface-100: oklch(0.960 0.005 25);
+  --color-surface-200: oklch(0.900 0.006 25);
+  --color-surface-300: oklch(0.850 0.008 25);
+  --color-surface-400: oklch(0.780 0.008 25);
+  --color-surface-500: oklch(0.720 0.008 25);
+  --color-surface-600: oklch(0.620 0.010 25);
+  --color-surface-700: oklch(0.500 0.010 25);
+  --color-surface-800: oklch(0.380 0.010 25);
+  --color-surface-900: oklch(0.270 0.010 25);
+  --color-surface-950: oklch(0.196 0.010 25);
+}
+
+.dark .cui-theme-ruby,
+.cui-theme-ruby.dark.dark,
+.cui-theme-ruby .dark {
+  --color-surface-50:  oklch(0.983 0.006 25);
+  --color-surface-100: oklch(0.960 0.006 25);
+  --color-surface-200: oklch(0.900 0.008 25);
+  --color-surface-300: oklch(0.850 0.008 25);
+  --color-surface-400: oklch(0.780 0.008 25);
+  --color-surface-500: oklch(0.720 0.010 25);
+  --color-surface-600: oklch(0.620 0.010 25);
+  --color-surface-700: oklch(0.500 0.012 25);
+  --color-surface-800: oklch(0.380 0.012 25);
+  --color-surface-900: oklch(0.270 0.015 25);
+  --color-surface-950: oklch(0.196 0.015 25);
+}

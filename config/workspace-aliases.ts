@@ -21,6 +21,14 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export function workspaceAliases() {
   const aliases = [
     {
+      find: "@itguy614/clean-ui/icons/builtin",
+      replacement: resolve(REPO_ROOT, "packages/clean-ui/src/icons/builtin.ts"),
+    },
+    {
+      find: /^@itguy614\/clean-ui\/icons\/generated\/(.+)$/,
+      replacement: resolve(REPO_ROOT, "packages/clean-ui/src/icons/generated/$1.ts"),
+    },
+    {
       find: "@itguy614/clean-ui/icons/lazy",
       replacement: resolve(REPO_ROOT, "packages/clean-ui/src/icons/lazy.ts"),
     },

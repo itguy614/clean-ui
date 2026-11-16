@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Text, computed, onBeforeUpdate, ref, useSlots, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, CuiRounded, NativeControlProps, FormControlProps } from "../types/common";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInputAttachment from "./CuiInputAttachment.vue";
 import { INPUT_SIZE_SCALE, RADIUS_SCALE } from "../utils/sizing";
@@ -8,6 +8,9 @@ import { useFieldDescribedBy } from "../composables/useFieldDescribedBy";
 import { useMessages } from "../composables/useMessages";
 import { useFloatingLabel } from "./form-field-context";
 import { slotNodes } from "../utils/vnodes";
+import { IconEye } from "../icons/generated/eye";
+import { IconEyeSlash } from "../icons/generated/eye-slash";
+import { IconX } from "../icons/generated/x";
 
 export type InputType =
   | "text"
@@ -19,7 +22,13 @@ export type InputType =
   | "number"
   | "range";
 
-export interface CuiInputProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "error" | "errorMessage" | "readonly"> {
   /** v-model binding. `string | number` so `type="number"` / `v-model.number` bind without a cast. */
   modelValue?: string | number;
   /** Input type */
@@ -28,12 +37,6 @@ export interface CuiInputProps extends NativeControlProps, HideableProps, Colora
   placeholder?: string;
   /** Show clear button when input has value */
   clearable?: boolean;
-  /** Show error state (red border + message) */
-  error?: boolean;
-  /** Error message displayed below the input */
-  errorMessage?: string;
-  /** Readonly state */
-  readonly?: boolean;
   /** Border radius */
   rounded?: CuiRounded;
 }
@@ -204,7 +207,7 @@ function prefixIsIcon(): boolean {
           :aria-label="messages.input.clear"
           @click="clear"
         >
-          <CuiIcon name="x" size="0.75rem" />
+          <CuiIcon :icon="IconX" size="0.75rem" />
         </button>
 
         <!-- Password toggle -->
@@ -216,9 +219,9 @@ function prefixIsIcon(): boolean {
           @click="passwordVisible = !passwordVisible"
         >
           <!-- Eye open -->
-          <CuiIcon v-if="!passwordVisible" name="eye" size="1rem" />
+          <CuiIcon v-if="!passwordVisible" :icon="IconEye" size="1rem" />
           <!-- Eye closed -->
-          <CuiIcon v-else name="eye-slash" size="1rem" />
+          <CuiIcon v-else :icon="IconEyeSlash" size="1rem" />
         </button>
 
         <!-- Suffix slot (icons/text inside input) -->

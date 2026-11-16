@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
-import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps } from "../types/common";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, NativeControlProps, FormControlProps } from "../types/common";
 import { INPUT_SIZE_SCALE, nestedSize } from "../utils/sizing";
 import { useFloatingLabel } from "./form-field-context";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { IconCaretDown } from "../icons/generated/caret-down";
+import { IconCaretUp } from "../icons/generated/caret-up";
+import { IconMinus } from "../icons/generated/minus";
+import { IconPlus } from "../icons/generated/plus";
 
 export type InputStepperOrientation = "horizontal" | "vertical";
 
-export interface CuiInputStepperProps extends NativeControlProps, HideableProps, ColorableProps, SizeableProps, DisableableProps {
+export interface CuiInputStepperProps
+  extends NativeControlProps,
+    HideableProps,
+    ColorableProps,
+    SizeableProps,
+    DisableableProps,
+    Pick<FormControlProps, "label"> {
   /** Current value */
   modelValue?: number;
   /** Minimum value */
@@ -19,8 +29,6 @@ export interface CuiInputStepperProps extends NativeControlProps, HideableProps,
   step?: number;
   /** Orientation */
   orientation?: InputStepperOrientation;
-  /** Label displayed above */
-  label?: string;
   /** Pad value with leading zeros to this width */
   pad?: number;
   /** Wrap around from max to min and vice versa */
@@ -216,7 +224,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="decrement"
       >
-        <CuiIcon name="minus" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconMinus" :size="cfg.iconSize" />
       </CuiButton>
       <input
         ref="inputH"
@@ -248,7 +256,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="increment"
       >
-        <CuiIcon name="plus" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconPlus" :size="cfg.iconSize" />
       </CuiButton>
     </div>
 
@@ -263,7 +271,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="increment"
       >
-        <CuiIcon name="caret-up" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconCaretUp" :size="cfg.iconSize" />
       </CuiButton>
       <input
         ref="inputV"
@@ -294,7 +302,7 @@ defineExpose({ el: rootEl, focus, blur });
         class="cui-input-stepper__button"
         @click="decrement"
       >
-        <CuiIcon name="caret-down" :size="cfg.iconSize" />
+        <CuiIcon :icon="IconCaretDown" :size="cfg.iconSize" />
       </CuiButton>
     </div>
   </div>
@@ -307,7 +315,7 @@ defineExpose({ el: rootEl, focus, blur });
 :where(.cui-input-stepper__control) {
   height: var(--cui-input-stepper-height, var(--_input-stepper-height));
   border: var(--cui-input-stepper-border, 1px solid var(--cui-border-strong, var(--cui-border)));
-  border-radius: var(--cui-input-stepper-radius, var(--cui-button-radius, var(--cui-radius-md, 0.375rem)));
+  border-radius: var(--cui-input-stepper-radius, var(--cui-radius-md, 0.375rem));
 }
 
 :where(.cui-input-stepper__field) {
