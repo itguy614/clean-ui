@@ -13,13 +13,17 @@
  * body row in the frame, with the sidebar at full height and a `cui-shell-frame__col` beside it
  * holding the bar over the content.
  */
+import { CuiCard } from "@itguy614/clean-ui";
+
 withDefaults(defineProps<{ label: string; height?: string }>(), { height: "32rem" });
 </script>
 
 <template>
-  <div class="cui-shell-frame" role="group" :aria-label="`${label}, live demo`" :style="{ height }">
+  <!-- The frame is a CuiCard (outline): its surface, border and radius come from the library, and
+       only the layout below is ours. -->
+  <CuiCard variant="outline" class="cui-shell-frame" role="group" :aria-label="`${label}, live demo`" :style="{ height }">
     <slot />
-  </div>
+  </CuiCard>
 </template>
 
 <style>
@@ -29,10 +33,6 @@ withDefaults(defineProps<{ label: string; height?: string }>(), { height: "32rem
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--cui-border);
-  border-radius: var(--cui-radius-lg, 0.5rem);
-  background: var(--cui-surface-base);
   color: var(--cui-text-body);
   position: relative;
 }

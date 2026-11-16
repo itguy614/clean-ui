@@ -22,6 +22,7 @@ import {
 import Example from "../components/Example.vue";
 import ShellFrame from "../components/ShellFrame.vue";
 import ShellPage from "../components/ShellPage.vue";
+import pageCode from "../shell-snippets/detail-drawer-page.vue?raw";
 
 // A CRM record browser: a list of contacts, each opening into its own record.
 interface DemoContact {
@@ -67,82 +68,18 @@ const selected = ref<DemoContact>();
 const drawerVisible = ref(false);
 const section = ref("overview");
 
-function open(contact: DemoContact) {
+// The row that opened the drawer, handed to the slideover as `return-focus`. Safari (and Firefox
+// on macOS) do not focus a button on click, so without this the overlay finds nothing focused
+// when it opens and has nowhere to hand focus back to when it closes.
+let opener: HTMLElement | null = null;
+
+function open(contact: DemoContact, event: MouseEvent) {
   section.value = "overview";
   selected.value = contact;
+  opener = (event.target as HTMLElement).closest<HTMLElement>("button, a");
   drawerVisible.value = true;
 }
 
-const pageCode = `<script setup>
-const visible = ref(false);
-const contact = ref();          // kept after closing, so the exit transition still has content
-const section = ref("overview");
-const sections = [{ id: "overview", label: "Overview" }, { id: "deals", label: "Deals" }];
-
-function open(c) {
-  section.value = "overview";
-  contact.value = c;
-  visible.value = true;
-}
-<\/script>
-
-<template>
-  <!-- The outer shell is sidebar-first (see "Sidebar and content"): the brand is in the sidebar
-       header, and the bar over the content carries the page title and its action. -->
-  <div style="display: flex">
-    <aside class="hidden lg:block" style="width: 15rem; flex-shrink: 0; position: sticky; top: 0; height: 100vh">
-      <CuiSidebar ref="sidebar" v-model:open="navOpen" label="Orbit CRM" :toggle="false" style="width: 100%">
-        <CuiSidebarHeader title="Orbit CRM" icon="planet" />
-        <CuiSidebarContent>…</CuiSidebarContent>
-      </CuiSidebar>
-    </aside>
-
-    <div style="flex: 1; min-width: 0">
-      <CuiNavbar sticky translucent>
-        <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="navOpen = true">…</CuiButton>
-        <h1 class="page-title">Contacts</h1>
-        <CuiNavbarActions><CuiButton size="sm">New contact</CuiButton></CuiNavbarActions>
-      </CuiNavbar>
-
-      <main id="main" tabindex="-1">
-        <!-- The record list: each row is a button that opens its record -->
-        <CuiList divided>
-          <CuiListItem v-for="c in contacts" :key="c.id" :title="c.name" :subtitle="c.company" chevron @click="open(c)">
-            <template #trailing><CuiBadge size="sm">{{ c.stage }}</CuiBadge></template>
-          </CuiListItem>
-        </CuiList>
-      </main>
-    </div>
-  </div>
-
-  <!-- Teleported, so it can sit anywhere. Sub-component mode: the header, then a row, so the
-       drawer is a shell of its own. aria-label names the dialog; the sidebar inside names its own nav. -->
-  <CuiSlideover v-model:visible="visible" size="xl" :aria-label="contact?.name">
-    <CuiModalHeader :title="contact?.name" @close="visible = false" />
-
-    <div style="display: flex; flex: 1; min-height: 0">
-      <!-- collapse-below="never": inside a drawer there is nothing to collapse into -->
-      <CuiSidebar collapse-below="never" label="Contact sections" style="width: 11rem; flex-shrink: 0">
-        <CuiSidebarContent>
-          <CuiList>
-            <CuiListItem
-              v-for="s in sections"
-              :key="s.id"
-              :title="s.label"
-              :aria-current="section === s.id ? 'page' : undefined"
-              @click="section = s.id"
-            />
-          </CuiList>
-        </CuiSidebarContent>
-      </CuiSidebar>
-
-      <div style="flex: 1; min-width: 0; overflow: auto">
-        <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135">…banner…</CuiPanel>
-        …the section…
-      </div>
-    </div>
-  </CuiSlideover>
-</template>`;
 </script>
 
 <template>
@@ -207,7 +144,7 @@ function open(c) {
           </div>
 
           <div class="cui-shell-frame__col">
-            <CuiNavbar label="Demo page bar" collapse-below="never">
+            <CuiNavbar collapse-below="never">
               <CuiButton
                 class="lg:!hidden"
                 variant="ghost"
@@ -236,7 +173,7 @@ function open(c) {
                   :title="c.name"
                   :subtitle="c.company"
                   chevron
-                  @click="open(c)"
+                  @click="open(c, $event)"
                 >
                   <template #icon><CuiAvatar :name="c.name" size="sm" /></template>
                   <template #trailing>
@@ -250,7 +187,12 @@ function open(c) {
       </ShellFrame>
 
       <!-- Teleported to <body> by the slideover, so it overlays the page, not the frame. -->
-      <CuiSlideover v-model:visible="drawerVisible" size="xl" :aria-label="selected?.name ?? 'Contact'">
+      <CuiSlideover
+        v-model:visible="drawerVisible"
+        size="xl"
+        :aria-label="selected?.name ?? 'Contact'"
+        :return-focus="() => opener"
+      >
         <CuiModalHeader :title="selected?.name ?? 'Contact'" @close="drawerVisible = false" />
 
         <div class="cui-shell-frame__body">
@@ -262,7 +204,7 @@ function open(c) {
                   :key="s.id"
                   :title="s.label"
                   :icon="s.icon"
-                  :aria-current="section === s.id ? 'page' : undefined"
+                  :aria-current="section === s.id ? 'true' : undefined"
                   @click="section = s.id"
                 />
               </CuiList>
@@ -325,7 +267,9 @@ function open(c) {
           <strong>Focus.</strong> Opening a record moves focus into the drawer; Tab stays inside it;
           Escape or the close button closes it and focus returns to the row that opened it, so the
           reader never loses their place in the list. Rows are buttons (a <code>CuiListItem</code>
-          with a click handler), not clickable text.
+          with a click handler), not clickable text. Safari, and Firefox on macOS, do not focus a
+          button when it is clicked, so pass the opener explicitly with the slideover's
+          <code>return-focus</code> prop, as the demo does, or focus has nowhere to return to there.
         </li>
         <li>
           <strong>Names.</strong> The drawer is a dialog and needs a name: <code>aria-label</code>
@@ -339,7 +283,10 @@ function open(c) {
         </li>
         <li>
           <strong><code>aria-current</code>.</strong> The current section carries
-          <code>aria-current="page"</code>; sections are buttons here, so it marks which one shows.
+          <code>aria-current="true"</code>, not <code>"page"</code>: these rows are buttons that switch
+          a panel, and the page does not change. Use <code>"page"</code> only on a link to the page you
+          are on. The sidebar draws its raised active fill for any <code>aria-current</code> except
+          <code>"false"</code>.
           Use real links (<code>to</code>) when each section has its own URL.
         </li>
         <li>

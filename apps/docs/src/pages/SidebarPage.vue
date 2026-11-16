@@ -154,7 +154,10 @@ const layoutCode = `<div style="display: flex">
         <li>
           The current page's link carries <code>aria-current="page"</code> (a
           <code>router-link</code> sets it itself when exactly active), and is marked by a
-          subtle fill and border, never by colour alone and never a solid primary fill.
+          subtle fill and border, never by colour alone and never a solid primary fill. Any
+          <code>aria-current</code> other than <code>"false"</code> gets the same look, so a row that
+          picks the current item in a set without changing the page (a section switcher in a record)
+          can use <code>aria-current="true"</code>.
         </li>
         <li>
           A group heading is a real <code>&lt;button&gt;</code> with <code>aria-expanded</code>

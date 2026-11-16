@@ -19,6 +19,8 @@ import {
 import Example from "../components/Example.vue";
 import ShellFrame from "../components/ShellFrame.vue";
 import ShellPage from "../components/ShellPage.vue";
+import pageCode from "../shell-snippets/navbar-page.vue?raw";
+import ownButtonCode from "../shell-snippets/navbar-own-button.vue?raw";
 
 const current = ref("home");
 const drawerOpen = ref(false);
@@ -29,51 +31,12 @@ const features = [
   { title: "Accessible", text: "Keyboard, focus and screen reader support throughout." },
 ];
 
-const pageCode = `<template>
-  <!-- sticky: the bar stays at the top and publishes --cui-navbar-height -->
-  <CuiNavbar sticky label="Main">
-    <CuiNavbarBrand href="/">Acme</CuiNavbarBrand>
-
-    <!-- Written once: in the bar wide, in a drawer below collapse-below -->
-    <CuiNavbarNav>
-      <CuiNavbarLink to="/" icon="house">Home</CuiNavbarLink>
-      <CuiNavbarMenu label="Products" icon="package">
-        <CuiNavbarLink to="/products/editor" icon="pencil-simple">Editor</CuiNavbarLink>
-        <CuiNavbarLink to="/products/charts" icon="chart-bar">
-          Charts
-          <template #suffix><CuiBadge size="sm">Beta</CuiBadge></template>
-        </CuiNavbarLink>
-      </CuiNavbarMenu>
-      <CuiNavbarLink to="/pricing" icon="tag">Pricing</CuiNavbarLink>
-    </CuiNavbarNav>
-
-    <CuiNavbarActions>
-      <CuiButton variant="ghost" size="sm">Sign in</CuiButton>
-      <CuiButton size="sm">Get started</CuiButton>
-    </CuiNavbarActions>
-  </CuiNavbar>
-
-  <main id="main" tabindex="-1">
-    <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135">
-      <CuiContainer max-width="xl" py="12">…hero…</CuiContainer>
-    </CuiPanel>
-    <CuiContainer max-width="xl" py="8">
-      <CuiGrid :cols="{ sm: 1, md: 3 }" gap="4">…cards…</CuiGrid>
-    </CuiContainer>
-  </main>
-</template>`;
-
 const frameCode = `<!-- The demo: the container scrolls, so the bar is not sticky and sits above the scroller -->
 <div style="display: flex; flex-direction: column; height: 32rem; overflow: hidden">
   <CuiNavbar>…</CuiNavbar>
   <div style="flex: 1; min-height: 0; overflow: auto">…</div>
 </div>`;
 
-const ownButtonCode = `<!-- Skip the built-in button and open the drawer from your own -->
-<CuiNavbar ref="navbar" :toggle="false">
-  <CuiButton v-bind="navbar?.toggleAttrs" @click="navbar?.toggle()">…</CuiButton>
-  <CuiNavbarNav>…</CuiNavbarNav>
-</CuiNavbar>`;
 </script>
 
 <template>
@@ -115,8 +78,15 @@ const ownButtonCode = `<!-- Skip the built-in button and open the drawer from yo
               Home
             </CuiNavbarLink>
             <CuiNavbarMenu label="Products" icon="package">
-              <CuiNavbarLink href="#editor" icon="pencil-simple" @click.prevent="current = 'editor'">Editor</CuiNavbarLink>
-              <CuiNavbarLink href="#charts" icon="chart-bar" @click.prevent="current = 'charts'">
+              <CuiNavbarLink
+                href="#editor"
+                icon="pencil-simple"
+                :active="current === 'editor'"
+                @click.prevent="current = 'editor'"
+              >
+                Editor
+              </CuiNavbarLink>
+              <CuiNavbarLink href="#charts" icon="chart-bar" :active="current === 'charts'" @click.prevent="current = 'charts'">
                 Charts
                 <template #suffix><CuiBadge size="sm">Beta</CuiBadge></template>
               </CuiNavbarLink>

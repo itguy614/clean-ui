@@ -20,6 +20,7 @@ import {
 import Example from "../components/Example.vue";
 import ShellFrame from "../components/ShellFrame.vue";
 import ShellPage from "../components/ShellPage.vue";
+import pageCode from "../shell-snippets/navbar-sidebar-page.vue?raw";
 
 const sections = [
   { id: "overview", label: "Overview", icon: "squares-four" },
@@ -39,48 +40,6 @@ const stats = [
   { label: "Revenue", value: "$18.2k" },
   { label: "Open issues", value: "23" },
 ];
-
-const pageCode = `<template>
-  <!-- A sticky navbar publishes its height as --cui-navbar-height, and scroll-padding-top -->
-  <CuiNavbar sticky label="Account">
-    <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="open = true">
-      <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
-    </CuiButton>
-    <CuiNavbarBrand href="/">Pulse Console</CuiNavbarBrand>
-    <CuiNavbarActions>
-      <CuiButton variant="ghost" size="sm">Search</CuiButton>
-      <CuiButton variant="ghost" size="sm">Kurt</CuiButton>
-    </CuiNavbarActions>
-  </CuiNavbar>
-
-  <div style="display: flex">
-    <!-- Hidden below lg, where the sidebar is a drawer, or it would leave an empty column.
-         sticky: top is --cui-navbar-height and the height is the rest of the viewport. -->
-    <aside class="hidden lg:block" style="width: 16rem; flex-shrink: 0">
-      <CuiSidebar ref="sidebar" v-model:open="open" sticky label="Sections" :toggle="false"
-                  style="width: 100%">
-        <CuiSidebarContent>
-          <CuiList>
-            <CuiListItem title="Overview" icon="squares-four" to="/" />
-          </CuiList>
-          <CuiSidebarGroup label="Workspace">
-            <CuiList>
-              <CuiListItem title="Team" icon="users-three" to="/team">
-                <template #trailing><CuiBadge size="sm">4</CuiBadge></template>
-              </CuiListItem>
-            </CuiList>
-          </CuiSidebarGroup>
-        </CuiSidebarContent>
-      </CuiSidebar>
-    </aside>
-
-    <main id="main" tabindex="-1" style="flex: 1; min-width: 0">
-      <!-- Anything of your own that sticks reads the same token: never a number -->
-      <div style="position: sticky; top: var(--cui-navbar-height, 0px)">Filters</div>
-      …
-    </main>
-  </div>
-</template>`;
 
 const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row whose content scrolls -->
 <div style="display: flex; flex-direction: column; height: 32rem; overflow: hidden">
@@ -127,7 +86,7 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
 
     <template #demo>
       <ShellFrame label="Navbar and sidebar">
-        <CuiNavbar label="Demo account" collapse-below="never">
+        <CuiNavbar collapse-below="never">
           <CuiButton
             class="lg:!hidden"
             variant="ghost"
@@ -258,10 +217,12 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           <strong>Landmarks.</strong> One <code>&lt;header&gt;</code> (the navbar), one
-          <code>&lt;main&gt;</code>, and two <code>&lt;nav&gt;</code>s if both have navigation. Two
-          unnamed navs are announced identically, so name them for what they hold: here
-          <code>label="Account"</code> on the navbar and <code>label="Sections"</code> on the sidebar,
-          not "Main" twice.
+          <code>&lt;main&gt;</code>, and one <code>&lt;nav&gt;</code>: the sidebar's. The navbar here has
+          no <code>CuiNavbarNav</code>, so it draws no <code>&lt;nav&gt;</code> of its own (its
+          <code>label</code> only names that nav). Name the sidebar for what it holds, here
+          <code>label="Sections"</code>. If you later add a <code>CuiNavbarNav</code>, give the navbar
+          its own <code>label</code> (for example "Account") so the two navs are not both announced as
+          "Main".
         </li>
         <li>
           <strong>Skip link.</strong> Header, then sidebar, then content: a keyboard user tabs through
