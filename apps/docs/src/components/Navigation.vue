@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { reactive, watch } from "vue";
-import { useRoute } from "vue-router";
 import {
   CuiBadge,
   CuiList,
@@ -142,19 +140,6 @@ const groups = Object.entries(
       {} as Record<string, typeof sections>,
     ),
 ).map(([label, items]) => ({ label, items }));
-
-// The group of the current page is open, and follows the route: a "next page" link into
-// another group opens it. What the user opens or closes by hand is left alone.
-const route = useRoute();
-const expanded = reactive<Record<string, boolean>>({});
-watch(
-  () => route.path,
-  (path) => {
-    const group = sections.find((s) => s.path === path)?.group;
-    if (group) expanded[group] = true;
-  },
-  { immediate: true },
-);
 </script>
 
 <template>
@@ -168,12 +153,8 @@ watch(
         <CuiListItem v-for="section in standalone" :key="section.id" :to="section.path" :title="section.label" />
       </CuiList>
 
-      <CuiSidebarGroup
-        v-for="group in groups"
-        :key="group.label"
-        v-model:expanded="expanded[group.label]"
-        :label="group.label"
-      >
+      <!-- The group holding the current page opens by itself, and follows the route. -->
+      <CuiSidebarGroup v-for="group in groups" :key="group.label" :label="group.label">
         <CuiList>
           <CuiListItem v-for="section in group.items" :key="section.id" :to="section.path" :title="section.label" />
         </CuiList>

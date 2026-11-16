@@ -87,6 +87,43 @@ describe("CuiSidebarGroup (outside any CuiSidebar)", () => {
       expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
     });
 
+    it("opens when a route change marks one of its links later (the first navigation settles after mount)", async () => {
+      const current = ref(false);
+      const Host = defineComponent({
+        setup: () => () =>
+          h(CuiSidebarGroup, { label: "Layout" }, () => [h("a", { href: "/a", "aria-current": current.value ? "page" : undefined }, "A")]),
+      });
+      const wrapper = mount(Host, { attachTo: document.body });
+      await flushPromises();
+      expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
+
+      current.value = true;
+      await flushPromises();
+      expect(wrapper.get("button").attributes("aria-expanded")).toBe("true");
+      wrapper.unmount();
+    });
+
+    it("leaves a group the user shut alone until the page moves into it again", async () => {
+      const wrapper = mount(CuiSidebarGroup, { props: { label: "Layout" }, slots: { default: current } });
+      await flushPromises();
+      await wrapper.get("button").trigger("click");
+      await flushPromises();
+      expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
+    });
+
+    it("does not follow the page when expanded is bound: the app drives it", async () => {
+      const marked = ref(false);
+      const Host = defineComponent({
+        setup: () => () =>
+          h(CuiSidebarGroup, { label: "Layout", expanded: false }, () => [h("a", { href: "/a", "aria-current": marked.value ? "page" : undefined }, "A")]),
+      });
+      const wrapper = mount(Host, { attachTo: document.body });
+      marked.value = true;
+      await flushPromises();
+      expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
+      wrapper.unmount();
+    });
+
     it("does not override an explicit v-model:expanded of false", async () => {
       const wrapper = mount(CuiSidebarGroup, { props: { label: "Layout", expanded: false }, slots: { default: current } });
       await flushPromises();

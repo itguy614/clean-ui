@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useCollapsible } from "../composables/useCollapsible";
 import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
@@ -53,18 +53,37 @@ function toggle() {
 // still opens it (#270).
 const { panel, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(() => isOpen.value, toggle);
 
-// The group that holds the current page opens at mount, with the transition off: it starts
-// open, it isn't opening. The reflow makes the open state count as drawn first.
-// A data attribute rather than a class: the template never binds it, so Vue leaves it alone.
-onMounted(async () => {
+// An unbound group follows the current page: it opens when one of its links is marked
+// `aria-current`. At mount that is with the transition off (it starts open, it isn't opening;
+// the reflow makes the open state count as drawn first), and afterwards, when a route change
+// marks one of its links, with it on. Only ever opens: a group the user shut stays shut until
+// the page moves into it again. A bound `expanded` is the app's to drive, so it is left alone.
+// The instant flag is a data attribute, not a class: the template never binds it, so Vue
+// leaves it alone.
+const CURRENT = '[aria-current]:not([aria-current="false"])';
+const holdsCurrentPage = () => !!panel.value?.querySelector(CURRENT);
+
+async function followCurrentPage(instant: boolean) {
   const el = panel.value;
-  if (props.expanded !== undefined || isOpen.value || !el?.querySelector('[aria-current]:not([aria-current="false"])')) return;
-  el.dataset.instant = "";
+  if (!el || props.expanded !== undefined || isOpen.value || !holdsCurrentPage()) return;
+  if (instant) el.dataset.instant = "";
   setExpanded(true);
+  if (!instant) return;
   await nextTick();
   void el.offsetHeight;
   delete el.dataset.instant;
+}
+
+let observer: MutationObserver | undefined;
+onMounted(() => {
+  void followCurrentPage(true);
+  if (!panel.value || typeof MutationObserver === "undefined") return;
+  // A router marks the new link after this group is mounted (the first navigation settles
+  // late; later ones are a click away).
+  observer = new MutationObserver(() => void followCurrentPage(false));
+  observer.observe(panel.value, { subtree: true, attributes: true, attributeFilter: ["aria-current"] });
 });
+onBeforeUnmount(() => observer?.disconnect());
 
 const id = useCuiId("sidebar-group");
 const triggerId = `${id}-trigger`;
