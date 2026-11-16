@@ -93,6 +93,11 @@ const ownButtonCode = `<!-- Skip the built-in button and open the drawer from yo
         <li>Past a handful of links, or when the app has its own tools and filters, move to <router-link to="/app-shells/navbar-sidebar">navbar and sidebar</router-link>.</li>
       </ul>
       <p>
+        <strong>The brand lives in the navbar.</strong> There is no sidebar to hold it, so the bar's
+        first item is the product's name, linking home. (With a sidebar, the brand moves: see
+        <router-link to="/app-shells/sidebar">sidebar and content</router-link>.)
+      </p>
+      <p>
         Built from <router-link to="/components/navbar">CuiNavbar</router-link> (with
         <code>CuiNavbarMenu</code> and <code>CuiNavbarLink</code>),
         <router-link to="/components/container">CuiContainer</router-link>,

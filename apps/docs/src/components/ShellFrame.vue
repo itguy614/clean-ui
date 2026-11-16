@@ -38,6 +38,15 @@ withDefaults(defineProps<{ label: string; height?: string }>(), { height: "32rem
   min-height: 0;
 }
 
+/* A column beside a full-height sidebar: a bar over the content, which scrolls on its own. */
+.cui-shell-frame__col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
 .cui-shell-frame__main {
   flex: 1;
   min-width: 0;
@@ -60,6 +69,11 @@ withDefaults(defineProps<{ label: string; height?: string }>(), { height: "32rem
   font-weight: 600;
   line-height: 1.3;
   color: var(--cui-text-emphasis);
+}
+
+.cui-shell-bar-title {
+  margin: 0;
+  flex: 1;
 }
 
 .cui-shell-text {

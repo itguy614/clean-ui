@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
 import {
+  CuiAvatar,
   CuiBadge,
   CuiButton,
   CuiIcon,
@@ -8,10 +9,12 @@ import {
   CuiListItem,
   CuiModalHeader,
   CuiNavbar,
+  CuiNavbarActions,
   CuiNavbarBrand,
   CuiPanel,
   CuiSidebar,
   CuiSidebarContent,
+  CuiSidebarFooter,
   CuiSidebarHeader,
   CuiSlideover,
   CuiStack,
@@ -20,116 +23,150 @@ import Example from "../components/Example.vue";
 import ShellFrame from "../components/ShellFrame.vue";
 import ShellPage from "../components/ShellPage.vue";
 
-interface DemoOrder {
+// A CRM record browser: a list of contacts, each opening into its own record.
+interface DemoContact {
   id: string;
-  customer: string;
-  total: string;
-  status: "Paid" | "Pending" | "Refunded";
+  name: string;
+  company: string;
+  stage: "Lead" | "Customer" | "Churned";
 }
 
-const orders: DemoOrder[] = [
-  { id: "1042", customer: "Ada Lovelace", total: "$128.00", status: "Paid" },
-  { id: "1041", customer: "Grace Hopper", total: "$64.50", status: "Pending" },
-  { id: "1040", customer: "Alan Turing", total: "$310.00", status: "Paid" },
-  { id: "1039", customer: "Edsger Dijkstra", total: "$22.00", status: "Refunded" },
-  { id: "1038", customer: "Barbara Liskov", total: "$98.25", status: "Paid" },
-  { id: "1037", customer: "Donald Knuth", total: "$75.00", status: "Pending" },
-  { id: "1036", customer: "Margaret Hamilton", total: "$240.00", status: "Paid" },
+const contacts: DemoContact[] = [
+  { id: "c1", name: "Ada Lovelace", company: "Analytical Engines", stage: "Customer" },
+  { id: "c2", name: "Grace Hopper", company: "Compiler Co.", stage: "Lead" },
+  { id: "c3", name: "Alan Turing", company: "Bletchley Labs", stage: "Customer" },
+  { id: "c4", name: "Edsger Dijkstra", company: "Structured Systems", stage: "Churned" },
+  { id: "c5", name: "Barbara Liskov", company: "Substitution Inc.", stage: "Lead" },
+  { id: "c6", name: "Donald Knuth", company: "Literate Press", stage: "Customer" },
+  { id: "c7", name: "Margaret Hamilton", company: "Apollo Software", stage: "Lead" },
 ];
-const STATUS_COLOR = { Paid: "success", Pending: "warning", Refunded: "surface" } as const;
+const STAGE_COLOR = { Lead: "info", Customer: "success", Churned: "surface" } as const;
 
 const detailSections = [
-  { id: "overview", label: "Overview" },
-  { id: "items", label: "Items" },
-  { id: "activity", label: "Activity" },
+  { id: "overview", label: "Overview", icon: "user" },
+  { id: "deals", label: "Deals", icon: "handshake" },
+  { id: "activity", label: "Activity", icon: "clock-counter-clockwise" },
 ];
 
 // The app sidebar, which collapses like the other shells' (see "On a small screen").
-const appNav = ["Orders", "Customers", "Products"];
-const appCurrent = ref("Orders");
+const appNav = [
+  { label: "Contacts", icon: "address-book", count: 7 },
+  { label: "Companies", icon: "buildings" },
+  { label: "Deals", icon: "handshake" },
+  { label: "Reports", icon: "chart-line-up" },
+];
+const appCurrent = ref("Contacts");
 const navOpen = ref(false);
 const sidebar = useTemplateRef("sidebar");
 
-// The record in the drawer, and which of its sections shows.
-// The record stays set after the drawer closes: the slideover keeps its content mounted through
-// the exit transition, and clearing it here would blank the title while it slides away.
-const selected = ref<DemoOrder>();
+// The record in the drawer, and which of its sections shows. The record stays set after the
+// drawer closes: the slideover keeps its content mounted through the exit transition, and
+// clearing it here would blank the title while it slides away.
+const selected = ref<DemoContact>();
 const drawerVisible = ref(false);
 const section = ref("overview");
 
-function open(order: DemoOrder) {
+function open(contact: DemoContact) {
   section.value = "overview";
-  selected.value = order;
+  selected.value = contact;
   drawerVisible.value = true;
 }
 
 const pageCode = `<script setup>
 const visible = ref(false);
-const order = ref();            // kept after closing, so the exit transition still has content
+const contact = ref();          // kept after closing, so the exit transition still has content
 const section = ref("overview");
-const sections = [{ id: "overview", label: "Overview" }, { id: "items", label: "Items" }];
+const sections = [{ id: "overview", label: "Overview" }, { id: "deals", label: "Deals" }];
 
-function open(o) {
+function open(c) {
   section.value = "overview";
-  order.value = o;
+  contact.value = c;
   visible.value = true;
 }
 <\/script>
 
 <template>
-<!-- The record list: each row is a button that opens its record -->
-<CuiList>
-  <CuiListItem v-for="o in orders" :key="o.id" :title="o.customer" :subtitle="'Order ' + o.id" @click="open(o)">
-    <template #trailing><CuiBadge size="sm">{{ o.status }}</CuiBadge></template>
-  </CuiListItem>
-</CuiList>
+  <!-- The outer shell is sidebar-first (see "Sidebar and content"): the brand is in the sidebar
+       header, and the bar over the content carries the page title and its action. -->
+  <div style="display: flex">
+    <aside class="hidden lg:block" style="width: 15rem; flex-shrink: 0; position: sticky; top: 0; height: 100vh">
+      <CuiSidebar ref="sidebar" v-model:open="navOpen" label="Orbit CRM" :toggle="false" style="width: 100%">
+        <CuiSidebarHeader title="Orbit CRM" icon="planet" />
+        <CuiSidebarContent>…</CuiSidebarContent>
+      </CuiSidebar>
+    </aside>
 
-<!-- Sub-component mode: the header, then a row, so the drawer is a shell of its own.
-     aria-label names the dialog; the sidebar inside names its own nav. -->
-<CuiSlideover v-model:visible="visible" size="xl" :aria-label="'Order ' + order?.id">
-  <CuiModalHeader :title="'Order ' + order?.id" @close="visible = false" />
+    <div style="flex: 1; min-width: 0">
+      <CuiNavbar sticky translucent>
+        <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="navOpen = true">…</CuiButton>
+        <h1 class="page-title">Contacts</h1>
+        <CuiNavbarActions><CuiButton size="sm">New contact</CuiButton></CuiNavbarActions>
+      </CuiNavbar>
 
-  <div style="display: flex; flex: 1; min-height: 0">
-    <!-- collapse-below="never": inside a drawer there is nothing to collapse into -->
-    <CuiSidebar collapse-below="never" label="Order sections" style="width: 11rem; flex-shrink: 0">
-      <CuiSidebarContent>
-        <CuiList>
-          <CuiListItem
-            v-for="s in sections"
-            :key="s.id"
-            :title="s.label"
-            :aria-current="section === s.id ? 'page' : undefined"
-            @click="section = s.id"
-          />
+      <main id="main" tabindex="-1">
+        <!-- The record list: each row is a button that opens its record -->
+        <CuiList divided>
+          <CuiListItem v-for="c in contacts" :key="c.id" :title="c.name" :subtitle="c.company" chevron @click="open(c)">
+            <template #trailing><CuiBadge size="sm">{{ c.stage }}</CuiBadge></template>
+          </CuiListItem>
         </CuiList>
-      </CuiSidebarContent>
-    </CuiSidebar>
-
-    <div style="flex: 1; min-width: 0; overflow: auto">
-      <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135">…banner…</CuiPanel>
-      …the section…
+      </main>
     </div>
   </div>
-</CuiSlideover>
+
+  <!-- Teleported, so it can sit anywhere. Sub-component mode: the header, then a row, so the
+       drawer is a shell of its own. aria-label names the dialog; the sidebar inside names its own nav. -->
+  <CuiSlideover v-model:visible="visible" size="xl" :aria-label="contact?.name">
+    <CuiModalHeader :title="contact?.name" @close="visible = false" />
+
+    <div style="display: flex; flex: 1; min-height: 0">
+      <!-- collapse-below="never": inside a drawer there is nothing to collapse into -->
+      <CuiSidebar collapse-below="never" label="Contact sections" style="width: 11rem; flex-shrink: 0">
+        <CuiSidebarContent>
+          <CuiList>
+            <CuiListItem
+              v-for="s in sections"
+              :key="s.id"
+              :title="s.label"
+              :aria-current="section === s.id ? 'page' : undefined"
+              @click="section = s.id"
+            />
+          </CuiList>
+        </CuiSidebarContent>
+      </CuiSidebar>
+
+      <div style="flex: 1; min-width: 0; overflow: auto">
+        <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135">…banner…</CuiPanel>
+        …the section…
+      </div>
+    </div>
+  </CuiSlideover>
 </template>`;
 </script>
 
 <template>
   <ShellPage
     title="Sidebar and detail drawer"
-    description="A list of records beside the app's navigation. Opening a record slides in a drawer that has a sidebar of its own, to move between the sections of that one record."
+    description="A list of records in a sidebar-first app. Opening a record slides in a drawer that has a sidebar of its own, to move between the sections of that one record."
   >
     <template #when>
       <p>
         Choose it when people work through a list and need the detail of one record without leaving
-        the list: orders, tickets, customers, files. The list stays where it was, with its scroll and
+        the list: contacts, orders, tickets, files. The list stays where it was, with its scroll and
         filters, and closing the drawer puts the reader back on the row they opened.
       </p>
       <ul class="list-disc pl-5">
-        <li>The record has several parts (overview, items, activity) that deserve navigating, not one long scroll.</li>
+        <li>The record has several parts (overview, deals, activity) that deserve navigating, not one long scroll.</li>
         <li>For a short detail, a plain <router-link to="/components/slideover">slideover</router-link> with a form is enough; for a full page of detail, give the record its own route.</li>
-        <li>The outer shell is <router-link to="/app-shells/sidebar">sidebar and content</router-link>, or <router-link to="/app-shells/navbar-sidebar">navbar and sidebar</router-link>.</li>
+        <li>The outer shell is <router-link to="/app-shells/sidebar">sidebar and content</router-link> here; it works as well under a <router-link to="/app-shells/navbar-sidebar">navbar and sidebar</router-link>.</li>
       </ul>
+      <p>
+        <strong>The brand lives in the app sidebar's header.</strong> The sidebar is the primary
+        navigation, so it owns the product's name, and the bar over the content carries only the page's
+        title and its action (below <code>lg</code>, where the sidebar is closed, the bar shows the brand instead).
+        The drawer's sidebar, a second one, has no brand: it names the record's sections, and the
+        drawer's header names the record.
+      </p>
       <p>
         Built from <router-link to="/components/sidebar">CuiSidebar</router-link> twice (the second
         with <code>collapse-below="never"</code>), <router-link to="/components/slideover">CuiSlideover</router-link>
@@ -138,78 +175,92 @@ function open(o) {
     </template>
 
     <template #demo>
-      <ShellFrame label="Sidebar and detail drawer">
-        <CuiNavbar label="Demo header" collapse-below="never">
-          <CuiButton
-            class="lg:!hidden"
-            variant="ghost"
-            size="sm"
-            v-bind="sidebar?.toggleAttrs"
-            @click="navOpen = true"
-          >
-            <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
-          </CuiButton>
-          <CuiNavbarBrand>Acme Shop</CuiNavbarBrand>
-        </CuiNavbar>
-
+      <ShellFrame label="Sidebar and detail drawer: a CRM">
         <div class="cui-shell-frame__body">
           <div class="cui-shell-frame__side hidden lg:block">
             <CuiSidebar
               ref="sidebar"
               v-model:open="navOpen"
-              label="Demo app"
+              label="Demo CRM"
               :toggle="false"
               :style="{ width: '100%' }"
             >
-              <CuiSidebarHeader title="Acme Shop" />
+              <CuiSidebarHeader title="Orbit CRM" icon="planet" />
               <CuiSidebarContent>
                 <CuiList>
                   <CuiListItem
                     v-for="item in appNav"
-                    :key="item"
-                    :title="item"
-                    :href="`#${item.toLowerCase()}`"
-                    :aria-current="appCurrent === item ? 'page' : undefined"
-                    @click.prevent="appCurrent = item"
-                  />
+                    :key="item.label"
+                    :title="item.label"
+                    :icon="item.icon"
+                    :href="`#${item.label.toLowerCase()}`"
+                    :aria-current="appCurrent === item.label ? 'page' : undefined"
+                    @click.prevent="appCurrent = item.label"
+                  >
+                    <template v-if="item.count" #trailing><CuiBadge size="sm">{{ item.count }}</CuiBadge></template>
+                  </CuiListItem>
                 </CuiList>
               </CuiSidebarContent>
+              <CuiSidebarFooter>Signed in as kurt</CuiSidebarFooter>
             </CuiSidebar>
           </div>
 
-          <div class="cui-shell-frame__main cui-shell-frame__pad" role="region" tabindex="0" aria-label="Demo orders">
-            <h3 class="cui-shell-title">Orders</h3>
-            <p class="cui-shell-text">Open a record: its drawer has a sidebar of its own.</p>
-            <CuiList divided>
-              <CuiListItem
-                v-for="o in orders"
-                :key="o.id"
-                :title="o.customer"
-                :subtitle="`Order ${o.id}`"
-                chevron
-                @click="open(o)"
+          <div class="cui-shell-frame__col">
+            <CuiNavbar label="Demo page bar" collapse-below="never">
+              <CuiButton
+                class="lg:!hidden"
+                variant="ghost"
+                size="sm"
+                v-bind="sidebar?.toggleAttrs"
+                @click="navOpen = true"
               >
-                <template #trailing>
-                  <CuiBadge size="sm" :color="STATUS_COLOR[o.status]">{{ o.status }}</CuiBadge>
-                </template>
-              </CuiListItem>
-            </CuiList>
+                <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
+              </CuiButton>
+              <CuiNavbarBrand class="lg:!hidden">Orbit CRM</CuiNavbarBrand>
+              <span class="cui-shell-title cui-shell-bar-title hidden lg:block">{{ appCurrent }}</span>
+              <CuiNavbarActions>
+                <CuiButton size="sm">
+                  <template #prefix><CuiIcon name="plus" size="sm" /></template>
+                  New contact
+                </CuiButton>
+              </CuiNavbarActions>
+            </CuiNavbar>
+
+            <div class="cui-shell-frame__main cui-shell-frame__pad" role="region" tabindex="0" aria-label="Demo contacts">
+              <p class="cui-shell-text">Open a contact: its drawer has a sidebar of its own.</p>
+              <CuiList divided>
+                <CuiListItem
+                  v-for="c in contacts"
+                  :key="c.id"
+                  :title="c.name"
+                  :subtitle="c.company"
+                  chevron
+                  @click="open(c)"
+                >
+                  <template #icon><CuiAvatar :name="c.name" size="sm" /></template>
+                  <template #trailing>
+                    <CuiBadge size="sm" :color="STAGE_COLOR[c.stage]">{{ c.stage }}</CuiBadge>
+                  </template>
+                </CuiListItem>
+              </CuiList>
+            </div>
           </div>
         </div>
       </ShellFrame>
 
       <!-- Teleported to <body> by the slideover, so it overlays the page, not the frame. -->
-      <CuiSlideover v-model:visible="drawerVisible" size="xl" :aria-label="`Order ${selected?.id ?? ''}`">
-        <CuiModalHeader :title="`Order ${selected?.id ?? ''}`" @close="drawerVisible = false" />
+      <CuiSlideover v-model:visible="drawerVisible" size="xl" :aria-label="selected?.name ?? 'Contact'">
+        <CuiModalHeader :title="selected?.name ?? 'Contact'" @close="drawerVisible = false" />
 
         <div class="cui-shell-frame__body">
-          <CuiSidebar collapse-below="never" label="Order sections" :style="{ width: '11rem', flexShrink: 0 }">
+          <CuiSidebar collapse-below="never" label="Contact sections" :style="{ width: '11rem', flexShrink: 0 }">
             <CuiSidebarContent>
               <CuiList>
                 <CuiListItem
                   v-for="s in detailSections"
                   :key="s.id"
                   :title="s.label"
+                  :icon="s.icon"
                   :aria-current="section === s.id ? 'page' : undefined"
                   @click="section = s.id"
                 />
@@ -219,16 +270,16 @@ function open(o) {
 
           <div class="cui-shell-frame__main">
             <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135" :style="{ padding: '1.25rem' }">
-              <h3 class="cui-shell-title">{{ selected?.customer }}</h3>
+              <h3 class="cui-shell-title">{{ selected?.name }}</h3>
               <p class="cui-shell-text" :style="{ marginBottom: 0 }">
-                Order {{ selected?.id }}, {{ selected?.total }}
-                <CuiBadge v-if="selected" size="sm" :color="STATUS_COLOR[selected.status]">{{ selected.status }}</CuiBadge>
+                {{ selected?.company }}
+                <CuiBadge v-if="selected" size="sm" :color="STAGE_COLOR[selected.stage]">{{ selected.stage }}</CuiBadge>
               </p>
             </CuiPanel>
             <CuiStack spacing="2" class="cui-shell-frame__pad">
               <h4 class="cui-shell-title">{{ detailSections.find((s) => s.id === section)?.label }}</h4>
               <p v-for="n in 3" :key="n" class="cui-shell-text">
-                The detail of one section of this record. Choosing another in the sidebar swaps
+                The detail of one section of this contact. Choosing another in the sidebar swaps
                 this area and leaves the list behind the drawer exactly as it was ({{ n }}).
               </p>
             </CuiStack>
@@ -253,7 +304,7 @@ function open(o) {
       <ul class="list-disc pl-5">
         <li>
           <strong>The outer sidebar</strong> collapses into its own drawer below <code>lg</code>, opened
-          from a header button bound to its <code>toggleAttrs</code>, exactly as in
+          from a button in the bar bound to its <code>toggleAttrs</code>, exactly as in
           <router-link to="/app-shells/sidebar">sidebar and content</router-link>.
         </li>
         <li>
@@ -279,7 +330,7 @@ function open(o) {
           <strong>Names.</strong> The drawer is a dialog and needs a name: <code>aria-label</code>
           (or the <code>title</code> prop in simple mode). The nested sidebar is a
           <code>&lt;nav&gt;</code> with its own <code>label</code>, distinct from the app's, so the
-          page now has three navigations that must be told apart.
+          page now has two navigations that must be told apart.
         </li>
         <li>
           <strong>Landmarks.</strong> The page keeps one <code>&lt;header&gt;</code> and one

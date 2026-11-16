@@ -22,13 +22,13 @@ import ShellFrame from "../components/ShellFrame.vue";
 import ShellPage from "../components/ShellPage.vue";
 
 const sections = [
-  { id: "overview", label: "Overview" },
-  { id: "reports", label: "Reports" },
+  { id: "overview", label: "Overview", icon: "squares-four" },
+  { id: "reports", label: "Reports", icon: "chart-line-up" },
 ];
 const workspace = [
-  { id: "team", label: "Team", count: 4 },
-  { id: "billing", label: "Billing" },
-  { id: "settings", label: "Settings" },
+  { id: "team", label: "Team", icon: "users-three", count: 4 },
+  { id: "billing", label: "Billing", icon: "credit-card" },
+  { id: "settings", label: "Settings", icon: "gear" },
 ];
 const current = ref("overview");
 const drawerOpen = ref(false);
@@ -46,7 +46,7 @@ const pageCode = `<template>
     <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="open = true">
       <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
     </CuiButton>
-    <CuiNavbarBrand href="/">Acme</CuiNavbarBrand>
+    <CuiNavbarBrand href="/">Pulse Console</CuiNavbarBrand>
     <CuiNavbarActions>
       <CuiButton variant="ghost" size="sm">Search</CuiButton>
       <CuiButton variant="ghost" size="sm">Kurt</CuiButton>
@@ -97,6 +97,16 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
         <li>Without global actions, <router-link to="/app-shells/sidebar">sidebar and content</router-link> is simpler; without a deep map, <router-link to="/app-shells/navbar">a navbar</router-link> is.</li>
       </ul>
       <p>
+        <strong>The brand lives in the navbar.</strong> The bar spans the full width above everything,
+        so it is the first thing on the page and holds the product's name; the sidebar underneath has
+        no header of its own (or one that names the section, never the product). When the sidebar owns
+        the left edge from top to bottom instead, the brand moves into it: see
+        <router-link to="/app-shells/sidebar">sidebar and content</router-link>. Choose a
+        <em>navbar-first</em> shell like this one when the bar carries global things (search, notifications,
+        the account menu) that belong to the whole app, a <em>sidebar-first</em> one when the
+        navigation is the product.
+      </p>
+      <p>
         The two are coupled by one token. A sticky navbar sets <code>--cui-navbar-height</code> on the
         document; a sticky sidebar offsets itself by it, and so does anything else of yours that
         sticks. Read the token. Never write the navbar's height as a number, because it changes with
@@ -116,7 +126,7 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
           >
             <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
           </CuiButton>
-          <CuiNavbarBrand>Acme</CuiNavbarBrand>
+          <CuiNavbarBrand>Pulse Console</CuiNavbarBrand>
           <CuiNavbarActions>
             <CuiButton variant="ghost" size="sm">
               <template #prefix><CuiIcon name="magnifying-glass" size="sm" /></template>
@@ -144,6 +154,7 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
                     v-for="s in sections"
                     :key="s.id"
                     :title="s.label"
+                    :icon="s.icon"
                     :href="`#${s.id}`"
                     :aria-current="current === s.id ? 'page' : undefined"
                     @click.prevent="current = s.id"
@@ -155,6 +166,7 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
                       v-for="s in workspace"
                       :key="s.id"
                       :title="s.label"
+                      :icon="s.icon"
                       :href="`#${s.id}`"
                       :aria-current="current === s.id ? 'page' : undefined"
                       @click.prevent="current = s.id"
