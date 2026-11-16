@@ -116,12 +116,18 @@ import CuiSidebarHeader from "./components/CuiSidebarHeader.vue";
 import CuiSidebarContent from "./components/CuiSidebarContent.vue";
 import CuiSidebarFooter from "./components/CuiSidebarFooter.vue";
 import CuiSidebarGroup from "./components/CuiSidebarGroup.vue";
+import CuiNavbar from "./components/CuiNavbar.vue";
+import CuiNavbarBrand from "./components/CuiNavbarBrand.vue";
+import CuiNavbarNav from "./components/CuiNavbarNav.vue";
+import CuiNavbarActions from "./components/CuiNavbarActions.vue";
+import CuiNavbarMenu from "./components/CuiNavbarMenu.vue";
+import CuiNavbarLink from "./components/CuiNavbarLink.vue";
 import CuiPanel from "./components/CuiPanel.vue";
 
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiToolbar, CuiToolbarSeparator, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiPinInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider, CuiTransition, CuiTransitionGroup, CuiSidebar, CuiSidebarHeader, CuiSidebarContent, CuiSidebarFooter, CuiSidebarGroup, CuiPanel };
+export { CuiButton, CuiButtonGroup, CuiToolbar, CuiToolbarSeparator, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiPinInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider, CuiTransition, CuiTransitionGroup, CuiSidebar, CuiSidebarHeader, CuiSidebarContent, CuiSidebarFooter, CuiSidebarGroup, CuiNavbar, CuiNavbarBrand, CuiNavbarNav, CuiNavbarActions, CuiNavbarMenu, CuiNavbarLink, CuiPanel };
 export { CuiList, CuiListItem, CuiStatusDot };
 
 // Type exports
@@ -320,6 +326,12 @@ export type { CuiSidebarHeaderProps } from "./components/CuiSidebarHeader.vue";
 export type { CuiSidebarContentProps } from "./components/CuiSidebarContent.vue";
 export type { CuiSidebarFooterProps } from "./components/CuiSidebarFooter.vue";
 export type { CuiSidebarGroupProps } from "./components/CuiSidebarGroup.vue";
+export type { CuiNavbarProps } from "./components/CuiNavbar.vue";
+export type { CuiNavbarBrandProps } from "./components/CuiNavbarBrand.vue";
+export type { CuiNavbarNavProps } from "./components/CuiNavbarNav.vue";
+export type { CuiNavbarActionsProps } from "./components/CuiNavbarActions.vue";
+export type { CuiNavbarMenuProps } from "./components/CuiNavbarMenu.vue";
+export type { CuiNavbarLinkProps } from "./components/CuiNavbarLink.vue";
 export type { CuiCollapseBelow } from "./composables/useCollapseToDrawer";
 export type { CuiPanelProps } from "./components/CuiPanel.vue";
 export { RadioGroupKey } from "./components/radio-context";
@@ -490,6 +502,12 @@ export function createCleanUI(options: CleanUIOptions = {}) {
       app.component("CuiSidebarContent", CuiSidebarContent);
       app.component("CuiSidebarFooter", CuiSidebarFooter);
       app.component("CuiSidebarGroup", CuiSidebarGroup);
+      app.component("CuiNavbar", CuiNavbar);
+      app.component("CuiNavbarBrand", CuiNavbarBrand);
+      app.component("CuiNavbarNav", CuiNavbarNav);
+      app.component("CuiNavbarActions", CuiNavbarActions);
+      app.component("CuiNavbarMenu", CuiNavbarMenu);
+      app.component("CuiNavbarLink", CuiNavbarLink);
       app.component("CuiPanel", CuiPanel);
     },
   };

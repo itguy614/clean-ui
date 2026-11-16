@@ -106,6 +106,7 @@ const sections = [
 
   // Navigation (alphabetical)
   { id: "breadcrumb", label: "Breadcrumb", path: "/components/breadcrumb", group: "Navigation" },
+  { id: "navbar", label: "Navbar", path: "/components/navbar", group: "Navigation" },
   { id: "pagination", label: "Pagination", path: "/components/pagination", group: "Navigation" },
   { id: "stepper", label: "Stepper", path: "/components/stepper", group: "Navigation" },
   { id: "tabs", label: "Tabs", path: "/components/tabs", group: "Navigation" },

@@ -376,6 +376,11 @@ const router = createRouter({
       component: () => import('../pages/ScrollAreaPage.vue'),
     },
     {
+      path: '/components/navbar',
+      name: 'navbar',
+      component: () => import('../pages/NavbarPage.vue'),
+    },
+    {
       path: '/components/sidebar',
       name: 'sidebar',
       component: () => import('../pages/SidebarPage.vue'),
