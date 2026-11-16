@@ -94,6 +94,11 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiSidebarContent.vue", issue: "#193" },
   { file: "CuiSidebarFooter.vue", issue: "#193" },
   { file: "CuiSidebarGroup.vue", issue: "#193" },
+  { file: "CuiNavbar.vue", issue: "#194" },
+  { file: "CuiNavbarBrand.vue", issue: "#194" },
+  { file: "CuiNavbarNav.vue", issue: "#194" },
+  { file: "CuiNavbarActions.vue", issue: "#194" },
+  { file: "CuiNavbarMenu.vue", issue: "#194" },
   // The editor's paint lives in its stylesheet, read through public tokens (#228).
   { file: "CuiMarkdownEditor.vue", issue: "#228" },
   { file: "CuiMarkdownEditorToolbar.vue", issue: "#228" },

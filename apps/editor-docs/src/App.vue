@@ -10,6 +10,8 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
+  CuiNavbar,
+  CuiNavbarActions,
   CuiToastProvider,
   useTheme,
   useDensity,
@@ -68,70 +70,61 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
       </aside>
 
       <div :style="{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column' }">
-        <header :style="{
-          position: 'sticky',
-          top: '0',
-          zIndex: '10',
-          background: isDark ? 'color-mix(in srgb, var(--color-surface-950) 80%, transparent)' : 'color-mix(in srgb, white 80%, transparent)',
-          backdropFilter: 'blur(8px)',
-        }">
-          <div :style="{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
-            <div class="lg:hidden">
-              <CuiButton variant="ghost" size="sm" v-bind="nav?.toggleAttrs" @click="mobileNavOpen = true">
-                <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
-              </CuiButton>
-            </div>
+        <!-- The header is a CuiNavbar with no nav of its own: this site's navigation is the sidebar.
+             Below lg the sidebar collapses, and the button here opens its drawer through the
+             sidebar's exposed toggleAttrs. The controls on the right are plain actions content. -->
+        <CuiNavbar sticky>
+          <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="nav?.toggleAttrs" @click="mobileNavOpen = true">
+            <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
+          </CuiButton>
 
-            <div class="hidden lg:block" />
-
-            <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem' }">
-              <CuiDropdown>
-                <CuiDropdownTrigger>
-                  <CuiButton variant="ghost" size="sm">
-                    <template #prefix><CuiIcon name="palette" size="sm" /></template>
-                    {{ presets.find(p => p.id === theme)?.label ?? 'Theme' }}
-                  </CuiButton>
-                </CuiDropdownTrigger>
-                <CuiDropdownMenu min-width="10rem">
-                  <CuiDropdownHeader>Theme</CuiDropdownHeader>
-                  <CuiDropdownRadioGroup :model-value="theme" @update:model-value="setTheme($event as string)">
-                    <CuiDropdownRadioItem v-for="preset in presets" :key="preset.id" :value="preset.id">
-                      {{ preset.label }}
-                    </CuiDropdownRadioItem>
-                  </CuiDropdownRadioGroup>
-                </CuiDropdownMenu>
-              </CuiDropdown>
-              <CuiDropdown>
-                <CuiDropdownTrigger>
-                  <CuiButton variant="ghost" size="sm">
-                    <template #prefix><CuiIcon name="rows" size="sm" /></template>
-                    {{ densityPresets.find(p => p.id === density)?.label ?? 'Density' }}
-                  </CuiButton>
-                </CuiDropdownTrigger>
-                <CuiDropdownMenu min-width="11rem">
-                  <CuiDropdownHeader>Density</CuiDropdownHeader>
-                  <CuiDropdownRadioGroup :model-value="density" @update:model-value="setDensity($event as 'compact' | 'default' | 'comfortable')">
-                    <CuiDropdownRadioItem v-for="preset in densityPresets" :key="preset.id" :value="preset.id">
-                      {{ preset.label }}
-                    </CuiDropdownRadioItem>
-                  </CuiDropdownRadioGroup>
-                </CuiDropdownMenu>
-              </CuiDropdown>
-              <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
-                {{ showDebug ? "Hide Debug" : "Show Debug" }}
-              </CuiButton>
-              <CuiButton
-                variant="ghost"
-                size="sm"
-                :aria-label="`Color mode: ${MODE_VIEW[colorMode].label}. Switch to ${MODE_VIEW[nextColorMode].label}`"
-                @click="setColorMode(nextColorMode)"
-              >
-                <template #prefix><CuiIcon :name="MODE_VIEW[colorMode].icon" size="sm" /></template>
-                {{ MODE_VIEW[colorMode].label }}
-              </CuiButton>
-            </div>
-          </div>
-        </header>
+          <CuiNavbarActions>
+            <CuiDropdown>
+              <CuiDropdownTrigger>
+                <CuiButton variant="ghost" size="sm">
+                  <template #prefix><CuiIcon name="palette" size="sm" /></template>
+                  {{ presets.find(p => p.id === theme)?.label ?? 'Theme' }}
+                </CuiButton>
+              </CuiDropdownTrigger>
+              <CuiDropdownMenu min-width="10rem">
+                <CuiDropdownHeader>Theme</CuiDropdownHeader>
+                <CuiDropdownRadioGroup :model-value="theme" @update:model-value="setTheme($event as string)">
+                  <CuiDropdownRadioItem v-for="preset in presets" :key="preset.id" :value="preset.id">
+                    {{ preset.label }}
+                  </CuiDropdownRadioItem>
+                </CuiDropdownRadioGroup>
+              </CuiDropdownMenu>
+            </CuiDropdown>
+            <CuiDropdown>
+              <CuiDropdownTrigger>
+                <CuiButton variant="ghost" size="sm">
+                  <template #prefix><CuiIcon name="rows" size="sm" /></template>
+                  {{ densityPresets.find(p => p.id === density)?.label ?? 'Density' }}
+                </CuiButton>
+              </CuiDropdownTrigger>
+              <CuiDropdownMenu min-width="11rem">
+                <CuiDropdownHeader>Density</CuiDropdownHeader>
+                <CuiDropdownRadioGroup :model-value="density" @update:model-value="setDensity($event as 'compact' | 'default' | 'comfortable')">
+                  <CuiDropdownRadioItem v-for="preset in densityPresets" :key="preset.id" :value="preset.id">
+                    {{ preset.label }}
+                  </CuiDropdownRadioItem>
+                </CuiDropdownRadioGroup>
+              </CuiDropdownMenu>
+            </CuiDropdown>
+            <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
+              {{ showDebug ? "Hide Debug" : "Show Debug" }}
+            </CuiButton>
+            <CuiButton
+              variant="ghost"
+              size="sm"
+              :aria-label="`Color mode: ${MODE_VIEW[colorMode].label}. Switch to ${MODE_VIEW[nextColorMode].label}`"
+              @click="setColorMode(nextColorMode)"
+            >
+              <template #prefix><CuiIcon :name="MODE_VIEW[colorMode].icon" size="sm" /></template>
+              {{ MODE_VIEW[colorMode].label }}
+            </CuiButton>
+          </CuiNavbarActions>
+        </CuiNavbar>
 
         <main class="cui-typography" :style="{ flex: '1', padding: '1.5rem' }">
           <div class="lg:px-6 lg:py-6">
