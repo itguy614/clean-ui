@@ -186,9 +186,10 @@ defineExpose({ el, focus, blur });
     var(--cui-list-px, calc(1rem * var(--cui-density-scale, 1)));
   color: var(--cui-list-color, var(--cui-text-emphasis));
   /* Before font-size, and at zero specificity: a structural `font: inherit` would outrank the
-     themeable size and make `--cui-list-font-size` do nothing. */
+     themeable size and make `--cui-list-font-size` do nothing. Unset, the row takes its
+     parent's size, as it always has. */
   font: inherit;
-  font-size: var(--cui-list-font-size, 0.9375rem);
+  font-size: var(--cui-list-font-size, inherit);
 }
 
 /* `--cui-text-body` holds 7:1 (AAA) against the list fill and the hover fill, in every theme

@@ -184,10 +184,18 @@ describe("CuiSidebar default look (real browser)", () => {
     }
   });
 
+  it("dark on the sidebar element itself also gets the dark defaults", () => {
+    const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+    el.classList.add("dark");
+    const probe = document.createElement("div");
+    probe.style.background = "var(--cui-surface-base)";
+    el.append(probe);
+    expect(getComputedStyle(el).backgroundColor).toBe(getComputedStyle(probe).backgroundColor);
+  });
+
   it("sets a navigation's type scale: 14px links, a 20px title", () => {
     const root = mountDefault();
     expect(getComputedStyle(root.querySelector("a.cui-list-item__row") as HTMLElement).fontSize).toBe("14px");
     expect(getComputedStyle(root.querySelector(".cui-sidebar-header__title") as HTMLElement).fontSize).toBe("20px");
   });
 });
-

@@ -135,15 +135,15 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
 }
 
 /* Dark keeps the base surface and the standard border: only light has the tinted fill. */
-:where(.dark .cui-sidebar) {
+:where(.dark .cui-sidebar, .cui-sidebar.dark) {
   background: var(--cui-sidebar-bg, var(--cui-surface-base));
 }
 
-:where(.dark .cui-sidebar--left:not(.cui-sidebar--drawer)) {
+:where(.dark .cui-sidebar--left:not(.cui-sidebar--drawer), .cui-sidebar--left.dark:not(.cui-sidebar--drawer)) {
   border-inline-end-color: var(--cui-sidebar-border, var(--cui-border));
 }
 
-:where(.dark .cui-sidebar--right:not(.cui-sidebar--drawer)) {
+:where(.dark .cui-sidebar--right:not(.cui-sidebar--drawer), .cui-sidebar--right.dark:not(.cui-sidebar--drawer)) {
   border-inline-start-color: var(--cui-sidebar-border, var(--cui-border));
 }
 
