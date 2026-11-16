@@ -39,6 +39,7 @@ const meta: ComponentMeta = {
       slots: [{ name: "default", description: "CuiSidebarHeader, CuiSidebarContent and CuiSidebarFooter" }],
       methods: [
         { name: "toggle", signature: "() => void", description: "Open or close the drawer. No effect while the sidebar is inline" },
+        { name: "toggleAttrs", signature: "ComputedRef<{ 'aria-expanded': boolean; 'aria-controls': string; 'aria-label': string }>", description: "What a button of your own binds (v-bind) to open the drawer: its state, the drawer's id and the translated menu name" },
       ],
     },
     {

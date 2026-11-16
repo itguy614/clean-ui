@@ -62,12 +62,12 @@ function onDrawerClick(event: MouseEvent) {
 const name = computed(() => props.label ?? messages.value.navigation?.sidebar ?? "Sidebar");
 // The drawer is a dialog around the `<nav>`: it is named for what it is (the menu), so the
 // dialog and the landmark inside it are not announced under one name.
-const drawerName = computed(() => messages.value.navigation?.menu ?? "Navigation menu");
+const drawerName = computed(() => toggleAttrs.value["aria-label"]);
 
 const elRef = useTemplateRef<HTMLElement>("rootEl");
 // `toggleAttrs` (aria-expanded, aria-controls, the catalogue's menu name) lets a button of your
 // own, in a header, drive the drawer with the library's labelling: `v-bind` it on the button.
-defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs, collapsed });
+defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
 </script>
 
 <template>

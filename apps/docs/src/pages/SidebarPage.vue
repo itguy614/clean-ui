@@ -92,8 +92,9 @@ const drawerCode = `<!-- Below xl the sidebar is not in the page: its links are 
 </CuiSidebar>
 
 <!-- Or open it from your own button and hide the built-in one -->
-<CuiButton aria-label="Navigation menu" :aria-expanded="drawerOpen" @click="drawerOpen = true">…</CuiButton>
-<CuiSidebar :toggle="false" v-model:open="drawerOpen">…</CuiSidebar>`;
+<!-- toggleAttrs: aria-expanded, aria-controls and the translated name -->
+<CuiButton v-bind="sidebar?.toggleAttrs" @click="drawerOpen = true">…</CuiButton>
+<CuiSidebar ref="sidebar" :toggle="false" v-model:open="drawerOpen">…</CuiSidebar>`;
 
 const layoutCode = `<div style="display: flex">
   <!-- Sticks below a sticky CuiNavbar, which sets --cui-navbar-height -->
