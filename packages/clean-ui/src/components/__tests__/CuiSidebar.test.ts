@@ -164,6 +164,20 @@ describe("CuiSidebar below its breakpoint (collapse-below, default lg)", () => {
     expect(document.body.querySelector("[role=dialog]")).toBeNull();
   });
 
+  it("closes the drawer when a link in it is followed", async () => {
+    breakpoint.value = "md";
+    const wrapper = mountSidebar();
+    await flushPromises();
+    await wrapper.get("button").trigger("click");
+    await flushPromises();
+    const link = document.body.querySelector("[role=dialog] a[href='/top']") as HTMLElement;
+    link.addEventListener("click", (e) => e.preventDefault());
+    link.click();
+    await flushPromises();
+    expect(document.body.querySelector("[role=dialog] a")).toBeNull();
+    expect(wrapper.get("button").attributes("aria-expanded")).toBe("false");
+  });
+
   it("collapses at exactly its breakpoint's width and not above", async () => {
     breakpoint.value = "md";
     const atMd = mountSidebar({ collapseBelow: "md" });

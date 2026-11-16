@@ -1,12 +1,7 @@
 import { inject, provide, type InjectionKey } from "vue";
 
-export interface SidebarContext {
-  /**
-   * True while the sidebar's content is rendered inside its drawer (the viewport is below
-   * `collapseBelow`) rather than as an inline column. Getter, so a part follows the change.
-   */
-  readonly inDrawer: boolean;
-}
+/** A marker: the parts only need to know a CuiSidebar is around them. */
+export type SidebarContext = Record<string, never>;
 
 export const SidebarKey: InjectionKey<SidebarContext> = Symbol("cui-sidebar");
 

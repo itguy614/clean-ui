@@ -66,12 +66,13 @@ const holdsCurrentPage = () => !!panel.value?.querySelector(CURRENT);
 async function followCurrentPage(instant: boolean) {
   const el = panel.value;
   if (!el || props.expanded !== undefined || isOpen.value || !holdsCurrentPage()) return;
-  if (instant) el.dataset.instant = "";
+  const root = el.parentElement;
+  if (instant && root) root.dataset.instant = "";
   setExpanded(true);
   if (!instant) return;
   await nextTick();
   void el.offsetHeight;
-  delete el.dataset.instant;
+  if (root) delete root.dataset.instant;
 }
 
 let observer: MutationObserver | undefined;
@@ -201,7 +202,8 @@ const panelId = `${id}-panel`;
   grid-template-rows: 1fr;
 }
 
-.cui-sidebar-group__panel[data-instant] {
+.cui-sidebar-group[data-instant] .cui-sidebar-group__panel,
+.cui-sidebar-group[data-instant] .cui-sidebar-group__chevron {
   transition: none;
 }
 

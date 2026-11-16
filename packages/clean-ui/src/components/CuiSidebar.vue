@@ -47,16 +47,17 @@ const props = withDefaults(defineProps<CuiSidebarProps>(), {
 const openModel = defineModel<boolean>("open");
 
 const messages = useMessages();
-const { collapsed, open, drawerId, toggle: toggleDrawer, toggleAttrs } = useCollapseToDrawer({
+const { collapsed, open, drawerId, toggle: toggleDrawer, close, toggleAttrs } = useCollapseToDrawer({
   collapseBelow: () => props.collapseBelow,
   open: openModel,
 });
 
-useSidebarProvider({
-  get inDrawer() {
-    return collapsed.value;
-  },
-});
+useSidebarProvider({});
+
+/** Following a link leaves the drawer: it would otherwise stay over the page it navigated to. */
+function onDrawerClick(event: MouseEvent) {
+  if ((event.target as Element | null)?.closest("a[href]")) close();
+}
 
 const name = computed(() => props.label ?? messages.value.navigation?.sidebar ?? "Sidebar");
 
@@ -87,10 +88,11 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer });
       :id="drawerId"
       v-model:visible="open"
       :side="side"
+      :hidden="hidden"
       size="sm"
       :aria-label="name"
     >
-      <nav class="cui-sidebar cui-sidebar--drawer" :aria-label="name">
+      <nav class="cui-sidebar cui-sidebar--drawer" :aria-label="name" @click="onDrawerClick">
         <slot />
       </nav>
     </CuiSlideover>

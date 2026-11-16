@@ -75,8 +75,8 @@ export function useCollapseToDrawer(options: CollapseToDrawerOptions): CollapseT
 
   // Back to the inline layout: an open drawer must not still be open when the viewport grows
   // and shrinks again.
-  watch(collapsed, (isCollapsed) => {
-    if (!isCollapsed) state.value = false;
+  watch([collapsed, state, mounted], () => {
+    if (mounted.value && !collapsed.value && state.value) state.value = false;
   });
 
   const drawerId = useCuiId("drawer");
