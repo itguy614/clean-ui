@@ -34,6 +34,8 @@ describe("CuiNavbar translucent (real browser)", () => {
     hosts.push(host);
     const w = mount({ render: () => h(CuiNavbar, { collapseBelow: "never", ...props }, () => h(CuiNavbarActions, null, () => "x")) }, { attachTo: host });
     mounted.push(w);
+    // A page, not a box the height of the bar: a sticky bar sticks within its parent.
+    host.querySelectorAll<HTMLElement>(":scope > div").forEach((box) => (box.style.minHeight = "2000px"));
     return host.querySelector<HTMLElement>("header")!;
   }
 
@@ -63,6 +65,35 @@ describe("CuiNavbar translucent (real browser)", () => {
   it("follows --cui-navbar-bg for the tint", () => {
     const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-bg: rgb(255 0 0)");
     expect(getComputedStyle(bar).backgroundColor).toMatch(/srgb 1 0 0 \/ 0\.8|rgba\(255, 0, 0, 0\.8\)/);
+  });
+
+  const edge = (bar: HTMLElement) => getComputedStyle(bar).borderBottomColor;
+  const scrollPast = async () => {
+    window.scrollTo(0, 400);
+    await new Promise((r) => setTimeout(r, 250));
+  };
+
+  it("has no bottom line when frosted, at the top and scrolled; a plain sticky bar keeps its line once scrolled", async () => {
+    const frosted = setup({ sticky: true, translucent: true });
+    expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
+    await scrollPast();
+    expect(frosted.classList.contains("cui-navbar--scrolled")).toBe(true);
+    expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
+    // The soft shadow stays, fainter, for separation.
+    expect(getComputedStyle(frosted, "::after").opacity).toBe("1");
+    expect(getComputedStyle(frosted, "::after").boxShadow).toContain("16px");
+
+    const plain = setup({ sticky: true });
+    await scrollPast();
+    expect(edge(plain)).not.toBe("rgba(0, 0, 0, 0)");
+    expect(getComputedStyle(plain, "::after").boxShadow).not.toContain("16px");
+  });
+
+  it("gives the line back to a consumer who sets --cui-navbar-border", async () => {
+    const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-border: rgb(255 0 0)");
+    expect(edge(bar)).toBe("rgb(255, 0, 0)");
+    await scrollPast();
+    expect(edge(bar)).toBe("rgb(255, 0, 0)");
   });
 
   it("stays stacked under the overlay scale, and its open menu is not held inside the frosted bar", async () => {

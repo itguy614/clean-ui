@@ -342,7 +342,8 @@ const shellCode = `<CuiNavbar sticky>
           Opt in with <code>translucent</code> (together with <code>sticky</code>) for a frosted
           bar: the background is <code>--cui-navbar-bg</code> at about 80% over a blur, so the
           page shows through as it scrolls. This site's own header is one: scroll this page and
-          watch the content pass under it. The bar goes solid where
+          watch the content pass under it. There is no line under it, only a soft shadow once the page
+          has scrolled (set <code>--cui-navbar-border</code> to bring a line back). The bar goes solid where
           <code>backdrop-filter</code> is unsupported, under
           <code>prefers-reduced-transparency</code> and in forced-colors mode. The blur is
           <code>--cui-navbar-blur</code> (8px).

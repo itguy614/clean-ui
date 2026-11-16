@@ -191,6 +191,13 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   border-bottom-color: transparent;
 }
 
+/* A frosted bar has no line, scrolled or not: the page showing through is its edge. It only
+   changes the default: a consumer who sets --cui-navbar-border gets their line back. After the
+   sticky rule above (same specificity), so it wins in both scroll states. */
+:where(.cui-navbar--translucent) {
+  border-bottom-color: var(--cui-navbar-border, transparent);
+}
+
 /* --- Structural --- */
 .cui-navbar {
   position: relative;
@@ -218,6 +225,12 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--cui-duration-fast) var(--cui-ease-out);
+}
+
+/* Over a frosted bar the shadow is the only separation, so it is the wider, fainter elevation step
+   (md), not the tighter one: a bar that shows the page through it should not end in a hard shade. */
+.cui-navbar--translucent::after {
+  box-shadow: var(--cui-shadow-md);
 }
 
 .cui-navbar--scrolled::after {
