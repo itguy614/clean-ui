@@ -37,6 +37,7 @@ const blurLight = ref(false);
 const blurHeavy = ref(false);
 const colored = ref(false);
 const gradient = ref(false);
+const flatGradient = ref(false);
 const transparent = ref(false);
 const imageBackdrop = ref(false);
 const imageBlur = ref(false);
@@ -475,6 +476,30 @@ const formAgree = ref(false);
             :backdrop-opacity="0.85"
           >
             <p>A gradient backdrop for a dramatic, editorial feel. Useful for marketing modals or onboarding flows.</p>
+          </CuiModal>
+        </Example>
+
+        <!-- Backdrop: from / to props -->
+        <Example title="Backdrop: From / To" :code="`<CuiModal
+  v-model:visible=&quot;show&quot;
+  title=&quot;Gradient Backdrop&quot;
+  backdrop-from=&quot;primary&quot;
+  backdrop-to=&quot;info&quot;
+  :backdrop-angle=&quot;135&quot;
+  backdrop-smooth
+>
+  <p>Color roles as gradient stops.</p>
+</CuiModal>`">
+          <CuiButton variant="outline" size="sm" color="info" @click="flatGradient = true">Gradient Overlay</CuiButton>
+          <CuiModal
+            v-model:visible="flatGradient"
+            title="Gradient Backdrop"
+            backdrop-from="primary"
+            backdrop-to="info"
+            :backdrop-angle="135"
+            backdrop-smooth
+          >
+            <p>The stops are color roles, so the backdrop follows the theme. backdrop-gradient still wins if both are set.</p>
           </CuiModal>
         </Example>
 
