@@ -314,6 +314,17 @@ describe("CuiNavbar sticky", () => {
     html.style.scrollPaddingTop = "";
   });
 
+  it("warns in development that translucent needs sticky", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    __clearWarned();
+    mountNavbar({ sticky: true, translucent: true });
+    expect(warn).not.toHaveBeenCalled();
+    mountNavbar({ translucent: true });
+    expect(String(warn.mock.calls[0]?.[0])).toContain("`translucent`");
+    warn.mockRestore();
+    __clearWarned();
+  });
+
   it("is off by default: no class, no token", () => {
     const wrapper = mountNavbar();
     expect(wrapper.get("header").classes()).not.toContain("cui-navbar--sticky");
@@ -331,6 +342,12 @@ describe("CuiNavbar sticky", () => {
     height = 72;
     resize?.();
     expect(html.style.getPropertyValue("--cui-navbar-height")).toBe("72px");
+  });
+
+  it("is frosted only with sticky and translucent together", () => {
+    expect(mountNavbar({ sticky: true }).get("header").classes()).not.toContain("cui-navbar--translucent");
+    expect(mountNavbar({ translucent: true }).get("header").classes()).not.toContain("cui-navbar--translucent");
+    expect(mountNavbar({ sticky: true, translucent: true }).get("header").classes()).toContain("cui-navbar--translucent");
   });
 
   it("gains an elevated state once the page has scrolled, and loses it back at the top", async () => {

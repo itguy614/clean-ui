@@ -27,6 +27,13 @@ const meta: ComponentMeta = {
             "Stick to the top of the page. It gains a border and a shadow once the page has scrolled, and sets --cui-navbar-height on the document, with a matching scroll-padding-top so a focused element is never left under the bar",
         },
         {
+          name: "translucent",
+          type: "boolean",
+          default: "false",
+          description:
+            "A frosted sticky bar: --cui-navbar-bg at about 80% over a blur, so the page shows through as it scrolls. It has no bottom line (only a soft shadow once scrolled) unless you set --cui-navbar-border. Needs sticky; without it the bar stays solid. Solid again where backdrop-filter is unsupported, under prefers-reduced-transparency and in forced-colors mode",
+        },
+        {
           name: "toggle",
           type: "boolean",
           default: "true",
@@ -94,7 +101,8 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-navbar-bg", default: "var(--cui-surface-base)", description: "Bar fill" },
-    { name: "--cui-navbar-border", default: "var(--cui-border)", description: "The rule under the bar. A sticky bar shows it once scrolled" },
+    { name: "--cui-navbar-border", default: "var(--cui-border)", description: "The rule under the bar. A sticky bar shows it once scrolled; a translucent one has none unless you set this" },
+    { name: "--cui-navbar-blur", default: "8px", description: "The blur behind a translucent sticky bar. 0 keeps the tint and drops the blur" },
     { name: "--cui-navbar-px", default: "1.5rem", description: "Horizontal padding of the bar" },
     { name: "--cui-navbar-gap", default: "0.75rem", description: "Space between the brand, the nav and the actions" },
     { name: "--cui-navbar-link-gap", default: "0.5rem", description: "Space between a CuiNavbarLink's icon, label and suffix" },
