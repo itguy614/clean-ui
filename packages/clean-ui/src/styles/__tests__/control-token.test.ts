@@ -73,6 +73,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiTransferList.vue", issue: "#469" },
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
+  { file: "CuiPanel.vue", issue: "#406" },
   { file: "CuiTreeNode.vue", issue: "#468" },
   { file: "CuiCodeBlock.vue", issue: "#484" },
   { file: "CuiModalHeader.vue", issue: "#489" },

@@ -54,6 +54,11 @@ const router = createRouter({
       component: () => import('../pages/ContainerPage.vue'),
     },
     {
+      path: '/components/panel',
+      name: 'panel',
+      component: () => import('../pages/PanelPage.vue'),
+    },
+    {
       path: '/components/spacer',
       name: 'spacer',
       component: () => import('../pages/SpacerPage.vue'),

@@ -38,6 +38,7 @@ const sections = [
   { id: "flex-item", label: "Flex Item", path: "/components/flex-item", group: "Layout" },
   { id: "grid", label: "Grid", path: "/components/grid", group: "Layout" },
   { id: "grid-item", label: "Grid Item", path: "/components/grid-item", group: "Layout" },
+  { id: "panel", label: "Panel", path: "/components/panel", group: "Layout" },
   { id: "resizable-panels", label: "Resizable Panels", path: "/components/resizable-panels", group: "Layout" },
   { id: "scroll-area", label: "Scroll Area", path: "/components/scroll-area", group: "Layout" },
   { id: "sidebar", label: "Sidebar", path: "/components/sidebar", group: "Layout" },
