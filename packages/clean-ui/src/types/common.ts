@@ -55,6 +55,25 @@ export interface HideableProps {
   hidden?: boolean;
 }
 
+/**
+ * A gradient fill (#406), resolved by `resolveGradient()` in `utils/gradient.ts`. A gradient is a
+ * fill style rather than a component, so any component that paints a background can take it.
+ */
+export interface GradientProps {
+  /** First stop: a color role (mapped to its token) or any CSS color. A gradient needs `from` and `to`. */
+  from?: CuiColorOrCss;
+  /** Optional middle stop, same forms as `from`. */
+  via?: CuiColorOrCss;
+  /** Last stop, same forms as `from`. */
+  to?: CuiColorOrCss;
+  /** Direction in degrees (CSS `linear-gradient` angle: 0 points up, 90 right, 180 down). */
+  angle?: number;
+  /** Lay a fine grain over the gradient, which hides banding in large low-contrast fills. Gradients only. */
+  smooth?: boolean;
+  /** A raw CSS gradient (radial, conic, ...). The escape hatch: it wins over `from`/`via`/`to`/`angle`. */
+  gradient?: string;
+}
+
 /** Components with a semantic color role. */
 export interface ColorableProps {
   /** Color role */

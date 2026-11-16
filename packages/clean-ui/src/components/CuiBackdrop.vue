@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import type { CuiColorOrCss, HideableProps } from "../types/common";
+import type { CuiColorOrCss, GradientProps, HideableProps } from "../types/common";
 import { resolveColor } from "../utils/color";
+import { resolveGradient } from "../utils/gradient";
 
 export type BackdropBlur = "none" | "sm" | "md" | "lg" | string;
 
-export interface CuiBackdropProps extends HideableProps {
+export interface CuiBackdropProps extends HideableProps, GradientProps {
   /** Backdrop opacity (0-1) */
   opacity?: number;
   /** Backdrop blur — named size or custom CSS value */
@@ -14,8 +15,6 @@ export interface CuiBackdropProps extends HideableProps {
   color?: CuiColorOrCss;
   /** Background image URL or data URI */
   image?: string;
-  /** CSS gradient string */
-  gradient?: string;
   /** External visibility control — when provided, overrides internal fade-in state */
   visible?: boolean;
 }
@@ -53,11 +52,9 @@ const backdropStyle = computed(() => {
   const style: Record<string, string> = {};
 
   // Build background layers
+  // The gradient is two layer lists (sRGB fallback, oklch); the image and color are shared.
+  const gradient = resolveGradient(props);
   const layers: string[] = [];
-
-  if (props.gradient) {
-    layers.push(props.gradient);
-  }
 
   if (props.image) {
     layers.push(`url("${props.image}") repeat`);
@@ -75,7 +72,8 @@ const backdropStyle = computed(() => {
   }
 
   // A private token, read back through the stylesheet's :where() (#211).
-  style["--_backdrop-bg"] = layers.join(", ");
+  style["--_backdrop-bg"] = (gradient ? [gradient.fallback, ...layers] : layers).join(", ");
+  if (gradient) style["--_backdrop-bg-modern"] = [gradient.modern, ...layers].join(", ");
 
   return style;
 });
@@ -100,6 +98,13 @@ const backdropStyle = computed(() => {
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) --- */
 :where(.cui-backdrop) {
   background: var(--cui-backdrop-bg, var(--_backdrop-bg));
+}
+
+/* The oklch gradient replaces the sRGB one wherever it parses (see CuiPanel.vue). */
+@supports (background: linear-gradient(in oklch shorter hue, red, blue)) {
+  :where(.cui-backdrop) {
+    background: var(--cui-backdrop-bg, var(--_backdrop-bg-modern, var(--_backdrop-bg)));
+  }
 }
 
 .cui-backdrop {
