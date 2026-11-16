@@ -111,6 +111,13 @@ const sections = [
   { id: "stepper", label: "Stepper", path: "/components/stepper", group: "Navigation" },
   { id: "tabs", label: "Tabs", path: "/components/tabs", group: "Navigation" },
 
+  // App Shells (#507): whole-page layouts built from the components above, in order of complexity.
+  // Named apart from "Layout", which holds the components.
+  { id: "shell-sidebar", label: "Sidebar and Content", path: "/app-shells/sidebar", group: "App Shells" },
+  { id: "shell-navbar", label: "Top Navbar and Content", path: "/app-shells/navbar", group: "App Shells" },
+  { id: "shell-navbar-sidebar", label: "Navbar and Sidebar", path: "/app-shells/navbar-sidebar", group: "App Shells" },
+  { id: "shell-detail-drawer", label: "Sidebar and Detail Drawer", path: "/app-shells/detail-drawer", group: "App Shells" },
+
   // Overlay (alphabetical)
   { id: "confirm-dialog", label: "Confirm Dialog", path: "/components/confirm-dialog", group: "Overlay" },
   { id: "context-menu", label: "Context Menu", path: "/components/context-menu", group: "Overlay" },

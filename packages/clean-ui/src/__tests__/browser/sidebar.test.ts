@@ -114,6 +114,34 @@ describe("CuiSidebar keyboard (real browser)", () => {
     expect(other.backgroundColor).toBe("rgba(0, 0, 0, 0)");
     expect(row("one-b").getBoundingClientRect().height).toBe(row("one-a").getBoundingClientRect().height);
   });
+
+  it("marks any current item, not only a page: aria-current=\"true\" gets the fill, \"false\" does not", async () => {
+    const el = document.createElement("div");
+    document.body.append(el);
+    hosts.push(el);
+    const w = mount(
+      {
+        render: () =>
+          h(CuiSidebar, { collapseBelow: "never", label: "Record" }, () =>
+            h(CuiSidebarContent, null, () =>
+              h(CuiList, null, () => [
+                // A section switcher inside a record: current, but not a page change.
+                h(CuiListItem, { title: "Overview", class: "is-current", "aria-current": "true", onClick: () => {} }),
+                h(CuiListItem, { title: "Deals", class: "is-not", "aria-current": "false", onClick: () => {} }),
+              ]),
+            ),
+          ),
+      },
+      { attachTo: el },
+    );
+    mounted.push(w);
+    await nextTick();
+    const row = (cls: string) => getComputedStyle(el.querySelector<HTMLElement>(`.${cls} .cui-list-item__row`)!);
+    expect(row("is-current").backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(row("is-current").borderTopColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(row("is-not").backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(row("is-not").borderTopColor).toBe("rgba(0, 0, 0, 0)");
+  });
 });
 
 /**

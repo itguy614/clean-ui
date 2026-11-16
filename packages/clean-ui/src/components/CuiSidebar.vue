@@ -179,7 +179,7 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   border-radius: var(--cui-sidebar-radius, var(--cui-radius-md, 0.375rem));
 }
 
-.cui-sidebar :deep(.cui-list-item__row[aria-current="page"]) {
+.cui-sidebar :deep(.cui-list-item__row[aria-current]:not([aria-current="false"])) {
   border-color: var(--cui-sidebar-pressed-border, var(--cui-border));
   background: var(--cui-sidebar-pressed-bg, var(--cui-surface-bg));
   color: var(--cui-sidebar-pressed-color, var(--cui-text-emphasis));
