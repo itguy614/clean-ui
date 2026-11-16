@@ -22,7 +22,7 @@ useNavbarContext();
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--cui-navbar-gap, 0.5rem);
+  gap: 0.5rem;
   margin-inline-start: auto;
 }
 </style>

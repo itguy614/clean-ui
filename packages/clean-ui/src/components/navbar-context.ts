@@ -24,6 +24,15 @@ export interface NavbarContext {
 
 export const NavbarKey: InjectionKey<NavbarContext> = Symbol("cui-navbar");
 
+/**
+ * Whether a click on something inside a menu or the drawer follows a link in place: the cue to
+ * close it. A modified or non-primary click opens the link elsewhere and leaves the menu be.
+ */
+export function followsLink(event: MouseEvent): boolean {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
+  return !!(event.target as Element | null)?.closest("a[href]");
+}
+
 /** CuiNavbar provides the family's context through this. */
 export function useNavbarProvider(context: NavbarContext) {
   provide(NavbarKey, context);

@@ -99,6 +99,7 @@ function track(on: boolean) {
     }
     return;
   }
+  scrolled.value = window.scrollY > 0;
   saved ??= { height: root().style.getPropertyValue("--cui-navbar-height"), padding: root().style.scrollPaddingTop };
   root().style.scrollPaddingTop = "var(--cui-navbar-height, 0px)";
   publish();

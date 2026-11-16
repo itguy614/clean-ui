@@ -139,9 +139,9 @@ export interface CuiCoreMessages {
   /**
    * Navigation chrome: `menu` is the accessible name of the button that opens a collapsed
    * navigation's drawer (CuiSidebar, CuiNavbar), `sidebar` and `navbar` the default names of a
-   * sidebar's and a navbar's `<nav>` landmark. Optional, so an existing catalogue type-checks.
+   * sidebar's and a navbar's `<nav>` landmark. Optional (`navbar` too), so an existing catalogue type-checks.
    */
-  navigation?: { menu: string; sidebar: string; navbar: string };
+  navigation?: { menu: string; sidebar: string; navbar?: string };
   copyButton: {
     /** Default `tooltip`, and the visible label. */
     copy: string;

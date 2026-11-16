@@ -7,7 +7,7 @@ import CuiDropdownTrigger from "./CuiDropdownTrigger.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiSidebarGroup from "./CuiSidebarGroup.vue";
 import type { HideableProps } from "../types/common";
-import { useNavbarContext } from "./navbar-context";
+import { followsLink, useNavbarContext } from "./navbar-context";
 import { IconCaretDown } from "../icons/generated/caret-down";
 
 export interface CuiNavbarMenuProps extends HideableProps {
@@ -33,13 +33,15 @@ function flatten(nodes: VNode[]): VNode[] {
   return nodes.flatMap((n) => (n.type === Fragment ? flatten(n.children as VNode[]) : n.type === Comment ? [] : [n]));
 }
 
-/** The default slot, each item given the menu role the dropdown's keyboard looks for. */
-const MenuItems = () =>
-  flatten(slots.default?.() ?? []).map((n) => (typeof n.type === "symbol" ? n : cloneVNode(n, { role: "menuitem" }, true)));
+/** A link: an `<a>`, or a component taking `to` / `href` (router-link). Only these are menu items. */
+const isLink = (n: VNode) => n.type === "a" || (typeof n.type !== "string" && typeof n.type !== "symbol" && !!(n.props && ("to" in n.props || "href" in n.props)));
+
+/** The default slot, each link given the menu role the dropdown's keyboard looks for (its own role kept). */
+const MenuItems = () => flatten(slots.default?.() ?? []).map((n) => (isLink(n) && !n.props?.role ? cloneVNode(n, { role: "menuitem" }, true) : n));
 
 /** Choosing a link closes the menu (the dropdown's own items do the same). */
 function onItemsClick(event: MouseEvent, close: () => void) {
-  if ((event.target as Element | null)?.closest("a[href]")) close();
+  if (followsLink(event)) close();
 }
 </script>
 
@@ -67,32 +69,38 @@ function onItemsClick(event: MouseEvent, close: () => void) {
 </template>
 
 <style scoped>
+/* The links of the panel, painted like the bar's own: whole-:where() rules, so a consumer's wins. */
+:where(.cui-navbar-menu__items :deep(a[href])) {
+  padding: calc(0.375rem * var(--cui-density-scale, 1)) 0.625rem;
+  border-radius: var(--cui-navbar-radius, var(--cui-radius-md, 0.375rem));
+  color: var(--cui-text-body);
+  font-size: var(--cui-navbar-font-size, 0.875rem);
+}
+
+:where(.cui-navbar-menu__items :deep(a[href]:hover)),
+:where(.cui-navbar-menu__items :deep(a[href]:focus-visible)) {
+  background: var(--cui-navbar-hover-bg, var(--cui-surface-bg));
+  color: var(--cui-navbar-hover-color, var(--cui-text-emphasis));
+}
+
+:where(.cui-navbar-menu__items :deep(a[aria-current="page"])) {
+  background: var(--cui-navbar-pressed-bg, var(--cui-surface-bg));
+  color: var(--cui-navbar-pressed-color, var(--cui-text-emphasis));
+}
+
 .cui-navbar-menu__items {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
 
-/* The links of the panel, painted like the bar's own. */
 .cui-navbar-menu__items :deep(a[href]) {
   display: block;
-  padding: calc(0.375rem * var(--cui-density-scale, 1)) 0.625rem;
-  border-radius: var(--cui-navbar-radius, var(--cui-radius-md, 0.375rem));
-  color: var(--cui-text-body);
-  font-size: var(--cui-navbar-font-size, 0.875rem);
   line-height: inherit;
   text-decoration: none;
 }
 
-.cui-navbar-menu__items :deep(a[href]:hover),
 .cui-navbar-menu__items :deep(a[href]:focus-visible) {
-  background: var(--cui-navbar-hover-bg, var(--cui-surface-bg));
-  color: var(--cui-navbar-hover-color, var(--cui-text-emphasis));
   outline: none;
-}
-
-.cui-navbar-menu__items :deep(a[aria-current="page"]) {
-  background: var(--cui-navbar-pressed-bg, var(--cui-surface-bg));
-  color: var(--cui-navbar-pressed-color, var(--cui-text-emphasis));
 }
 </style>

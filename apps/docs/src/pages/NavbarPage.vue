@@ -56,7 +56,7 @@ const stickyCode = `<CuiNavbar sticky>
 
 const shellCode = `<CuiNavbar sticky>
   <!-- A page that has a sidebar of its own: this button opens THAT drawer -->
-  <CuiButton class="lg:hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="sidebar?.toggle()">
+  <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="sidebar?.toggle()">
     <template #prefix><CuiIcon name="list" /></template>
   </CuiButton>
   <CuiNavbarActions>…</CuiNavbarActions>

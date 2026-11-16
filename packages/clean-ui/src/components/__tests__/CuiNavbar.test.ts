@@ -240,6 +240,50 @@ describe("CuiNavbar below its breakpoint (collapse-below, default lg)", () => {
   });
 });
 
+describe("CuiNavbar review fixes", () => {
+  it("gives only links the menu-item role, and keeps a role an item already has", async () => {
+    const wrapper = mount(CuiNavbar, {
+      attachTo: document.body,
+      slots: {
+        default: () =>
+          h(CuiNavbarNav, null, () =>
+            h(CuiNavbarMenu, { label: "More" }, () => [h("a", { href: "/a" }, "A"), h("hr"), h("a", { href: "/b", role: "menuitemradio" }, "B")]),
+          ),
+      },
+    });
+    mounted.push(wrapper);
+    await wrapper.get(".cui-navbar-menu__trigger").trigger("click");
+    await flushPromises();
+    const menu = document.body.querySelector('[role="menu"]') as HTMLElement;
+    expect(menu.querySelector("hr")!.getAttribute("role")).toBeNull();
+    expect(menu.querySelector('a[href="/a"]')!.getAttribute("role")).toBe("menuitem");
+    expect(menu.querySelector('a[href="/b"]')!.getAttribute("role")).toBe("menuitemradio");
+  });
+
+  it("a modified click on a menu link or a drawer link leaves the menu and the drawer open", async () => {
+    const wrapper = mountNavbar();
+    const trigger = wrapper.get(".cui-navbar-menu__trigger");
+    await trigger.trigger("click");
+    await flushPromises();
+    const link = document.body.querySelector('[role="menu"] a') as HTMLAnchorElement;
+    link.addEventListener("click", (e) => e.preventDefault());
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, ctrlKey: true }));
+    await flushPromises();
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+  });
+
+  it("shows no menu button for a hidden nav, which would open an empty drawer", async () => {
+    breakpoint.value = "md";
+    const wrapper = mount(CuiNavbar, {
+      attachTo: document.body,
+      slots: { default: () => h(CuiNavbarNav, { hidden: true }, () => h("a", { href: "/x" }, "X")) },
+    });
+    mounted.push(wrapper);
+    await flushPromises();
+    expect(wrapper.find(".cui-navbar__toggle").exists()).toBe(false);
+  });
+});
+
 describe("CuiNavbar sticky", () => {
   const html = document.documentElement;
   let resize: (() => void) | undefined;
@@ -315,5 +359,13 @@ describe("CuiNavbar sticky", () => {
     mounted.splice(mounted.indexOf(wrapper), 1);
     expect(html.style.getPropertyValue("--cui-navbar-height")).toBe("");
     expect(html.style.scrollPaddingTop).toBe("2rem");
+  });
+
+  it("is elevated at once when `sticky` is switched on over a page that has already scrolled", async () => {
+    Object.defineProperty(window, "scrollY", { value: 300, configurable: true });
+    const wrapper = mountNavbar();
+    await nextTick();
+    await wrapper.setProps({ sticky: true });
+    expect(wrapper.get("header").classes()).toContain("cui-navbar--scrolled");
   });
 });
