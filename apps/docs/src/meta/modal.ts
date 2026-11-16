@@ -7,7 +7,12 @@ export const backdropProps: PropRow[] = [
   { name: "backdropBlur", type: "none | sm | md | lg | string", default: "none", description: "Backdrop blur amount" },
   { name: "backdropColor", type: "string", default: "black", description: "Backdrop color — any CSS color" },
   { name: "backdropImage", type: "string", description: "Backdrop image URL, layered over the color" },
-  { name: "backdropGradient", type: "string", description: "Backdrop CSS gradient, layered over the color" },
+  { name: "backdropGradient", type: "string", description: "Backdrop CSS gradient (radial, conic, ...), layered over the color. Wins over the flat gradient props below" },
+  { name: "backdropFrom", type: "color role | string", description: "First stop of a backdrop gradient: a color role or any CSS color. A gradient needs backdropFrom and backdropTo. Role colors are opaque, so backdropOpacity and backdropBlur show through only with translucent stops" },
+  { name: "backdropVia", type: "color role | string", description: "Optional middle stop of the backdrop gradient" },
+  { name: "backdropTo", type: "color role | string", description: "Last stop of the backdrop gradient" },
+  { name: "backdropAngle", type: "number", default: "180", description: "Backdrop gradient direction in degrees (0 up, 90 right, 180 down)" },
+  { name: "backdropSmooth", type: "boolean", default: "false", description: "Lay a fine grain over the backdrop gradient to hide banding" },
 ];
 
 /** Where focus goes on open and close — shared by CuiModal and CuiSlideover (#374). */
