@@ -71,6 +71,25 @@ describe("Navigation search", () => {
     expect(wrapper.text()).toContain("No matches");
   });
 
+  it("treats a query of only separators as no query", async () => {
+    await mountNav();
+    await type(" - ");
+    expect(results()).toHaveLength(0);
+    expect(wrapper.find<HTMLElement>("[data-docs-nav]").element.style.display).toBe("");
+  });
+
+  it("skips links in a group the user shut when moving with the arrows", async () => {
+    await mountNav();
+    box().element.focus();
+    await type("dropdown");
+    const triggers = wrapper.findAll("[data-docs-search-results] .cui-sidebar-group__trigger");
+    await triggers[0]!.trigger("click");
+    const reachable = results().filter((l) => !l.element.closest("[inert], [hidden]"));
+    expect(reachable.length).toBeLessThan(results().length);
+    await press("ArrowDown");
+    expect(document.activeElement).toBe(reachable[0]!.element);
+  });
+
   it("highlights the matched text in a label", async () => {
     await mountNav();
     await type("drop");

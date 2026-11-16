@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DocPage } from "../pages";
-import { groupResults, highlightSegments, isSearchShortcut, RANK, resultsMessage, searchPages } from "../search";
+import { groupResults, hasQuery, highlightSegments, isSearchShortcut, RANK, resultsMessage, searchPages } from "../search";
 
 const page = (label: string, group: string, keywords: string[] = ["x"]): DocPage => ({
   id: label.toLowerCase().replace(/\W+/g, "-"),
@@ -82,6 +82,14 @@ describe("searchPages", () => {
   });
 });
 
+describe("hasQuery", () => {
+  it("is false for nothing but separators", () => {
+    expect(hasQuery("")).toBe(false);
+    expect(hasQuery(" - _ ")).toBe(false);
+    expect(hasQuery("a")).toBe(true);
+  });
+});
+
 describe("groupResults", () => {
   it("groups by section, best group first, so the first link is the best match", () => {
     const groups = groupResults(searchPages(PAGES, "dropdown"));
@@ -119,6 +127,19 @@ describe("isSearchShortcut", () => {
 
   it.each(["input", "textarea", "select"])("ignores a slash typed in a %s", (tag) => {
     expect(isSearchShortcut(key({ target: document.createElement(tag) }))).toBe(false);
+  });
+
+  it("ignores a slash inside a dialog, on a combobox, while held down or composing", () => {
+    const dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+    const inner = document.createElement("button");
+    dialog.append(inner);
+    expect(isSearchShortcut(key({ target: inner }))).toBe(false);
+    const combo = document.createElement("div");
+    combo.setAttribute("role", "combobox");
+    expect(isSearchShortcut(key({ target: combo }))).toBe(false);
+    expect(isSearchShortcut(key({ repeat: true }))).toBe(false);
+    expect(isSearchShortcut(key({ isComposing: true }))).toBe(false);
   });
 
   it("ignores a slash typed in a contenteditable, and inside one", () => {

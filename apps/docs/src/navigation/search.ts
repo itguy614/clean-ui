@@ -61,6 +61,31 @@ function toRanges(label: Normalized, from: number, length: number): Array<[numbe
   return [[start, end]];
 }
 
+/** Whether a query says anything: spaces, hyphens and underscores alone do not. */
+export function hasQuery(query: string): boolean {
+  return normalize(query).text !== "";
+}
+
+// The index is static, so each page is normalized once, not on every keystroke.
+interface Indexed {
+  label: Normalized;
+  keywords: Array<{ keyword: string; text: string }>;
+  group: string;
+}
+const indexed = new WeakMap<DocPage, Indexed>();
+function indexOf(page: DocPage): Indexed {
+  let entry = indexed.get(page);
+  if (!entry) {
+    entry = {
+      label: normalize(page.label),
+      keywords: page.keywords.map((keyword) => ({ keyword, text: normalize(keyword).text })),
+      group: normalize(page.group).text,
+    };
+    indexed.set(page, entry);
+  }
+  return entry;
+}
+
 /** Every page that matches, best first, then in page order. An empty query matches every page. */
 export function searchPages(pages: readonly DocPage[], query: string): SearchResult[] {
   const q = normalize(query).text;
@@ -68,7 +93,7 @@ export function searchPages(pages: readonly DocPage[], query: string): SearchRes
 
   const results: Array<SearchResult & { order: number }> = [];
   pages.forEach((page, order) => {
-    const label = normalize(page.label);
+    const { label, keywords, group } = indexOf(page);
     const at = label.text.indexOf(q);
     if (at !== -1) {
       const rank = label.text.startsWith(q) ? RANK.labelPrefix : RANK.labelSubstring;
@@ -78,8 +103,7 @@ export function searchPages(pages: readonly DocPage[], query: string): SearchRes
 
     let rank: number = RANK.group;
     let keyword: string | undefined;
-    for (const candidate of page.keywords) {
-      const text = normalize(candidate).text;
+    for (const { keyword: candidate, text } of keywords) {
       if (!text.includes(q)) continue;
       const candidateRank = text.startsWith(q) ? RANK.keywordPrefix : RANK.keywordSubstring;
       if (candidateRank < rank) {
@@ -87,7 +111,7 @@ export function searchPages(pages: readonly DocPage[], query: string): SearchRes
         keyword = candidate;
       }
     }
-    if (!keyword && !normalize(page.group).text.includes(q)) return;
+    if (!keyword && !group.includes(q)) return;
     results.push({ page, rank, ranges: [], keyword, order });
   });
 
@@ -133,11 +157,12 @@ export function highlightSegments(label: string, ranges: ReadonlyArray<readonly 
 }
 
 /** Whether a keypress should send `/` to the search box: not while typing, not with a modifier. */
-export function isSearchShortcut(event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "target" | "defaultPrevented">): boolean {
+export function isSearchShortcut(event: Pick<KeyboardEvent, "key" | "repeat" | "isComposing" | "ctrlKey" | "metaKey" | "altKey" | "target" | "defaultPrevented">): boolean {
   if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented) return false;
+  if (event.repeat || event.isComposing) return false;
   const target = event.target as Element | null;
   if (!target || typeof target.closest !== "function") return true;
-  return !target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])");
+  return !target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='combobox'], [role='textbox'], [role='dialog'], [aria-modal='true']");
 }
 
 /** The announcement for a result count. */

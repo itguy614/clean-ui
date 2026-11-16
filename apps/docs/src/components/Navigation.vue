@@ -15,6 +15,7 @@ import versionRaw from "../../../../VERSION?raw";
 import { PAGES, STANDALONE_GROUP, type DocPage } from "../navigation/pages";
 import {
   groupResults,
+  hasQuery,
   highlightSegments,
   isSearchShortcut,
   resultsMessage,
@@ -59,7 +60,7 @@ for (const page of PAGES) {
 // each open until the user shuts it, and all open again when the query changes.
 
 const query = ref("");
-const searching = computed(() => query.value.trim() !== "");
+const searching = computed(() => hasQuery(query.value));
 const results = computed(() => searchPages(PAGES, query.value));
 const resultGroups = computed(() => (searching.value ? groupResults(results.value) : []));
 
@@ -78,17 +79,17 @@ let announceTimer: ReturnType<typeof setTimeout> | undefined;
 watch(query, () => {
   shutGroups.value = new Set();
   clearTimeout(announceTimer);
-  if (!searching.value) {
-    announcement.value = "";
-    return;
-  }
+  // Emptied first, so a count equal to the last one still changes the region and is spoken.
+  announcement.value = "";
+  if (!searching.value) return;
   announceTimer = setTimeout(() => (announcement.value = resultsMessage(results.value.length)), 500);
 });
 onBeforeUnmount(() => clearTimeout(announceTimer));
 
-// A drawer that was shut has finished with its search.
+// A drawer opens on a fresh search. (Not cleared on close: the results would reflow while the
+// drawer is still sliding out.)
 watch(open, (isOpen) => {
-  if (!isOpen) query.value = "";
+  if (isOpen) query.value = "";
 });
 
 // --- Keyboard ----------------------------------------------------------------------------
@@ -96,7 +97,11 @@ watch(open, (isOpen) => {
 const input = useTemplateRef("input");
 const resultsEl = useTemplateRef<HTMLElement>("resultsEl");
 
-const resultLinks = () => Array.from(resultsEl.value?.querySelectorAll<HTMLAnchorElement>("a[href]") ?? []);
+// Links in a group the user shut are inert: focus() on them does nothing, so arrows skip them.
+const resultLinks = () =>
+  Array.from(resultsEl.value?.querySelectorAll<HTMLAnchorElement>("a[href]") ?? []).filter(
+    (a) => !a.closest("[inert], [hidden]"),
+  );
 
 // Below the sidebar's breakpoint it is a drawer, and the box exists only while that is open:
 // `/` opens it, and the box takes focus when it appears.
@@ -148,7 +153,7 @@ function onSearchKeydown(event: KeyboardEvent) {
     } else if (inField) {
       input.value?.blur();
     }
-  } else if (event.key === "Enter" && inField) {
+  } else if (event.key === "Enter" && inField && !event.isComposing) {
     event.preventDefault();
     openFirstMatch();
   } else if (event.key === "ArrowDown" && (inField ? links.length : index !== -1)) {
@@ -175,7 +180,7 @@ function onSearchKeydown(event: KeyboardEvent) {
         ref="input"
         v-model="query"
         id="docs-search"
-        type="search"
+        type="text"
         size="sm"
         clearable
         autocomplete="off"
@@ -220,7 +225,9 @@ function onSearchKeydown(event: KeyboardEvent) {
                     <template v-else>{{ segment.text }}</template>
                   </template>
                 </span>
-                <span v-if="result.keyword" class="cui-list-item__subtitle">{{ result.keyword }}</span>
+                <span v-if="result.keyword" class="cui-list-item__subtitle">
+                  <span class="cui-list-item__subtitle-text">{{ result.keyword }}</span>
+                </span>
               </CuiListItem>
             </CuiList>
           </CuiSidebarGroup>
