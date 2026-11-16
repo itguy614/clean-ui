@@ -115,3 +115,79 @@ describe("CuiSidebar keyboard (real browser)", () => {
     expect(row("one-b").getBoundingClientRect().height).toBe(row("one-a").getBoundingClientRect().height);
   });
 });
+
+/**
+ * The look of a default sidebar (#193 review): the surface and border of the old hand-rolled
+ * docs navigation, and a navigation's type scale. The font size once did nothing: CuiListItem's
+ * structural `font: inherit` outranked the themeable `--cui-list-font-size`.
+ */
+describe("CuiSidebar default look (real browser)", () => {
+  let removeTokens: () => void;
+  let wrapper: VueWrapper;
+  let host: HTMLElement;
+  beforeAll(() => {
+    removeTokens = installTokens(main);
+  });
+  afterAll(() => removeTokens());
+  afterEach(() => {
+    wrapper?.unmount();
+    host?.remove();
+  });
+
+  function mountDefault() {
+    host = document.createElement("div");
+    host.style.cssText = "height:400px;width:260px";
+    document.body.append(host);
+    wrapper = mount(
+      {
+        render: () =>
+          h(CuiSidebar, { collapseBelow: "never", label: "Docs" }, () => [
+            h(CuiSidebarHeader, { title: "Docs", subtitle: "Sub" }),
+            h(CuiSidebarContent, null, () => h(CuiList, null, () => h(CuiListItem, { title: "Home", href: "#home" }))),
+          ]),
+      },
+      { attachTo: host },
+    );
+    return host;
+  }
+
+  function resolved(token: string) {
+    const probe = document.createElement("div");
+    probe.style.background = `var(${token})`;
+    host.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  }
+
+  it("light: fills with the tinted surface (not transparent, not the page colour) and a surface border", () => {
+    const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+    const style = getComputedStyle(el);
+    expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(style.backgroundColor).toBe(resolved("--cui-surface-light-bg"));
+    expect(style.backgroundColor).not.toBe(resolved("--cui-surface-base"));
+    expect(style.borderInlineEndWidth).toBe("1px");
+  });
+
+  it("dark: keeps the base surface and the standard border", () => {
+    document.documentElement.classList.add("dark");
+    try {
+      const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+      const style = getComputedStyle(el);
+      expect(style.backgroundColor).toBe(resolved("--cui-surface-base"));
+      const probe = document.createElement("div");
+      probe.style.borderTop = "1px solid var(--cui-border)";
+      host.append(probe);
+      expect(style.borderInlineEndColor).toBe(getComputedStyle(probe).borderTopColor);
+    } finally {
+      document.documentElement.classList.remove("dark");
+    }
+  });
+
+  it("sets a navigation's type scale: 14px links, a 20px title", () => {
+    const root = mountDefault();
+    expect(getComputedStyle(root.querySelector("a.cui-list-item__row") as HTMLElement).fontSize).toBe("14px");
+    expect(getComputedStyle(root.querySelector(".cui-sidebar-header__title") as HTMLElement).fontSize).toBe("20px");
+  });
+});
+

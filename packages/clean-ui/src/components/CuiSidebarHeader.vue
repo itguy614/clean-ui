@@ -46,12 +46,12 @@ const iconProps = computed(() => (typeof props.icon === "string" ? { name: props
 
 :where(.cui-sidebar-header__title) {
   color: var(--cui-text-emphasis);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
 }
 
 :where(.cui-sidebar-header__subtitle) {
   color: var(--cui-text-secondary);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .cui-sidebar-header {
