@@ -55,7 +55,8 @@ const appNav = [
   { label: "Deals", icon: "handshake" },
   { label: "Reports", icon: "chart-line-up" },
 ];
-const appCurrent = ref("Contacts");
+// Only Contacts has a page in this demo; the other links are placeholders.
+const appCurrent = "Contacts";
 const navOpen = ref(false);
 const sidebar = useTemplateRef("sidebar");
 
@@ -195,13 +196,13 @@ function open(c) {
                     :icon="item.icon"
                     :href="`#${item.label.toLowerCase()}`"
                     :aria-current="appCurrent === item.label ? 'page' : undefined"
-                    @click.prevent="appCurrent = item.label"
+                    @click.prevent
                   >
                     <template v-if="item.count" #trailing><CuiBadge size="sm">{{ item.count }}</CuiBadge></template>
                   </CuiListItem>
                 </CuiList>
               </CuiSidebarContent>
-              <CuiSidebarFooter>Signed in as kurt</CuiSidebarFooter>
+              <CuiSidebarFooter>Signed in as Ada</CuiSidebarFooter>
             </CuiSidebar>
           </div>
 
@@ -217,7 +218,7 @@ function open(c) {
                 <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
               </CuiButton>
               <CuiNavbarBrand class="lg:!hidden">Orbit CRM</CuiNavbarBrand>
-              <span class="cui-shell-title cui-shell-bar-title hidden lg:block">{{ appCurrent }}</span>
+              <span class="cui-shell-title cui-shell-bar-title hidden lg:block">Contacts</span>
               <CuiNavbarActions>
                 <CuiButton size="sm">
                   <template #prefix><CuiIcon name="plus" size="sm" /></template>

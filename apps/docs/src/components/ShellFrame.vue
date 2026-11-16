@@ -6,7 +6,12 @@
  * Nothing inside a frame is `sticky`. A sticky `CuiNavbar` writes `--cui-navbar-height` and
  * `scroll-padding-top` onto `<html>` and measures against the *page* scroll, so one in a
  * frame would fight this site's own sticky header. The frame scrolls instead, and its regions
- * (navbar, sidebar, content) are laid out so that only the content scrolls. See `ShellPage`.
+ * are laid out so that only the content scrolls. See `ShellPage`.
+ *
+ * Two layouts, by what owns the top: a navbar-first shell puts the navbar directly in the frame,
+ * above a `cui-shell-frame__body` row of sidebar and content; a sidebar-first shell puts only the
+ * body row in the frame, with the sidebar at full height and a `cui-shell-frame__col` beside it
+ * holding the bar over the content.
  */
 withDefaults(defineProps<{ label: string; height?: string }>(), { height: "32rem" });
 </script>

@@ -153,7 +153,7 @@ const skipCode = `<body>
         <strong>The brand lives in the sidebar header.</strong> When the sidebar is the primary
         navigation it is the natural home of the product's name, and a second copy in the bar would
         only repeat it. The bar is freed for what changes page by page. (Below <code>lg</code> the
-        sidebar is closed, so the bar shows the brand then; the two are never on screen together.)
+        sidebar is closed, so the bar shows the brand then; the two are never on screen together; this site's own bar leaves the brand out.)
       </p>
       <p>
         Built from <router-link to="/components/sidebar">CuiSidebar</router-link>, a
@@ -201,10 +201,7 @@ const skipCode = `<body>
                 </CuiSidebarGroup>
               </CuiSidebarContent>
               <CuiSidebarFooter>
-                <CuiButton variant="ghost" size="sm">
-                  <template #prefix><CuiIcon name="palette" size="sm" /></template>
-                  Theme: Navy
-                </CuiButton>
+                <span class="cui-shell-text" :style="{ margin: 0 }">Acme Docs, MIT licensed</span>
               </CuiSidebarFooter>
             </CuiSidebar>
           </div>
@@ -305,7 +302,8 @@ const skipCode = `<body>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           <strong>Landmarks.</strong> The sidebar is a <code>&lt;nav&gt;</code> named by
-          <code>label</code>; the bar is a <code>&lt;header&gt;</code>. Keep one
+          <code>label</code>; the bar is a <code>&lt;header&gt;</code>, and a breadcrumb in it is a second
+          <code>&lt;nav&gt;</code> (<code>aria-label="Breadcrumb"</code>), so the page has two. Keep one
           <code>&lt;header&gt;</code> and one <code>&lt;main&gt;</code> per page, and name every
           <code>&lt;nav&gt;</code> if there is more than one.
         </li>

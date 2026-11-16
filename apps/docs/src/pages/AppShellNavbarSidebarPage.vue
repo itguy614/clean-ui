@@ -59,7 +59,18 @@ const pageCode = `<template>
     <aside class="hidden lg:block" style="width: 16rem; flex-shrink: 0">
       <CuiSidebar ref="sidebar" v-model:open="open" sticky label="Sections" :toggle="false"
                   style="width: 100%">
-        <CuiSidebarContent>…</CuiSidebarContent>
+        <CuiSidebarContent>
+          <CuiList>
+            <CuiListItem title="Overview" icon="squares-four" to="/" />
+          </CuiList>
+          <CuiSidebarGroup label="Workspace">
+            <CuiList>
+              <CuiListItem title="Team" icon="users-three" to="/team">
+                <template #trailing><CuiBadge size="sm">4</CuiBadge></template>
+              </CuiListItem>
+            </CuiList>
+          </CuiSidebarGroup>
+        </CuiSidebarContent>
       </CuiSidebar>
     </aside>
 
@@ -222,9 +233,10 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
     <template #mobile>
       <p>
         Below <code>collapse-below</code> (<code>lg</code> by default) the sidebar leaves the page and
-        its links move into a slideover, which a button in the header opens. That is this site's own
-        shell: the navigation is the sidebar, so the navbar has no <code>CuiNavbarNav</code> and no
-        built-in menu button.
+        its links move into a slideover, which a button in the header opens. Because the
+        navigation is the sidebar, the navbar has no <code>CuiNavbarNav</code> and so no built-in menu
+        button. (This site's own shell is the sidebar-first form: see
+        <router-link to="/app-shells/sidebar">sidebar and content</router-link>.)
       </p>
       <ul class="list-disc pl-5">
         <li>
