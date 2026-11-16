@@ -224,23 +224,27 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   z-index: calc(var(--cui-z-overlay, 9990) - 1);
 }
 
-/* The shadow is drawn once and faded in: an opacity change, not a repainted box-shadow. */
+/* The shadow's paint is a rule with only the pseudo-element's specificity (below, the frosted
+   bar's after it), so a consumer's own `.x::after` wins. It is drawn once and faded in: an opacity change, not a repainted box-shadow. */
 .cui-navbar--sticky::after {
   content: "";
   position: absolute;
   inset-inline: 0;
   top: 100%;
   height: 0;
-  box-shadow: var(--_navbar-shadow, var(--cui-shadow-sm));
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--cui-duration-fast) var(--cui-ease-out);
 }
 
+:where(.cui-navbar--sticky)::after {
+  box-shadow: var(--cui-shadow-sm);
+}
+
 /* Over a frosted bar the shadow is the only separation, so it is the wider, fainter elevation step
    (md), not the tighter one: a bar that shows the page through it should not end in a hard shade. */
-:where(.cui-navbar--translucent) {
-  --_navbar-shadow: var(--cui-shadow-md);
+:where(.cui-navbar--translucent)::after {
+  box-shadow: var(--cui-shadow-md);
 }
 
 .cui-navbar--scrolled::after {
