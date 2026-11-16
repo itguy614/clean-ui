@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Comment, Fragment, cloneVNode, useSlots, type VNode } from "vue";
+import { Comment, Fragment, cloneVNode, computed, useSlots, type Component, type VNode } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiDropdown from "./CuiDropdown.vue";
 import CuiDropdownMenu from "./CuiDropdownMenu.vue";
 import CuiDropdownTrigger from "./CuiDropdownTrigger.vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiNavbarLink from "./CuiNavbarLink.vue";
 import CuiSidebarGroup from "./CuiSidebarGroup.vue";
 import type { HideableProps } from "../types/common";
 import { followsLink, useNavbarContext } from "./navbar-context";
@@ -13,15 +14,17 @@ import { IconCaretDown } from "../icons/generated/caret-down";
 export interface CuiNavbarMenuProps extends HideableProps {
   /** The menu's name: the trigger's text in the bar, the group's heading in the drawer. The `#label` slot replaces it. */
   label?: string;
+  /** Leading icon of the trigger and of the group's heading: a registered icon name or an icon component. */
+  icon?: string | Component;
 }
 
 /**
  * A group of links inside a CuiNavbarNav, written once. The navbar decides how it shows: a
  * CuiDropdown in the bar (menu semantics and keyboard come from it), a collapsible
- * CuiSidebarGroup in the drawer. Its items are links (`<a>`, `router-link`): in the dropdown
- * each becomes a `menuitem`, and choosing one closes the menu.
+ * CuiSidebarGroup in the drawer. Its items are links (`CuiNavbarLink`, `<a>`, `router-link`): in
+ * the dropdown each becomes a `menuitem`, and choosing one closes the menu.
  */
-withDefaults(defineProps<CuiNavbarMenuProps>(), {
+const props = withDefaults(defineProps<CuiNavbarMenuProps>(), {
   hidden: false,
 });
 
@@ -33,11 +36,14 @@ function flatten(nodes: VNode[]): VNode[] {
   return nodes.flatMap((n) => (n.type === Fragment ? flatten(n.children as VNode[]) : n.type === Comment ? [] : [n]));
 }
 
-/** A link: an `<a>`, or a component taking `to` / `href` (router-link). Only these are menu items. */
-const isLink = (n: VNode) => n.type === "a" || (typeof n.type !== "string" && typeof n.type !== "symbol" && !!(n.props && ("to" in n.props || "href" in n.props)));
+/** A link: a CuiNavbarLink, an `<a>`, or a component taking `to` / `href` (router-link). Only these are menu items. */
+const isLink = (n: VNode) => n.type === "a" || n.type === CuiNavbarLink || (typeof n.type !== "string" && typeof n.type !== "symbol" && !!(n.props && ("to" in n.props || "href" in n.props)));
 
 /** The default slot, each link given the menu role the dropdown's keyboard looks for (its own role kept). */
 const MenuItems = () => flatten(slots.default?.() ?? []).map((n) => (isLink(n) && !n.props?.role ? cloneVNode(n, { role: "menuitem" }, true) : n));
+
+/** CuiIcon takes a name and a component as separate props. */
+const iconProps = computed(() => (typeof props.icon === "string" ? { name: props.icon } : { icon: props.icon }));
 
 /** Choosing a link closes the menu (the dropdown's own items do the same). */
 function onItemsClick(event: MouseEvent, close: () => void) {
@@ -50,8 +56,12 @@ function onItemsClick(event: MouseEvent, close: () => void) {
   <CuiDropdown v-if="!collapsed" v-slot="{ close }" v-show="!hidden" class="cui-navbar-menu">
     <CuiDropdownTrigger>
       <CuiButton variant="ghost" size="sm" class="cui-navbar-menu__trigger">
+        <template v-if="icon" #prefix><CuiIcon v-bind="iconProps" size="sm" /></template>
         <slot name="label">{{ label }}</slot>
-        <template #suffix><CuiIcon :icon="IconCaretDown" size="sm" /></template>
+        <template #suffix>
+          <span v-if="$slots.suffix" class="cui-navbar-menu__suffix"><slot name="suffix" /></span>
+          <CuiIcon :icon="IconCaretDown" size="sm" />
+        </template>
       </CuiButton>
     </CuiDropdownTrigger>
     <CuiDropdownMenu>
@@ -63,27 +73,34 @@ function onItemsClick(event: MouseEvent, close: () => void) {
 
   <!-- Narrow: a collapsible group in the drawer. The group is a block, a link keeps its own row. -->
   <CuiSidebarGroup v-else v-show="!hidden" class="cui-navbar-menu" :label="label">
-    <template v-if="$slots.label" #label><slot name="label" /></template>
+    <!-- The group's label slot carries the icon and the suffix too: no change to CuiSidebarGroup. -->
+    <template v-if="$slots.label || icon || $slots.suffix" #label>
+      <span class="cui-navbar-menu__heading">
+        <CuiIcon v-if="icon" v-bind="iconProps" size="sm" />
+        <span class="cui-navbar-menu__heading-text"><slot name="label">{{ label }}</slot></span>
+        <span v-if="$slots.suffix" class="cui-navbar-menu__suffix"><slot name="suffix" /></span>
+      </span>
+    </template>
     <slot />
   </CuiSidebarGroup>
 </template>
 
 <style scoped>
 /* The links of the panel, painted like the bar's own: whole-:where() rules, so a consumer's wins. */
-:where(.cui-navbar-menu__items :deep(a[href])) {
+:where(.cui-navbar-menu__items :deep(a[href]:not(.cui-navbar-link))) {
   padding: calc(0.375rem * var(--cui-density-scale, 1)) 0.625rem;
   border-radius: var(--cui-navbar-radius, var(--cui-radius-md, 0.375rem));
   color: var(--cui-text-body);
   font-size: var(--cui-navbar-font-size, 0.875rem);
 }
 
-:where(.cui-navbar-menu__items :deep(a[href]:hover)),
-:where(.cui-navbar-menu__items :deep(a[href]:focus-visible)) {
+:where(.cui-navbar-menu__items :deep(a[href]:not(.cui-navbar-link):hover)),
+:where(.cui-navbar-menu__items :deep(a[href]:not(.cui-navbar-link):focus-visible)) {
   background: var(--cui-navbar-hover-bg, var(--cui-surface-bg));
   color: var(--cui-navbar-hover-color, var(--cui-text-emphasis));
 }
 
-:where(.cui-navbar-menu__items :deep(a[aria-current="page"])) {
+:where(.cui-navbar-menu__items :deep(a[aria-current="page"]:not(.cui-navbar-link))) {
   background: var(--cui-navbar-pressed-bg, var(--cui-surface-bg));
   color: var(--cui-navbar-pressed-color, var(--cui-text-emphasis));
 }
@@ -94,13 +111,41 @@ function onItemsClick(event: MouseEvent, close: () => void) {
   gap: 0.125rem;
 }
 
-.cui-navbar-menu__items :deep(a[href]) {
+.cui-navbar-menu__items :deep(a[href]:not(.cui-navbar-link)) {
   display: block;
   line-height: inherit;
   text-decoration: none;
 }
 
-.cui-navbar-menu__items :deep(a[href]:focus-visible) {
+.cui-navbar-menu__items :deep(a[href]:not(.cui-navbar-link):focus-visible) {
   outline: none;
+}
+
+/* A CuiNavbarLink in the panel is a full-width row, in the panel's text colour. */
+.cui-navbar-menu__items {
+  --cui-navbar-color: var(--cui-text-body);
+}
+
+.cui-navbar-menu__items :deep(.cui-navbar-link) {
+  display: flex;
+}
+
+/* The drawer group's heading: icon, text, suffix. The suffix is not in capitals. */
+.cui-navbar-menu__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cui-navbar-menu__heading-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-navbar-menu__suffix {
+  display: inline-flex;
+  align-items: center;
+  letter-spacing: normal;
+  text-transform: none;
 }
 </style>

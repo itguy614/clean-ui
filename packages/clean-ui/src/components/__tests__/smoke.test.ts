@@ -44,6 +44,7 @@ const SKIP: Record<string, string> = {
   CuiNavbarNav: "needs <CuiNavbar> context — covered by CuiNavbar.test.ts",
   CuiNavbarActions: "needs <CuiNavbar> context — covered by CuiNavbar.test.ts",
   CuiNavbarMenu: "needs <CuiNavbar> context — covered by CuiNavbar.test.ts",
+  CuiNavbarLink: "needs <CuiNavbar> context — covered by CuiNavbar.test.ts",
 };
 
 /** Minimal props for components that need them to render meaningfully. */

@@ -53,7 +53,7 @@ function onDrawerClick(event: MouseEvent) {
 /* --- Themeable --- Whole-:where() rules, so a plain consumer rule or a container token wins.
    The links are the consumer's own (<a>, router-link): the nav paints them, so they read as one
    set in the bar and in the drawer. A current page is raised, never filled with the primary. */
-:where(.cui-navbar-nav :deep(a[href])) {
+:where(.cui-navbar-nav :deep(a[href]:not(.cui-navbar-link))) {
   padding: calc(0.375rem * var(--cui-density-scale, 1)) 0.625rem;
   border: 1px solid transparent;
   border-radius: var(--cui-navbar-radius, var(--cui-radius-md, 0.375rem));
@@ -61,12 +61,12 @@ function onDrawerClick(event: MouseEvent) {
   font-size: var(--cui-navbar-font-size, 0.875rem);
 }
 
-:where(.cui-navbar-nav :deep(a[href]:hover)) {
+:where(.cui-navbar-nav :deep(a[href]:not(.cui-navbar-link):hover)) {
   background: var(--cui-navbar-hover-bg, var(--cui-surface-bg));
   color: var(--cui-navbar-hover-color, var(--cui-text-emphasis));
 }
 
-:where(.cui-navbar-nav :deep(a[aria-current="page"])) {
+:where(.cui-navbar-nav :deep(a[aria-current="page"]:not(.cui-navbar-link))) {
   border-color: var(--cui-navbar-pressed-border, var(--cui-border));
   background: var(--cui-navbar-pressed-bg, var(--cui-surface-bg));
   color: var(--cui-navbar-pressed-color, var(--cui-text-emphasis));
@@ -80,7 +80,7 @@ function onDrawerClick(event: MouseEvent) {
   min-width: 0;
 }
 
-.cui-navbar-nav :deep(a[href]) {
+.cui-navbar-nav :deep(a[href]:not(.cui-navbar-link)) {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -102,7 +102,8 @@ function onDrawerClick(event: MouseEvent) {
   padding: calc(0.75rem * var(--cui-density-scale, 1));
 }
 
-.cui-navbar-nav--drawer :deep(a[href]) {
+.cui-navbar-nav--drawer :deep(a[href]),
+.cui-navbar-nav--drawer :deep(.cui-navbar-link) {
   display: flex;
 }
 </style>

@@ -7,6 +7,8 @@ import CuiNavbarBrand from "../CuiNavbarBrand.vue";
 import CuiNavbarNav from "../CuiNavbarNav.vue";
 import CuiNavbarActions from "../CuiNavbarActions.vue";
 import CuiNavbarMenu from "../CuiNavbarMenu.vue";
+import CuiNavbarLink from "../CuiNavbarLink.vue";
+import { __clearWarned } from "../../utils/devWarn";
 import CuiConfigProvider from "../CuiConfigProvider.vue";
 
 // The breakpoint is a viewport singleton: stand in for it, so a test sets the width.
@@ -367,5 +369,137 @@ describe("CuiNavbar sticky", () => {
     await nextTick();
     await wrapper.setProps({ sticky: true });
     expect(wrapper.get("header").classes()).toContain("cui-navbar--scrolled");
+  });
+});
+
+/** An icon component of the test's own: a bare svg carrying a marker class. */
+const TestIcon = { render: () => h("svg", { class: "test-icon" }) };
+
+function mountNav(nav: () => unknown, props: Record<string, unknown> = {}) {
+  const wrapper = mount(CuiNavbar, { props, attachTo: document.body, slots: { default: () => h(CuiNavbarNav, null, nav as () => never) } });
+  mounted.push(wrapper);
+  return wrapper;
+}
+
+describe("CuiNavbarLink", () => {
+  it("renders an icon, the label and a suffix inline in the bar, as a link", () => {
+    const wrapper = mountNav(() => h(CuiNavbarLink, { href: "/inbox", icon: TestIcon }, { default: () => "Inbox", suffix: () => h("b", { class: "badge" }, "3") }));
+    const link = wrapper.get("a.cui-navbar-link");
+    expect(link.attributes("href")).toBe("/inbox");
+    expect(Array.from(link.element.children).map((c) => c.className)).toEqual(["cui-navbar-link__icon", "cui-navbar-link__label", "cui-navbar-link__suffix"]);
+    expect(link.find(".test-icon").exists()).toBe(true);
+    expect(link.get(".cui-navbar-link__label").text()).toBe("Inbox");
+    expect(link.get(".badge").text()).toBe("3");
+  });
+
+  it("hides the icon from assistive technology, and names an icon-only link by its aria-label", () => {
+    const wrapper = mountNav(() => [
+      h(CuiNavbarLink, { href: "/a", icon: TestIcon }, () => "Labelled"),
+      h(CuiNavbarLink, { href: "/b", icon: TestIcon, "aria-label": "Search" }),
+    ]);
+    for (const icon of wrapper.findAll(".cui-navbar-link__icon .cui-icon")) expect(icon.attributes("aria-hidden")).toBe("true");
+    expect(wrapper.get('a[href="/b"]').attributes("aria-label")).toBe("Search");
+    expect(wrapper.get('a[href="/b"]').find(".cui-navbar-link__label").exists()).toBe(false);
+  });
+
+  it("warns in development about an icon-only link with no accessible name, once it has one it does not", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    __clearWarned();
+    mountNav(() => h(CuiNavbarLink, { href: "/b", icon: TestIcon, "aria-label": "Search" }));
+    expect(warn).not.toHaveBeenCalled();
+    mountNav(() => h(CuiNavbarLink, { href: "/b", icon: TestIcon }));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain("CuiNavbarLink");
+    expect(String(warn.mock.calls[0][0])).toContain("accessible name");
+    warn.mockRestore();
+    __clearWarned();
+  });
+
+  it("passes aria-current through, and `active` overrides it", () => {
+    const wrapper = mountNav(() => [
+      h(CuiNavbarLink, { href: "/a", "aria-current": "page" }, () => "Passed"),
+      h(CuiNavbarLink, { href: "/b", active: true }, () => "Active"),
+      h(CuiNavbarLink, { href: "/c", active: false }, () => "Not"),
+      h(CuiNavbarLink, { href: "/d" }, () => "Unset"),
+    ]);
+    const current = (href: string) => wrapper.get(`a[href="${href}"]`).attributes("aria-current");
+    expect(current("/a")).toBe("page");
+    expect(current("/b")).toBe("page");
+    expect(current("/c")).toBe("false");
+    expect(current("/d")).toBeUndefined();
+  });
+
+  it("drops the target of a disabled link, and holds its click back", async () => {
+    const wrapper = mountNav(() => h(CuiNavbarLink, { href: "/gone", disabled: true }, () => "Gone"));
+    const link = wrapper.get(".cui-navbar-link");
+    expect(link.attributes("href")).toBeUndefined();
+    expect(link.attributes("aria-disabled")).toBe("true");
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+    link.element.dispatchEvent(click);
+    expect(click.defaultPrevented).toBe(true);
+  });
+
+  it("fails clearly outside a navbar", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(() => mount(CuiNavbarLink)).toThrow(/must be used inside a <CuiNavbar>/);
+    warn.mockRestore();
+  });
+
+  it("is a menu item in a dropdown menu, beside a plain link that is one too", async () => {
+    const wrapper = mountNav(() =>
+      h(CuiNavbarMenu, { label: "More" }, () => [h(CuiNavbarLink, { href: "/a", icon: TestIcon }, { default: () => "Link", suffix: () => "s" }), h("a", { href: "/b" }, "Plain")]),
+    );
+    await wrapper.get(".cui-navbar-menu__trigger").trigger("click");
+    await flushPromises();
+    const items = Array.from(document.body.querySelectorAll('[role="menu"] [role="menuitem"]'));
+    expect(items[1].textContent).toBe("Plain");
+    expect(items).toHaveLength(2);
+    expect(items[0].className).toContain("cui-navbar-link");
+    expect(items[0].querySelector(".test-icon")).not.toBeNull();
+  });
+
+  it("renders its icon and suffix in the drawer, and in a menu's group there, once", async () => {
+    breakpoint.value = "sm";
+    const wrapper = mount(CuiNavbar, {
+      attachTo: document.body,
+      slots: {
+        default: () =>
+          h(CuiNavbarNav, null, () => [
+            h(CuiNavbarLink, { href: "/inbox", icon: TestIcon }, { default: () => "Inbox", suffix: () => h("b", { class: "count" }, "3") }),
+            h(CuiNavbarMenu, { label: "More", icon: TestIcon }, { default: () => h(CuiNavbarLink, { href: "/x", icon: TestIcon }, { default: () => "Deep", suffix: () => h("i", { class: "ext" }) }), suffix: () => h("em", { class: "menu-count" }, "2") }),
+          ]),
+      },
+    });
+    mounted.push(wrapper);
+    await flushPromises();
+    await wrapper.get(".cui-navbar__toggle").trigger("click");
+    await flushPromises();
+    const dialog = document.body.querySelector("[role=dialog]") as HTMLElement;
+    const inbox = dialog.querySelector('a[href="/inbox"]') as HTMLElement;
+    expect(inbox.querySelector(".test-icon")).not.toBeNull();
+    expect(inbox.querySelector(".count")!.textContent).toBe("3");
+    expect(document.body.querySelectorAll('a[href="/inbox"]')).toHaveLength(1);
+    // The group's heading carries the menu's icon and suffix; its link is a row with its own.
+    const heading = dialog.querySelector(".cui-sidebar-group__trigger") as HTMLElement;
+    expect(heading.querySelector(".test-icon")).not.toBeNull();
+    expect(heading.querySelector(".menu-count")!.textContent).toBe("2");
+    expect(heading.textContent).toContain("More");
+    (heading as HTMLButtonElement).click();
+    await flushPromises();
+    const deep = dialog.querySelector('a[href="/x"]') as HTMLElement;
+    expect(deep.querySelector(".test-icon")).not.toBeNull();
+    expect(deep.querySelector(".ext")).not.toBeNull();
+    expect(deep.getAttribute("role")).toBeNull();
+  });
+
+  it("puts a menu's icon and suffix on its trigger, the suffix before the caret", () => {
+    const wrapper = mountNav(() => h(CuiNavbarMenu, { label: "More", icon: TestIcon }, { default: () => h("a", { href: "/x" }, "X"), suffix: () => h("em", { class: "menu-count" }, "2") }));
+    const trigger = wrapper.get(".cui-navbar-menu__trigger");
+    expect(trigger.find(".test-icon").exists()).toBe(true);
+    const suffix = trigger.get(".cui-button__suffix, [class*='suffix']");
+    const order = Array.from(suffix.element.children).map((c) => c.className.toString());
+    expect(order[0]).toContain("cui-navbar-menu__suffix");
+    expect(order[order.length - 1]).toContain("cui-icon");
+    expect(trigger.get(".menu-count").text()).toBe("2");
   });
 });

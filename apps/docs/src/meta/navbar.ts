@@ -53,16 +53,36 @@ const meta: ComponentMeta = {
         {
           name: "default",
           description:
-            "Links (<a>, router-link) and CuiNavbarMenus. Written once: in the bar while there is room, in the drawer below the breakpoint, never both. The current page's link carries aria-current=\"page\"",
+            "Links (CuiNavbarLink, <a> or router-link) and CuiNavbarMenus. Written once: in the bar while there is room, in the drawer below the breakpoint, never both. The current page's link carries aria-current=\"page\"",
         },
       ],
     },
     {
       name: "CuiNavbarMenu",
-      props: [{ name: "label", type: "string", description: "The menu's name: the trigger's text in the bar, the group's heading in the drawer" }, hiddenProp],
+      props: [
+        { name: "label", type: "string", description: "The menu's name: the trigger's text in the bar, the group's heading in the drawer" },
+        { name: "icon", type: "string | Component", description: "Leading icon of the trigger and of the group's heading: a registered name or an icon component" },
+        hiddenProp,
+      ],
       slots: [
-        { name: "default", description: "Links. In the bar each becomes a menu item of a dropdown and choosing one closes it; in the drawer they sit in a collapsible group" },
+        { name: "default", description: "Links, typically CuiNavbarLinks. In the bar each becomes a menu item of a dropdown and choosing one closes it; in the drawer they sit in a collapsible group" },
         { name: "label", description: "Replaces the label prop" },
+        { name: "suffix", description: "Trailing content on the trigger (before its caret) and on the group's heading: a badge or a count" },
+      ],
+    },
+    {
+      name: "CuiNavbarLink",
+      props: [
+        { name: "to", type: "string | object", description: "Render the link as a router-link to this route" },
+        { name: "href", type: "string", description: "Render the link as an <a> to this URL. to takes precedence" },
+        { name: "icon", type: "string | Component", description: "Leading icon: a registered name or an icon component. Decorative, hidden from assistive technology" },
+        { name: "active", type: "boolean", description: "Mark this the current page (aria-current=\"page\"), or, false, not. Left unset, a router-link marks the current page itself" },
+        { name: "disabled", type: "boolean", default: "false", description: "Drop the link's target so it can neither be focused nor followed, and dim it" },
+        hiddenProp,
+      ],
+      slots: [
+        { name: "default", description: "The label. Without one the link is icon-only and needs an aria-label (a warning in development says so)" },
+        { name: "suffix", description: "Trailing content: a badge, a count, a chevron or an external-link marker. In the drawer and in menus it sits at the end of the row" },
       ],
     },
     {
@@ -77,6 +97,8 @@ const meta: ComponentMeta = {
     { name: "--cui-navbar-border", default: "var(--cui-border)", description: "The rule under the bar. A sticky bar shows it once scrolled" },
     { name: "--cui-navbar-px", default: "1.5rem", description: "Horizontal padding of the bar" },
     { name: "--cui-navbar-gap", default: "0.75rem", description: "Space between the brand, the nav and the actions" },
+    { name: "--cui-navbar-link-gap", default: "0.5rem", description: "Space between a CuiNavbarLink's icon, label and suffix" },
+    { name: "--cui-navbar-focus-ring", default: "var(--cui-primary-focus-ring)", description: "A CuiNavbarLink's focus ring" },
     { name: "--cui-navbar-radius", default: "var(--cui-radius-md, 0.375rem)", description: "Corner radius of a link" },
     { name: "--cui-navbar-color", default: "var(--cui-text-secondary)", description: "A nav link's text" },
     { name: "--cui-navbar-font-size", default: "0.875rem", description: "A nav link's size" },

@@ -6,6 +6,7 @@ import CuiNavbarBrand from "../../components/CuiNavbarBrand.vue";
 import CuiNavbarNav from "../../components/CuiNavbarNav.vue";
 import CuiNavbarActions from "../../components/CuiNavbarActions.vue";
 import CuiNavbarMenu from "../../components/CuiNavbarMenu.vue";
+import CuiNavbarLink from "../../components/CuiNavbarLink.vue";
 
 /**
  * The server has no viewport, so it can't know whether the navbar is collapsed: it always
@@ -48,5 +49,23 @@ describe("CuiNavbar renders on the server (node environment)", () => {
     const second = await renderToString(app({ sticky: true, collapseBelow: "xl" }));
     expect(first).toContain("cui-navbar--sticky");
     expect(second).toBe(first);
+  });
+
+  it("renders a link with an icon, a label and a suffix, and a menu with an icon and a suffix", async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(CuiNavbar, null, () =>
+            h(CuiNavbarNav, null, () => [
+              h(CuiNavbarLink, { href: "/inbox", icon: "bell", active: true }, { default: () => "Inbox", suffix: () => "3" }),
+              h(CuiNavbarMenu, { label: "More", icon: "bell" }, { default: () => h("a", { href: "/x" }, "X"), suffix: () => "2" }),
+            ]),
+          ),
+      }),
+    );
+    expect(html).toContain('class="cui-navbar-link"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("cui-navbar-link__suffix");
+    expect(html).toContain("cui-navbar-menu__suffix");
   });
 });
