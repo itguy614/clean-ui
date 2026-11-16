@@ -74,6 +74,25 @@ export interface GradientProps {
   gradient?: string;
 }
 
+/**
+ * `GradientProps` under the `backdrop*` names an overlay (CuiModal, CuiSlideover) takes, each
+ * forwarded to its CuiBackdrop (#509). `backdropGradient` wins over the flat props, as `gradient` does.
+ */
+export interface BackdropGradientProps {
+  /** Backdrop gradient: a raw CSS gradient, wins over the flat props below */
+  backdropGradient?: GradientProps["gradient"];
+  /** Backdrop gradient first stop (a color role or any CSS color); needs `backdropTo` */
+  backdropFrom?: GradientProps["from"];
+  /** Backdrop gradient middle stop */
+  backdropVia?: GradientProps["via"];
+  /** Backdrop gradient last stop */
+  backdropTo?: GradientProps["to"];
+  /** Backdrop gradient direction in degrees */
+  backdropAngle?: GradientProps["angle"];
+  /** Lay a fine grain over the backdrop gradient */
+  backdropSmooth?: GradientProps["smooth"];
+}
+
 /** Components with a semantic color role. */
 export interface ColorableProps {
   /** Color role */

@@ -9,12 +9,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { GradientProps, HideableProps, TitleAsProps, OverlayFocusProps } from "../types/common";
+import type { BackdropGradientProps, HideableProps, TitleAsProps, OverlayFocusProps } from "../types/common";
 
 export type SlideoverSide = "right" | "left" | "top" | "bottom";
 export type SlideoverSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiSlideoverProps extends HideableProps, TitleAsProps, OverlayFocusProps {
+export interface CuiSlideoverProps extends BackdropGradientProps, HideableProps, TitleAsProps, OverlayFocusProps {
   /** Controls slideover visibility (v-model:visible) */
   visible?: boolean;
   /** Which edge the panel slides from */
@@ -35,18 +35,6 @@ export interface CuiSlideoverProps extends HideableProps, TitleAsProps, OverlayF
   backdropColor?: string;
   /** Backdrop image URL */
   backdropImage?: string;
-  /** Backdrop gradient: a raw CSS gradient, wins over the flat props below */
-  backdropGradient?: GradientProps["gradient"];
-  /** Backdrop gradient first stop (a color role or any CSS color); needs `backdropTo` */
-  backdropFrom?: GradientProps["from"];
-  /** Backdrop gradient middle stop */
-  backdropVia?: GradientProps["via"];
-  /** Backdrop gradient last stop */
-  backdropTo?: GradientProps["to"];
-  /** Backdrop gradient direction in degrees */
-  backdropAngle?: GradientProps["angle"];
-  /** Lay a fine grain over the backdrop gradient */
-  backdropSmooth?: GradientProps["smooth"];
 }
 
 // The root is a <Teleport>, which can't take fallthrough attributes: Vue would drop a class

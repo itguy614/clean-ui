@@ -237,10 +237,20 @@ describe.each([
     wrapper.unmount();
   });
 
-  it("lets backdropSmooth add the grain layer", async () => {
-    const wrapper = mount(component, { props: { visible: true, backdropFrom: "primary", backdropTo: "info", backdropSmooth: true } });
+  it("lets backdropSmooth add the grain layer, as a bare attribute too", async () => {
+    // A bare `backdrop-smooth` arrives as "": it only counts as true if the prop is typed boolean.
+    const wrapper = mount(component, {
+      props: { visible: true, backdropFrom: "primary", backdropTo: "info", backdropSmooth: "" as unknown as boolean },
+    });
     await vi.runOnlyPendingTimersAsync();
     expect(bg()).toContain("data:image/svg+xml");
+    wrapper.unmount();
+  });
+
+  it("keeps an angle of 0 (up) rather than the default", async () => {
+    const wrapper = mount(component, { props: { visible: true, backdropFrom: "primary", backdropTo: "info", backdropAngle: 0 } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toContain("linear-gradient(0deg");
     wrapper.unmount();
   });
 
