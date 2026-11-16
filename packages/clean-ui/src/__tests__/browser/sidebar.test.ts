@@ -1,0 +1,201 @@
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { userEvent } from "@vitest/browser/context";
+import { mount, type VueWrapper } from "@vue/test-utils";
+import { h, nextTick } from "vue";
+import main from "../../styles/main.css?inline";
+import { installTokens } from "../../../../../config/test/browser-helpers";
+import { motionDuration } from "../../utils/motion";
+import CuiSidebar from "../../components/CuiSidebar.vue";
+import CuiSidebarHeader from "../../components/CuiSidebarHeader.vue";
+import CuiSidebarContent from "../../components/CuiSidebarContent.vue";
+import CuiSidebarGroup from "../../components/CuiSidebarGroup.vue";
+import CuiList from "../../components/CuiList.vue";
+import CuiListItem from "../../components/CuiListItem.vue";
+
+/**
+ * #193 — keyboard use of a real sidebar: Tab skips the links of a shut group (they are
+ * hidden, not just clipped), the group's heading opens on Enter and on Space, and the current
+ * page's link is marked without taking layout room.
+ */
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+describe("CuiSidebar keyboard (real browser)", () => {
+  let removeTokens: () => void;
+  beforeAll(() => {
+    removeTokens = installTokens(main);
+  });
+  afterAll(() => removeTokens());
+
+  const mounted: VueWrapper[] = [];
+  const hosts: HTMLElement[] = [];
+  afterEach(() => {
+    mounted.splice(0).forEach((w) => w.unmount());
+    hosts.splice(0).forEach((el) => el.remove());
+  });
+
+  function setup() {
+    const el = document.createElement("div");
+    el.innerHTML = '<button id="before">before</button><div class="slot" style="height:400px;width:260px"></div><button id="after">after</button>';
+    document.body.append(el);
+    hosts.push(el);
+    const w = mount(
+      {
+        render: () =>
+          h(CuiSidebar, { collapseBelow: "never", label: "Docs" }, () => [
+            h(CuiSidebarHeader, { title: "Docs" }),
+            h(CuiSidebarContent, null, () => [
+              h(CuiList, null, () => h(CuiListItem, { title: "Home", href: "#home", class: "top" })),
+              h(CuiSidebarGroup, { label: "One" }, () =>
+                h(CuiList, null, () => [
+                  h(CuiListItem, { title: "One A", href: "#1a", class: "one-a" }),
+                  h(CuiListItem, { title: "One B", href: "#1b", class: "one-b", "aria-current": "page" }),
+                ]),
+              ),
+              h(CuiSidebarGroup, { label: "Two" }, () => h(CuiList, null, () => h(CuiListItem, { title: "Two A", href: "#2a", class: "two-a" }))),
+            ]),
+          ]),
+      },
+      { attachTo: el.querySelector<HTMLElement>(".slot")! },
+    );
+    mounted.push(w);
+    return { el, w };
+  }
+
+  async function tabStops(): Promise<string[]> {
+    (document.getElementById("before") as HTMLElement).focus();
+    const stops: string[] = [];
+    for (let i = 0; i < 12 && document.activeElement?.id !== "after"; i++) {
+      await userEvent.tab();
+      stops.push((document.activeElement as HTMLElement).textContent?.trim() ?? "");
+    }
+    return stops;
+  }
+
+  it("Tab reaches the top link, the open group's links and every heading, but not a shut group's links", async () => {
+    setup();
+    await nextTick();
+    await wait(motionDuration("slow") + 100);
+    // "One" holds the current page, so it opened itself; "Two" is shut.
+    expect(await tabStops()).toEqual(["Home", "One", "One A", "One B", "Two", "after"]);
+  });
+
+  it("opens a heading on Enter and on Space, and Tab then reaches its links", async () => {
+    const { el } = setup();
+    await nextTick();
+    const two = [...el.querySelectorAll<HTMLButtonElement>(".cui-sidebar-group__trigger")].find((b) => b.textContent?.includes("Two"))!;
+
+    two.focus();
+    await userEvent.keyboard("{Enter}");
+    await wait(motionDuration("slow") + 100);
+    expect(two.getAttribute("aria-expanded")).toBe("true");
+    await userEvent.tab();
+    expect(document.activeElement?.textContent?.trim()).toBe("Two A");
+
+    two.focus();
+    await userEvent.keyboard(" ");
+    await wait(motionDuration("slow") + 100);
+    expect(two.getAttribute("aria-expanded")).toBe("false");
+    await userEvent.tab();
+    expect(document.activeElement?.id).toBe("after");
+  });
+
+  it("marks the current page with a surface fill and a border, and reserves the border's room on every link", async () => {
+    const { el } = setup();
+    await nextTick();
+    const row = (cls: string) => el.querySelector<HTMLElement>(`.${cls} .cui-list-item__row`)!;
+    const current = getComputedStyle(row("one-b"));
+    const other = getComputedStyle(row("one-a"));
+    expect(current.borderTopWidth).toBe("1px");
+    expect(other.borderTopWidth).toBe("1px");
+    // The border is visible only on the current page.
+    expect(other.borderTopColor).toBe("rgba(0, 0, 0, 0)");
+    expect(current.borderTopColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(current.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(other.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(row("one-b").getBoundingClientRect().height).toBe(row("one-a").getBoundingClientRect().height);
+  });
+});
+
+/**
+ * The look of a default sidebar (#193 review): the surface and border of the old hand-rolled
+ * docs navigation, and a navigation's type scale. The font size once did nothing: CuiListItem's
+ * structural `font: inherit` outranked the themeable `--cui-list-font-size`.
+ */
+describe("CuiSidebar default look (real browser)", () => {
+  let removeTokens: () => void;
+  let wrapper: VueWrapper;
+  let host: HTMLElement;
+  beforeAll(() => {
+    removeTokens = installTokens(main);
+  });
+  afterAll(() => removeTokens());
+  afterEach(() => {
+    wrapper?.unmount();
+    host?.remove();
+  });
+
+  function mountDefault() {
+    host = document.createElement("div");
+    host.style.cssText = "height:400px;width:260px";
+    document.body.append(host);
+    wrapper = mount(
+      {
+        render: () =>
+          h(CuiSidebar, { collapseBelow: "never", label: "Docs" }, () => [
+            h(CuiSidebarHeader, { title: "Docs", subtitle: "Sub" }),
+            h(CuiSidebarContent, null, () => h(CuiList, null, () => h(CuiListItem, { title: "Home", href: "#home" }))),
+          ]),
+      },
+      { attachTo: host },
+    );
+    return host;
+  }
+
+  function resolved(token: string) {
+    const probe = document.createElement("div");
+    probe.style.background = `var(${token})`;
+    host.append(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  }
+
+  it("light: fills with the tinted surface (not transparent, not the page colour) and a surface border", () => {
+    const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+    const style = getComputedStyle(el);
+    expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(style.backgroundColor).toBe(resolved("--cui-surface-light-bg"));
+    expect(style.backgroundColor).not.toBe(resolved("--cui-surface-base"));
+    expect(style.borderInlineEndWidth).toBe("1px");
+  });
+
+  it("dark: keeps the base surface and the standard border", () => {
+    document.documentElement.classList.add("dark");
+    try {
+      const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+      const style = getComputedStyle(el);
+      expect(style.backgroundColor).toBe(resolved("--cui-surface-base"));
+      const probe = document.createElement("div");
+      probe.style.borderTop = "1px solid var(--cui-border)";
+      host.append(probe);
+      expect(style.borderInlineEndColor).toBe(getComputedStyle(probe).borderTopColor);
+    } finally {
+      document.documentElement.classList.remove("dark");
+    }
+  });
+
+  it("dark on the sidebar element itself also gets the dark defaults", () => {
+    const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
+    el.classList.add("dark");
+    const probe = document.createElement("div");
+    probe.style.background = "var(--cui-surface-base)";
+    el.append(probe);
+    expect(getComputedStyle(el).backgroundColor).toBe(getComputedStyle(probe).backgroundColor);
+  });
+
+  it("sets a navigation's type scale: 14px links, a 20px title", () => {
+    const root = mountDefault();
+    expect(getComputedStyle(root.querySelector("a.cui-list-item__row") as HTMLElement).fontSize).toBe("14px");
+    expect(getComputedStyle(root.querySelector(".cui-sidebar-header__title") as HTMLElement).fontSize).toBe("20px");
+  });
+});

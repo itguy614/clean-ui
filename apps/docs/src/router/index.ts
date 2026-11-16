@@ -376,6 +376,11 @@ const router = createRouter({
       component: () => import('../pages/ScrollAreaPage.vue'),
     },
     {
+      path: '/components/sidebar',
+      name: 'sidebar',
+      component: () => import('../pages/SidebarPage.vue'),
+    },
+    {
       path: '/components/resizable-panels',
       name: 'resizable-panels',
       component: () => import('../pages/ResizablePanelsPage.vue'),

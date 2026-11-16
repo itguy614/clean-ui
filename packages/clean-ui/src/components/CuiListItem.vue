@@ -185,7 +185,11 @@ defineExpose({ el, focus, blur });
   padding: var(--cui-list-py, calc(0.75rem * var(--cui-density-scale, 1)))
     var(--cui-list-px, calc(1rem * var(--cui-density-scale, 1)));
   color: var(--cui-list-color, var(--cui-text-emphasis));
-  font-size: var(--cui-list-font-size, 0.9375rem);
+  /* Before font-size, and at zero specificity: a structural `font: inherit` would outrank the
+     themeable size and make `--cui-list-font-size` do nothing. Unset, the row takes its
+     parent's size, as it always has. */
+  font: inherit;
+  font-size: var(--cui-list-font-size, inherit);
 }
 
 /* `--cui-text-body` holds 7:1 (AAA) against the list fill and the hover fill, in every theme
@@ -279,7 +283,6 @@ defineExpose({ el, focus, blur });
      (below) over the divider rather than being crossed by it. */
   position: relative;
   z-index: 1;
-  font: inherit;
   text-align: start;
   text-decoration: none;
   cursor: default;

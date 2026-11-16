@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, provide, watch } from "vue";
+import { computed, ref, provide, watch, useTemplateRef } from "vue";
 import { useRoute } from "vue-router";
 import {
   CuiButton,
@@ -10,7 +10,6 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
-  CuiSlideover,
   CuiToastProvider,
   useTheme,
   useDensity,
@@ -23,6 +22,7 @@ import { ShowDebugKey } from "./keys";
 
 const showDebug = ref(false);
 const mobileNavOpen = ref(false);
+const nav = useTemplateRef("nav");
 const { theme, presets, setTheme } = useTheme();
 const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
@@ -59,7 +59,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
     <!-- Desktop layout: sidebar + content -->
     <div :style="{ display: 'flex', minHeight: '100vh' }">
 
-      <!-- Sidebar: hidden on mobile -->
+      <!-- Sidebar column: below lg the sidebar collapses into its own drawer, opened from the header's menu button -->
       <aside :style="{
         width: '16rem',
         flexShrink: '0',
@@ -69,7 +69,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         overflowY: 'auto',
         display: 'none',
       }" class="lg:!block">
-        <Navigation />
+        <Navigation ref="nav" v-model:open="mobileNavOpen" />
       </aside>
 
       <!-- Main column -->
@@ -87,7 +87,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
 
             <!-- Left: hamburger (mobile only) -->
             <div class="lg:hidden">
-              <CuiButton variant="ghost" size="sm" @click="mobileNavOpen = true">
+              <CuiButton variant="ghost" size="sm" v-bind="nav?.toggleAttrs" @click="mobileNavOpen = true">
                 <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
               </CuiButton>
             </div>
@@ -156,15 +156,6 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         </div>
       </div>
     </div>
-
-    <!-- Mobile nav slideover -->
-    <CuiSlideover
-      v-model:visible="mobileNavOpen"
-      side="left"
-      size="sm"
-    >
-      <Navigation @navigate="mobileNavOpen = false" />
-    </CuiSlideover>
   </div>
   </CuiToastProvider>
 </template>
