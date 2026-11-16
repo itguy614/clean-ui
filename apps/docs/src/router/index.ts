@@ -4,6 +4,11 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/components/sidebar',
+      name: 'sidebar',
+      component: () => import('../pages/SidebarPage.vue'),
+    },
+    {
       path: '/',
       name: 'overview',
       component: () => import('../pages/Overview.vue'),

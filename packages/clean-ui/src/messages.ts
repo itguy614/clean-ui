@@ -136,6 +136,12 @@ export interface CuiCoreMessages {
   };
   /** The time picker's hour and minute steppers (#391). Optional, so an existing catalogue type-checks. */
   timePicker?: { hours: string; minutes: string };
+  /**
+   * Navigation chrome: `menu` is the accessible name of the button that opens a collapsed
+   * navigation's drawer (CuiSidebar, CuiNavbar), `sidebar` the default name of a sidebar's
+   * `<nav>` landmark. Optional, so an existing catalogue type-checks.
+   */
+  navigation?: { menu: string; sidebar: string };
   copyButton: {
     /** Default `tooltip`, and the visible label. */
     copy: string;
@@ -364,6 +370,7 @@ export const defaultMessages: CuiCoreMessages = {
   datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
   timePicker: { hours: "Hours", minutes: "Minutes" },
+  navigation: { menu: "Navigation menu", sidebar: "Sidebar" },
   copyButton: { copy: "Copy", copied: "Copied", copiedTooltip: "Copied!" },
   avatar: { label: "Avatar", overflow: (count) => `${count} more` },
   spinner: { label: "Loading" },

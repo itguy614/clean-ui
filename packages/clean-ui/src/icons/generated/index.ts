@@ -34,6 +34,7 @@ import { IconFloppyDisk } from "./floppy-disk";
 import { IconFunnel } from "./funnel";
 import { IconImage } from "./image";
 import { IconInfo } from "./info";
+import { IconList } from "./list";
 import { IconLock } from "./lock";
 import { IconMagnifyingGlass } from "./magnifying-glass";
 import { IconMinus } from "./minus";
@@ -91,6 +92,7 @@ export {
   IconFunnel,
   IconImage,
   IconInfo,
+  IconList,
   IconLock,
   IconMagnifyingGlass,
   IconMinus,
@@ -150,6 +152,7 @@ export const BUILTIN_ICONS: Record<string, Component> = {
   funnel: IconFunnel,
   image: IconImage,
   info: IconInfo,
+  list: IconList,
   lock: IconLock,
   "magnifying-glass": IconMagnifyingGlass,
   minus: IconMinus,
