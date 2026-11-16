@@ -1,0 +1,128 @@
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import { mount, type VueWrapper } from "@vue/test-utils";
+import { h, nextTick } from "vue";
+import main from "../../styles/main.css?inline";
+import { installTokens } from "../../../../../config/test/browser-helpers";
+import CuiNavbar from "../../components/CuiNavbar.vue";
+import CuiNavbarActions from "../../components/CuiNavbarActions.vue";
+import CuiNavbarNav from "../../components/CuiNavbarNav.vue";
+import CuiNavbarMenu from "../../components/CuiNavbarMenu.vue";
+
+/**
+ * #513 — the frosted bar: a tint and a blur only with `sticky`, the blur a token a consumer
+ * can set, the bar still stacked under the overlays, and nothing in it holding a viewport-fixed
+ * box that the bar's backdrop-filter (a containing block for fixed descendants) would capture.
+ */
+describe("CuiNavbar translucent (real browser)", () => {
+  let removeTokens: () => void;
+  beforeAll(() => {
+    removeTokens = installTokens(main);
+  });
+  afterAll(() => removeTokens());
+
+  const mounted: VueWrapper[] = [];
+  const hosts: HTMLElement[] = [];
+  afterEach(async () => {
+    mounted.splice(0).forEach((w) => w.unmount());
+    hosts.splice(0).forEach((el) => el.remove());
+    window.scrollTo(0, 0);
+    // Let the scroll event land here: a dropdown opened by the next test closes on scroll.
+    await new Promise((r) => setTimeout(r, 100));
+  });
+
+  function setup(props: Record<string, unknown>, hostStyle = "") {
+    const host = document.createElement("div");
+    host.style.cssText = `min-height: 2000px; ${hostStyle}`;
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount({ render: () => h(CuiNavbar, { collapseBelow: "never", ...props }, () => h(CuiNavbarActions, null, () => "x")) }, { attachTo: host });
+    mounted.push(w);
+    // A page, not a box the height of the bar: a sticky bar sticks within its parent.
+    host.querySelectorAll<HTMLElement>(":scope > div").forEach((box) => (box.style.minHeight = "2000px"));
+    return host.querySelector<HTMLElement>("header")!;
+  }
+
+  it("is solid by default, and frosted with sticky + translucent: a ~80% tint over an 8px blur", async () => {
+    const solid = getComputedStyle(setup({ sticky: true }));
+    expect(solid.backdropFilter).toBe("none");
+    const frosted = getComputedStyle(setup({ sticky: true, translucent: true }));
+    expect(frosted.backdropFilter).toBe("blur(8px)");
+    // color-mix(…, transparent): the background's alpha is the mix, not opaque.
+    expect(frosted.backgroundColor).toMatch(/\/ 0\.8\)$|rgba\(.*, 0\.8\)$/);
+    expect(solid.backgroundColor).not.toMatch(/0\.8/);
+  });
+
+  it("is a no-op without sticky", () => {
+    const bar = setup({ translucent: true });
+    const style = getComputedStyle(bar);
+    expect(bar.classList.contains("cui-navbar--translucent")).toBe(false);
+    expect(style.backdropFilter).toBe("none");
+    expect(style.backgroundColor).not.toMatch(/0\.8/);
+  });
+
+  it("reads the blur from --cui-navbar-blur, which a container can set", () => {
+    const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-blur: 3px");
+    expect(getComputedStyle(bar).backdropFilter).toBe("blur(3px)");
+  });
+
+  it("follows --cui-navbar-bg for the tint", () => {
+    const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-bg: rgb(255 0 0)");
+    expect(getComputedStyle(bar).backgroundColor).toMatch(/srgb 1 0 0 \/ 0\.8|rgba\(255, 0, 0, 0\.8\)/);
+  });
+
+  const edge = (bar: HTMLElement) => getComputedStyle(bar).borderBottomColor;
+  const scrollPast = async (bar: HTMLElement) => {
+    window.scrollTo(0, 400);
+    await vi.waitFor(() => expect(getComputedStyle(bar, "::after").opacity).toBe("1"));
+  };
+
+  it("has no bottom line when frosted, at the top and scrolled; a plain sticky bar keeps its line once scrolled", async () => {
+    const frosted = setup({ sticky: true, translucent: true });
+    expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
+    await scrollPast(frosted);
+    expect(frosted.classList.contains("cui-navbar--scrolled")).toBe(true);
+    expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
+    // The soft shadow stays, fainter, for separation.
+    expect(getComputedStyle(frosted, "::after").opacity).toBe("1");
+    const frostedShadow = getComputedStyle(frosted, "::after").boxShadow;
+
+    // A plain sticky bar, mounted at the top again: its line and its tighter shadow, as before.
+    window.scrollTo(0, 0);
+    mounted.splice(0).forEach((w) => w.unmount());
+    const plain = setup({ sticky: true });
+    await scrollPast(plain);
+    expect(edge(plain)).not.toBe("rgba(0, 0, 0, 0)");
+    expect(getComputedStyle(plain, "::after").boxShadow).not.toBe(frostedShadow);
+  });
+
+  it("gives the line back to a consumer who sets --cui-navbar-border", async () => {
+    const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-border: rgb(255 0 0)");
+    expect(edge(bar)).toBe("rgb(255, 0, 0)");
+    await scrollPast(bar);
+    expect(edge(bar)).toBe("rgb(255, 0, 0)");
+  });
+
+  it("stays stacked under the overlay scale, and its open menu is not held inside the frosted bar", async () => {
+    const host = document.createElement("div");
+    host.style.minHeight = "2000px";
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount(
+      { render: () => h(CuiNavbar, { collapseBelow: "never", sticky: true, translucent: true }, () => h(CuiNavbarNav, null, () => h(CuiNavbarMenu, { label: "More" }, () => h("a", { href: "#x" }, "X")))) },
+      { attachTo: host },
+    );
+    mounted.push(w);
+    const bar = host.querySelector<HTMLElement>("header")!;
+    await nextTick();
+    expect(Number(getComputedStyle(bar).zIndex)).toBeLessThan(Number(getComputedStyle(document.documentElement).getPropertyValue("--cui-z-overlay") || 9990));
+    const trigger = bar.querySelector<HTMLElement>(".cui-navbar-menu__trigger")!;
+    trigger.click();
+    await new Promise((r) => setTimeout(r, 300));
+    // The panel is teleported out: a backdrop-filter on the bar would otherwise make the bar the
+    // containing block of the panel's position: fixed, pinning it to the bar, not the viewport.
+    const panel = document.body.querySelector<HTMLElement>('[role="menu"]')!;
+    expect(panel.closest("header")).toBeNull();
+    expect(getComputedStyle(panel).position).toBe("fixed");
+    expect(Math.abs(panel.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom)).toBeLessThan(16);
+  });
+});

@@ -73,7 +73,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         <!-- The header is a CuiNavbar with no nav of its own: this site's navigation is the sidebar.
              Below lg the sidebar collapses, and the button here opens its drawer through the
              sidebar's exposed toggleAttrs. The controls on the right are plain actions content. -->
-        <CuiNavbar sticky>
+        <CuiNavbar sticky translucent>
           <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="nav?.toggleAttrs" @click="mobileNavOpen = true">
             <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
           </CuiButton>
