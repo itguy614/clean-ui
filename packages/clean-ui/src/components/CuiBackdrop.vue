@@ -57,7 +57,7 @@ const backdropStyle = computed(() => {
   const layers: string[] = [];
 
   if (props.image) {
-    layers.push(`url("${props.image}") repeat`);
+    layers.push(`url("${props.image.replace(/[\\"]/g, "\\$&")}") repeat`);
   }
 
   // For backdrop-filter to work, the background must be semi-transparent
@@ -73,7 +73,8 @@ const backdropStyle = computed(() => {
 
   // A private token, read back through the stylesheet's :where() (#211).
   style["--_backdrop-bg"] = (gradient ? [gradient.fallback, ...layers] : layers).join(", ");
-  if (gradient) style["--_backdrop-bg-modern"] = [gradient.modern, ...layers].join(", ");
+  // Always set, as `initial` without a gradient: custom properties inherit (see CuiPanel.vue).
+  style["--_backdrop-bg-modern"] = gradient ? [gradient.modern, ...layers].join(", ") : "initial";
 
   return style;
 });

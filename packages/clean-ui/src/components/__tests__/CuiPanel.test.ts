@@ -22,7 +22,7 @@ describe("CuiPanel (#406)", () => {
   it("paints only the surface color by default", () => {
     const w = mount(CuiPanel);
     expect(prop(w, "--_panel-bg")).toBe("var(--cui-surface-base)");
-    expect(prop(w, "--_panel-bg-modern")).toBe("");
+    expect(prop(w, "--_panel-bg-modern")).toBe("initial");
     expect(prop(w, "--_panel-radius")).toBe("0");
   });
 
@@ -115,6 +115,6 @@ describe("CuiBackdrop gradient props (#406)", () => {
   });
 
   it("without a gradient, emits no oklch token", () => {
-    expect(prop(mount(CuiBackdrop), "--_backdrop-bg-modern")).toBe("");
+    expect(prop(mount(CuiBackdrop), "--_backdrop-bg-modern")).toBe("initial");
   });
 });

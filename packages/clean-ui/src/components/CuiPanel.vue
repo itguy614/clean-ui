@@ -39,7 +39,9 @@ const panelStyle = computed(() => {
     "--_panel-radius": RADIUS_SCALE[props.rounded],
     "--_panel-bg": (gradient ? [gradient.fallback, ...rest] : rest).join(", "),
   };
-  if (gradient) style["--_panel-bg-modern"] = [gradient.modern, ...rest].join(", ");
+  // Always set: a custom property inherits, so a flat panel inside a gradient one would read the
+  // parent's. `initial` is the guaranteed-invalid value, which makes the stylesheet's var() fall through.
+  style["--_panel-bg-modern"] = gradient ? [gradient.modern, ...rest].join(", ") : "initial";
   return style;
 });
 </script>

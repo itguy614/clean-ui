@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
+import { h } from "vue";
 import CuiPanel from "../../components/CuiPanel.vue";
 import main from "../../styles/main.css?inline";
 import { installTokens } from "../../../../../config/test/browser-helpers";
@@ -32,6 +33,17 @@ describe("CuiPanel gradient (real browser)", () => {
     expect(paint({ from: "#ff0000", to: "#0000ff", smooth: true })).toMatch(/^url\(.*\), linear-gradient\(/);
     wrapper?.unmount();
     expect(paint({ color: "#336699" })).toBe("none");
+  });
+
+  it("a flat panel nested in a gradient panel paints its own color, not the parent's", () => {
+    wrapper = mount(CuiPanel, {
+      props: { from: "#ff0000", to: "#0000ff" },
+      slots: { default: () => h(CuiPanel, { color: "#336699", class: "inner" }) },
+      attachTo: document.body,
+    });
+    const inner = getComputedStyle(wrapper.element.querySelector(".inner")!);
+    expect(inner.backgroundImage).toBe("none");
+    expect(inner.backgroundColor).toBe("rgb(51, 102, 153)");
   });
 
   it("lets a public token replace the whole background", () => {
