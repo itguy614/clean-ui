@@ -1,8 +1,19 @@
 <script setup lang="ts">
-import { CuiBadge } from "@itguy614/clean-ui";
+import { reactive, watch } from "vue";
+import { useRoute } from "vue-router";
+import {
+  CuiBadge,
+  CuiList,
+  CuiListItem,
+  CuiSidebar,
+  CuiSidebarContent,
+  CuiSidebarGroup,
+  CuiSidebarHeader,
+} from "@itguy614/clean-ui";
 import versionRaw from "../../../../VERSION?raw";
 
-defineEmits<{ navigate: [] }>();
+/** Whether the mobile drawer is open (`v-model:open`): the header's menu button drives it. */
+const open = defineModel<boolean>("open", { default: false });
 
 const version = versionRaw.trim();
 
@@ -31,6 +42,7 @@ const sections = [
   { id: "grid-item", label: "Grid Item", path: "/components/grid-item", group: "Layout" },
   { id: "resizable-panels", label: "Resizable Panels", path: "/components/resizable-panels", group: "Layout" },
   { id: "scroll-area", label: "Scroll Area", path: "/components/scroll-area", group: "Layout" },
+  { id: "sidebar", label: "Sidebar", path: "/components/sidebar", group: "Layout" },
   { id: "spacer", label: "Spacer", path: "/components/spacer", group: "Layout" },
   { id: "stack", label: "Stack", path: "/components/stack", group: "Layout" },
 
@@ -116,49 +128,56 @@ const sections = [
   { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
 ];
 
-const groupedSections = sections.reduce((acc, section) => {
-  if (!acc[section.group]) {
-    acc[section.group] = [];
-  }
-  acc[section.group].push(section);
-  return acc;
-}, {} as Record<string, typeof sections>);
+// Links outside any group stand alone at the top; everything else is a collapsible group.
+const STANDALONE = "Getting Started";
+const standalone = sections.filter((s) => s.group === STANDALONE);
+const groups = Object.entries(
+  sections
+    .filter((s) => s.group !== STANDALONE)
+    .reduce(
+      (acc, section) => {
+        (acc[section.group] ??= []).push(section);
+        return acc;
+      },
+      {} as Record<string, typeof sections>,
+    ),
+).map(([label, items]) => ({ label, items }));
+
+// The group of the current page is open, and follows the route: a "next page" link into
+// another group opens it. What the user opens or closes by hand is left alone.
+const route = useRoute();
+const expanded = reactive<Record<string, boolean>>({});
+watch(
+  () => route.path,
+  (path) => {
+    const group = sections.find((s) => s.path === path)?.group;
+    if (group) expanded[group] = true;
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <nav
-    class="cui-scrollbar bg-surface-50 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800"
-    :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem' }"
-  >
-    <div style="margin-bottom: 1.5rem;">
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cui-text-emphasis);">Clean UI</h2>
-        <CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge>
-      </div>
-      <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
-    </div>
+  <CuiSidebar v-model:open="open" label="Documentation" :toggle="false" :style="{ width: '100%' }">
+    <CuiSidebarHeader title="Clean UI" subtitle="Vue Component Library">
+      <template #suffix><CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge></template>
+    </CuiSidebarHeader>
 
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-      <div v-for="(items, group) in groupedSections" :key="group">
-        <h3 :style="{ marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--cui-text-tertiary)' }">
-          {{ group }}
-        </h3>
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.125rem;">
-          <li v-for="section in items" :key="section.id">
-            <router-link
-              :to="section.path"
-              :class="[
-                'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
-                'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
-              ]"
-              active-class="[color:var(--cui-primary-text)]! [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
-              @click="$emit('navigate')"
-            >
-              {{ section.label }}
-            </router-link>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+    <CuiSidebarContent>
+      <CuiList>
+        <CuiListItem v-for="section in standalone" :key="section.id" :to="section.path" :title="section.label" />
+      </CuiList>
+
+      <CuiSidebarGroup
+        v-for="group in groups"
+        :key="group.label"
+        v-model:expanded="expanded[group.label]"
+        :label="group.label"
+      >
+        <CuiList>
+          <CuiListItem v-for="section in group.items" :key="section.id" :to="section.path" :title="section.label" />
+        </CuiList>
+      </CuiSidebarGroup>
+    </CuiSidebarContent>
+  </CuiSidebar>
 </template>

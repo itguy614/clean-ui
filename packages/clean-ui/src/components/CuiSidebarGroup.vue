@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { useCollapsible } from "../composables/useCollapsible";
 import { useCuiId } from "../composables/useCuiId";
 import CuiIcon from "./CuiIcon.vue";
@@ -10,9 +10,14 @@ export interface CuiSidebarGroupProps extends HideableProps {
   /** The group's heading, shown in capitals. The `#label` slot replaces it. */
   label?: string;
   /**
-   * Open at first render. Without it (and without a `v-model:expanded`) the group opens on
-   * mount if it holds the current page: a link marked `aria-current` (a `router-link` that is
-   * exactly active sets it). Persisting what the user then opens or closes is the app's job.
+   * Whether the group is open (`v-model:expanded`). Left unbound, the group keeps its own
+   * state. Persisting what the user opens or closes is the app's job.
+   */
+  expanded?: boolean;
+  /**
+   * Open at first render. Without it (and without `expanded`) the group opens on mount if it
+   * holds the current page: a link marked `aria-current` (a `router-link` that is exactly
+   * active sets it).
    */
   defaultExpanded?: boolean;
 }
@@ -23,22 +28,24 @@ export interface CuiSidebarGroupProps extends HideableProps {
  * and its links come through the default slot, typically a `CuiList`.
  */
 const props = withDefaults(defineProps<CuiSidebarGroupProps>(), {
+  // `undefined`, not Vue's boolean `false`: "not given" (the group decides) is not "shut".
+  expanded: undefined,
   defaultExpanded: false,
   hidden: false,
 });
 
-/**
- * `v-model:expanded`. Left unbound, the group keeps its own state. The explicit `undefined`
- * default is what keeps "not given" apart from `false`: Vue casts an absent boolean prop to
- * `false`, which would read as a parent choosing shut.
- */
-const expanded = defineModel<boolean>("expanded", { default: undefined });
-if (expanded.value === undefined && props.defaultExpanded) expanded.value = true;
+const emit = defineEmits<{ "update:expanded": [value: boolean] }>();
 
-const isOpen = computed(() => expanded.value ?? false);
+const local = ref(props.defaultExpanded);
+const isOpen = computed(() => props.expanded ?? local.value);
+
+function setExpanded(value: boolean) {
+  local.value = value;
+  emit("update:expanded", value);
+}
 
 function toggle() {
-  expanded.value = !isOpen.value;
+  setExpanded(!isOpen.value);
 }
 
 // A shut group is hidden once its collapse ends (hidden="until-found", else inert), so its
@@ -51,9 +58,9 @@ const { panel, hiddenAttr, inertAttr, onBeforeMatch } = useCollapsible(() => isO
 // A data attribute rather than a class: the template never binds it, so Vue leaves it alone.
 onMounted(async () => {
   const el = panel.value;
-  if (expanded.value !== undefined || !el?.querySelector('[aria-current]:not([aria-current="false"])')) return;
+  if (props.expanded !== undefined || isOpen.value || !el?.querySelector('[aria-current]:not([aria-current="false"])')) return;
   el.dataset.instant = "";
-  expanded.value = true;
+  setExpanded(true);
   await nextTick();
   void el.offsetHeight;
   delete el.dataset.instant;

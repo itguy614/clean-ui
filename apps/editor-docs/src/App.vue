@@ -10,7 +10,6 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
-  CuiSlideover,
   CuiToastProvider,
   useTheme,
   useDensity,
@@ -64,7 +63,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         overflowY: 'auto',
         display: 'none',
       }" class="lg:!block">
-        <Navigation />
+        <Navigation v-model:open="mobileNavOpen" />
       </aside>
 
       <div :style="{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column' }">
@@ -77,7 +76,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         }">
           <div :style="{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
             <div class="lg:hidden">
-              <CuiButton variant="ghost" size="sm" @click="mobileNavOpen = true">
+              <CuiButton variant="ghost" size="sm" aria-label="Navigation menu" :aria-expanded="mobileNavOpen" @click="mobileNavOpen = true">
                 <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
               </CuiButton>
             </div>
@@ -140,15 +139,6 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         </main>
       </div>
     </div>
-
-    <CuiSlideover
-      v-model:visible="mobileNavOpen"
-      side="left"
-      size="sm"
-      :no-header="true"
-    >
-      <Navigation @navigate="mobileNavOpen = false" />
-    </CuiSlideover>
   </div>
   </CuiToastProvider>
 </template>

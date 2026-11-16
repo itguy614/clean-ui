@@ -4,11 +4,6 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/components/sidebar',
-      name: 'sidebar',
-      component: () => import('../pages/SidebarPage.vue'),
-    },
-    {
       path: '/',
       name: 'overview',
       component: () => import('../pages/Overview.vue'),
@@ -374,6 +369,11 @@ const router = createRouter({
       path: '/components/scroll-area',
       name: 'scroll-area',
       component: () => import('../pages/ScrollAreaPage.vue'),
+    },
+    {
+      path: '/components/sidebar',
+      name: 'sidebar',
+      component: () => import('../pages/SidebarPage.vue'),
     },
     {
       path: '/components/resizable-panels',
