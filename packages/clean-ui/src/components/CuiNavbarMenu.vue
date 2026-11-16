@@ -56,7 +56,7 @@ function onItemsClick(event: MouseEvent, close: () => void) {
   <CuiDropdown v-if="!collapsed" v-slot="{ close }" v-show="!hidden" class="cui-navbar-menu">
     <CuiDropdownTrigger>
       <CuiButton variant="ghost" size="sm" class="cui-navbar-menu__trigger">
-        <template v-if="icon" #prefix><CuiIcon v-bind="iconProps" size="sm" /></template>
+        <template v-if="icon" #prefix><CuiIcon v-bind="iconProps" size="sm" aria-hidden="true" /></template>
         <slot name="label">{{ label }}</slot>
         <template #suffix>
           <span v-if="$slots.suffix" class="cui-navbar-menu__suffix"><slot name="suffix" /></span>
@@ -76,7 +76,7 @@ function onItemsClick(event: MouseEvent, close: () => void) {
     <!-- The group's label slot carries the icon and the suffix too: no change to CuiSidebarGroup. -->
     <template v-if="$slots.label || icon || $slots.suffix" #label>
       <span class="cui-navbar-menu__heading">
-        <CuiIcon v-if="icon" v-bind="iconProps" size="sm" />
+        <CuiIcon v-if="icon" v-bind="iconProps" size="sm" aria-hidden="true" />
         <span class="cui-navbar-menu__heading-text"><slot name="label">{{ label }}</slot></span>
         <span v-if="$slots.suffix" class="cui-navbar-menu__suffix"><slot name="suffix" /></span>
       </span>
@@ -123,11 +123,18 @@ function onItemsClick(event: MouseEvent, close: () => void) {
 
 /* A CuiNavbarLink in the panel is a full-width row, in the panel's text colour. */
 .cui-navbar-menu__items {
-  --cui-navbar-color: var(--cui-text-body);
+  --_navbar-link-color: var(--cui-text-body);
 }
 
 .cui-navbar-menu__items :deep(.cui-navbar-link) {
   display: flex;
+}
+
+/* Arrowing through the panel lights a row the same way for a plain link and a CuiNavbarLink. */
+.cui-navbar-menu__items :deep(.cui-navbar-link:focus-visible) {
+  background: var(--cui-navbar-hover-bg, var(--cui-surface-bg));
+  color: var(--cui-navbar-hover-color, var(--cui-text-emphasis));
+  outline: none;
 }
 
 /* The drawer group's heading: icon, text, suffix. The suffix is not in capitals. */

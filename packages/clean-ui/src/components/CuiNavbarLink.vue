@@ -29,6 +29,8 @@ export interface CuiNavbarLinkProps extends HideableProps, DisableableProps {
  * `role="menuitem"`. Which is down to where it sits, not to anything it reads, so the nav is
  * still written once. A plain `<a>` works beside it, unchanged.
  */
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(defineProps<CuiNavbarLinkProps>(), {
   hidden: false,
   disabled: false,
@@ -47,6 +49,11 @@ if (__DEV__ && process.env.NODE_ENV !== "production" && !slots.default && !attrs
   warnOnce("[clean-ui] CuiNavbarLink: a link with no label needs an accessible name. Pass `aria-label` (or `aria-labelledby`), or give it a default slot.");
 }
 
+// A link with no target is a dead `<a>`: not focusable, styled as clickable.
+if (__DEV__ && process.env.NODE_ENV !== "production" && !props.to && !props.href && !props.disabled) {
+  warnOnce("[clean-ui] CuiNavbarLink: pass `to` (a route) or `href` (a URL), or the link goes nowhere and cannot take focus.");
+}
+
 /**
  * The element and its attributes. A disabled link drops its target (`disabledLink`, shared
  * with CuiButton and CuiListItem) rather than staying a link that still navigates. `aria-current`
@@ -63,6 +70,17 @@ const link = computed(() => {
   return { is: disabledAs ? "a" : props.to ? "router-link" : "a", attrs: base };
 });
 
+/**
+ * The consumer's attributes (`aria-label`, `target`, `@click`). While disabled, their click
+ * listeners are dropped (`@click.once` compiles to `onClickOnce`), so nothing fires on a link
+ * that does nothing. Read during render: `attrs` isn't reactive, but a change re-renders this.
+ */
+function boundAttrs() {
+  const rest = { ...attrs };
+  if (props.disabled) for (const key of Object.keys(rest)) if (/^onClick/.test(key)) delete rest[key];
+  return rest;
+}
+
 function onClick(event: MouseEvent) {
   // An `<a>` without `href` still fires click: hold it back, so nothing follows a disabled link.
   if (props.disabled) event.preventDefault();
@@ -75,7 +93,7 @@ const iconProps = computed(() => (typeof props.icon === "string" ? { name: props
 <template>
   <component
     :is="link.is"
-    v-bind="link.attrs"
+    v-bind="{ ...boundAttrs(), ...link.attrs }"
     v-show="!hidden"
     class="cui-navbar-link"
     :class="{ 'cui-navbar-link--disabled': disabled }"
@@ -96,7 +114,7 @@ const iconProps = computed(() => (typeof props.icon === "string" ? { name: props
   padding: calc(0.375rem * var(--cui-density-scale, 1)) 0.625rem;
   border: 1px solid transparent;
   border-radius: var(--cui-navbar-radius, var(--cui-radius-md, 0.375rem));
-  color: var(--cui-navbar-color, var(--cui-text-secondary));
+  color: var(--cui-navbar-color, var(--_navbar-link-color, var(--cui-text-secondary)));
   font-size: var(--cui-navbar-font-size, 0.875rem);
 }
 

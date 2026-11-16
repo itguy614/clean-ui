@@ -439,6 +439,25 @@ describe("CuiNavbarLink", () => {
     expect(click.defaultPrevented).toBe(true);
   });
 
+  it("does not run a consumer's click listener on a disabled link, and warns about a link with no target", () => {
+    const onClick = vi.fn();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    __clearWarned();
+    const wrapper = mountNav(() => [
+      h(CuiNavbarLink, { href: "/gone", disabled: true, onClick }, () => "Gone"),
+      h(CuiNavbarLink, { href: "/ok", onClick }, () => "Ok"),
+    ]);
+    wrapper.get('[aria-disabled="true"]').element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    expect(onClick).not.toHaveBeenCalled();
+    wrapper.get('a[href="/ok"]').element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(warn).not.toHaveBeenCalled();
+    mountNav(() => h(CuiNavbarLink, null, () => "Nowhere"));
+    expect(String(warn.mock.calls[0]?.[0])).toContain("`to`");
+    warn.mockRestore();
+    __clearWarned();
+  });
+
   it("fails clearly outside a navbar", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     expect(() => mount(CuiNavbarLink)).toThrow(/must be used inside a <CuiNavbar>/);
