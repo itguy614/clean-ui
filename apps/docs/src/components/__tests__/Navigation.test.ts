@@ -93,16 +93,32 @@ describe("Navigation search", () => {
         .findAll("[data-docs-nav] .cui-sidebar-group__trigger")
         .find((t) => t.text() === label.toUpperCase() || t.text() === label)!
         .attributes("aria-expanded");
+    const trigger = (label: string) =>
+      wrapper.findAll("[data-docs-nav] .cui-sidebar-group__trigger").find((t) => t.text().toLowerCase() === label.toLowerCase())!;
     await nextTick();
     expect(open("Actions")).toBe("true");
     expect(open("Overlay")).toBe("false");
+    // A group the user opened by hand, and one the page opened.
+    await trigger("Layout").trigger("click");
+    expect(open("Layout")).toBe("true");
 
     await type("modal");
     await type("");
     expect(wrapper.find<HTMLElement>("[data-docs-nav]").element.style.display).toBe("");
     expect(open("Actions")).toBe("true");
+    expect(open("Layout")).toBe("true");
     expect(open("Overlay")).toBe("false");
     expect(results()).toHaveLength(0);
+  });
+
+  it("opens a group again when the query changes after the user shut it", async () => {
+    await mountNav();
+    await type("dialog");
+    const trigger = () => wrapper.find("[data-docs-search-results] .cui-sidebar-group__trigger");
+    await trigger().trigger("click");
+    expect(trigger().attributes("aria-expanded")).toBe("false");
+    await type("dialo");
+    expect(trigger().attributes("aria-expanded")).toBe("true");
   });
 
   it("announces the count once typing pauses, not on each keystroke", async () => {
