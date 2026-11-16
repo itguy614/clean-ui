@@ -5,6 +5,8 @@ import main from "../../styles/main.css?inline";
 import { installTokens } from "../../../../../config/test/browser-helpers";
 import CuiNavbar from "../../components/CuiNavbar.vue";
 import CuiNavbarActions from "../../components/CuiNavbarActions.vue";
+import CuiNavbarNav from "../../components/CuiNavbarNav.vue";
+import CuiNavbarMenu from "../../components/CuiNavbarMenu.vue";
 
 /**
  * #513 — the frosted bar: a tint and a blur only with `sticky`, the blur a token a consumer
@@ -63,11 +65,27 @@ describe("CuiNavbar translucent (real browser)", () => {
     expect(getComputedStyle(bar).backgroundColor).toMatch(/srgb 1 0 0 \/ 0\.8|rgba\(255, 0, 0, 0\.8\)/);
   });
 
-  it("stays stacked under the overlay scale, and the frosted bar nests nothing fixed", async () => {
-    const bar = setup({ sticky: true, translucent: true });
+  it("stays stacked under the overlay scale, and its open menu is not held inside the frosted bar", async () => {
+    const host = document.createElement("div");
+    host.style.minHeight = "2000px";
+    document.body.append(host);
+    hosts.push(host);
+    const w = mount(
+      { render: () => h(CuiNavbar, { collapseBelow: "never", sticky: true, translucent: true }, () => h(CuiNavbarNav, null, () => h(CuiNavbarMenu, { label: "More" }, () => h("a", { href: "#x" }, "X")))) },
+      { attachTo: host },
+    );
+    mounted.push(w);
+    const bar = host.querySelector<HTMLElement>("header")!;
     await nextTick();
-    const z = Number(getComputedStyle(bar).zIndex);
-    expect(z).toBeLessThan(Number(getComputedStyle(document.documentElement).getPropertyValue("--cui-z-overlay") || 9990));
-    for (const el of bar.querySelectorAll("*")) expect(getComputedStyle(el).position).not.toBe("fixed");
+    expect(Number(getComputedStyle(bar).zIndex)).toBeLessThan(Number(getComputedStyle(document.documentElement).getPropertyValue("--cui-z-overlay") || 9990));
+    const trigger = bar.querySelector<HTMLElement>(".cui-navbar-menu__trigger")!;
+    trigger.click();
+    await new Promise((r) => setTimeout(r, 300));
+    // The panel is teleported out: a backdrop-filter on the bar would otherwise make the bar the
+    // containing block of the panel's position: fixed, pinning it to the bar, not the viewport.
+    const panel = document.body.querySelector<HTMLElement>('[role="menu"]')!;
+    expect(panel.closest("header")).toBeNull();
+    expect(getComputedStyle(panel).position).toBe("fixed");
+    expect(Math.abs(panel.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom)).toBeLessThan(16);
   });
 });

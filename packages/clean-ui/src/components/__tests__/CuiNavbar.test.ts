@@ -314,6 +314,17 @@ describe("CuiNavbar sticky", () => {
     html.style.scrollPaddingTop = "";
   });
 
+  it("warns in development that translucent needs sticky", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    __clearWarned();
+    mountNavbar({ sticky: true, translucent: true });
+    expect(warn).not.toHaveBeenCalled();
+    mountNavbar({ translucent: true });
+    expect(String(warn.mock.calls[0]?.[0])).toContain("`translucent`");
+    warn.mockRestore();
+    __clearWarned();
+  });
+
   it("is off by default: no class, no token", () => {
     const wrapper = mountNavbar();
     expect(wrapper.get("header").classes()).not.toContain("cui-navbar--sticky");

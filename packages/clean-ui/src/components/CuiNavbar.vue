@@ -4,6 +4,9 @@ import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import { useCollapseToDrawer, type CuiCollapseBelow } from "../composables/useCollapseToDrawer";
 import { useEventListener } from "../composables/useEventListener";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 import { useMessages } from "../composables/useMessages";
 import type { HideableProps } from "../types/common";
 import { useNavbarProvider } from "./navbar-context";
@@ -50,6 +53,11 @@ const props = withDefaults(defineProps<CuiNavbarProps>(), {
   toggle: true,
   hidden: false,
 });
+
+// `translucent` is the frost of a bar that sticks: alone it changes nothing, so say so.
+if (__DEV__ && process.env.NODE_ENV !== "production" && props.translucent && !props.sticky) {
+  warnOnce("[clean-ui] CuiNavbar: `translucent` only has an effect together with `sticky`; the bar stays solid.");
+}
 
 /** Whether the drawer is open (`v-model:open`). Only meaningful while collapsed. */
 const openModel = defineModel<boolean>("open");
@@ -152,14 +160,11 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   background: var(--cui-navbar-bg, var(--cui-surface-base));
   border-bottom: 1px solid var(--cui-navbar-border, var(--cui-border));
   color: var(--cui-text-body);
+  --_navbar-blur: 8px;
 }
 
 /* A frosted bar (translucent + sticky): the tint is the background mixed with transparent, the
    blur sits on the backdrop. The blur reads the public token over a private default. */
-:where(.cui-navbar) {
-  --_navbar-blur: 8px;
-}
-
 :where(.cui-navbar--translucent) {
   background: color-mix(in srgb, var(--cui-navbar-bg, var(--cui-surface-base)) 80%, transparent);
   -webkit-backdrop-filter: blur(var(--cui-navbar-blur, var(--_navbar-blur)));
