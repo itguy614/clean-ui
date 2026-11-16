@@ -25,7 +25,8 @@ export interface CuiNavbarProps extends HideableProps {
    */
   collapseBelow?: CuiCollapseBelow;
   /**
-   * Stick to the top of the page. Once the page has scrolled it gains a border and a shadow,
+   * Stick to the top of the page. Once the page has scrolled it gains a border and a shadow (a frosted bar, `translucent`,
+   gets a softer shadow and no border),
    * and the bar sets `--cui-navbar-height` on the document and a `scroll-padding-top` to match,
    * so a focused element is never left under it (WCAG 2.4.11). Off by default.
    */
@@ -33,7 +34,8 @@ export interface CuiNavbarProps extends HideableProps {
   /**
    * A frosted bar: the background is `--cui-navbar-bg` at about 80% over a blur
    * (`--cui-navbar-blur`), so the page scrolling under a sticky bar shows through. Only
-   * meaningful with `sticky`; without it the bar stays solid. Off by default: the solid bar is
+   * meaningful with `sticky`; without it the bar stays solid. It has no bottom line, only a
+   * soft shadow once scrolled, unless you set `--cui-navbar-border`. Off by default: the solid bar is
    * the most legible. It goes solid again where `backdrop-filter` is unsupported, under
    * `prefers-reduced-transparency` and in forced-colors mode. Text contrast over scrolling
    * content is not covered by the library's contrast audit: check yours.
@@ -171,21 +173,6 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   backdrop-filter: blur(var(--cui-navbar-blur, var(--_navbar-blur)));
 }
 
-/* Solid again where a frosted bar can't be drawn or isn't wanted. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :where(.cui-navbar--translucent) {
-    background: var(--cui-navbar-bg, var(--cui-surface-base));
-  }
-}
-
-@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  :where(.cui-navbar--translucent) {
-    background: var(--cui-navbar-bg, var(--cui-surface-base));
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-
 /* A bar that sticks keeps its border for when the page has moved under it. */
 :where(.cui-navbar--sticky:not(.cui-navbar--scrolled)) {
   border-bottom-color: transparent;
@@ -196,6 +183,29 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
    sticky rule above (same specificity), so it wins in both scroll states. */
 :where(.cui-navbar--translucent) {
   border-bottom-color: var(--cui-navbar-border, transparent);
+}
+
+/* Solid again where a frosted bar can't be drawn or isn't wanted: it is an ordinary solid bar
+   then, with its line once scrolled (and the page's edge needs it, in forced colours no shadow
+   is drawn). After the border rule above, so it wins. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :where(.cui-navbar--translucent) {
+    background: var(--cui-navbar-bg, var(--cui-surface-base));
+  }
+  :where(.cui-navbar--translucent.cui-navbar--scrolled) {
+    border-bottom-color: var(--cui-navbar-border, var(--cui-border));
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  :where(.cui-navbar--translucent) {
+    background: var(--cui-navbar-bg, var(--cui-surface-base));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  :where(.cui-navbar--translucent.cui-navbar--scrolled) {
+    border-bottom-color: var(--cui-navbar-border, var(--cui-border));
+  }
 }
 
 /* --- Structural --- */
@@ -221,7 +231,7 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   inset-inline: 0;
   top: 100%;
   height: 0;
-  box-shadow: var(--cui-shadow-sm);
+  box-shadow: var(--_navbar-shadow, var(--cui-shadow-sm));
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--cui-duration-fast) var(--cui-ease-out);
@@ -229,8 +239,8 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
 
 /* Over a frosted bar the shadow is the only separation, so it is the wider, fainter elevation step
    (md), not the tighter one: a bar that shows the page through it should not end in a hard shade. */
-.cui-navbar--translucent::after {
-  box-shadow: var(--cui-shadow-md);
+:where(.cui-navbar--translucent) {
+  --_navbar-shadow: var(--cui-shadow-md);
 }
 
 .cui-navbar--scrolled::after {

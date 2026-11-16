@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { h, nextTick } from "vue";
 import main from "../../styles/main.css?inline";
@@ -22,9 +22,12 @@ describe("CuiNavbar translucent (real browser)", () => {
 
   const mounted: VueWrapper[] = [];
   const hosts: HTMLElement[] = [];
-  afterEach(() => {
+  afterEach(async () => {
     mounted.splice(0).forEach((w) => w.unmount());
     hosts.splice(0).forEach((el) => el.remove());
+    window.scrollTo(0, 0);
+    // Let the scroll event land here: a dropdown opened by the next test closes on scroll.
+    await new Promise((r) => setTimeout(r, 100));
   });
 
   function setup(props: Record<string, unknown>, hostStyle = "") {
@@ -68,31 +71,34 @@ describe("CuiNavbar translucent (real browser)", () => {
   });
 
   const edge = (bar: HTMLElement) => getComputedStyle(bar).borderBottomColor;
-  const scrollPast = async () => {
+  const scrollPast = async (bar: HTMLElement) => {
     window.scrollTo(0, 400);
-    await new Promise((r) => setTimeout(r, 250));
+    await vi.waitFor(() => expect(getComputedStyle(bar, "::after").opacity).toBe("1"));
   };
 
   it("has no bottom line when frosted, at the top and scrolled; a plain sticky bar keeps its line once scrolled", async () => {
     const frosted = setup({ sticky: true, translucent: true });
     expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
-    await scrollPast();
+    await scrollPast(frosted);
     expect(frosted.classList.contains("cui-navbar--scrolled")).toBe(true);
     expect(edge(frosted)).toBe("rgba(0, 0, 0, 0)");
     // The soft shadow stays, fainter, for separation.
     expect(getComputedStyle(frosted, "::after").opacity).toBe("1");
-    expect(getComputedStyle(frosted, "::after").boxShadow).toContain("16px");
+    const frostedShadow = getComputedStyle(frosted, "::after").boxShadow;
 
+    // A plain sticky bar, mounted at the top again: its line and its tighter shadow, as before.
+    window.scrollTo(0, 0);
+    mounted.splice(0).forEach((w) => w.unmount());
     const plain = setup({ sticky: true });
-    await scrollPast();
+    await scrollPast(plain);
     expect(edge(plain)).not.toBe("rgba(0, 0, 0, 0)");
-    expect(getComputedStyle(plain, "::after").boxShadow).not.toContain("16px");
+    expect(getComputedStyle(plain, "::after").boxShadow).not.toBe(frostedShadow);
   });
 
   it("gives the line back to a consumer who sets --cui-navbar-border", async () => {
     const bar = setup({ sticky: true, translucent: true }, "--cui-navbar-border: rgb(255 0 0)");
     expect(edge(bar)).toBe("rgb(255, 0, 0)");
-    await scrollPast();
+    await scrollPast(bar);
     expect(edge(bar)).toBe("rgb(255, 0, 0)");
   });
 

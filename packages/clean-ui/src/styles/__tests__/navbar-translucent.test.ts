@@ -50,6 +50,12 @@ describe("CuiNavbar translucent fallbacks", () => {
     expect(rule).toMatch(/backdrop-filter:\s*none/);
   });
 
+  it("gives the solid fallback its line back once scrolled, as a plain sticky bar has", () => {
+    const line = /:where\(\.cui-navbar--translucent\.cui-navbar--scrolled\)\s*\{\s*border-bottom-color:\s*var\(--cui-navbar-border, var\(--cui-border\)\)/;
+    expect(block("@supports not")).toMatch(line);
+    expect(block("@media (prefers-reduced-transparency: reduce)")).toMatch(line);
+  });
+
   it("adds no motion for it", () => {
     expect(style).not.toMatch(/transition:[^;]*(backdrop|background)/);
   });
