@@ -117,11 +117,36 @@ describe("CuiSidebar below its breakpoint (collapse-below, default lg)", () => {
     expect(button.attributes("aria-expanded")).toBe("true");
     const dialog = document.body.querySelector("[role=dialog]") as HTMLElement;
     expect(dialog.id).toBe(button.attributes("aria-controls"));
-    expect(dialog.getAttribute("aria-label")).toBe("Sidebar");
+    // The dialog is the menu, the landmark inside it is the sidebar: two names, not one.
+    expect(dialog.getAttribute("aria-label")).toBe("Navigation menu");
     const nav = dialog.querySelector("nav") as HTMLElement;
     expect(nav.getAttribute("aria-label")).toBe("Sidebar");
     expect(nav.textContent).toContain("Top link");
     expect(nav.textContent).toContain("Layout");
+  });
+
+  it("exposes toggleAttrs for a button of the app's own, wired to the drawer and its state", async () => {
+    breakpoint.value = "md";
+    const open = ref(false);
+    const sidebar = ref<InstanceType<typeof CuiSidebar> | null>(null);
+    const Host = defineComponent({
+      setup: () => () => [
+        h("button", { id: "mine", ...sidebar.value?.toggleAttrs, onClick: () => (open.value = !open.value) }),
+        h(CuiSidebar, { ref: sidebar, toggle: false, open: open.value, "onUpdate:open": (v: boolean) => (open.value = v) }, () => h("a", { href: "/x" }, "X")),
+      ],
+    });
+    const wrapper = mount(Host, { attachTo: document.body });
+    mounted.push(wrapper);
+    await flushPromises();
+    const button = wrapper.get("#mine");
+    expect(button.attributes("aria-label")).toBe("Navigation menu");
+    expect(button.attributes("aria-expanded")).toBe("false");
+
+    await button.trigger("click");
+    await flushPromises();
+    const dialog = document.body.querySelector("[role=dialog]") as HTMLElement;
+    expect(button.attributes("aria-expanded")).toBe("true");
+    expect(button.attributes("aria-controls")).toBe(dialog.id);
   });
 
   it("supports v-model:open, with the built-in button turned off", async () => {

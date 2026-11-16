@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, provide, watch } from "vue";
+import { computed, ref, provide, watch, useTemplateRef } from "vue";
 import { useRoute } from "vue-router";
 import {
   CuiButton,
@@ -21,6 +21,7 @@ import { ShowDebugKey } from "./keys";
 
 const showDebug = ref(false);
 const mobileNavOpen = ref(false);
+const nav = useTemplateRef("nav");
 const { theme, presets, setTheme } = useTheme();
 const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
@@ -63,7 +64,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         overflowY: 'auto',
         display: 'none',
       }" class="lg:!block">
-        <Navigation v-model:open="mobileNavOpen" />
+        <Navigation ref="nav" v-model:open="mobileNavOpen" />
       </aside>
 
       <div :style="{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column' }">
@@ -76,7 +77,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
         }">
           <div :style="{ width: '100%', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }">
             <div class="lg:hidden">
-              <CuiButton variant="ghost" size="sm" aria-label="Navigation menu" :aria-expanded="mobileNavOpen" @click="mobileNavOpen = true">
+              <CuiButton variant="ghost" size="sm" v-bind="nav?.toggleAttrs" @click="mobileNavOpen = true">
                 <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
               </CuiButton>
             </div>

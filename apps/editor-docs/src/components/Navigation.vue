@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, useTemplateRef } from "vue";
 import {
   CuiBadge,
   CuiList,
@@ -12,6 +13,11 @@ import versionRaw from "../../../../packages/clean-ui-editor/package.json?raw";
 
 /** Whether the mobile drawer is open (`v-model:open`): the header's menu button drives it. */
 const open = defineModel<boolean>("open", { default: false });
+
+// The header's menu button binds these (aria-expanded, aria-controls and the translated menu
+// name) instead of hard-coding them.
+const sidebar = useTemplateRef("sidebar");
+defineExpose({ toggleAttrs: computed(() => sidebar.value?.toggleAttrs) });
 
 const version = JSON.parse(versionRaw).version as string;
 
@@ -31,7 +37,7 @@ const guides = [
 </script>
 
 <template>
-  <CuiSidebar v-model:open="open" label="Documentation" :toggle="false" :style="{ width: '100%' }">
+  <CuiSidebar ref="sidebar" v-model:open="open" label="Documentation" :toggle="false" :style="{ width: '100%' }">
     <CuiSidebarHeader title="Clean UI Editor" subtitle="Markdown Editor for Vue">
       <template #suffix><CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge></template>
     </CuiSidebarHeader>
