@@ -64,7 +64,6 @@ const results = computed(() => searchPages(PAGES, query.value));
 const resultGroups = computed(() => (searching.value ? groupResults(results.value) : []));
 
 const shutGroups = ref(new Set<string>());
-watch(query, () => (shutGroups.value = new Set()));
 
 function setGroupOpen(label: string, value: boolean) {
   const next = new Set(shutGroups.value);
@@ -77,6 +76,7 @@ function setGroupOpen(label: string, value: boolean) {
 const announcement = ref("");
 let announceTimer: ReturnType<typeof setTimeout> | undefined;
 watch(query, () => {
+  shutGroups.value = new Set();
   clearTimeout(announceTimer);
   if (!searching.value) {
     announcement.value = "";
@@ -136,6 +136,8 @@ function onSearchKeydown(event: KeyboardEvent) {
   const target = event.target as HTMLElement;
   const inField = target === input.value?.el;
   const links = resultLinks();
+  // From the box, index -1 makes "next" the first result.
+  const index = inField ? -1 : links.indexOf(target as HTMLAnchorElement);
 
   if (event.key === "Escape") {
     // Clearing is this keystroke's whole job: say so, or the drawer closes around it.
@@ -149,14 +151,11 @@ function onSearchKeydown(event: KeyboardEvent) {
   } else if (event.key === "Enter" && inField) {
     event.preventDefault();
     openFirstMatch();
-  } else if (event.key === "ArrowDown") {
-    const next = inField ? links[0] : links[links.indexOf(target as HTMLAnchorElement) + 1];
-    if (inField && !links.length) return;
+  } else if (event.key === "ArrowDown" && (inField ? links.length : index !== -1)) {
     event.preventDefault();
-    next?.focus();
-  } else if (event.key === "ArrowUp" && links.includes(target as HTMLAnchorElement)) {
+    links[index + 1]?.focus();
+  } else if (event.key === "ArrowUp" && index !== -1) {
     event.preventDefault();
-    const index = links.indexOf(target as HTMLAnchorElement);
     if (index === 0) input.value?.focus();
     else links[index - 1]?.focus();
   }
