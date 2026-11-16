@@ -46,7 +46,15 @@ const id = (s: string) => slug(s);
 
     <div>
       <h2 :id="id('In a page')" class="mb-4 text-2xl font-semibold">In a page</h2>
-      <CuiStack spacing="4"><slot name="code" /></CuiStack>
+      <CuiStack spacing="4">
+        <p class="text-surface-600 dark:text-surface-400">
+          Icon names in the snippets (<code>house</code>, <code>bell</code>, …) resolve here because
+          this site loads <code>@itguy614/clean-ui/icons/lazy</code>. In your app, register the names you
+          use, or pass an icon component (<code>:icon="IconHouse"</code>): see the
+          <router-link to="/foundations/icons">Icons</router-link> page.
+        </p>
+        <slot name="code" />
+      </CuiStack>
     </div>
 
     <div>

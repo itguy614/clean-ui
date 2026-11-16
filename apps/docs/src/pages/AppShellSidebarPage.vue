@@ -58,14 +58,18 @@ const sidebar = useTemplateRef("sidebar");
 
 <template>
   <div style="display: flex">
-    <!-- Wide: a sticky column. Below lg it is not in the page: its links are in a drawer. -->
+    <!-- The column. Hidden below lg, where the sidebar is not in the page and its links are in
+         a drawer: without this the collapsed sidebar would leave an empty 16rem strip. Here
+         the header sits in the content column, so the column itself sticks to the top of the
+         viewport (the sidebar's own sticky prop offsets by --cui-navbar-height, for a navbar
+         that spans above it: see "Navbar and sidebar"). -->
+    <aside class="hidden lg:block" style="width: 16rem; flex-shrink: 0; position: sticky; top: 0; height: 100vh">
     <CuiSidebar
       ref="sidebar"
       v-model:open="open"
-      sticky
       label="Documentation"
       :toggle="false"
-      style="width: 16rem; flex-shrink: 0"
+      style="width: 100%"
     >
       <CuiSidebarHeader title="Acme Docs" subtitle="Version 2.1" />
       <CuiSidebarContent>
@@ -81,6 +85,7 @@ const sidebar = useTemplateRef("sidebar");
       </CuiSidebarContent>
       <CuiSidebarFooter>Signed in as kurt</CuiSidebarFooter>
     </CuiSidebar>
+    </aside>
 
     <div style="flex: 1; min-width: 0">
       <!-- The header is a navbar with no nav of its own: the sidebar is the navigation -->
@@ -155,7 +160,6 @@ const skipCode = `<body>
             variant="ghost"
             size="sm"
             v-bind="sidebar?.toggleAttrs"
-            aria-label="Demo navigation menu"
             @click="drawerOpen = true"
           >
             <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
@@ -204,7 +208,7 @@ const skipCode = `<body>
             </CuiSidebar>
           </div>
 
-          <div class="cui-shell-frame__main cui-shell-frame__pad" tabindex="0" aria-label="Demo content">
+          <div class="cui-shell-frame__main cui-shell-frame__pad" role="region" tabindex="0" aria-label="Demo content">
             <h3 class="cui-shell-title">{{ currentLabel }}</h3>
             <p v-for="n in 8" :key="n" class="cui-shell-text">
               Only this column scrolls. The sidebar keeps its own place, so the current page stays
@@ -218,9 +222,11 @@ const skipCode = `<body>
     <template #code>
       <Example title="The page" code-open :code="pageCode">
         <p class="text-surface-700 dark:text-surface-300">
-          A sticky sidebar sticks below <code>--cui-navbar-height</code> (<code>0</code> with no
-          sticky navbar above it) and fills the rest of the viewport; its content scrolls inside it.
-          Give it a width: it sizes to its container. This is how this site is built.
+          The sidebar sizes to its container, so the column is a sticky <code>&lt;aside&gt;</code>
+          with a width and the viewport's height; the sidebar's own content scrolls inside it. The
+          wrapper is hidden below <code>lg</code>, where the sidebar is a drawer. This is how this
+          site is built. The header is in the content column here: when a navbar spans the whole
+          page above the sidebar, use the sidebar's <code>sticky</code> prop instead.
         </p>
       </Example>
       <Example title="Inside a container" :code="frameCode">
@@ -282,7 +288,8 @@ const skipCode = `<body>
           fill and border, not colour alone.
         </li>
         <li>
-          <strong>Focus order.</strong> Header, then sidebar, then content, as they read. Below the
+          <strong>Focus order.</strong> It follows the markup: in the page code above, sidebar, then
+          header, then content (the demo, with its header on top, reads header first). Below the
           breakpoint the sidebar is not in the page at all until opened, so it takes no tab stops.
         </li>
         <li>
@@ -291,7 +298,7 @@ const skipCode = `<body>
         </li>
         <li>
           <strong>Scrolling content.</strong> A region that scrolls on its own, as in the frame above,
-          needs to be reachable by keyboard: give it <code>tabindex="0"</code> and a name when it has
+          needs to be reachable by keyboard: give it <code>tabindex="0"</code>, <code>role="region"</code> and a name when it has
           nothing focusable inside. On a real page the document scrolls and none of this applies.
         </li>
       </ul>

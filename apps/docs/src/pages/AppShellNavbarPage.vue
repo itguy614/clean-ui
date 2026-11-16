@@ -126,7 +126,7 @@ const ownButtonCode = `<!-- Skip the built-in button and open the drawer from yo
           </CuiNavbarActions>
         </CuiNavbar>
 
-        <div class="cui-shell-frame__main" tabindex="0" aria-label="Demo content">
+        <div class="cui-shell-frame__main" role="region" tabindex="0" aria-label="Demo content">
           <CuiPanel from="var(--cui-primary-bg)" to="var(--cui-surface-base)" :angle="135">
             <CuiContainer max-width="xl" py="10" px="6">
               <h3 class="cui-shell-title">Build something people keep</h3>

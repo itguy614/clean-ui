@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { ref, useTemplateRef } from "vue";
 import {
   CuiBadge,
   CuiButton,
@@ -51,21 +51,33 @@ const navOpen = ref(false);
 const sidebar = useTemplateRef("sidebar");
 
 // The record in the drawer, and which of its sections shows.
+// The record stays set after the drawer closes: the slideover keeps its content mounted through
+// the exit transition, and clearing it here would blank the title while it slides away.
 const selected = ref<DemoOrder>();
-const drawerVisible = computed({
-  get: () => selected.value !== undefined,
-  set: (v: boolean) => {
-    if (!v) selected.value = undefined;
-  },
-});
+const drawerVisible = ref(false);
 const section = ref("overview");
 
 function open(order: DemoOrder) {
   section.value = "overview";
   selected.value = order;
+  drawerVisible.value = true;
 }
 
-const pageCode = `<!-- The record list: each row is a button that opens its record -->
+const pageCode = `<script setup>
+const visible = ref(false);
+const order = ref();            // kept after closing, so the exit transition still has content
+const section = ref("overview");
+const sections = [{ id: "overview", label: "Overview" }, { id: "items", label: "Items" }];
+
+function open(o) {
+  section.value = "overview";
+  order.value = o;
+  visible.value = true;
+}
+<\/script>
+
+<template>
+<!-- The record list: each row is a button that opens its record -->
 <CuiList>
   <CuiListItem v-for="o in orders" :key="o.id" :title="o.customer" :subtitle="'Order ' + o.id" @click="open(o)">
     <template #trailing><CuiBadge size="sm">{{ o.status }}</CuiBadge></template>
@@ -98,7 +110,8 @@ const pageCode = `<!-- The record list: each row is a button that opens its reco
       …the section…
     </div>
   </div>
-</CuiSlideover>`;
+</CuiSlideover>
+</template>`;
 </script>
 
 <template>
@@ -132,7 +145,6 @@ const pageCode = `<!-- The record list: each row is a button that opens its reco
             variant="ghost"
             size="sm"
             v-bind="sidebar?.toggleAttrs"
-            aria-label="Demo navigation menu"
             @click="navOpen = true"
           >
             <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
@@ -165,7 +177,7 @@ const pageCode = `<!-- The record list: each row is a button that opens its reco
             </CuiSidebar>
           </div>
 
-          <div class="cui-shell-frame__main cui-shell-frame__pad" tabindex="0" aria-label="Demo orders">
+          <div class="cui-shell-frame__main cui-shell-frame__pad" role="region" tabindex="0" aria-label="Demo orders">
             <h3 class="cui-shell-title">Orders</h3>
             <p class="cui-shell-text">Open a record: its drawer has a sidebar of its own.</p>
             <CuiList divided>

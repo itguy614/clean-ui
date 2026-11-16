@@ -54,11 +54,14 @@ const pageCode = `<template>
   </CuiNavbar>
 
   <div style="display: flex">
-    <!-- sticky: top is --cui-navbar-height and the height is the rest of the viewport -->
-    <CuiSidebar ref="sidebar" v-model:open="open" sticky label="Sections" :toggle="false"
-                style="width: 16rem; flex-shrink: 0">
-      <CuiSidebarContent>…</CuiSidebarContent>
-    </CuiSidebar>
+    <!-- Hidden below lg, where the sidebar is a drawer, or it would leave an empty column.
+         sticky: top is --cui-navbar-height and the height is the rest of the viewport. -->
+    <aside class="hidden lg:block" style="width: 16rem; flex-shrink: 0">
+      <CuiSidebar ref="sidebar" v-model:open="open" sticky label="Sections" :toggle="false"
+                  style="width: 100%">
+        <CuiSidebarContent>…</CuiSidebarContent>
+      </CuiSidebar>
+    </aside>
 
     <main id="main" tabindex="-1" style="flex: 1; min-width: 0">
       <!-- Anything of your own that sticks reads the same token: never a number -->
@@ -109,7 +112,6 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
             variant="ghost"
             size="sm"
             v-bind="sidebar?.toggleAttrs"
-            aria-label="Demo navigation menu"
             @click="drawerOpen = true"
           >
             <template #prefix><CuiIcon name="list" size="1.25rem" /></template>
@@ -165,7 +167,7 @@ const frameCode = `<!-- The demo: nothing is sticky; the navbar sits above a row
             </CuiSidebar>
           </div>
 
-          <div class="cui-shell-frame__main cui-shell-frame__pad" tabindex="0" aria-label="Demo content">
+          <div class="cui-shell-frame__main cui-shell-frame__pad" role="region" tabindex="0" aria-label="Demo content">
             <CuiStack spacing="4">
               <div>
                 <h3 class="cui-shell-title">{{ [...sections, ...workspace].find((s) => s.id === current)?.label }}</h3>
