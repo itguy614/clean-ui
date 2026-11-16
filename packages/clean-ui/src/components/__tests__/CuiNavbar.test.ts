@@ -333,6 +333,12 @@ describe("CuiNavbar sticky", () => {
     expect(html.style.getPropertyValue("--cui-navbar-height")).toBe("72px");
   });
 
+  it("is frosted only with sticky and translucent together", () => {
+    expect(mountNavbar({ sticky: true }).get("header").classes()).not.toContain("cui-navbar--translucent");
+    expect(mountNavbar({ translucent: true }).get("header").classes()).not.toContain("cui-navbar--translucent");
+    expect(mountNavbar({ sticky: true, translucent: true }).get("header").classes()).toContain("cui-navbar--translucent");
+  });
+
   it("gains an elevated state once the page has scrolled, and loses it back at the top", async () => {
     const wrapper = mountNavbar({ sticky: true });
     await nextTick();

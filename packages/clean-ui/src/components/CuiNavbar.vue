@@ -28,6 +28,15 @@ export interface CuiNavbarProps extends HideableProps {
    */
   sticky?: boolean;
   /**
+   * A frosted bar: the background is `--cui-navbar-bg` at about 80% over a blur
+   * (`--cui-navbar-blur`), so the page scrolling under a sticky bar shows through. Only
+   * meaningful with `sticky`; without it the bar stays solid. Off by default: the solid bar is
+   * the most legible. It goes solid again where `backdrop-filter` is unsupported, under
+   * `prefers-reduced-transparency` and in forced-colors mode. Text contrast over scrolling
+   * content is not covered by the library's contrast audit: check yours.
+   */
+  translucent?: boolean;
+  /**
    * Show the menu button that opens the drawer while collapsed. Turn it off to open the drawer
    * from your own button through `v-model:open`.
    */
@@ -37,6 +46,7 @@ export interface CuiNavbarProps extends HideableProps {
 const props = withDefaults(defineProps<CuiNavbarProps>(), {
   collapseBelow: "lg",
   sticky: false,
+  translucent: false,
   toggle: true,
   hidden: false,
 });
@@ -125,7 +135,7 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
     v-show="!hidden"
     ref="rootEl"
     class="cui-navbar"
-    :class="{ 'cui-navbar--sticky': sticky, 'cui-navbar--scrolled': sticky && scrolled }"
+    :class="{ 'cui-navbar--sticky': sticky, 'cui-navbar--scrolled': sticky && scrolled, 'cui-navbar--translucent': sticky && translucent }"
   >
     <CuiButton v-if="showToggle" class="cui-navbar__toggle" variant="ghost" size="sm" v-bind="toggleAttrs" @click="toggleDrawer">
       <template #prefix><CuiIcon :icon="IconList" size="1.25rem" /></template>
@@ -142,6 +152,33 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   background: var(--cui-navbar-bg, var(--cui-surface-base));
   border-bottom: 1px solid var(--cui-navbar-border, var(--cui-border));
   color: var(--cui-text-body);
+}
+
+/* A frosted bar (translucent + sticky): the tint is the background mixed with transparent, the
+   blur sits on the backdrop. The blur reads the public token over a private default. */
+:where(.cui-navbar) {
+  --_navbar-blur: 8px;
+}
+
+:where(.cui-navbar--translucent) {
+  background: color-mix(in srgb, var(--cui-navbar-bg, var(--cui-surface-base)) 80%, transparent);
+  -webkit-backdrop-filter: blur(var(--cui-navbar-blur, var(--_navbar-blur)));
+  backdrop-filter: blur(var(--cui-navbar-blur, var(--_navbar-blur)));
+}
+
+/* Solid again where a frosted bar can't be drawn or isn't wanted. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :where(.cui-navbar--translucent) {
+    background: var(--cui-navbar-bg, var(--cui-surface-base));
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  :where(.cui-navbar--translucent) {
+    background: var(--cui-navbar-bg, var(--cui-surface-base));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* A bar that sticks keeps its border for when the page has moved under it. */

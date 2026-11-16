@@ -114,6 +114,13 @@ const stickyCode = `<CuiNavbar sticky>
    that reads it clears the bar: a sticky CuiSidebar, a focused link, an anchor jump. */
 <CuiSidebar sticky>…</CuiSidebar>`;
 
+const translucentCode = `<CuiNavbar sticky translucent>
+  …
+</CuiNavbar>
+
+/* A softer or stronger frost */
+.my-header { --cui-navbar-blur: 16px; }`;
+
 const shellCode = `<CuiNavbar sticky>
   <!-- A page that has a sidebar of its own: this button opens THAT drawer -->
   <CuiButton class="lg:!hidden" variant="ghost" size="sm" v-bind="sidebar?.toggleAttrs" @click="sidebar?.toggle()">
@@ -327,6 +334,23 @@ const shellCode = `<CuiNavbar sticky>
           shadow once the page has scrolled, and publishes its height as
           <code>--cui-navbar-height</code> on the document. This site's own header is one:
           scroll this page and watch it. There is no hide-on-scroll.
+        </p>
+      </Example>
+
+      <Example title="Translucent" :code="translucentCode">
+        <p class="mb-3 text-surface-700 dark:text-surface-300">
+          Opt in with <code>translucent</code> (together with <code>sticky</code>) for a frosted
+          bar: the background is <code>--cui-navbar-bg</code> at about 80% over a blur, so the
+          page shows through as it scrolls. This site's own header is one: scroll this page and
+          watch the content pass under it. The bar goes solid where
+          <code>backdrop-filter</code> is unsupported, under
+          <code>prefers-reduced-transparency</code> and in forced-colors mode. The blur is
+          <code>--cui-navbar-blur</code> (8px).
+        </p>
+        <p class="text-surface-700 dark:text-surface-300">
+          Mind the contrast: the library's contrast audit checks the bar against its own
+          background, not against whatever scrolls beneath a translucent one. Check your own
+          content, or keep the default solid bar.
         </p>
       </Example>
 
