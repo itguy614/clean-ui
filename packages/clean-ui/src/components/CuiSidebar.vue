@@ -113,16 +113,16 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   --cui-list-px: 0.625rem;
   --cui-list-font-size: 0.875rem;
   --cui-list-color: var(--cui-text-body);
-  background: var(--cui-sidebar-bg, var(--cui-surface-base));
+  background: var(--cui-sidebar-bg, var(--cui-surface-light-bg));
   color: var(--cui-text-body);
 }
 
 :where(.cui-sidebar--left:not(.cui-sidebar--drawer)) {
-  border-inline-end: 1px solid var(--cui-sidebar-border, var(--cui-border));
+  border-inline-end: 1px solid var(--cui-sidebar-border, var(--cui-surface-light-border));
 }
 
 :where(.cui-sidebar--right:not(.cui-sidebar--drawer)) {
-  border-inline-start: 1px solid var(--cui-sidebar-border, var(--cui-border));
+  border-inline-start: 1px solid var(--cui-sidebar-border, var(--cui-surface-light-border));
 }
 
 /* --- Structural --- */
@@ -132,6 +132,19 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
   box-sizing: border-box;
   min-height: 0;
   min-width: 0;
+}
+
+/* Dark keeps the base surface and the standard border: only light has the tinted fill. */
+:where(.dark .cui-sidebar, .cui-sidebar.dark) {
+  background: var(--cui-sidebar-bg, var(--cui-surface-base));
+}
+
+:where(.dark .cui-sidebar--left:not(.cui-sidebar--drawer), .cui-sidebar--left.dark:not(.cui-sidebar--drawer)) {
+  border-inline-end-color: var(--cui-sidebar-border, var(--cui-border));
+}
+
+:where(.dark .cui-sidebar--right:not(.cui-sidebar--drawer), .cui-sidebar--right.dark:not(.cui-sidebar--drawer)) {
+  border-inline-start-color: var(--cui-sidebar-border, var(--cui-border));
 }
 
 /* Sizes to its container: a column that fills the height it is given. Zero specificity, so

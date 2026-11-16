@@ -88,8 +88,8 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
-    { name: "--cui-sidebar-bg", default: "var(--cui-surface-base)", description: "Sidebar fill" },
-    { name: "--cui-sidebar-border", default: "var(--cui-border)", description: "The rule between the sidebar and the page" },
+    { name: "--cui-sidebar-bg", default: "var(--cui-surface-light-bg) (light), var(--cui-surface-base) (dark)", description: "Sidebar fill" },
+    { name: "--cui-sidebar-border", default: "var(--cui-surface-light-border) (light), var(--cui-border) (dark)", description: "The rule between the sidebar and the page" },
     { name: "--cui-sidebar-radius", default: "var(--cui-radius-md, 0.375rem)", description: "Corner radius of a link and a group heading" },
     { name: "--cui-sidebar-pressed-bg", default: "var(--cui-surface-bg)", description: "Fill of the current page's link" },
     { name: "--cui-sidebar-pressed-border", default: "var(--cui-border)", description: "Border of the current page's link" },
