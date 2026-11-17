@@ -1,4 +1,4 @@
-import { onScopeDispose, provide, shallowReactive, watchPostEffect } from "vue";
+import { onScopeDispose, provide, shallowReactive, shallowRef, watchPostEffect } from "vue";
 import { __DEV__, warnOnce } from "../utils/devWarn";
 import { resolveColor } from "../utils/color";
 import { OverlayStackKey, type OverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
@@ -79,6 +79,7 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
       const step = Math.min(Math.max(depth(entry), 0), MAX_Z_STEP);
       return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : "var(--cui-z-overlay, 9990)";
     },
+    backdropEl: shallowRef<HTMLElement | null>(null),
     backdropEntry: () => entries[start()],
     bottomEntry: () => entries[0],
     closeTop() {

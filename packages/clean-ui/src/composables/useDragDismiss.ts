@@ -1,4 +1,5 @@
-import { nextTick, onScopeDispose, type Ref, type ShallowRef } from "vue";
+import { nextTick, onScopeDispose, watch, type Ref, type ShallowRef } from "vue";
+import { prefersReducedMotion } from "../utils/motion";
 import { usePointerDrag } from "./usePointerDrag";
 
 export type DragEdge = "top" | "right" | "bottom" | "left";
@@ -29,6 +30,13 @@ export interface UseDragDismissOptions {
   onSettle?: (index: number) => void;
   /** The panel was let go past the point of closing, or flicked: close it. */
   onDismiss: () => void;
+  /**
+   * An element to fade with the drag (a backdrop), looked up when a drag starts; none, or `null`,
+   * fades nothing. Its opacity is written straight onto it, scaled from its own (a
+   * `--_backdrop-opacity` it carries) down to 0 as the panel travels from its lowest stop to
+   * closed, and handed back to the stylesheet on release, which settles it with the panel.
+   */
+  fade?: () => HTMLElement | null | undefined;
 }
 
 /** A drag short of this is a tap or a click, not a gesture. */
@@ -83,6 +91,11 @@ function scrolledAway(el: HTMLElement, edge: DragEdge): boolean {
  * - **Releases by velocity as well as distance**: over `VELOCITY` px/ms it closes, or moves a
  *   stop, however short the drag. Slower, it goes to the nearest stop, or closes once past
  *   `CLOSE_AT` of the way.
+ * - **Fades a backdrop with it** (`fade`): written directly on that element, like the transform.
+ * - **Reduced motion**: the drag follows the finger (direct manipulation), and a dismissal after
+ *   it fades out where the finger left the panel instead of snapping back to rest first. The
+ *   stylesheet's reduced-motion reset skips only a panel carrying `data-cui-dragging`, which a
+ *   held one keeps until it is shown again.
  * - **Dampens** a pull past fully open, which moves less the further it goes.
  * - **Scroll versus drag**: a drag that starts in scrolled content (not at the dismiss end)
  *   is left to the scroll, and for `SCROLL_BLOCK_MS` after any scroll none starts.
@@ -94,7 +107,7 @@ function scrolledAway(el: HTMLElement, edge: DragEdge): boolean {
  * page instead. Scroll containers inside it keep their own native panning.
  */
 export function useDragDismiss(options: UseDragDismissOptions) {
-  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, dismissible = () => true, onSettle, onDismiss } = options;
+  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, dismissible = () => true, onSettle, onDismiss, fade } = options;
   const drag = usePointerDrag();
 
   let dragging = false;
@@ -106,8 +119,12 @@ export function useDragDismiss(options: UseDragDismissOptions) {
   let originT = 0;
   let rest = 0;
   let size = 0;
+  let lowest = 0;
   let offset = 0;
   let pointerId = 0;
+  let faded: HTMLElement | null = null;
+  // A dismissal under reduced motion: the panel keeps where it was let go while it fades out.
+  let held = false;
 
   const vertical = () => edge() === "top" || edge() === "bottom";
   /** +1 when moving along the axis in the positive direction dismisses (bottom, right). */
@@ -120,17 +137,39 @@ export function useDragDismiss(options: UseDragDismissOptions) {
   function write(px: number) {
     const el = panel.value;
     if (!el) return;
-    el.style.transform = `translate${vertical() ? "Y" : "X"}(${px * sign()}px)`;
+    // Relative to where it rests: a stop's own offset is the stylesheet's (a `translate`, which
+    // reduced motion leaves alone), and this moves the panel from there.
+    el.style.transform = `translate${vertical() ? "Y" : "X"}(${(px - rest) * sign()}px)`;
   }
 
-  /** Hand the panel back to its stylesheet, which carries it to wherever it rests or leaves to. */
-  function release() {
+  /** The fade follows the travel from the lowest stop to closed: full while resting there, 0 when gone. */
+  function writeFade(px: number) {
+    if (!faded) return;
+    const progress = Math.min(Math.max((px - lowest) / Math.max(size - lowest, 1), 0), 1);
+    faded.style.opacity = `calc(var(--_backdrop-opacity, 1) * ${1 - progress})`;
+  }
+
+  /**
+   * Hand the panel (and what it fades) back to its stylesheet, which carries it to wherever it
+   * rests or leaves to. With `hold`, a dismissal under reduced motion, the dragged offset stays
+   * until the panel is shown again or gone: the stylesheet would otherwise put it back at rest
+   * (it removes movement) and fade it out from there.
+   */
+  function release(hold = false) {
     const el = panel.value;
+    if (faded) {
+      faded.style.opacity = "";
+      faded.style.transition = "";
+      faded = null;
+    }
     if (!el) return;
-    el.style.transform = "";
     el.style.transition = "";
-    el.removeAttribute("data-cui-dragging");
     el.removeEventListener("touchmove", preventPan);
+    held = hold;
+    if (!hold) {
+      el.style.transform = "";
+      el.removeAttribute("data-cui-dragging");
+    }
     try {
       el.releasePointerCapture(pointerId);
     } catch {
@@ -177,6 +216,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
       rest = list[Math.max(0, Math.min(stop(), list.length - 1))] ?? 0;
       offset = rest;
       size = vertical() ? el.offsetHeight : el.offsetWidth;
+      lowest = list[list.length - 1] ?? 0;
       // From where the gesture committed, so the panel doesn't jump by the slop.
       originX = e.clientX;
       originY = e.clientY;
@@ -188,6 +228,8 @@ export function useDragDismiss(options: UseDragDismissOptions) {
       }
       el.style.transition = "none";
       el.setAttribute("data-cui-dragging", "");
+      faded = fade?.() ?? null;
+      if (faded) faded.style.transition = "none";
       // Touch: a cancelable move is the browser's cue to scroll; refuse it.
       el.addEventListener("touchmove", preventPan, { passive: false });
       return;
@@ -196,6 +238,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     const next = rest + distance;
     offset = next < 0 ? -damp(-next) : Math.min(next, size);
     write(offset);
+    writeFade(offset);
   }
 
   function onEnd(e: PointerEvent) {
@@ -205,7 +248,6 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     const list = stops();
     const current = Math.max(0, Math.min(stop(), list.length - 1));
     const velocity = (offset - rest) / Math.max(performance.now() - originT, 1);
-    const lowest = list[list.length - 1] ?? 0;
 
     // null: close.
     let target: number | null;
@@ -221,11 +263,19 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     }
 
     if (target === null && !dismissible()) target = list.length - 1;
-    if (target === null) onDismiss();
-    else onSettle?.(target);
-    // The new stop, or the closing state, renders on the next tick; handing the panel back
-    // before it does would carry it to the old position first.
-    nextTick(release);
+    if (target === null) {
+      // Handed back before the close renders, in the same task: no frame is drawn between, so
+      // the panel goes from where it was let go to the closed state in one transition. The
+      // leave waits on the animations running when it starts, and with the drag's
+      // `transition: none` still on it would find none and end at once.
+      release(prefersReducedMotion());
+      onDismiss();
+    } else {
+      onSettle?.(target);
+      // The new stop renders on the next tick; handing the panel back before it does would
+      // carry it to the old position first.
+      nextTick(() => release());
+    }
   }
 
   /** A drag's release is also a click on whatever is under the finger or pointer: swallow it. */
@@ -239,6 +289,9 @@ export function useDragDismiss(options: UseDragDismissOptions) {
   function onScrollCapture() {
     lastScroll = performance.now();
   }
+
+  // Shown again (re-opened mid-exit): the held offset is no longer where the panel is.
+  watch(enabled, (on) => on && held && release());
 
   onScopeDispose(() => {
     dragging = false;

@@ -52,6 +52,13 @@ export function joinStack(options: JoinOptions) {
       /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
       zIndex: () => (stack ? stack.zIndex(entry) : OVERLAY_Z_INDEX),
       isModal,
+      /**
+       * The backdrop a drag of this overlay fades (#526). In a stack the backdrop is the
+       * stack's, one for the group: it fades only for the one panel open there, since a drag of
+       * a panel above others would dim the page behind them too. `null`: leave it. `undefined`:
+       * no stack, so the overlay's own.
+       */
+      fadeTarget: () => (stack ? (stack.entries.length === 1 && stack.entries[0] === entry ? stack.backdropEl.value : null) : undefined),
       onEscape: stack ? () => stack.escape() : undefined,
       // Children close first, in the same tick, so the exits read as one motion and a stack
       // never sees a half state.

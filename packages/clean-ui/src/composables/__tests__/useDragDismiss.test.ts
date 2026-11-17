@@ -100,8 +100,10 @@ describe("useDragDismiss", () => {
     t.send(t.el, "pointermove", 1, 100, 110);
     t.send(t.el, "pointermove", 1, 100, -400); // 510 past the start, 310 past fully open
     const y = parseFloat(/translateY\((-?[\d.]+)px\)/.exec(t.el.style.transform)![1]);
-    expect(y).toBeLessThan(0);
-    expect(-y).toBeLessThan(80);
+    // The transform is relative to the stop it rested at (200): fully open is -200, and the pull past it is damped.
+    const past = -(y + 200);
+    expect(past).toBeGreaterThan(0);
+    expect(past).toBeLessThan(80);
     t.send(t.el, "pointerup", 1, 100, -400);
   });
 

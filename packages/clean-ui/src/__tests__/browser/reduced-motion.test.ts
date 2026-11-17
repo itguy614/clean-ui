@@ -159,9 +159,13 @@ describe("reduced motion (real browser)", () => {
     mounted.push(w);
     await wait(motionDuration("slow") * 2 + 100);
     const panel = document.querySelector<HTMLElement>(".cui-drawer__panel")!;
-    // Direct manipulation, not animation: the transform the drag writes is not cancelled.
+    // Direct manipulation, not animation: the transform a drag writes (it marks the panel
+    // `data-cui-dragging`) is not cancelled; with no drag active (#527) a transform is.
     panel.style.transform = "translateY(40px)";
+    expect(getComputedStyle(panel).transform).toBe("none");
+    panel.setAttribute("data-cui-dragging", "");
     expect(getComputedStyle(panel).transform).not.toBe("none");
+    panel.removeAttribute("data-cui-dragging");
     panel.style.transform = "";
     await w.setProps({ visible: false });
     await wait(60);

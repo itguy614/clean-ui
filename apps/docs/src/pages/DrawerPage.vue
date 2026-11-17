@@ -43,7 +43,8 @@ const email = ref("");
           <li>Open the snap-point drawer. Drag between the three heights, and flick up or down to skip one.</li>
           <li>Open the scrolling drawer. Scroll the list, back to the top, and keep pulling: it only closes once the list is at the top.</li>
           <li>Open the keyboard drawer on a phone and tap the field: the sheet stays above the keyboard.</li>
-          <li>Turn on Reduce Motion in your OS: the sheet fades instead of sliding, but a drag still follows your finger.</li>
+          <li>Watch the page behind the sheet while you drag: the backdrop fades as the sheet moves away, comes back to full if it springs back, and finishes fading as it closes.</li>
+          <li>Turn on Reduce Motion in your OS: the sheet fades instead of sliding, but a drag still follows your finger. Drag it halfway down and let go past the closing point: it fades out where you left it, with no jump back to the top first.</li>
           <li>Press Escape, click the backdrop or the X, with the mouse or the keyboard: each closes it. Dragging is never the only way.</li>
         </ol>
       </CuiAlert>
@@ -103,7 +104,7 @@ const email = ref("");
         <li><strong>Dragging is never the only way to close it.</strong> Escape, the backdrop and the X button (in simple mode, or a <code>CuiModalHeader</code> you assemble) all close it, and each works without a pointer. <code>persistent</code> blocks Escape, the backdrop and a drag that would close it (it can still be dragged between snap points); the X still closes.</li>
         <li>The grab handle is decorative (<code>aria-hidden</code>), not a control. A screen reader or keyboard user never needs it.</li>
         <li>With <code>title</code> set, the dialog is labelled by its title. Assembling the sheet yourself, give it an <code>aria-label</code>, which lands on the panel.</li>
-        <li>Under <code>prefers-reduced-motion</code> the sheet fades rather than slides; a drag still follows the finger, since that is direct manipulation, not animation.</li>
+        <li>Under <code>prefers-reduced-motion</code> the sheet fades rather than slides; a drag still follows the finger, since that is direct manipulation, not animation, and a sheet dismissed after a drag fades out where the finger left it. A snap point is still a resting place. The backdrop fade is an opacity change, so it stays.</li>
         <li>A drag never starts on a text field, a select or anything marked <code>data-cui-no-drag</code>, and a click that ends a drag is swallowed rather than pressing whatever was under the finger.</li>
         <li>Touch zoom still works inside the sheet (<code>touch-action: pinch-zoom</code>), and a scrolling region keeps its own native panning.</li>
       </ul>
@@ -122,6 +123,7 @@ const email = ref("");
         <h2 class="text-2xl font-semibold">How the gesture decides</h2>
         <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
           <li><strong>Release:</strong> faster than 0.11 px/ms over the drag closes it (or moves one snap point) however short it was. Slower, it goes to the nearest snap point, or closes once pulled past 40% of the way.</li>
+          <li><strong>The backdrop follows the sheet:</strong> its opacity is written straight onto the backdrop as you drag, scaled from its own (<code>backdrop-opacity</code>) to nothing across the distance from the lowest snap point to closed. On release it settles with the sheet: back to full on a spring-back, to zero on a dismissal. Inside a <code>CuiSlideoverStack</code> the backdrop is the stack's, one for the whole group, so only a drawer that is the only panel open fades it; a drawer open with others leaves it alone.</li>
           <li><strong>Pulling past fully open</strong> is damped: the sheet moves less the further you pull.</li>
           <li><strong>Scroll versus drag:</strong> a drag that starts in scrolled content is a scroll. Only at the top of the content does a pull close the sheet, and for 100ms after the content last scrolled no drag starts, so a fast scroll past the top does not dismiss it.</li>
           <li><strong>One finger:</strong> the pointer is captured once the drag starts, and a second touch is ignored.</li>

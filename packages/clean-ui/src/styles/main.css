@@ -989,9 +989,11 @@
   [data-cui-panel="hidden"],
   .cui-toast-enter-from,
   .cui-toast-leave-to,
-  /* An open slideover or drawer is skipped: a drag still follows the finger (#268), which is
-     direct manipulation, not animation, and a snap point is a resting place. */
-  [data-cui-exit]:not(.cui-slideover__panel--visible, .cui-drawer__panel--visible),
+  /* A panel being dragged is skipped (#268, #527): following the finger is direct manipulation,
+     not animation, and a dismissal after a drag keeps the drag's offset while it fades (the
+     drag marks it until it is shown again or gone). Only a drag: an open panel's own transform
+     is neutralized like any other, and a drawer's snap point is a `translate`, not this. */
+  [data-cui-exit]:not([data-cui-dragging]),
   [class*="cui-alert--entrance-slide"] {
     transform: none !important;
   }

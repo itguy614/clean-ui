@@ -91,6 +91,7 @@ const emit = defineEmits<{
 const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 const handleRef = useTemplateRef<HTMLElement>("handleEl");
+const backdropRef = useTemplateRef<InstanceType<typeof CuiBackdrop>>("backdropEl");
 
 const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, join } = useOverlay({
   open: () => props.visible,
@@ -173,6 +174,12 @@ const gesture = useDragDismiss({
   stop: () => (keyboardOpen.value ? 0 : stopIndex.value),
   onSettle: settle,
   onDismiss: closeOverlay,
+  // The backdrop fades with the sheet (#526): its own, or in a stack the shared one, for the
+  // one sheet open there.
+  fade: () => {
+    const shared = join.fadeTarget();
+    return shared === undefined ? (backdropRef.value?.$el as HTMLElement | undefined) : shared;
+  },
 });
 
 // --- Style ----------------------------------------------------------------------------
@@ -217,6 +224,7 @@ const themeScope = useScopedTheme(() => mounted.value);
       >
         <CuiBackdrop
           v-if="!join.stacked"
+          ref="backdropEl"
           data-cui-exit
           :visible="isAnimating"
           :opacity="backdropOpacity"
@@ -322,14 +330,18 @@ const themeScope = useScopedTheme(() => mounted.value);
   /* Off-screen until visible. Slides out faster than it came in, with its backdrop (#269):
      a transition takes the duration of the state it moves to. */
   transform: translateY(100%);
-  transition: transform var(--cui-duration-fast) var(--cui-ease-drawer);
+  /* A snap point's resting offset is a `translate`, not part of the transform: reduced motion
+     neutralizes a panel's `transform` (#527) and must leave where the sheet rests. The drag
+     writes its transform relative to it, and the two ease together, so their sum is one move. */
+  translate: 0 var(--_drawer-snap-offset, 0px);
+  transition: transform var(--cui-duration-fast) var(--cui-ease-drawer), translate var(--cui-duration-fast) var(--cui-ease-drawer);
 }
 
 /* Open: the iOS sheet curve over twice the slow token (500ms), matching a native sheet. The
    one exception to the 300ms ceiling on UI motion (#268): the sheet crosses most of the screen,
    and a shorter run reads as a snap. The exit stays fast. */
 .cui-drawer__panel--visible {
-  transform: translateY(var(--_drawer-snap-offset, 0px));
+  transform: translateY(0);
   transition-duration: calc(var(--cui-duration-slow) * 2);
 }
 
