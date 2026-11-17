@@ -174,6 +174,18 @@ const peeks = ref([false, false, false, false]);
       </CuiStack>
 
       <CuiStack spacing="2" class="mb-6">
+        <h2 class="text-2xl font-semibold">Hiding a panel</h2>
+        <p class="text-surface-700 dark:text-surface-300">
+          A panel that is open but <code>hidden</code> sits out of the stack: it takes no room in the
+          layout, does not count toward the active set (so it never makes the panels beneath it inert),
+          and is not dimmed as covered. Setting <code>hidden</code> on an open panel closes the gap at
+          once, with no slide, since the panel itself vanishes at once; clearing it puts the panel in
+          its place and the others slide to make room, like any other re-flow. The shared backdrop is
+          unaffected either way: it stays while any panel is open, hidden or not.
+        </p>
+      </CuiStack>
+
+      <CuiStack spacing="2" class="mb-6">
         <h2 class="text-2xl font-semibold">Child panels</h2>
         <p class="text-surface-700 dark:text-surface-300">
           A <code>CuiSlideover</code> or <code>CuiDrawer</code> declared inside another panel's

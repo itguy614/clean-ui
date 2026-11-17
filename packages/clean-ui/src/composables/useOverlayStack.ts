@@ -44,8 +44,16 @@ function unmark(el: HTMLElement) {
 export function useOverlayStackProvider(options: { modal?: () => boolean } = {}): OverlayStackContext {
   const entries = shallowReactive<OverlayStackEntry[]>([]);
 
-  const start = () => activeStart(entries.map((e) => e.modal()));
-  const topEntry = () => entries[entries.length - 1];
+  // A hidden panel is not on screen, so it neither makes what is beneath it inert nor is dimmed
+  // itself: the active set is worked out over the shown panels, as an index into `entries`. With
+  // none shown the first entry stays the backdrop's owner, so the shared backdrop does not dip.
+  const start = () => {
+    const shown = entries.map((_, i) => i).filter((i) => !entries[i].hidden?.());
+    return shown.length ? shown[activeStart(shown.map((i) => entries[i].modal()))] : 0;
+  };
+  // Escape and a backdrop click reach the topmost panel on screen: a hidden one cannot be closed
+  // from where the user is looking. With none shown, the last one stands.
+  const topEntry = () => entries.filter((e) => !e.hidden?.()).pop() ?? entries[entries.length - 1];
 
   function register(entry: OverlayStackEntry) {
     if (entries.includes(entry)) return;
@@ -121,7 +129,7 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
       const root = entry.root();
       const panel = entry.panel();
       if (root && i < from) next.add(root);
-      if (panel && i < from) nextCovered.add(panel);
+      if (panel && i < from && !entry.hidden?.()) nextCovered.add(panel);
     });
     for (const el of marked) if (!next.has(el)) unmark(el);
     for (const el of next) mark(el);
