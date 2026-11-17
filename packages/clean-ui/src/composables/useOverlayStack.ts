@@ -22,13 +22,13 @@ export function activeStart(modals: readonly boolean[]): number {
 }
 
 function mark(el: HTMLElement) {
+  // `inert` alone also removes it from the accessibility tree; `aria-hidden` on a root that
+  // still holds focus (the opener) makes the browser warn.
   el.setAttribute("inert", "");
-  el.setAttribute("aria-hidden", "true");
 }
 
 function unmark(el: HTMLElement) {
   el.removeAttribute("inert");
-  el.removeAttribute("aria-hidden");
 }
 
 /**
@@ -36,7 +36,7 @@ function unmark(el: HTMLElement) {
  * (CuiSlideoverStack); overlays beneath it join through `useOverlayStackContext()`.
  *
  * It owns what is common to every kind of stacked panel and nothing visual: the open order,
- * the z-order, which panel draws the one shared backdrop, `inert` and `aria-hidden` on the
+ * the z-order, which panel draws the one shared backdrop, `inert` on the
  * panels beneath the active set, and routing Escape and backdrop clicks. The Escape stack
  * (`useLayerStack`) and the reference-counted scroll lock stay where they are: the overlays
  * still register with both, so the page locks once and unlocks when the last one closes.

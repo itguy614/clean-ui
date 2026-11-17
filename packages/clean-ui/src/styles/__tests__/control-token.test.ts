@@ -508,6 +508,8 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiContextMenu.vue": { "context-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDateRangePicker.vue": { "date-range-picker-field-width": `the start and end fields are as wide as the \`format\` prop's text (${GEOMETRY})` },
   "CuiDrawer.vue": {
+    "stack-dim": `a covered sheet's scrim takes the backdrop's opacity, set by the stack (${GEOMETRY}) (#41)`,
+    "stack-scrim": `a covered sheet's scrim takes the backdrop's color, set by the stack (${GEOMETRY}) (#41)`,
     "drawer-snap-offset": `the resting position follows the active snap point (${GEOMETRY})`,
     "drawer-keyboard-inset": `the sheet is anchored above the soft keyboard (${GEOMETRY})`,
     "drawer-max-height": `the sheet is held to the room the soft keyboard leaves (${GEOMETRY})`,

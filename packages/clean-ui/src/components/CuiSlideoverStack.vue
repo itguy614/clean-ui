@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onScopeDispose, ref, shallowRef, watch, watchEffect } from "vue";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
@@ -68,17 +68,18 @@ watch(
   },
   { flush: "sync" },
 );
-let lastProps: Record<string, unknown> = {};
-let lastZ = "var(--cui-z-overlay, 9990)";
-const backdrop = computed(() => {
+// What the backdrop looks like and where it sits, kept through its fade-out after the last
+// panel has left. Always just behind the bottom panel, so it never changes layer; the panels
+// above it that are out of the active set dim themselves (useOverlayStack).
+const lookProps = shallowRef<Record<string, unknown>>({});
+const lookZ = shallowRef("var(--cui-z-overlay, 9990)");
+watchEffect(() => {
   const entry = stack.backdropEntry();
   const bottom = stack.bottomEntry();
-  if (entry) lastProps = entry.backdrop?.() ?? {};
-  // Always just behind the bottom panel, so it never changes layer; the panels above it that are
-  // out of the active set dim themselves (useOverlayStack).
-  if (bottom) lastZ = stack.zIndex(bottom);
-  return { props: lastProps, zIndex: lastZ };
+  if (entry) lookProps.value = entry.backdrop?.() ?? {};
+  if (bottom) lookZ.value = stack.zIndex(bottom);
 });
+onScopeDispose(() => cancelAnimationFrame(frame));
 
 useSlideoverStackLayout(stack, {
   mode: () => props.mode,
@@ -99,9 +100,9 @@ useSlideoverStackLayout(stack, {
         v-show="open"
         class="cui-slideover-stack__backdrop"
         :class="themeScope"
-        v-bind="backdrop.props"
+        v-bind="lookProps"
         :visible="shown"
-        :style="{ position: 'fixed', zIndex: backdrop.zIndex }"
+        :style="{ position: 'fixed', zIndex: lookZ }"
         @click="stack.closeTop()"
       />
     </Transition>

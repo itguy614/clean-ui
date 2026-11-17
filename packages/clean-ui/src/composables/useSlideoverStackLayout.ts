@@ -45,6 +45,7 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
   const given = new WeakMap<HTMLElement, { width: number; offset: number }>();
   let managed = new Set<HTMLElement>();
   let count = 0;
+  let lastWidth = viewport.value;
 
   /**
    * Natural widths: what each panel measures with no stack width forced on it. Every property is
@@ -82,7 +83,8 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     const items: HTMLElement[] = [];
     for (const entry of horizontal) {
       const el = entry.panel();
-      if (el && entry.side() === side) items.push(el);
+      // Not laid out (the consumer's `hidden`) it measures nothing, and takes no part.
+      if (el && el.offsetWidth > 0 && entry.side() === side) items.push(el);
     }
 
     // A panel that left the stack keeps the geometry it had, so it exits from where it stood
@@ -120,7 +122,10 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
       if (before && (Math.abs(before.width - width) > 0.5 || Math.abs(before.offset - offset) > 0.5)) moved.push(el);
     });
 
-    if (!moved.length || prefersReducedMotion() || typeof moved[0].animate !== "function") return;
+    // A resize snaps: panels follow the window, they do not trail it.
+    const resized = vw !== lastWidth;
+    lastWidth = vw;
+    if (!moved.length || resized || prefersReducedMotion() || typeof moved[0].animate !== "function") return;
     // Read every new rect, and the easing once, before the first animate() dirties style.
     const right = side === "right";
     const easing = getComputedStyle(moved[0]).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";

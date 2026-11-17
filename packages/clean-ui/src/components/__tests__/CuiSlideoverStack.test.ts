@@ -95,8 +95,6 @@ describe("overlay stack core", () => {
     const { open } = mountStack([{}, {}, {}]);
     await openAll(open);
     expect([isInert(0), isInert(1), isInert(2)]).toEqual([true, true, false]);
-    expect(root(0).getAttribute("aria-hidden")).toBe("true");
-    expect(root(2).hasAttribute("aria-hidden")).toBe(false);
   });
 
   it("1 modal, 2 co-active, 3 co-active: all three interactive, backdrop behind 1", async () => {
@@ -144,7 +142,7 @@ describe("overlay stack core", () => {
     expect(backdropZ()).toBe(zOf(1));
   });
 
-  it("removes inert and aria-hidden from every panel when the stack unmounts", async () => {
+  it("removes inert from every panel when the stack unmounts", async () => {
     const { open, wrapper } = mountStack([{}, {}]);
     await openAll(open);
     const first = root(0);
@@ -198,7 +196,7 @@ describe("overlay stack core", () => {
     expect(scrim.querySelector(".cui-slideover__scrim")).not.toBeNull();
   });
 
-  it("removes inert and aria-hidden from every panel when the stack unmounts", async () => {
+  it("removes inert from every panel when the stack unmounts", async () => {
     const { open, wrapper } = mountStack([{}, {}]);
     await openAll(open);
     const first = root(0);
@@ -470,6 +468,14 @@ describe("overlay stack core", () => {
       await openAll(open);
       expect(warn.mock.calls.filter((c) => String(c[0]).includes("different sides"))).toHaveLength(0);
       warn.mockRestore();
+    });
+
+    it("a drawer covered by a modal slideover dims itself with a scrim, like a slideover", async () => {
+      const { open } = mountStack([{ kind: "drawer" }, {}]);
+      await openAll(open);
+      const panel0 = document.querySelector<HTMLElement>('[data-testid="panel-0"]')!;
+      expect(panel0.hasAttribute("data-cui-covered")).toBe(true);
+      expect(panel0.querySelector(".cui-drawer__scrim")).not.toBeNull();
     });
 
     it("a co-active drawer leaves the slideover beneath it interactive", async () => {

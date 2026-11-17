@@ -271,6 +271,9 @@ const themeScope = useScopedTheme(() => mounted.value);
           <template v-else>
             <slot />
           </template>
+
+          <!-- In a stack: dims the sheet while another panel covers it (#41) -->
+          <div v-if="join.stacked" class="cui-drawer__scrim" aria-hidden="true" />
         </div>
       </div>
     </Transition>
@@ -334,6 +337,24 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-drawer__panel[data-cui-dragging] {
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* A sheet covered by another panel of a stack dims itself, as a slideover does (#41): the stack
+   marks it data-cui-covered and sets --_stack-dim and --_stack-scrim. */
+.cui-drawer__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--_stack-scrim, black);
+  opacity: 0;
+  transition: opacity var(--cui-duration-fast) ease;
+}
+[data-cui-covered] > .cui-drawer__scrim {
+  opacity: var(--_stack-dim, 0.5);
+  transition-duration: var(--cui-duration-slow);
+  transition-timing-function: var(--cui-ease-drawer);
 }
 
 /* --- Handle --- */

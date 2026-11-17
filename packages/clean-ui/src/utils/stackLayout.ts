@@ -1,7 +1,8 @@
 /**
  * The geometry of a stack of same-side slideovers (#41), as plain numbers in px. Panels are
- * listed bottom first (the one opened first, docked to the edge) and an `offset` is the
- * distance from that edge to the panel's own edge on the same side. It is pure and DOM-free,
+ * listed bottom first (the one opened first) and an `offset` is the distance from the docked
+ * edge to the panel's own edge on the same side (0 for the panel sitting at the edge: the newest
+ * with push inward, the first with push outward). It is pure and DOM-free,
  * so the rules are testable on their own; `useSlideoverStackLayout` measures, calls this and
  * applies the answer.
  *
