@@ -51,7 +51,7 @@ const DURATIONS: TokenRow[] = (Object.keys(MOTION_DURATIONS) as MotionDuration[]
 const EASINGS: TokenRow[] = [
   { name: "--cui-ease-out", default: "cubic-bezier(0.23, 1, 0.32, 1)", description: "Anything entering or leaving, and hover feedback" },
   { name: "--cui-ease-in-out", default: "cubic-bezier(0.77, 0, 0.175, 1)", description: "Something moving on screen: a knob, a chevron turning" },
-  { name: "--cui-ease-drawer", default: "cubic-bezier(0.32, 0.72, 0, 1)", description: "CuiSlideover's panel sliding in from an edge" },
+  { name: "--cui-ease-drawer", default: "cubic-bezier(0.32, 0.72, 0, 1)", description: "CuiSlideover's and CuiDrawer's panel sliding in from an edge, and a drawer settling" },
 ];
 
 // The speed demo scales every duration token on one container.
