@@ -10,16 +10,19 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
+  CuiKbd,
   CuiNavbar,
   CuiNavbarActions,
   CuiToastProvider,
   useTheme,
   useDensity,
   useColorMode,
+  useCommandPalette,
   type ColorMode,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
 import PageNav from "./components/PageNav.vue";
+import SitePalette from "./components/SitePalette.vue";
 import { ShowDebugKey } from "./keys";
 
 const showDebug = ref(false);
@@ -30,6 +33,11 @@ const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
 
 provide(ShowDebugKey, showDebug);
+
+// The header button opens the site palette (SitePalette.vue) without the shortcut. The hint shows
+// the key for this platform; the palette's own default is Mod-K, so the two agree.
+const palette = useCommandPalette();
+const apple = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 
 // Close mobile nav on route change
 const route = useRoute();
@@ -86,6 +94,19 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
           </CuiButton>
 
           <CuiNavbarActions>
+            <CuiButton
+              variant="ghost"
+              size="sm"
+              aria-label="Search documentation"
+              :aria-keyshortcuts="apple ? 'Meta+K' : 'Control+K'"
+              @click="palette.open()"
+            >
+              <template #prefix><CuiIcon name="magnifying-glass" size="sm" /></template>
+              <span class="max-sm:hidden">Search</span>
+              <template #suffix>
+                <span class="max-sm:hidden" aria-hidden="true"><CuiKbd>{{ apple ? "⌘" : "Ctrl" }}</CuiKbd> <CuiKbd>K</CuiKbd></span>
+              </template>
+            </CuiButton>
             <CuiDropdown>
               <CuiDropdownTrigger>
                 <CuiButton variant="ghost" size="sm">
@@ -145,5 +166,6 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
       </div>
     </div>
   </div>
+  <SitePalette />
   </CuiToastProvider>
 </template>

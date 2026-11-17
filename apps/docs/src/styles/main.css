@@ -25,3 +25,10 @@ main :is(h1, h2, h3)[id] {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
 }
+
+/* The site palette (#531) is mounted in the app shell, so its overlay sits in <body> before any
+   modal or slideover a page opens later; at the same z-index the later one paints over it. Lift a
+   palette's overlay one step above the library's overlay layer, so Mod-K works over an open dialog. */
+.cui-modal-overlay:has(.cui-command-palette) {
+  z-index: calc(var(--cui-z-overlay, 9990) + 10);
+}
