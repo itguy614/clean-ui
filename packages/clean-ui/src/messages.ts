@@ -182,6 +182,12 @@ export interface CuiCoreMessages {
     noResults: string;
     /** Heading of the recently run commands, shown before anything is typed. */
     recent: string;
+    /** The footer's key hints: what the arrows, Enter and Escape do. */
+    hintNavigate: string;
+    hintRun: string;
+    hintClose: string;
+    /** The Escape key's cap in the footer hint. */
+    keyEscape: string;
   };
   pagination: {
     summary: (range: PaginationRange) => string;
@@ -400,6 +406,10 @@ export const defaultMessages: CuiCoreMessages = {
     placeholder: "Type a command or search…",
     noResults: "No matching commands",
     recent: "Recent",
+    hintNavigate: "navigate",
+    hintRun: "run",
+    hintClose: "close",
+    keyEscape: "esc",
   },
   pagination: {
     summary: ({ from, to, total }) => `Showing ${from} to ${to} of ${total} results`,

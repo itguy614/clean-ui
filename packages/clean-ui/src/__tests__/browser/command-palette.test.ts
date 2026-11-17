@@ -154,4 +154,58 @@ describe("CuiCommandPalette (real browser)", () => {
     const bg = getComputedStyle(options()[0]).backgroundColor;
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
   });
+
+  // The look (#197 review): it has to stand off the page in dark mode, not only light.
+  const rgba = (css: string): [number, number, number, number] => {
+    const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
+    c.clearRect(0, 0, 1, 1);
+    c.fillStyle = css;
+    c.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = c.getImageData(0, 0, 1, 1).data;
+    return [r, g, b, a / 255];
+  };
+  const over = (top: number[], under: number[]) => top.slice(0, 3).map((v, i) => v * top[3] + under[i] * (1 - top[3]));
+  const luminance = (c: number[]) => {
+    const [r, g, b] = c.map((v) => ((v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a: number[], b: number[]) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  it.each([
+    ["light", false, [255, 255, 255]],
+    ["dark", true, [9, 9, 11]],
+  ])("is a rounded, translucent, role-tinted panel with AA text in %s mode, on the worst page behind it", async (_name, dark, page) => {
+    document.documentElement.classList.toggle("dark", dark);
+    // installTokens stubs only some scale steps, and the dark slots read others.
+    const steps = document.createElement("style");
+    steps.textContent = `:root { ${[50, 200, 400, 800, 950].map((n) => `--color-primary-${n}: #6366f1;`).join(" ")} }`;
+    document.head.append(steps);
+    try {
+      setup([{ id: "a", label: "Toggle", description: "Described", group: "g" }], { groups: [{ id: "g", label: "Group" }] });
+      await userEvent.click(document.querySelector('[data-t="opener"]')!);
+      await settle();
+      const panel = document.querySelector<HTMLElement>(".cui-command-palette")!;
+      const st = getComputedStyle(panel);
+      expect(parseFloat(st.borderTopLeftRadius), "larger than the scale's lg").toBeGreaterThanOrEqual(16);
+      expect(st.backdropFilter).toContain("blur");
+      expect(st.boxShadow).not.toBe("none");
+      expect(st.borderTopWidth).toBe("1px");
+      const fill = rgba(st.backgroundColor);
+      expect(fill[3], "translucent, but not see-through").toBeGreaterThan(0.6);
+      expect(fill[3]).toBeLessThan(1);
+      // The panel against the page: a border or glow has to separate them as well as the fill.
+      expect(st.borderTopColor).not.toBe(st.backgroundColor);
+      const surface = over(fill, page);
+      const text = (sel: string) => rgba(getComputedStyle(document.querySelector(sel)!).color);
+      for (const sel of [".cui-command-palette__label", ".cui-command-palette__description", ".cui-command-palette__heading"]) {
+        expect(contrast(text(sel), surface), `${sel} on the panel`).toBeGreaterThanOrEqual(4.5);
+      }
+    } finally {
+      document.documentElement.classList.remove("dark");
+      steps.remove();
+    }
+  });
 });

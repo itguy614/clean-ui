@@ -311,9 +311,15 @@ const initialFocus = computed(() => props.initialFocus ?? ".cui-command-palette_
 
 // Emitted as private properties, read back through the public tokens. The two --_listbox-*
 // ones paint CuiListboxOption's rows, which reads its consumer's tokens through the panel.
-const vars = computed(() => ({
+const panelVars = computed(() => ({
+  "--_command-palette-accent": `var(--cui-${props.color})`,
+  "--_command-palette-tint": `color-mix(in srgb, var(--cui-${props.color}-bg) 55%, transparent)`,
+  "--_command-palette-heading": `color-mix(in srgb, var(--cui-${props.color}) 60%, var(--cui-text-emphasis))`,
+  "--_command-palette-ring": `var(--cui-${props.color}-border)`,
   "--_command-palette-focus-ring": `var(--cui-${props.color}-focus-ring)`,
   "--_command-palette-match": `var(--cui-${props.color})`,
+}));
+const vars = computed(() => ({
   "--_listbox-font-size": "var(--cui-command-palette-font-size, 0.9375rem)",
   "--_listbox-item-padding":
     "var(--cui-command-palette-py, calc(0.5rem * var(--cui-density-scale, 1))) var(--cui-command-palette-px, calc(0.75rem * var(--cui-density-scale, 1)))",
@@ -345,6 +351,9 @@ defineExpose({
     :hidden="hidden"
     :visible="open"
     :aria-label="resolvedLabel"
+    :style="panelVars"
+    backdrop-blur="sm"
+    :backdrop-opacity="0.6"
     :initial-focus="initialFocus"
     :return-focus="returnFocus"
     @update:visible="onUpdateVisible"
@@ -416,6 +425,12 @@ defineExpose({
         <slot name="empty" :query="query">{{ messages.commandPalette.noResults }}</slot>
       </div>
 
+      <div class="cui-command-palette__footer" aria-hidden="true">
+        <span class="cui-command-palette__hint"><CuiKbd size="sm">↑</CuiKbd><CuiKbd size="sm">↓</CuiKbd>{{ messages.commandPalette.hintNavigate }}</span>
+        <span class="cui-command-palette__hint"><CuiKbd size="sm">↵</CuiKbd>{{ messages.commandPalette.hintRun }}</span>
+        <span class="cui-command-palette__hint"><CuiKbd size="sm">{{ messages.commandPalette.keyEscape }}</CuiKbd>{{ messages.commandPalette.hintClose }}</span>
+      </div>
+
       <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
     </div>
   </CuiModal>
@@ -432,7 +447,8 @@ defineExpose({
 :where(.cui-command-palette__search) {
   gap: var(--cui-command-palette-gap, calc(0.625rem * var(--cui-density-scale, 1)));
   padding: var(--cui-command-palette-py, calc(0.75rem * var(--cui-density-scale, 1))) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
-  border-bottom: var(--cui-command-palette-border, 1px solid var(--cui-border));
+  border-bottom: 1px solid var(--cui-border);
+  background: var(--_command-palette-tint);
   color: var(--cui-text-tertiary);
 }
 
@@ -460,6 +476,19 @@ defineExpose({
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--_command-palette-heading);
+}
+
+:where(.cui-command-palette__option.cui-listbox-option--active) {
+  box-shadow: inset 0 0 0 1px var(--cui-command-palette-hover-border, var(--_command-palette-ring));
+}
+
+:where(.cui-command-palette__footer) {
+  gap: calc(1rem * var(--cui-density-scale, 1));
+  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
+  border-top: 1px solid var(--cui-border);
+  background: var(--_command-palette-tint);
+  font-size: 0.75rem;
   color: var(--cui-text-secondary);
 }
 
@@ -516,6 +545,18 @@ defineExpose({
   text-align: center;
 }
 
+.cui-command-palette__footer {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+}
+
+.cui-command-palette__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .cui-command-palette__icon {
   flex: none;
 }
@@ -539,5 +580,32 @@ defineExpose({
   flex: none;
   gap: 0.25rem;
   margin-inline-start: auto;
+}
+</style>
+
+<style>
+/*
+ * The dialog itself is CuiModal's panel, which this component's scoped styles cannot reach (a
+ * Teleport root carries no scope attribute), so its look is written here, keyed on the class the
+ * panel was given. Zero specificity like the rest, and later in the bundle than CuiModal's own
+ * rules (this file imports it), so these win the tie. A translucent surface with a role-tinted
+ * border, ring and glow: in dark mode a plain shadow vanishes, and the glow is what lifts the
+ * dialog off the page.
+ */
+:where(.cui-command-palette.cui-modal) {
+  border-radius: var(--cui-command-palette-radius, 1rem);
+  background: var(--cui-command-palette-bg, color-mix(in srgb, var(--cui-surface-base) 86%, transparent));
+  border: var(--cui-command-palette-border, 1px solid color-mix(in srgb, var(--_command-palette-accent) 38%, var(--cui-border)));
+  box-shadow: var(
+    --cui-command-palette-shadow,
+    var(--cui-shadow-lg),
+    0 0 0 4px color-mix(in srgb, var(--_command-palette-accent) 12%, transparent),
+    0 0 56px -8px color-mix(in srgb, var(--_command-palette-accent) 35%, transparent)
+  );
+}
+
+.cui-command-palette.cui-modal {
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
 }
 </style>

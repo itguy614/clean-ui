@@ -352,7 +352,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   {
     file: "CuiCommandPalette.vue",
     component: "command-palette",
-    privateOnly: { match: PART_COLOUR },
+    privateOnly: { match: PART_COLOUR, tint: PART_COLOUR, heading: PART_COLOUR },
     issue: "#197",
   },
   { file: "CuiDivider.vue", component: "divider", privateOnly: { spacing: "follows the `spacing` prop: margin geometry from the data, with no slot in the vocabulary (#489)" }, issue: "#489" },
