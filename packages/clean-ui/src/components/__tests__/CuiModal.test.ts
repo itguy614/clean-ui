@@ -42,6 +42,15 @@ describe.each([
     wrapper.unmount();
   });
 
+  it("names the dialog by its title: aria-labelledby resolves to the heading (#524)", async () => {
+    const wrapper = mount(CuiModal, { props: { visible: true, title: "Settings" } });
+    await vi.runOnlyPendingTimersAsync();
+    const dialog = document.body.querySelector('[role="dialog"]')!;
+    const heading = document.getElementById(dialog.getAttribute("aria-labelledby")!);
+    expect(heading?.textContent).toContain("Settings");
+    wrapper.unmount();
+  });
+
   it("lets a forwarded role, aria-labelledby or tabindex override the panel's own", async () => {
     // A destructive confirm wants role="alertdialog"; a slideover assembled from
     // sub-components is named by an aria-labelledby the consumer passes.
