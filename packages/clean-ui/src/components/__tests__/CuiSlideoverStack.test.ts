@@ -16,7 +16,7 @@ interface PanelSpec {
 // Timers are faked so each open's requestAnimationFrame/nextTick steps are deterministic.
 let wrappers: VueWrapper[] = [];
 
-function mountStack(specs: PanelSpec[], opts: { stack?: boolean } = {}) {
+function mountStack(specs: PanelSpec[], opts: { stack?: boolean; stackModal?: boolean } = {}) {
   const open = reactive(specs.map(() => false));
   const panels = () =>
     specs.map((s, i) =>
@@ -26,7 +26,7 @@ function mountStack(specs: PanelSpec[], opts: { stack?: boolean } = {}) {
           key: i,
           visible: open[i],
           "onUpdate:visible": (v: boolean) => (open[i] = v),
-          modal: s.modal ?? true,
+          ...(s.modal === undefined ? {} : { modal: s.modal }),
           persistent: s.persistent,
           ...(s.side ? { side: s.side } : {}),
           "data-testid": `panel-${i}`,
@@ -36,7 +36,7 @@ function mountStack(specs: PanelSpec[], opts: { stack?: boolean } = {}) {
     );
   const wrapper = mount(
     defineComponent({
-      render: () => (opts.stack === false ? h("div", panels()) : h(CuiSlideoverStack, null, { default: panels })),
+      render: () => (opts.stack === false ? h("div", panels()) : h(CuiSlideoverStack, opts.stackModal === undefined ? null : { modal: opts.stackModal }, { default: panels })),
     }),
   );
   wrappers.push(wrapper);
@@ -170,6 +170,58 @@ describe("overlay stack core", () => {
     open[0] = false;
     await flush();
     expect(document.body.style.overflow).not.toBe("hidden");
+  });
+
+  describe("the stack's modal prop", () => {
+    it("modal=false makes every panel co-active: nothing inert, one backdrop behind the lowest", async () => {
+      const { open } = mountStack([{}, {}, {}], { stackModal: false });
+      await openAll(open);
+      expect([isInert(0), isInert(1), isInert(2)]).toEqual([false, false, false]);
+      expect([hasBackdrop(0), hasBackdrop(1), hasBackdrop(2)]).toEqual([true, false, false]);
+      expect(document.querySelector('[data-testid="panel-0"]')!.getAttribute("aria-modal")).toBe("false");
+    });
+
+    it("a panel's own modal wins over the stack's: stack co-active, panel 3 explicitly modal", async () => {
+      const { open } = mountStack([{}, {}, { modal: true }], { stackModal: false });
+      await openAll(open);
+      expect([isInert(0), isInert(1), isInert(2)]).toEqual([true, true, false]);
+      expect(hasBackdrop(2)).toBe(true);
+    });
+
+    it("a panel's own modal=false wins over a modal stack", async () => {
+      const { open } = mountStack([{}, { modal: false }, { modal: false }], { stackModal: true });
+      await openAll(open);
+      expect([isInert(0), isInert(1), isInert(2)]).toEqual([false, false, false]);
+    });
+
+    it("unset on both: modal, as alone", async () => {
+      const { open } = mountStack([{}, {}]);
+      await openAll(open);
+      expect([isInert(0), isInert(1)]).toEqual([true, false]);
+    });
+
+    it("an all-active stack takes no Tab trap", async () => {
+      const { open } = mountStack([{}, {}], { stackModal: false });
+      await openAll(open);
+      const e = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+      document.getElementById("btn-1")!.dispatchEvent(e);
+      expect(e.defaultPrevented).toBe(false);
+    });
+
+    it("Escape in an all-active stack closes the panel focus is in", async () => {
+      const { open } = mountStack([{}, {}, {}], { stackModal: false });
+      await openAll(open);
+      document.getElementById("btn-1")!.focus();
+      escape();
+      await flush();
+      expect(open).toEqual([true, false, true]);
+    });
+
+    it("a standalone overlay with no stack is modal by default", async () => {
+      const { open } = mountStack([{}], { stack: false });
+      await openAll(open);
+      expect(document.querySelector('[data-testid="panel-0"]')!.getAttribute("aria-modal")).toBe("true");
+    });
   });
 
   describe("Escape", () => {

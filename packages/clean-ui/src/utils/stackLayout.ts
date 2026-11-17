@@ -5,8 +5,11 @@
  * so the rules are testable on their own; `useSlideoverStackLayout` measures, calls this and
  * applies the answer.
  *
- * Attach: panels keep their natural width and sit edge to edge, each beside the one beneath,
- * as one surface from the docked edge. While the group still fits in `viewport - gap` nothing
+ * Attach: panels keep their natural width and sit edge to edge, as one surface from the
+ * docked edge. `push` says which end the newest panel takes. "inward" (the default): the newest
+ * sits at the docked edge and the ones already open are pushed inward to make room, so it
+ * reads oldest to newest from the open side to the edge. "outward": the newest attaches on
+ * the open side of the group and the older ones stay where they are. While the group still fits in `viewport - gap` nothing
  * changes. Past that, every panel narrows by the same proportion until the group exactly fills
  * it, so the gap a lone slideover leaves is never used and nothing goes off-screen.
  *
@@ -25,6 +28,8 @@ export interface StackLayoutInput {
   minWidth: number;
   peekOffset: number;
   maxPeek: number;
+  /** Which way the older panels move when one is added (attach mode). Default "inward". */
+  push?: "inward" | "outward";
   /** Peek regardless of room (a narrow viewport). */
   forcePeek?: boolean;
 }
@@ -35,7 +40,7 @@ export interface StackLayout {
 }
 
 export function layoutStack(input: StackLayoutInput): StackLayout {
-  const { natural, viewport, gap, minWidth, peekOffset, maxPeek, forcePeek } = input;
+  const { natural, viewport, gap, minWidth, peekOffset, maxPeek, forcePeek, push = "inward" } = input;
   const avail = Math.max(0, viewport - gap);
   const n = natural.length;
   const clamped = natural.map((w) => Math.min(w, avail));
@@ -46,15 +51,15 @@ export function layoutStack(input: StackLayoutInput): StackLayout {
     const widths = clamped.map((w) => w * scale);
     // A lone panel is only ever capped, never "squeezed".
     if (scale === 1 || n === 1 || Math.min(...widths) >= minWidth) {
+      const panels = widths.map((width) => ({ width, offset: 0 }));
+      // Outward: oldest at the edge, each newer one beside it. Inward: newest at the edge.
       let offset = 0;
-      return {
-        mode: "attach",
-        panels: widths.map((width) => {
-          const panel = { width, offset };
-          offset += width;
-          return panel;
-        }),
-      };
+      for (let k = 0; k < n; k++) {
+        const i = push === "inward" ? n - 1 - k : k;
+        panels[i].offset = offset;
+        offset += widths[i];
+      }
+      return { mode: "attach", panels };
     }
   }
 

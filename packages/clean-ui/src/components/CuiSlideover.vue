@@ -24,9 +24,10 @@ export interface CuiSlideoverProps extends BackdropGradientProps, HideableProps,
   /** Title text (rendered in header) */
   title?: string;
   /**
-   * A modal overlay (the default) traps focus and, inside a `CuiSlideoverStack`, makes the
-   * overlays beneath it inert. `false` opens it co-active: the ones beneath stay interactive,
-   * focus moves freely and nothing is trapped. Bind it, `:modal="false"` (#41)
+   * A modal overlay traps focus and, inside a `CuiSlideoverStack`, makes the overlays beneath
+   * it inert. `false` opens it co-active: the ones beneath stay interactive, focus moves
+   * freely and nothing is trapped. Unset, it inherits the stack's `modal` (true alone). Bind
+   * it, `:modal="false"` (#41)
    */
   modal?: boolean;
   /** Prevent closing via Escape and backdrop click */
@@ -53,7 +54,8 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   visible: false,
-  modal: true,
+  // `undefined`, not Vue's boolean `false`: absent means inherit from the stack (true alone).
+  modal: undefined,
   side: "right",
   size: "md",
   persistent: false,
@@ -81,7 +83,7 @@ const emit = defineEmits<{
 const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, ownsBackdrop, stacked } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, ownsBackdrop, stacked, isModal } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -195,7 +197,7 @@ const themeScope = useScopedTheme(() => mounted.value);
         :class="panelClass"
         :style="panelVars"
         role="dialog"
-        :aria-modal="modal ? 'true' : 'false'"
+        :aria-modal="isModal ? 'true' : 'false'"
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
         v-bind="$attrs"

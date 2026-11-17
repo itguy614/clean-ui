@@ -40,7 +40,7 @@ function unmark(el: HTMLElement) {
  * (`useLayerStack`) and the reference-counted scroll lock stay where they are: the overlays
  * still register with both, so the page locks once and unlocks when the last one closes.
  */
-export function useOverlayStackProvider(): OverlayStackContext {
+export function useOverlayStackProvider(options: { modal?: () => boolean } = {}): OverlayStackContext {
   const entries = shallowReactive<OverlayStackEntry[]>([]);
 
   const start = () => activeStart(entries.map((e) => e.modal()));
@@ -75,6 +75,7 @@ export function useOverlayStackProvider(): OverlayStackContext {
 
   const context: OverlayStackContext = {
     entries,
+    defaultModal: () => options.modal?.() ?? true,
     register,
     unregister,
     depth,

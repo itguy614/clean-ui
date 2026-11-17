@@ -44,10 +44,11 @@ export interface UseOverlayOptions {
   /** Called once the exit has finished and focus has been returned (`after-leave`). */
   onClosed?: () => void;
   /**
-   * Whether the overlay is modal (default true). A co-active one (`false`) leaves the overlays
-   * beneath it interactive when it sits in a stack, and never traps focus (#41).
+   * Whether the overlay is modal. `undefined` inherits the stack's `modal` (true with no stack).
+   * A co-active one (`false`) leaves the overlays beneath it interactive when it sits in a
+   * stack, and never traps focus (#41).
    */
-  modal?: () => boolean;
+  modal?: () => boolean | undefined;
   /** The edge the overlay docks to, for a stack that checks its panels agree (#41). None by default. */
   side?: () => string;
 }
@@ -64,7 +65,7 @@ export function useOverlay(options: UseOverlayOptions) {
     returnFocus: getReturnFocus,
     onOpened,
     onClosed,
-    modal: getModal = () => true,
+    modal: getModal = () => undefined,
     side: getSide = () => "",
   } = options;
 
@@ -209,9 +210,11 @@ export function useOverlay(options: UseOverlayOptions) {
   // depth, z-order, the one backdrop and `inert`, and routes Escape and backdrop clicks. With
   // no stack this is a bare inject returning null, and nothing below changes.
   const stack = useOverlayStackContext();
+  /** Its own `modal` if set, else the stack's, else true. */
+  const isModal = () => getModal() ?? stack?.defaultModal() ?? true;
   let stackEntry: OverlayStackEntry | null = null;
   if (stack) {
-    stackEntry = { modal: getModal, side: getSide, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
+    stackEntry = { modal: isModal, side: getSide, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
     const joined = stackEntry;
     watch(isOpen, (now) => (now ? stack.register(joined) : stack.unregister(joined)), { flush: "sync" });
     onScopeDispose(() => stack.unregister(joined));
@@ -231,7 +234,7 @@ export function useOverlay(options: UseOverlayOptions) {
   // focus move on to its siblings.
   function onKeydown(e: KeyboardEvent) {
     const dialog = dialogRef.value;
-    if (e.key !== "Tab" || !dialog || !getModal()) return;
+    if (e.key !== "Tab" || !dialog || !isModal()) return;
     const items = tabbableIn(dialog);
     // Nothing to tab to: focus stays on the dialog rather than leaving it.
     if (!items.length) {
@@ -285,5 +288,7 @@ export function useOverlay(options: UseOverlayOptions) {
     ownsBackdrop,
     /** Whether the overlay sits in a stack: its root then lets pointer events through. */
     stacked: !!stack,
+    /** Whether the dialog is modal after inheriting from the stack (`aria-modal`). */
+    isModal: computed(isModal),
   };
 }

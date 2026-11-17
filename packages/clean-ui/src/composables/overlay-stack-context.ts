@@ -25,6 +25,8 @@ export interface OverlayStackContext {
   unregister: (entry: OverlayStackEntry) => void;
   /** 0 for the bottom overlay; -1 when the entry is not registered (not open). */
   depth: (entry: OverlayStackEntry) => number;
+  /** The stack's `modal`: what an overlay that sets none of its own inherits. */
+  defaultModal: () => boolean;
   /** Interactive: in the active set (see `activeStart`). A closed entry reports true. */
   isActive: (entry: OverlayStackEntry) => boolean;
   /** The CSS `z-index` of the entry's overlay root: one step above the entry beneath it. */

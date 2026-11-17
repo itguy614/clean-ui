@@ -13,9 +13,15 @@ describe("layoutStack: attach", () => {
     expect(l.panels).toEqual([{ width: 448, offset: 0 }]);
   });
 
-  it("panels that fit sit edge to edge at their natural widths", () => {
-    const l = run({ natural: [576, 448] });
+  it("inward (default): the newest is at the edge, older panels sit inward of it", () => {
+    const l = run({ natural: [400, 448, 320] });
     expect(l.mode).toBe("attach");
+    expect(widths(l)).toEqual([400, 448, 320]);
+    expect(offsets(l)).toEqual([768, 320, 0]);
+  });
+
+  it("outward: the oldest is at the edge, each newer one attached beside it", () => {
+    const l = run({ natural: [576, 448], push: "outward" });
     expect(widths(l)).toEqual([576, 448]);
     expect(offsets(l)).toEqual([0, 576]);
   });
@@ -27,7 +33,7 @@ describe("layoutStack: attach", () => {
     // Equal proportion: the ratios between panels survive.
     expect(widths(l)[0] / widths(l)[1]).toBeCloseTo(576 / 448, 6);
     // Still edge to edge, and never past the gap.
-    expect(offsets(l)[2] + widths(l)[2]).toBeCloseTo(1248, 6);
+    expect(offsets(l)[0] + widths(l)[0]).toBeCloseTo(1248, 6);
   });
 
   it("a lone panel wider than the room is capped, not treated as squeezed", () => {

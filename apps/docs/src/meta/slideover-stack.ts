@@ -11,6 +11,20 @@ const meta: ComponentMeta = {
       name: "CuiSlideoverStack",
       props: [
         {
+          name: "push",
+          type: "inward | outward",
+          default: "inward",
+          description:
+            "Which way panels already open move when another is added. inward: they slide toward the open side while the newest enters at the docked edge. outward: they stay put and the newest attaches on the open side. A closing panel reverses it",
+        },
+        {
+          name: "modal",
+          type: "boolean",
+          default: "true",
+          description:
+            "Whether the stack's panels are modal. false keeps every panel active: none is made inert, nothing traps focus, and Escape closes the focused panel. A panel's own modal prop overrides it",
+        },
+        {
           name: "mode",
           type: "auto | peek",
           default: "auto",
@@ -56,9 +70,9 @@ const meta: ComponentMeta = {
         {
           name: "modal",
           type: "boolean",
-          default: "true",
+          default: "the stack's modal (true alone)",
           description:
-            "A modal panel traps focus and, in a stack, makes every panel beneath it inert. Bind :modal=\"false\" to open it co-active: the panels beneath stay interactive and focus moves freely between them",
+            "A modal panel traps focus and, in a stack, makes every panel beneath it inert. Bind :modal=\"false\" to open it co-active: the panels beneath stay interactive and focus moves freely between them. Unset, it inherits the stack's modal",
         },
       ],
     },

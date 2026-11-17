@@ -8,6 +8,7 @@ import type { TailwindBreakpoint } from "../types/grid";
 
 export interface SlideoverStackLayoutOptions {
   mode: () => "auto" | "peek";
+  push: () => "inward" | "outward";
   gap: () => number;
   minWidth: () => number;
   peekOffset: () => number;
@@ -75,16 +76,15 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
       if (el && entry.side() === side) items.push({ entry, el });
     }
 
-    // Panels that left the stack (or sit on another side) go back to their own layout.
-    const next = new Set(items.map((i) => i.el));
-    for (const el of managed) if (!next.has(el)) clear(el);
-    managed = next;
+    // A panel that left the stack keeps the geometry it had, so it exits from where it stood
+    // (through the docked edge) rather than jumping; its element goes when its exit ends.
+    managed = new Set(items.map((i) => i.el));
     if (!items.length || typeof window === "undefined") return;
 
     // Where each is drawn now, running animations included, before anything changes.
     const first = new Map(items.map(({ el }) => [el, el.getBoundingClientRect()]));
     const natural = items.map(({ el }) => naturalWidth(el));
-    const layout = layoutStack({ natural, viewport: vw, gap, minWidth, peekOffset, maxPeek, forcePeek });
+    const layout = layoutStack({ natural, viewport: vw, gap, minWidth, peekOffset, maxPeek, forcePeek, push: options.push() });
 
     items.forEach(({ el }) => el.getAnimations?.().forEach((a) => a.id === FLIP && a.cancel()));
     const moved: HTMLElement[] = [];

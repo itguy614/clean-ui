@@ -31,6 +31,7 @@ describe("CuiSlideoverStack (real browser)", () => {
   interface Spec {
     size?: string;
     modal?: boolean;
+    side?: string;
   }
   function stack(specs: Spec[], props: Record<string, unknown> = {}) {
     const open = reactive(specs.map(() => false));
@@ -47,7 +48,8 @@ describe("CuiSlideoverStack (real browser)", () => {
                     visible: open[i],
                     "onUpdate:visible": (v: boolean) => (open[i] = v),
                     size: s.size ?? "md",
-                    modal: s.modal ?? true,
+                    ...(s.modal === undefined ? {} : { modal: s.modal }),
+                    side: s.side ?? "right",
                     "data-testid": `p${i}`,
                   },
                   { default: () => [h("button", { id: `a${i}` }, "a"), h("button", { id: `b${i}` }, "b")] },
@@ -72,28 +74,91 @@ describe("CuiSlideoverStack (real browser)", () => {
   describe("wide viewport", () => {
     beforeAll(() => page.viewport(1400, 800));
 
-    it("attaches panels edge to edge from the right edge, at their natural widths", async () => {
+    it("inward (the default): the newest panel enters at the dock edge and the older ones move inward", async () => {
       const open = stack([{ size: "lg" }, { size: "md" }]);
+      await openN(open, 2);
+      // Newest (md, 448) at the right edge; the first (lg, 576) slid in beside it.
+      expect(rect(1).right).toBeCloseTo(1400, 0);
+      expect(rect(1).width).toBeCloseTo(448, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
+      expect(rect(0).width).toBeCloseTo(576, 0);
+      // The lone-slideover gap is intact.
+      expect(rect(0).left).toBeGreaterThan(32);
+    });
+
+    it("inward: sliding without narrowing is a pure translate, no scale", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }]);
+      await openN(open, 1);
+      const before = rect(0).right;
+      open[1] = true;
+      await frames(2);
+      const flip = panel(0).getAnimations().find((a) => a.id === "cui-stack-flip")!;
+      expect(flip, "the first panel slides").toBeDefined();
+      const frames_ = (flip.effect as KeyframeEffect).getKeyframes();
+      expect(String(frames_[0].transform)).toMatch(/translateX\(-?[\d.]+px\) scaleX\(1\)/);
+      await settle();
+      expect(rect(0).right).toBeCloseTo(before - 448, 0);
+      expect(rect(0).width).toBeCloseTo(576, 0);
+    });
+
+    it("inward: closing the newest reverses it, the older panels slide back to the edge", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }]);
+      await openN(open, 2);
+      open[1] = false;
+      await frames(2);
+      expect(panel(0).getAnimations().some((a) => a.id === "cui-stack-flip"), "the older panel animates back").toBe(true);
+      await settle();
+      expect(rect(0).right).toBeCloseTo(1400, 0);
+    });
+
+    it("outward: the newest attaches on the inner side and the older panels stay put", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }], { push: "outward" });
       await openN(open, 2);
       expect(rect(0).right).toBeCloseTo(1400, 0);
       expect(rect(0).width).toBeCloseTo(576, 0);
       expect(rect(1).right).toBeCloseTo(rect(0).left, 0);
       expect(rect(1).width).toBeCloseTo(448, 0);
-      // The lone-slideover gap is intact.
       expect(rect(1).left).toBeGreaterThan(32);
     });
 
-    it("narrows together so the group exactly fills the viewport minus the gap", async () => {
+    it("outward: opening another panel does not move the first", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }], { push: "outward" });
+      await openN(open, 1);
+      open[1] = true;
+      await frames(2);
+      expect(panel(0).getAnimations().some((a) => a.id === "cui-stack-flip")).toBe(false);
+    });
+
+    it("a panel that closes exits through the dock edge as it stood, not re-laid-out first", async () => {
+      const open = stack([{ size: "lg" }, { size: "lg" }, { size: "lg" }]);
+      await openN(open, 3);
+      const { left, width } = rect(2);
+      expect(width).toBeLessThan(576);
+      open[2] = false;
+      await frames(2);
+      // Still the narrowed width, and not moved back toward the screen's inside.
+      expect(rect(2).width).toBeCloseTo(width, 0);
+      expect(rect(2).left).toBeGreaterThanOrEqual(left - 1);
+    });
+
+    it("narrows together, newest at the edge, so the group exactly fills the viewport minus the gap", async () => {
       const open = stack([{ size: "lg" }, { size: "lg" }, { size: "lg" }]);
       await openN(open, 3);
       const left = Math.min(rect(0).left, rect(1).left, rect(2).left);
       expect(left).toBeCloseTo(32, 0);
-      expect(rect(0).right).toBeCloseTo(1400, 0);
-      // Edge to edge, no seams, equal widths.
-      expect(rect(1).right).toBeCloseTo(rect(0).left, 0);
-      expect(rect(2).right).toBeCloseTo(rect(1).left, 0);
+      // Newest at the right edge, oldest innermost, edge to edge, equal widths.
+      expect(rect(2).right).toBeCloseTo(1400, 0);
+      expect(rect(1).right).toBeCloseTo(rect(2).left, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
       expect(rect(0).width).toBeCloseTo(rect(2).width, 0);
       expect(rect(0).width).toBeLessThan(576);
+    });
+
+    it("mirrors on the left: the newest at the left edge, older panels moved inward", async () => {
+      const open = stack([{ size: "lg", side: "left" }, { size: "md", side: "left" }]);
+      await openN(open, 2);
+      expect(rect(1).left).toBeCloseTo(0, 0);
+      expect(rect(0).left).toBeCloseTo(rect(1).right, 0);
     });
 
     it("widens back when a panel closes", async () => {
@@ -102,7 +167,8 @@ describe("CuiSlideoverStack (real browser)", () => {
       open[2] = false;
       await settle();
       expect(rect(0).width).toBeCloseTo(576, 0);
-      expect(rect(1).right).toBeCloseTo(rect(0).left, 0);
+      expect(rect(1).right).toBeCloseTo(1400, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
     });
 
     it("plays the re-flow on transform alone: a panel that narrows animates, and ends in place", async () => {

@@ -10,6 +10,7 @@ import {
   CuiSlideoverStack,
   CuiStack,
   CuiTextarea,
+  CuiToggle,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
@@ -17,6 +18,8 @@ import meta from "../meta/slideover-stack";
 
 // Modal stack: three panels, each opened from the one beneath.
 const levels = ref([false, false, false]);
+const pushInward = ref(true);
+const allActive = ref(false);
 
 // Co-active: a form, and a history of it that stays interactive beside it.
 const formOpen = ref(false);
@@ -34,7 +37,9 @@ const peeks = ref([false, false, false, false]);
     <template #intro>
       <CuiAlert color="info" title="Try it">
         <ol class="list-decimal pl-5">
-          <li><strong>Modal stack:</strong> open panel 1, then open 2 from inside it, then 3. Panels attach edge to edge, one surface from the right edge, and there is always a gap on the left. Narrow your window and open all three: they narrow together, then fall back to peeking.</li>
+          <li><strong>Modal stack:</strong> open panel 1, then open 2 from inside it, then 3. The newest panel enters at the right edge and the ones already open slide inward to make room, all edge to edge, with a gap always left on the left. Close the top one: it leaves through the right edge and the others slide back. Narrow your window and open all three: they narrow together, then fall back to peeking.</li>
+          <li>Turn off <strong>Push existing panels inward</strong> (<code>push="outward"</code>) and reopen: now the first panel stays at the edge and each new one attaches on the inner side.</li>
+          <li>Turn on <strong>All panels stay active</strong> (<code>:modal="false"</code> on the stack) and open all three: none goes inert, Tab moves freely between them, and Escape closes the panel you are in.</li>
           <li>With all three open, try to click or Tab into panel 1: only the top panel responds. Press Escape: only the top closes, and focus goes back to the button you opened it with.</li>
           <li><strong>Co-active:</strong> open the form, then open its history. Both are interactive: click a history row to fill the form, type in the form, and Tab from one to the other.</li>
           <li>With the form focused, press Escape: the panel you are in closes, not the one on top.</li>
@@ -48,18 +53,23 @@ const peeks = ref([false, false, false, false]);
       <Example
         code-open
         title="Modal stack"
-        :code="`<CuiSlideoverStack>
+        :code="`<!-- push: inward (default) | outward; modal=false: every panel stays active -->
+<CuiSlideoverStack push=&quot;inward&quot; :modal=&quot;true&quot;>
   <CuiSlideover v-model:visible=&quot;one&quot; title=&quot;One&quot;>
     <CuiButton @click=&quot;two = true&quot;>Open two</CuiButton>
   </CuiSlideover>
   <CuiSlideover v-model:visible=&quot;two&quot; title=&quot;Two&quot;>...</CuiSlideover>
 </CuiSlideoverStack>`"
       >
-        <CuiButton variant="solid" size="sm" @click="levels[0] = true">Open panel 1</CuiButton>
-        <CuiSlideoverStack>
+        <CuiFlex gap="4" class="flex-wrap items-center">
+          <CuiButton variant="solid" size="sm" @click="levels[0] = true">Open panel 1</CuiButton>
+          <CuiToggle v-model="pushInward" label="Push existing panels inward" size="sm" />
+          <CuiToggle v-model="allActive" label="All panels stay active" size="sm" />
+        </CuiFlex>
+        <CuiSlideoverStack :push="pushInward ? 'inward' : 'outward'" :modal="!allActive">
           <CuiSlideover v-for="(_, i) in levels" :key="i" v-model:visible="levels[i]" :title="`Panel ${i + 1}`" size="md">
             <CuiStack spacing="3">
-              <p>This is panel {{ i + 1 }}. Only the top panel of a modal stack is interactive.</p>
+              <p>This is panel {{ i + 1 }}. {{ allActive ? "Every panel in this stack is interactive." : "Only the top panel of a modal stack is interactive." }}</p>
               <CuiButton v-if="i < levels.length - 1" variant="outline" size="sm" @click="levels[i + 1] = true">
                 Open panel {{ i + 2 }}
               </CuiButton>
@@ -131,6 +141,13 @@ const peeks = ref([false, false, false, false]);
           <li><code>1 modal, 2 co-active, 3 modal</code>: 3 is modal, so 1 and 2 are inert; the backdrop is behind 3.</li>
         </ul>
         <p class="text-surface-700 dark:text-surface-300">
+          <code>modal</code> on the stack (default <code>true</code>) is every panel's default;
+          <code>:modal="false"</code> makes all of them co-active, so the active set is the whole
+          stack and the backdrop sits behind the lowest panel. A panel's own <code>modal</code>
+          prop still wins when set: a modal panel in an all-active stack bounds the active set as
+          usual. Unset on both, a panel is modal, as it is outside a stack.
+        </p>
+        <p class="text-surface-700 dark:text-surface-300">
           Escape closes the topmost active panel, unless it is <code>persistent</code>, in which case
           nothing closes. In a co-active group, if focus is in a lower active panel, Escape closes the
           focused panel instead. A click on the backdrop closes the topmost panel the same way.
@@ -141,16 +158,18 @@ const peeks = ref([false, false, false, false]);
         <h2 class="text-2xl font-semibold">Layout</h2>
         <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
           <li><strong>Attach:</strong> panels keep their natural width and sit edge to edge from the docked side. The gap a lone slideover leaves (<code>gap</code>, 32px) is never used.</li>
+          <li><strong>Push:</strong> <code>push="inward"</code> (the default) puts the newest panel at the docked edge and slides the ones already open toward the open side to make room, so the stack reads oldest to newest from the open side to the edge. <code>push="outward"</code> leaves the older panels where they are and attaches the newest on the open side. A closing panel reverses either: it leaves through the docked edge and the rest slide back. Left-docked stacks mirror this.</li>
           <li><strong>Narrow to fit:</strong> once the group would reach the gap, every panel narrows by the same proportion so the group exactly fills the viewport minus the gap.</li>
           <li><strong>Peek:</strong> below <code>minWidth</code>, or on a viewport narrower than <code>peekBelow</code>, panels overlap and each lower panel's edge shows <code>peekOffset</code> beyond the one above. Past <code>maxPeek</code> layers the offset stops growing.</li>
           <li><strong>Same side only:</strong> a stack is all-right or all-left. Panels on different sides still get the shared backdrop, inert and z-order, but the layout only arranges the first panel's side, and a development warning says so. Top and bottom panels join the coordination without any layout.</li>
         </ul>
         <p class="text-surface-700 dark:text-surface-300">
-          Narrowing and peeking animate on <code>transform</code> only. The new layout is applied at
+          Narrowing, sliding and peeking animate on <code>transform</code> only. The new layout is applied at
           once, and each panel that moved is then played from where it was drawn to where it now is
           (a translate and a scale about its docked edge), over <code>--cui-duration-slow</code>. A
-          width transition would animate layout on every frame; this stays on the compositor. The
-          catch: during that quarter second, text in a panel that is narrowing is scaled with it.
+          width transition would animate layout on every frame; this stays on the compositor. Sliding
+          alone is a pure translate. The catch: during that quarter second, text in a panel that is
+          narrowing is scaled with it.
         </p>
       </CuiStack>
 
