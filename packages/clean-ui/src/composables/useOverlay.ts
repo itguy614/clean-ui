@@ -1,7 +1,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
-import { useLayerStack } from "./useLayerStack";
+import { useLayerStack, type LayerHandle } from "./useLayerStack";
 import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
@@ -41,9 +41,43 @@ export interface UseOverlayOptions {
   onOpened?: () => void;
   /** Called once the exit has finished and focus has been returned (`after-leave`). */
   onClosed?: () => void;
+  /**
+   * What a slideover or drawer adds to the shared behavior (#41): joining a stack, and closing
+   * the overlays nested in it. It is a factory so `useOverlay` carries none of that: a modal
+   * passes nothing and pays nothing (see `useOverlayJoin.ts`).
+   */
+  join?: (core: OverlayJoinCore) => OverlayHooks;
 }
 
-export function useOverlay(options: UseOverlayOptions) {
+/** What `useOverlay` hands the extension that joins it to a stack. */
+export interface OverlayJoinCore {
+  isOpen: Ref<boolean>;
+  dialogRef: UseOverlayOptions["dialogRef"];
+  rootRef: UseOverlayOptions["dialogRef"];
+  /** Close, unless `persistent`. */
+  requestClose: () => void;
+  close: () => void;
+  /** Report the close (the exit has played): idempotent. */
+  finish: () => void;
+  /** Handle of this overlay's layer in the Escape stack. */
+  layer: LayerHandle;
+}
+
+/** The extension points; every one is optional. */
+export interface OverlayHooks {
+  /** Whether Tab is trapped. */
+  isModal?: () => boolean;
+  /** Escape, in place of closing this overlay. */
+  onEscape?: () => void;
+  /** A close has begun. */
+  beforeClose?: () => void;
+  /** The close is about to be reported. */
+  beforeFinish?: () => void;
+  /** The overlay this is nested in closed: close, and return what reports it. */
+  onParentClose?: () => (() => void) | void;
+}
+
+export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<UseOverlayOptions, "join"> & { join?: (core: OverlayJoinCore) => J }) {
   const {
     open: getOpen,
     dialogRef,
@@ -55,7 +89,9 @@ export function useOverlay(options: UseOverlayOptions) {
     returnFocus: getReturnFocus,
     onOpened,
     onClosed,
+    join,
   } = options;
+  let hooks: J | undefined;
 
   const isVisible = ref(false);
   const isAnimating = ref(false);
@@ -84,6 +120,9 @@ export function useOverlay(options: UseOverlayOptions) {
     holdsScrollLock = false;
     unlockBodyScroll();
   }
+
+  // Closed, and the exit not reported yet: what makes `finishClose` safe to run twice.
+  let finishing = false;
 
   let enterFrame: number | null = null;
   // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
@@ -139,6 +178,9 @@ export function useOverlay(options: UseOverlayOptions) {
 
   /** The exit has played: report the close, give the page back, return focus. */
   function finishClose() {
+    if (!finishing) return;
+    finishing = false;
+    hooks?.beforeFinish?.();
     onUpdateOpen(false);
     onClose();
 
@@ -159,6 +201,8 @@ export function useOverlay(options: UseOverlayOptions) {
     // Already closing, or closed: once is enough. Without this the consumer's v-model echo
     // of the close, `open` turning false, started a second close and reported it twice (#339).
     if (!isOpen.value) return;
+    hooks?.beforeClose?.();
+    finishing = true;
     // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
     if (enterFrame !== null) {
       cancelAnimationFrame(enterFrame);
@@ -194,13 +238,20 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
-  // A persistent overlay still takes the Escape and declines it.
-  useLayerStack({ active: isOpen, onEscape: requestClose, modal: true });
+  // A persistent overlay still takes the Escape and declines it. A stack picks which panel.
+  const layer = useLayerStack({
+    active: isOpen,
+    onEscape: () => (hooks?.onEscape ?? requestClose)(),
+    modal: true,
+    onParentClose: () => hooks?.onParentClose?.(),
+  });
+  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer });
 
-  // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339).
+  // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
+  // focus move on to its siblings.
   function onKeydown(e: KeyboardEvent) {
     const dialog = dialogRef.value;
-    if (e.key !== "Tab" || !dialog) return;
+    if (e.key !== "Tab" || !dialog || hooks?.isModal?.() === false) return;
     const items = tabbableIn(dialog);
     // Nothing to tab to: focus stays on the dialog rather than leaving it.
     if (!items.length) {
@@ -250,5 +301,7 @@ export function useOverlay(options: UseOverlayOptions) {
     requestClose,
     onBackdropClick,
     onKeydown,
+    /** What `join` returned: a slideover's stack layer. */
+    join: hooks as J,
   };
 }

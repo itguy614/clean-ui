@@ -3,9 +3,9 @@ import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
+import { backdropOf, joinStack } from "../composables/useOverlayJoin";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
-import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -24,6 +24,13 @@ export interface CuiSlideoverProps extends BackdropGradientProps, HideableProps,
   size?: SlideoverSize | string;
   /** Title text (rendered in header) */
   title?: string;
+  /**
+   * A modal overlay traps focus and, inside a `CuiSlideoverStack`, makes the overlays beneath
+   * it inert. `false` opens it co-active: the ones beneath stay interactive, focus moves
+   * freely and nothing is trapped. Unset, it inherits the stack's `modal` (true alone). Bind
+   * it, `:modal="false"` (#41)
+   */
+  modal?: boolean;
   /** Prevent closing via Escape and backdrop click */
   persistent?: boolean;
   /** Hide the X close button */
@@ -48,6 +55,8 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   visible: false,
+  // `undefined`, not Vue's boolean `false`: absent means inherit from the stack (true alone).
+  modal: undefined,
   side: "right",
   size: "md",
   persistent: false,
@@ -75,7 +84,7 @@ const emit = defineEmits<{
 const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, join } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -87,6 +96,11 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   returnFocus: () => props.returnFocus,
   onOpened: () => emit("after-enter"),
   onClosed: () => emit("after-leave"),
+  join: joinStack({
+    modal: () => props.modal,
+    side: () => props.side,
+    backdrop: () => backdropOf(props),
+  }),
 });
 
 // Closed while `hidden`: v-show is already off, so no leave runs to report the close.
@@ -136,6 +150,7 @@ const panelVars = computed(() =>
 const panelClass = computed(() => [
   `cui-slideover__panel--${props.side}`,
   {
+    "cui-slideover__panel--stacked": join.stacked,
     "cui-slideover__panel--full": props.size === "full",
     "cui-slideover__panel--visible": isAnimating.value,
   },
@@ -157,12 +172,13 @@ const themeScope = useScopedTheme(() => mounted.value);
       v-show="isVisible && !hidden"
       ref="overlayEl"
       class="cui-slideover-overlay"
-      :class="themeScope"
-      :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
+      :class="[themeScope, { 'cui-slideover-overlay--stacked': join.stacked }]"
+      :style="{ position: 'fixed', inset: '0', zIndex: join.zIndex() }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
       <CuiBackdrop
+        v-if="!join.stacked"
         data-cui-exit
         :visible="isAnimating"
         :opacity="backdropOpacity"
@@ -186,7 +202,7 @@ const themeScope = useScopedTheme(() => mounted.value);
         :class="panelClass"
         :style="panelVars"
         role="dialog"
-        aria-modal="true"
+        :aria-modal="join.isModal() ? 'true' : 'false'"
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
         v-bind="$attrs"
@@ -212,6 +228,9 @@ const themeScope = useScopedTheme(() => mounted.value);
         <template v-else>
           <slot />
         </template>
+
+        <!-- In a stack: dims the panel while another covers it (#41) -->
+        <div v-if="join.stacked" class="cui-slideover__scrim" aria-hidden="true" />
       </div>
     </div>
     </Transition>
@@ -219,6 +238,16 @@ const themeScope = useScopedTheme(() => mounted.value);
 </template>
 
 <style scoped>
+/* In a stack (#41) every overlay root is full-screen, and the ones above would block the
+   panels beneath them. The root lets pointer events through; the panel takes them. The one
+   backdrop is the stack's own (CuiSlideoverStack), not a panel's. */
+.cui-slideover-overlay--stacked {
+  pointer-events: none;
+}
+.cui-slideover-overlay--stacked .cui-slideover__panel {
+  pointer-events: auto;
+}
+
 /* --- Panel --- */
 /* Themeable — zero specificity, so a class forwarded onto the panel (`<CuiSlideover class>`)
    or a consumer's own `.cui-slideover__panel { … }` wins without `!important` (#407). A token
@@ -230,7 +259,7 @@ const themeScope = useScopedTheme(() => mounted.value);
 }
 
 :where(.cui-slideover__panel--left, .cui-slideover__panel--right) {
-  width: var(--cui-slideover-width, var(--_slideover-width));
+  width: var(--_stack-width, var(--cui-slideover-width, var(--_slideover-width)));
 }
 
 :where(.cui-slideover__panel--top, .cui-slideover__panel--bottom) {
@@ -256,7 +285,8 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-slideover__panel--right {
   top: 0;
   height: 100%;
-  max-width: calc(100vw - 2rem);
+  /* In a stack the layout sets the width itself and lifts this cap (--_stack-*, #41). */
+  max-width: var(--_stack-max-width, calc(100vw - 2rem));
 }
 
 .cui-slideover__panel--top,
@@ -273,14 +303,19 @@ const themeScope = useScopedTheme(() => mounted.value);
 }
 
 /* Off-screen until visible. */
+/* In a stack a panel sits --_stack-offset in from the edge, beside the ones beneath it, and
+   leaves past all of them. Alone the offset is 0. Its edge is also where a re-flow scales
+   from (useSlideoverStackLayout). */
 .cui-slideover__panel--right {
-  right: 0;
-  transform: translateX(100%);
+  right: var(--_stack-offset, 0px);
+  transform: translateX(calc(100% + var(--_stack-offset, 0px)));
+  transform-origin: right center;
 }
 
 .cui-slideover__panel--left {
-  left: 0;
-  transform: translateX(-100%);
+  left: var(--_stack-offset, 0px);
+  transform: translateX(calc(-100% - var(--_stack-offset, 0px)));
+  transform-origin: left center;
 }
 
 .cui-slideover__panel--top {
@@ -291,6 +326,75 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-slideover__panel--bottom {
   bottom: 0;
   transform: translateY(100%);
+}
+
+/* In a stack (#41) the attached panels read as one surface. A panel's own shadow would fall on
+   the panel beside it, so none casts one but the outer edge of the group: the shadow and a
+   hairline for the seams are two pseudo-elements, faded by opacity when the edge changes hands
+   (transform and opacity only, no shadow animation). The stack's layout sets the private
+   --_stack-shadow / --_stack-seam / --_stack-shadow-val on each panel; alone they default to a
+   lone panel's look. overflow is visible here so the shadow can leave the box: the panel is
+   as tall as the viewport and its content scrolls in its own body. */
+.cui-slideover__panel--stacked {
+  overflow: visible;
+  box-shadow: none;
+}
+/* A panel beneath the active set (covered) is dimmed by its own scrim, not by the one backdrop
+   moving a layer in front of it: the scrim fades in by opacity over the incoming panel's slide
+   (and out over the same easing), so the dimming is a ramp and nothing pops. The stack sets
+   --_stack-dim (the backdrop's opacity) and --_stack-scrim (its color) and marks the panel
+   data-cui-covered; settled, it looks as the backdrop did over it. */
+.cui-slideover__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--_stack-scrim, black);
+  opacity: 0;
+  /* Out of the covered state it clears over the exit of the panel above (--cui-duration-fast, the
+     same as its slide-out), but on plain `ease`, the colour-change curve: the drawer curve is
+     front-loaded, and a fade on it is a step in the first 40ms, which reads as a flash. */
+  transition: opacity var(--cui-duration-fast) ease;
+}
+[data-cui-covered] > .cui-slideover__scrim {
+  opacity: var(--_stack-dim, 0.5);
+  transition-duration: var(--cui-duration-slow);
+  transition-timing-function: var(--cui-ease-drawer);
+}
+.cui-slideover__panel--stacked::after,
+.cui-slideover__panel--stacked::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  transition: opacity var(--cui-duration-base) ease;
+}
+.cui-slideover__panel--stacked::after {
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  /* Cast to the open side only: with push="outward" the outer panel is the topmost layer, and a
+     shadow all round would fall on the panel beside it. */
+  clip-path: inset(-100px 0 -100px -100px);
+  box-shadow: var(--_stack-shadow-val, var(--cui-shadow-lg));
+  opacity: var(--_stack-shadow, 1);
+}
+.cui-slideover__panel--stacked::before {
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 1px;
+  background: var(--cui-slideover-border, var(--cui-border));
+  opacity: var(--_stack-seam, 0);
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--right::before {
+  left: 0;
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--left::before {
+  right: 0;
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--left::after {
+  clip-path: inset(-100px -100px -100px 0);
 }
 
 /* After the side rules, which it overrides at the same specificity. */

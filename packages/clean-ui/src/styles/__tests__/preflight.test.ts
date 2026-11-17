@@ -160,6 +160,7 @@ describe("every component root is inside the scope", () => {
     // Renderless: the root is <slot />, so there is no element of our own.
     "CuiConfigProvider.vue": "renderless",
     "CuiToastProvider.vue": "renderless (its toast container is classed separately)",
+    "CuiSlideoverStack.vue": "renderless: a provider whose slot holds the overlays, which teleport and carry their own classes (#41)",
     // <Teleport> is not an element; the element it teleports carries the class.
     "CuiDropdownMenu.vue": "teleports .cui-dropdown-menu",
     "CuiListboxPanel.vue": "teleports .cui-listbox-panel",

@@ -124,6 +124,7 @@ export const PAGES: readonly DocPage[] = [
   { id: "modal", label: "Modal", path: "/components/modal", group: "Overlay", keywords: ["dialog", "popup", "overlay", "lightbox", "window", "backdrop", "focus trap", "modal dialog"] },
   { id: "popover", label: "Popover", path: "/components/popover", group: "Overlay", keywords: ["tooltip", "popup", "overlay", "floating", "flyout", "hovercard", "anchored", "bubble"] },
   { id: "slideover", label: "Slideover", path: "/components/slideover", group: "Overlay", keywords: ["drawer", "side panel", "sheet", "off canvas", "flyout", "overlay", "sidebar", "panel"] },
+  { id: "slideover-stack", label: "Slideover Stack", path: "/components/slideover-stack", group: "Overlay", keywords: ["stacked", "nested", "multiple", "cascade", "peek", "co-active", "history panel", "side by side", "panels", "overlay stack", "shared backdrop", "depth", "inert"] },
   { id: "tooltip", label: "Tooltip", path: "/components/tooltip", group: "Overlay", keywords: ["hint", "hover", "title", "popover", "help text", "label on hover", "bubble"] },
 
   // Composables (#296): interaction, positioning, responsive, forms

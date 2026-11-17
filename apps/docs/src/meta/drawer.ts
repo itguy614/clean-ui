@@ -32,6 +32,13 @@ const meta: ComponentMeta = {
           description: "The snap point the sheet rests at, as v-model:active-snap-point. It opens at this one, and returns to the first each time it reopens",
         },
         {
+          name: "modal",
+          type: "boolean",
+          default: "the stack's modal (true alone)",
+          description:
+            "Modal panels trap focus and, inside a CuiSlideoverStack, make the panels beneath them inert. Bind :modal=\"false\" for a co-active one: the panels beneath stay interactive and focus moves freely",
+        },
+        {
           name: "persistent",
           type: "boolean",
           default: "false",

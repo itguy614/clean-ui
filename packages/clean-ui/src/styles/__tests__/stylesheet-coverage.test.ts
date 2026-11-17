@@ -27,6 +27,7 @@ const COMPOSES = (parts: string) => `renders only ${parts}, which carry the pain
 const NO_PAINT: Record<string, string> = {
   // Renderless: the template is a slot or a Vue built-in, and the content carries its own paint.
   "CuiConfigProvider.vue": "renders only its slot: provides the message catalogue and defaults",
+  "CuiSlideoverStack.vue": "renders only its slot: provides the stack coordinator; its panels own all paint (#41)",
   "CuiTransition.vue": "wraps Vue's <Transition>; the motion is utils/motion hooks, the content is the consumer's",
   "CuiTransitionGroup.vue": "wraps Vue's <TransitionGroup>; the motion is utils/motion hooks and shared classes in main.css",
   // Composition: another component paints it.

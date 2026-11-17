@@ -33,6 +33,13 @@ const meta: ComponentMeta = {
           description: "Which edge the panel slides from",
         },
         {
+          name: "modal",
+          type: "boolean",
+          default: "the stack's modal (true alone)",
+          description:
+            "Modal panels trap focus and, inside a CuiSlideoverStack, make the panels beneath them inert. Bind :modal=\"false\" for a co-active one: the panels beneath stay interactive and focus moves freely",
+        },
+        {
           name: "size",
           type: "sm | md | lg | xl | full | string",
           default: "md",
