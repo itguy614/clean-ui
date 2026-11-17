@@ -75,7 +75,7 @@ const meta: ComponentMeta = {
   slots: [
     {
       name: "item",
-      payload: "{ command, active, query, segments }",
+      payload: "{ command, active, query, segments, badge }",
       description:
         "One result row, in place of the icon, label, description and shortcut. segments is the label split into { text, match } stretches, for rendering your own highlight",
     },
@@ -133,6 +133,12 @@ const meta: ComponentMeta = {
         { name: "group", type: "string", description: "The id of a group. Without one the command sits under no heading" },
         { name: "priority", type: "number", default: "0", description: "Higher first within its group, and breaks a tie in match score" },
         { name: "icon", type: "string | Component", description: "A registered icon name or an icon component" },
+        {
+          name: "badge",
+          type: "string | number | { label, color? }",
+          description:
+            "A count or short label beside the row, such as unread notifications, in the library's subtle badge. { label, color } picks a color role. Nothing is shown for 0 or an empty label. It sits before the shortcut, is part of the row's accessible name (Notifications, 3), and follows state when the command is registered through a getter or a ref",
+        },
         { name: "shortcut", type: "string | string[]", description: "The shortcut to show, e.g. ⌘N, or [\"G\", \"I\"] for a sequence. Display only: it binds nothing" },
         { name: "disabled", type: "boolean", default: "false", description: "Listed but not runnable: skipped by the arrow keys, ignored on click" },
         { name: "action", type: "(command) => unknown", description: "What choosing it does. Runs once the palette has closed and focus is back where it was" },

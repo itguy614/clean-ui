@@ -28,6 +28,16 @@ const palette = useCommandPalette();
 
 const lastRan = ref("(nothing yet)");
 
+// A count that changes while the palette is open: registered as a getter, so the badge follows it.
+const unread = ref(3);
+const incoming = ref(false);
+let incomingTimer: ReturnType<typeof setInterval> | undefined;
+watch(incoming, (on) => {
+  clearInterval(incomingTimer);
+  incomingTimer = on ? setInterval(() => (unread.value += 1), 2000) : undefined;
+});
+onBeforeUnmount(() => clearInterval(incomingTimer));
+
 // A large "server" the palette searches as you type: 2,000 records, a slow answer, and a log
 // of what happened to each search so the cancellation is visible.
 const RECORDS = Array.from({ length: 2000 }, (_, i) => `${["Customer", "Invoice", "Order", "Ticket"][i % 4]} ${String(i + 1).padStart(4, "0")}`);
@@ -103,6 +113,16 @@ palette.register([
     }),
   ),
 ]);
+
+palette.register(() => ({
+  id: "demo.notifications",
+  label: "Notifications",
+  description: "Open the notification inbox",
+  group: "actions",
+  icon: "info",
+  badge: unread.value,
+  action: () => (unread.value = 0),
+}));
 
 // A registration that comes and goes while the page is up: a route's own commands.
 const routeCommands = ref(false);
@@ -201,6 +221,9 @@ const hotkeyCode = `<!-- Rebind it -->
           </span>
         </CuiFlex>
         <p style="margin: 0.75rem 0 0">Last run: <CuiBadge>{{ lastRan }}</CuiBadge></p>
+        <div style="margin-top: 0.75rem">
+          <CuiToggle v-model="incoming" :label="`Incoming notifications (${unread} unread)`" />
+        </div>
         <ol v-if="searchLog.length" aria-label="Search log" style="margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.8125rem">
           <li v-for="(line, i) in searchLog" :key="i + line">{{ line }}</li>
         </ol>
@@ -231,6 +254,7 @@ const hotkeyCode = `<!-- Rebind it -->
             <li>Type <kbd>modal</kbd> and press Enter on a <em>Go to</em> row: the page changes after the palette has closed, and focus is back where you opened it from.</li>
             <li>Switch on <em>Contribute a command from this route</em>: a <em>This page</em> group appears, first. Switch it off, or leave this page, and it is withdrawn.</li>
             <li>Type <kbd>cust</kbd>, wait a second: a <em>Results</em> group of customer records lands after the local rows, with a spinner in the field while it is out. Now type <kbd>invoice 12</kbd> quickly, a letter at a time: the log shows each earlier search <em>aborted</em> and only the last one answered. Your highlight stays on its row when the results arrive, and Enter runs it even while the search is out.</li>
+            <li>Open the palette and look at <em>Notifications</em>: its badge shows the unread count. Switch on <em>Incoming notifications</em>, open the palette and wait: the badge counts up in place every two seconds. Run the command and the badge goes, since 0 shows nothing.</li>
             <li>Press the shortcut with a screen reader running, and type: the number of results is announced a moment after you stop typing.</li>
           </ul>
         </CuiCardBody>

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { effectScope, nextTick } from "vue";
+import { effectScope, nextTick, ref } from "vue";
 import { mount, flushPromises, enableAutoUnmount } from "@vue/test-utils";
 import CuiCommandPalette from "../CuiCommandPalette.vue";
 import { useCommandPalette, type CuiCommand } from "../../composables/useCommandPalette";
@@ -704,5 +704,102 @@ describe("CuiCommandPalette fetchCommands (async search)", () => {
     await wait();
     wrapper.unmount();
     expect(calls[1].signal.aborted).toBe(true);
+  });
+});
+
+describe("CuiCommandPalette badge", () => {
+  const badges = () => options().map((o) => o.querySelector(".cui-command-palette__badge .cui-badge")?.textContent?.trim() ?? null);
+  /** A fetchCommands the test answers by hand. */
+  function manual() {
+    const box: { resolve: (c: CuiCommand[]) => void } = { resolve: () => {} };
+    const fetchCommands = () => new Promise<CuiCommand[]>((r) => (box.resolve = r));
+    return { box, fetchCommands };
+  }
+
+  it("shows a count or label as a suffix, and nothing for 0, an empty label or none", async () => {
+    registerScoped([
+      { id: "n", label: "Notifications", badge: 3 },
+      { id: "t", label: "Tags", badge: "new" },
+      { id: "z", label: "Zero", badge: 0 },
+      { id: "e", label: "Empty", badge: "" },
+      { id: "o", label: "Obj", badge: { label: 7, color: "error" } },
+      { id: "oz", label: "ObjZero", badge: { label: 0 } },
+      { id: "none", label: "None" },
+    ]);
+    const wrapper = await open();
+    expect(badges()).toEqual(["3", "new", null, null, "7", null, null]);
+    wrapper.unmount();
+  });
+
+  it("uses the library's subtle badge by default, and takes a color role", async () => {
+    registerScoped([
+      { id: "a", label: "Plain", badge: 1 },
+      { id: "b", label: "Red", badge: { label: 2, color: "error" } },
+    ]);
+    const wrapper = await open();
+    const [plain, red] = [...document.querySelectorAll<HTMLElement>(".cui-command-palette__badge")];
+    expect(plain.querySelector(".cui-badge")).not.toBeNull();
+    expect(plain.style.getPropertyValue("--cui-badge-bg")).toContain("primary-100");
+    expect(red.style.getPropertyValue("--cui-badge-bg")).toContain("error-100");
+    wrapper.unmount();
+  });
+
+  it("is part of the row's accessible name, so it does not rely on position", async () => {
+    registerScoped([{ id: "n", label: "Notifications", badge: 3, shortcut: "G N" }]);
+    const wrapper = await open();
+    const named = options()[0].cloneNode(true) as HTMLElement;
+    named.querySelectorAll("[aria-hidden='true']").forEach((el) => el.remove());
+    expect(named.textContent!.replace(/\s+/g, " ").trim()).toBe("Notifications, 3");
+    // The shortcut chips stay out of it (aria-hidden), and the highlight is still the option's id.
+    expect(options()[0].querySelector(".cui-command-palette__shortcut")!.getAttribute("aria-hidden")).toBe("true");
+    expect(input().getAttribute("aria-activedescendant")).toBe(options()[0].id);
+    wrapper.unmount();
+  });
+
+  it("follows a registered getter while the palette is open", async () => {
+    const count = ref(2);
+    const scope = effectScope();
+    scopes.push(scope);
+    scope.run(() => palette.register(() => ({ id: "n", label: "Notifications", badge: count.value })));
+    const wrapper = await open();
+    expect(badges()).toEqual(["2"]);
+    count.value = 9;
+    await nextTick();
+    expect(badges()).toEqual(["9"]);
+    count.value = 0;
+    await nextTick();
+    expect(badges()).toEqual([null]);
+    wrapper.unmount();
+  });
+
+  it("shows on results from fetchCommands, and reaches the item slot", async () => {
+    registerScoped([]);
+    const { box, fetchCommands } = manual();
+    const wrapper = mount(CuiCommandPalette, {
+      props: { hotkey: false, debounce: 0, fetchCommands },
+      slots: { item: `<template #item="{ command, badge }"><i class="mine">{{ command.label }}:{{ badge ? badge.label : "-" }}</i></template>` },
+    });
+    palette.open();
+    await settle();
+    await type("a");
+    await new Promise((r) => setTimeout(r, 20));
+    box.resolve([{ id: "r", label: "Inbox", badge: 12 }, { id: "q", label: "Quiet" }]);
+    await settle();
+    expect([...document.querySelectorAll(".mine")].map((m) => m.textContent)).toEqual(["Inbox:12", "Quiet:-"]);
+    wrapper.unmount();
+  });
+
+  it("renders a badge on async rows by default too", async () => {
+    registerScoped([]);
+    const { box, fetchCommands } = manual();
+    const wrapper = mount(CuiCommandPalette, { props: { hotkey: false, debounce: 0, fetchCommands } });
+    palette.open();
+    await settle();
+    await type("a");
+    await new Promise((r) => setTimeout(r, 20));
+    box.resolve([{ id: "r", label: "Inbox", badge: 12 }]);
+    await settle();
+    expect(badges()).toEqual(["12"]);
+    wrapper.unmount();
   });
 });

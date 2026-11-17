@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import CuiModal from "./CuiModal.vue";
 import CuiIcon from "./CuiIcon.vue";
+import CuiBadge from "./CuiBadge.vue";
 import CuiKbd from "./CuiKbd.vue";
 import CuiSpinner from "./CuiSpinner.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
@@ -15,7 +16,7 @@ import { useMessages } from "../composables/useMessages";
 import { useCommandRegistry, type CuiCommand, type CuiCommandGroup } from "../composables/useCommandPalette";
 import { fuzzyMatch, highlightSegments, type FuzzyMatch, type HighlightSegment } from "../utils/fuzzy";
 import { matchesHotkey, parseHotkey } from "../utils/hotkey";
-import type { ColorableProps, HideableProps, OverlayFocusProps } from "../types/common";
+import type { ColorableProps, CuiColor, HideableProps, OverlayFocusProps } from "../types/common";
 
 export interface CuiCommandPaletteProps extends HideableProps, ColorableProps, OverlayFocusProps {
   /**
@@ -83,7 +84,7 @@ const emit = defineEmits<{
 
 defineSlots<{
   /** One result row, in place of the icon, label, description and shortcut. */
-  item?(props: { command: CuiCommand; active: boolean; query: string; segments: HighlightSegment[] }): unknown;
+  item?(props: { command: CuiCommand; active: boolean; query: string; segments: HighlightSegment[]; badge: Row["badge"] }): unknown;
   /** A group's heading. */
   heading?(props: { group: { id: string; label: string }; count: number }): unknown;
   /** Shown, in place of the message, when nothing matches. */
@@ -125,6 +126,16 @@ interface Row {
   command: CuiCommand;
   index: number;
   segments: HighlightSegment[];
+  /** The command's badge, if it has something to show. */
+  badge: { label: string | number; color: CuiColor } | null;
+}
+
+/** 0, an empty label and nothing at all show no badge. */
+function badgeOf(command: CuiCommand): Row["badge"] {
+  const b = command.badge;
+  const label = typeof b === "object" && b !== null ? b.label : b;
+  if (label === undefined || label === null || label === "" || label === 0) return null;
+  return { label, color: (typeof b === "object" && b.color) || "primary" };
 }
 interface Section {
   id: string;
@@ -202,6 +213,7 @@ const sections = computed<Section[]>(() => {
       command: h.command,
       index: index++,
       segments: highlightSegments(h.command.label, h.ranges),
+      badge: badgeOf(h.command),
     }));
     room -= rows.length;
     result.push({
@@ -220,7 +232,7 @@ const sections = computed<Section[]>(() => {
       result.push({
         id: RESULTS_GROUP,
         label: messages.value.commandPalette.results,
-        rows: found.map((command): Row => ({ command, index: index++, segments: highlightSegments(command.label, []) })),
+        rows: found.map((command): Row => ({ command, index: index++, segments: highlightSegments(command.label, []), badge: badgeOf(command) })),
       });
     }
   }
@@ -385,6 +397,16 @@ const vars = computed(() => ({
 
 const headingId = (section: string) => `${id}-heading-${section.replace("\0", "")}`;
 const shortcuts = (command: CuiCommand) => (command.shortcut === undefined ? [] : Array.isArray(command.shortcut) ? command.shortcut : [command.shortcut]);
+// A badge reads as a tint of its color on the light card, not the dark-mode slots CuiBadge would
+// take from the page: set through CuiBadge's own tokens, from the role's scale.
+function badgeTone(color: CuiColor) {
+  const c = color.startsWith("surface") ? "surface" : color;
+  return {
+    "--cui-badge-bg": `var(--color-${c}-100)`,
+    "--cui-badge-color": `var(--color-${c}-700)`,
+    "--cui-badge-border": `1px solid var(--color-${c}-300)`,
+  };
+}
 // CuiIcon takes a name and a component as separate props, so forward by type.
 const iconProps = (icon: NonNullable<CuiCommand["icon"]>) => (typeof icon === "string" ? { name: icon } : { icon });
 
@@ -463,11 +485,14 @@ defineExpose({
             @select="choose(row.index)"
             @mousemove="activeIndex = row.index"
           >
-            <slot name="item" :command="row.command" :active="row.index === activeIndex" :query="query" :segments="row.segments">
+            <slot name="item" :command="row.command" :active="row.index === activeIndex" :query="query" :segments="row.segments" :badge="row.badge">
               <CuiIcon v-if="row.command.icon" v-bind="iconProps(row.command.icon)" class="cui-command-palette__icon" size="1.125rem" aria-hidden="true" />
               <span class="cui-command-palette__text">
                 <span class="cui-command-palette__label"><template v-for="(segment, i) in row.segments" :key="i"><span v-if="segment.match" class="cui-command-palette__match">{{ segment.text }}</span><template v-else>{{ segment.text }}</template></template></span>
                 <span v-if="row.command.description" class="cui-command-palette__description">{{ row.command.description }}</span>
+              </span>
+              <span v-if="row.badge" class="cui-command-palette__badge" :style="badgeTone(row.badge.color)">
+                <span class="cui-sr-only">, </span><CuiBadge :color="row.badge.color">{{ row.badge.label }}</CuiBadge>
               </span>
               <span v-if="shortcuts(row.command).length" class="cui-command-palette__shortcut" aria-hidden="true">
                 <CuiKbd v-for="(key, i) in shortcuts(row.command)" :key="i" size="sm">{{ key }}</CuiKbd>

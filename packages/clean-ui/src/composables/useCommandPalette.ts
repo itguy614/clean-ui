@@ -1,4 +1,5 @@
 import { computed, getCurrentScope, onScopeDispose, ref, shallowRef, toValue, type Component, type MaybeRefOrGetter } from "vue";
+import type { CuiColor } from "../types/common";
 
 /**
  * The command registry behind CuiCommandPalette (#197): register commands from anywhere,
@@ -42,6 +43,13 @@ export interface CuiCommand {
   priority?: number;
   /** A registered icon name or an icon component. */
   icon?: string | Component;
+  /**
+   * A count or short label shown beside the row, such as unread notifications. A bare value
+   * takes the library's subtle badge; `{ label, color }` picks a color role. Nothing is shown
+   * for 0 or an empty label. Register the command through a getter or a ref and it follows
+   * state, also while the palette is open.
+   */
+  badge?: string | number | { label: string | number; color?: CuiColor };
   /** The shortcut to show, e.g. `"⌘N"` or `["G", "I"]` for a sequence. Display only: it binds nothing. */
   shortcut?: string | string[];
   /** Listed but not runnable: skipped by the arrow keys and ignored on click. */

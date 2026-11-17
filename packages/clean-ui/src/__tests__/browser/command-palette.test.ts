@@ -267,4 +267,46 @@ describe("CuiCommandPalette (real browser)", () => {
       steps.remove();
     }
   });
+
+  it.each([
+    ["light", false, [255, 255, 255]],
+    ["dark", true, [9, 9, 11]],
+  ])("lays out a badge beside a shortcut without overlap or wrapping, truncating a long title first, with AA badge text in %s mode", async (_name, dark, page) => {
+    document.documentElement.classList.toggle("dark", dark);
+    const steps = document.createElement("style");
+    steps.textContent = `:root { ${[50, 200, 400, 800, 950].map((n) => `--color-primary-${n}: #6366f1;`).join(" ")} }`;
+    document.head.append(steps);
+    try {
+      setup([
+        { id: "a", label: "Short", badge: 3, shortcut: ["G", "N"] },
+        { id: "b", label: "A very long command title that cannot possibly fit on one line next to its suffix ".repeat(2), description: "And a long description as well to be sure it truncates", badge: { label: 128, color: "error" }, shortcut: "⌘⇧P" },
+      ]);
+      await userEvent.click(document.querySelector('[data-t="opener"]')!);
+      await settle();
+      for (const row of options()) {
+        const badge = row.querySelector(".cui-command-palette__badge")!.getBoundingClientRect();
+        const shortcut = row.querySelector(".cui-command-palette__shortcut")!.getBoundingClientRect();
+        const label = row.querySelector(".cui-command-palette__label")!.getBoundingClientRect();
+        const rowRect = row.getBoundingClientRect();
+        expect(badge.right, "badge sits left of the shortcut").toBeLessThanOrEqual(shortcut.left + 0.5);
+        expect(label.right, "the title ends before the suffix").toBeLessThanOrEqual(badge.left + 0.5);
+        expect(shortcut.right).toBeLessThanOrEqual(rowRect.right);
+        expect(badge.height, "the badge does not wrap").toBeLessThan(28);
+        expect(rowRect.height, "the row stays one title high").toBeLessThan(72);
+      }
+      const longLabel = options()[1].querySelector<HTMLElement>(".cui-command-palette__label")!;
+      expect(longLabel.scrollWidth, "the long title is truncated, not wrapped").toBeGreaterThan(longLabel.clientWidth);
+      const panel = document.querySelector(".cui-command-palette")!;
+      const fill = rgba(getComputedStyle(panel).backgroundColor);
+      const surface = over(fill, page);
+      for (const badge of document.querySelectorAll(".cui-command-palette__badge .cui-badge")) {
+        const bg = rgba(getComputedStyle(badge).backgroundColor);
+        const text = rgba(getComputedStyle(badge).color);
+        expect(contrast(text, over(bg, surface)), `badge text on its fill`).toBeGreaterThanOrEqual(4.5);
+      }
+    } finally {
+      document.documentElement.classList.remove("dark");
+      steps.remove();
+    }
+  });
 });
