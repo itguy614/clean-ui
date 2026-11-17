@@ -365,10 +365,13 @@ const initialFocus = computed(() => props.initialFocus ?? ".cui-command-palette_
 
 // Emitted as private properties, read back through the public tokens. The two --_listbox-*
 // ones paint CuiListboxOption's rows, which reads its consumer's tokens through the panel.
+// The role's own scale, not its slots: the dialog is a light surface in both modes, and the
+// slots flip to their dark values in dark mode. The neutral roles share the surface scale.
+const scale = computed(() => (props.color.startsWith("surface") ? "surface" : props.color));
 const panelVars = computed(() => ({
   "--_command-palette-accent": `var(--cui-${props.color})`,
-  "--_command-palette-focus-ring": `var(--cui-${props.color}-focus-ring)`,
-  "--_command-palette-match": `var(--cui-${props.color})`,
+  "--_command-palette-focus-ring": `var(--color-${scale.value}-700)`,
+  "--_command-palette-match": `var(--color-${scale.value}-500)`,
 }));
 const vars = computed(() => ({
   "--_listbox-font-size": "var(--cui-command-palette-font-size, 0.9375rem)",
@@ -376,7 +379,7 @@ const vars = computed(() => ({
     "var(--cui-command-palette-py, calc(0.5rem * var(--cui-density-scale, 1))) var(--cui-command-palette-px, calc(0.75rem * var(--cui-density-scale, 1)))",
   "--_listbox-item-color": "var(--cui-command-palette-color, var(--cui-text-body))",
   "--_listbox-item-radius": "var(--cui-command-palette-radius, var(--cui-radius-md, 0.375rem))",
-  "--_listbox-item-focus-bg": `var(--cui-command-palette-hover-bg, var(--cui-${props.color}-bg))`,
+  "--_listbox-item-focus-bg": `var(--cui-command-palette-hover-bg, var(--color-${scale.value}-100))`,
   "--_listbox-item-disabled-color": "var(--cui-text-tertiary)",
 }));
 
@@ -428,7 +431,7 @@ defineExpose({
           spellcheck="false"
           @keydown="listbox.onKeydown"
         />
-        <span class="cui-command-palette__busy" aria-hidden="true"><CuiSpinner v-if="remote.pending.value" size="xs" /></span>
+        <span class="cui-command-palette__busy" aria-hidden="true"><CuiSpinner v-if="remote.pending.value" size="xs" color="surface" /></span>
       </div>
 
       <div
@@ -511,9 +514,9 @@ defineExpose({
   color: var(--cui-text-body);
 }
 
-:where(.cui-command-palette__input:focus-visible) {
-  outline: 2px solid var(--cui-command-palette-focus-ring, var(--_command-palette-focus-ring));
-  outline-offset: 2px;
+/* One quiet treatment: the row's bottom edge takes the color, in place of a box around the field. */
+:where(.cui-command-palette__search:focus-within) {
+  box-shadow: inset 0 -2px 0 var(--cui-command-palette-focus-ring, var(--_command-palette-focus-ring));
 }
 
 :where(.cui-command-palette__input::placeholder) {
@@ -583,6 +586,7 @@ defineExpose({
   flex: 1 1 auto;
   min-width: 0;
   border: 0;
+  outline: none;
   background: transparent;
 }
 
@@ -651,10 +655,22 @@ defineExpose({
  * rules (this file imports it), so these win the tie. A translucent surface with a role-tinted
  * border, ring and glow: in dark mode a plain shadow vanishes, and the glow is what lifts the
  * dialog off the page.
+ *
+ * The surface is light in both modes (the faintest surface step, which is what surface-light is
+ * in light mode): a light card is what makes the palette easy to find over a dark page. No
+ * neutral slot is light in dark mode, so the panel restates the neutral text, border and base
+ * tokens with their light-mode values for its own subtree. It declares them on the panel
+ * itself, an ancestor re-theming what is below it, and never under a blanket `.dark *`.
  */
 :where(.cui-command-palette.cui-modal) {
+  --cui-text-body: var(--color-surface-900);
+  --cui-text-secondary: var(--color-surface-700);
+  --cui-text-tertiary: color-mix(in oklab, var(--color-surface-600) 42%, var(--color-surface-700));
+  --cui-text-emphasis: var(--color-surface-950);
+  --cui-border: var(--color-surface-300);
+  --cui-surface-base: white;
   border-radius: var(--cui-command-palette-radius, 1rem);
-  background: var(--cui-command-palette-bg, color-mix(in srgb, var(--cui-surface-base) 86%, transparent));
+  background: var(--cui-command-palette-bg, color-mix(in srgb, var(--color-surface-50) 94%, transparent));
   border: var(--cui-command-palette-border, 1px solid color-mix(in srgb, var(--_command-palette-accent) 38%, var(--cui-border)));
   box-shadow: var(
     --cui-command-palette-shadow,

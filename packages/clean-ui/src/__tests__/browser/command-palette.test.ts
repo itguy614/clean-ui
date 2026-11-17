@@ -192,6 +192,15 @@ describe("CuiCommandPalette (real browser)", () => {
     expect(document.querySelector('[role="listbox"]')!.getAttribute("aria-busy")).toBeNull();
   });
 
+  it("shows focus on the search field as one quiet edge, not a box: no outline, a colored bottom edge on the row", async () => {
+    setup([{ id: "a", label: "Alpha" }]);
+    await userEvent.click(document.querySelector('[data-t="opener"]')!);
+    await settle();
+    expect(document.activeElement).toBe(input());
+    expect(getComputedStyle(input()).outlineStyle).toBe("none");
+    expect(getComputedStyle(document.querySelector(".cui-command-palette__search")!).boxShadow).not.toBe("none");
+  });
+
   // The look (#197 review): it has to stand off the page in dark mode, not only light.
   const rgba = (css: string): [number, number, number, number] => {
     const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
@@ -236,6 +245,12 @@ describe("CuiCommandPalette (real browser)", () => {
       // The panel against the page: a border or glow has to separate them as well as the fill.
       expect(st.borderTopColor).not.toBe(st.backgroundColor);
       const surface = over(fill, page);
+      expect(luminance(surface), "a light card in both modes, so it is findable over a dark page").toBeGreaterThan(0.8);
+      // The icon, the placeholder, the kbd chips and the dividers flip with it.
+      const secondary = rgba(getComputedStyle(document.querySelector(".cui-command-palette__input")!).color);
+      expect(contrast(secondary, surface), "typed text").toBeGreaterThanOrEqual(4.5);
+      const hint = rgba(getComputedStyle(document.querySelector(".cui-command-palette__footer")!).color);
+      expect(contrast(hint, surface), "footer hints").toBeGreaterThanOrEqual(4.5);
       const text = (sel: string) => rgba(getComputedStyle(document.querySelector(sel)!).color);
       for (const sel of [".cui-command-palette__label", ".cui-command-palette__description", ".cui-command-palette__heading"]) {
         expect(contrast(text(sel), surface), `${sel} on the panel`).toBeGreaterThanOrEqual(4.5);
