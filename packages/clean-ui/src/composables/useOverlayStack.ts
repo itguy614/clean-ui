@@ -51,7 +51,9 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
     const shown = entries.map((_, i) => i).filter((i) => !entries[i].hidden?.());
     return shown.length ? shown[activeStart(shown.map((i) => entries[i].modal()))] : 0;
   };
-  const topEntry = () => entries[entries.length - 1];
+  // Escape and a backdrop click reach the topmost panel on screen: a hidden one cannot be closed
+  // from where the user is looking. With none shown, the last one stands.
+  const topEntry = () => entries.filter((e) => !e.hidden?.()).pop() ?? entries[entries.length - 1];
 
   function register(entry: OverlayStackEntry) {
     if (entries.includes(entry)) return;

@@ -79,7 +79,8 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     const bp = breakpoint.value;
     const forcePeek = options.mode() === "peek" || (bp === "base" ? -1 : BREAKPOINT_ORDER.indexOf(bp)) < BREAKPOINT_ORDER.indexOf(peekBelow);
     const horizontal = stack.entries.filter((e) => e.side() === "left" || e.side() === "right");
-    const side = horizontal[0]?.side();
+    // The side comes from the first panel shown: a hidden one takes no part in the layout.
+    const side = horizontal.find((e) => !e.hidden?.())?.side();
     const items: HTMLElement[] = [];
     let snap = false;
     for (const entry of horizontal) {
@@ -156,6 +157,7 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     }
   }
 
+  let disposed = false;
   watchPostEffect(relayout);
   // The effect above runs before the panel's own `v-show` has put its display back, so a panel
   // that was just shown still measures nothing there: one more pass, once the DOM has settled
@@ -164,11 +166,12 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
   watch(
     () => stack.entries.filter((e) => e.hidden?.()),
     (now, was) => {
-      if (was.some((e) => !now.includes(e) && stack.entries.includes(e))) void nextTick(relayout);
+      if (was.some((e) => !now.includes(e) && stack.entries.includes(e))) void nextTick(() => !disposed && relayout());
     },
     { flush: "post" },
   );
   onScopeDispose(() => {
+    disposed = true;
     for (const el of managed) clear(el);
     managed.clear();
   });

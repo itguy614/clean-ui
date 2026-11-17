@@ -1245,6 +1245,24 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(panel(0).hasAttribute("data-cui-covered")).toBe(true);
     });
 
+    it("Escape closes the topmost panel that is shown, not a hidden one above it", async () => {
+      const open = stack([{}, {}]);
+      await openN(open, 2);
+      hid[1] = true;
+      await settle();
+      await userEvent.keyboard("{Escape}");
+      await settle();
+      expect(open[0], "the visible panel closed").toBe(false);
+      expect(open[1], "the hidden one stayed").toBe(true);
+    });
+
+    it("the side the stack arranges comes from a panel that is shown", async () => {
+      const open = stack([{ side: "left", hidden: true }, { size: "lg" }, { size: "md" }]);
+      await openN(open, 3);
+      expect(rect(2).right).toBeCloseTo(1400, 0);
+      expect(rect(1).right).toBeCloseTo(rect(2).left, 0);
+    });
+
     it("the shared backdrop never dips or remounts while a panel is hidden and revealed, even the last one", async () => {
       const open = stack([{}, {}]);
       await openN(open, 2);
@@ -1258,7 +1276,7 @@ describe("CuiSlideoverStack (real browser)", () => {
         if (running) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      for (const [a, b] of [[false, true], [true, true], [false, false]]) {
+      for (const [a, b] of [[false, true], [true, false], [true, true]]) {
         hid[0] = a;
         hid[1] = b;
         await settle();
