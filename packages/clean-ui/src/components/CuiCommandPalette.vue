@@ -363,7 +363,7 @@ defineExpose({
   >
     <div class="cui-command-palette__body" :style="vars">
       <div class="cui-command-palette__search">
-        <CuiIcon :icon="IconMagnifyingGlass" class="cui-command-palette__search-icon" size="1.125rem" aria-hidden="true" />
+        <CuiIcon :icon="IconMagnifyingGlass" class="cui-command-palette__icon" size="1.125rem" aria-hidden="true" />
         <input
           :id="`${id}-input`"
           v-model="query"
@@ -520,10 +520,6 @@ defineExpose({
 .cui-command-palette__search {
   display: flex;
   align-items: center;
-  flex: none;
-}
-
-.cui-command-palette__search-icon {
   flex: none;
 }
 
