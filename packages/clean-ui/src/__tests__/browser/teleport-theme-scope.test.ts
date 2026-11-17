@@ -12,6 +12,7 @@ import {
 } from "../../../../../config/test/browser-helpers";
 import CuiModal from "../../components/CuiModal.vue";
 import CuiSlideover from "../../components/CuiSlideover.vue";
+import CuiDrawer from "../../components/CuiDrawer.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiTooltip from "../../components/CuiTooltip.vue";
 import CuiDropdown from "../../components/CuiDropdown.vue";
@@ -91,6 +92,11 @@ describe("teleported panels keep the theme scope they were opened from (real bro
       fixtures.track(mount(CuiSlideover, { props: { visible: true, title: "Sheet" }, slots: { default: "Body" }, attachTo: host }));
       await settle();
       return query(".cui-slideover-overlay");
+    },
+    async CuiDrawer(host) {
+      fixtures.track(mount(CuiDrawer, { props: { visible: true, title: "Sheet" }, slots: { default: "Body" }, attachTo: host }));
+      await settle();
+      return query(".cui-drawer-overlay");
     },
     async CuiPopover(host) {
       fixtures.track(

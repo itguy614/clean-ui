@@ -124,6 +124,13 @@ const formAgree = ref(false);
         </li>
         <li>Background scrolling is locked while the panel is open.</li>
         <li>
+          On touch and pen, dragging the panel toward its edge closes it, by distance or by a
+          quick flick, and a released drag short of that springs back. A mouse never drags it, so
+          text selection and clicks are untouched, and it is off while <code>persistent</code>
+          (or with <code>noDrag</code>). It is a convenience only: the X button, Escape and the
+          backdrop always close it too.
+        </li>
+        <li>
           <code>titleAs</code> sets the element the title renders as, defaulting to
           <code>h2</code>. It is forwarded to <code>CuiModalHeader</code>, so it works in simple
           mode and when you assemble the header yourself.

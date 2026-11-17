@@ -17,20 +17,25 @@ export function usePointerDrag() {
   const active = ref(false);
   let pointerId: number | undefined;
   let onMove: ((e: PointerEvent) => void) | null = null;
+  let onEnd: ((e: PointerEvent) => void) | null = null;
 
   function end() {
     active.value = false;
     onMove = null;
+    onEnd = null;
   }
 
   /**
    * Follow `e`'s pointer, calling `move` for each of its moves, and end any drag already in
    * progress. Returns false, starting nothing, for a press of any but the primary button.
+   * `end`, if given, is called with the `pointerup` or `pointercancel` that finished the
+   * drag, and not for one ended by `end()`, by a newer `start()` or by unmount.
    */
-  function start(e: PointerEvent, move: (e: PointerEvent) => void) {
+  function start(e: PointerEvent, move: (e: PointerEvent) => void, end?: (e: PointerEvent) => void) {
     if (e.button > 0) return false;
     pointerId = e.pointerId;
     onMove = move;
+    onEnd = end ?? null;
     active.value = true;
     return true;
   }
@@ -40,7 +45,12 @@ export function usePointerDrag() {
   // `onMove` is already null, so nothing is moved in between.
   const own = (e: PointerEvent) => e.pointerId === pointerId;
   useEventListener("document", "pointermove", (e) => { if (own(e)) onMove?.(e); }, { enabled: active });
-  useEventListener("document", ["pointerup", "pointercancel"], (e) => { if (own(e)) end(); }, { enabled: active });
+  useEventListener("document", ["pointerup", "pointercancel"], (e) => {
+    if (!own(e)) return;
+    const done = onEnd;
+    end();
+    done?.(e);
+  }, { enabled: active });
   onScopeDispose(end);
 
   return { start, end, active: readonly(active) };

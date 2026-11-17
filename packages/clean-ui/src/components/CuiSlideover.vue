@@ -4,6 +4,7 @@ import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
 import { useScopedTheme } from "../composables/useScopedTheme";
+import { useDragDismiss } from "../composables/useDragDismiss";
 import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -27,6 +28,8 @@ export interface CuiSlideoverProps extends BackdropGradientProps, HideableProps,
   persistent?: boolean;
   /** Hide the X close button */
   noCloseButton?: boolean;
+  /** Turn off touch and pen drag-to-dismiss (drag the panel toward its edge to close it) */
+  noDrag?: boolean;
   /** Backdrop opacity */
   backdropOpacity?: number;
   /** Backdrop blur */
@@ -49,6 +52,7 @@ const props = withDefaults(defineProps<CuiSlideoverProps>(), {
   size: "md",
   persistent: false,
   noCloseButton: false,
+  noDrag: false,
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
@@ -88,6 +92,15 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
 // Closed while `hidden`: v-show is already off, so no leave runs to report the close.
 watch(isVisible, (visible) => {
   if (!visible && props.hidden) onAfterLeave();
+});
+
+// Touch and pen drag toward the edge to dismiss (#268). A mouse never drags it, so text
+// selection and clicks are untouched; the gesture is also off while `persistent`.
+const gesture = useDragDismiss({
+  panel: panelRef,
+  edge: () => props.side,
+  enabled: () => !props.noDrag && !props.persistent,
+  onDismiss: closeOverlay,
 });
 
 // Horizontal or vertical slide
@@ -177,6 +190,9 @@ const themeScope = useScopedTheme(() => mounted.value);
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
         v-bind="$attrs"
+        @pointerdown="gesture.onPointerdown"
+        @click.capture="gesture.onClickCapture"
+        @scroll.capture="gesture.onScrollCapture"
       >
         <!-- Simple mode: title prop renders header + body wrapper -->
         <template v-if="title">
@@ -228,6 +244,9 @@ const themeScope = useScopedTheme(() => mounted.value);
   flex-direction: column;
   outline: none;
   overflow: hidden;
+  /* A touch drag moves the panel (#268) instead of panning the page; pinch-zoom stays, and a
+     scroll container inside keeps its own native panning. */
+  touch-action: pinch-zoom;
   /* Slides out faster than it came in, with its backdrop (#269): a transition takes the
      duration of the state it moves to. */
   transition: transform var(--cui-duration-fast) var(--cui-ease-drawer);
