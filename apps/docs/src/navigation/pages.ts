@@ -116,6 +116,7 @@ export const PAGES: readonly DocPage[] = [
   { id: "shell-detail-drawer", label: "Sidebar and Detail Drawer", path: "/app-shells/detail-drawer", group: "App Shells", keywords: ["app shell", "layout", "master detail", "inspector", "side panel", "slideover", "inbox", "template", "recipe"] },
 
   // Overlay
+  { id: "command-palette", label: "Command Palette", path: "/components/command-palette", group: "Overlay", keywords: ["cmd k", "ctrl k", "command k", "spotlight", "quick actions", "quick open", "omnibar", "search everything", "hotkey", "shortcut", "fuzzy", "use command palette", "register commands", "command registry", "command menu"] },
   { id: "confirm-dialog", label: "Confirm Dialog", path: "/components/confirm-dialog", group: "Overlay", keywords: ["dialog", "confirm", "confirmation", "are you sure", "alert dialog", "prompt", "delete confirmation", "modal", "popup"] },
   { id: "context-menu", label: "Context Menu", path: "/components/context-menu", group: "Overlay", keywords: ["right click", "menu", "popup menu", "contextual", "dropdown", "long press"] },
   { id: "dropdown", label: "Dropdown", path: "/components/dropdown", group: "Overlay", keywords: ["menu", "dropdown menu", "actions menu", "popup menu", "kebab", "overflow menu", "submenu", "select", "popover"] },

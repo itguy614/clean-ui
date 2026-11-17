@@ -173,6 +173,16 @@ export interface CuiCoreMessages {
     /** Prompt for type-to-confirm dialogs (rendered as plain text). */
     typePrompt: (word: string) => string;
   };
+  commandPalette: {
+    /** The dialog's and the list's accessible name. */
+    label: string;
+    /** Default `placeholder`. */
+    placeholder: string;
+    /** Shown and announced when nothing matches. */
+    noResults: string;
+    /** Heading of the recently run commands, shown before anything is typed. */
+    recent: string;
+  };
   pagination: {
     summary: (range: PaginationRange) => string;
     perPage: (count: number) => string;
@@ -384,6 +394,12 @@ export const defaultMessages: CuiCoreMessages = {
     confirm: "Confirm",
     cancel: "Cancel",
     typePrompt: (word) => `Please type "${word}" to confirm.`,
+  },
+  commandPalette: {
+    label: "Command palette",
+    placeholder: "Type a command or search…",
+    noResults: "No matching commands",
+    recent: "Recent",
   },
   pagination: {
     summary: ({ from, to, total }) => `Showing ${from} to ${to} of ${total} results`,

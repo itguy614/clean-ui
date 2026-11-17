@@ -366,6 +366,11 @@ const router = createRouter({
       component: () => import('../pages/TimelinePage.vue'),
     },
     {
+      path: '/components/command-palette',
+      name: 'command-palette',
+      component: () => import('../pages/CommandPalettePage.vue'),
+    },
+    {
       path: '/components/confirm-dialog',
       name: 'confirm-dialog',
       component: () => import('../pages/ConfirmDialogPage.vue'),
