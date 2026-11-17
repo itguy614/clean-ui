@@ -5,7 +5,7 @@ import { backdropProps, modalBodyProps, modalFooterProps, modalHeaderProps, over
 const meta: ComponentMeta = {
   name: "Drawer",
   description:
-    "A bottom sheet you can drag: flick it down to dismiss, drag it between heights, scroll its content without closing it. Modal, with CuiModal's focus trap, scroll lock and backdrop, and assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-drawer__panel), the element actually rendered.",
+    "A bottom sheet you can drag: flick it down to dismiss, drag it between heights, scroll its content without closing it. The backdrop fades with the drag (and settles with the sheet on release); under reduced motion a dismissed sheet fades out where the finger left it. Modal, with CuiModal's focus trap, scroll lock and backdrop, and assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-drawer__panel), the element actually rendered.",
   interactive: true,
 
   parts: [

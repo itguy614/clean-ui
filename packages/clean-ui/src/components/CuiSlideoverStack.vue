@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onScopeDispose, ref, shallowRef, watch, watchEffect } from "vue";
+import { computed, onScopeDispose, type ComponentPublicInstance, ref, shallowRef, watch, watchEffect } from "vue";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
@@ -80,6 +80,10 @@ watchEffect(() => {
   if (bottom) lookZ.value = stack.zIndex(bottom);
 });
 onScopeDispose(() => cancelAnimationFrame(frame));
+// The backdrop's element, for a drawer's drag to fade (#526).
+const setBackdrop = (instance: unknown) => {
+  stack.backdropEl.value = ((instance as ComponentPublicInstance | null)?.$el as HTMLElement | undefined) ?? null;
+};
 
 useSlideoverStackLayout(stack, {
   mode: () => props.mode,
@@ -98,6 +102,7 @@ useSlideoverStackLayout(stack, {
       <CuiBackdrop
         v-if="present"
         v-show="open"
+        :ref="setBackdrop"
         class="cui-slideover-stack__backdrop"
         :class="themeScope"
         v-bind="lookProps"

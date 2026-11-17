@@ -1,4 +1,4 @@
-import { inject, type InjectionKey } from "vue";
+import { inject, type InjectionKey, type ShallowRef } from "vue";
 
 /**
  * What an overlay (CuiSlideover, CuiDrawer) tells the stack about itself when it opens. Every
@@ -39,6 +39,8 @@ export interface OverlayStackContext {
    * lowest active one. The backdrop itself is drawn once by the stack, not by any panel.
    */
   backdropEntry: () => OverlayStackEntry | undefined;
+  /** The element of the one shared backdrop, set by the stack while it draws one: what a drag fades (#526). */
+  readonly backdropEl: ShallowRef<HTMLElement | null>;
   /** The bottom panel: the backdrop's layer is just behind its root, whoever is active. */
   bottomEntry: () => OverlayStackEntry | undefined;
   /** Backdrop click: closes the topmost panel, if it is not `persistent`. */
