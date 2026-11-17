@@ -40,7 +40,7 @@ describe("the site palette", () => {
     expect(router.currentRoute.value.path).toBe(target.path);
   });
 
-  it("offers the site's actions: color mode, debug overlays and every theme", async () => {
+  it("offers the site's actions: color mode and every theme", async () => {
     await mountPalette();
     const ids = useCommandPalette().commands.value.map((c) => c.id);
     expect(ids).toEqual(expect.arrayContaining(["site.color-mode", "site.theme.default", "site.theme.forest"]));
