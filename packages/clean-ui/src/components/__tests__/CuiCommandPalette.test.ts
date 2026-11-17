@@ -248,6 +248,57 @@ describe("CuiCommandPalette", () => {
     wrapper.unmount();
   });
 
+  it("starts on the first row when reopened after a filtered visit, not where the old match sat", async () => {
+    registerScoped([
+      { id: "a", label: "Alpha" },
+      { id: "b", label: "Beta" },
+      { id: "c", label: "Gamma" },
+    ]);
+    const wrapper = await open();
+    await type("gamma");
+    key({ key: "Escape" }, document.body);
+    await settle();
+    palette.open();
+    await settle();
+    expect(input().value).toBe("");
+    expect(input().getAttribute("aria-activedescendant")).toBe(options()[0].id);
+    wrapper.unmount();
+  });
+
+  it("runs a chosen command even if the palette unmounts before its exit reports", async () => {
+    const run = vi.fn();
+    registerScoped([{ id: "a", label: "Alpha", action: run }]);
+    const wrapper = await open();
+    key({ key: "Enter" });
+    wrapper.unmount();
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(palette.visible.value).toBe(false);
+  });
+
+  it("moves the highlight to the row under a moving pointer, not to one that merely scrolled under it", async () => {
+    registerScoped([
+      { id: "a", label: "Alpha" },
+      { id: "b", label: "Beta" },
+    ]);
+    const wrapper = await open();
+    options()[1].dispatchEvent(new MouseEvent("mouseenter"));
+    await nextTick();
+    expect(input().getAttribute("aria-activedescendant")).toBe(options()[0].id);
+    options()[1].dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+    await nextTick();
+    expect(input().getAttribute("aria-activedescendant")).toBe(options()[1].id);
+    wrapper.unmount();
+  });
+
+  it("does not claim an expanded popup when nothing matches", async () => {
+    registerScoped(COMMANDS);
+    const wrapper = await open();
+    await type("zzzz");
+    expect(input().getAttribute("aria-expanded")).toBe("false");
+    expect(input().getAttribute("aria-controls")).toBeNull();
+    wrapper.unmount();
+  });
+
   it("closes on Escape through the layer stack", async () => {
     registerScoped(COMMANDS);
     const wrapper = await open();

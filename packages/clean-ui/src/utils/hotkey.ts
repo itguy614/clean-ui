@@ -50,6 +50,9 @@ export function matchesHotkey(e: KeyboardEvent, hotkey: Hotkey): boolean {
   if (e.ctrlKey !== hotkey.ctrl || e.metaKey !== hotkey.meta || e.altKey !== hotkey.alt || e.shiftKey !== hotkey.shift) return false;
   const key = e.key.toLowerCase();
   if (key === hotkey.key || (key === " " && hotkey.key === "space")) return true;
+  // Only where Option has swapped the character: on a non-QWERTY layout the physical K is
+  // another letter, and Ctrl+T must not open a Ctrl+K palette.
+  if (/^[a-z0-9]$/.test(key)) return false;
   const code = e.code.toLowerCase();
   return code === `key${hotkey.key}` || code === `digit${hotkey.key}`;
 }

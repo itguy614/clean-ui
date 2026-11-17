@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
 import CuiModal from "./CuiModal.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiKbd from "./CuiKbd.vue";
@@ -129,9 +129,12 @@ const sections = computed<Section[]>(() => {
     }
     // Each keyword on its own: joined, a short query finds letters scattered over all of them.
     const byKeyword = command.keywords?.map((k) => fuzzyMatch(q, k)).reduce<FuzzyMatch | null>((best, m) => (m && (!best || m.score > best.score) ? m : best), null);
+    if (byKeyword) {
+      hits.push({ command, score: byKeyword.score - 20, ranges: [] });
+      continue;
+    }
     const byDescription = command.description ? fuzzyMatch(q, command.description) : null;
-    if (byKeyword) hits.push({ command, score: byKeyword.score - 20, ranges: [] });
-    else if (byDescription) hits.push({ command, score: byDescription.score - 40, ranges: [] });
+    if (byDescription) hits.push({ command, score: byDescription.score - 40, ranges: [] });
   }
 
   const byGroup = new Map<string, typeof hits>();
@@ -192,7 +195,8 @@ const listbox = useListbox({
   count: () => rows.value.length,
   isDisabled: (i) => !!rows.value[i]?.command.disabled,
   activeIndex,
-  isOpen: () => open.value,
+  // No results, no popup to speak of: the empty message is not part of the listbox.
+  isOpen: () => open.value && rows.value.length > 0,
   // The list is always showing while the palette is.
   open: () => {},
   select: choose,
@@ -227,7 +231,8 @@ watch(open, (isOpen) => {
   // Reopened before the last choice ran (its exit was cut short): run it now.
   flush();
   query.value = "";
-  lastQuery = "";
+  // The list about to show is a fresh one, not the old filtered list changing: start on row 0.
+  lastQuery = "\0";
   activeIndex.value = firstIndex(items());
 });
 
@@ -247,6 +252,13 @@ function flush() {
   pending = null;
   if (command) void command.action?.(command);
 }
+
+// Unmounted mid-exit: the leave never reports, and the choice must not be lost. The shared
+// open state goes with the palette, so the next one to mount does not open at once.
+onBeforeUnmount(() => {
+  flush();
+  open.value = false;
+});
 
 function onAfterLeave() {
   emit("after-leave");
@@ -279,7 +291,7 @@ onMounted(() => {
   if (!key) return;
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
-    if (Array.isArray(stored)) registry.recents.value = stored.filter((s): s is string => typeof s === "string");
+    if (Array.isArray(stored)) registry.recents.value = stored.filter((s): s is string => typeof s === "string").slice(0, 20);
   } catch {
     /* storage unavailable or not ours */
   }
@@ -384,7 +396,7 @@ defineExpose({
             :active="row.index === activeIndex"
             :disabled="row.command.disabled"
             @select="choose(row.index)"
-            @hover="activeIndex = row.index"
+            @mousemove="activeIndex = row.index"
           >
             <slot name="item" :command="row.command" :active="row.index === activeIndex" :query="query" :segments="row.segments">
               <CuiIcon v-if="row.command.icon" v-bind="iconProps(row.command.icon)" class="cui-command-palette__icon" size="1.125rem" aria-hidden="true" />

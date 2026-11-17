@@ -39,6 +39,10 @@ describe("matchesHotkey", () => {
     expect(matchesHotkey(key({ key: "j", ctrlKey: true }), modK)).toBe(false);
   });
 
+  it("does not match by physical key position when the layout's own letter differs (Dvorak)", () => {
+    expect(matchesHotkey(key({ key: "t", code: "KeyK", ctrlKey: true }), modK)).toBe(false);
+  });
+
   it("falls back to the physical key when Alt changes the character", () => {
     const altK = parseHotkey("alt+k", false)!;
     expect(matchesHotkey(key({ key: "˚", code: "KeyK", altKey: true }), altK)).toBe(true);
