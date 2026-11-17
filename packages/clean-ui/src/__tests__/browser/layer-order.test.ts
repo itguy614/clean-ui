@@ -266,6 +266,8 @@ describe("toasts and tooltips sit above the sequence", () => {
     await settle();
     const region = document.querySelector<HTMLElement>(".cui-toast-container")!;
     expect(zOf(region)).toBeGreaterThan(zOf(document.querySelector(".cui-popover__panel")));
+    // The fixed tier above the 40-step sequence: base 9990 + 48, whatever has opened.
+    expect(zOf(region)).toBe(9990 + 48);
   });
 
   both("a tooltip shown while a modal is open paints above it, and above the toast region", async () => {
@@ -278,6 +280,7 @@ describe("toasts and tooltips sit above the sequence", () => {
     expect(paintsOnTop(tip)).toBe(true);
     const region = document.querySelector<HTMLElement>(".cui-toast-container");
     if (region) expect(zOf(tip)).toBeGreaterThan(zOf(region));
+    expect(zOf(tip)).toBe(9990 + 49);
     expect(zOf(tip)).toBeGreaterThan(zOf(overlays()[0]));
   });
 });
