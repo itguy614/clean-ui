@@ -11,7 +11,7 @@ import CuiSlideover from "../../components/CuiSlideover.vue";
 import CuiDrawer from "../../components/CuiDrawer.vue";
 import CuiCommandPalette from "../../components/CuiCommandPalette.vue";
 import { useCommandPalette } from "../../composables/useCommandPalette";
-import { POPOVER_Z_INDEX, TOOLTIP_Z_INDEX } from "../../utils/position";
+import { TOAST_Z_INDEX, TOOLTIP_Z_INDEX } from "../../utils/position";
 import CuiSlideoverStack from "../../components/CuiSlideoverStack.vue";
 
 /**
@@ -99,8 +99,8 @@ describe("overlay layering (real browser)", () => {
 });
 
 describe("headroom above the overlays (real browser)", () => {
-  for (const count of [4, 8]) {
-    it(`a popover and a tooltip stay above the newest of ${count} stacked overlays`, async () => {
+  for (const count of [4, 40]) {
+    it(`the toast region and a tooltip stay above the newest of ${count} stacked overlays`, async () => {
       const t = host(Array.from({ length: count }, () => "modal" as Kind));
       // Opened newest-first by declaration, so mount order is the reverse of the open order.
       for (let i = count - 1; i >= 0; i--) {
@@ -110,14 +110,14 @@ describe("headroom above the overlays (real browser)", () => {
       const newest = document.querySelector<HTMLElement>('[data-ov="0"]')!;
       expect(newest.contains(topAt(newest))).toBe(true);
       const r = newest.getBoundingClientRect();
-      for (const [name, z] of [["popover", POPOVER_Z_INDEX], ["tooltip", TOOLTIP_Z_INDEX]]) {
+      for (const [name, z] of [["toast region", TOAST_Z_INDEX], ["tooltip", TOOLTIP_Z_INDEX]]) {
         const probe = document.createElement("div");
         probe.setAttribute("style", `position:fixed;left:${r.left + r.width / 2 - 10}px;top:${r.top + r.height / 2 - 10}px;width:20px;height:20px;z-index:${z}`);
         document.body.prepend(probe);
         expect(topAt(newest), `${name} paints over the newest overlay`).toBe(probe);
         probe.remove();
       }
-    });
+    }, 90_000);
   }
 
   it("a modal opened over a stack of slideovers paints above every panel in the stack", async () => {
