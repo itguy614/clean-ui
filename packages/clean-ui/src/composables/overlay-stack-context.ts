@@ -34,11 +34,12 @@ export interface OverlayStackContext {
   /** The CSS `z-index` of the entry's overlay root: one step above the entry beneath it. */
   zIndex: (entry: OverlayStackEntry) => string;
   /**
-   * The panel the one shared backdrop sits just behind: the lowest active one. The backdrop
-   * itself is drawn once by the stack, not by any panel, so a change of owner moves nothing
-   * on screen but its layer.
+   * The panel whose backdrop props (opacity, blur, gradient) the one shared backdrop takes: the
+   * lowest active one. The backdrop itself is drawn once by the stack, not by any panel.
    */
   backdropEntry: () => OverlayStackEntry | undefined;
+  /** The bottom panel: the backdrop's layer is just behind its root, whoever is active. */
+  bottomEntry: () => OverlayStackEntry | undefined;
   /** Backdrop click: closes the topmost panel, if it is not `persistent`. */
   closeTop: () => void;
   /** Escape: closes the topmost active panel, or the focused one in a co-active group. */

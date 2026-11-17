@@ -50,8 +50,8 @@ const stack = useOverlayStackProvider({ modal: () => props.modal });
 
 // The one backdrop of the group (#41). The stack draws it, once, for as long as any panel is
 // open, so opening a panel, closing one or changing the active set never remounts it or
-// restarts its fade: it fades in with the first panel and out with the last. Only its layer
-// (and the props it takes from the lowest active panel) follow the active set.
+// restarts its fade: it fades in with the first panel and out with the last. It sits behind
+// the bottom panel throughout, and takes its props from the lowest active panel.
 const open = computed(() => stack.entries.length > 0);
 const { present, onAfterLeave } = usePresence(() => open.value);
 const shown = ref(false);
@@ -70,10 +70,11 @@ let lastProps: Record<string, unknown> = {};
 let lastZ = "var(--cui-z-overlay, 9990)";
 const backdrop = computed(() => {
   const entry = stack.backdropEntry();
-  if (entry) {
-    lastProps = entry.backdrop?.() ?? {};
-    lastZ = stack.zIndex(entry);
-  }
+  const bottom = stack.bottomEntry();
+  if (entry) lastProps = entry.backdrop?.() ?? {};
+  // Always just behind the bottom panel, so it never changes layer; the panels above it that are
+  // out of the active set dim themselves (useOverlayStack).
+  if (bottom) lastZ = stack.zIndex(bottom);
   return { props: lastProps, zIndex: lastZ };
 });
 

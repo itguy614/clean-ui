@@ -3,6 +3,7 @@ import { computed, ref, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
+import { joinStack } from "../composables/useOverlayJoin";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
 import { useVisualViewport } from "../composables/useVisualViewport";
@@ -91,7 +92,7 @@ const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 const handleRef = useTemplateRef<HTMLElement>("handleEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, stacked, isModal } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, join } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -102,18 +103,20 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   returnFocus: () => props.returnFocus,
   onOpened: () => emit("after-enter"),
   onClosed: () => emit("after-leave"),
-  modal: () => props.modal,
-  backdrop: () => ({
-    opacity: props.backdropOpacity,
-    blur: props.backdropBlur,
-    color: props.backdropColor,
-    image: props.backdropImage,
-    gradient: props.backdropGradient,
-    from: props.backdropFrom,
-    via: props.backdropVia,
-    to: props.backdropTo,
-    angle: props.backdropAngle,
-    smooth: props.backdropSmooth,
+  join: joinStack({
+    modal: () => props.modal,
+    backdrop: () => ({
+      opacity: props.backdropOpacity,
+      blur: props.backdropBlur,
+      color: props.backdropColor,
+      image: props.backdropImage,
+      gradient: props.backdropGradient,
+      from: props.backdropFrom,
+      via: props.backdropVia,
+      to: props.backdropTo,
+      angle: props.backdropAngle,
+      smooth: props.backdropSmooth,
+    }),
   }),
 });
 
@@ -219,12 +222,12 @@ const themeScope = useScopedTheme(() => mounted.value);
         v-show="isVisible && !hidden"
         ref="overlayEl"
         class="cui-drawer-overlay"
-        :class="[themeScope, { 'cui-drawer-overlay--stacked': stacked }]"
-        :style="{ position: 'fixed', inset: '0', zIndex: zIndex() }"
+        :class="[themeScope, { 'cui-drawer-overlay--stacked': join.stacked }]"
+        :style="{ position: 'fixed', inset: '0', zIndex: join.zIndex() }"
         @keydown="onKeydown"
       >
         <CuiBackdrop
-          v-if="!stacked"
+          v-if="!join.stacked"
           data-cui-exit
           :visible="isAnimating"
           :opacity="backdropOpacity"
@@ -247,7 +250,7 @@ const themeScope = useScopedTheme(() => mounted.value);
           :class="panelClass"
           :style="panelVars"
           role="dialog"
-          :aria-modal="isModal() ? 'true' : 'false'"
+          :aria-modal="join.isModal() ? 'true' : 'false'"
           :aria-labelledby="title ? titleId : undefined"
           tabindex="-1"
           v-bind="$attrs"

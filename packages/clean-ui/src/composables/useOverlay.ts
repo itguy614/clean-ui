@@ -1,9 +1,7 @@
-import { ref, watch, onMounted, onScopeDispose, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
-import { useLayerStack } from "./useLayerStack";
-import { useOverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
-import { OVERLAY_Z_INDEX } from "../utils/position";
+import { useLayerStack, type LayerHandle } from "./useLayerStack";
 import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
@@ -44,18 +42,42 @@ export interface UseOverlayOptions {
   /** Called once the exit has finished and focus has been returned (`after-leave`). */
   onClosed?: () => void;
   /**
-   * Whether the overlay is modal. `undefined` inherits the stack's `modal` (true with no stack).
-   * A co-active one (`false`) leaves the overlays beneath it interactive when it sits in a
-   * stack, and never traps focus (#41).
+   * What a slideover or drawer adds to the shared behavior (#41): joining a stack, and closing
+   * the overlays nested in it. It is a factory so `useOverlay` carries none of that: a modal
+   * passes nothing and pays nothing (see `useOverlayJoin.ts`).
    */
-  modal?: () => boolean | undefined;
-  /** The backdrop props this overlay asks for, drawn by the stack when it sits in one (#41). */
-  backdrop?: () => Record<string, unknown>;
-  /** The edge the overlay docks to, for a stack that checks its panels agree (#41). None by default. */
-  side?: () => string;
+  join?: (core: OverlayJoinCore) => OverlayHooks;
 }
 
-export function useOverlay(options: UseOverlayOptions) {
+/** What `useOverlay` hands the extension that joins it to a stack. */
+export interface OverlayJoinCore {
+  isOpen: Ref<boolean>;
+  dialogRef: UseOverlayOptions["dialogRef"];
+  rootRef: UseOverlayOptions["dialogRef"];
+  /** Close, unless `persistent`. */
+  requestClose: () => void;
+  close: () => void;
+  /** Report the close (the exit has played): idempotent. */
+  finish: () => void;
+  /** Handle of this overlay's layer in the Escape stack. */
+  layer: LayerHandle;
+}
+
+/** The extension points; every one is optional. */
+export interface OverlayHooks {
+  /** Whether Tab is trapped. */
+  isModal?: () => boolean;
+  /** Escape, in place of closing this overlay. */
+  onEscape?: () => void;
+  /** A close has begun. */
+  beforeClose?: () => void;
+  /** The close is about to be reported. */
+  beforeFinish?: () => void;
+  /** The overlay this is nested in closed: close, and return what reports it. */
+  onParentClose?: () => (() => void) | void;
+}
+
+export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<UseOverlayOptions, "join"> & { join?: (core: OverlayJoinCore) => J }) {
   const {
     open: getOpen,
     dialogRef,
@@ -67,10 +89,9 @@ export function useOverlay(options: UseOverlayOptions) {
     returnFocus: getReturnFocus,
     onOpened,
     onClosed,
-    modal: getModal = () => undefined,
-    side: getSide = () => "",
-    backdrop: getBackdrop,
+    join,
   } = options;
+  let hooks: J | undefined;
 
   const isVisible = ref(false);
   const isAnimating = ref(false);
@@ -100,11 +121,8 @@ export function useOverlay(options: UseOverlayOptions) {
     unlockBodyScroll();
   }
 
-  // `finishing`: closed, and the exit has not been reported yet. `kids`: what the overlays
-  // nested in this one (#41) report when they close with it, run before this one's own report,
-  // so a parent never reports before its children and focus lands on the parent's opener last.
+  // Closed, and the exit not reported yet: what makes `finishClose` safe to run twice.
   let finishing = false;
-  let kids: (() => void)[] = [];
 
   let enterFrame: number | null = null;
   // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
@@ -162,8 +180,7 @@ export function useOverlay(options: UseOverlayOptions) {
   function finishClose() {
     if (!finishing) return;
     finishing = false;
-    // Children report first, so their `close` precedes the parent's, whichever exit ended first.
-    kids.splice(0).forEach((finish) => finish());
+    hooks?.beforeFinish?.();
     onUpdateOpen(false);
     onClose();
 
@@ -184,9 +201,7 @@ export function useOverlay(options: UseOverlayOptions) {
     // Already closing, or closed: once is enough. Without this the consumer's v-model echo
     // of the close, `open` turning false, started a second close and reported it twice (#339).
     if (!isOpen.value) return;
-    // Overlays declared inside this one's content are its children (#41): they close first,
-    // in the same tick, so the exits read as one motion and the stack never sees a half state.
-    kids = closeNested();
+    hooks?.beforeClose?.();
     finishing = true;
     // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
     if (enterFrame !== null) {
@@ -219,42 +234,24 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   function onBackdropClick() {
-    if (stack) stack.closeTop();
-    else requestClose();
-  }
-
-  // Inside a stack (#41) the overlay joins the shared coordinator while open: it supplies
-  // depth, z-order, the one backdrop and `inert`, and routes Escape and backdrop clicks. With
-  // no stack this is a bare inject returning null, and nothing below changes.
-  const stack = useOverlayStackContext();
-  /** Its own `modal` if set, else the stack's, else true. */
-  const isModal = () => getModal() ?? stack?.defaultModal() ?? true;
-  let stackEntry: OverlayStackEntry | null = null;
-  if (stack) {
-    stackEntry = { modal: isModal, side: getSide, backdrop: getBackdrop, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
-    const joined = stackEntry;
-    watch(isOpen, (now) => (now ? stack.register(joined) : stack.unregister(joined)), { flush: "sync" });
-    onScopeDispose(() => stack.unregister(joined));
+    requestClose();
   }
 
   // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
-  // A persistent overlay still takes the Escape and declines it. In a stack the coordinator
-  // picks which panel: the topmost active one, or the focused one in a co-active group.
-  const { closeNested } = useLayerStack({
+  // A persistent overlay still takes the Escape and declines it. A stack picks which panel.
+  const layer = useLayerStack({
     active: isOpen,
-    onEscape: stack ? () => stack.escape() : requestClose,
+    onEscape: () => (hooks?.onEscape ?? requestClose)(),
     modal: true,
-    onParentClose: () => (closeOverlay(), finishClose),
+    onParentClose: () => hooks?.onParentClose?.(),
   });
-
-  /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
-  const zIndex = () => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX);
+  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer });
 
   // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
   // focus move on to its siblings.
   function onKeydown(e: KeyboardEvent) {
     const dialog = dialogRef.value;
-    if (e.key !== "Tab" || !dialog || !isModal()) return;
+    if (e.key !== "Tab" || !dialog || hooks?.isModal?.() === false) return;
     const items = tabbableIn(dialog);
     // Nothing to tab to: focus stays on the dialog rather than leaving it.
     if (!items.length) {
@@ -304,10 +301,7 @@ export function useOverlay(options: UseOverlayOptions) {
     requestClose,
     onBackdropClick,
     onKeydown,
-    zIndex,
-    /** Whether the overlay sits in a stack: its root then lets pointer events through. */
-    stacked: !!stack,
-    /** Whether the dialog is modal after inheriting from the stack (`aria-modal`). */
-    isModal,
+    /** What `join` returned: a slideover's stack layer. */
+    join: hooks as J,
   };
 }

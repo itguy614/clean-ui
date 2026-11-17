@@ -1,5 +1,6 @@
 import { onScopeDispose, provide, shallowReactive, watchPostEffect } from "vue";
 import { __DEV__, warnOnce } from "../utils/devWarn";
+import { resolveColor } from "../utils/color";
 import { OverlayStackKey, type OverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
 
 // Module-scoped, so the library doesn't pull Node's global types into its own build.
@@ -85,6 +86,7 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
       return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : "var(--cui-z-overlay, 9990)";
     },
     backdropEntry: () => entries[start()],
+    bottomEntry: () => entries[0],
     closeTop() {
       topEntry()?.requestClose();
     },
@@ -106,22 +108,44 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
   };
 
   // Everything beneath the active set is out of reach: no pointer, no focus, no screen reader.
+  // It is also dimmed, as the one backdrop would dim it, by the panel's own scrim: the backdrop
+  // stays behind the bottom panel and never changes layer, and the scrim fades in or out when a
+  // panel becomes covered or uncovered, so the dimming is a ramp, not a step.
   let marked = new Set<HTMLElement>();
+  let covered = new Set<HTMLElement>();
+  const uncover = (el: HTMLElement) => {
+    el.removeAttribute("data-cui-covered");
+    el.style.removeProperty("--_stack-dim");
+    el.style.removeProperty("--_stack-scrim");
+  };
   const stop = watchPostEffect(() => {
     const from = start();
+    const look = entries[from]?.backdrop?.() ?? {};
     const next = new Set<HTMLElement>();
+    const nextCovered = new Set<HTMLElement>();
     entries.forEach((entry, i) => {
       const root = entry.root();
+      const panel = entry.panel();
       if (root && i < from) next.add(root);
+      if (panel && i < from) nextCovered.add(panel);
     });
     for (const el of marked) if (!next.has(el)) unmark(el);
     for (const el of next) mark(el);
+    for (const el of covered) if (!nextCovered.has(el)) uncover(el);
+    for (const el of nextCovered) {
+      el.setAttribute("data-cui-covered", "");
+      el.style.setProperty("--_stack-dim", String(look.opacity ?? 0.5));
+      el.style.setProperty("--_stack-scrim", resolveColor(String(look.color ?? "black")));
+    }
     marked = next;
+    covered = nextCovered;
   });
   onScopeDispose(() => {
     stop();
     for (const el of marked) unmark(el);
+    for (const el of covered) uncover(el);
     marked.clear();
+    covered.clear();
   });
 
   provide(OverlayStackKey, context);

@@ -79,32 +79,31 @@ export interface UseLayerStackOptions {
   onParentClose?: () => (() => void) | void;
 }
 
-export interface LayerStackHandle {
-  /**
-   * Closes every open layer nested in this one, and returns what each handed
-   * back from `onParentClose`: a function that reports its close, for the parent to run first.
-   */
-  closeNested: () => (() => void)[];
-}
+/** Opaque handle to a layer, for `closeNestedLayers`. */
+export type LayerHandle = Layer;
 
 /** Registers the calling component as a layer while `active` is true. Call in setup. */
-export function useLayerStack({ active, onEscape, modal = false, onParentClose }: UseLayerStackOptions): LayerStackHandle {
+export function useLayerStack({ active, onEscape, modal = false, onParentClose }: UseLayerStackOptions): LayerHandle {
   const layer: Layer = { onEscape, modal, inModal: inject(ModalLayerKey, null), onParentClose };
   if (modal) provide(ModalLayerKey, layer);
-  const handle: LayerStackHandle = {
-    closeNested() {
-      const finishers: (() => void)[] = [];
-      for (const nested of [...stack]) {
-        const finish = nested.onParentClose && belongsTo(nested, layer) ? nested.onParentClose() : undefined;
-        if (finish) finishers.push(finish);
-      }
-      return finishers;
-    },
-  };
-
-  if (typeof document === "undefined") return handle;
+  if (typeof document === "undefined") return layer;
   // Sync, so a layer that closes on one Escape has left the stack before the next arrives.
   watch(active, (open) => (open ? register(layer) : unregister(layer)), { immediate: true, flush: "sync" });
   onScopeDispose(() => unregister(layer));
-  return handle;
+  return layer;
+}
+
+/**
+ * Closes every open layer nested in `layer` (by component tree, #41), the newest first, and
+ * returns what each handed back from `onParentClose`: a function that reports its close, for the
+ * parent to run first. Kept out of `useLayerStack` so an overlay that never closes its children
+ * (a modal) doesn't carry it.
+ */
+export function closeNestedLayers(layer: LayerHandle): (() => void)[] {
+  const finishers: (() => void)[] = [];
+  for (const nested of [...stack]) {
+    const finish = nested.onParentClose && belongsTo(nested, layer) ? nested.onParentClose() : undefined;
+    if (finish) finishers.push(finish);
+  }
+  return finishers;
 }

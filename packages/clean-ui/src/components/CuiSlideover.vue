@@ -3,6 +3,7 @@ import { computed, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
+import { joinStack } from "../composables/useOverlayJoin";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
 import CuiBackdrop from "./CuiBackdrop.vue";
@@ -83,7 +84,7 @@ const emit = defineEmits<{
 const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, stacked, isModal } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, join } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -95,20 +96,22 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   returnFocus: () => props.returnFocus,
   onOpened: () => emit("after-enter"),
   onClosed: () => emit("after-leave"),
-  modal: () => props.modal,
-  backdrop: () => ({
-    opacity: props.backdropOpacity,
-    blur: props.backdropBlur,
-    color: props.backdropColor,
-    image: props.backdropImage,
-    gradient: props.backdropGradient,
-    from: props.backdropFrom,
-    via: props.backdropVia,
-    to: props.backdropTo,
-    angle: props.backdropAngle,
-    smooth: props.backdropSmooth,
+  join: joinStack({
+    modal: () => props.modal,
+    side: () => props.side,
+    backdrop: () => ({
+      opacity: props.backdropOpacity,
+      blur: props.backdropBlur,
+      color: props.backdropColor,
+      image: props.backdropImage,
+      gradient: props.backdropGradient,
+      from: props.backdropFrom,
+      via: props.backdropVia,
+      to: props.backdropTo,
+      angle: props.backdropAngle,
+      smooth: props.backdropSmooth,
+    }),
   }),
-  side: () => props.side,
 });
 
 // Closed while `hidden`: v-show is already off, so no leave runs to report the close.
@@ -158,7 +161,7 @@ const panelVars = computed(() =>
 const panelClass = computed(() => [
   `cui-slideover__panel--${props.side}`,
   {
-    "cui-slideover__panel--stacked": stacked,
+    "cui-slideover__panel--stacked": join.stacked,
     "cui-slideover__panel--full": props.size === "full",
     "cui-slideover__panel--visible": isAnimating.value,
   },
@@ -180,13 +183,13 @@ const themeScope = useScopedTheme(() => mounted.value);
       v-show="isVisible && !hidden"
       ref="overlayEl"
       class="cui-slideover-overlay"
-      :class="[themeScope, { 'cui-slideover-overlay--stacked': stacked }]"
-      :style="{ position: 'fixed', inset: '0', zIndex: zIndex() }"
+      :class="[themeScope, { 'cui-slideover-overlay--stacked': join.stacked }]"
+      :style="{ position: 'fixed', inset: '0', zIndex: join.zIndex() }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
       <CuiBackdrop
-        v-if="!stacked"
+        v-if="!join.stacked"
         data-cui-exit
         :visible="isAnimating"
         :opacity="backdropOpacity"
@@ -210,7 +213,7 @@ const themeScope = useScopedTheme(() => mounted.value);
         :class="panelClass"
         :style="panelVars"
         role="dialog"
-        :aria-modal="isModal() ? 'true' : 'false'"
+        :aria-modal="join.isModal() ? 'true' : 'false'"
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
         v-bind="$attrs"
@@ -236,6 +239,9 @@ const themeScope = useScopedTheme(() => mounted.value);
         <template v-else>
           <slot />
         </template>
+
+        <!-- In a stack: dims the panel while another covers it (#41) -->
+        <div v-if="join.stacked" class="cui-slideover__scrim" aria-hidden="true" />
       </div>
     </div>
     </Transition>
@@ -343,6 +349,26 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-slideover__panel--stacked {
   overflow: visible;
   box-shadow: none;
+}
+/* A panel beneath the active set (covered) is dimmed by its own scrim, not by the one backdrop
+   moving a layer in front of it: the scrim fades in by opacity over the incoming panel's slide
+   (and out over the same easing), so the dimming is a ramp and nothing pops. The stack sets
+   --_stack-dim (the backdrop's opacity) and --_stack-scrim (its color) and marks the panel
+   data-cui-covered; settled, it looks as the backdrop did over it. */
+.cui-slideover__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--_stack-scrim, black);
+  opacity: 0;
+  /* Out of the covered state it leaves with the panel above, faster than it came. */
+  transition: opacity var(--cui-duration-fast) var(--cui-ease-drawer);
+}
+[data-cui-covered] > .cui-slideover__scrim {
+  opacity: var(--_stack-dim, 0.5);
+  transition-duration: var(--cui-duration-slow);
 }
 .cui-slideover__panel--stacked::after,
 .cui-slideover__panel--stacked::before {

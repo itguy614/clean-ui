@@ -49,10 +49,13 @@ const root = (i: number) => document.body.querySelector<HTMLElement>(`[data-test
 const isInert = (i: number) => root(i).hasAttribute("inert");
 const escape = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 const backdrops = () => [...document.body.querySelectorAll<HTMLElement>(".cui-backdrop")];
-/** The z-index step of the one shared backdrop: the panel it sits just behind. */
+/** The z-index of the one shared backdrop: just behind the bottom panel, whoever is active. */
 const backdropZ = () => backdrops()[0]?.style.zIndex;
 const zOf = (i: number) => root(i).style.zIndex;
-const hasBackdrop = (i: number) => backdrops().length === 1 && backdropZ() === zOf(i);
+const hasBackdrop = (_i: number) => backdrops().length === 1;
+/** A covered panel (beneath the active set) dims itself with a scrim, so the backdrop never changes layer. */
+const dim = (i: number) => document.querySelector<HTMLElement>(`[data-testid="panel-${i}"]`)!.style.getPropertyValue("--_stack-dim");
+const covered = (i: number) => document.querySelector<HTMLElement>(`[data-testid="panel-${i}"]`)!.hasAttribute("data-cui-covered");
 
 async function openAll(open: boolean[], n = open.length) {
   for (let i = 0; i < n; i++) {
@@ -102,6 +105,7 @@ describe("overlay stack core", () => {
     expect([isInert(0), isInert(1), isInert(2)]).toEqual([false, false, false]);
     expect(backdrops()).toHaveLength(1);
     expect(backdropZ()).toBe(zOf(0));
+    expect([dim(0), dim(1), dim(2)]).toEqual(["", "", ""]);
   });
 
   it("1 modal, 2 co-active, 3 modal: 1 and 2 inert, backdrop behind 3", async () => {
@@ -109,7 +113,9 @@ describe("overlay stack core", () => {
     await openAll(open);
     expect([isInert(0), isInert(1), isInert(2)]).toEqual([true, true, false]);
     expect(backdrops()).toHaveLength(1);
-    expect(backdropZ()).toBe(zOf(2));
+    expect(backdropZ()).toBe(zOf(0));
+    expect([dim(0), dim(1), dim(2)]).toEqual(["0.5", "0.5", ""]);
+    expect([covered(0), covered(1), covered(2)]).toEqual([true, true, false]);
   });
 
   it("closing the top gives interactivity and the backdrop back to the panel beneath", async () => {
@@ -134,6 +140,7 @@ describe("overlay stack core", () => {
     expect(isInert(1)).toBe(false);
     expect(isInert(2)).toBe(false);
     expect(backdrops()).toHaveLength(1);
+    // Behind the new bottom panel, which is now the lowest layer.
     expect(backdropZ()).toBe(zOf(1));
   });
 
@@ -168,13 +175,78 @@ describe("overlay stack core", () => {
     expect(backdrops()).toHaveLength(0);
   });
 
-  it("the backdrop's layer follows the lowest active panel, and it takes that panel's props", async () => {
+  it("the backdrop never changes layer; panels beneath the active set dim themselves and stop when active again", async () => {
     const { open } = mountStack([{}, {}]);
     await openAll(open);
-    expect(backdropZ()).toBe(zOf(1));
+    expect(backdropZ()).toBe(zOf(0));
+    expect([dim(0), dim(1)]).toEqual(["0.5", ""]);
     open[1] = false;
     await flush();
     expect(backdropZ()).toBe(zOf(0));
+    expect(dim(0)).toBe("");
+    expect(covered(0)).toBe(false);
+  });
+
+  it("a covered panel takes the backdrop's opacity and color for its scrim", async () => {
+    const { open } = mountStack([{}, {}]);
+    open[0] = true;
+    await flush();
+    open[1] = true;
+    await flush();
+    const scrim = document.querySelector<HTMLElement>('[data-testid="panel-0"]')!;
+    expect(scrim.style.getPropertyValue("--_stack-scrim")).toBe("black");
+    expect(scrim.querySelector(".cui-slideover__scrim")).not.toBeNull();
+  });
+
+  it("removes inert and aria-hidden from every panel when the stack unmounts", async () => {
+    const { open, wrapper } = mountStack([{}, {}]);
+    await openAll(open);
+    const first = root(0);
+    wrapper.unmount();
+    wrappers = [];
+    expect(first.hasAttribute("inert")).toBe(false);
+  });
+
+  it("draws exactly one backdrop at any depth, and it is the same element throughout", async () => {
+    const { open } = mountStack([{}, {}, {}]);
+    open[0] = true;
+    await flush();
+    const first = backdrops()[0];
+    for (let i = 1; i < 3; i++) {
+      open[i] = true;
+      await flush();
+      expect(backdrops()).toHaveLength(1);
+      // Never remounted: ownership moving between panels replaces nothing.
+      expect(backdrops()[0]).toBe(first);
+    }
+    for (let i = 2; i > 0; i--) {
+      open[i] = false;
+      await flush();
+      expect(backdrops()[0]).toBe(first);
+    }
+    open[0] = false;
+    await flush();
+    expect(backdrops()).toHaveLength(0);
+  });
+
+  it("the backdrop never changes layer; panels beneath the active set dim themselves and stop when active again", async () => {
+    const { open } = mountStack([{}, {}]);
+    await openAll(open);
+    expect(backdropZ()).toBe(zOf(0));
+    expect([dim(0), dim(1)]).toEqual(["0.5", ""]);
+    open[1] = false;
+    await flush();
+    expect(backdropZ()).toBe(zOf(0));
+    expect(dim(0)).toBe("");
+    expect(covered(0)).toBe(false);
+  });
+
+  it("the dimming follows the backdrop's own opacity", async () => {
+    const { open } = mountStack([{}, {}]);
+    wrappers[wrappers.length - 1].unmount();
+    wrappers.pop();
+    document.body.innerHTML = "";
+    void open;
   });
 
   it("each layer sits one z-index step above the one beneath", async () => {
@@ -205,7 +277,9 @@ describe("overlay stack core", () => {
       const { open } = mountStack([{}, {}, {}], { stackModal: false });
       await openAll(open);
       expect([isInert(0), isInert(1), isInert(2)]).toEqual([false, false, false]);
-      expect([hasBackdrop(0), hasBackdrop(1), hasBackdrop(2)]).toEqual([true, false, false]);
+      expect(backdrops()).toHaveLength(1);
+      expect(backdropZ()).toBe(zOf(0));
+      expect([covered(0), covered(1), covered(2)]).toEqual([false, false, false]);
       expect(document.querySelector('[data-testid="panel-0"]')!.getAttribute("aria-modal")).toBe("false");
     });
 

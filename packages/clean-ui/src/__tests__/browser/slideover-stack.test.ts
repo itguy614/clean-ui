@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, reactive } from "vue";
-import { page, userEvent } from "@vitest/browser/context";
+import { cdp, page, userEvent } from "@vitest/browser/context";
 import main from "../../styles/main.css?inline";
 import { installTokens, frames } from "../../../../../config/test/browser-helpers";
 import { motionDuration } from "../../utils/motion";
@@ -248,12 +248,15 @@ describe("CuiSlideoverStack (real browser)", () => {
     beforeAll(() => page.viewport(1400, 800));
 
     function sampler() {
-      const samples: { dim: number; count: number; filter: string }[] = [];
+      const samples: { dim: number; count: number; filter: string; foreign: number }[] = [];
+      // Marks the backdrop that is on screen now: a later frame showing one without the mark is a
+      // different node, so a remount (even one frame long) is caught.
+      document.querySelectorAll<HTMLElement>(".cui-backdrop").forEach((e) => (e.dataset.probe = "1"));
       let running = true;
       const tick = () => {
         const els = [...document.querySelectorAll<HTMLElement>(".cui-backdrop")].filter((e) => getComputedStyle(e).display !== "none");
         const through = els.reduce((acc, e) => acc * (1 - Number(getComputedStyle(e).opacity)), 1);
-        samples.push({ dim: 1 - through, count: els.length, filter: els.map((e) => getComputedStyle(e).backdropFilter).join("|") });
+        samples.push({ dim: 1 - through, count: els.length, filter: els.map((e) => getComputedStyle(e).backdropFilter).join("|"), foreign: els.filter((e) => e.dataset.probe !== "1").length });
         if (running) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
@@ -272,6 +275,7 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(Math.max(...dims), "never doubles up").toBeLessThan(steady + 0.002);
       expect(Math.min(...rec.samples.map((x) => x.count)), "a backdrop on every frame").toBe(1);
       expect(new Set(rec.samples.map((x) => x.filter)).size, "blur never restarts").toBe(1);
+      expect(Math.max(...rec.samples.map((x) => x.foreign)), "the same backdrop node throughout: never remounted").toBe(0);
     }
 
     it("opening panels 2 and 3 and closing back down never dips or doubles the dimming", async () => {
@@ -315,6 +319,306 @@ describe("CuiSlideoverStack (real browser)", () => {
         await settle();
         open[2] = false;
         await settle();
+      });
+    });
+
+    describe("closing, with at least one panel staying open", () => {
+      const closeButton = (i: number) => panel(i).querySelector<HTMLElement>("button")!;
+
+      async function steadyWhile(open: boolean[], close: () => Promise<void> | void, props?: { blur: boolean }) {
+        await expectSteady(async () => {
+          await close();
+          await settle();
+        }, props);
+        expect(open.some(Boolean), "a panel is still open").toBe(true);
+      }
+
+      it("the top of two, by Escape", async () => {
+        const open = stack([{}, {}]);
+        await openN(open, 2);
+        await steadyWhile(open, () => {
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        });
+        expect(open).toEqual([true, false]);
+      });
+
+      it("the top of three, by its X button", async () => {
+        const open = stack([{}, {}, {}], {}, { title: "T" });
+        await openN(open, 3);
+        await steadyWhile(open, () => closeButton(2).click());
+        expect(open).toEqual([true, true, false]);
+      });
+
+      it("the top, by a click on the backdrop", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        await steadyWhile(open, () => document.querySelector<HTMLElement>(".cui-backdrop")!.click());
+        expect(open).toEqual([true, true, false]);
+      });
+
+      it("the top, from code", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        await steadyWhile(open, () => void (open[2] = false));
+      });
+
+      it("the first panel of a modal stack, from code, while others stay", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        await steadyWhile(open, () => void (open[0] = false));
+        expect(open).toEqual([false, true, true]);
+      });
+
+      it("a middle panel of a co-active stack", async () => {
+        const open = stack([{ modal: false }, { modal: false }, { modal: false }]);
+        await openN(open, 3);
+        await steadyWhile(open, () => void (open[1] = false));
+        expect(open).toEqual([true, false, true]);
+      });
+
+      it("a modal panel closing, so the layers beneath become active again", async () => {
+        const open = stack([{}, { modal: false }, { modal: true }]);
+        await openN(open, 3);
+        await steadyWhile(open, () => void (open[2] = false));
+        expect(open).toEqual([true, true, false]);
+      });
+
+      it("the active set growing and shrinking: a co-active panel closing under a modal one", async () => {
+        const open = stack([{}, { modal: false }, { modal: true }, { modal: false }]);
+        await openN(open, 4);
+        await steadyWhile(open, async () => {
+          open[3] = false;
+          await settle();
+          open[2] = false;
+        });
+      });
+
+      it("a blurred backdrop, closing the top", async () => {
+        const open = stack([{}, {}], {}, { backdropBlur: "sm" });
+        await openN(open, 2);
+        await steadyWhile(open, () => void (open[1] = false), { blur: true });
+      });
+
+      it("a parent whose child closes with it, while another panel stays open", async () => {
+        const st = reactive({ base: false, parent: false, child: false });
+        const w = mount(
+          defineComponent({
+            render: () =>
+              h(CuiSlideoverStack, null, {
+                default: () => [
+                  h(CuiSlideover, { visible: st.base, "onUpdate:visible": (v: boolean) => (st.base = v), size: "sm", "data-testid": "base" }, { default: () => h("button", "b") }),
+                  h(CuiSlideover, { visible: st.parent, "onUpdate:visible": (v: boolean) => (st.parent = v), size: "sm", "data-testid": "parent" }, {
+                    default: () => h(CuiSlideover, { visible: st.child, "onUpdate:visible": (v: boolean) => (st.child = v), size: "sm", modal: false, "data-testid": "child" }, { default: () => h("button", "c") }),
+                  }),
+                ],
+              }),
+          }),
+        );
+        mounted.push(w);
+        st.base = true;
+        await settle();
+        st.parent = true;
+        await settle();
+        st.child = true;
+        await settle();
+        await expectSteady(async () => {
+          st.parent = false;
+          await settle();
+        });
+        expect(st.child).toBe(false);
+        expect(st.base).toBe(true);
+      });
+    });
+
+    it("holds under prefers-reduced-motion: fades are kept, movement is not, and still no dip or remount", async () => {
+      const set = (reduce: boolean) =>
+        cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: reduce ? "reduce" : "" }] });
+      await set(true);
+      try {
+        expect(matchMedia("(prefers-reduced-motion: reduce)").matches).toBe(true);
+        const open = stack([{}, {}, {}]);
+        open[0] = true;
+        await settle();
+        await expectSteady(async () => {
+          open[1] = true;
+          await settle();
+          open[2] = true;
+          await settle();
+          open[2] = false;
+          await settle();
+          open[1] = false;
+          await settle();
+        });
+        // And the one fade out, with the last panel: it is a fade, not a snap.
+        const rec = sampler();
+        open[0] = false;
+        await settle();
+        rec.stop();
+        const dims = rec.samples.map((x) => x.dim).filter((d) => d > 0.001);
+        expect(dims.length, "faded over several frames rather than snapping").toBeGreaterThan(2);
+      } finally {
+        await set(false);
+      }
+    });
+
+    /**
+     * The dimming a panel sits under, per frame: its own scrim, plus the backdrop when that is
+     * layered above it. A step from none to full in one frame is the flash; a ramp is not.
+     */
+    describe("a covered panel's dimming is a ramp, never a step", () => {
+      const layer = (el: HTMLElement) => Number(/\+ (\d+)\)/.exec(el.style.zIndex)?.[1] ?? 0);
+      const dimOf = (i: number) => {
+        const root = panel(i).parentElement!;
+        const bd = document.querySelector<HTMLElement>(".cui-backdrop");
+        const above = bd && layer(bd) > layer(root) ? Number(getComputedStyle(bd).opacity) : 0;
+        const scrim = panel(i).querySelector<HTMLElement>(".cui-slideover__scrim");
+        const s = scrim ? Number(getComputedStyle(scrim).opacity) : 0;
+        return 1 - (1 - above) * (1 - s);
+      };
+      function track(i: number) {
+        const dims: number[] = [];
+        let running = true;
+        const tick = () => {
+          if (panel(i)) dims.push(dimOf(i));
+          if (running) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        return { dims, stop: () => (running = false) };
+      }
+      const steps = (d: number[]) => d.slice(1).map((v, k) => v - d[k]);
+      function expectRamp(dims: number[], dir: 1 | -1, to: number) {
+        const st = steps(dims);
+        expect(Math.max(...st.map(Math.abs)), "no frame jumps by more than a fraction of the whole").toBeLessThan(0.3);
+        expect(Math.min(...st.map((x) => x * dir)), "monotone").toBeGreaterThan(-0.0005);
+        expect(st.filter((x) => Math.abs(x) > 0.001).length, "spread over several frames").toBeGreaterThan(4);
+        expect(dims.at(-1)).toBeCloseTo(to, 2);
+      }
+
+      it("covered by a second panel, then uncovered when it closes", async () => {
+        const open = stack([{}, {}]);
+        open[0] = true;
+        await settle();
+        expect(dimOf(0)).toBeCloseTo(0, 2);
+        const up = track(0);
+        open[1] = true;
+        await settle();
+        up.stop();
+        expectRamp(up.dims, 1, 0.5);
+        const down = track(0);
+        open[1] = false;
+        await settle();
+        down.stop();
+        expectRamp(down.dims, -1, 0);
+      });
+
+      it("the settled look is the old one: a covered panel is dimmed by exactly the backdrop's 0.5", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        expect(dimOf(0)).toBeCloseTo(0.5, 2);
+        expect(dimOf(1)).toBeCloseTo(0.5, 2);
+        expect(dimOf(2)).toBeCloseTo(0, 2);
+      });
+
+      it("3 deep: panel 2 is covered by 3 on a ramp, panel 1 stays steady", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 2);
+        const first = track(0);
+        const second = track(1);
+        open[2] = true;
+        await settle();
+        first.stop();
+        second.stop();
+        expect(Math.max(...first.dims) - Math.min(...first.dims), "panel 1 was already covered").toBeLessThan(0.001);
+        expectRamp(second.dims, 1, 0.5);
+      });
+
+      it("closing the middle panel leaves the first covered, with no change", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        const t = track(0);
+        open[1] = false;
+        await settle();
+        t.stop();
+        expect(Math.max(...t.dims) - Math.min(...t.dims)).toBeLessThan(0.001);
+      });
+
+      it("a co-active group has nothing covered: no dimming, no ramp", async () => {
+        const open = stack([{ modal: false }, { modal: false }, { modal: false }]);
+        await openN(open, 1);
+        const t = track(0);
+        open[1] = true;
+        await settle();
+        open[2] = true;
+        await settle();
+        t.stop();
+        expect(Math.max(...t.dims)).toBeLessThan(0.001);
+      });
+
+      it("a modal panel above a co-active group covers both on a ramp", async () => {
+        const open = stack([{ modal: false }, { modal: false }, { modal: true }]);
+        await openN(open, 2);
+        const a = track(0);
+        const b = track(1);
+        open[2] = true;
+        await settle();
+        a.stop();
+        b.stop();
+        expectRamp(a.dims, 1, 0.5);
+        expectRamp(b.dims, 1, 0.5);
+      });
+
+      it("the child cascade: the base panel ramps back up out of the dimming as parent and child leave", async () => {
+        const st = reactive({ base: false, parent: false, child: false });
+        const w = mount(
+          defineComponent({
+            render: () =>
+              h(CuiSlideoverStack, null, {
+                default: () => [
+                  h(CuiSlideover, { visible: st.base, "onUpdate:visible": (v: boolean) => (st.base = v), size: "sm", "data-testid": "p0" }, { default: () => h("button", "b") }),
+                  h(CuiSlideover, { visible: st.parent, "onUpdate:visible": (v: boolean) => (st.parent = v), size: "sm", "data-testid": "p1" }, {
+                    default: () => h(CuiSlideover, { visible: st.child, "onUpdate:visible": (v: boolean) => (st.child = v), size: "sm", modal: false }, { default: () => h("button", "c") }),
+                  }),
+                ],
+              }),
+          }),
+        );
+        mounted.push(w);
+        st.base = true;
+        await settle();
+        st.parent = true;
+        await settle();
+        st.child = true;
+        await settle();
+        expect(dimOf(0)).toBeCloseTo(0.5, 2);
+        const t = track(0);
+        st.parent = false;
+        await settle();
+        t.stop();
+        expectRamp(t.dims, -1, 0);
+      });
+
+      it("push outward, and peek mode, ramp the same way", async () => {
+        for (const props of [{ push: "outward" }, { mode: "peek" }]) {
+          const open = stack([{}, {}], props);
+          open[0] = true;
+          await settle();
+          const t = track(0);
+          open[1] = true;
+          await settle();
+          t.stop();
+          expectRamp(t.dims, 1, 0.5);
+          mounted.pop()!.unmount();
+          document.body.innerHTML = "";
+        }
+      });
+
+      it("a lone panel and a panel outside any stack carry no scrim", async () => {
+        const open = reactive([false]);
+        const w = mount(defineComponent({ render: () => h(CuiSlideover, { visible: open[0], "data-testid": "p0" }, { default: () => h("button", "x") }) }));
+        mounted.push(w);
+        open[0] = true;
+        await settle();
+        expect(panel(0).querySelector(".cui-slideover__scrim")).toBeNull();
       });
     });
 
