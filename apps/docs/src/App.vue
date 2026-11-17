@@ -99,17 +99,19 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
 
           <CuiNavbarActions>
             <CuiButton
+              class="max-sm:[--cui-button-px:0.125rem]"
               variant="ghost"
               size="sm"
               aria-label="Search documentation"
               :aria-keyshortcuts="apple ? 'Meta+K' : 'Control+K'"
               @click="palette.open()"
             >
-              <template #prefix><CuiIcon name="magnifying-glass" size="sm" /></template>
-              <span class="max-sm:hidden">Search</span>
-              <template #suffix>
+              <!-- One wrapper, so the button's own prefix/suffix gaps do not widen it below sm, where only the icon shows -->
+              <span class="inline-flex items-center gap-2">
+                <CuiIcon name="magnifying-glass" size="sm" />
+                <span class="max-sm:hidden">Search</span>
                 <span class="max-sm:hidden" aria-hidden="true"><CuiKbd>{{ apple ? "⌘" : "Ctrl" }}</CuiKbd> <CuiKbd>K</CuiKbd></span>
-              </template>
+              </span>
             </CuiButton>
             <CuiDropdown>
               <CuiDropdownTrigger>
