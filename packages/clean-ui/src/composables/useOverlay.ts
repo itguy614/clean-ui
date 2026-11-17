@@ -1,4 +1,4 @@
-import { computed, ref, watch, onMounted, onScopeDispose, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { ref, watch, onMounted, onScopeDispose, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
@@ -248,7 +248,7 @@ export function useOverlay(options: UseOverlayOptions) {
   });
 
   /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
-  const zIndex = computed(() => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX));
+  const zIndex = () => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX);
 
   // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
   // focus move on to its siblings.
@@ -308,6 +308,6 @@ export function useOverlay(options: UseOverlayOptions) {
     /** Whether the overlay sits in a stack: its root then lets pointer events through. */
     stacked: !!stack,
     /** Whether the dialog is modal after inheriting from the stack (`aria-modal`). */
-    isModal: computed(isModal),
+    isModal,
   };
 }

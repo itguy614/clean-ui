@@ -81,7 +81,7 @@ export interface UseLayerStackOptions {
 
 export interface LayerStackHandle {
   /**
-   * Closes every open layer nested in this one, the newest first, and returns what each handed
+   * Closes every open layer nested in this one, and returns what each handed
    * back from `onParentClose`: a function that reports its close, for the parent to run first.
    */
   closeNested: () => (() => void)[];
@@ -94,7 +94,7 @@ export function useLayerStack({ active, onEscape, modal = false, onParentClose }
   const handle: LayerStackHandle = {
     closeNested() {
       const finishers: (() => void)[] = [];
-      for (const nested of stack.slice().reverse()) {
+      for (const nested of [...stack]) {
         const finish = nested.onParentClose && belongsTo(nested, layer) ? nested.onParentClose() : undefined;
         if (finish) finishers.push(finish);
       }

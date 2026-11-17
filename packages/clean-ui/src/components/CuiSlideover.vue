@@ -181,7 +181,7 @@ const themeScope = useScopedTheme(() => mounted.value);
       ref="overlayEl"
       class="cui-slideover-overlay"
       :class="[themeScope, { 'cui-slideover-overlay--stacked': stacked }]"
-      :style="{ position: 'fixed', inset: '0', zIndex }"
+      :style="{ position: 'fixed', inset: '0', zIndex: zIndex() }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
@@ -210,7 +210,7 @@ const themeScope = useScopedTheme(() => mounted.value);
         :class="panelClass"
         :style="panelVars"
         role="dialog"
-        :aria-modal="isModal ? 'true' : 'false'"
+        :aria-modal="isModal() ? 'true' : 'false'"
         :aria-labelledby="title ? titleId : undefined"
         tabindex="-1"
         v-bind="$attrs"
