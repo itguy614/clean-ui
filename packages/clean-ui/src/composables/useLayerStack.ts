@@ -24,6 +24,8 @@ interface Layer {
   modal: boolean;
   /** The nearest enclosing modal layer in the component tree. */
   inModal: Layer | null;
+  /** Close with the modal layer it is nested in (#41): a panel declared in another's content. */
+  onParentClose?: () => (() => void) | void;
 }
 
 const ModalLayerKey: InjectionKey<Layer> = Symbol("cui-modal-layer");
@@ -70,15 +72,39 @@ export interface UseLayerStackOptions {
   onEscape: () => void;
   /** A modal layer (Modal, Slideover): a layer opened outside it later goes beneath it. */
   modal?: boolean;
+  /**
+   * Called when the modal layer this one is nested in, by component tree, closes (#41): an
+   * overlay declared inside another's content is its child, and goes with it.
+   */
+  onParentClose?: () => (() => void) | void;
+}
+
+export interface LayerStackHandle {
+  /**
+   * Closes every open layer nested in this one, the newest first, and returns what each handed
+   * back from `onParentClose`: a function that reports its close, for the parent to run first.
+   */
+  closeNested: () => (() => void)[];
 }
 
 /** Registers the calling component as a layer while `active` is true. Call in setup. */
-export function useLayerStack({ active, onEscape, modal = false }: UseLayerStackOptions): void {
-  const layer: Layer = { onEscape, modal, inModal: inject(ModalLayerKey, null) };
+export function useLayerStack({ active, onEscape, modal = false, onParentClose }: UseLayerStackOptions): LayerStackHandle {
+  const layer: Layer = { onEscape, modal, inModal: inject(ModalLayerKey, null), onParentClose };
   if (modal) provide(ModalLayerKey, layer);
+  const handle: LayerStackHandle = {
+    closeNested() {
+      const finishers: (() => void)[] = [];
+      for (const nested of stack.slice().reverse()) {
+        const finish = nested.onParentClose && belongsTo(nested, layer) ? nested.onParentClose() : undefined;
+        if (finish) finishers.push(finish);
+      }
+      return finishers;
+    },
+  };
 
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") return handle;
   // Sync, so a layer that closes on one Escape has left the stack before the next arrives.
   watch(active, (open) => (open ? register(layer) : unregister(layer)), { immediate: true, flush: "sync" });
   onScopeDispose(() => unregister(layer));
+  return handle;
 }

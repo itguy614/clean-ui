@@ -100,6 +100,12 @@ export function useOverlay(options: UseOverlayOptions) {
     unlockBodyScroll();
   }
 
+  // `finishing`: closed, and the exit has not been reported yet. `kids`: what the overlays
+  // nested in this one (#41) report when they close with it, run before this one's own report,
+  // so a parent never reports before its children and focus lands on the parent's opener last.
+  let finishing = false;
+  let kids: (() => void)[] = [];
+
   let enterFrame: number | null = null;
   // Bumped as each entry starts, and by every close and unmount, so an entry's end reports
   // only if nothing has happened since it began: closed mid-entry, it never "opened".
@@ -154,6 +160,10 @@ export function useOverlay(options: UseOverlayOptions) {
 
   /** The exit has played: report the close, give the page back, return focus. */
   function finishClose() {
+    if (!finishing) return;
+    finishing = false;
+    // Children report first, so their `close` precedes the parent's, whichever exit ended first.
+    kids.splice(0).forEach((finish) => finish());
     onUpdateOpen(false);
     onClose();
 
@@ -174,6 +184,10 @@ export function useOverlay(options: UseOverlayOptions) {
     // Already closing, or closed: once is enough. Without this the consumer's v-model echo
     // of the close, `open` turning false, started a second close and reported it twice (#339).
     if (!isOpen.value) return;
+    // Overlays declared inside this one's content are its children (#41): they close first,
+    // in the same tick, so the exits read as one motion and the stack never sees a half state.
+    kids = closeNested();
+    finishing = true;
     // Closed within a frame of opening: the entry hasn't flipped yet, and mustn't now.
     if (enterFrame !== null) {
       cancelAnimationFrame(enterFrame);
@@ -226,7 +240,12 @@ export function useOverlay(options: UseOverlayOptions) {
   // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
   // A persistent overlay still takes the Escape and declines it. In a stack the coordinator
   // picks which panel: the topmost active one, or the focused one in a co-active group.
-  useLayerStack({ active: isOpen, onEscape: stack ? () => stack.escape() : requestClose, modal: true });
+  const { closeNested } = useLayerStack({
+    active: isOpen,
+    onEscape: stack ? () => stack.escape() : requestClose,
+    modal: true,
+    onParentClose: () => (closeOverlay(), finishClose),
+  });
 
   /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
   const zIndex = computed(() => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX));

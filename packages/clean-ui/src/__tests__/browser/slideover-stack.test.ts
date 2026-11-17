@@ -376,4 +376,96 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(panel(0).contains(document.activeElement), "Shift+Tab leaves the top panel for the one beneath").toBe(true);
     });
   });
+
+  /**
+   * A panel declared in another's content is its child: closing the parent takes it along, as one
+   * motion, and focus lands on the parent's opener.
+   */
+  describe("nested panels", () => {
+    beforeAll(() => page.viewport(1400, 800));
+
+    function nested(childStyle?: Record<string, string>) {
+      const st = reactive({ parent: false, child: false, grand: false });
+      const log: string[] = [];
+      const bind = (k: "parent" | "child" | "grand", extra: Record<string, unknown> = {}) => ({
+        visible: st[k],
+        "onUpdate:visible": (v: boolean) => (st[k] = v),
+        onClose: () => log.push(k),
+        "data-testid": k,
+        size: "sm",
+        ...extra,
+      });
+      const w = mount(
+        defineComponent({
+          render: () =>
+            h("div", [
+              h("button", { id: "opener" }, "opener"),
+              h(CuiSlideoverStack, null, {
+                default: () =>
+                  h(CuiSlideover, bind("parent"), {
+                    default: () => [
+                      h("button", { id: "in-parent" }, "p"),
+                      h(CuiSlideover, bind("child", { style: childStyle }), {
+                        default: () => [h("button", { id: "in-child" }, "c"), h(CuiSlideover, bind("grand", { style: childStyle }), { default: () => h("button", { id: "in-grand" }, "g") })],
+                      }),
+                    ],
+                  }),
+              }),
+            ]),
+        }),
+        { attachTo: document.body },
+      );
+      mounted.push(w);
+      return { st, log };
+    }
+    const byId = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+
+    it("real focus returns to the parent's opener after the whole cascade", async () => {
+      const { st } = nested();
+      const opener = document.getElementById("opener")!;
+      opener.focus();
+      st.parent = true;
+      await settle();
+      document.getElementById("in-parent")!.focus();
+      st.child = true;
+      await settle();
+      document.getElementById("in-child")!.focus();
+      expect(document.activeElement?.id).toBe("in-child");
+      st.parent = false;
+      await settle();
+      expect(byId("parent")).toBeNull();
+      expect(byId("child")).toBeNull();
+      expect(document.activeElement).toBe(opener);
+    });
+
+    it("the child leaves with the parent: both are animating on the same frame", async () => {
+      const { st } = nested();
+      st.parent = true;
+      await settle();
+      st.child = true;
+      await settle();
+      st.parent = false;
+      await frames(2);
+      expect(byId("parent")!.getAnimations().length, "the parent is leaving").toBeGreaterThan(0);
+      expect(byId("child")!.getAnimations().length, "so is the child, not already gone, not waiting").toBeGreaterThan(0);
+      await settle();
+      expect(byId("child")).toBeNull();
+    });
+
+    it("reports children first even when a child's exit outlasts its parent's", async () => {
+      const slow = { transitionDuration: "600ms" };
+      const { st, log } = nested(slow);
+      st.parent = true;
+      await settle();
+      st.child = true;
+      await settle();
+      st.grand = true;
+      await settle();
+      st.parent = false;
+      await wait(motionDuration("slow") + 800);
+      expect(log).toEqual(["grand", "child", "parent"]);
+      expect(st.child).toBe(false);
+      expect(st.grand).toBe(false);
+    });
+  });
 });

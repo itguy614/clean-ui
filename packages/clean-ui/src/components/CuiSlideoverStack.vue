@@ -2,6 +2,7 @@
 import { computed, ref, watch } from "vue";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import { usePresence } from "../composables/usePresence";
+import { useScopedTheme } from "../composables/useScopedTheme";
 import { subtreeTransition } from "../utils/motion";
 import type { TailwindBreakpoint } from "../types/grid";
 import { useOverlayStackProvider } from "../composables/useOverlayStack";
@@ -54,6 +55,8 @@ const stack = useOverlayStackProvider({ modal: () => props.modal });
 const open = computed(() => stack.entries.length > 0);
 const { present, onAfterLeave } = usePresence(() => open.value);
 const shown = ref(false);
+// The theme scope around the stack, on the teleported backdrop (#418).
+const themeScope = useScopedTheme(() => present.value);
 watch(
   open,
   (now) => {
@@ -91,6 +94,8 @@ useSlideoverStackLayout(stack, {
       <CuiBackdrop
         v-if="present"
         v-show="open"
+        class="cui-slideover-stack__backdrop"
+        :class="themeScope"
         v-bind="backdrop.props"
         :visible="shown"
         :style="{ position: 'fixed', zIndex: backdrop.zIndex }"
