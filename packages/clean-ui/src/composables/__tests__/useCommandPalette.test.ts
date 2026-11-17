@@ -1,7 +1,8 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { defineComponent, effectScope, h, nextTick, ref } from "vue";
+import { describe, it, expect, afterEach, vi } from "vitest";
+import { createApp, defineComponent, effectScope, h, nextTick, ref } from "vue";
 import { mount } from "@vue/test-utils";
-import { useCommandPalette } from "../useCommandPalette";
+import { createCommandPalette, useCommandPalette, useCommandPaletteProvider } from "../useCommandPalette";
+import { CuiCommandPaletteKey } from "../command-palette-context";
 
 const palette = useCommandPalette();
 const ids = () => palette.commands.value.map((c) => c.id);
@@ -90,5 +91,161 @@ describe("useCommandPalette (#197)", () => {
     palette.toggle();
     palette.close();
     expect(palette.visible.value).toBe(false);
+  });
+});
+
+describe("scoped registries (#530)", () => {
+  // A component that provides its own registry and renders a child that reads it.
+  function withProvider(child: () => unknown, registry?: ReturnType<typeof createCommandPalette>) {
+    let provided!: ReturnType<typeof useCommandPaletteProvider>;
+    const Child = defineComponent({ setup: () => (child(), () => h("i")) });
+    const Parent = defineComponent({
+      setup() {
+        provided = useCommandPaletteProvider(registry);
+        return () => h(Child);
+      },
+    });
+    return { wrapper: mount(Parent), provided };
+  }
+
+  it("keeps commands, open state and recents apart from the default registry", () => {
+    const { provided } = withProvider(() => useCommandPalette().register({ id: "scoped", label: "Scoped" }));
+    scoped(() => palette.register({ id: "global", label: "Global" }));
+    provided.open();
+    expect(provided.commands.value.map((c) => c.id)).toEqual(["scoped"]);
+    expect(ids()).toEqual(["global"]);
+    expect(provided.visible.value).toBe(true);
+    expect(palette.visible.value).toBe(false);
+    (provided as unknown as { remember(id: string): void }).remember("scoped");
+    expect(provided.recents.value).toEqual(["scoped"]);
+    expect(palette.recents.value).toEqual([]);
+    palette.clearRecents();
+    expect(provided.recents.value).toEqual(["scoped"]);
+  });
+
+  it("gives each created registry its own state, and an app's descendants the one it provides", () => {
+    const a = createCommandPalette();
+    const b = createCommandPalette();
+    a.register({ id: "only-a", label: "A" });
+    expect(b.commands.value).toEqual([]);
+    a.open();
+    expect(b.visible.value).toBe(false);
+
+    let seen: unknown;
+    const app = createApp({ setup: () => ((seen = useCommandPalette()), () => h("div")) });
+    app.provide(CuiCommandPaletteKey, a);
+    app.mount(document.createElement("div"));
+    expect(seen).toBe(a);
+    app.unmount();
+  });
+
+  it("withdraws a scoped registration on unmount, from the scoped registry only", () => {
+    const registry = createCommandPalette();
+    scoped(() => palette.register({ id: "global", label: "Global" }));
+    const { wrapper } = withProvider(() => useCommandPalette().register({ id: "route", label: "Route" }), registry);
+    expect(registry.commands.value.map((c) => c.id)).toEqual(["route"]);
+    wrapper.unmount();
+    expect(registry.commands.value).toEqual([]);
+    expect(ids()).toEqual(["global"]);
+  });
+
+  it("resolves the latest registration of an id within a registry, and withdraw restores the earlier one", () => {
+    const registry = createCommandPalette();
+    registry.register({ id: "x", label: "First" });
+    const second = registry.register({ id: "x", label: "Second" });
+    scoped(() => palette.register({ id: "x", label: "Default" }));
+    expect(registry.commands.value.map((c) => c.label)).toEqual(["Second"]);
+    second();
+    expect(registry.commands.value.map((c) => c.label)).toEqual(["First"]);
+    expect(labelOf("x")).toBe("Default");
+  });
+
+  it("answers with the default registry outside a component, with no warning", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(useCommandPalette()).toBe(palette);
+    // A component with no provider above it too.
+    let seen: unknown;
+    mount(defineComponent({ setup: () => ((seen = useCommandPalette()), () => h("i")) }));
+    expect(seen).toBe(palette);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("scoped registries (#530)", () => {
+  // A component that provides its own registry and renders a child that reads it.
+  function withProvider(child: () => unknown, registry?: ReturnType<typeof createCommandPalette>) {
+    let provided!: ReturnType<typeof useCommandPaletteProvider>;
+    const Child = defineComponent({ setup: () => (child(), () => h("i")) });
+    const Parent = defineComponent({
+      setup() {
+        provided = useCommandPaletteProvider(registry);
+        return () => h(Child);
+      },
+    });
+    return { wrapper: mount(Parent), provided };
+  }
+
+  it("keeps commands, open state and recents apart from the default registry", () => {
+    const { provided } = withProvider(() => useCommandPalette().register({ id: "scoped", label: "Scoped" }));
+    scoped(() => palette.register({ id: "global", label: "Global" }));
+    provided.open();
+    expect(provided.commands.value.map((c) => c.id)).toEqual(["scoped"]);
+    expect(ids()).toEqual(["global"]);
+    expect(provided.visible.value).toBe(true);
+    expect(palette.visible.value).toBe(false);
+    (provided as unknown as { remember(id: string): void }).remember("scoped");
+    expect(provided.recents.value).toEqual(["scoped"]);
+    expect(palette.recents.value).toEqual([]);
+    palette.clearRecents();
+    expect(provided.recents.value).toEqual(["scoped"]);
+  });
+
+  it("gives each created registry its own state, and an app's descendants the one it provides", () => {
+    const a = createCommandPalette();
+    const b = createCommandPalette();
+    a.register({ id: "only-a", label: "A" });
+    expect(b.commands.value).toEqual([]);
+    a.open();
+    expect(b.visible.value).toBe(false);
+
+    let seen: unknown;
+    const app = createApp({ setup: () => ((seen = useCommandPalette()), () => h("div")) });
+    app.provide(CuiCommandPaletteKey, a);
+    app.mount(document.createElement("div"));
+    expect(seen).toBe(a);
+    app.unmount();
+  });
+
+  it("withdraws a scoped registration on unmount, from the scoped registry only", () => {
+    const registry = createCommandPalette();
+    scoped(() => palette.register({ id: "global", label: "Global" }));
+    const { wrapper } = withProvider(() => useCommandPalette().register({ id: "route", label: "Route" }), registry);
+    expect(registry.commands.value.map((c) => c.id)).toEqual(["route"]);
+    wrapper.unmount();
+    expect(registry.commands.value).toEqual([]);
+    expect(ids()).toEqual(["global"]);
+  });
+
+  it("resolves the latest registration of an id within a registry, and withdraw restores the earlier one", () => {
+    const registry = createCommandPalette();
+    registry.register({ id: "x", label: "First" });
+    const second = registry.register({ id: "x", label: "Second" });
+    scoped(() => palette.register({ id: "x", label: "Default" }));
+    expect(registry.commands.value.map((c) => c.label)).toEqual(["Second"]);
+    second();
+    expect(registry.commands.value.map((c) => c.label)).toEqual(["First"]);
+    expect(labelOf("x")).toBe("Default");
+  });
+
+  it("answers with the default registry outside a component, with no warning", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(useCommandPalette()).toBe(palette);
+    // A component with no provider above it too.
+    let seen: unknown;
+    mount(defineComponent({ setup: () => ((seen = useCommandPalette()), () => h("i")) }));
+    expect(seen).toBe(palette);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

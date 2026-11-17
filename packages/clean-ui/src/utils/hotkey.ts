@@ -56,3 +56,35 @@ export function matchesHotkey(e: KeyboardEvent, hotkey: Hotkey): boolean {
   const code = e.code.toLowerCase();
   return code === `key${hotkey.key}` || code === `digit${hotkey.key}`;
 }
+
+interface Claim {
+  hotkey: Hotkey | null;
+}
+const claims: Claim[] = [];
+
+/**
+ * Several palettes may listen for one shortcut; of those mounted, the one that claimed its
+ * place last and has a shortcut set handles it (#530), so a palette that mounts over another
+ * (in a drawer) takes the key while it is there and hands it back when it goes. A claim keeps
+ * its place when its shortcut changes. Returns `set(hotkey | null)`, `owns(e)` and `release()`.
+ */
+export function claimHotkey() {
+  const claim: Claim = { hotkey: null };
+  claims.push(claim);
+  return {
+    set(hotkey: Hotkey | null) {
+      claim.hotkey = hotkey;
+    },
+    owns(e: KeyboardEvent) {
+      for (let i = claims.length - 1; i >= 0; i--) {
+        const h = claims[i].hotkey;
+        if (h && matchesHotkey(e, h)) return claims[i] === claim;
+      }
+      return false;
+    },
+    release() {
+      const i = claims.indexOf(claim);
+      if (i >= 0) claims.splice(i, 1);
+    },
+  };
+}

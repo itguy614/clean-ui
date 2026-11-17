@@ -99,6 +99,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   join: joinStack({
     modal: () => props.modal,
     side: () => props.side,
+    hidden: () => props.hidden,
     backdrop: () => backdropOf(props),
   }),
 });

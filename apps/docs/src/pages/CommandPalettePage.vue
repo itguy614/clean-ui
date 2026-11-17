@@ -18,6 +18,7 @@ import {
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
+import ScopedPaletteDemo from "../components/ScopedPaletteDemo.vue";
 import meta from "../meta/command-palette";
 import { PAGES } from "../navigation/pages";
 
@@ -180,6 +181,30 @@ withdraw();
 // The same id registered twice: the latest wins, and withdrawing it brings the earlier back.
 // A route can override a global command for as long as it is mounted.`;
 
+const scopedCode = `<!-- ScopedPaletteDemo.vue: this component's subtree gets its own registry -->
+<script setup>
+import { CuiCommandPalette, useCommandPaletteProvider } from "@itguy614/clean-ui";
+
+const scoped = useCommandPaletteProvider();
+scoped.register({ id: "scoped.one", label: "Scoped command one", group: "scoped", action });
+<\/script>
+
+<template>
+  <CuiButton @click="scoped.open()">Open the scoped palette</CuiButton>
+  <!-- Reads the registry provided above; its own shortcut, so the two never fight over one -->
+  <CuiCommandPalette hotkey="mod+j" :groups="[{ id: 'scoped', label: 'Scoped' }]" />
+</template>
+
+<!-- Or build one anywhere and hand it over -->
+<script setup>
+import { createCommandPalette } from "@itguy614/clean-ui";
+const drawerPalette = createCommandPalette();
+<\/script>
+<CuiCommandPalette :registry="drawerPalette" />
+
+// Or one per app, for two apps on a page
+app.provide(CuiCommandPaletteKey, createCommandPalette());`;
+
 const slotsCode = `<CuiCommandPalette :groups="groups">
   <template #item="{ command, active, segments }">
     <span>
@@ -287,11 +312,35 @@ const hotkeyCode = `<!-- Rebind it -->
         <ul class="mb-4 list-disc pl-5 text-surface-700 dark:text-surface-300">
           <li><code>register(commands)</code> takes a command, an array, or a ref or getter of either (so <code>disabled</code> and <code>label</code> can follow state), and returns <code>withdraw()</code>. Called in a component's setup it also withdraws on unmount.</li>
           <li><code>commands</code>: everything registered now. <code>recents</code>: the ids last run, newest first, with <code>clearRecents()</code>.</li>
-          <li><code>visible</code>, <code>open()</code>, <code>close()</code> and <code>toggle()</code>: whether the palette is open, and a way to change it from anywhere. There is one palette per page.</li>
+          <li><code>visible</code>, <code>open()</code>, <code>close()</code> and <code>toggle()</code>: whether the palette is open, and a way to change it from anywhere. Code that provides no registry shares one default per page; see <a href="#scoped-registries">Scoped registries</a> for more than one.</li>
           <li>On the server <code>register</code> does nothing, so a request cannot leave commands behind for the next.</li>
         </ul>
         <Example title="Scoped, reactive and overriding registrations" code-open :code="scopeCode">
           <CuiToggle v-model="routeCommands" label="Contribute a command from this route" />
+        </Example>
+      </div>
+
+      <div>
+        <h2 id="scoped-registries" class="mb-4 text-2xl font-semibold">Scoped registries</h2>
+        <p class="mb-4 text-surface-600 dark:text-surface-400">
+          A registry holds the commands, the open state and the recents. Everything that provides
+          none shares one default registry, so one palette per page needs nothing more. Give an app,
+          or a subtree such as a drawer, its own and its palette shares nothing with the rest.
+        </p>
+        <ul class="mb-4 list-disc pl-5 text-surface-700 dark:text-surface-300">
+          <li><code>useCommandPaletteProvider()</code>, in a component's setup, gives that component's descendants a new registry and returns it. <code>useCommandPalette()</code> and <code>CuiCommandPalette</code> below it use that one; the providing component itself, and any call after an <code>await</code> in setup, must use the returned object or it gets the default. Pass it a registry from <code>createCommandPalette()</code> to provide that instead.</li>
+          <li><code>app.provide(CuiCommandPaletteKey, createCommandPalette())</code> does the same for a whole app, which is what separates two apps on one page.</li>
+          <li><code>CuiCommandPalette</code>'s <code>registry</code> prop points one palette at an explicit registry, whatever is provided. Register into the same object.</li>
+          <li><code>useCommandPalette()</code> answers with the nearest registry, and with the default outside a component, where nothing is provided.</li>
+          <li>Several palettes may listen for one shortcut. The palette mounted last handles it, so one inside a drawer takes <kbd>Mod</kbd>+<kbd>K</kbd> while it is mounted and hands it back when it goes. A palette that stays mounted but out of sight keeps the key, so mount it with <code>v-if</code> or set <code>hidden</code>. A palette with its hotkey off, or <code>hidden</code>, never takes it; give each a shortcut of its own to keep both reachable.</li>
+          <li>Registrations still withdraw when the component that made them unmounts, and the latest registration of an id wins within its own registry. On the server <code>register</code> does nothing in every registry.</li>
+        </ul>
+        <Example title="Two palettes, two registries" code-open :code="scopedCode">
+          <ScopedPaletteDemo />
+          <p style="margin: 0.75rem 0 0">
+            The palette in the first example lists this page's commands; this one lists only the two
+            scoped ones. Open each and compare: each has its own open state and recents.
+          </p>
         </Example>
       </div>
 

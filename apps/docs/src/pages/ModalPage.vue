@@ -161,10 +161,9 @@ const formAgree = ref(false);
           <code>h2</code>. Pick the level that fits the page the modal was opened from.
         </li>
         <li>
-          A modal is not announced by its title today: <code>aria-labelledby</code> is emitted,
-          but the id it names is never put on the title element, so the dialog has no accessible
-          name. Until that is fixed, give the panel its own <code>aria-label</code> if the name
-          matters to you.
+          With a <code>title</code>, the dialog is named by it: <code>aria-labelledby</code>
+          points at the title element. Without one, add your own <code>aria-label</code>, or pass
+          <code>aria-labelledby</code> naming your heading, which overrides the panel's.
         </li>
       </ul>
     </template>
