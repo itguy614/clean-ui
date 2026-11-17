@@ -19,12 +19,20 @@ const width = Number(process.argv[3] ?? 390);
 const router = readFileSync(`${root}apps/docs/src/router/index.ts`, "utf8");
 const routes = [...router.matchAll(/path: '([^']+)'/g)].map((m) => m[1]).filter((p) => !/[:*]/.test(p));
 
+if (!routes.length) throw new Error("no routes found in apps/docs/src/router/index.ts");
+
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width, height: 800 } });
 const failures = [];
 
 for (const route of routes) {
-  await page.goto(base + route, { waitUntil: "networkidle" });
+  // A cold dev server re-optimizes dependencies and aborts the navigation in flight: retry once.
+  const go = () => page.goto(base + route, { waitUntil: "networkidle" });
+  const response = await go().catch(go);
+  if (!response?.ok()) {
+    failures.push(`${route}: HTTP ${response?.status()}`);
+    continue;
+  }
   const found = await page.evaluate(() => {
     if (document.documentElement.scrollWidth <= innerWidth) return null;
     const culprits = [];

@@ -122,8 +122,7 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
                 </CuiDropdownRadioGroup>
               </CuiDropdownMenu>
             </CuiDropdown>
-            <!-- A layout aid for wide screens: dropped below sm so the bar fits a phone -->
-            <CuiButton class="max-sm:!hidden" variant="ghost" size="sm" @click="showDebug = !showDebug">
+            <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
               {{ showDebug ? "Hide Debug" : "Show Debug" }}
             </CuiButton>
             <CuiButton
