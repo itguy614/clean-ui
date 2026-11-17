@@ -505,7 +505,6 @@ defineExpose({
 :where(.cui-command-palette__search) {
   gap: var(--cui-command-palette-gap, calc(0.625rem * var(--cui-density-scale, 1)));
   padding: var(--cui-command-palette-py, calc(0.75rem * var(--cui-density-scale, 1))) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
-  border-bottom: 1px solid var(--cui-border);
   color: var(--cui-text-tertiary);
 }
 
@@ -531,7 +530,6 @@ defineExpose({
   padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--cui-command-palette-px, calc(0.75rem * var(--cui-density-scale, 1))) calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cui-text-secondary);
 }
@@ -545,10 +543,12 @@ defineExpose({
 
 :where(.cui-command-palette__footer) {
   gap: calc(1rem * var(--cui-density-scale, 1));
-  padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
-  border-top: 1px solid var(--cui-border);
+  padding: calc(0.625rem * var(--cui-density-scale, 1)) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1))) calc(0.75rem * var(--cui-density-scale, 1));
   font-size: 0.75rem;
   color: var(--cui-text-secondary);
+  /* The key chips sit back: no fill, text in the footer's own color. */
+  --cui-kbd-bg: transparent;
+  --cui-kbd-color: var(--cui-text-secondary);
 }
 
 :where(.cui-command-palette__description) {
@@ -561,12 +561,12 @@ defineExpose({
   color: var(--cui-text-emphasis);
   text-decoration: underline 2px;
   text-decoration-color: var(--_command-palette-match);
-  text-underline-offset: 0.2em;
 }
 
 :where(.cui-command-palette__empty) {
   padding: calc(1.5rem * var(--cui-density-scale, 1)) calc(1rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
+  text-align: center;
   color: var(--cui-text-secondary);
 }
 
@@ -597,24 +597,23 @@ defineExpose({
   overflow-y: auto;
 }
 
-.cui-command-palette__empty {
-  text-align: center;
-}
-
 .cui-command-palette__footer {
   display: flex;
   flex: none;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.cui-command-palette__hint {
+.cui-command-palette__icon,
+.cui-command-palette__shortcut {
+  flex: none;
+}
+
+.cui-command-palette__hint,
+.cui-command-palette__shortcut {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-}
-
-.cui-command-palette__icon {
-  flex: none;
 }
 
 /* Always there, so the spinner appearing moves nothing. */
@@ -640,9 +639,6 @@ defineExpose({
 }
 
 .cui-command-palette__shortcut {
-  display: inline-flex;
-  flex: none;
-  gap: 0.25rem;
   margin-inline-start: auto;
 }
 </style>
@@ -681,7 +677,6 @@ defineExpose({
 }
 
 .cui-command-palette.cui-modal {
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
   backdrop-filter: blur(18px) saturate(1.5);
 }
 </style>

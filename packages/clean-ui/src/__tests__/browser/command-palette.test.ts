@@ -154,6 +154,13 @@ describe("CuiCommandPalette (real browser)", () => {
     const bg = getComputedStyle(options()[0]).backgroundColor;
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
     // The interior reads as the panel's own surface: only the highlighted row is tinted.
+    // No internal rules: the regions are told apart by spacing, and only the outer border remains.
+    expect(getComputedStyle(document.querySelector(".cui-command-palette__search")!).borderBottomWidth).toBe("0px");
+    expect(getComputedStyle(document.querySelector(".cui-command-palette__footer")!).borderTopWidth).toBe("0px");
+    // The key hints sit at the right of the footer, apart from the results.
+    const footer = document.querySelector(".cui-command-palette__footer")!.getBoundingClientRect();
+    const firstHint = document.querySelector(".cui-command-palette__hint")!.getBoundingClientRect();
+    expect(firstHint.left - footer.left, "right-aligned").toBeGreaterThan(footer.width / 3);
     for (const sel of [".cui-command-palette__search", ".cui-command-palette__footer", ".cui-command-palette__list"]) {
       expect(getComputedStyle(document.querySelector(sel)!).backgroundColor, `${sel} has no fill of its own`).toBe("rgba(0, 0, 0, 0)");
     }
