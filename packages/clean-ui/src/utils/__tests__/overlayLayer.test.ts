@@ -151,6 +151,19 @@ describe("useOverlay and the counter", () => {
     expect(t.steps()[1]).toBe(1);
   });
 
+  it("a step given back is reused by a different overlay, not just by the one that held it", async () => {
+    const t = mountOverlays(3);
+    t.open[0] = true;
+    await flush();
+    t.open[1] = true;
+    await flush();
+    t.open[1] = false;
+    await flush();
+    t.open[2] = true;
+    await flush();
+    expect(t.steps()[2]).toBe(1);
+  });
+
   it("an overlay unmounted while open gives its step back", async () => {
     const t = mountOverlays(1);
     t.open[0] = true;
