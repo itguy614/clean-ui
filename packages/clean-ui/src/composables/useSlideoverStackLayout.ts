@@ -1,12 +1,12 @@
 import { onScopeDispose, ref, watchPostEffect } from "vue";
 import { layoutStack } from "../utils/stackLayout";
 import { motionDuration, prefersReducedMotion } from "../utils/motion";
-import { useBreakpoint } from "./useBreakpoint";
+import { BREAKPOINT_ORDER, useBreakpoint } from "./useBreakpoint";
 import { useEventListener } from "./useEventListener";
-import type { OverlayStackContext, OverlayStackEntry } from "./overlay-stack-context";
+import type { OverlayStackContext } from "./overlay-stack-context";
 import type { TailwindBreakpoint } from "../types/grid";
 
-export interface SlideoverStackLayoutOptions {
+interface SlideoverStackLayoutOptions {
   mode: () => "auto" | "peek";
   push: () => "inward" | "outward";
   gap: () => number;
@@ -16,9 +16,10 @@ export interface SlideoverStackLayoutOptions {
   peekBelow: () => TailwindBreakpoint;
 }
 
-const BREAKPOINT_ORDER = ["base", "sm", "md", "lg", "xl", "2xl"];
 const VARS = ["--_stack-width", "--_stack-offset", "--_stack-max-width", "--_stack-shadow", "--_stack-seam", "--_stack-shadow-val"] as const;
 const FLIP = "cui-stack-flip";
+
+const cancelFlip = (el: HTMLElement) => el.getAnimations?.().forEach((a) => a.id === FLIP && a.cancel());
 
 /**
  * Arranges the left or right slideovers of a stack (`layoutStack` decides where, this applies
@@ -45,21 +46,24 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
   let managed = new Set<HTMLElement>();
   let count = 0;
 
-  /** Natural width: what the panel measures with no stack width forced on it. */
-  function naturalWidth(el: HTMLElement) {
-    const forced = el.style.getPropertyValue("--_stack-width");
-    const cap = el.style.getPropertyValue("--_stack-max-width");
-    el.style.removeProperty("--_stack-width");
-    el.style.removeProperty("--_stack-max-width");
-    const width = el.offsetWidth;
-    if (forced) el.style.setProperty("--_stack-width", forced);
-    if (cap) el.style.setProperty("--_stack-max-width", cap);
-    return width;
+  /**
+   * Natural widths: what each panel measures with no stack width forced on it. Every property is
+   * lifted, every width read, then every property put back, so it is one layout, not one per panel.
+   */
+  function naturalWidths(els: HTMLElement[]) {
+    const kept = els.map((el) => [el.style.getPropertyValue("--_stack-width"), el.style.getPropertyValue("--_stack-max-width")]);
+    els.forEach((el) => (el.style.removeProperty("--_stack-width"), el.style.removeProperty("--_stack-max-width")));
+    const widths = els.map((el) => el.offsetWidth);
+    els.forEach((el, i) => {
+      if (kept[i][0]) el.style.setProperty("--_stack-width", kept[i][0]);
+      if (kept[i][1]) el.style.setProperty("--_stack-max-width", kept[i][1]);
+    });
+    return widths;
   }
 
   function clear(el: HTMLElement) {
     VARS.forEach((v) => el.style.removeProperty(v));
-    el.getAnimations?.().forEach((a) => a.id === FLIP && a.cancel());
+    cancelFlip(el);
     given.delete(el);
   }
 
@@ -71,29 +75,30 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     const maxPeek = options.maxPeek();
     const peekBelow = options.peekBelow();
     const vw = viewport.value;
-    const forcePeek = options.mode() === "peek" || BREAKPOINT_ORDER.indexOf(breakpoint.value) < BREAKPOINT_ORDER.indexOf(peekBelow);
+    const bp = breakpoint.value;
+    const forcePeek = options.mode() === "peek" || (bp === "base" ? -1 : BREAKPOINT_ORDER.indexOf(bp)) < BREAKPOINT_ORDER.indexOf(peekBelow);
     const horizontal = stack.entries.filter((e) => e.side() === "left" || e.side() === "right");
     const side = horizontal[0]?.side();
-    const items: { entry: OverlayStackEntry; el: HTMLElement }[] = [];
+    const items: HTMLElement[] = [];
     for (const entry of horizontal) {
       const el = entry.panel();
-      if (el && entry.side() === side) items.push({ entry, el });
+      if (el && entry.side() === side) items.push(el);
     }
 
     // A panel that left the stack keeps the geometry it had, so it exits from where it stood
     // (through the docked edge) rather than jumping; its element goes when its exit ends.
-    managed = new Set(items.map((i) => i.el));
+    managed = new Set(items);
     // A panel leaving: the others slide back over its exit (the fast duration), not an entry's.
     const leaving = items.length < count;
     count = items.length;
     if (!items.length || typeof window === "undefined") return;
 
     // Where each is drawn now, running animations included, before anything changes.
-    const first = new Map(items.map(({ el }) => [el, el.getBoundingClientRect()]));
-    const natural = items.map(({ el }) => naturalWidth(el));
+    const first = new Map(items.map((el) => [el, el.getBoundingClientRect()]));
+    const natural = naturalWidths(items);
     const layout = layoutStack({ natural, viewport: vw, gap, minWidth, peekOffset, maxPeek, forcePeek, push: options.push() });
 
-    items.forEach(({ el }) => el.getAnimations?.().forEach((a) => a.id === FLIP && a.cancel()));
+    items.forEach(cancelFlip);
     // Attached panels are one surface: the shadow is the group's outer edge's alone, and the
     // seams get a hairline. Peeking panels overlap, so each casts a small one on the next.
     let outer = 0;
@@ -101,8 +106,8 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
       if (p.offset + p.width > layout.panels[outer].offset + layout.panels[outer].width + 0.5) outer = i;
     });
     const moved: HTMLElement[] = [];
-    items.forEach(({ el }, i) => {
-      const peek = layout.mode === "peek";
+    const peek = layout.mode === "peek";
+    items.forEach((el, i) => {
       el.style.setProperty("--_stack-shadow", peek || i === outer ? "1" : "0");
       el.style.setProperty("--_stack-seam", peek || i === outer ? "0" : "1");
       el.style.setProperty("--_stack-shadow-val", peek ? "var(--cui-shadow-md)" : "var(--cui-shadow-lg)");
@@ -116,14 +121,16 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     });
 
     if (!moved.length || prefersReducedMotion() || typeof moved[0].animate !== "function") return;
-    for (const el of moved) {
+    // Read every new rect, and the easing once, before the first animate() dirties style.
+    const right = side === "right";
+    const easing = getComputedStyle(moved[0]).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
+    const plays = moved.map((el) => {
       const from = first.get(el)!;
       const to = el.getBoundingClientRect();
-      const right = side === "right";
-      const dx = right ? from.right - to.right : from.left - to.left;
-      const sx = to.width ? from.width / to.width : 1;
+      return { el, dx: right ? from.right - to.right : from.left - to.left, sx: to.width ? from.width / to.width : 1 };
+    });
+    for (const { el, dx, sx } of plays) {
       if (Math.abs(dx) < 0.5 && Math.abs(sx - 1) < 0.001) continue;
-      const easing = getComputedStyle(el).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
       el.animate(
         [{ translate: `${dx}px 0`, scale: `${sx} 1` }, { translate: "0 0", scale: "1 1" }],
         { id: FLIP, duration: motionDuration(leaving ? "fast" : "slow", el), easing },

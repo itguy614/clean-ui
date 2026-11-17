@@ -3,7 +3,7 @@ import { computed, ref, useTemplateRef, watch } from "vue";
 import { useCuiId } from "../composables/useCuiId";
 import { subtreeTransition } from "../utils/motion";
 import { useOverlay } from "../composables/useOverlay";
-import { joinStack } from "../composables/useOverlayJoin";
+import { backdropOf, joinStack } from "../composables/useOverlayJoin";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
 import { useVisualViewport } from "../composables/useVisualViewport";
@@ -105,18 +105,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   onClosed: () => emit("after-leave"),
   join: joinStack({
     modal: () => props.modal,
-    backdrop: () => ({
-      opacity: props.backdropOpacity,
-      blur: props.backdropBlur,
-      color: props.backdropColor,
-      image: props.backdropImage,
-      gradient: props.backdropGradient,
-      from: props.backdropFrom,
-      via: props.backdropVia,
-      to: props.backdropTo,
-      angle: props.backdropAngle,
-      smooth: props.backdropSmooth,
-    }),
+    backdrop: () => backdropOf(props),
   }),
 });
 

@@ -55,14 +55,16 @@ const stack = useOverlayStackProvider({ modal: () => props.modal });
 const open = computed(() => stack.entries.length > 0);
 const { present, onAfterLeave } = usePresence(() => open.value);
 const shown = ref(false);
+let frame = 0;
 // The theme scope around the stack, on the teleported backdrop (#418).
 const themeScope = useScopedTheme(() => present.value);
 watch(
   open,
   (now) => {
+    cancelAnimationFrame(frame);
     if (!now) shown.value = false;
     // After a paint, so the fade runs from the hidden state.
-    else requestAnimationFrame(() => (shown.value = open.value));
+    else frame = requestAnimationFrame(() => (shown.value = open.value));
   },
   { flush: "sync" },
 );

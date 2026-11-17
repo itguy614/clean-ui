@@ -69,18 +69,12 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
   }
 
   const depth = (entry: OverlayStackEntry) => entries.indexOf(entry);
-  const isActive = (entry: OverlayStackEntry) => {
-    const i = depth(entry);
-    return i === -1 || i >= start();
-  };
 
   const context: OverlayStackContext = {
     entries,
     defaultModal: () => options.modal?.() ?? true,
     register,
     unregister,
-    depth,
-    isActive,
     zIndex(entry) {
       const step = Math.min(Math.max(depth(entry), 0), MAX_Z_STEP);
       return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : "var(--cui-z-overlay, 9990)";
@@ -118,7 +112,7 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
     el.style.removeProperty("--_stack-dim");
     el.style.removeProperty("--_stack-scrim");
   };
-  const stop = watchPostEffect(() => {
+  watchPostEffect(() => {
     const from = start();
     const look = entries[from]?.backdrop?.() ?? {};
     const next = new Set<HTMLElement>();
@@ -141,11 +135,8 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
     covered = nextCovered;
   });
   onScopeDispose(() => {
-    stop();
     for (const el of marked) unmark(el);
     for (const el of covered) uncover(el);
-    marked.clear();
-    covered.clear();
   });
 
   provide(OverlayStackKey, context);
