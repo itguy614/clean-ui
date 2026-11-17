@@ -4,7 +4,9 @@ import { useCuiId } from "../composables/useCuiId";
 import { usePopover, type PopoverPlacement } from "../composables/usePopover";
 import { useClickOutside } from "../composables/useClickOutside";
 import { useLayerStack } from "../composables/useLayerStack";
-import { POPOVER_Z_INDEX, PANEL_OFFSET } from "../utils/position";
+import { PANEL_OFFSET } from "../utils/position";
+import { overlayZIndex } from "../utils/overlayLayer";
+import { useLayerStep } from "../composables/useLayerStep";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, DisableableProps, CuiRounded } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -61,6 +63,8 @@ const slots = useSlots();
 
 const isVisible = ref(false);
 const { present, onAfterLeave } = usePresence(() => isVisible.value);
+// Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
+const layerStep = useLayerStep(() => isVisible.value, present, () => hideNow());
 // The theme scope around the trigger, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
@@ -150,7 +154,7 @@ const panelStyle = computed(() => {
   // Paint is the stylesheet's, read through `--cui-popover-<slot>`: the radius and the width
   // preset are the only computed parts, emitted as private properties (#294).
   const s: Record<string, string> = {
-    zIndex: POPOVER_Z_INDEX,
+    zIndex: overlayZIndex(layerStep.value),
     "--_popover-radius": RADIUS_SCALE[props.rounded],
     // Read back as transform-origin below, so the panel grows out of its trigger (#262).
     "--_popover-transform-origin": transformOrigin.value,

@@ -384,6 +384,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="tag-input"
+      @dismiss="isOpen = false"
       :color="color"
       :max-height="240"
       :font-size="cfg.style['--_tag-input-font-size']"

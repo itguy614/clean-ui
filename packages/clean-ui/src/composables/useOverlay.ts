@@ -6,7 +6,7 @@ import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
-import { giveBackOverlayStep, takeOverlayStep } from "../utils/overlayLayer";
+import { dismissPanels, giveBackStep, takeOverlayStep, type LayerToken } from "../utils/overlayLayer";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -114,10 +114,10 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
 
   // The z-index step it holds from opening until its exit has finished (#541).
   const zStep = ref(0);
-  let heldStep = -1;
+  let held: LayerToken | undefined;
   const releaseStep = () => {
-    if (heldStep >= 0) giveBackOverlayStep(heldStep);
-    heldStep = -1;
+    if (held) giveBackStep(held);
+    held = undefined;
   };
 
   function acquireScrollLock() {
@@ -143,7 +143,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   function openOverlay() {
     // First, so a stack registering on `isOpen` reads the step. Re-opened mid-exit it is the newest.
     releaseStep();
-    heldStep = zStep.value = takeOverlayStep();
+    held = takeOverlayStep();
+    zStep.value = held.step;
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -151,6 +152,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
       previousFocusKey = restoreKeyOf(previousFocus.value);
     }
     isVisible.value = true;
+    // A panel open beneath it closes (its own close, so its events follow), now that the opener is noted.
+    dismissPanels(held);
 
     acquireScrollLock();
 

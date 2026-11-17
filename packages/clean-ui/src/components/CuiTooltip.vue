@@ -311,7 +311,7 @@ const tooltipStyle = computed(() => ({
 
 /* --- Tooltip --- */
 .cui-tooltip {
-  z-index: calc(var(--cui-z-overlay, 9990) + 9); /* TOOLTIP_Z_INDEX in utils/position.ts */
+  z-index: calc(var(--cui-z-overlay, 9990) + 49); /* TOOLTIP_Z_INDEX in utils/position.ts */
   line-height: 1.4;
   max-width: 280px;
   word-wrap: break-word;

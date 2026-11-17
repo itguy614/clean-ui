@@ -1,43 +1,71 @@
 import { OVERLAY_Z_INDEX } from "./position";
 
 /**
- * Layering of overlays: the newest one is on top (#541).
+ * Layering: the newest layer is on top (#541).
  *
- * Every overlay (modal, confirm dialog, command palette, slideover, drawer) used to share the
- * one `--cui-z-overlay`, so which was on top came down to DOM order, and a teleported overlay
- * sits where its component *mounted*, not where it opened: a dialog that mounts late beat a
- * palette that opens later. Each overlay now takes the next step above the one open when it
- * opens, from the one counter below, and gives it back when its exit has finished.
+ * Overlays (modal, confirm dialog, command palette, slideover, drawer) and the panels anchored
+ * to a trigger (popover, dropdown menu and sub-menu, select, combobox, tag input, context
+ * menu) share ONE open-order sequence. Each takes the next step above the newest one open when
+ * it opens and gives it back when its exit has finished, so a layer is above its own overlay
+ * and above everything opened before it, and is covered by whatever opens after it. A teleported
+ * layer sits in `<body>` where its component *mounted*, not where it opened, so before this
+ * the one shared z-index left DOM order in charge.
  *
- * Steps are offsets from `--cui-z-overlay`, so a consumer re-layers the whole library with that
- * one property. A step is at most `MAX_OVERLAY_STEP` (7), which leaves the popover (+8) and
- * the tooltip (+9) above every open overlay, and a popover inside the newest overlay above
- * the overlay itself. A stack deeper than eight shares the top step and falls back to DOM order.
- * The counter is the open steps in order, newest last: with none open the next step is 0, so
- * z-index never climbs, and an out-of-order close just removes its own.
+ * Steps are offsets from `--cui-z-overlay` (default 9990), so a consumer re-layers the whole
+ * library with that one property. The sequence is `0..MAX_LAYER_STEP` (39); past it the layers
+ * share the last step and DOM order decides. Above the sequence, fixed: the toast region
+ * (+48) and tooltips (+49, over the toast region, since a tooltip can belong to a toast's
+ * own button). See `TOAST_Z_INDEX` and `TOOLTIP_Z_INDEX` in `position.ts`.
  *
- * Module state, tiny, and free of Vue, so `useOverlay` (and the editor's modal) pay almost
- * nothing, and the stack layer (`useOverlayStack`) can read what it hands out. It is only
- * touched from open and close, which run in the browser, so it is SSR safe.
+ * A panel that is open when an overlay opens light-dismisses: `dismissPanels` calls each
+ * panel's `dismiss` (its own close, so its v-model and events follow). A panel opened later,
+ * from inside the overlay, is not touched.
+ *
+ * Module state, tiny and free of Vue, so `useOverlay` (and the editor's modal) pay almost
+ * nothing, and the stack layer can read what it hands out. Only open and close touch it, in the
+ * browser, so it is SSR safe.
  */
-export const MAX_OVERLAY_STEP = 7;
+export const MAX_LAYER_STEP = 39;
 
-const taken: number[] = [];
+export interface LayerToken {
+  step: number;
+  /** A panel's own close, called when an overlay opens over it. Overlays have none. */
+  dismiss?: () => void;
+}
 
-/** The next step above the newest open overlay's. Give it back with `giveBackOverlayStep`. */
-export function takeOverlayStep(): number {
-  const step = taken.length ? Math.min(taken[taken.length - 1] + 1, MAX_OVERLAY_STEP) : 0;
-  taken.push(step);
-  return step;
+const taken: LayerToken[] = [];
+
+function take(dismiss?: () => void): LayerToken {
+  const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss };
+  taken.push(token);
+  return token;
+}
+
+/** An overlay's step: the next one. */
+export function takeOverlayStep(): LayerToken {
+  return take();
+}
+
+/**
+ * Light-dismisses every open panel older than the overlay that just opened: call it after the
+ * overlay has noted where focus was, since a closing panel may move it.
+ */
+export function dismissPanels(newest: LayerToken): void {
+  taken.slice(0, taken.indexOf(newest)).forEach((t) => t.dismiss?.());
+}
+
+/** A panel's step: the next one. `dismiss` closes it when an overlay opens (none: it goes with its parent). */
+export function takePanelStep(dismiss?: () => void): LayerToken {
+  return take(dismiss);
 }
 
 /** Returns a step taken earlier; the others keep theirs. */
-export function giveBackOverlayStep(step: number): void {
-  const i = taken.lastIndexOf(step);
+export function giveBackStep(token: LayerToken): void {
+  const i = taken.indexOf(token);
   if (i !== -1) taken.splice(i, 1);
 }
 
-/** The CSS `z-index` of an overlay root at `step`. */
+/** The CSS `z-index` of a layer at `step`. */
 export function overlayZIndex(step: number): string {
   return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : OVERLAY_Z_INDEX;
 }
