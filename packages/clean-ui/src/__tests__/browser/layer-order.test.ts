@@ -13,6 +13,7 @@ import CuiDropdown from "../../components/CuiDropdown.vue";
 import CuiDropdownTrigger from "../../components/CuiDropdownTrigger.vue";
 import CuiDropdownMenu from "../../components/CuiDropdownMenu.vue";
 import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
+import CuiContextMenu from "../../components/CuiContextMenu.vue";
 import CuiToastProvider from "../../components/CuiToastProvider.vue";
 import CuiCommandPalette from "../../components/CuiCommandPalette.vue";
 import { useCommandPalette } from "../../composables/useCommandPalette";
@@ -194,6 +195,28 @@ describe("a panel opened over an overlay is above it, whatever sits beneath", ()
     const panel = document.querySelector<HTMLElement>('[role="listbox"]')!;
     expect(zOf(panel)).toBeGreaterThan(zOf(overlays().at(-1)!));
     expect(paintsOnTop(panel)).toBe(true);
+  });
+
+  both("a context menu opened in a modal that sits over another overlay paints above its modal, and closes when a newer overlay opens", async () => {
+    const state = reactive({ a: true, b: false, c: false });
+    wrapper = mount(defineComponent({ render: () => [
+      modal(state, "a", () => h("p", "a")),
+      modal(state, "b", () => h(CuiContextMenu, null, { default: () => h("div", { "data-c": "1", style: "padding:2rem" }, "right-click me"), menu: () => h(CuiDropdownItem, null, { default: () => "Item" }) })),
+      modal(state, "c", () => h("p", "c")),
+    ] }), { attachTo: document.body });
+    await settle();
+    state.b = true;
+    await settle();
+    const target = document.querySelector<HTMLElement>('[data-c="1"]')!;
+    const r = target.getBoundingClientRect();
+    target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.left + 10, clientY: r.top + 10 }));
+    await settle();
+    const menu = document.querySelector<HTMLElement>(".cui-context-menu__panel")!;
+    expect(zOf(menu)).toBeGreaterThan(zOf(overlays().at(-1)!));
+    expect(paintsOnTop(menu)).toBe(true);
+    state.c = true;
+    await settle();
+    expect(document.querySelector(".cui-context-menu__panel")).toBeNull();
   });
 
   it("a select list opened in a slideover that sits over a modal paints above its slideover", async () => {
