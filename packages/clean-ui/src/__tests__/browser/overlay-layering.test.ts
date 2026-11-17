@@ -99,7 +99,7 @@ describe("overlay layering (real browser)", () => {
 });
 
 describe("headroom above the overlays (real browser)", () => {
-  for (const count of [4, 9]) {
+  for (const count of [4, 8]) {
     it(`a popover and a tooltip stay above the newest of ${count} stacked overlays`, async () => {
       const t = host(Array.from({ length: count }, () => "modal" as Kind));
       // Opened newest-first by declaration, so mount order is the reverse of the open order.

@@ -11,7 +11,7 @@ const name = ref("");
 const lastClosed = ref("never");
 const dialogEl = useTemplateRef<HTMLElement>("dialogEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { zStep, isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => persistent.value,
@@ -24,7 +24,7 @@ const overlayCode = `<script setup>
 const open = ref(false);
 const dialogEl = useTemplateRef("dialogEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { zStep, isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => false,
@@ -40,6 +40,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClic
     <!-- Mounted until the exit has played; shown while open, so a re-open mid-exit reverses -->
     <Transition :css="false" @leave="afterAnimations" @after-leave="onAfterLeave">
     <div v-if="mounted" v-show="isVisible" class="overlay" :class="{ 'is-in': isAnimating }"
+         :style="{ zIndex: 'calc(var(--cui-z-overlay, 9990) + ' + zStep + ')' }"
          @keydown="onKeydown" @click.self="onBackdropClick">
       <div ref="dialogEl" role="dialog" aria-modal="true"
            aria-labelledby="overlay-title" tabindex="-1" class="panel">
@@ -115,6 +116,12 @@ const options = [
 
 const returns = [
   {
+    name: "zStep",
+    type: "Ref<number>",
+    description:
+      "The overlay's z-index step above --cui-z-overlay, taken when it opens and given back when its exit has finished: 0 with nothing else open, one more than the newest open overlay otherwise, up to 7. Add it to the base on your root, as in the example, and the newest overlay is on top. See Layering below.",
+  },
+  {
     name: "isVisible",
     type: "Ref<boolean>",
     description: 'Whether the overlay is shown. Bind it with v-show, inside v-if="mounted".',
@@ -166,7 +173,6 @@ const returns = [
 const overlayStyle = {
   position: "fixed",
   inset: "0",
-  zIndex: "var(--cui-z-overlay, 9990)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -224,7 +230,7 @@ const panelStyle = {
         v-if="mounted"
         v-show="isVisible"
         class="cui-docs-overlay"
-        :style="{ ...overlayStyle, opacity: isAnimating ? 1 : 0 }"
+        :style="{ ...overlayStyle, zIndex: `calc(var(--cui-z-overlay, 9990) + ${zStep})`, opacity: isAnimating ? 1 : 0 }"
         @keydown="onKeydown"
         @click.self="onBackdropClick"
       >
@@ -334,6 +340,30 @@ const panelStyle = {
         </ul>
       </CuiCardBody>
     </CuiCard>
+
+    <!-- Layering -->
+    <div>
+      <h2>Layering: the newest overlay is on top</h2>
+      <p>
+        <code class="cui-code">CuiModal</code>, <code class="cui-code">CuiConfirmDialog</code>,
+        <code class="cui-code">CuiCommandPalette</code>, <code class="cui-code">CuiSlideover</code>,
+        <code class="cui-code">CuiDrawer</code> and anything built on
+        <code class="cui-code">useOverlay</code> stack in the order they open. An overlay takes the
+        next z-index step above the newest one open when it opens, and gives it back when its exit
+        has finished, so with nothing open the next one starts at the base again and z-index never
+        climbs. Open order, not where a component sits in your template, decides what is on top:
+        the command palette mounted in your app shell opens over a dialog from any page.
+      </p>
+      <p>
+        Steps are offsets from <code class="cui-code">--cui-z-overlay</code> (default
+        <code class="cui-code">9990</code>), so one property on <code class="cui-code">:root</code>
+        moves the whole library. A step is at most 7, which leaves room for what has to stay above
+        an overlay: popovers and toasts sit at the base + 8 and tooltips at + 9, above every open
+        overlay and above a popover or tooltip opened inside the newest one. Eight overlays open
+        at once fill the steps; a ninth shares the top one, and DOM order decides between them.
+        Panels in a <code class="cui-code">CuiSlideoverStack</code> use the same steps, in stack order.
+      </p>
+    </div>
 
     <!-- When to use it -->
     <div>
