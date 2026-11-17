@@ -358,7 +358,6 @@ Compound sub-components for top-level composition, targeted slots inside them fo
 ## Docs Site
 - Dogfoods the library: CuiGrid for layout, CuiCard for content panels, `cui-typography` on main content, CuiButton/CuiIcon everywhere
 - Theme switcher + color-mode button (`useColorMode`), search palette trigger in header
-- `ShowDebugKey` InjectionKey in `apps/docs/src/keys.ts`, provided in App.vue, injected via computed in pages
 - `CuiToastProvider` wraps the app in App.vue
 - Navigation groups: Getting Started → Foundations → Layout → Form Controls → Actions → Feedback → Data Display → Navigation → App Shells → Overlay → Composables
 - Helper components: `Example.vue` (show/hide code), `PropTable.vue` (props documentation)

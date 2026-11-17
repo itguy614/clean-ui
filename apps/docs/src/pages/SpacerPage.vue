@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
-import { ShowDebugKey } from "../keys";
 import { CuiFlex, CuiSpacer } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/spacer";
-
-const showDebugRef = inject(ShowDebugKey);
-const showDebug = computed(() => showDebugRef?.value ?? false);
 </script>
 
 <template>
@@ -21,7 +16,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
   <div>Right</div>
 </CuiFlex>`"
       >
-        <CuiFlex gap="4" :debug="showDebug" class="rounded-lg bg-surface-200 p-4 dark:bg-surface-800">
+        <CuiFlex gap="4" class="rounded-lg bg-surface-200 p-4 dark:bg-surface-800">
           <div class="rounded-lg bg-error-500 p-3 text-white">Left</div>
           <CuiSpacer />
           <div class="rounded-lg bg-error-500 p-3 text-white">Right</div>
@@ -47,7 +42,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
 <div>Item 2</div>
 </CuiFlex>`"
       >
-        <CuiFlex gap="4" :debug="showDebug" class="rounded-lg bg-surface-200 p-4 dark:bg-surface-800">
+        <CuiFlex gap="4" class="rounded-lg bg-surface-200 p-4 dark:bg-surface-800">
           <div class="rounded-lg bg-warning-500 p-3 text-white">Item 1</div>
           <CuiSpacer size="20" />
           <div class="rounded-lg bg-warning-500 p-3 text-white">Item 2</div>

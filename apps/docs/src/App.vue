@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, provide, watch, useTemplateRef } from "vue";
+import { computed, ref, watch, useTemplateRef } from "vue";
 import { useRoute } from "vue-router";
 import {
   CuiButton,
@@ -23,16 +23,12 @@ import {
 import Navigation from "./components/Navigation.vue";
 import PageNav from "./components/PageNav.vue";
 import SitePalette from "./components/SitePalette.vue";
-import { ShowDebugKey } from "./keys";
 
-const showDebug = ref(false);
 const mobileNavOpen = ref(false);
 const nav = useTemplateRef("nav");
 const { theme, presets, setTheme } = useTheme();
 const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
-
-provide(ShowDebugKey, showDebug);
 
 // The header button opens the site palette (SitePalette.vue) without the shortcut. The hint shows
 // the key for this platform; the palette's own default is Mod-K, so the two agree.

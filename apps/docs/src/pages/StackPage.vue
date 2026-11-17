@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
-import { ShowDebugKey } from "../keys";
 import { CuiStack } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/stack";
-
-const showDebugRef = inject(ShowDebugKey);
-const showDebug = computed(() => showDebugRef?.value ?? false);
 </script>
 
 <template>
@@ -21,7 +16,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
   <div>Item 3</div>
 </CuiStack>`"
       >
-        <CuiStack spacing="4" :debug="showDebug">
+        <CuiStack spacing="4">
           <div class="rounded-lg bg-primary-500 p-3 text-white">Item 1</div>
           <div class="rounded-lg bg-primary-500 p-3 text-white">Item 2</div>
           <div class="rounded-lg bg-primary-500 p-3 text-white">Item 3</div>
@@ -37,7 +32,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
 <div>Item 2</div>
 </CuiStack>`"
       >
-        <CuiStack orientation="horizontal" spacing="3" :debug="showDebug">
+        <CuiStack orientation="horizontal" spacing="3">
           <div class="rounded-lg bg-info-500 p-3 text-white">Item 1</div>
           <div class="rounded-lg bg-info-500 p-3 text-white">Item 2</div>
           <div class="rounded-lg bg-info-500 p-3 text-white">Item 3</div>
