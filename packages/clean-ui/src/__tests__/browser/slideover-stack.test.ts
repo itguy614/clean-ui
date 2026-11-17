@@ -185,6 +185,17 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(panel(1).contains(document.activeElement)).toBe(true);
     });
 
+    it("a panel beneath a co-active one can be clicked: the upper overlay root lets pointers through", async () => {
+      const open = stack([{ size: "lg" }, { size: "sm", modal: false }]);
+      await openN(open, 2);
+      const r = rect(0);
+      const hit = document.elementFromPoint(r.left + 40, r.top + 40);
+      expect(panel(0).contains(hit)).toBe(true);
+      // The shared backdrop is still what the rest of the page hits.
+      const away = document.elementFromPoint(8, 8);
+      expect(away?.closest(".cui-backdrop, [class*='backdrop']")).not.toBeNull();
+    });
+
     it("co-active panels let focus move freely between them", async () => {
       const open = stack([{}, { modal: false }]);
       await openN(open, 2);
