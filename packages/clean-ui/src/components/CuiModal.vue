@@ -78,7 +78,7 @@ const emit = defineEmits<{
 const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const dialogRef = useTemplateRef<HTMLElement>("dialogEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+const { zStep, isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
   open: () => props.visible,
   dialogRef,
   persistent: () => props.persistent,
@@ -130,6 +130,7 @@ const themeScope = useScopedTheme(() => mounted.value);
       ref="overlayEl"
       class="cui-modal-overlay"
       :class="[{ 'cui-modal-overlay--visible': isAnimating }, themeScope]"
+      :style="{ '--_overlay-step': zStep }"
       @keydown="onKeydown"
     >
       <!-- Backdrop -->
@@ -193,7 +194,8 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: var(--cui-z-overlay, 9990); /* OVERLAY_Z_INDEX in utils/position.ts */
+  /* Its step above the overlays open before it, from utils/overlayLayer.ts (#541). */
+  z-index: calc(var(--cui-z-overlay, 9990) + var(--_overlay-step, 0));
   display: flex;
   align-items: flex-start;
   justify-content: center;

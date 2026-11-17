@@ -6,6 +6,7 @@ import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
+import { giveBackOverlayStep, takeOverlayStep } from "../utils/overlayLayer";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -61,6 +62,8 @@ export interface OverlayJoinCore {
   finish: () => void;
   /** Handle of this overlay's layer in the Escape stack. */
   layer: LayerHandle;
+  /** Its z-index step above `--cui-z-overlay`: the newest overlay is on top (#541). */
+  zStep: Ref<number>;
 }
 
 /** The extension points; every one is optional. */
@@ -109,6 +112,14 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   // exit-animation timeout, so both paths go through this guard.
   let holdsScrollLock = false;
 
+  // The z-index step it holds from opening until its exit has finished (#541).
+  const zStep = ref(0);
+  let heldStep = -1;
+  const releaseStep = () => {
+    if (heldStep >= 0) giveBackOverlayStep(heldStep);
+    heldStep = -1;
+  };
+
   function acquireScrollLock() {
     if (holdsScrollLock) return;
     holdsScrollLock = true;
@@ -130,6 +141,9 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   let entry = 0;
 
   function openOverlay() {
+    // First, so a stack registering on `isOpen` reads the step. Re-opened mid-exit it is the newest.
+    releaseStep();
+    heldStep = zStep.value = takeOverlayStep();
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -185,6 +199,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
     onClose();
 
     releaseScrollLock();
+    releaseStep();
 
     // Return focus — to `returnFocus` if it names an element that takes it (resolved now,
     // after the `close` handlers, so it can pick one they rendered; the closing dialog is
@@ -245,7 +260,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
     modal: true,
     onParentClose: () => hooks?.onParentClose?.(),
   });
-  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer });
+  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer, zStep });
 
   // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
   // focus move on to its siblings.
@@ -289,9 +304,11 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   onUnmounted(() => {
     entry++;
     releaseScrollLock();
+    releaseStep();
   });
 
   return {
+    zStep,
     isVisible,
     isAnimating,
     mounted,

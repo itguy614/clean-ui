@@ -1,13 +1,11 @@
 import { onScopeDispose, provide, shallowReactive, shallowRef, watchPostEffect } from "vue";
 import { __DEV__, warnOnce } from "../utils/devWarn";
 import { resolveColor } from "../utils/color";
+import { overlayZIndex } from "../utils/overlayLayer";
 import { OverlayStackKey, type OverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
 
 // Module-scoped, so the library doesn't pull Node's global types into its own build.
 declare const process: { env: { NODE_ENV?: string } };
-
-/** Layers above the bottom overlay stay below popovers (`--cui-z-overlay` + 8). */
-const MAX_Z_STEP = 7;
 
 /**
  * Where the active set starts. Walk down from the top: the top panel is always active, and so
@@ -76,17 +74,13 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
     if (i !== -1) entries.splice(i, 1);
   }
 
-  const depth = (entry: OverlayStackEntry) => entries.indexOf(entry);
-
   const context: OverlayStackContext = {
     entries,
     defaultModal: () => options.modal?.() ?? true,
     register,
     unregister,
-    zIndex(entry) {
-      const step = Math.min(Math.max(depth(entry), 0), MAX_Z_STEP);
-      return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : "var(--cui-z-overlay, 9990)";
-    },
+    // The shared counter (`utils/overlayLayer.ts`): panels open in stack order, so the order holds.
+    zIndex: (entry) => overlayZIndex(entry.step()),
     backdropEl: shallowRef<HTMLElement | null>(null),
     backdropEntry: () => entries[start()],
     bottomEntry: () => entries[0],
