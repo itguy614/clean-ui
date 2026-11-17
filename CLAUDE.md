@@ -157,7 +157,7 @@ jarring appear/disappear. "It looks nice" is not one.
   a chevron turning) → `--cui-ease-in-out`; a sheet sliding in → `--cui-ease-drawer`;
   colour changes → `ease`; constant loops → `linear`. **Never `ease-in`.** It starts slowly,
   so the interface feels laggy.
-- **Duration:** UI motion stays under 300ms, and exits are faster than entries (a menu
+- **Duration:** UI motion stays under 300ms, and exits are faster than entries (the one exception is CuiDrawer's open: 500ms, `calc(var(--cui-duration-slow) * 2)` on `--cui-ease-drawer`, to match a native iOS sheet, #268) (a menu
   opens over `base`, closes over `fast`). A transition takes the duration of the state it
   moves to, so give the hidden state the short one and the shown state the long one (CuiModal,
   CuiBackdrop, CuiAlert). Loops keep their own longer durations.

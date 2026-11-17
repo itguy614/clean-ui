@@ -102,6 +102,13 @@ describe("CuiDrawer", () => {
     vi.restoreAllMocks();
   });
 
+  it("ignores a snap point in a unit it cannot read, rather than taking '50%' for 50px", async () => {
+    const w = mount(CuiDrawer, { props: { visible: true, title: "x", snapPoints: ["50%", "20rem"] } });
+    await vi.runAllTimersAsync();
+    expect(dialog()!.getAttribute("style") ?? "").not.toContain("--_drawer-height");
+    w.unmount();
+  });
+
   it("has no snap variables without snap points", async () => {
     const w = mount(CuiDrawer, { props: { visible: true, title: "x" } });
     await vi.runAllTimersAsync();

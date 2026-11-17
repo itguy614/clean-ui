@@ -207,17 +207,41 @@ describe("CuiDrawer and CuiSlideover drag-to-dismiss (real browser)", () => {
     pointer(input, "pointerup", 100, 150);
   });
 
-  it("does not drag while persistent or with noDrag", async () => {
-    for (const props of [{ persistent: true }, { noDrag: true }]) {
-      const w = await mountDrawer(props);
-      await down(header(), 100, 100);
-      pointer(header(), "pointermove", 100, 110);
-      pointer(header(), "pointermove", 100, 150);
-      expect(panel().hasAttribute("data-cui-dragging"), JSON.stringify(props)).toBe(false);
-      pointer(header(), "pointerup", 100, 150);
-      w.unmount();
-      mounted.pop();
-    }
+  it("does not drag with noDrag", async () => {
+    await mountDrawer({ noDrag: true });
+    await down(header(), 100, 100);
+    pointer(header(), "pointermove", 100, 110);
+    pointer(header(), "pointermove", 100, 150);
+    expect(panel().hasAttribute("data-cui-dragging")).toBe(false);
+    pointer(header(), "pointerup", 100, 150);
+  });
+
+  it("a persistent drawer follows a drag but never closes by it", async () => {
+    const w = await mountDrawer({ persistent: true });
+    const release = await dragDown(header(), panel().offsetHeight, 20);
+    release();
+    await wait(motionDuration("slow") * 2 + 150);
+    expect(closed(w)).toBe(false);
+    expect(panel().style.transform).toBe("");
+  });
+
+  it("does not start a drag while it is leaving", async () => {
+    const w = await mountDrawer();
+    await w.setProps({ visible: false });
+    await wait(30);
+    await down(header(), 100, 100);
+    pointer(header(), "pointermove", 100, 110);
+    pointer(header(), "pointermove", 100, 150);
+    expect(panel().hasAttribute("data-cui-dragging")).toBe(false);
+    pointer(header(), "pointerup", 100, 150);
+  });
+
+  it("a twitch past the slop does not close it", async () => {
+    const w = await mountDrawer();
+    const release = await dragDown(header(), 6, 5);
+    release();
+    await wait(motionDuration("slow") * 2 + 150);
+    expect(closed(w)).toBe(false);
   });
 
   it("swallows the click that ends a drag", async () => {

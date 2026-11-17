@@ -21,6 +21,8 @@ export interface UseDragDismissOptions {
    * on one of them, or closes. Defaults to `[0]`: open or closed.
    */
   stops?: () => readonly number[];
+  /** False: a release never closes, it settles on the lowest stop (a persistent sheet still moves between stops). Default true. */
+  dismissible?: () => boolean;
   /** Index into `stops` the panel rests at. Default 0. */
   stop?: () => number;
   /** The panel was let go and settles on `stops[index]` (also called for the one it was on). */
@@ -39,11 +41,13 @@ const SCROLL_BLOCK_MS = 100;
 const CLOSE_AT = 0.4;
 /** The furthest, px, a panel can be pulled past fully open. */
 const DAMP_LIMIT = 80;
+/** A flick needs at least this many px of travel: a twitch past the slop mustn't close it. */
+const MIN_FLICK = 16;
 /** A click this soon after a drag ended is the drag's own release, not a press. */
 const CLICK_GUARD_MS = 80;
 
 /** Elements a drag mustn't start on: it would take the caret, the selection or the slider thumb. */
-const NO_DRAG = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [data-cui-no-drag]';
+const NO_DRAG = 'input, textarea, select, .cui-resizable-panels__handle, [contenteditable=""], [contenteditable="true"], [data-cui-no-drag]';
 
 /** The further past the limit, the less it moves: tracks the finger at first, then gives up. */
 function damp(overshoot: number): number {
@@ -90,7 +94,7 @@ function scrolledAway(el: HTMLElement, edge: DragEdge): boolean {
  * page instead. Scroll containers inside it keep their own native panning.
  */
 export function useDragDismiss(options: UseDragDismissOptions) {
-  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, onSettle, onDismiss } = options;
+  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, dismissible = () => true, onSettle, onDismiss } = options;
   const drag = usePointerDrag();
 
   let dragging = false;
@@ -136,7 +140,8 @@ export function useDragDismiss(options: UseDragDismissOptions) {
 
   function onPointerdown(e: PointerEvent) {
     const el = panel.value;
-    if (!el || !enabled() || drag.active.value || e.isPrimary === false) return;
+    // A widget that tracks its own pointer (a colour picker) prevents the default: not ours.
+    if (!el || !enabled() || drag.active.value || e.isPrimary === false || e.defaultPrevented) return;
     const target = e.target as HTMLElement | null;
     if (!target || target.closest(NO_DRAG)) return;
     if (e.pointerType === "mouse" && !handle?.()?.contains(target)) return;
@@ -206,7 +211,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     let target: number | null;
     if (e.type === "pointercancel") {
       target = current;
-    } else if (Math.abs(velocity) > VELOCITY) {
+    } else if (Math.abs(velocity) > VELOCITY && Math.abs(offset - rest) >= MIN_FLICK) {
       // A flick: one stop that way, or out past the last.
       target = velocity > 0 ? (current + 1 < list.length ? current + 1 : null) : Math.max(current - 1, 0);
     } else if (offset > lowest + (size - lowest) * CLOSE_AT) {
@@ -215,6 +220,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
       target = list.reduce((best, s, i) => (Math.abs(s - offset) < Math.abs((list[best] ?? 0) - offset) ? i : best), 0);
     }
 
+    if (target === null && !dismissible()) target = list.length - 1;
     if (target === null) onDismiss();
     else onSettle?.(target);
     // The new stop, or the closing state, renders on the next tick; handing the panel back

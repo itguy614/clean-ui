@@ -35,7 +35,7 @@ const meta: ComponentMeta = {
           name: "persistent",
           type: "boolean",
           default: "false",
-          description: "Block closing via Escape, backdrop click and dragging. The X button still closes",
+          description: "Block closing via Escape, backdrop click and dragging down. The sheet can still be dragged between snap points. The X button still closes",
         },
         { name: "noCloseButton", type: "boolean", default: "false", description: "Hide the X close button in simple mode" },
         { name: "noHandle", type: "boolean", default: "false", description: "Hide the grab handle. Touch and pen can still drag from the sheet; a mouse can no longer drag at all" },

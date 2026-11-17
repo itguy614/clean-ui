@@ -19,14 +19,17 @@ export function useVisualViewport(active: () => boolean) {
 
   function read() {
     if (typeof window === "undefined") return;
-    const vv = window.visualViewport;
+    // Pinch-zoomed in, the visual viewport is smaller too, but that is no keyboard.
+    const zoomed = (window.visualViewport?.scale ?? 1) !== 1;
+    const vv = zoomed ? null : window.visualViewport;
     layout.value = window.innerHeight;
     height.value = vv ? vv.height : window.innerHeight;
     // Below the visual viewport's bottom edge, down to the layout viewport's.
     inset.value = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
   }
 
-  useEventListener("window", "resize", read, { enabled: active });
+  // Where there is a visualViewport, its own resize says it all.
+  useEventListener("window", "resize", read, { enabled: () => active() && !window.visualViewport });
 
   let target: VisualViewport | null = null;
   function detach() {

@@ -99,7 +99,7 @@ watch(isVisible, (visible) => {
 const gesture = useDragDismiss({
   panel: panelRef,
   edge: () => props.side,
-  enabled: () => !props.noDrag && !props.persistent,
+  enabled: () => !props.noDrag && !props.persistent && isAnimating.value,
   onDismiss: closeOverlay,
 });
 

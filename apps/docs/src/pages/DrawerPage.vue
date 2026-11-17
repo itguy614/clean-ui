@@ -100,7 +100,7 @@ const email = ref("");
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>On open, focus moves to the panel; on close it returns to the control that opened it. Tab and Shift+Tab wrap inside it, and background scrolling is locked.</li>
-        <li><strong>Dragging is never the only way to close it.</strong> Escape, the backdrop and the X button (in simple mode, or a <code>CuiModalHeader</code> you assemble) all close it, and each works without a pointer. <code>persistent</code> blocks Escape, the backdrop and dragging together; the X still closes.</li>
+        <li><strong>Dragging is never the only way to close it.</strong> Escape, the backdrop and the X button (in simple mode, or a <code>CuiModalHeader</code> you assemble) all close it, and each works without a pointer. <code>persistent</code> blocks Escape, the backdrop and a drag that would close it (it can still be dragged between snap points); the X still closes.</li>
         <li>The grab handle is decorative (<code>aria-hidden</code>), not a control. A screen reader or keyboard user never needs it.</li>
         <li>With <code>title</code> set, the dialog is labelled by its title. Assembling the sheet yourself, give it an <code>aria-label</code>, which lands on the panel.</li>
         <li>Under <code>prefers-reduced-motion</code> the sheet fades rather than slides; a drag still follows the finger, since that is direct manipulation, not animation.</li>
@@ -206,7 +206,7 @@ const email = ref("");
           <CuiButton variant="outline" size="sm" @click="noDrag = true">No drag</CuiButton>
         </CuiFlex>
         <CuiDrawer v-model:visible="persistent" persistent title="Persistent">
-          <p>Escape, the backdrop and dragging do nothing. Use the X.</p>
+          <p>Escape, the backdrop and a drag down do not close it. Use the X.</p>
         </CuiDrawer>
         <CuiDrawer v-model:visible="noDrag" no-drag title="No drag">
           <p>It closes by Escape, the backdrop and the X only.</p>

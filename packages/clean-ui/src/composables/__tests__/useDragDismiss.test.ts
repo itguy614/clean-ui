@@ -33,7 +33,7 @@ function setup(opts: { edge?: DragEdge; stops?: number[]; stop?: number; enabled
   )!;
   el.addEventListener("pointerdown", gesture.onPointerdown as EventListener);
   const send = (target: Element, type: string, id: number, x: number, y: number, extra: Record<string, unknown> = {}) => {
-    const ev = pointer(type, id, { clientX: x, clientY: y, bubbles: true }) as PointerEvent & Record<string, unknown>;
+    const ev = pointer(type, id, { clientX: x, clientY: y, bubbles: true, cancelable: true }) as PointerEvent & Record<string, unknown>;
     for (const [k, v] of Object.entries({ isPrimary: true, pointerType: "touch", ...extra })) Object.defineProperty(ev, k, { value: v });
     target.dispatchEvent(ev);
   };
@@ -140,6 +140,47 @@ describe("useDragDismiss", () => {
     t.send(t.el, "pointerup", 1, 100, 150);
     await nextTick();
     expect(t.onSettle.mock.calls.length + t.onDismiss.mock.calls.length).toBe(1);
+  });
+
+  it("does not close on a twitch just past the slop, however quick", async () => {
+    const t = setup();
+    await t.swipe(t.el, 114, 5); // 4px after the commit, over 5ms
+    expect(t.onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("leaves a press a widget already took (default prevented) alone", async () => {
+    const t = setup();
+    t.el.addEventListener("pointerdown", (e) => e.preventDefault(), true);
+    t.send(t.el, "pointerdown", 1, 100, 100);
+    await nextTick();
+    t.send(t.el, "pointermove", 1, 100, 110);
+    expect(t.el.hasAttribute("data-cui-dragging")).toBe(false);
+  });
+
+  it("settles on the lowest stop instead of closing when not dismissible", async () => {
+    const el = document.createElement("div");
+    document.body.append(el);
+    Object.defineProperty(el, "offsetHeight", { value: 400 });
+    const onDismiss = vi.fn();
+    const onSettle = vi.fn();
+    const scope = effectScope();
+    const g = scope.run(() =>
+      useDragDismiss({ panel: shallowRef(el), edge: () => "bottom", enabled: () => true, stops: () => [0, 200], stop: () => 1, dismissible: () => false, onDismiss, onSettle }),
+    )!;
+    el.addEventListener("pointerdown", g.onPointerdown as EventListener);
+    const send = (type: string, y: number) => {
+      const ev = pointer(type, 1, { clientX: 100, clientY: y, bubbles: true });
+      Object.defineProperty(ev, "isPrimary", { value: true });
+      el.dispatchEvent(ev);
+    };
+    send("pointerdown", 100);
+    await nextTick();
+    send("pointermove", 110);
+    send("pointermove", 190);
+    send("pointerup", 190);
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(onSettle).toHaveBeenCalledWith(1);
+    scope.stop();
   });
 
   it("treats a stop index below zero as the fully open stop", async () => {

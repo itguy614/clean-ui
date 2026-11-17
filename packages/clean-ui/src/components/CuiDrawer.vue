@@ -112,7 +112,8 @@ const viewport = useVisualViewport(() => mounted.value);
 const layoutHeight = viewport.layout;
 
 function toPx(point: CuiDrawerSnapPoint): number {
-  const n = typeof point === "number" ? point : parseFloat(point);
+  // A string is px only ("320px"); anything else (a %, rem) is no snap point.
+  const n = typeof point === "number" ? point : /^\d+(\.\d+)?px$/.test(point.trim()) ? parseFloat(point) : 0;
   if (!Number.isFinite(n) || n <= 0) return 0;
   return typeof point === "number" && n <= 1 ? n * layoutHeight.value : n;
 }
@@ -144,14 +145,19 @@ function settle(index: number) {
   if (point.value !== props.activeSnapPoint) emit("update:activeSnapPoint", point.value);
 }
 
+const keyboardOpen = computed(() => viewport.inset.value > 0);
+
 // --- The gesture ----------------------------------------------------------------------
 const gesture = useDragDismiss({
   panel: panelRef,
   edge: () => "bottom",
-  enabled: () => !props.noDrag && !props.persistent,
+  // Not while it is leaving: a touch then would freeze the exit under the finger.
+  enabled: () => !props.noDrag && isAnimating.value,
+  dismissible: () => !props.persistent,
   handle: () => handleRef.value,
-  stops: () => stops.value,
-  stop: () => stopIndex.value,
+  // With the keyboard up the sheet shows as much as fits, at offset 0.
+  stops: () => (keyboardOpen.value ? [0] : stops.value),
+  stop: () => (keyboardOpen.value ? 0 : stopIndex.value),
   onSettle: settle,
   onDismiss: closeOverlay,
 });
@@ -160,8 +166,6 @@ const gesture = useDragDismiss({
 // The keyboard: a sheet at the bottom of the layout viewport is under it, so it is anchored
 // to the visual viewport's bottom and held to the room left. Snap offsets stand down: the
 // sheet shows as much as fits.
-const keyboardOpen = computed(() => viewport.inset.value > 0);
-
 const panelVars = computed(() => {
   const vars: Record<string, string> = {};
   if (snapping.value) {
