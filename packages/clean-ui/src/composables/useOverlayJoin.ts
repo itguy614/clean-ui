@@ -57,11 +57,16 @@ export function joinStack(options: JoinOptions) {
       isModal,
       /**
        * The backdrop a drag of this overlay fades (#526). In a stack the backdrop is the
-       * stack's, one for the group: it fades only for the one panel open there, since a drag of
+       * stack's, one for the group: it fades only for the one panel shown there, since a drag of
        * a panel above others would dim the page behind them too. `null`: leave it. `undefined`:
        * no stack, so the overlay's own.
        */
-      fadeTarget: () => (stack ? (stack.entries.length === 1 && stack.entries[0] === entry ? stack.backdropEl.value : null) : undefined),
+      fadeTarget: () => {
+        if (!stack) return undefined;
+        // A hidden panel is open but not on screen (#529): it is not one the page is dimmed behind.
+        const shown = stack.entries.filter((e) => !e.hidden?.());
+        return shown.length === 1 && shown[0] === entry ? stack.backdropEl.value : null;
+      },
       onEscape: stack ? () => stack.escape() : undefined,
       // Children close first, in the same tick, so the exits read as one motion and a stack
       // never sees a half state.

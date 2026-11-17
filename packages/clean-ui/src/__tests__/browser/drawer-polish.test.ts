@@ -223,7 +223,7 @@ describe("drag polish: backdrop fade and reduced motion (real browser)", () => {
     });
 
     describe("in a stack the backdrop is the stack's: only a lone sheet dims it", () => {
-      function stackOf(n: number) {
+      function stackOf(n: number, hid: boolean[] = reactive(Array.from({ length: n }, () => false))) {
         const st = reactive(Array.from({ length: n }, () => false));
         mounted.push(
           mount(
@@ -232,7 +232,7 @@ describe("drag polish: backdrop fade and reduced motion (real browser)", () => {
                 h(CuiSlideoverStack, null, {
                   default: () =>
                     st.map((v, i) =>
-                      h(CuiDrawer, { key: i, visible: v, "onUpdate:visible": (x: boolean) => (st[i] = x), title: `S${i}`, "data-testid": `d${i}` }, { default: () => h("div", { style: "height:200px" }, "x") }),
+                      h(CuiDrawer, { key: i, visible: v, hidden: hid[i], "onUpdate:visible": (x: boolean) => (st[i] = x), title: `S${i}`, "data-testid": `d${i}` }, { default: () => h("div", { style: "height:200px" }, "x") }),
                     ),
                 }),
             }),
@@ -256,6 +256,24 @@ describe("drag polish: backdrop fade and reduced motion (real browser)", () => {
         await wait(motionDuration("slow") * 2 + 150);
         expect(opacityOf(shared())).toBeCloseTo(full, 2);
         expect(shared().style.opacity).toBe("");
+      });
+
+      it("a hidden panel is not one the page is dimmed behind: the shown drawer fades the backdrop (#529)", async () => {
+        const hid = reactive([false, false]);
+        const st = stackOf(2, hid);
+        st[0] = true;
+        await open();
+        st[1] = true;
+        await open();
+        hid[0] = true;
+        await open();
+        const full = opacityOf(shared());
+        const release = await drag(head(1), 40, 500);
+        await frames(2);
+        expect(opacityOf(shared())).toBeLessThan(full - 0.01);
+        release();
+        await wait(motionDuration("slow") * 2 + 150);
+        expect(opacityOf(shared())).toBeCloseTo(full, 2);
       });
 
       it("a drawer open with another leaves the shared backdrop alone", async () => {
