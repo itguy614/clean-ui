@@ -91,7 +91,7 @@ const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 const handleRef = useTemplateRef<HTMLElement>("handleEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, ownsBackdrop, stacked, isModal } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, stacked, isModal } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -103,6 +103,18 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   onOpened: () => emit("after-enter"),
   onClosed: () => emit("after-leave"),
   modal: () => props.modal,
+  backdrop: () => ({
+    opacity: props.backdropOpacity,
+    blur: props.backdropBlur,
+    color: props.backdropColor,
+    image: props.backdropImage,
+    gradient: props.backdropGradient,
+    from: props.backdropFrom,
+    via: props.backdropVia,
+    to: props.backdropTo,
+    angle: props.backdropAngle,
+    smooth: props.backdropSmooth,
+  }),
 });
 
 watch(isVisible, (visible) => {
@@ -212,9 +224,9 @@ const themeScope = useScopedTheme(() => mounted.value);
         @keydown="onKeydown"
       >
         <CuiBackdrop
+          v-if="!stacked"
           data-cui-exit
-          :visible="isAnimating && ownsBackdrop"
-          :class="{ 'cui-drawer__backdrop--live': ownsBackdrop }"
+          :visible="isAnimating"
           :opacity="backdropOpacity"
           :blur="backdropBlur"
           :color="backdropColor"
@@ -275,13 +287,12 @@ const themeScope = useScopedTheme(() => mounted.value);
 
 <style scoped>
 /* In a stack (#41) every overlay root is full-screen, and the ones above would block the
-   panels beneath them. The root lets pointer events through; the panel and the one backdrop
-   that is drawn (the lowest active overlay's) take them. */
+   panels beneath them. The root lets pointer events through; the panel takes them. The one
+   backdrop is the stack's own (CuiSlideoverStack), not a panel's. */
 .cui-drawer-overlay--stacked {
   pointer-events: none;
 }
-.cui-drawer-overlay--stacked .cui-drawer__panel,
-.cui-drawer-overlay--stacked .cui-drawer__backdrop--live {
+.cui-drawer-overlay--stacked .cui-drawer__panel {
   pointer-events: auto;
 }
 

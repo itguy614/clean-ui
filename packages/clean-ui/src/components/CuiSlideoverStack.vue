@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import CuiBackdrop from "./CuiBackdrop.vue";
+import { usePresence } from "../composables/usePresence";
+import { subtreeTransition } from "../utils/motion";
 import type { TailwindBreakpoint } from "../types/grid";
 import { useOverlayStackProvider } from "../composables/useOverlayStack";
 import { useSlideoverStackLayout } from "../composables/useSlideoverStackLayout";
@@ -42,6 +46,34 @@ const props = withDefaults(defineProps<CuiSlideoverStackProps>(), {
 });
 
 const stack = useOverlayStackProvider({ modal: () => props.modal });
+
+// The one backdrop of the group (#41). The stack draws it, once, for as long as any panel is
+// open, so opening a panel, closing one or changing the active set never remounts it or
+// restarts its fade: it fades in with the first panel and out with the last. Only its layer
+// (and the props it takes from the lowest active panel) follow the active set.
+const open = computed(() => stack.entries.length > 0);
+const { present, onAfterLeave } = usePresence(() => open.value);
+const shown = ref(false);
+watch(
+  open,
+  (now) => {
+    if (!now) shown.value = false;
+    // After a paint, so the fade runs from the hidden state.
+    else requestAnimationFrame(() => (shown.value = open.value));
+  },
+  { flush: "sync" },
+);
+let lastProps: Record<string, unknown> = {};
+let lastZ = "var(--cui-z-overlay, 9990)";
+const backdrop = computed(() => {
+  const entry = stack.backdropEntry();
+  if (entry) {
+    lastProps = entry.backdrop?.() ?? {};
+    lastZ = stack.zIndex(entry);
+  }
+  return { props: lastProps, zIndex: lastZ };
+});
+
 useSlideoverStackLayout(stack, {
   mode: () => props.mode,
   push: () => props.push,
@@ -54,5 +86,17 @@ useSlideoverStackLayout(stack, {
 </script>
 
 <template>
+  <Teleport to="body">
+    <Transition v-bind="subtreeTransition" @after-leave="onAfterLeave">
+      <CuiBackdrop
+        v-if="present"
+        v-show="open"
+        v-bind="backdrop.props"
+        :visible="shown"
+        :style="{ position: 'fixed', zIndex: backdrop.zIndex }"
+        @click="stack.closeTop()"
+      />
+    </Transition>
+  </Teleport>
   <slot />
 </template>

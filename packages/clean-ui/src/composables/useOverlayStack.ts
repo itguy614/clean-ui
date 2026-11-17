@@ -84,10 +84,7 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
       const step = Math.min(Math.max(depth(entry), 0), MAX_Z_STEP);
       return step ? `calc(var(--cui-z-overlay, 9990) + ${step})` : "var(--cui-z-overlay, 9990)";
     },
-    ownsBackdrop(entry) {
-      const i = depth(entry);
-      return i === -1 || i === start();
-    },
+    backdropEntry: () => entries[start()],
     closeTop() {
       topEntry()?.requestClose();
     },

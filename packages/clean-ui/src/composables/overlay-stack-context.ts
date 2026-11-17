@@ -13,6 +13,8 @@ export interface OverlayStackEntry {
   panel: () => HTMLElement | null | undefined;
   /** The teleported overlay root holding the panel and its backdrop: what `inert` goes on. */
   root: () => HTMLElement | null | undefined;
+  /** The backdrop props (opacity, blur, color, image, gradient...) this panel asks for. */
+  backdrop?: () => Record<string, unknown>;
   /** Close this panel, unless it is `persistent`. */
   requestClose: () => void;
 }
@@ -31,8 +33,12 @@ export interface OverlayStackContext {
   isActive: (entry: OverlayStackEntry) => boolean;
   /** The CSS `z-index` of the entry's overlay root: one step above the entry beneath it. */
   zIndex: (entry: OverlayStackEntry) => string;
-  /** Whether this entry draws the one shared backdrop: the lowest active one. */
-  ownsBackdrop: (entry: OverlayStackEntry) => boolean;
+  /**
+   * The panel the one shared backdrop sits just behind: the lowest active one. The backdrop
+   * itself is drawn once by the stack, not by any panel, so a change of owner moves nothing
+   * on screen but its layer.
+   */
+  backdropEntry: () => OverlayStackEntry | undefined;
   /** Backdrop click: closes the topmost panel, if it is not `persistent`. */
   closeTop: () => void;
   /** Escape: closes the topmost active panel, or the focused one in a co-active group. */

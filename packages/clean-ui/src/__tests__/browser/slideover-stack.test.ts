@@ -33,7 +33,7 @@ describe("CuiSlideoverStack (real browser)", () => {
     modal?: boolean;
     side?: string;
   }
-  function stack(specs: Spec[], props: Record<string, unknown> = {}) {
+  function stack(specs: Spec[], props: Record<string, unknown> = {}, panelProps: Record<string, unknown> = {}) {
     const open = reactive(specs.map(() => false));
     const w = mount(
       defineComponent({
@@ -50,6 +50,7 @@ describe("CuiSlideoverStack (real browser)", () => {
                     size: s.size ?? "md",
                     ...(s.modal === undefined ? {} : { modal: s.modal }),
                     side: s.side ?? "right",
+                    ...panelProps,
                     "data-testid": `p${i}`,
                   },
                   { default: () => [h("button", { id: `a${i}` }, "a"), h("button", { id: `b${i}` }, "b")] },
@@ -234,6 +235,111 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(lefts[0]).toBe(lefts[2]);
       // Nothing past the gap.
       expect(Math.min(...lefts)).toBeGreaterThanOrEqual(32);
+    });
+  });
+
+  /**
+   * The user-visible rule: while any panel of a stack is open the page is dimmed by one
+   * continuous backdrop. Sampled on every real frame, the effective dimming (the product of
+   * what every backdrop element lets through) never leaves the steady value, and there is
+   * never a frame without a backdrop.
+   */
+  describe("one continuous backdrop", () => {
+    beforeAll(() => page.viewport(1400, 800));
+
+    function sampler() {
+      const samples: { dim: number; count: number; filter: string }[] = [];
+      let running = true;
+      const tick = () => {
+        const els = [...document.querySelectorAll<HTMLElement>(".cui-backdrop")].filter((e) => getComputedStyle(e).display !== "none");
+        const through = els.reduce((acc, e) => acc * (1 - Number(getComputedStyle(e).opacity)), 1);
+        samples.push({ dim: 1 - through, count: els.length, filter: els.map((e) => getComputedStyle(e).backdropFilter).join("|") });
+        if (running) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      return { samples, stop: () => (running = false) };
+    }
+
+    async function expectSteady(run: () => Promise<void>, props?: { blur: boolean }) {
+      const steady = props?.blur ? 1 : 0.5;
+      const rec = sampler();
+      await run();
+      rec.stop();
+      await frames(2);
+      expect(rec.samples.length).toBeGreaterThan(20);
+      const dims = rec.samples.map((x) => x.dim);
+      expect(Math.min(...dims), "never dips").toBeGreaterThan(steady - 0.002);
+      expect(Math.max(...dims), "never doubles up").toBeLessThan(steady + 0.002);
+      expect(Math.min(...rec.samples.map((x) => x.count)), "a backdrop on every frame").toBe(1);
+      expect(new Set(rec.samples.map((x) => x.filter)).size, "blur never restarts").toBe(1);
+    }
+
+    it("opening panels 2 and 3 and closing back down never dips or doubles the dimming", async () => {
+      const open = stack([{}, {}, {}]);
+      open[0] = true;
+      await settle();
+      await expectSteady(async () => {
+        open[1] = true;
+        await settle();
+        open[2] = true;
+        await settle();
+        open[2] = false;
+        await settle();
+        open[1] = false;
+        await settle();
+      });
+    });
+
+    it("holds with a blurred backdrop too", async () => {
+      const open = stack([{}, {}, {}], {}, { backdropBlur: "sm" });
+      open[0] = true;
+      await settle();
+      await expectSteady(async () => {
+        open[1] = true;
+        await settle();
+        open[2] = true;
+        await settle();
+        open[2] = false;
+        await settle();
+      }, { blur: true });
+    });
+
+    it("holds when a modal panel opens above a co-active group, and when the active set changes", async () => {
+      const open = stack([{}, { modal: false }, { modal: true }]);
+      open[0] = true;
+      await settle();
+      await expectSteady(async () => {
+        open[1] = true;
+        await settle();
+        open[2] = true;
+        await settle();
+        open[2] = false;
+        await settle();
+      });
+    });
+
+    it("fades in once with the first panel and out once with the last", async () => {
+      const open = stack([{}, {}]);
+      const rec = sampler();
+      open[0] = true;
+      await settle();
+      open[1] = true;
+      await settle();
+      open[1] = false;
+      await settle();
+      open[0] = false;
+      await settle();
+      rec.stop();
+      const dims = rec.samples.map((x) => x.dim);
+      // Up to steady, hold, down to nothing: exactly one rise and one fall.
+      let turns = 0;
+      for (let i = 2; i < dims.length; i++) {
+        const a = Math.sign(Math.round((dims[i - 1] - dims[i - 2]) * 1000));
+        const b = Math.sign(Math.round((dims[i] - dims[i - 1]) * 1000));
+        if (a !== 0 && b !== 0 && a !== b) turns++;
+      }
+      expect(turns).toBeLessThanOrEqual(1);
+      expect(dims.at(-1)).toBeLessThan(0.01);
     });
   });
 

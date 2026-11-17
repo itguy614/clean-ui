@@ -49,6 +49,8 @@ export interface UseOverlayOptions {
    * stack, and never traps focus (#41).
    */
   modal?: () => boolean | undefined;
+  /** The backdrop props this overlay asks for, drawn by the stack when it sits in one (#41). */
+  backdrop?: () => Record<string, unknown>;
   /** The edge the overlay docks to, for a stack that checks its panels agree (#41). None by default. */
   side?: () => string;
 }
@@ -67,6 +69,7 @@ export function useOverlay(options: UseOverlayOptions) {
     onClosed,
     modal: getModal = () => undefined,
     side: getSide = () => "",
+    backdrop: getBackdrop,
   } = options;
 
   const isVisible = ref(false);
@@ -214,7 +217,7 @@ export function useOverlay(options: UseOverlayOptions) {
   const isModal = () => getModal() ?? stack?.defaultModal() ?? true;
   let stackEntry: OverlayStackEntry | null = null;
   if (stack) {
-    stackEntry = { modal: isModal, side: getSide, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
+    stackEntry = { modal: isModal, side: getSide, backdrop: getBackdrop, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
     const joined = stackEntry;
     watch(isOpen, (now) => (now ? stack.register(joined) : stack.unregister(joined)), { flush: "sync" });
     onScopeDispose(() => stack.unregister(joined));
@@ -227,8 +230,6 @@ export function useOverlay(options: UseOverlayOptions) {
 
   /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
   const zIndex = computed(() => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX));
-  /** Whether this overlay draws the backdrop: the lowest active one in a stack, else always. */
-  const ownsBackdrop = computed(() => (stack && stackEntry ? stack.ownsBackdrop(stackEntry) : true));
 
   // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
   // focus move on to its siblings.
@@ -285,7 +286,6 @@ export function useOverlay(options: UseOverlayOptions) {
     onBackdropClick,
     onKeydown,
     zIndex,
-    ownsBackdrop,
     /** Whether the overlay sits in a stack: its root then lets pointer events through. */
     stacked: !!stack,
     /** Whether the dialog is modal after inheriting from the stack (`aria-modal`). */

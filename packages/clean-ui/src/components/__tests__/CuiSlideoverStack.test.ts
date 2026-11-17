@@ -48,7 +48,11 @@ const roots = () => [...document.body.querySelectorAll<HTMLElement>(".cui-slideo
 const root = (i: number) => document.body.querySelector<HTMLElement>(`[data-testid="panel-${i}"]`)!.parentElement!;
 const isInert = (i: number) => root(i).hasAttribute("inert");
 const escape = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-const hasBackdrop = (i: number) => root(i).querySelector(".cui-slideover__backdrop--live, .cui-drawer__backdrop--live") !== null;
+const backdrops = () => [...document.body.querySelectorAll<HTMLElement>(".cui-backdrop")];
+/** The z-index step of the one shared backdrop: the panel it sits just behind. */
+const backdropZ = () => backdrops()[0]?.style.zIndex;
+const zOf = (i: number) => root(i).style.zIndex;
+const hasBackdrop = (i: number) => backdrops().length === 1 && backdropZ() === zOf(i);
 
 async function openAll(open: boolean[], n = open.length) {
   for (let i = 0; i < n; i++) {
@@ -96,14 +100,16 @@ describe("overlay stack core", () => {
     const { open } = mountStack([{}, { modal: false }, { modal: false }]);
     await openAll(open);
     expect([isInert(0), isInert(1), isInert(2)]).toEqual([false, false, false]);
-    expect([hasBackdrop(0), hasBackdrop(1), hasBackdrop(2)]).toEqual([true, false, false]);
+    expect(backdrops()).toHaveLength(1);
+    expect(backdropZ()).toBe(zOf(0));
   });
 
   it("1 modal, 2 co-active, 3 modal: 1 and 2 inert, backdrop behind 3", async () => {
     const { open } = mountStack([{}, { modal: false }, {}]);
     await openAll(open);
     expect([isInert(0), isInert(1), isInert(2)]).toEqual([true, true, false]);
-    expect([hasBackdrop(0), hasBackdrop(1), hasBackdrop(2)]).toEqual([false, false, true]);
+    expect(backdrops()).toHaveLength(1);
+    expect(backdropZ()).toBe(zOf(2));
   });
 
   it("closing the top gives interactivity and the backdrop back to the panel beneath", async () => {
@@ -127,7 +133,8 @@ describe("overlay stack core", () => {
     // 2 and 3 remain, both co-active: still both interactive, and the backdrop is behind 2.
     expect(isInert(1)).toBe(false);
     expect(isInert(2)).toBe(false);
-    expect(hasBackdrop(1)).toBe(true);
+    expect(backdrops()).toHaveLength(1);
+    expect(backdropZ()).toBe(zOf(1));
   });
 
   it("removes inert and aria-hidden from every panel when the stack unmounts", async () => {
@@ -139,14 +146,35 @@ describe("overlay stack core", () => {
     expect(first.hasAttribute("inert")).toBe(false);
   });
 
-  it("draws exactly one backdrop at any depth", async () => {
+  it("draws exactly one backdrop at any depth, and it is the same element throughout", async () => {
     const { open } = mountStack([{}, {}, {}]);
-    for (let i = 0; i < 3; i++) {
+    open[0] = true;
+    await flush();
+    const first = backdrops()[0];
+    for (let i = 1; i < 3; i++) {
       open[i] = true;
       await flush();
-      const live = document.body.querySelectorAll(".cui-slideover__backdrop--live");
-      expect(live).toHaveLength(1);
+      expect(backdrops()).toHaveLength(1);
+      // Never remounted: ownership moving between panels replaces nothing.
+      expect(backdrops()[0]).toBe(first);
     }
+    for (let i = 2; i > 0; i--) {
+      open[i] = false;
+      await flush();
+      expect(backdrops()[0]).toBe(first);
+    }
+    open[0] = false;
+    await flush();
+    expect(backdrops()).toHaveLength(0);
+  });
+
+  it("the backdrop's layer follows the lowest active panel, and it takes that panel's props", async () => {
+    const { open } = mountStack([{}, {}]);
+    await openAll(open);
+    expect(backdropZ()).toBe(zOf(1));
+    open[1] = false;
+    await flush();
+    expect(backdropZ()).toBe(zOf(0));
   });
 
   it("each layer sits one z-index step above the one beneath", async () => {
@@ -274,8 +302,7 @@ describe("overlay stack core", () => {
   });
 
   describe("backdrop click", () => {
-    const backdropOf = (i: number) =>
-      root(i).querySelector<HTMLElement>(".cui-slideover__backdrop--live")!;
+    const backdropOf = (_i: number) => backdrops()[0];
 
     it("closes the topmost panel, through the one shared backdrop", async () => {
       const { open } = mountStack([{}, { modal: false }]);
@@ -360,7 +387,7 @@ describe("overlay stack core", () => {
       expect(isInert(0)).toBe(true);
       expect(isInert(1)).toBe(false);
       expect(root(1).style.zIndex).toBe("calc(var(--cui-z-overlay, 9990) + 1)");
-      expect([hasBackdrop(0), hasBackdrop(1)]).toEqual([false, true]);
+      expect(hasBackdrop(1)).toBe(true);
     });
 
     it("joining a slideover stack does not count as a mixed side", async () => {
@@ -386,7 +413,8 @@ describe("overlay stack core", () => {
       expect(root(0).style.zIndex).toBe("var(--cui-z-overlay, 9990)");
       expect(root(1).style.zIndex).toBe("var(--cui-z-overlay, 9990)");
       expect(root(0).className).not.toContain("--stacked");
-      expect(document.querySelectorAll(".cui-slideover__backdrop--live")).toHaveLength(2);
+      // Each draws its own, as before.
+      expect(document.querySelectorAll(".cui-backdrop")).toHaveLength(2);
     });
   });
 });
