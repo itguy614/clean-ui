@@ -27,6 +27,8 @@ const historyOpen = ref(false);
 const title = ref("Quarterly report");
 const notes = ref("");
 const history = ["Quarterly report", "Q3 report", "Draft"];
+// Whether History is declared inside the Edit panel (its child) or beside it (a sibling).
+const nestHistory = ref(true);
 
 // Peek: the same stack, always peeking.
 const peeks = ref([false, false, false, false]);
@@ -43,6 +45,10 @@ const peeks = ref([false, false, false, false]);
           <li>With all three open, try to click or Tab into panel 1: only the top panel responds. Press Escape: only the top closes, and focus goes back to the button you opened it with.</li>
           <li><strong>Co-active:</strong> open the form, then open its history. Both are interactive: click a history row to fill the form, type in the form, and Tab from one to the other.</li>
           <li>With the form focused, press Escape: the panel you are in closes, not the one on top.</li>
+          <li><strong>Child panels:</strong> with History open, close Edit report (its X, Escape in it, or the backdrop). History closes with it, leaving through the same edge in the same motion, and focus goes back to the Edit report button. Close History alone: Edit report stays open.</li>
+          <li>Turn off <strong>Declare History inside Edit report</strong> and repeat: History is now a sibling, declared next to Edit report, so closing Edit report leaves it open.</li>
+          <li>Open all three panels of the first demo and look at the seams: one surface, a hairline between panels, and the soft shadow only on the outer edge, not between them. In the peek cascade each panel casts a small shadow on the one beneath.</li>
+          <li>Open a second and a third panel and watch the page behind: the dimming stays as it is, with no flash.</li>
           <li><strong>Peek:</strong> open the cascade and open all four. Each lower panel shows its edge behind the one above; the fourth and deeper share the last offset.</li>
           <li>Turn on Reduce Motion in your OS: panels fade where they stand instead of sliding or re-flowing.</li>
         </ol>
@@ -84,12 +90,17 @@ const peeks = ref([false, false, false, false]);
       <Example
         title="Co-active: a form and its history"
         :code="`<CuiSlideoverStack>
-  <CuiSlideover v-model:visible=&quot;formOpen&quot; title=&quot;Edit report&quot;>...</CuiSlideover>
-  <!-- opens beside the form without making it inert -->
-  <CuiSlideover v-model:visible=&quot;historyOpen&quot; :modal=&quot;false&quot; title=&quot;History&quot;>...</CuiSlideover>
+  <CuiSlideover v-model:visible=&quot;formOpen&quot; title=&quot;Edit report&quot;>
+    ...
+    <!-- inside the form: its child, closes with it. Move it out for a sibling -->
+    <CuiSlideover v-model:visible=&quot;historyOpen&quot; :modal=&quot;false&quot; title=&quot;History&quot;>...</CuiSlideover>
+  </CuiSlideover>
 </CuiSlideoverStack>`"
       >
-        <CuiButton variant="outline" size="sm" @click="formOpen = true">Edit report</CuiButton>
+        <CuiFlex gap="4" class="flex-wrap items-center">
+          <CuiButton variant="outline" size="sm" @click="formOpen = true">Edit report</CuiButton>
+          <CuiToggle v-model="nestHistory" label="Declare History inside Edit report" size="sm" />
+        </CuiFlex>
         <CuiSlideoverStack>
           <CuiSlideover v-model:visible="formOpen" title="Edit report" size="md">
             <CuiStack spacing="3">
@@ -99,8 +110,16 @@ const peeks = ref([false, false, false, false]);
                 <CuiButton variant="outline" size="sm" @click="historyOpen = true">Show history</CuiButton>
               </CuiFlex>
             </CuiStack>
+            <!-- Declared in the form's content: History is its child, and closes with it. -->
+            <CuiSlideover v-if="nestHistory" v-model:visible="historyOpen" :modal="false" title="History" size="sm">
+              <CuiStack spacing="2">
+                <p>Click a version to put its title in the form.</p>
+                <CuiButton v-for="h in history" :key="h" variant="ghost" size="sm" @click="title = h">{{ h }}</CuiButton>
+              </CuiStack>
+            </CuiSlideover>
           </CuiSlideover>
-          <CuiSlideover v-model:visible="historyOpen" :modal="false" title="History" size="sm">
+          <!-- Declared beside it: a sibling, independent of the form. -->
+          <CuiSlideover v-if="!nestHistory" v-model:visible="historyOpen" :modal="false" title="History" size="sm">
             <CuiStack spacing="2">
               <p>Click a version to put its title in the form.</p>
               <CuiButton v-for="h in history" :key="h" variant="ghost" size="sm" @click="title = h">{{ h }}</CuiButton>
@@ -152,6 +171,37 @@ const peeks = ref([false, false, false, false]);
           nothing closes. In a co-active group, if focus is in a lower active panel, Escape closes the
           focused panel instead. A click on the backdrop closes the topmost panel the same way.
         </p>
+      </CuiStack>
+
+      <CuiStack spacing="2" class="mb-6">
+        <h2 class="text-2xl font-semibold">Child panels</h2>
+        <p class="text-surface-700 dark:text-surface-300">
+          A <code>CuiSlideover</code> or <code>CuiDrawer</code> declared inside another panel's
+          content (its slot) is that panel's child, by the component tree, even though both teleport
+          to the body. Closing the parent, by any route (its <code>visible</code>, Escape, the
+          backdrop, the X), closes its open children in the same tick, newest first, so their exits
+          play as one motion with the parent's. Each child emits its own <code>update:visible</code>
+          (false) and <code>close</code>, before its parent's, so your flags stay in sync. Focus returns to the
+          parent's opener, since the child's own opener lived inside the parent. Closing a child
+          never closes its parent, and a sibling, declared next to the parent, is independent in
+          both directions. It works the same inside or outside a stack, and nests as deep as you like.
+        </p>
+        <p class="text-surface-700 dark:text-surface-300">
+          A child is only rendered while its parent is open, so a child's flag opens nothing while
+          the parent is closed. If it is still true when the parent opens, the child opens with it.
+          The cascade resets the flag when the parent closes, so that does not happen by accident.
+          There is no way to let a nested child outlive its parent: declare it beside the parent
+          instead.
+        </p>
+      </CuiStack>
+
+      <CuiStack spacing="2" class="mb-6">
+        <h2 class="text-2xl font-semibold">Backdrop and shadows</h2>
+        <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
+          <li>The stack draws <strong>one backdrop</strong>, for as long as any panel is open. It fades in with the first panel and out with the last; opening or closing the others, or a change of the active set, never fades it, remounts it or doubles it up. Only its layer follows the lowest active panel, and its opacity, blur and gradient come from that panel's backdrop props.</li>
+          <li>Attached panels are <strong>one surface</strong>: no shadow between them, a hairline (<code>--cui-border</code>, or <code>--cui-slideover-border</code>) at each seam, and the soft shadow only on the outer edge of the group. When the outer edge changes hands (<code>push="outward"</code>), the shadow and hairline cross-fade by opacity.</li>
+          <li>Peeking panels overlap, so each keeps a smaller shadow (<code>--cui-shadow-md</code>) onto the one beneath. A slideover outside a stack looks exactly as it always did.</li>
+        </ul>
       </CuiStack>
 
       <CuiStack spacing="2" class="mb-6">

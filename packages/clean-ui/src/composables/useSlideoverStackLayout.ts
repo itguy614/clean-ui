@@ -17,7 +17,7 @@ export interface SlideoverStackLayoutOptions {
 }
 
 const BREAKPOINT_ORDER = ["base", "sm", "md", "lg", "xl", "2xl"];
-const VARS = ["--_stack-width", "--_stack-offset", "--_stack-max-width"] as const;
+const VARS = ["--_stack-width", "--_stack-offset", "--_stack-max-width", "--_stack-shadow", "--_stack-seam", "--_stack-shadow-val"] as const;
 const FLIP = "cui-stack-flip";
 
 /**
@@ -87,8 +87,18 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     const layout = layoutStack({ natural, viewport: vw, gap, minWidth, peekOffset, maxPeek, forcePeek, push: options.push() });
 
     items.forEach(({ el }) => el.getAnimations?.().forEach((a) => a.id === FLIP && a.cancel()));
+    // Attached panels are one surface: the shadow is the group's outer edge's alone, and the
+    // seams get a hairline. Peeking panels overlap, so each casts a small one on the next.
+    let outer = 0;
+    layout.panels.forEach((p, i) => {
+      if (p.offset + p.width > layout.panels[outer].offset + layout.panels[outer].width + 0.5) outer = i;
+    });
     const moved: HTMLElement[] = [];
     items.forEach(({ el }, i) => {
+      const peek = layout.mode === "peek";
+      el.style.setProperty("--_stack-shadow", peek || i === outer ? "1" : "0");
+      el.style.setProperty("--_stack-seam", peek || i === outer ? "0" : "1");
+      el.style.setProperty("--_stack-shadow-val", peek ? "var(--cui-shadow-md)" : "var(--cui-shadow-lg)");
       const { width, offset } = layout.panels[i];
       const before = given.get(el);
       el.style.setProperty("--_stack-width", `${width}px`);

@@ -515,6 +515,9 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiSlideover.vue": {
     "stack-width": `a stacked panel's width is set by the stack's layout (${GEOMETRY}); alone, the public --cui-slideover-width applies (#41)`,
     "stack-max-width": `lifted by the stack's layout so a narrowed or peeking panel is not capped (${GEOMETRY}) (#41)`,
+    "stack-shadow": `which panel of a stack casts the group's shadow follows the layout (${GEOMETRY}) (#41)`,
+    "stack-seam": `which panels of a stack draw a seam hairline follows the layout (${GEOMETRY}) (#41)`,
+    "stack-shadow-val": `a stack's shadow is the lg step on the group's edge and md on each peeking panel (${GEOMETRY}) (#41)`,
     "stack-offset": `a stacked panel's distance from the docked edge, from the stack's layout (${GEOMETRY}) (#41)`,
   },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },

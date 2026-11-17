@@ -158,6 +158,7 @@ const panelVars = computed(() =>
 const panelClass = computed(() => [
   `cui-slideover__panel--${props.side}`,
   {
+    "cui-slideover__panel--stacked": stacked,
     "cui-slideover__panel--full": props.size === "full",
     "cui-slideover__panel--visible": isAnimating.value,
   },
@@ -330,6 +331,46 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-slideover__panel--bottom {
   bottom: 0;
   transform: translateY(100%);
+}
+
+/* In a stack (#41) the attached panels read as one surface. A panel's own shadow would fall on
+   the panel beside it, so none casts one but the outer edge of the group: the shadow and a
+   hairline for the seams are two pseudo-elements, faded by opacity when the edge changes hands
+   (transform and opacity only, no shadow animation). The stack's layout sets the private
+   --_stack-shadow / --_stack-seam / --_stack-shadow-val on each panel; alone they default to a
+   lone panel's look. overflow is visible here so the shadow can leave the box: the panel is
+   as tall as the viewport and its content scrolls in its own body. */
+.cui-slideover__panel--stacked {
+  overflow: visible;
+  box-shadow: none;
+}
+.cui-slideover__panel--stacked::after,
+.cui-slideover__panel--stacked::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  transition: opacity var(--cui-duration-base) ease;
+}
+.cui-slideover__panel--stacked::after {
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: var(--_stack-shadow-val, var(--cui-shadow-lg));
+  opacity: var(--_stack-shadow, 1);
+}
+.cui-slideover__panel--stacked::before {
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+  width: 1px;
+  background: var(--cui-slideover-border, var(--cui-border));
+  opacity: var(--_stack-seam, 0);
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--right::before {
+  left: 0;
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--left::before {
+  right: 0;
 }
 
 /* After the side rules, which it overrides at the same specificity. */

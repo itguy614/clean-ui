@@ -378,6 +378,114 @@ describe("CuiSlideoverStack (real browser)", () => {
   });
 
   /**
+   * Attached panels read as one surface (#41): no shadow between them, a hairline at each seam,
+   * and the soft shadow only on the group's outer edge. Peeking panels overlap and each casts a
+   * small one on the next. A lone slideover looks as it always did.
+   */
+  describe("shadows and seams", () => {
+    beforeAll(() => page.viewport(1400, 800));
+    afterEach(() => document.documentElement.classList.remove("dark"));
+
+    const shadowOf = (i: number) => {
+      const after = getComputedStyle(panel(i), "::after");
+      const before = getComputedStyle(panel(i), "::before");
+      return {
+        own: getComputedStyle(panel(i)).boxShadow,
+        cast: Number(after.opacity),
+        castShadow: after.boxShadow,
+        seam: Number(before.opacity),
+        seamColor: before.backgroundColor,
+      };
+    };
+
+    it("inward: only the oldest, outermost panel casts the shadow; the others carry a seam hairline", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }, { size: "md" }]);
+      await openN(open, 3);
+      const [oldest, middle, newest] = [0, 1, 2].map(shadowOf);
+      expect(oldest.cast).toBe(1);
+      expect(oldest.seam).toBe(0);
+      expect(oldest.castShadow).toContain("48px");
+      for (const p of [middle, newest]) {
+        expect(p.cast).toBe(0);
+        expect(p.seam).toBe(1);
+      }
+      // No panel paints a shadow of its own in a stack: only the pseudo-element does.
+      for (const i of [0, 1, 2]) expect(shadowOf(i).own).toBe("none");
+      expect(oldest.seamColor).not.toBe("rgba(0, 0, 0, 0)");
+    });
+
+    it("outward: the newest, outermost panel casts the shadow", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }, { size: "md" }], { push: "outward" });
+      await openN(open, 3);
+      expect([0, 1, 2].map((i) => shadowOf(i).cast)).toEqual([0, 0, 1]);
+      expect([0, 1, 2].map((i) => shadowOf(i).seam)).toEqual([1, 1, 0]);
+    });
+
+    it("the edge changing hands fades by opacity, never jumps", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }], { push: "outward" });
+      await openN(open, 1);
+      expect(shadowOf(0).cast).toBe(1);
+      open[1] = true;
+      await frames(3);
+      const running = panel(0).getAnimations({ subtree: true }).filter((a) => (a as CSSTransition).transitionProperty === "opacity");
+      expect(running.length, "the old edge's shadow is fading out").toBeGreaterThan(0);
+      await settle();
+      expect(shadowOf(0).cast).toBe(0);
+      expect(shadowOf(1).cast).toBe(1);
+    });
+
+    it("a mirrored (left) stack puts the hairline on the right edge", async () => {
+      const open = stack([{ size: "md", side: "left" }, { size: "md", side: "left" }]);
+      await openN(open, 2);
+      const seam = getComputedStyle(panel(1), "::before");
+      expect(seam.opacity).toBe("1");
+      expect(seam.right).toBe("0px");
+    });
+
+    it("peek: every panel casts a smaller shadow onto the one beneath, with no hairline", async () => {
+      const open = stack([{}, {}, {}], { mode: "peek" });
+      await openN(open, 3);
+      for (const i of [0, 1, 2]) {
+        const p = shadowOf(i);
+        expect(p.cast).toBe(1);
+        expect(p.seam).toBe(0);
+        expect(p.castShadow).toContain("16px");
+        expect(p.castShadow).not.toContain("48px");
+      }
+    });
+
+    it("a lone slideover outside any stack keeps its own shadow and has no pseudo-elements", async () => {
+      const open = reactive([false]);
+      const w = mount(
+        defineComponent({
+          render: () => h(CuiSlideover, { visible: open[0], "data-testid": "p0" }, { default: () => h("button", "x") }),
+        }),
+      );
+      mounted.push(w);
+      open[0] = true;
+      await settle();
+      expect(getComputedStyle(panel(0)).boxShadow).toContain("48px");
+      expect(getComputedStyle(panel(0), "::after").content).toBe("none");
+      expect(getComputedStyle(panel(0)).overflow).toBe("hidden");
+    });
+
+    it("dark mode: the hairline and the shadow are still drawn, in the dark tokens", async () => {
+      document.documentElement.classList.add("dark");
+      const open = stack([{ size: "lg" }, { size: "md" }]);
+      await openN(open, 2);
+      const outer = shadowOf(0);
+      const inner = shadowOf(1);
+      expect(outer.castShadow).toContain("0.4");
+      expect(inner.seam).toBe(1);
+      expect(inner.seamColor).not.toBe("rgba(0, 0, 0, 0)");
+      // The seam color follows the theme: it differs from the light mode's.
+      document.documentElement.classList.remove("dark");
+      await frames(2);
+      expect(shadowOf(1).seamColor).not.toBe(inner.seamColor);
+    });
+  });
+
+  /**
    * A panel declared in another's content is its child: closing the parent takes it along, as one
    * motion, and focus lands on the parent's opener.
    */
