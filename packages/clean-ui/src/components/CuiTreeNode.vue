@@ -187,7 +187,7 @@ function onNodeClick() {
   a consumer's plain class rule or a `--cui-tree-view-<slot>` on a container wins without
   !important. CuiTreeView emits the size scale as private `--_tree-view-*` properties on
   its root; this node adds only its depth. Layout stays at normal specificity. A row is
-  crossed by the keyboard, so none of its colours transition.
+  crossed by the keyboard, so none of its colors transition.
 */
 .cui-tree-node {
   position: relative;
@@ -258,7 +258,7 @@ function onNodeClick() {
   color: var(--cui-tree-view-color, var(--cui-text-body));
 }
 
-/* Selected is the toggle's "on" state: the subtle tint, never the hero colour. */
+/* Selected is the toggle's "on" state: the subtle tint, never the hero color. */
 :where(.cui-tree-node__row--selected) {
   background: var(--cui-tree-view-pressed-bg, var(--cui-primary-bg));
   color: var(--cui-tree-view-pressed-color, var(--cui-primary));
@@ -266,7 +266,7 @@ function onNodeClick() {
 }
 
 /* After selected, so a disabled selected row is still dimmed text on the tint. Its own
-   colour, not the row token: setting `color` to restyle rows mustn't un-dim these. */
+   color, not the row token: setting `color` to restyle rows mustn't un-dim these. */
 :where(.cui-tree-node__row--disabled) {
   color: var(--cui-text-tertiary);
   opacity: 0.5;

@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<CuiTimelineItemProps>(), {
   hidden: false,
 });
 
-// The dot's colours follow `color` (and whether it carries an icon): per-instance data,
+// The dot's colors follow `color` (and whether it carries an icon): per-instance data,
 // emitted as private properties on the dot. The stylesheet reads them back through the
 // public tokens, so a consumer's rule or container token still wins (#489).
 const dotVars = computed(() => ({
@@ -68,7 +68,7 @@ const dotVars = computed(() => ({
 /*
  * Every themeable rule is a whole :where(), so a consumer's plain `.cui-timeline-item__dot
  * { … }` at (0,1,0) wins without !important; structure (display, flex, positioning) keeps
- * normal specificity. The dot's colours arrive as private --_timeline-item-* properties (#489).
+ * normal specificity. The dot's colors arrive as private --_timeline-item-* properties (#489).
  */
 .cui-timeline-item {
   display: flex;

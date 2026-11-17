@@ -16,7 +16,7 @@ describe("theme", () => {
     expect(() => editorThemeExtension(false)).not.toThrow();
   });
 
-  it("carries no hardcoded colour literal, only --cui-* references", () => {
+  it("carries no hardcoded color literal, only --cui-* references", () => {
     for (const rule of cuiMarkdownHighlightStyle.specs) {
       if (rule.color) expect(rule.color).toMatch(/^var\(--cui-/);
     }
@@ -58,7 +58,7 @@ describe("theme", () => {
 
       // Every highlighted span CodeMirror emits carries a class the
       // HighlightStyle generated — confirms tag → class → rule wiring is
-      // live end to end (colour resolution itself needs a real browser,
+      // live end to end (color resolution itself needs a real browser,
       // covered separately in the phase-02 journal's Playwright check).
       const highlighted = [...view.contentDOM.querySelectorAll("span[class]")];
       expect(highlighted.length).toBeGreaterThan(0);

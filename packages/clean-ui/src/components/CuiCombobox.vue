@@ -530,7 +530,7 @@ function optionClass(index: number, option: ComboboxOption) {
   box-shadow: 0 0 0 2px var(--cui-combobox-focus-ring, var(--_combobox-focus-ring));
 }
 
-/* An invalid field keeps its error colours whatever a consumer's token says, so a themed
+/* An invalid field keeps its error colors whatever a consumer's token says, so a themed
    border or ring cannot hide it. Normal specificity, on purpose. */
 .cui-combobox__control--error {
   border-color: var(--cui-error);

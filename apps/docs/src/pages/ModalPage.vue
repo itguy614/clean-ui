@@ -697,7 +697,7 @@ const formAgree = ref(false);
           </CuiModal>
           <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
             Reach for <code class="cui-code">CuiConfirmDialog</code> before hand-rolling this —
-            it already has the role icon, the matching confirm colour and the type-the-word gate.
+            it already has the role icon, the matching confirm color and the type-the-word gate.
           </p>
         </Example>
     </template>

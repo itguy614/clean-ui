@@ -93,7 +93,7 @@ const dynamicField = ref({
         </li>
         <li>
           <code>error</code> sets <code>aria-invalid</code> on the group and wraps the
-          options in a tinted bordered container, so the failure is not signalled by colour
+          options in a tinted bordered container, so the failure is not signalled by color
           alone — the message below it carries the text.
         </li>
         <li>

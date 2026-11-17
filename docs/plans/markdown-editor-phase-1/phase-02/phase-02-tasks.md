@@ -106,7 +106,7 @@ degree from the plan's original browser-only framing, not an untested code path.
 
 ### Group 2.2: Theming
 
-#### Task 2.2.1: Editor chrome and syntax colours from tokens
+#### Task 2.2.1: Editor chrome and syntax colors from tokens
 
 | Field | Value |
 |-------|-------|
@@ -118,22 +118,22 @@ degree from the plan's original browser-only framing, not an untested code path.
 **Description:**
 Build the editor theme and the syntax highlight style from `--cui-*` tokens. CodeMirror's language
 package ships its own palette, which is easy to wire up unchanged and violates the
-no-hardcoded-colours rule invisibly until a theme switch or contrast audit exposes it. Respect the
+no-hardcoded-colors rule invisibly until a theme switch or contrast audit exposes it. Respect the
 density scale for padding.
 
 **Acceptance Criteria:**
-- [x] No colour literal in the package's source or emitted CSS
+- [x] No color literal in the package's source or emitted CSS
 - [x] Highlight tokens pass the contrast audit in light and dark across all themes
 - [x] Density classes change spacing but never type size
 
-Note: every colour used (`--cui-primary`, `--cui-text-emphasis`, `--cui-text-tertiary`,
+Note: every color used (`--cui-primary`, `--cui-text-emphasis`, `--cui-text-tertiary`,
 `--cui-text-link`, `--cui-text-code`, `--cui-text-secondary`) is an existing, already-audited
 clean-ui semantic slot — no new token was introduced, so no change to
 `scripts/check-contrast.mjs` was needed to claim audit coverage.
 
 ---
 
-#### Task 2.2.2: Dark mode through the colour-scheme signal
+#### Task 2.2.2: Dark mode through the color-scheme signal
 
 | Field | Value |
 |-------|-------|
@@ -145,11 +145,11 @@ clean-ui semantic slot — no new token was introduced, so no change to
 **Description:**
 Tokens alone are not sufficient: CodeMirror picks its base-theme dark rules from a flag fixed when
 configuration is built, while clean-ui's dark mode is a runtime class on an arbitrary ancestor.
-Drive that flag from clean-ui's colour-scheme signal through a compartment, or the caret and
+Drive that flag from clean-ui's color-scheme signal through a compartment, or the caret and
 selection layers stay light with no obvious cause.
 
 **Acceptance Criteria:**
-- [x] Toggling the class at runtime updates caret, selection layer and syntax colours without a
+- [x] Toggling the class at runtime updates caret, selection layer and syntax colors without a
       remount
 - [x] A dark class scoped to a subtree affects only an editor inside it
 - [x] Verified in a real browser, since this is invisible to jsdom
@@ -162,8 +162,8 @@ and throws `RangeError: Unsupported selector` if attempted) — the fix is a pla
 selector, which resolves to the same CSS specificity as the base theme's own scoped selectors (both
 get a per-extension marker class prepended) and wins via later stylesheet insertion. Verified with
 a temporary Playwright harness (two editors, one under a `.dark`-scoped ancestor) confirming: (1)
-cursor/selection colours differ between the two, and neither is CodeMirror's hardcoded default; (2)
-toggling `.dark` on the live ancestor updates colours with the same `EditorView` instance and DOM
+cursor/selection colors differ between the two, and neither is CodeMirror's hardcoded default; (2)
+toggling `.dark` on the live ancestor updates colors with the same `EditorView` instance and DOM
 node (no remount) and an in-flight, unflushed edit survives the toggle; (3) the sibling editor
 outside the toggled subtree is unaffected.
 

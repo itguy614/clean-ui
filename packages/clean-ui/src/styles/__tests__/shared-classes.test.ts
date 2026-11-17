@@ -25,7 +25,7 @@ describe("shared component classes", () => {
 
   it("no error-message rule or inline style paints the text; .cui-field-error does", () => {
     // Any selector naming an `__error` part (bare, compound or `:where()`) that sets the
-    // text's size or colour (not `border-color`), or an error element styled inline. Its
+    // text's size or color (not `border-color`), or an error element styled inline. Its
     // gap — a margin — is the control's own layout, and stays.
     expect(offenders(/__error\b[^{}]*\{[^}]*(?<![-\w])(font-size|line-height|color)\s*:/)).toEqual([]);
     expect(errorTags.filter(({ tag }) => /\s:style=/.test(tag)).map(({ name }) => name)).toEqual([]);

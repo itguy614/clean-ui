@@ -10,7 +10,7 @@ const meta: ComponentMeta = {
     { name: "value", type: "number", default: "0", description: "Current value, clamped to the range 0…max" },
     { name: "max", type: "number", default: "100", description: "Value that counts as complete" },
     { name: "variant", type: "bar | circle", default: "bar", description: "Horizontal bar, or a ring" },
-    colorProp("Colour role. The fill uses --cui-{role}, the track --cui-{role}-bg"),
+    colorProp("Color role. The fill uses --cui-{role}, the track --cui-{role}-bg"),
     clampedSizeProp("sm, md and lg", "md", "Bar thickness (0.375–1rem) or ring diameter (40–96px)"),
     {
       name: "showLabel",

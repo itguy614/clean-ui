@@ -54,7 +54,7 @@ import meta from "../meta/avatar";
           decorative unless you label it.
         </li>
         <li>
-          <code>status</code> is a coloured dot with no text — green and amber differ only by
+          <code>status</code> is a colored dot with no text — green and amber differ only by
           hue, which fails WCAG 1.4.1. Always write the state somewhere (“Alice — Online”),
           as the examples below do.
         </li>

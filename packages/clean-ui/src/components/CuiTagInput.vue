@@ -112,7 +112,7 @@ const controlRef = ref<HTMLElement | null>(null);
 const selectedSet = computed(() => new Set(props.modelValue));
 const atMax = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags);
 
-// Every suggestion seen, so a tag keeps its label and colour after the search that found
+// Every suggestion seen, so a tag keeps its label and color after the search that found
 // it is replaced, cleared or fails — as CuiCombobox's allKnownOptions does.
 // Reactive, so a chip re-renders with the label once the search that names it lands.
 const seenSuggestions = reactive(new Map<string, TagOption>());
@@ -455,7 +455,7 @@ defineExpose({ el: wrapperRef, focus, blur });
   color: var(--cui-tag-input-color, var(--cui-text-body));
 }
 
-/* An invalid field keeps its error colour whatever a consumer's token says, so a themed
+/* An invalid field keeps its error color whatever a consumer's token says, so a themed
    border cannot hide it. Normal specificity, on purpose. */
 .cui-tag-input__control--error {
   border-color: var(--cui-error);

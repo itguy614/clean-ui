@@ -9,7 +9,7 @@ import CuiDivider from "../../components/CuiDivider.vue";
  * #489 — a consumer restyles CuiDivider without `!important`: a plain class rule at (0,1,0),
  * or a public `--cui-divider-*` token on a container. The paint sits in the component's
  * stylesheet at zero specificity; the only inline values are the private `--_divider-*`
- * properties (the line's style and colour, the spacing), which the stylesheet reads through
+ * properties (the line's style and color, the spacing), which the stylesheet reads through
  * the public tokens.
  */
 describe("CuiDivider is themeable (real browser, #489)", () => {
@@ -94,7 +94,7 @@ describe("CuiDivider is themeable (real browser, #489)", () => {
     expect(getComputedStyle(labelled.label!).fontSize).toBe("19px");
   });
 
-  it("still paints a role and a raw CSS colour from the prop", async () => {
+  it("still paints a role and a raw CSS color from the prop", async () => {
     const role = await render({ color: "error", label: "Or" });
     expect(getComputedStyle(role.lines[0]).borderTopColor).toBe(getComputedStyle(role.label!).color);
     expect(getComputedStyle(role.label!).color).not.toBe("rgb(0, 0, 0)");

@@ -37,7 +37,7 @@ const overrides = shallowReactive<Partial<Record<CuiColor, CuiRoleIcon>>>({});
  * the same as `configureCleanUI({ roleIcons })`, of which this stays the documented alias.
  * For one app, prefer `createCleanUI({ roleIcons })` (#149).
  *
- * Role → icon is a theme concern in the same way role → colour is, and colours are
+ * Role → icon is a theme concern in the same way role → color is, and colors are
  * overridable at the root. Without this, a design language with its own error glyph had
  * to pass `icon` at every single feedback component in the app (#140).
  *

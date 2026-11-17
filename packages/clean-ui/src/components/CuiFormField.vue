@@ -228,8 +228,8 @@ onBeforeUnmount(() => {
   gap: calc(0.25rem * var(--cui-density-scale, 1));
   font-size: 0.875rem;
   font-weight: 500;
-  /* A private hook, so the floating label's resting state recolours it without a rule
-     that outranks a consumer's own colour for the label (#191). */
+  /* A private hook, so the floating label's resting state recolors it without a rule
+     that outranks a consumer's own color for the label (#191). */
   color: var(--_form-field-label-color, var(--cui-text-body));
   line-height: 1.4;
 }
@@ -427,7 +427,7 @@ onBeforeUnmount(() => {
    or the single space, showing (its own is transparent until focus). Never while the
    browser has autofilled it, which can show a value before the page can read it; nor a
    pinned label. A browser without `:autofill` drops this rule, and the label just stays
-   up. Focus does not recolour the label: primary at 12px fails 4.5:1 in some themes. */
+   up. Focus does not recolor the label: primary at 12px fails 4.5:1 in some themes. */
 .cui-form-field--floating:not(:focus-within):has([data-cui-float-label]:not([data-cui-float-label~="pinned"]):placeholder-shown:not(:autofill)) > .cui-form-field__label {
   --_form-field-label-color: var(--_form-field-float-rest-color);
   transform: none;

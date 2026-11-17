@@ -51,7 +51,7 @@ const rating4 = ref(2);
           The value text comes from the message catalogue
           (<code>rating.valueText(value, max)</code>), so it can be translated.
           <code>showValue</code> prints the number for sighted users too, rather than leaving
-          it to colour and fill weight.
+          it to color and fill weight.
         </li>
       </ul>
     </template>

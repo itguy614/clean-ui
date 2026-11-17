@@ -4,14 +4,14 @@ import { clampedSizeProp, colorProp, hiddenProp, roundedProp } from "./shared";
 const meta: ComponentMeta = {
   name: "Badge",
   description:
-    "Small coloured label for status, counts and removable tags. Also renders as a bare dot for presence indicators.",
+    "Small colored label for status, counts and removable tags. Also renders as a bare dot for presence indicators.",
 
   props: [
     { name: "variant", type: "solid | subtle | outline", default: "subtle", description: "Visual style" },
-    colorProp("Colour role from the colour system"),
+    colorProp("Color role from the color system"),
     clampedSizeProp("sm and md", "sm", "Badge size"),
     { ...roundedProp, default: "full", description: "Border radius. Badges default to a pill" },
-    { name: "dot", type: "boolean", default: "false", description: "Render as a bare coloured dot with no text" },
+    { name: "dot", type: "boolean", default: "false", description: "Render as a bare colored dot with no text" },
     {
       name: "removable",
       type: "boolean",
@@ -40,7 +40,7 @@ const meta: ComponentMeta = {
   tokens: [
     { name: "--cui-badge-radius", default: "per rounded", description: "Corner radius" },
     { name: "--cui-badge-bg", default: "per variant and color", description: "Fill (none for the outline variant)" },
-    { name: "--cui-badge-color", default: "per variant and color", description: "Text colour" },
+    { name: "--cui-badge-color", default: "per variant and color", description: "Text color" },
     { name: "--cui-badge-border", default: "per variant and color", description: "The border shorthand: 1px solid transparent, or the role's border for outline" },
   ],
 };

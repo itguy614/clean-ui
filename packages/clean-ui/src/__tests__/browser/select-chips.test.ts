@@ -31,7 +31,7 @@ describe("CuiSelect chips match CuiCombobox's (real browser)", () => {
     return { ...Object.fromEntries(PROPS.map((p) => [p, cs[p]])), height: el.getBoundingClientRect().height };
   };
 
-  it.each(["sm", "md", "lg"] as const)("at size %s: same background, colour, border and height", async (size) => {
+  it.each(["sm", "md", "lg"] as const)("at size %s: same background, color, border and height", async (size) => {
     const a = host({ position: "fixed", left: "20px", top: "20px", width: "320px" });
     const b = host({ position: "fixed", left: "20px", top: "120px", width: "320px" });
     track(mount(CuiSelect, { attachTo: a, props: { options, multiple: true, modelValue: ["a"], size } }));

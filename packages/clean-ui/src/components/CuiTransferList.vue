@@ -630,7 +630,7 @@ const rootStyle = computed(() => ({
   color: var(--cui-text-tertiary);
 }
 
-/* --- Rows. Keyboard-crossed, so a colour change has no transition (CLAUDE.md, Motion). --- */
+/* --- Rows. Keyboard-crossed, so a color change has no transition (CLAUDE.md, Motion). --- */
 .cui-transfer-list__option {
   display: flex;
   align-items: center;

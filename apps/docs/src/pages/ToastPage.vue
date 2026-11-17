@@ -159,7 +159,7 @@ toast.success('Saved!', { description: 'Your changes are live.' })`"
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         Toasts announce themselves without moving focus: <code>error</code> becomes an
-        assertive <code>role="alert"</code>, every other colour a polite
+        assertive <code>role="alert"</code>, every other color a polite
         <code>role="status"</code>.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">

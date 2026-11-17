@@ -124,7 +124,7 @@ export const clampedSizeProp = (supported: string, dflt = "md", what = "Size"): 
 
 /**
  * `CuiColorOrCss` — the paint components (Icon, Divider, Backdrop), which take a role name
- * *or* any raw CSS colour.
+ * *or* any raw CSS color.
  *
  * `type` deliberately stays as the role list with no `| <css-color>` pseudo-member: the
  * Playground splits `type` on `|` to build its select, so a pseudo-token would become a

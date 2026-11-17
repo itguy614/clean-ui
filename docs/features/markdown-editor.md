@@ -188,7 +188,7 @@ Settled before drafting; these constrain the requirements below.
 **Form integration**
 
 - FR31: The component composes `FormControlProps` (label, description, error, errorMessage,
-  required, readonly, disabled), follows the library's error convention of recolouring its own
+  required, readonly, disabled), follows the library's error convention of recoloring its own
   border with the message below, and sets `aria-invalid`. It participates in `CuiForm` on the
   same terms as every other control: a resolver error for its field renders on it, and
   `required` renders the indicator and sets `aria-required`. Note that `required` is
@@ -261,7 +261,7 @@ Settled before drafting; these constrain the requirements below.
   1.2.0 is the floor because three seams the editor needs do not exist in 1.1.0: an augmentable
   message-namespace interface (`CuiMessages` is closed today, so NFR5 is not implementable at
   the type level against 1.1.0), an exported `version` for mismatch detection, and a
-  colour-scheme signal for NFR6. That release is a prerequisite, not a parallel effort.
+  color-scheme signal for NFR6. That release is a prerequisite, not a parallel effort.
 - NFR3: Every Phosphor icon the editor renders is registered by the package itself via
   clean-ui's `registerIcons`, or passed as a component. Since clean-ui 1.1.0 an unregistered
   name renders a placeholder glyph, so an unregistered toolbar icon would appear broken in
@@ -280,12 +280,12 @@ Settled before drafting; these constrain the requirements below.
 - NFR5: All user-visible strings resolve through clean-ui's message catalog under a new
   namespace, so they are overridable exactly like the rest of the library.
 - NFR6: Appearance derives from clean-ui tokens, honours dark mode and respects the density
-  scale. The package ships no hardcoded colours. This explicitly includes source-mode syntax
+  scale. The package ships no hardcoded colors. This explicitly includes source-mode syntax
   highlighting: the CodeMirror `HighlightStyle` is built from `--cui-*` tokens rather than using
   CodeMirror's default palette. Tokens alone are not sufficient for dark mode, because
   CodeMirror selects its own base-theme rules from a flag fixed when the configuration is built,
   while clean-ui's dark mode is a class on an arbitrary ancestor that can toggle at runtime and
-  can be scoped to a subtree. That flag is therefore driven from clean-ui's colour-scheme signal
+  can be scoped to a subtree. That flag is therefore driven from clean-ui's color-scheme signal
   (NFR2) through a reconfigurable compartment, or the caret and selection layers stay in light
   mode with no obvious cause. Extending the repository's contrast audit to cover a second
   package's tokens is a prerequisite for claiming the audit covers these.
@@ -349,7 +349,7 @@ Settled before drafting; these constrain the requirements below.
 - [ ] With a strict `style-src` and a supplied `cspNonce`, the editor renders styled; without
       the nonce the failure is documented rather than mysterious
 - [ ] Toggling clean-ui's dark class at runtime updates the editor's caret, selection layer and
-      syntax colours without a remount
+      syntax colors without a remount
 - [ ] A toolbar button renders pressed state from a command's `isActive` while the cursor sits
       inside that construct
 - [ ] A consumer plugin overriding a built-in command id wins, with a warning naming both

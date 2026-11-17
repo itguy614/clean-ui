@@ -36,9 +36,9 @@ describe("importing the barrel", () => {
     expect(remove).not.toHaveBeenCalled();
     expect(toggle).not.toHaveBeenCalled();
     expect(document.documentElement.className).toBe("consumer-class");
-    // No colour-mode listener or query either (#487).
+    // No color-mode listener or query either (#487).
     expect(matchMedia).not.toHaveBeenCalled();
-    // A stored density, theme or colour mode waits for first use (#209, #463): no cui-* key is read at import.
+    // A stored density, theme or color mode waits for first use (#209, #463): no cui-* key is read at import.
     expect(getItem.mock.calls.filter(([key]) => String(key).startsWith("cui-"))).toEqual([]);
   });
 });

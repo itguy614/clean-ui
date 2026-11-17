@@ -38,7 +38,7 @@ import type { TokenRow } from "../meta/types";
 const DURATION_USE: Record<MotionDuration, string> = {
   instant: "No motion",
   press: "A button press, a toggle knob, a menu row's hover",
-  fast: "Tooltips, colour changes, and every exit",
+  fast: "Tooltips, color changes, and every exit",
   base: "Dropdowns, selects, popovers",
   slow: "Modals, slideovers, toasts, collapsible panels",
 };
@@ -242,7 +242,7 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
         </p>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
           What's used many times a day doesn't animate at all. Menu items, listbox options,
-          tree nodes and date cells change colour at once as the keyboard crosses them, since a
+          tree nodes and date cells change color at once as the keyboard crosses them, since a
           fade leaves a trail of half-lit rows when an arrow key repeats. Dragging a slider
           follows the pointer, and stepping it from the keyboard lands at once. Only a click on
           its track glides the thumb across.
@@ -255,7 +255,7 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
       <CuiCardHeader title="Easings" />
       <CuiCardBody>
         <p class="text-sm" style="color: var(--cui-text-secondary);">
-          Colour and hover changes keep plain <code class="cui-code">ease</code>, and constant
+          Color and hover changes keep plain <code class="cui-code">ease</code>, and constant
           loops keep <code class="cui-code">linear</code>. Nothing in the library uses
           <code class="cui-code">ease-in</code>: it starts slowly, so the interface feels late.
         </p>
@@ -477,7 +477,7 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           what changed.
         </p>
         <ul class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
-          <li>Only opacity transitions. A scale, slide or other transform snaps, and colours change instantly, which is still not motion.</li>
+          <li>Only opacity transitions. A scale, slide or other transform snaps, and colors change instantly, which is still not motion.</li>
           <li>Menus, popovers, tooltips, toasts, modals, slideovers and alerts fade in and out where they stand.</li>
           <li>Durations don't change, so <code class="cui-code">motionDuration()</code> and the exits it times still match the CSS.</li>
           <li>Decorative loops stop: pulses, shimmers, pings and an indeterminate progress bar. A spinner stops spinning and dims.</li>
@@ -485,7 +485,7 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
           <li>Only the library's components and what's inside them are affected, including content in their slots. Utility classes you put around your own content, such as <code class="cui-code">.cui-typography</code>, a theme or a density, don't count.</li>
         </ul>
         <p class="text-sm" style="color: var(--cui-text-secondary); margin-top: 0.5rem;">
-          Hover-only motion, such as a rating star or a colour swatch growing, runs only with a
+          Hover-only motion, such as a rating star or a color swatch growing, runs only with a
           fine pointer (<code class="cui-code">@media (hover: hover) and (pointer: fine)</code>).
           On a touch screen, a tap would set the hover state and some browsers would leave it set.
         </p>

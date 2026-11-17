@@ -19,7 +19,7 @@ const meta: ComponentMeta = {
     {
       name: "highlightLines",
       type: "number[]",
-      description: "Lines to call out, numbered as displayed (so relative to startLine). Tinted, with a primary-coloured left edge",
+      description: "Lines to call out, numbered as displayed (so relative to startLine). Tinted, with a primary-colored left edge",
     },
     { name: "copyable", type: "boolean", default: "true", description: "Show the copy button, which copies code exactly" },
     { name: "maxHeight", type: "string", description: "Any CSS length. Past it the code area scrolls instead of growing" },
@@ -40,13 +40,13 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-code-block-bg", default: "var(--color-surface-950)", description: "The block's fill" },
-    { name: "--cui-code-block-border", default: "var(--cui-border)", description: "The block's border colour" },
+    { name: "--cui-code-block-border", default: "var(--cui-border)", description: "The block's border color" },
     { name: "--cui-code-block-radius", default: "var(--cui-radius-lg)", description: "The block's corner radius" },
-    { name: "--cui-code-block-color", default: "var(--color-surface-200)", description: "Code text colour" },
+    { name: "--cui-code-block-color", default: "var(--color-surface-200)", description: "Code text color" },
     { name: "--cui-code-block-font-size", default: "0.8125rem (size)", description: "Code and line-number text size. The line height and the header title size follow the size preset and have no token" },
     { name: "--cui-code-block-px", default: "1rem (size and density)", description: "Horizontal padding of the header, the gutter and the code" },
     { name: "--cui-code-block-py", default: "1rem (size and density)", description: "Vertical padding of the code area" },
-    { name: "--cui-code-block-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring colour on the scrolling code area" },
+    { name: "--cui-code-block-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color on the scrolling code area" },
   ],
 };
 

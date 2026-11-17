@@ -4,7 +4,7 @@ import { COLOR_MODE_STORAGE_KEY, DARK_CLASS, DARK_SCHEME_QUERY } from "./ssr-con
  * SSR Color Mode Init Script
  *
  * Paste this as an inline <script> in your Nuxt/HTML <head> BEFORE any stylesheets, next to
- * `ssrThemeInitScript` and `ssrDensityInitScript`. It reads the stored colour mode from
+ * `ssrThemeInitScript` and `ssrDensityInitScript`. It reads the stored color mode from
  * localStorage and sets the "dark" class on <html> before the page paints, so a dark page
  * does not flash light first. "system" (and no stored value, or an unknown one) follows
  * `prefers-color-scheme`.

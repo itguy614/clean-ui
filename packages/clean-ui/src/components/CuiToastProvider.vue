@@ -205,9 +205,9 @@ const themeScope = useScopedTheme(() => state.toasts.value.length > 0);
           @dismiss="state.dismiss(toast.id)"
         >
           <!-- A real <button> inside the toast's live region, so role="status"/"alert" is
-               unchanged (#345). Ghost: subtle-first, the toast already carries the colour.
-               On a solid toast a ghost's role-coloured text would vanish into the fill; a
-               solid button there is the same fill and text colour, so it still reads as
+               unchanged (#345). Ghost: subtle-first, the toast already carries the color.
+               On a solid toast a ghost's role-colored text would vanish into the fill; a
+               solid button there is the same fill and text color, so it still reads as
                a ghost at rest, and darkens through the role's -solid-hover slot. -->
           <template v-if="toast.action" #actions>
             <CuiButton

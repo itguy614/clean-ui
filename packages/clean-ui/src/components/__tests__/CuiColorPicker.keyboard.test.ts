@@ -149,13 +149,13 @@ describe("CuiColorPicker keyboard and ARIA", () => {
     expect(w!.emitted("update:modelValue")).toEqual([["#0000ff"]]);
   });
 
-  it("reads a palette in any format as selected, and keeps the stop on a repeated colour", async () => {
+  it("reads a palette in any format as selected, and keeps the stop on a repeated color", async () => {
     mountPicker({ palette: ["#f00", "rgb(0, 0, 255)", "#0000ff"], modelValue: "#0000ff" });
     await nextTick();
     const radios = () => w!.findAll('[role="radio"]');
     expect(radios().map((r) => r.attributes("aria-checked"))).toEqual(["false", "true", "true"]);
     (radios()[1].element as HTMLElement).focus();
-    press(radios()[1].element, "ArrowRight"); // onto the repeat: same colour, no emit
+    press(radios()[1].element, "ArrowRight"); // onto the repeat: same color, no emit
     await nextTick();
     expect(w!.emitted("update:modelValue")).toBeUndefined();
     expect(radios()[2].attributes("tabindex")).toBe("0");

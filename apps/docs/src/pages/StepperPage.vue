@@ -100,10 +100,10 @@ const verticalStep = ref(1);
           stepper is the way back.
         </li>
         <li>
-          Status is not carried by colour alone: a completed step swaps its number for a check
+          Status is not carried by color alone: a completed step swaps its number for a check
           icon and a failed one for a warning icon, and a screen reader hears “completed” or
           “error” after the label (<code>stepper.complete</code> / <code>stepper.error</code>).
-          Current and upcoming steps differ visually only by ring colour and label weight, so
+          Current and upcoming steps differ visually only by ring color and label weight, so
           keep the labels themselves meaningful.
         </li>
       </ul>

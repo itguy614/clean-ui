@@ -71,10 +71,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-scroll-area-fade-size", default: "1.5rem", description: "Depth of the edge fade" },
-    { name: "--cui-scroll-area-fade-color", default: "var(--cui-surface-base)", description: "Colour of an overlay fade (useScrollArea's `fade: \"overlay\"`)" },
+    { name: "--cui-scroll-area-fade-color", default: "var(--cui-surface-base)", description: "Color of an overlay fade (useScrollArea's `fade: \"overlay\"`)" },
     { name: "--cui-scroll-area-indicator-size", default: "2rem", description: "Width and height of an indicator" },
     { name: "--cui-scroll-area-indicator-bg", default: "var(--cui-surface-base)", description: "Indicator background" },
-    { name: "--cui-scroll-area-indicator-color", default: "var(--cui-text-secondary)", description: "Indicator icon colour" },
+    { name: "--cui-scroll-area-indicator-color", default: "var(--cui-text-secondary)", description: "Indicator icon color" },
     { name: "--cui-scroll-area-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus outline of the region" },
   ],
 };

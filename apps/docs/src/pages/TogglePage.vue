@@ -89,7 +89,7 @@ const dynamicField = ref({
           the guard every click would flip twice.
         </li>
         <li>
-          On/off is never signalled by the track colour alone — the knob moves, and
+          On/off is never signalled by the track color alone — the knob moves, and
           <code>showLabels</code> can print the state inside the track as well.
         </li>
         <li>

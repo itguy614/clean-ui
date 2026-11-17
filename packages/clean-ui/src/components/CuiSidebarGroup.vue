@@ -223,7 +223,7 @@ const panelId = `${id}-panel`;
 }
 
 /* The links (a CuiList's rows) keep a transparent border, so the current page's border
-   takes no room, and a subtle raised fill marks it: never the solid primary colour. */
+   takes no room, and a subtle raised fill marks it: never the solid primary color. */
 .cui-sidebar-group :deep(.cui-list-item__row) {
   border: 1px solid transparent;
   border-radius: var(--cui-sidebar-radius, var(--cui-radius-md, 0.375rem));

@@ -214,7 +214,7 @@ const hiddenUntilPositioned = computed(() => {
   return styles;
 });
 
-// A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
+// A colored tooltip's paint, as private tokens the stylesheet reads back (#211); the
 // default tooltip's come from `.cui-tooltip--default`.
 const tooltipStyle = computed(() => ({
   // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.

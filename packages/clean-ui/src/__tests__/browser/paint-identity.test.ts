@@ -8,11 +8,11 @@ import CuiPopover from "../../components/CuiPopover.vue";
 import baseline from "./paint-identity.baseline.json";
 
 /**
- * #294 — CuiBadge, CuiFieldset and CuiPopover wrote their paint (background, border, colour,
+ * #294 — CuiBadge, CuiFieldset and CuiPopover wrote their paint (background, border, color,
  * radius, padding, sizes) as bare inline declarations, and now emit private
  * `--_<component>-<slot>` properties read back through public tokens. Nothing about how they
  * look may change. `paint-identity.baseline.json` holds the computed styles of each part,
- * recorded from the branch tip BEFORE the conversion: every variant, colour and size of a
+ * recorded from the branch tip BEFORE the conversion: every variant, color and size of a
  * badge, a fieldset's variants and states, a popover's panel, arrow on each side, header,
  * close button and footer, light and dark. Real browser: jsdom computes none of this.
  *
@@ -155,7 +155,7 @@ function snapshot(kind: string, host: ParentNode) {
   return out;
 }
 
-/** Distinct, deterministic colours for every step of the scale, so a wrong slot shows up. */
+/** Distinct, deterministic colors for every step of the scale, so a wrong slot shows up. */
 function colourScale() {
   const full = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   const condensed = [100, 300, 500, 700, 900];

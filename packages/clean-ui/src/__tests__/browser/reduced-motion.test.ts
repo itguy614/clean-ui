@@ -21,7 +21,7 @@ import CuiDrawer from "../../components/CuiDrawer.vue";
 /**
  * #265 — under `prefers-reduced-motion: reduce` the library clamped every animation and
  * transition on the whole page (`*`) to 1ms: no movement, but no fades either, and it
- * reached the consumer's own elements. It now removes movement only: fades and colour keep
+ * reached the consumer's own elements. It now removes movement only: fades and color keep
  * their durations, and only the library's own elements are touched.
  */
 describe("reduced motion (real browser)", () => {

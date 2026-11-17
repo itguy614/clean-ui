@@ -3,14 +3,14 @@ import { hiddenProp } from "./shared";
 
 const meta: ComponentMeta = {
   name: "Status Dot",
-  description: "A small coloured dot for a status — online, warning, offline — beside text that says the same thing.",
+  description: "A small colored dot for a status — online, warning, offline — beside text that says the same thing.",
 
   props: [
     {
       name: "tone",
       type: "success | info | warning | error | neutral",
       default: "neutral",
-      description: "Status, mapped to a colour role (neutral uses surface-dark)",
+      description: "Status, mapped to a color role (neutral uses surface-dark)",
     },
     {
       name: "label",
@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
     hiddenProp,
   ],
 
-  tokens: [{ name: "--cui-status-dot-bg", default: "var(--cui-<tone role>)", description: "Dot colour" }],
+  tokens: [{ name: "--cui-status-dot-bg", default: "var(--cui-<tone role>)", description: "Dot color" }],
 };
 
 export default meta;

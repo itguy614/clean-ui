@@ -155,7 +155,7 @@ watch(() => route.fullPath, () => nextTick(collect));
   font-size: 0.78125rem;
 }
 
-/* Not colour alone (WCAG 1.4.1): a bar four times the rail's width and a heavier weight
+/* Not color alone (WCAG 1.4.1): a bar four times the rail's width and a heavier weight
    mark the current entry too, so it still reads in greyscale. */
 .cui-page-nav__link--active {
   color: var(--cui-primary);
