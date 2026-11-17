@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-16
+
+### Added
+
+- `CuiSidebar` family (`CuiSidebar`, `CuiSidebarHeader`, `CuiSidebarContent`,
+  `CuiSidebarFooter`, `CuiSidebarGroup`): a layout shell for app navigation. Collapsible groups
+  (`v-model:expanded`, the group holding the current page opens itself), a subtle active state,
+  trailing badges, and a collapse to a `CuiSlideover` drawer below `collapse-below` (default
+  `lg`). `toggleAttrs`, `toggle` and `open` are exposed so an outside button can drive the
+  drawer.
+- `CuiNavbar` family (`CuiNavbar`, `CuiNavbarBrand`, `CuiNavbarNav`, `CuiNavbarActions`,
+  `CuiNavbarMenu`, `CuiNavbarLink`): one nav, two presentations. Menus are dropdowns in the bar
+  and collapsible groups in the drawer. Links take an `icon` and a `#suffix`. Opt-in `sticky`
+  keeps focus from hiding under the bar and sets `--cui-navbar-height`; opt-in `translucent`
+  frosts a sticky bar (`--cui-navbar-blur`), with solid fallbacks.
+- `CuiPanel`: a background primitive with a colour, an image and gradients. A gradient takes
+  `from`, `via`, `to` (roles or CSS colours) and `angle`, interpolates in oklch with an sRGB
+  fallback, and has an optional `smooth` grain. `gradient` takes a raw CSS string.
+- Gradient props on `CuiBackdrop`, and `backdropFrom`, `backdropVia`, `backdropTo`,
+  `backdropAngle` and `backdropSmooth` on `CuiModal` and `CuiSlideover`.
+- `messages.navigation` (`menu`, `sidebar`, `navbar`) for the new components' labels.
+
+### Changed
+
+- A row inside a sidebar gets the active look for any `aria-current` value except `"false"`,
+  not only `"page"`.
+
+### Fixed
+
+- `--cui-list-font-size` takes effect on `CuiListItem`; a structural `font: inherit` used to
+  outrank it. The default is `inherit`, so rows look the same unless you set the token.
+- `CuiBackdrop` escapes its `image` URL.
+
+### Documentation
+
+- App Shells: four recipes (sidebar, navbar, navbar and sidebar, sidebar and detail drawer),
+  with code that is type-checked against the library.
+- The docs sites use `CuiSidebar` and `CuiNavbar`, and the main site has a search box that
+  filters the navigation by name and keyword.
+
 ## [2.0.0] - 2026-11-15
 
 ### Upgrading to 2.0
