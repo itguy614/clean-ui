@@ -10,16 +10,19 @@ import {
   CuiDropdownRadioItem,
   CuiDropdownHeader,
   CuiIcon,
+  CuiKbd,
   CuiNavbar,
   CuiNavbarActions,
   CuiToastProvider,
   useTheme,
   useDensity,
   useColorMode,
+  useCommandPalette,
   type ColorMode,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
 import PageNav from "./components/PageNav.vue";
+import SitePalette from "./components/SitePalette.vue";
 import { ShowDebugKey } from "./keys";
 
 const showDebug = ref(false);
@@ -30,6 +33,11 @@ const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
 
 provide(ShowDebugKey, showDebug);
+
+// The header button opens the site palette (SitePalette.vue) without the shortcut. The hint shows
+// the key for this platform; the palette's own default is Mod-K, so the two agree.
+const palette = useCommandPalette();
+const apple = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 
 // Close mobile nav on route change
 const route = useRoute();
@@ -90,6 +98,20 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
           </CuiButton>
 
           <CuiNavbarActions>
+            <CuiButton
+              variant="ghost"
+              size="sm"
+              aria-label="Search documentation"
+              :aria-keyshortcuts="apple ? 'Meta+K' : 'Control+K'"
+              @click="palette.open()"
+            >
+              <!-- One wrapper, so the button's own prefix/suffix gaps do not widen it below sm, where only the icon shows -->
+              <span class="inline-flex items-center gap-2">
+                <CuiIcon name="magnifying-glass" size="sm" />
+                <span class="max-sm:hidden">Search</span>
+                <span class="max-sm:hidden" aria-hidden="true"><CuiKbd>{{ apple ? "⌘" : "Ctrl" }}</CuiKbd> <CuiKbd>K</CuiKbd></span>
+              </span>
+            </CuiButton>
             <CuiDropdown>
               <CuiDropdownTrigger>
                 <CuiButton variant="ghost" size="sm" :aria-label="`Theme: ${themeLabel}`">
@@ -122,9 +144,6 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
                 </CuiDropdownRadioGroup>
               </CuiDropdownMenu>
             </CuiDropdown>
-            <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
-              {{ showDebug ? "Hide Debug" : "Show Debug" }}
-            </CuiButton>
             <CuiButton
               variant="ghost"
               size="sm"
@@ -149,5 +168,6 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
       </div>
     </div>
   </div>
+  <SitePalette />
   </CuiToastProvider>
 </template>
