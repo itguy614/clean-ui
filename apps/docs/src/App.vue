@@ -54,6 +54,10 @@ const MODE_VIEW: Record<ColorMode, { label: string; icon: string }> = {
   system: { label: "System", icon: "desktop" },
 };
 const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.value) + 1) % MODE_CYCLE.length]);
+
+// Below sm the header buttons shrink to their icons, so the current choice moves into the name.
+const themeLabel = computed(() => presets.find((p) => p.id === theme.value)?.label ?? "Theme");
+const densityLabel = computed(() => densityPresets.find((p) => p.id === density.value)?.label ?? "Density");
 </script>
 
 <template>
@@ -109,9 +113,9 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
             </CuiButton>
             <CuiDropdown>
               <CuiDropdownTrigger>
-                <CuiButton variant="ghost" size="sm">
+                <CuiButton variant="ghost" size="sm" :aria-label="`Theme: ${themeLabel}`">
                   <template #prefix><CuiIcon name="palette" size="sm" /></template>
-                  {{ presets.find(p => p.id === theme)?.label ?? 'Theme' }}
+                  <span class="max-sm:sr-only">{{ themeLabel }}</span>
                 </CuiButton>
               </CuiDropdownTrigger>
               <CuiDropdownMenu min-width="10rem">
@@ -125,9 +129,9 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
             </CuiDropdown>
             <CuiDropdown>
               <CuiDropdownTrigger>
-                <CuiButton variant="ghost" size="sm">
+                <CuiButton variant="ghost" size="sm" :aria-label="`Density: ${densityLabel}`">
                   <template #prefix><CuiIcon name="rows" size="sm" /></template>
-                  {{ densityPresets.find(p => p.id === density)?.label ?? 'Density' }}
+                  <span class="max-sm:sr-only">{{ densityLabel }}</span>
                 </CuiButton>
               </CuiDropdownTrigger>
               <CuiDropdownMenu min-width="11rem">
@@ -149,7 +153,7 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
               @click="setColorMode(nextColorMode)"
             >
               <template #prefix><CuiIcon :name="MODE_VIEW[colorMode].icon" size="sm" /></template>
-              {{ MODE_VIEW[colorMode].label }}
+              <span class="max-sm:sr-only">{{ MODE_VIEW[colorMode].label }}</span>
             </CuiButton>
           </CuiNavbarActions>
         </CuiNavbar>
