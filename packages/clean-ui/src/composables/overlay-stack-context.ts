@@ -9,6 +9,11 @@ export interface OverlayStackEntry {
   modal: () => boolean;
   /** The edge the panel docks to ("left", "right", "top", "bottom"), or "" for one with none (a drawer sheet). */
   side: () => string;
+  /**
+   * The consumer's `hidden`: the panel is open but not shown. It sits out of the layout and of
+   * the active set, and a change re-runs both. Absent, it is never hidden.
+   */
+  hidden?: () => boolean;
   /** The dialog element, where focus lives. */
   panel: () => HTMLElement | null | undefined;
   /** The teleported overlay root holding the panel and its backdrop: what `inert` goes on. */

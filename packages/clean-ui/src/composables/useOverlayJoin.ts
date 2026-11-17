@@ -9,6 +9,8 @@ export interface JoinOptions {
   modal: () => boolean | undefined;
   /** The edge the overlay docks to, for a stack that checks its panels agree. None: a sheet. */
   side?: () => string;
+  /** Its `hidden` prop: open but not shown, so the stack leaves it out of its layout. */
+  hidden?: () => boolean;
   /** The backdrop props it asks for, drawn by the stack when it sits in one. */
   backdrop?: () => Record<string, unknown>;
 }
@@ -37,6 +39,7 @@ export function joinStack(options: JoinOptions) {
       modal: isModal,
       side: options.side ?? (() => ""),
       backdrop: options.backdrop,
+      hidden: options.hidden,
       panel: () => core.dialogRef.value,
       root: () => core.rootRef.value,
       requestClose: core.requestClose,
