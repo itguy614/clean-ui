@@ -114,7 +114,7 @@ function applyColor(color: string): boolean {
 // Sync from modelValue prop — except for the echo of a value this picker just emitted. That
 // string is quantized (hex has 256 steps a channel), and parsing it back would rewrite the
 // HSV state the user is moving: 1% keyboard steps would skip and rewind, the hue would be
-// lost whenever the color reached grey or black, and 360° would come back as 0°.
+// lost whenever the color reached gray or black, and 360° would come back as 0°.
 let lastEmitted: string | null = null;
 function syncFromProp() {
   // Once: a later change back to the same string, after something else moved the color,
@@ -780,7 +780,7 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* The handles. Where one sits (`left`, and `top` on the gradient) is written inline as the value
-   changes; the centring transform is the same for all of them. */
+   changes; the centering transform is the same for all of them. */
 .cui-color-picker__thumb {
   position: absolute;
   transform: translate(-50%, -50%);

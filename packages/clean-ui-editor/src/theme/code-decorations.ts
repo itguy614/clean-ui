@@ -16,7 +16,7 @@ import { decorationViewPlugin } from "../reveal/decoration-view-plugin";
  * like the highlight style's own monospace/color treatment — construct
  * exclusion (FR27) affects marker-reveal and toolbar/keymap/paste
  * availability, not this package's baseline visual styling for a
- * recognised syntax node.
+ * recognized syntax node.
  */
 const inlineCodeDecoration = Decoration.mark({ class: "cui-md-inline-code" });
 const codeBlockLineDecoration = Decoration.line({ class: "cui-md-code-block-line" });

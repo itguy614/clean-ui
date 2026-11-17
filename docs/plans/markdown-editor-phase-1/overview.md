@@ -75,7 +75,7 @@ re-litigating them.
 ## Verification Debt Carried From the Spike
 
 The prototype validated reveal, accessibility-tree exposure, touch granularity and IME composition
-in headless Chrome. It did **not** prove: touch behaviour on a physical device (selection handles,
+in headless Chrome. It did **not** prove: touch behavior on a physical device (selection handles,
 on-screen keyboard), composition through a real input method, or how the exposed markdown sounds in
 a screen reader. Those are tasks in Phase 99 of the platform plan's browser runner and in this
 plan's Phase 02, not assumptions.

@@ -323,7 +323,7 @@ describe("CuiTabs overflow", () => {
 
 // #238: a <button> with no type is a submit button, so a tab set inside a <form>
 // submitted the form on every tab switch. Fixed in #167; button-type.test.ts guards every
-// component statically, and this checks the behaviour end to end.
+// component statically, and this checks the behavior end to end.
 describe("CuiTabs inside a form", () => {
   it("switching or closing a tab does not submit the form", async () => {
     const onSubmit = vi.fn((e: Event) => e.preventDefault());

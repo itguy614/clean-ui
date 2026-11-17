@@ -30,7 +30,7 @@ import meta from "../meta/spinner";
         avoid. The animation is small and in place rather than travelling, so it stays
         within what <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.3.3
         contemplates — but prefer <code>CuiSkeleton</code> with
-        <code>animation="none"</code> when a whole region is loading and you are honouring
+        <code>animation="none"</code> when a whole region is loading and you are honoring
         reduced motion.
       </p>
     </template>

@@ -81,8 +81,8 @@ export function useButtonGroupProvider(options: {
         const n = members.value.length;
         return n <= 1 ? "only" : index.value === 0 ? "first" : index.value === n - 1 ? "last" : "middle";
       });
-      const merges = (neighbour: Member | undefined) =>
-        !!self.value && !!neighbour && (self.value.dropdown || (isPainted(self.value) && isPainted(neighbour)));
+      const merges = (neighbor: Member | undefined) =>
+        !!self.value && !!neighbor && (self.value.dropdown || (isPainted(self.value) && isPainted(neighbor)));
       const flatStart = computed(() => index.value > 0 && merges(members.value[index.value - 1]));
       const flatEnd = computed(() => index.value >= 0 && merges(members.value[index.value + 1]));
       const classes = computed(() =>

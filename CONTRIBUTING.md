@@ -86,7 +86,7 @@ shouldn't fail just because nobody's run `playwright install` yet.
   environment (no DOM at all, unlike jsdom which always fakes one). Use this for anything that must
   not touch `document`/`window` outside a lifecycle hook.
 - **browser** (`src/__tests__/browser/`) — a real headless Chromium via Playwright
-  (`@vitest/browser`), for behaviour that depends on real layout, selection or input method (jsdom's
+  (`@vitest/browser`), for behavior that depends on real layout, selection or input method (jsdom's
   layout engine is a no-op — `getComputedStyle`/`scrollHeight` are always zero there). First run
   needs the browser installed once: `pnpm --filter @itguy614/clean-ui exec playwright install
   chromium`. Run it with `pnpm --filter @itguy614/clean-ui test:browser`. **Triaging a failure:**

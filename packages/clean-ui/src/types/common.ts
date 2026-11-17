@@ -255,7 +255,7 @@ export interface AriaLabelableProps {
    * supplied automatically by `CuiFormField`.
    *
    * Deliberately `aria-required` rather than the native `required` attribute — the latter
-   * switches on browser validation and would change form behaviour, not just announce it.
+   * switches on browser validation and would change form behavior, not just announce it.
    */
   ariaRequired?: boolean;
 }

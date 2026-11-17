@@ -78,7 +78,7 @@ a task — the tasks file tracks status, this file records why things happened.
   `.cm-selectionBackground` DOM layer to theme at all. The feature spec's own wording ("the caret
   and selection layers stay light") names CodeMirror's drawn layers specifically, confirming this
   extension was always intended to be part of the base setup.
-- Wired a `themeCompartment` into `CuiMarkdownEditor.vue`, initialised from `useColorScheme(rootRef)`
+- Wired a `themeCompartment` into `CuiMarkdownEditor.vue`, initialized from `useColorScheme(rootRef)`
   (from `@itguy614/clean-ui`) and reconfigured on every `isDark` change via `view.dispatch({effects:
   themeCompartment.reconfigure(...)})`.
 - Density: `.cm-content`'s padding now reads `calc(0.5rem * var(--cui-density-scale, 1))` /
@@ -137,7 +137,7 @@ recorded here rather than claimed complete. What automated proxies *could* verif
 `pointerType: "touch"` events switching granularity correctly, and a CDP accessibility-tree
 extraction confirming the underlying markdown (including markers) is exposed as `StaticText`
 beneath the editor's `textbox` role — is documented against 2.1.1/2.1.2 above and does not stand in
-for the device- and assistive-technology-specific behaviour these two tasks ask for. See each
+for the device- and assistive-technology-specific behavior these two tasks ask for. See each
 task's own "Deferral reason" in `phase-02-tasks.md` for what remains outstanding.
 
 <!-- Template:

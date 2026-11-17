@@ -56,7 +56,7 @@ describe("CuiCodeBlock is themeable (real browser, #484)", () => {
     const p = await render({ maxHeight: "100px" });
     const inline = (el: HTMLElement) => [...Array(el.style.length).keys()].map((i) => el.style.item(i));
     expect(inline(p.root).filter((n) => !n.startsWith("--_code-block-") && n !== "display")).toEqual([]);
-    // `useScrollArea` also writes `scroll-padding-*` (scroll behaviour, not paint).
+    // `useScrollArea` also writes `scroll-padding-*` (scroll behavior, not paint).
     expect(inline(p.pre).filter((n) => !n.startsWith("scroll-padding"))).toEqual(["max-height"]);
     expect(inline(p.number)).toEqual(["min-width"]);
     for (const el of [p.header, p.title, p.gutter, p.code, ...p.lines]) expect(el.getAttribute("style") ?? "", el.className).toBe("");

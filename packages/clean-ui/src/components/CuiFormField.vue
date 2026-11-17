@@ -288,11 +288,11 @@ onBeforeUnmount(() => {
 /* --- Floating label (#191) --- see form-field-context.ts for the mechanism.
    An inset label: it shares the control's grid cell, and the control, one size step taller
    (its own private height, from the marker), keeps room for it. Resting, it is the value's
-   size, centred where the text starts. Floated, it scales down and moves up into the top
-   of the box, the value sitting below it (the control's own `padding-top`): the two centred
+   size, centered where the text starts. Floated, it scales down and moves up into the top
+   of the box, the value sitting below it (the control's own `padding-top`): the two centered
    as a pair. Transform only, so nothing reflows, and the help or error text stays in row 2.
 
-   Resting centre: half the box. Floated centre: half the box less half the value's line
+   Resting center: half the box. Floated center: half the box less half the value's line
    box (V), so translateY(-V/2) whatever the height, density included. */
 .cui-form-field--floating:has([data-cui-float-label]) {
   /* The value's font size, and the floated label's as a ratio of it (12px; 13px at xl), per

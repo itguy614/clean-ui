@@ -171,7 +171,7 @@ outside the toggled subtree is unaffected.
 
 ### Group 2.3: Verification debt from the spike
 
-#### Task 2.3.1: Touch behaviour on a physical device
+#### Task 2.3.1: Touch behavior on a physical device
 
 | Field | Value |
 |-------|-------|
@@ -198,7 +198,7 @@ the Spike" framing. What *could* be verified in this environment was: `inputType
 correctly switches granularity on a `pointerType: "touch"` event (jsdom test, real DOM event
 dispatch) and a synthetic touch `pointerdown` in a real Chromium browser correctly reveals the
 caret's whole line (Playwright, see the 2.1.1 journal entry). Selection-handle dragging, the
-on-screen keyboard's viewport effects, and any WebKit/Android-WebView-specific behaviour remain
+on-screen keyboard's viewport effects, and any WebKit/Android-WebView-specific behavior remain
 unverified and are carried forward as known, undischarged verification debt — not implemented and
 silently assumed correct.
 
@@ -233,5 +233,5 @@ nodes beneath the editor's `textbox` role, markers included, regardless of caret
 confirms the *raw material* a screen reader would read is present and correct; it does not confirm
 the *experience* — announcement phrasing, whether marker noise reads as confusing versus merely
 present, or whether caret navigation announcements match VoiceOver/NVDA's actual per-character
-behaviour — is coherent to an actual user. That gap is carried forward as known, undischarged
+behavior — is coherent to an actual user. That gap is carried forward as known, undischarged
 verification debt.

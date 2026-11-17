@@ -180,19 +180,19 @@ function closeFromKey(e: KeyboardEvent): boolean {
   // A held key repeats: one press closes one tab.
   if (e.repeat || list[at].disabled) return true;
   const closing = list[at].value;
-  const neighbour = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
+  const neighbor = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
   close(closing);
-  if (neighbour) {
+  if (neighbor) {
     nextTick(() => {
       // `close` is a request: if the consumer kept the tab (a confirm, a refusal), so does focus.
       if (tabs.value.some((t) => t.value === closing)) return;
-      // The selection went with the tab and nothing took it over: the neighbour does, or the
+      // The selection went with the tab and nothing took it over: the neighbor does, or the
       // bar would be left with no tab stop and arrow keys that do nothing.
       if (!tabs.value.some((t) => t.value === activeTab.value)) {
         keyed.value = keyedButtons.value = true;
-        activate(neighbour.value);
+        activate(neighbor.value);
       }
-      const el = tabElement(neighbour.value);
+      const el = tabElement(neighbor.value);
       el?.focus({ preventScroll: true });
       const scroller = areaRef.value?.el;
       if (el && scroller) scrollIntoViewWithin(scroller, el, "instant");

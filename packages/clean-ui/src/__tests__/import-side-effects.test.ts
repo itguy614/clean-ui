@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { spyStorage } from "./storage-spy";
 
 // Importing the library must not touch the consumer's page (#209, #389): no localStorage read or
-// write of a `cui-*` key and no class change on <html>. This is the generalising guard — a composable that does
+// write of a `cui-*` key and no class change on <html>. This is the generalizing guard — a composable that does
 // work at module load (a stored density restored at import, say) fails it, whichever one.
 describe("importing the barrel", () => {
   afterEach(() => {

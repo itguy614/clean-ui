@@ -159,7 +159,7 @@ export interface PasteRule {
   /** The construct id this rule produces — checked against the loaded
    * construct policy (FR28). */
   produces: string;
-  /** Fallback used when `produces` isn't authorised: another construct id to
+  /** Fallback used when `produces` isn't authorized: another construct id to
    * degrade to, or `"plainText"` to drop formatting entirely. */
   degradeTo: "plainText" | string;
 }
@@ -169,7 +169,7 @@ export interface CuiEditorPluginSpec {
   readonly commands: Record<string, PluginCommandSpec>;
   readonly toolbar?: ToolbarEntry[];
   readonly keymap?: KeymapEntry[];
-  /** Construct ids this plugin authorises — the construct policy (FR27) is
+  /** Construct ids this plugin authorizes — the construct policy (FR27) is
    * the union of every loaded plugin's declared constructs. */
   readonly constructs?: string[];
   readonly paste?: PasteRule[];

@@ -98,7 +98,7 @@
    button has mounted (#444). The corner rules above are the mounted state, from the context;
    the `:not(.cui-button--grouped)` ones further down cover the time before it. */
 
-/* Shared borders: each button after the first overlaps its neighbour's edge by one pixel. */
+/* Shared borders: each button after the first overlaps its neighbor's edge by one pixel. */
 .cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-button,
 .cui-button-group--horizontal > :is(.cui-button, .cui-dropdown) + .cui-dropdown .cui-button {
   margin-left: -1px;
@@ -110,7 +110,7 @@
 }
 
 /* Lift a button above its siblings so the shared border shows its edge, in three tiers: a
-   hovered button, then a selected one, then a focused one. A hovered neighbour must stay
+   hovered button, then a selected one, then a focused one. A hovered neighbor must stay
    below a selected button, or its hover fill paints over the selected border it overlaps.
    Zero specificity, so the order here is the ranking. */
 :where(.cui-button-group > :is(.cui-button, .cui-dropdown .cui-button):hover) {

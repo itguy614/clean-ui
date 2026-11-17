@@ -45,7 +45,7 @@ const Avatars = () => {
   const hiddenCount = children.length - limit;
   const first = children[0].props ?? {};
   // First in the DOM: the group is `row-reverse`, so that is its visual right end, and it
-  // overlaps and paints beneath its neighbour exactly as every other avatar does.
+  // overlaps and paints beneath its neighbor exactly as every other avatar does.
   return [
     h(CuiAvatar, {
       class: "cui-avatar-group__overflow",

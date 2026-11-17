@@ -247,7 +247,7 @@ const layoutContextFields: PropRow[] = [
       <h2>When to use it</h2>
       <ul>
         <li>
-          Use <code class="cui-code">useBreakpoint()</code> when a component's <em>behaviour</em> or
+          Use <code class="cui-code">useBreakpoint()</code> when a component's <em>behavior</em> or
           <em>structure</em> changes with width — fewer columns, a menu that collapses into a drawer, a
           different number of items. For purely visual changes, a CSS media query or a responsive prop on
           CuiGrid/CuiFlex is simpler and works before hydration.

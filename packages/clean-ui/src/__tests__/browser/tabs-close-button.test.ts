@@ -47,7 +47,7 @@ describe("CuiTabs close button (real browser)", () => {
     return { bar, closed };
   }
 
-  it("serialises to markup that parses back to the same structure, with no nested button", async () => {
+  it("serializes to markup that parses back to the same structure, with no nested button", async () => {
     const { bar } = mountTabs();
     await nextTick();
     const parsed = document.createElement("div");
@@ -60,7 +60,7 @@ describe("CuiTabs close button (real browser)", () => {
     expect(reparsed.innerHTML).toBe(bar.innerHTML);
   });
 
-  it("Delete from a real key press closes the focused tab and focuses its neighbour", async () => {
+  it("Delete from a real key press closes the focused tab and focuses its neighbor", async () => {
     const { bar, closed } = mountTabs();
     await nextTick();
     const tab = (v: string) => bar.querySelector<HTMLElement>(`[data-cui-tab-value="${v}"]`)!;

@@ -490,12 +490,12 @@ function rowWithActions(el: Element): DataGridRow | undefined {
 
 // --- Interactive rows (#232) ---
 // A clickable grid's rows are one tab stop. The stop is tracked by row key, so it survives
-// sorting, filtering and virtualisation, and falls back to the first rendered row when its
+// sorting, filtering and virtualization, and falls back to the first rendered row when its
 // row is gone. Arrow Up/Down and Home/End move over the whole data set — not just the
-// rendered rows, so a virtualised grid scrolls the target in — and Enter or Space on the
+// rendered rows, so a virtualized grid scrolls the target in — and Enter or Space on the
 // row itself emits row-click. Native table semantics stay: no role="grid".
 // useListNavigation, not useRovingFocus: that one finds its items in the DOM, and a
-// virtualised grid's rows outside the render window aren't there to reach.
+// virtualized grid's rows outside the render window aren't there to reach.
 const nav = useListNavigation();
 const activeKey = ref<string | null>(null);
 const stopKey = computed(() => {

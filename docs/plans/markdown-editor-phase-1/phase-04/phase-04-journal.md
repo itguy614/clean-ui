@@ -21,7 +21,7 @@ a task — the tasks file tracks status, this file records why things happened.
   (detached Vue app), URL scheme allowlist.
 - `src/plugins/slash-menu.ts` — CodeMirror-autocomplete-based palette sourced from
   label+icon-carrying commands.
-- `src/paste/convert-html.ts` + per-plugin `paste` rules — HTML→markdown conversion honouring the
+- `src/paste/convert-html.ts` + per-plugin `paste` rules — HTML→markdown conversion honoring the
   construct policy, with degrade chains.
 - `src/reveal/construct-policy.ts` — the reveal layer's marker-hiding finally became plugin-driven
   (deferred from Phase 02/03 specifically until real plugins existed to drive it).

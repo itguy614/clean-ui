@@ -263,7 +263,7 @@ const dims = computed(() => {
 // One step below the control, as CuiCombobox's and CuiTagInput's chips are.
 const chipSize = computed(() => nestedSize(props.size));
 const messages = useMessages();
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.select.placeholder);
 const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.select.noOptions);
 </script>

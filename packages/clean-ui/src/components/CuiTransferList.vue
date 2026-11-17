@@ -55,7 +55,7 @@ const props = withDefaults(defineProps<CuiTransferListProps>(), {
   hidden: false,
 });
 
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const messages = useMessages();
 const sourceLabel = computed(() => props.sourceTitle ?? messages.value.transferList.source);
 const targetLabel = computed(() => props.targetTitle ?? messages.value.transferList.target);
@@ -145,7 +145,7 @@ function moveAllToSource() {
   emit("update:modelValue", []);
 }
 
-/** Swap the one marked item with its neighbour `by` places away, if there is one. */
+/** Swap the one marked item with its neighbor `by` places away, if there is one. */
 function reorder(by: -1 | 1) {
   const idx = reorderIndex.value;
   const to = idx + by;
@@ -534,7 +534,7 @@ const rootStyle = computed(() => ({
 </template>
 
 <style>
-/* Structural: the move toolbar sits between the lists, its buttons centred down the middle. */
+/* Structural: the move toolbar sits between the lists, its buttons centered down the middle. */
 .cui-transfer-list__actions {
   justify-content: center;
   flex-shrink: 0;

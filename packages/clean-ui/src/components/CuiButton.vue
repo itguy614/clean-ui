@@ -347,7 +347,7 @@ const buttonStyle = computed(() => {
 /* Pressing a pressed toggle mixes a little of its text color into its fill. The variant's
    active fill can't be used: it is drawn for the unpressed button's text (a ghost's pale tint
    would take the white text of a solid pressed look), and for solid it is the pressed shade's
-   neighbour. */
+   neighbor. */
 :where(.cui-button--pressed:active:not(.cui-button--disabled)) {
   background: color-mix(in srgb, var(--cui-button-pressed-bg, var(--_button-pressed-bg)) 85%, currentColor);
 }

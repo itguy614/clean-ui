@@ -166,7 +166,7 @@ const area = useScrollArea({
   letter-spacing: 0.04em;
 }
 /* Kept as it was inline: this colors the copy button's wrapper (what the status text inherits),
-   not the button, which paints itself from --cui-button-color. Greying the button would change
+   not the button, which paints itself from --cui-button-color. Graying the button would change
    how the block looks, so it is left for a deliberate change. */
 :where(.cui-code-block__copy) {
   color: var(--color-surface-400, #999);

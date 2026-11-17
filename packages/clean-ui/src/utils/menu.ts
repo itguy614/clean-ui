@@ -72,7 +72,7 @@ export function inMenuPanels(ownerId: string | undefined, node: Node | null | un
 export function restoreMenuFocus(target: Element | null | undefined, ownerId: string | undefined) {
   if (!(target instanceof HTMLElement) || !inMenuPanels(ownerId, document.activeElement)) return;
   if (target.isConnected) target.focus({ preventScroll: true });
-  // Gone — a virtualised grid row's trigger, scrolled out while the menu was open: ask its
+  // Gone — a virtualized grid row's trigger, scrolled out while the menu was open: ask its
   // owner for it back by key, as an overlay does (utils/focusRestore). A detached subtree
   // still knows its ancestors, so the key is still there to read.
   else returnFocus(null, restoreKeyOf(target));

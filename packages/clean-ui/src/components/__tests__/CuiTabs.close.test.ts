@@ -69,7 +69,7 @@ describe("CuiTabs closeable tabs (#153)", () => {
     await flushPromises();
     expect(closed).toEqual(["one"]);
     expect(document.activeElement).toBe(tabs[1].element);
-    // "one" was the active tab and the consumer dropped it: the neighbour took the selection.
+    // "one" was the active tab and the consumer dropped it: the neighbor took the selection.
     expect(tabs[1].attributes("aria-selected")).toBe("true");
     wrapper.unmount();
   });
@@ -166,7 +166,7 @@ describe("CuiTabs closeable tabs (#153)", () => {
     wrapper.unmount();
   });
 
-  it("skips a disabled neighbour when moving focus", async () => {
+  it("skips a disabled neighbor when moving focus", async () => {
     const { wrapper } = closeHost({ disabledTwo: true });
     await wrapper.vm.$nextTick();
     const tabs = wrapper.findAll<HTMLElement>('[role="tab"]');

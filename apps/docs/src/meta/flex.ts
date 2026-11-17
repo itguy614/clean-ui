@@ -17,7 +17,7 @@ const meta: ComponentMeta = {
       name: "wrap",
       type: "wrap | wrap-reverse | nowrap",
       default: "wrap",
-      description: "Wrap behaviour. Note the default wraps — pass nowrap for a strip that must stay on one line",
+      description: "Wrap behavior. Note the default wraps — pass nowrap for a strip that must stay on one line",
     },
     {
       name: "align",

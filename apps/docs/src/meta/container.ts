@@ -4,7 +4,7 @@ import { hiddenProp, spacingProp } from "./shared";
 const meta: ComponentMeta = {
   name: "Container",
   description:
-    "Centres a page's content at a capped width with horizontal padding. The width and the padding both take responsive objects, so one container covers every breakpoint.",
+    "Centers a page's content at a capped width with horizontal padding. The width and the padding both take responsive objects, so one container covers every breakpoint.",
 
   props: [
     {
@@ -20,7 +20,7 @@ const meta: ComponentMeta = {
       name: "centered",
       type: "boolean",
       default: "true",
-      description: "Centre the box with auto side margins. Set false to let it sit against the left edge",
+      description: "Center the box with auto side margins. Set false to let it sit against the left edge",
     },
     hiddenProp,
   ],

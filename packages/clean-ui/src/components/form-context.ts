@@ -13,7 +13,7 @@ export type FormErrors = Record<string, string>;
  */
 export type FormResolver = (values: FormValues) => FormErrors | Promise<FormErrors>;
 
-/** When validation runs. Always validates on submit; this controls eager behaviour. */
+/** When validation runs. Always validates on submit; this controls eager behavior. */
 export type FormValidateOn = "submit" | "change";
 
 /**

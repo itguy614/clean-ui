@@ -110,4 +110,4 @@ planned change into an emergency.
 **Acceptance Criteria:**
 - [x] `CONTRIBUTING.md` describes the release process accurately
 - [x] The ordering rule for coupled releases is stated explicitly
-- [x] The `/make-release` workflow's behaviour matches what is documented
+- [x] The `/make-release` workflow's behavior matches what is documented

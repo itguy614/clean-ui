@@ -311,7 +311,7 @@ setTimeout(remove, motionDuration("fast", panelEl));`;
         <p class="text-sm" style="color: var(--cui-text-secondary);">
           Popovers, tooltips, menus and listboxes scale in from the edge that faces their
           trigger, on whichever side they opened, and after flipping when there isn't room.
-          A context menu grows from the corner at the pointer. Modals stay centred.
+          A context menu grows from the corner at the pointer. Modals stay centered.
         </p>
         <CuiFlex gap="3" class="flex-wrap items-center">
           <CuiPopover v-for="side in (['top', 'right', 'bottom', 'left'] as const)" :key="side" :placement="side" :title="side">

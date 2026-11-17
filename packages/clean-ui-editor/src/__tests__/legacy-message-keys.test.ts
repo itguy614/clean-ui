@@ -50,7 +50,7 @@ describe("legacy dialog message keys (#398)", () => {
 
   it("is silent in production, whether the mode is known at load or only when called", async () => {
     // The call-site guard (dead code in a consumer's build) is enforced by clean-ui's dev-warnings.test.ts
-    // and the fixture's no-dev-warnings guarantee; this is the behaviour.
+    // and the fixture's no-dev-warnings guarantee; this is the behavior.
     const merge = await load();
     process.env.NODE_ENV = "production";
     merge(Object.fromEntries(Object.keys(LEGACY).map((k) => [k, "x"])) as never);

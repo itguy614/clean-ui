@@ -265,7 +265,7 @@ function onKeydown(e: KeyboardEvent) {
 // The ARIA combobox pattern, editable (#205) — see useListbox. Ids build on the control's own
 // `id` when it has one; useCuiId runs either way, for SSR-stable ids.
 const messages = useMessages();
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.combobox.placeholder);
 const noResultsLabel = computed(() => props.noResultsText ?? messages.value.combobox.noResults);
 const generatedId = useCuiId("combobox");
@@ -282,7 +282,7 @@ const listbox = useListbox({
   hasLabel: () => !!props.label,
   labelledby: () => props.ariaLabelledby,
   // Silent while searching, and while the min-chars hint shows instead; the panel's own
-  // empty text when nothing matches, so a localised noResultsText is what's heard.
+  // empty text when nothing matches, so a localized noResultsText is what's heard.
   announce: () => {
     if (!panelOpen.value || isLoading.value) return "";
     if (showFailed.value) return messages.value.listbox.searchFailed;

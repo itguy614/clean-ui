@@ -192,7 +192,7 @@ const panelStyle = {
     <div>
       <h1>Overlay</h1>
       <p class="cui-lead">
-        <code class="cui-code">useOverlay()</code> handles the behaviour behind
+        <code class="cui-code">useOverlay()</code> handles the behavior behind
         <code class="cui-code">CuiModal</code> and <code class="cui-code">CuiSlideover</code>: focus on
         open and back on close, a Tab focus trap, body scroll lock, Escape through the shared layer
         stack, and an exit animation delay.

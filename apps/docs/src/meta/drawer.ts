@@ -69,7 +69,7 @@ const meta: ComponentMeta = {
   ],
 
   tokens: [
-    { name: "--cui-drawer-width", default: "100%", description: "Width of the sheet, centred on the screen. Set it for a sheet narrower than the viewport" },
+    { name: "--cui-drawer-width", default: "100%", description: "Width of the sheet, centered on the screen. Set it for a sheet narrower than the viewport" },
     { name: "--cui-drawer-height", default: "per snap points", description: "Height of the sheet. Overrides the tallest snap point, so the rest positions go with it" },
     { name: "--cui-drawer-radius", default: "var(--cui-radius-lg)", description: "Radius of the sheet's top corners" },
   ],

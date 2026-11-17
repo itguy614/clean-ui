@@ -62,7 +62,7 @@ const locale = useLocale(); // ComputedRef<string>`;
     <CuiAlert color="info" title="Locale does not translate text">
       Translated strings come from the message catalogue, set under
       <router-link to="/foundations/localization">Foundations &rarr; Localization</router-link>.
-      Setting only one of the two gives a half-localised UI: a German catalogue with no
+      Setting only one of the two gives a half-localized UI: a German catalogue with no
       <code>locale</code> shows &ldquo;Heute&rdquo; beside &ldquo;Oct&rdquo;, and the reverse
       shows &ldquo;Okt&rdquo; beside &ldquo;Today&rdquo;.
     </CuiAlert>

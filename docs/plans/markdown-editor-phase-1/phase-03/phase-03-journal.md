@@ -42,7 +42,7 @@ a task — the tasks file tracks status, this file records why things happened.
   task 4.3.2 owns paste conversion + construct-policy enforcement together. Phase 03 only needed to
   prove plugins *can declare* `constructs`/`decorations` and have the registry collect them
   correctly — not rewire Phase 02's `SUPPORTED_CONSTRUCT_NODES` yet, which would have broken
-  Phase 02's already-shipped, already-tested default hiding behaviour the moment `DEFAULT_PLUGINS`
+  Phase 02's already-shipped, already-tested default hiding behavior the moment `DEFAULT_PLUGINS`
   (empty until Phase 04) became the source of truth.
 - **`CommandContext.doc`/`.selection` are live getters, not a snapshot.** This is what makes FR18a's
   "positions still valid if the user typed during the dialog" true for free: a command's `.then()`
@@ -83,11 +83,11 @@ a task — the tasks file tracks status, this file records why things happened.
   command/keybinding override with warnings naming both contributors, duplicate plugin id
   replacement, the default preset's own conflict-freedom, every context helper across empty/partial/
   multi-line selections, `replaceRanges` as one undo step, `collect()` resolve/cancel/live-position
-  behaviour, a throwing command/query degrading safely and reporting via `pluginError`, a real
+  behavior, a throwing command/query degrading safely and reporting via `pluginError`, a real
   keymap `KeyboardEvent` producing the same edit as `runCommand`, reactive `plugins` reconfiguration
   preserving document/history/cursor, and an invalid configuration being rejected without disturbing
   the previous one.
-- No Playwright/browser-level verification was needed this phase (unlike Phase 02) — every behaviour
+- No Playwright/browser-level verification was needed this phase (unlike Phase 02) — every behavior
   here is pure state/JS logic with no layout, CSS cascade, or accessibility-tree dependency, which is
   exactly the "jsdom where possible, browser where layout is involved" split task 3.2.4 asks for.
 - Full workspace regression: `pnpm -r build`, `pnpm -r --if-present test`, `pnpm verify:fixture` all

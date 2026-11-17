@@ -149,7 +149,7 @@ function onHexInput(val: string | number) {
           <CuiCard variant="outline">
             <CuiCardBody>
               <p class="mb-3 text-surface-600 dark:text-surface-400">
-                The picker's color maths is exported for use on its own — to normalise a value
+                The picker's color maths is exported for use on its own — to normalize a value
                 before storing it, to show it in another format, or to build a palette. Every
                 channel is 0–255; <code class="cui-code">RGB</code>, <code class="cui-code">RGBA</code>, <code class="cui-code">HSL</code>,
                 <code class="cui-code">HSV</code> and <code class="cui-code">ColorFormat</code> are exported as types.

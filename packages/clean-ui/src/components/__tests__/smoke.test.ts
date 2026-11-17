@@ -6,15 +6,15 @@ import * as CleanUI from "../../index";
 /**
  * Breadth smoke test: every public component must mount without throwing and
  * render a real root node. Depth (v-model, events, focus, keyboard) lives in the
- * per-component behaviour test files.
+ * per-component behavior test files.
  *
  * Sub-components that require a parent provider's injected context can't mount
  * standalone — they're SKIPPED here with a reason and covered by their parent's
- * behaviour tests.
+ * behavior tests.
  */
 
 // Sub-components that can't mount standalone (need a parent's injected context).
-// Each is exercised in its parent's behaviour test — referenced here so a "skip"
+// Each is exercised in its parent's behavior test — referenced here so a "skip"
 // reads as "covered elsewhere", not "untested".
 const SKIP: Record<string, string> = {
   CuiTab: "needs <CuiTabs> context — covered by CuiTabs.test.ts",

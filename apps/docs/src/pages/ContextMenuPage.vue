@@ -69,7 +69,7 @@ function openFromButton(e: MouseEvent) {
         A right-click is invisible and unreachable by half the people using your app, so the
         component summons the same menu three other ways. The panel itself is a
         <code>role="menu"</code> filled with the dropdown item components, so the roles and the
-        arrow-key behaviour are exactly Dropdown's.
+        arrow-key behavior are exactly Dropdown's.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>

@@ -73,8 +73,8 @@ describe("security: default configuration (no allowRawHtml)", () => {
 
   it("neutralises a javascript: bare/angle-bracket autolink", () => {
     // Not valid CommonMark autolink syntax in practice (autolinks require an
-    // http(s)/mailto-shaped body to be recognised at all), but asserted
-    // anyway: if the grammar ever did recognise one, the same URL policy
+    // http(s)/mailto-shaped body to be recognized at all), but asserted
+    // anyway: if the grammar ever did recognize one, the same URL policy
     // must still apply, not a different, unchecked path.
     const html = serializeMarkdownToHtml("<javascript:alert(1)>");
     expect(html).not.toContain("<a ");
@@ -118,7 +118,7 @@ describe("security: allowRawHtml + sanitize still neutralises scheme-based vecto
 describe("security: HTML smuggled through paste cannot be laundered into a raw-HTML render path", () => {
   it("a script tag pasted from a web page never becomes stored markdown that could render as raw HTML later", () => {
     // FR43: the paste converter has no rule matching <script> (or any
-    // element it doesn't recognise) — it degrades to plain text, so the
+    // element it doesn't recognize) — it degrades to plain text, so the
     // literal characters "<script>" never reach storage as executable
     // markup regardless of what render-time configuration is used later.
     const markdown = convertHtmlToMarkdown("<script>alert(document.cookie)</script>", [], new Set());
@@ -131,7 +131,7 @@ describe("security: HTML smuggled through paste cannot be laundered into a raw-H
     expect(adapter(markdown)).not.toContain("<script>");
   });
 
-  it("an event-handler attribute pasted on a recognised element (e.g. a link) is dropped, not preserved", () => {
+  it("an event-handler attribute pasted on a recognized element (e.g. a link) is dropped, not preserved", () => {
     const markdown = convertHtmlToMarkdown('<a href="https://example.com" onclick="alert(1)">link</a>', [], new Set());
     expect(markdown).not.toContain("onclick");
     expect(markdown).not.toContain("alert(1)");

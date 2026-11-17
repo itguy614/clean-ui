@@ -271,7 +271,7 @@ defineExpose({ scrollWrapper, measure });
   top: 0 !important;
   /* z-index intentionally NOT !important: a cell that is BOTH a sticky header
      and a sticky column (the top-left "corner") needs to layer above its
-     neighbours, which it does by setting a higher z-index inline. */
+     neighbors, which it does by setting a higher z-index inline. */
   z-index: 10;
   /* Token, not a raw scale step: CuiDataGrid pins its own header cells inline
      with the same token, and this !important would otherwise clobber a

@@ -131,7 +131,7 @@ const formAgree = ref(false);
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         The panel is a <code>role="dialog"</code> with <code>aria-modal="true"</code>, and the
-        overlay behaviour — focus, trapping, Escape and the scroll lock — lives in the shared
+        overlay behavior — focus, trapping, Escape and the scroll lock — lives in the shared
         <code>useOverlay</code> composable, so Modal, Slideover and Confirm Dialog all behave
         identically.
       </p>

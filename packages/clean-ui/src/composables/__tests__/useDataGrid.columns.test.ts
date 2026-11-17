@@ -77,7 +77,7 @@ describe("useDataGrid column definitions", () => {
     expect(grid.isDirty.value).toBe(false);
   });
 
-  it("a new column is placed after its neighbour in the user's order", async () => {
+  it("a new column is placed after its neighbor in the user's order", async () => {
     const columns = ref<DataGridColumn[]>([...base]);
     const grid = useDataGrid({ columns, data });
     grid.reorderColumns(0, 2); // email, role, name

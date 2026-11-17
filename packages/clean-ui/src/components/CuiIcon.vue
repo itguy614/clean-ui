@@ -153,7 +153,7 @@ watchEffect(() => {
   const resolver = getIconFallbackResolver();
   if (!resolver) {
     // Render the "?" glyph rather than nothing, so a typo is visible instead of
-    // silently blank — same as pre-1.1 behaviour for a bad name.
+    // silently blank — same as pre-1.1 behavior for a bad name.
     warnUnknown(props.name);
     asyncResolved.value = FALLBACK_ICON;
     return;

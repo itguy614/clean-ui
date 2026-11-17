@@ -113,7 +113,7 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   panel's width preset — CuiModal, a left/right CuiSlideover — which is not `CuiSize`; a
   top/bottom slideover's preset is `height` — #407), and `pressed-bg`, `pressed-color`,
   `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396). Private prefix matches the
-  public one (`--cui-button-bg` ↔ `--_button-bg`); normalise a component's old ad-hoc prefix
+  public one (`--cui-button-bg` ↔ `--_button-bg`); normalize a component's old ad-hoc prefix
   (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`, `--_rb-`, `--_check-`) when you convert it.
   The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)
   read their consumer's public tokens by `tokenPrefix` and map them onto `--_listbox-*`.
@@ -168,7 +168,7 @@ jarring appear/disappear. "It looks nice" is not one.
   rule. It is private only, with no public `--cui-*` token, since a consumer has nothing to
   restyle there: not one of the themeable slots. Never redo the side-to-origin mapping.
   Measure inside a panel that is still scaling in with `offset*` values, or after its
-  animation ends: a rect is the shrunken one. Modals stay centred.
+  animation ends: a rect is the shrunken one. Modals stay centered.
 - **Animate `transform` and `opacity` only.** No `width`/`height`/`max-height`/`top`/`left`/
   `margin`/`padding` animation; collapsibles use `grid-template-rows: 0fr → 1fr`. Never
   `transition: all`: name the properties.
@@ -195,7 +195,7 @@ jarring appear/disappear. "It looks nice" is not one.
   - Code that waits on a `transitionend` must first check that a transition actually started (`el.getAnimations().length`), since a snapped property fires none (as CuiAccordionItem does).
 - **Press feedback:** a pressed CuiButton shrinks to `--cui-press-scale` (0.97). It is 1
   under reduced motion, and wherever buttons are merged (CuiButtonGroup, CuiInput's attached
-  buttons), since a shrinking button opens a seam against its neighbour. Set the token on
+  buttons), since a shrinking button opens a seam against its neighbor. Set the token on
   the container.
 - **`CuiTransition`** (#397) is the one component for consumer content that appears and
   disappears: presets `fade`, `fade-slide`, `grow`, `collapse`, also exported as the classes

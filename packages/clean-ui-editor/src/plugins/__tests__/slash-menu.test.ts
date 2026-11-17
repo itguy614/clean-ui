@@ -11,7 +11,7 @@ import { italicPlugin } from "../builtin/italic";
 // selection logic — and needs real focus/layout jsdom's contenteditable
 // support can't reliably provide (confirmed empirically: even after
 // `view.focus()`, `view.hasFocus` stayed `false` in jsdom, and
-// `closeOnBlur` — correct, desired production behaviour — then closes the
+// `closeOnBlur` — correct, desired production behavior — then closes the
 // menu before its query resolves). That interactive path is verified in a
 // real browser instead; this covers the part that's actually this file's
 // own logic: which commands qualify (FR20) and in what order.

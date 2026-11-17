@@ -67,7 +67,7 @@ function convertNode(node: ChildNode, rules: readonly PasteRule[], activeConstru
 
 /**
  * FR28: converts pasted HTML to markdown through the active plugins' own
- * `paste` rules, honouring the loaded construct set. Never emits raw HTML —
+ * `paste` rules, honoring the loaded construct set. Never emits raw HTML —
  * an element with no matching rule contributes only its converted children
  * (recursing further), never its own tag; `SKIP_TAGS` elements contribute
  * nothing at all. This is also what keeps a hostile page's markup from

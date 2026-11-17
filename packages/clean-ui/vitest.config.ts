@@ -18,7 +18,7 @@ export default defineConfig({
     // "jsdom" is the existing component/composable suite; "ssr" proves
     // server-rendering properties jsdom can't (it always provides a DOM, so it
     // can't fail a component that wrongly touches one during setup()); "browser"
-    // covers layout/selection/input-method-dependent behaviour jsdom's no-op
+    // covers layout/selection/input-method-dependent behavior jsdom's no-op
     // layout engine can't verify either (getComputedStyle/scrollHeight are
     // always zero there).
     projects: [

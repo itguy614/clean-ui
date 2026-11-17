@@ -46,7 +46,7 @@ Settled before drafting; these constrain the requirements below.
 | Command execution | Commands are synchronous and return a boolean, as CodeMirror's own commands do; asynchronous work goes through named seams the editor owns | Positions go stale across an `await` and undo grouping becomes undefined; the editor should absorb that once rather than distribute it to every plugin author |
 | API stability tiers | Declarative tier is semver-major protected; the raw tier tracks the CodeMirror major it is built against and may break in an editor minor | The escape hatch's price, stated openly, so CodeMirror's release cadence cannot dictate ours |
 | Built-in actions | Implemented as plugins against the public plugin API and shipped as presets | Proves the API is sufficient, makes the documentation examples the library's own source, and lets an application omit what it does not use |
-| Construct policy | The loaded plugin set defines which constructs are allowed; commands, slash menu, paste conversion and decoration all honour it | Excluding a plugin should mean the construct cannot enter the document, not merely that a button is hidden |
+| Construct policy | The loaded plugin set defines which constructs are allowed; commands, slash menu, paste conversion and decoration all honor it | Excluding a plugin should mean the construct cannot enter the document, not merely that a button is hidden |
 | Plugin precedence | Array order, default preset applied first, later registration wins, conflicts warned | Makes overriding a built-in possible on purpose, and makes an accidental clash visible instead of order-dependent and silent |
 | Form integration | Composes `FormControlProps` and participates in `CuiForm` like every other control | A markdown field is a form field; validation errors and helper text need the same home they have on `CuiInput` |
 | Rendering to HTML | Injectable `render` adapter; the library's own implementation is an optional `/render` battery with raw HTML escaped by default | The editor needs no HTML at any phase, and an app that already renders markdown elsewhere must not end up with two renderers and two sanitiser policies over the same content |
@@ -110,7 +110,7 @@ Settled before drafting; these constrain the requirements below.
 
 **Typing ergonomics**
 
-- FR16: List behaviour: Enter continues the current item; Enter on an empty item exits the
+- FR16: List behavior: Enter continues the current item; Enter on an empty item exits the
   list; Tab and Shift-Tab indent and outdent; task items continue unchecked; ordered lists
   renumber.
 
@@ -118,8 +118,8 @@ Settled before drafting; these constrain the requirements below.
 
 - FR17: A plugin is declared with a single factory (`definePlugin`) exposing a unique `id`,
   named `commands`, and optionally: `toolbar` entries, a `keymap`, the `constructs` it
-  authorises, `paste` rules (source element to markdown emitter, each with an explicit degrade
-  target for FR28), `decorations` rules (parser node to marker-hiding behaviour), and raw
+  authorizes, `paste` rules (source element to markdown emitter, each with an explicit degrade
+  target for FR28), `decorations` rules (parser node to marker-hiding behavior), and raw
   CodeMirror `extensions`. The declarative fields are sufficient for every built-in, so no
   built-in needs privileged internal access.
 - FR18: A command is synchronous and returns a boolean indicating whether it handled the
@@ -177,9 +177,9 @@ Settled before drafting; these constrain the requirements below.
   default preset, or configuring a preset to omit individual actions.
 - FR27: A construct whose plugin is not loaded is absent from every authoring surface: no
   toolbar button, no keyboard shortcut, no slash-menu entry, no command.
-- FR28: Paste conversion honours the loaded construct set. HTML implying an unavailable
+- FR28: Paste conversion honors the loaded construct set. HTML implying an unavailable
   construct degrades to the nearest available representation, falling back to plain text.
-- FR29: Decoration honours the loaded construct set. An unavailable construct is not styled,
+- FR29: Decoration honors the loaded construct set. An unavailable construct is not styled,
   so its markers appear as ordinary text.
 - FR30: The policy's boundary is documented explicitly: it governs what the editor produces,
   converts and styles, and cannot prevent a user typing marker characters by hand.
@@ -206,7 +206,7 @@ Settled before drafting; these constrain the requirements below.
 - FR33: Pasting `text/html` converts it to markdown, preserving headings, emphasis, links,
   lists, code and tables, subject to FR28. Pasting plain text inserts verbatim.
 - FR34: A modifier-key paste inserts the clipboard as plain text without conversion.
-- FR35: In v1, a pasted or dropped image file is refused with a visible, localised message and
+- FR35: In v1, a pasted or dropped image file is refused with a visible, localized message and
   nothing is inserted. Images are authored by URL through the dialog in FR14.
 
 **Rendering**
@@ -235,7 +235,7 @@ Settled before drafting; these constrain the requirements below.
 - FR42: URL schemes are allowlisted (http, https, mailto, tel, relative) in both the supplied
   adapter and the FR14 link and image dialog. A `javascript:` URL in link syntax is valid
   CommonMark and is the most likely real vulnerability in this feature.
-- FR43: The paste converter never emits raw HTML. An element it does not recognise degrades to
+- FR43: The paste converter never emits raw HTML. An element it does not recognize degrades to
   text, so hostile markup pasted from a web page cannot be laundered into stored content that
   fires later on a render path with raw HTML enabled.
 - FR44: Rendered widgets, when they arrive in phase 2, are built by constructing DOM from the
@@ -279,7 +279,7 @@ Settled before drafting; these constrain the requirements below.
   permit inline styles.
 - NFR5: All user-visible strings resolve through clean-ui's message catalog under a new
   namespace, so they are overridable exactly like the rest of the library.
-- NFR6: Appearance derives from clean-ui tokens, honours dark mode and respects the density
+- NFR6: Appearance derives from clean-ui tokens, honors dark mode and respects the density
   scale. The package ships no hardcoded colors. This explicitly includes source-mode syntax
   highlighting: the CodeMirror `HighlightStyle` is built from `--cui-*` tokens rather than using
   CodeMirror's default palette. Tokens alone are not sufficient for dark mode, because
@@ -338,13 +338,13 @@ Settled before drafting; these constrain the requirements below.
 - [ ] A plugin contributing a raw CodeMirror extension, imported from this package's CodeMirror
       subpath, takes effect
 - [ ] A plugin declaring `constructs`, a `paste` rule and a `decorations` rule has all three
-      honoured, with no built-in relying on internal access the tier lacks
+      honored, with no built-in relying on internal access the tier lacks
 - [ ] Failure is contained: a command that throws surfaces through the error hook and leaves the
       editor usable; an invalid `plugins` value keeps the previous configuration with the
       document intact; a plugin stamped with an incompatible API version is rejected at
       registration naming the mismatch
 - [ ] `[click](javascript:alert(1))` is neither produced by the link dialog nor rendered as a
-      live link, and pasted HTML containing a script tag or unrecognised element yields text
+      live link, and pasted HTML containing a script tag or unrecognized element yields text
       rather than raw HTML in the stored markdown
 - [ ] With a strict `style-src` and a supplied `cspNonce`, the editor renders styled; without
       the nonce the failure is documented rather than mysterious
@@ -362,7 +362,7 @@ Settled before drafting; these constrain the requirements below.
       plain text, and hand-typed asterisks stay unstyled literal characters
 - [ ] Pasting HTML copied from a rendered page produces markdown preserving headings,
       emphasis, links, lists and a table; plain-text paste is verbatim
-- [ ] A pasted image file is refused with a localised message and nothing is inserted
+- [ ] A pasted image file is refused with a localized message and nothing is inserted
 - [ ] The core entry's built bundle contains no markdown-to-HTML renderer and no sanitiser,
       measured on a consumer build; importing `/render` adds them
 - [ ] A viewer driven by a consumer-supplied `render` adapter works with no import from
@@ -392,7 +392,7 @@ budget gate, and the test-environment matrix the criteria below assume.
       only in the raw-tier declarations, keeping the declarative tier portable
 - [ ] The core bundle stays within its committed budget, verified on a consumer build rather
       than on this package's own `dist`
-- [ ] Behaviour verified in a real browser, not only jsdom, for: marker reveal on cursor entry,
+- [ ] Behavior verified in a real browser, not only jsdom, for: marker reveal on cursor entry,
       touch-granularity reveal, paste conversion, slash-menu keyboard operation, IME
       composition, and toolbar overflow
 - [ ] Docs site builds and documents every prop, event, slot, command id and plugin hook
@@ -454,4 +454,4 @@ request beyond v1, which is why image upload heads phase 2.
 - WCAG 2.5.8 Target Size (Minimum):
   https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum
 - clean-ui conventions this package must follow: `CLAUDE.md` in this repository
-- Icon registry behaviour and its rationale: clean-ui issue #42 and `CHANGELOG.md` 1.1.0
+- Icon registry behavior and its rationale: clean-ui issue #42 and `CHANGELOG.md` 1.1.0

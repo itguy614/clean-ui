@@ -18,7 +18,7 @@ import {
 const meta: ComponentMeta = {
   name: "Slideover",
   description:
-    "A panel that slides in from any edge of the viewport. Shares CuiModal's overlay behaviour — focus trap, scroll lock, backdrop — and is assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-slideover__panel), the element actually rendered, rather than being dropped at its teleported root.",
+    "A panel that slides in from any edge of the viewport. Shares CuiModal's overlay behavior — focus trap, scroll lock, backdrop — and is assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-slideover__panel), the element actually rendered, rather than being dropped at its teleported root.",
   interactive: true,
 
   parts: [

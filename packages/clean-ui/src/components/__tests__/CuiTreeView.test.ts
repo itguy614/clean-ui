@@ -164,7 +164,7 @@ describe("CuiTreeView chevron hit target", () => {
   it("keeps the caret optically in place by offsetting the wider box", () => {
     const wrapper = mount(CuiTreeView, { props: { ...baseProps, size: "sm" } });
 
-    // The stylesheet's margin is -(hitSize - iconSize)/2, so the glyph's centre doesn't
+    // The stylesheet's margin is -(hitSize - iconSize)/2, so the glyph's center doesn't
     // move and stays aligned with the showLines connectors: it reads both from the root.
     expect(rootVar(wrapper, "icon-size")).toBe("0.75rem");
     expect(rootVar(wrapper, "height")).toBe(scaleControlHeight("0.75rem"));

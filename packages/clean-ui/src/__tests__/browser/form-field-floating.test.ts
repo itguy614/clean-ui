@@ -78,17 +78,17 @@ describe("CuiFormField floating label (real browser)", () => {
     const l = rect(label), b = rect(box);
     return l.top >= b.top - 0.5 && l.bottom <= b.bottom + 0.5 && l.left >= b.left - 0.5 && l.right <= b.right + 0.5;
   }
-  /** The value's line box: centred in the native input's content box, line-height 1.25. */
+  /** The value's line box: centered in the native input's content box, line-height 1.25. */
   function valueLine(native: HTMLElement) {
     const r = rect(native);
     const top = r.top + px(native, "padding-top"), bottom = r.bottom - px(native, "padding-bottom");
     const v = px(native, "font-size") * 1.25;
     return { top: (top + bottom) / 2 - v / 2, bottom: (top + bottom) / 2 + v / 2 };
   }
-  /** Resting: the label is the value's size, centred in the box. */
+  /** Resting: the label is the value's size, centered in the box. */
   const rests = (label: HTMLElement, box: HTMLElement) => Math.abs(mid(rect(label)) - mid(rect(box))) < 1;
 
-  it("rests centred where the text starts, and floats inside the box above the value", async () => {
+  it("rests centered where the text starts, and floats inside the box above the value", async () => {
     const { label, box, native } = field(CuiInput);
     await frames(2);
     expect(rests(label, box)).toBe(true);
@@ -106,7 +106,7 @@ describe("CuiFormField floating label (real browser)", () => {
     // 12px in a 15px line box, at the same start: no translateX.
     expect(floated.height).toBeCloseTo(15, 0);
     expect(Math.abs(floated.left - resting.left)).toBeLessThan(1);
-    // Directly above the value, the two centred in the box as a pair.
+    // Directly above the value, the two centered in the box as a pair.
     const value = valueLine(native);
     expect(Math.abs(floated.bottom - value.top)).toBeLessThan(1);
     expect(Math.abs((floated.top + value.bottom) / 2 - mid(rect(box)))).toBeLessThan(1);
@@ -195,7 +195,7 @@ describe("CuiFormField floating label (real browser)", () => {
     expect(overlaps(rect(label), rect(icon))).toBe(false);
   });
 
-  it("keeps the clear and password buttons centred on the full height, clear of a resting label", async () => {
+  it("keeps the clear and password buttons centered on the full height, clear of a resting label", async () => {
     const long = "Preferred contact email address for receipts and invoices";
     const { root, label, box } = field(CuiInput, { label: long }, { type: "password" });
     await frames(2);
@@ -284,7 +284,7 @@ describe("CuiFormField floating label (real browser)", () => {
     const { label } = field(CuiInput, {}, { modelValue: "ada@example.com" });
     await frames(2);
     const l = rect(label);
-    // What a real click at the label's centre would hit.
+    // What a real click at the label's center would hit.
     const hit = document.elementFromPoint((l.left + l.right) / 2, (l.top + l.bottom) / 2);
     expect(hit?.closest("label")).toBe(label.parentElement);
   });

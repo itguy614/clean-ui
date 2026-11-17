@@ -99,7 +99,7 @@ function clearQuery() {
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const messages = useMessages();
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.tagInput.placeholder);
 const noSuggestionsLabel = computed(() => props.noSuggestionsText ?? messages.value.tagInput.noSuggestions);
 // `createText`, when given, keeps its old shape: the word, then the quoted value.

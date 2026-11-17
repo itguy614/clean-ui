@@ -66,7 +66,7 @@ function go(e, id) {
 </template>`;
 
 const pageCode = `// The whole page scrolls: leave root out. The docs header is 56px tall; the headings' own
-// scroll-margin-top (4.5rem, for #hash links) is larger, and scrollTo honours it.
+// scroll-margin-top (4.5rem, for #hash links) is larger, and scrollTo honors it.
 const { activeId, scrollTo } = useScrollSpy(
   () => headings.value.map((h) => h.id),
   { rootMargin: "0px 0px -80% 0px", offset: 56, initial: () => headings.value[0]?.id },

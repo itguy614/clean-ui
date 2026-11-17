@@ -6,7 +6,7 @@ import { resolve } from "node:path";
  * #238 — a <button> with no `type` is a submit button, so any component that renders one
  * submits the surrounding <form> when it is clicked. CuiTabs did it on every tab switch
  * (fixed in #167), and CuiPagination and CuiDataGridViewManager still did when this guard
- * was added. A per-component behaviour test only protects that component; this one reads
+ * was added. A per-component behavior test only protects that component; this one reads
  * every component template, so the next untyped button fails here instead of in a
  * consumer's form.
  *

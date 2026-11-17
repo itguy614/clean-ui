@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<CuiCopyButtonProps>(), {
   hidden: false,
 });
 
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const messages = useMessages();
 const tooltipText = computed(() => props.tooltip ?? messages.value.copyButton.copy);
 const copiedText = computed(() => props.copiedTooltip ?? messages.value.copyButton.copiedTooltip);

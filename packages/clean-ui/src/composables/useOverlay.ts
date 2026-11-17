@@ -97,7 +97,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   const isAnimating = ref(false);
   const previousFocus = ref<HTMLElement | null>(null);
   // The opener's restore key, if it carries one: what brings it back if it has unmounted by
-  // the time this closes (a virtualised grid row, #232).
+  // the time this closes (a virtualized grid row, #232).
   let previousFocusKey: string | null = null;
   // Open from openOverlay() until closeOverlay() starts the exit, so Escape goes to the
   // layer beneath while this one animates out.

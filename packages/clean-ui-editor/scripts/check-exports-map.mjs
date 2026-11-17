@@ -1,6 +1,6 @@
 /**
  * Asserts the package's `exports` map is explicit (#229): every public entry is listed by
- * name, there is no wildcard, and the built `dist` honours the map, from the consumer's side.
+ * name, there is no wildcard, and the built `dist` honors the map, from the consumer's side.
  *
  * The map used to end in `"./*": "./dist/*"`, which made every file under `dist` a public
  * module (`@itguy614/clean-ui-editor/messages.js`, `/plugins/registry.js`, ...), so renaming

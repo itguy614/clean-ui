@@ -32,7 +32,7 @@ import meta from "../meta/kbd";
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         Renders a native <code>&lt;kbd&gt;</code>, so the key is announced as user input
-        rather than as ordinary prose, and the element carries no role or focus behaviour
+        rather than as ordinary prose, and the element carries no role or focus behavior
         of its own — it is a label, not a control.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">

@@ -5,7 +5,7 @@ import { FLOATING_LABEL_SCALE, type FloatingLabelSize } from "../utils/sizing";
 /**
  * How a control's floating label rests (#191), which only the control knows:
  *
- * - `inline` — a single-line input: the label rests centred in it, where the text starts
+ * - `inline` — a single-line input: the label rests centered in it, where the text starts
  *   (after a leading icon), and floats to the top of the box above the value.
  * - `multiline` — a textarea: the label rests on the first line.
  * - `pinned` — something already sits where the label would rest (a prefix, an attached

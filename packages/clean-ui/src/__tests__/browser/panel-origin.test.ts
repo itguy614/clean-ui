@@ -15,7 +15,7 @@ import { motionDuration } from "../../utils/motion";
 import { PANEL_OFFSET } from "../../utils/position";
 
 /**
- * #262 — every floating panel scaled from its centre, so one below its trigger grew outward
+ * #262 — every floating panel scaled from its center, so one below its trigger grew outward
  * in every direction. It now grows from the edge facing the trigger, after a flip too, on
  * both positioning paths: Floating UI (usePopover) and computeDropdownPosition.
  */
@@ -35,7 +35,7 @@ describe("floating panels grow out of their trigger (real browser)", () => {
   function host(at: "top" | "bottom") {
     const el = document.createElement("div");
     el.id = "origin-host";
-    // Mid-row, so a centred panel fits across: only the vertical side is in question.
+    // Mid-row, so a centered panel fits across: only the vertical side is in question.
     el.style.cssText = `position: fixed; left: 160px; ${at}: 0;`;
     document.body.append(el);
     return el;

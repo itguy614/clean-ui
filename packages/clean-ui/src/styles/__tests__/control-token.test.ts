@@ -190,7 +190,7 @@ describe("converted components emit themeable properties as tokens (#114)", () =
           new RegExp(`(^|[{,\\s])${prop}\\s*:\\s*[\`"']`, "m").test(script) ||
           // Or an assignment onto a style object, `base.background = …` (#211: CuiAlert, CuiToast
           // and CuiBackdrop built their paint that way, and passed). A direct DOM write —
-          // `el.style.height = …`, CuiTextarea's autosize — is behaviour, not a binding.
+          // `el.style.height = …`, CuiTextarea's autosize — is behavior, not a binding.
           new RegExp(`(?<!\\.style)\\.${prop}\\s*=[^=]`, "m").test(script),
       );
 

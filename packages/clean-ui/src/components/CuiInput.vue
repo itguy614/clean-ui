@@ -320,8 +320,8 @@ function prefixIsIcon(): boolean {
 /* --- Floating label (#191) ---
    The field's label sits inside the box, above the value: the value (and prefix or suffix
    text beside it, so their baselines match) is pushed down by the floated label's line
-   box, and stays centred in what is left. An icon, like the clear and password buttons,
-   stays centred on the full height. */
+   box, and stays centered in what is left. An icon, like the clear and password buttons,
+   stays centered on the full height. */
 :where(.cui-input--floating .cui-input__native, .cui-input--floating :is(.cui-input__prefix, .cui-input__suffix):not(:has(> .cui-icon:only-child))) {
   align-self: stretch;
   padding-top: var(--_input-float-offset);
@@ -329,7 +329,7 @@ function prefixIsIcon(): boolean {
 
 /* A resting label stands where the placeholder would, so it shows only once the label has
    floated: on focus. A pinned label never rests, so its control's placeholder always shows.
-   Behaviour rather than paint, so at normal specificity, above the placeholder color. */
+   Behavior rather than paint, so at normal specificity, above the placeholder color. */
 .cui-input__native[data-cui-float-label]:not([data-cui-float-label~="pinned"]):not(:focus)::placeholder {
   color: transparent;
 }

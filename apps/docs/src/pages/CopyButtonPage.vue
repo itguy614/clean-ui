@@ -54,7 +54,7 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
       <div>
         <h2 id="usecopytoclipboard" class="mb-4 text-2xl font-semibold">useCopyToClipboard</h2>
         <p class="mb-4 text-surface-600 dark:text-surface-400">
-          The composable behind the button, for when you want the behaviour without this
+          The composable behind the button, for when you want the behavior without this
           button — a copy action in a dropdown, a whole row that copies on click.
         </p>
         <Example

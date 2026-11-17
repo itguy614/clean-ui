@@ -208,7 +208,7 @@ function renderNode(node: SyntaxNode, markdown: string, ctx: SerializeOptions): 
       // A Link/Image/Autolink's own URL child is consumed by that parent's
       // handler via getChild — the generic child walk still visits it
       // (renderChildren has no way to skip just one specific child), so it
-      // must recognise and skip that case here rather than double-render.
+      // must recognize and skip that case here rather than double-render.
       const parentName = node.parent?.type.name;
       if (parentName === "Link" || parentName === "Image" || parentName === "Autolink") return "";
       return renderBareUrl(node, markdown); // bare GFM-detected autolink
@@ -225,7 +225,7 @@ function renderNode(node: SyntaxNode, markdown: string, ctx: SerializeOptions): 
     case "HTMLTag":
       return renderRawHtml(node, markdown, ctx);
     default:
-      // An unrecognised node (future grammar additions, or an extension
+      // An unrecognized node (future grammar additions, or an extension
       // this file hasn't been taught about) degrades to its own escaped
       // text rather than either crashing or silently vanishing.
       return renderChildren(node, markdown, ctx);

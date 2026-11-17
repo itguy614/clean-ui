@@ -15,7 +15,7 @@ import { panelTransition } from "../utils/motion";
 /**
  * How the menu can be summoned.
  *
- * `contextmenu` is the default and the only behaviour before #60 — the native
+ * `contextmenu` is the default and the only behavior before #60 — the native
  * event, i.e. right-click or the OS long-press callout.
  *
  * `longpress` adds a pointer hold. It is opt-in because suppressing the iOS
