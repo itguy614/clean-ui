@@ -3,9 +3,11 @@ import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from
 import CuiModal from "./CuiModal.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiKbd from "./CuiKbd.vue";
+import CuiSpinner from "./CuiSpinner.vue";
 import CuiListboxOption from "./CuiListboxOption.vue";
 import { IconMagnifyingGlass } from "../icons/generated/magnifying-glass";
 import { useCuiId } from "../composables/useCuiId";
+import { useAsyncSearch } from "../composables/useAsyncSearch";
 import { useEventListener } from "../composables/useEventListener";
 import { followHighlight, useListbox } from "../composables/useListbox";
 import { firstIndex } from "../composables/useListNavigation";
@@ -39,8 +41,18 @@ export interface CuiCommandPaletteProps extends HideableProps, ColorableProps, O
   recent?: number;
   /** A localStorage key to keep the recents under, across visits. Unset, they last until the page unloads. */
   recentsStorageKey?: string;
-  /** The most results listed, across groups. */
+  /** The most local results listed, across groups. Async results are the server's to limit. */
   maxResults?: number;
+  /**
+   * Search somewhere else as well: called with the query and `{ signal }` after the debounce.
+   * Its commands are listed under "Results", after the local ones, in the order returned and
+   * not matched or ranked again. Only the latest search lands; the one before is aborted.
+   */
+  fetchCommands?: (query: string, context: { signal: AbortSignal }) => Promise<CuiCommand[]>;
+  /** Milliseconds to wait after typing before `fetchCommands` is called. */
+  debounce?: number;
+  /** The fewest characters that start a `fetchCommands` search. */
+  minChars?: number;
 }
 
 // The root is a CuiModal (a Teleport), which takes the class onto its panel (#228).
@@ -51,6 +63,8 @@ const props = withDefaults(defineProps<CuiCommandPaletteProps>(), {
   hotkey: "mod+k",
   recent: 5,
   maxResults: 100,
+  debounce: 300,
+  minChars: 1,
   hidden: false,
   initialFocus: undefined,
   returnFocus: undefined,
@@ -85,6 +99,19 @@ watch(() => props.visible, (v) => { if (v !== undefined) open.value = v; }, { im
 watch(open, (v) => emit("update:visible", v));
 
 const query = ref("");
+
+// fetchCommands: debounced, latest-only, cancelled below minChars and on unmount.
+const remote = useAsyncSearch<CuiCommand>({
+  fetch: () => props.fetchCommands,
+  query: () => query.value,
+  debounce: () => props.debounce,
+  minChars: () => props.minChars,
+});
+watch(query, (q) => {
+  if (props.fetchCommands) remote.search(q);
+});
+// Whether the typed query is one that asks the server.
+const searching = computed(() => !!props.fetchCommands && query.value.length >= props.minChars);
 const activeIndex = ref(-1);
 
 // --- The commands ---
@@ -106,6 +133,7 @@ interface Section {
 }
 
 const RECENT_GROUP = "\0recent";
+const RESULTS_GROUP = "\0results";
 
 // Highest first, then the order the commands (and so the groups) first appeared in.
 const sections = computed<Section[]>(() => {
@@ -182,10 +210,29 @@ const sections = computed<Section[]>(() => {
       rows,
     });
   }
+
+  // The server's answer goes last, as it came: a command already listed above (the local one
+  // wins) is not listed twice.
+  if (searching.value) {
+    const listed = new Set(result.flatMap((s) => s.rows.map((r) => r.command.id)));
+    const found = remote.results.value.filter((c) => !listed.has(c.id));
+    if (found.length) {
+      result.push({
+        id: RESULTS_GROUP,
+        label: messages.value.commandPalette.results,
+        rows: found.map((command): Row => ({ command, index: index++, segments: highlightSegments(command.label, []) })),
+      });
+    }
+  }
   return result;
 });
 
 const rows = computed(() => sections.value.flatMap((s) => s.rows));
+
+// What the status line under the list says, if anything: a failed search, a search with nothing
+// to show yet, or nothing found (only once the search for what is typed now has come back).
+const failed = computed(() => searching.value && !!remote.error.value && remote.answered.value);
+const waiting = computed(() => searching.value && !rows.value.length && (remote.pending.value || !remote.answered.value) && !failed.value);
 
 // --- Combobox: focus stays in the input, the highlight is aria-activedescendant ---
 const id = useCuiId("command-palette");
@@ -201,7 +248,12 @@ const listbox = useListbox({
   open: () => {},
   select: choose,
   hasLabel: () => false,
-  announce: () => (!open.value ? "" : rows.value.length ? messages.value.listbox.results(rows.value.length) : messages.value.commandPalette.noResults),
+  // Silent while a search is out: the count is announced once, when it has landed.
+  announce: () => {
+    if (!open.value || (searching.value && (remote.pending.value || !remote.answered.value))) return "";
+    if (failed.value) return messages.value.listbox.searchFailed;
+    return rows.value.length ? messages.value.listbox.results(rows.value.length) : messages.value.commandPalette.noResults;
+  },
 });
 
 const items = () => ({ count: rows.value.length, isDisabled: (i: number) => !!rows.value[i]?.command.disabled });
@@ -227,6 +279,8 @@ watch(query, () => {
 let pending: CuiCommand | null = null;
 
 watch(open, (isOpen) => {
+  // Opening or closing ends any search: nothing in flight outlives the palette's visit.
+  remote.reset();
   if (!isOpen) return;
   // Reopened before the last choice ran (its exit was cut short): run it now.
   flush();
@@ -329,7 +383,7 @@ const vars = computed(() => ({
   "--_listbox-item-disabled-color": "var(--cui-text-tertiary)",
 }));
 
-const headingId = (section: string) => `${id}-heading-${section === RECENT_GROUP ? "recent" : section}`;
+const headingId = (section: string) => `${id}-heading-${section.replace("\0", "")}`;
 const shortcuts = (command: CuiCommand) => (command.shortcut === undefined ? [] : Array.isArray(command.shortcut) ? command.shortcut : [command.shortcut]);
 // CuiIcon takes a name and a component as separate props, so forward by type.
 const iconProps = (icon: NonNullable<CuiCommand["icon"]>) => (typeof icon === "string" ? { name: icon } : { icon });
@@ -377,6 +431,7 @@ defineExpose({
           spellcheck="false"
           @keydown="listbox.onKeydown"
         />
+        <span class="cui-command-palette__busy" aria-hidden="true"><CuiSpinner v-if="remote.pending.value" size="xs" /></span>
       </div>
 
       <div
@@ -386,6 +441,7 @@ defineExpose({
         role="listbox"
         class="cui-command-palette__list"
         :aria-label="resolvedLabel"
+        :aria-busy="remote.pending.value ? 'true' : undefined"
       >
         <div
           v-for="section in sections"
@@ -421,7 +477,9 @@ defineExpose({
         </div>
       </div>
 
-      <div v-if="!rows.length" class="cui-command-palette__empty">
+      <div v-if="failed" class="cui-command-palette__empty">{{ messages.listbox.searchFailed }}</div>
+      <div v-else-if="waiting" class="cui-command-palette__empty">{{ messages.commandPalette.searching }}</div>
+      <div v-else-if="!rows.length" class="cui-command-palette__empty">
         <slot name="empty" :query="query">{{ messages.commandPalette.noResults }}</slot>
       </div>
 
@@ -555,6 +613,14 @@ defineExpose({
 
 .cui-command-palette__icon {
   flex: none;
+}
+
+/* Always there, so the spinner appearing moves nothing. */
+.cui-command-palette__busy {
+  display: inline-flex;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
 }
 
 .cui-command-palette__text {

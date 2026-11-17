@@ -28,6 +28,28 @@ const palette = useCommandPalette();
 
 const lastRan = ref("(nothing yet)");
 
+// A large "server" the palette searches as you type: 2,000 records, a slow answer, and a log
+// of what happened to each search so the cancellation is visible.
+const RECORDS = Array.from({ length: 2000 }, (_, i) => `${["Customer", "Invoice", "Order", "Ticket"][i % 4]} ${String(i + 1).padStart(4, "0")}`);
+const searchLog = ref<string[]>([]);
+const note = (line: string) => (searchLog.value = [line, ...searchLog.value].slice(0, 5));
+function searchRecords(query: string, { signal }: { signal: AbortSignal }): Promise<CuiCommand[]> {
+  note(`“${query}” sent`);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      const q = query.toLowerCase();
+      const hits = RECORDS.filter((r) => r.toLowerCase().includes(q)).slice(0, 12);
+      note(`“${query}” answered (${hits.length} shown)`);
+      resolve(hits.map((label) => ({ id: `record.${label}`, label, description: "Record", icon: "file", action: () => (lastRan.value = label) })));
+    }, 1200);
+    signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      note(`“${query}” aborted`);
+      reject(new DOMException("aborted", "AbortError"));
+    });
+  });
+}
+
 const groups: CuiCommandGroup[] = [
   { id: "actions", label: "Actions", priority: 2 },
   { id: "page", label: "This page", priority: 3 },
@@ -152,6 +174,15 @@ const slotsCode = `<CuiCommandPalette :groups="groups">
   <template #empty="{ query }">Nothing called “{{ query }}”. Try another word.</template>
 </CuiCommandPalette>`;
 
+const fetchCode = `<CuiCommandPalette :fetch-commands="search" :debounce="300" :min-chars="2" />
+
+<script setup>
+async function search(query, { signal }) {
+  const res = await fetch(\`/api/search?q=\${encodeURIComponent(query)}\`, { signal });
+  return (await res.json()).map((r) => ({ id: r.id, label: r.title, description: r.kind, action: () => router.push(r.url) }));
+}
+<\/script>`;
+
 const hotkeyCode = `<!-- Rebind it -->
 <CuiCommandPalette hotkey="mod+shift+p" />
 
@@ -170,8 +201,11 @@ const hotkeyCode = `<!-- Rebind it -->
           </span>
         </CuiFlex>
         <p style="margin: 0.75rem 0 0">Last run: <CuiBadge>{{ lastRan }}</CuiBadge></p>
+        <ol v-if="searchLog.length" aria-label="Search log" style="margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.8125rem">
+          <li v-for="(line, i) in searchLog" :key="i + line">{{ line }}</li>
+        </ol>
 
-        <CuiCommandPalette :groups="groups" :max-results="30" :recent="3" @select="lastRan = $event.label">
+        <CuiCommandPalette :groups="groups" :max-results="30" :recent="3" :fetch-commands="searchRecords" @select="lastRan = $event.label">
           <template v-if="customRows" #item="{ command, active, segments }">
             <span style="flex: 1 1 auto">
               <template v-for="(s, i) in segments" :key="i">
@@ -196,6 +230,7 @@ const hotkeyCode = `<!-- Rebind it -->
             <li>Run <em>Show a toast</em>, then reopen: it is now under <em>Recent</em>, above the other groups, with nothing typed. ({{ recents }} recent so far.)</li>
             <li>Type <kbd>modal</kbd> and press Enter on a <em>Go to</em> row: the page changes after the palette has closed, and focus is back where you opened it from.</li>
             <li>Switch on <em>Contribute a command from this route</em>: a <em>This page</em> group appears, first. Switch it off, or leave this page, and it is withdrawn.</li>
+            <li>Type <kbd>cust</kbd>, wait a second: a <em>Results</em> group of customer records lands after the local rows, with a spinner in the field while it is out. Now type <kbd>invoice 12</kbd> quickly, a letter at a time: the log shows each earlier search <em>aborted</em> and only the last one answered. Your highlight stays on its row when the results arrive, and Enter runs it even while the search is out.</li>
             <li>Press the shortcut with a screen reader running, and type: the number of results is announced a moment after you stop typing.</li>
           </ul>
         </CuiCardBody>
@@ -244,6 +279,27 @@ const hotkeyCode = `<!-- Rebind it -->
           <li>A command found only through its <code>keywords</code> or <code>description</code> ranks below one found by its label, and highlights nothing. Accents are not folded: <code>cafe</code> does not find <em>Café</em>.</li>
           <li>Results stay in their groups. Groups run by <code>priority</code> then registration order, and, while nothing is typed, <em>Recent</em> comes first and its commands are not repeated in their own group.</li>
         </ul>
+      </div>
+
+      <div>
+        <h2 id="async-search" class="mb-4 text-2xl font-semibold">Searching a server</h2>
+        <p class="mb-4 text-surface-700 dark:text-surface-300">
+          For a palette that is more a search tool than a list of actions, give it
+          <code>fetchCommands(query, &#123; signal &#125;)</code>. Registered commands stay instant and keep their
+          fuzzy match and highlight; what the server returns is listed under <em>Results</em> after them, in the
+          order it came back and not matched or ranked again, with any command the local list already shows
+          dropped. Only the latest search lands: the one before it is aborted through <code>signal</code> (pass it
+          to <code>fetch</code>), nothing is sent below <code>minChars</code>, and closing or unmounting cancels
+          what is in flight.
+        </p>
+        <ul class="mb-4 list-disc pl-5 text-surface-700 dark:text-surface-300">
+          <li>While a search is out the field shows a spinner and the list is <code>aria-busy</code>. "No matching commands" is claimed only once the search for what is typed now has come back; a failed search says so and never leaves the palette loading.</li>
+          <li>The result count is announced once, when the search has landed, not per keystroke.</li>
+          <li>The highlight does not move when results arrive, and Enter while one is out runs the highlighted local command. A chosen server command emits <code>select</code> and runs its <code>action</code> after the close like any other, and is remembered in the recents.</li>
+        </ul>
+        <Example title="fetchCommands" :code="fetchCode">
+          <p style="margin: 0">The palette above searches 2,000 records with a 1.2 second answer. Watch the log under it.</p>
+        </Example>
       </div>
 
       <div>

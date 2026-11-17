@@ -54,7 +54,15 @@ const meta: ComponentMeta = {
       type: "string",
       description: "A localStorage key to keep the recents under, across visits. Unset, they last until the page unloads",
     },
-    { name: "maxResults", type: "number", default: "100", description: "The most results listed, across groups" },
+    { name: "maxResults", type: "number", default: "100", description: "The most local results listed, across groups. Results from fetchCommands are the server's to limit" },
+    {
+      name: "fetchCommands",
+      type: "(query, { signal }) => Promise<CuiCommand[]>",
+      description:
+        "Search somewhere else as well. Called after the debounce; its commands are listed under Results after the local ones, in the order returned, not matched or ranked again, with ids the local list already shows dropped. Only the latest search lands and the one before is aborted through signal. A failure shows a message and clears the spinner",
+    },
+    { name: "debounce", type: "number", default: "300", description: "Milliseconds to wait after typing before fetchCommands is called" },
+    { name: "minChars", type: "number", default: "1", description: "The fewest characters that start a fetchCommands search. Below it nothing is sent and earlier results are dropped" },
     colorProp("Color role of the highlighted row, the match underline and the focus ring"),
     ...overlayFocusProps.map((p) =>
       p.name === "initialFocus"

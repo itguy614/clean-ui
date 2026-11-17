@@ -155,6 +155,39 @@ describe("CuiCommandPalette (real browser)", () => {
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
   });
 
+  it("searches a server as you type: fast typing sends one search, slow typing aborts the earlier, and the highlight stays put when results land", async () => {
+    const calls: Array<{ query: string; signal: AbortSignal; resolve: (r: Array<{ id: string; label: string }>) => void }> = [];
+    setup(
+      [
+        { id: "a", label: "Alpha one" },
+        { id: "b", label: "Alpha two" },
+      ],
+      {
+        debounce: 80,
+        fetchCommands: (query: string, { signal }: { signal: AbortSignal }) =>
+          new Promise((resolve) => calls.push({ query, signal, resolve })),
+      },
+    );
+    await userEvent.click(document.querySelector('[data-t="opener"]')!);
+    await settle();
+    await userEvent.keyboard("alph");
+    await wait(300);
+    expect(calls.map((c) => c.query), "four keystrokes inside the debounce make one search").toEqual(["alph"]);
+    await userEvent.keyboard("a");
+    await wait(300);
+    expect(calls.map((c) => c.query)).toEqual(["alph", "alpha"]);
+    expect(calls[0].signal.aborted, "the earlier search is aborted in a real browser").toBe(true);
+    expect(document.querySelector('[role="listbox"]')!.getAttribute("aria-busy")).toBe("true");
+
+    await userEvent.keyboard("{ArrowDown}");
+    const active = () => document.getElementById(input().getAttribute("aria-activedescendant")!)!.textContent;
+    expect(active()).toContain("Alpha two");
+    calls[1].resolve([{ id: "r1", label: "Alpha from the server" }]);
+    await vi.waitFor(() => expect(labels()).toContain("Alpha from the server"));
+    expect(active(), "the highlight did not move").toContain("Alpha two");
+    expect(document.querySelector('[role="listbox"]')!.getAttribute("aria-busy")).toBeNull();
+  });
+
   // The look (#197 review): it has to stand off the page in dark mode, not only light.
   const rgba = (css: string): [number, number, number, number] => {
     const c = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;

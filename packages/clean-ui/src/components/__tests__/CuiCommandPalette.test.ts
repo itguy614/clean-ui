@@ -168,7 +168,7 @@ describe("CuiCommandPalette", () => {
     const wrapper = await open();
     vi.useFakeTimers();
     await type("file");
-    const live = () => document.querySelector('[role="status"]')!.textContent;
+    const live = () => document.querySelector<HTMLElement>('.cui-sr-only[role="status"]')!.textContent;
     expect(live()).toBe("");
     vi.advanceTimersByTime(700);
     await nextTick();
@@ -485,5 +485,224 @@ describe("CuiCommandPalette hotkey", () => {
     await settle();
     expect(input()).not.toBeNull();
     wrapper.unmount();
+  });
+});
+
+describe("CuiCommandPalette fetchCommands (async search)", () => {
+  interface Pending {
+    query: string;
+    signal: AbortSignal;
+    resolve: (found: CuiCommand[]) => void;
+    reject: (err: unknown) => void;
+  }
+  /** A fetchCommands whose every call waits to be answered by the test. */
+  function remote() {
+    const calls: Pending[] = [];
+    const fetchCommands = vi.fn(
+      (query: string, { signal }: { signal: AbortSignal }) =>
+        new Promise<CuiCommand[]>((resolve, reject) => calls.push({ query, signal, resolve, reject })),
+    );
+    return { calls, fetchCommands };
+  }
+  const wait = (ms = 20) => new Promise((r) => setTimeout(r, ms));
+  const found = (...labels: string[]): CuiCommand[] => labels.map((label) => ({ id: `r:${label}`, label }));
+  const status = () => document.querySelector(".cui-command-palette__empty")?.textContent?.trim();
+  const list = () => document.querySelector('[role="listbox"]')!;
+
+  async function openWith(props: Record<string, unknown> = {}) {
+    registerScoped([{ id: "local", label: "Open settings" }, { id: "other", label: "Close window" }]);
+    const r = remote();
+    const wrapper = await open({ fetchCommands: r.fetchCommands, debounce: 0, ...props });
+    return { ...r, wrapper };
+  }
+
+  it("lists the local matches first, then the server's under Results, as returned and not highlighted", async () => {
+    const { calls, wrapper } = await openWith();
+    await type("set");
+    await wait();
+    expect(labels()).toEqual(["Open settings"]);
+    expect(document.querySelectorAll(".cui-command-palette__match").length).toBeGreaterThan(0);
+    calls[0].resolve(found("Zebra settings", "Apple settings"));
+    await settle();
+    expect(labels()).toEqual(["Open settings", "Zebra settings", "Apple settings"]);
+    expect(headings().at(-1)).toBe("Results");
+    expect(options()[1].querySelector(".cui-command-palette__match")).toBeNull();
+    wrapper.unmount();
+  });
+
+  it("lists a command the local list already shows once, the local one winning", async () => {
+    const { calls, wrapper } = await openWith();
+    await type("set");
+    await wait();
+    calls[0].resolve([{ id: "local", label: "Remote copy" }, ...found("Other")]);
+    await settle();
+    expect(labels()).toEqual(["Open settings", "Other"]);
+    wrapper.unmount();
+  });
+
+  it("lets only the latest search land, and aborts the one before it", async () => {
+    const { calls, wrapper } = await openWith();
+    await type("a");
+    await wait();
+    await type("ab");
+    await wait();
+    expect(calls.map((c) => c.query)).toEqual(["a", "ab"]);
+    expect(calls[0].signal.aborted).toBe(true);
+    expect(calls[1].signal.aborted).toBe(false);
+    calls[1].resolve(found("For ab"));
+    await settle();
+    calls[0].resolve(found("For a, too late"));
+    await settle();
+    expect(labels()).toEqual(["For ab"]);
+    wrapper.unmount();
+  });
+
+  it("does not search below minChars, and drops what it had", async () => {
+    const { calls, fetchCommands, wrapper } = await openWith({ minChars: 3 });
+    await type("ab");
+    await wait();
+    expect(fetchCommands).not.toHaveBeenCalled();
+    // Not a search the server was asked: no "Searching…" waiting for an answer that never comes.
+    expect(status()).toBe("No matching commands");
+    await type("abc");
+    await wait();
+    calls[0].resolve(found("Hit"));
+    await settle();
+    expect(labels()).toContain("Hit");
+    await type("ab");
+    await settle();
+    expect(labels()).not.toContain("Hit");
+    wrapper.unmount();
+  });
+
+  it("marks the list busy and shows the spinner while a search is out, and says Searching with nothing else to show", async () => {
+    registerScoped([]);
+    const r = remote();
+    const wrapper = await open({ fetchCommands: r.fetchCommands, debounce: 0 });
+    await type("zzz");
+    await wait();
+    expect(list().getAttribute("aria-busy")).toBe("true");
+    expect(document.querySelector(".cui-command-palette__busy .cui-spinner, .cui-command-palette__busy [role]")).not.toBeNull();
+    expect(status()).toBe("Searching…");
+    r.calls[0].resolve([]);
+    await settle();
+    expect(list().getAttribute("aria-busy")).toBeNull();
+    expect(status()).toBe("No matching commands");
+    wrapper.unmount();
+  });
+
+  it("claims no results only once the search for the current query has come back", async () => {
+    const { calls, wrapper } = await openWith();
+    await type("qqq");
+    await wait();
+    expect(status()).toBe("Searching…");
+    expect(status()).not.toContain("No matching");
+    calls[0].resolve([]);
+    await settle();
+    expect(status()).toContain("No matching");
+    wrapper.unmount();
+  });
+
+  it("shows a failed search as a message, without leaving the palette stuck loading", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { calls, wrapper } = await openWith();
+    await type("set");
+    await wait();
+    calls[0].reject(new Error("boom"));
+    await settle();
+    expect(status()).toBe("Couldn't load results");
+    expect(list().getAttribute("aria-busy")).toBeNull();
+    expect(labels()).toEqual(["Open settings"]);
+    // An abort is not a failure.
+    await type("sett");
+    await wait();
+    await type("setti");
+    await wait();
+    calls[1].reject(new DOMException("aborted", "AbortError"));
+    await settle();
+    expect(status()).not.toBe("Couldn't load results");
+    spy.mockRestore();
+    wrapper.unmount();
+  });
+
+  it("announces the combined count once the search has landed, not while it is out", async () => {
+    const { calls, wrapper } = await openWith();
+    vi.useFakeTimers();
+    await type("set");
+    await vi.advanceTimersByTimeAsync(10);
+    const live = () => document.querySelector<HTMLElement>('.cui-sr-only[role="status"]')!.textContent;
+    await vi.advanceTimersByTimeAsync(800);
+    expect(live(), "silent while the search is out").toBe("");
+    calls[0].resolve(found("A", "B"));
+    await vi.advanceTimersByTimeAsync(10);
+    expect(live()).toBe("");
+    await vi.advanceTimersByTimeAsync(800);
+    expect(live()).toMatch(/3/);
+    wrapper.unmount();
+  });
+
+  it("keeps the highlight on its command when results arrive, and Enter while loading runs the local one", async () => {
+    const run = vi.fn();
+    registerScoped([
+      { id: "a", label: "Alpha one" },
+      { id: "b", label: "Alpha two", action: run },
+    ]);
+    const r = remote();
+    const wrapper = await open({ fetchCommands: r.fetchCommands, debounce: 0 });
+    await type("alph");
+    await wait();
+    key({ key: "ArrowDown" });
+    await nextTick();
+    const active = () => document.getElementById(input().getAttribute("aria-activedescendant")!)!.textContent;
+    expect(active()).toContain("Alpha two");
+    r.calls[0].resolve(found("Alphabet soup"));
+    await settle();
+    expect(active()).toContain("Alpha two");
+    // And a second query, still loading: Enter runs the highlighted local command.
+    await type("alpha t");
+    await wait();
+    key({ key: "Enter" });
+    await settle();
+    expect(run).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
+  it("runs a chosen server command like any other: select, then its action after the close, and a recent", async () => {
+    const run = vi.fn();
+    const { calls, wrapper } = await openWith();
+    await type("set");
+    await wait();
+    calls[0].resolve([{ id: "r1", label: "Remote thing", action: run }, { id: "r2", label: "No action" }]);
+    await settle();
+    options()[1].click();
+    await settle();
+    expect(wrapper.emitted("select")?.[0][0]).toMatchObject({ id: "r1" });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(palette.recents.value[0]).toBe("r1");
+    palette.open();
+    await settle();
+    await type("set");
+    await wait();
+    calls[1].resolve([{ id: "r2", label: "No action" }]);
+    await settle();
+    options().at(-1)!.click();
+    await settle();
+    expect(wrapper.emitted("select")?.at(-1)?.[0]).toMatchObject({ id: "r2" });
+    wrapper.unmount();
+  });
+
+  it("cancels a search in flight when the palette closes or unmounts", async () => {
+    const { calls, wrapper } = await openWith();
+    await type("set");
+    await wait();
+    key({ key: "Escape" }, document.body);
+    await settle();
+    expect(calls[0].signal.aborted).toBe(true);
+    palette.open();
+    await settle();
+    await type("set");
+    await wait();
+    wrapper.unmount();
+    expect(calls[1].signal.aborted).toBe(true);
   });
 });

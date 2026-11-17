@@ -182,6 +182,10 @@ export interface CuiCoreMessages {
     noResults: string;
     /** Heading of the recently run commands, shown before anything is typed. */
     recent: string;
+    /** Heading of the results an async `fetchCommands` search found. */
+    results: string;
+    /** Shown while a `fetchCommands` search has nothing to list yet. */
+    searching: string;
     /** The footer's key hints: what the arrows, Enter and Escape do. */
     hintNavigate: string;
     hintRun: string;
@@ -406,6 +410,8 @@ export const defaultMessages: CuiCoreMessages = {
     placeholder: "Type a command or search…",
     noResults: "No matching commands",
     recent: "Recent",
+    results: "Results",
+    searching: "Searching…",
     hintNavigate: "navigate",
     hintRun: "run",
     hintClose: "close",
