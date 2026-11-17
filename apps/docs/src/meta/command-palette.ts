@@ -107,6 +107,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-command-palette-width", default: "36rem", description: "Width of the dialog" },
+    { name: "--cui-command-palette-radius", default: "1rem", description: "Corner radius of the dialog" },
+    { name: "--cui-command-palette-bg", default: "surface at 86%, translucent", description: "Fill of the dialog" },
+    { name: "--cui-command-palette-border", default: "1px solid, tinted by the color role", description: "Border of the dialog. A whole border shorthand" },
+    { name: "--cui-command-palette-shadow", default: "the large shadow plus a color glow", description: "Shadow and glow around the dialog" },
     { name: "--cui-command-palette-px", default: "0.75rem–1rem (density)", description: "Horizontal padding of the search field, the rows and the headings" },
     { name: "--cui-command-palette-py", default: "0.5rem–0.75rem (density)", description: "Vertical padding of the search field and the rows" },
     { name: "--cui-command-palette-gap", default: "0.625rem (density)", description: "Space between the search icon and the field" },
@@ -116,7 +120,6 @@ const meta: ComponentMeta = {
     { name: "--cui-command-palette-hover-bg", default: "var(--cui-<color>-bg)", description: "Fill of the highlighted row" },
     { name: "--cui-command-palette-border", default: "1px solid var(--cui-border)", description: "The line under the search field" },
     { name: "--cui-command-palette-focus-ring", default: "var(--cui-<color>-focus-ring)", description: "The search field's focus ring" },
-    { name: "--cui-modal-radius", default: "from rounded", description: "Corner radius of the dialog, shared with CuiModal" },
   ],
 
   parts: [

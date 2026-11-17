@@ -367,9 +367,6 @@ const initialFocus = computed(() => props.initialFocus ?? ".cui-command-palette_
 // ones paint CuiListboxOption's rows, which reads its consumer's tokens through the panel.
 const panelVars = computed(() => ({
   "--_command-palette-accent": `var(--cui-${props.color})`,
-  "--_command-palette-tint": `color-mix(in srgb, var(--cui-${props.color}-bg) 55%, transparent)`,
-  "--_command-palette-heading": `color-mix(in srgb, var(--cui-${props.color}) 60%, var(--cui-text-emphasis))`,
-  "--_command-palette-ring": `var(--cui-${props.color}-border)`,
   "--_command-palette-focus-ring": `var(--cui-${props.color}-focus-ring)`,
   "--_command-palette-match": `var(--cui-${props.color})`,
 }));
@@ -506,7 +503,6 @@ defineExpose({
   gap: var(--cui-command-palette-gap, calc(0.625rem * var(--cui-density-scale, 1)));
   padding: var(--cui-command-palette-py, calc(0.75rem * var(--cui-density-scale, 1))) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
   border-bottom: 1px solid var(--cui-border);
-  background: var(--_command-palette-tint);
   color: var(--cui-text-tertiary);
 }
 
@@ -534,18 +530,20 @@ defineExpose({
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--_command-palette-heading);
+  color: var(--cui-text-secondary);
 }
 
-:where(.cui-command-palette__option.cui-listbox-option--active) {
-  box-shadow: inset 0 0 0 1px var(--cui-command-palette-hover-border, var(--_command-palette-ring));
+/* The row's tint is invisible when the system forces its own colors. */
+@media (forced-colors: active) {
+  .cui-command-palette__option.cui-listbox-option--active {
+    outline: 2px solid Highlight;
+  }
 }
 
 :where(.cui-command-palette__footer) {
   gap: calc(1rem * var(--cui-density-scale, 1));
   padding: calc(0.5rem * var(--cui-density-scale, 1)) var(--cui-command-palette-px, calc(1rem * var(--cui-density-scale, 1)));
   border-top: 1px solid var(--cui-border);
-  background: var(--_command-palette-tint);
   font-size: 0.75rem;
   color: var(--cui-text-secondary);
 }

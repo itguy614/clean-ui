@@ -153,6 +153,10 @@ describe("CuiCommandPalette (real browser)", () => {
     expect(Number(getComputedStyle(match).fontWeight)).toBeGreaterThanOrEqual(600);
     const bg = getComputedStyle(options()[0]).backgroundColor;
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
+    // The interior reads as the panel's own surface: only the highlighted row is tinted.
+    for (const sel of [".cui-command-palette__search", ".cui-command-palette__footer", ".cui-command-palette__list"]) {
+      expect(getComputedStyle(document.querySelector(sel)!).backgroundColor, `${sel} has no fill of its own`).toBe("rgba(0, 0, 0, 0)");
+    }
   });
 
   it("searches a server as you type: fast typing sends one search, slow typing aborts the earlier, and the highlight stays put when results land", async () => {
