@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, provide, watch, useTemplateRef } from "vue";
+import { computed, ref, watch, useTemplateRef } from "vue";
 import { useRoute } from "vue-router";
 import {
   CuiButton,
@@ -19,16 +19,12 @@ import {
   type ColorMode,
 } from "@itguy614/clean-ui";
 import Navigation from "./components/Navigation.vue";
-import { ShowDebugKey } from "./keys";
 
-const showDebug = ref(false);
 const mobileNavOpen = ref(false);
 const nav = useTemplateRef("nav");
 const { theme, presets, setTheme } = useTheme();
 const { density, presets: densityPresets, setDensity } = useDensity();
 const { mode: colorMode, isDark, setMode: setColorMode } = useColorMode();
-
-provide(ShowDebugKey, showDebug);
 
 const route = useRoute();
 watch(() => route.path, () => {
@@ -111,9 +107,6 @@ const nextColorMode = computed(() => MODE_CYCLE[(MODE_CYCLE.indexOf(colorMode.va
                 </CuiDropdownRadioGroup>
               </CuiDropdownMenu>
             </CuiDropdown>
-            <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
-              {{ showDebug ? "Hide Debug" : "Show Debug" }}
-            </CuiButton>
             <CuiButton
               variant="ghost"
               size="sm"

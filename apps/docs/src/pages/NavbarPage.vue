@@ -361,7 +361,7 @@ const shellCode = `<CuiNavbar sticky>
           <code>CuiNavbarNav</code> and no menu button of its own. Put a button in the bar and bind
           it to the sidebar's <code>toggleAttrs</code> and <code>toggle()</code>: below the
           sidebar's breakpoint it opens the sidebar's drawer. This site works that way, and its
-          theme switcher, color-mode button and debug toggle are plain
+          theme switcher and color-mode button are plain
           <code>CuiNavbarActions</code> content.
         </p>
       </Example>
