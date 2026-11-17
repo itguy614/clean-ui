@@ -240,7 +240,7 @@ const returns = [
         <li>
           <strong>Layering is yours.</strong> Teleport the panel to <code class="cui-code">body</code> so
           no ancestor's <code class="cui-code">overflow</code> clips it. Give it a z-index from the
-          library's scale: popovers use <code class="cui-code">calc(var(--cui-z-overlay, 9990) + 8)</code>,
+          library's scale: tooltips and toasts sit at <code class="cui-code">+ 49</code> and <code class="cui-code">+ 48</code>, and the library's own popovers, menus and lists take the next step in the overlay sequence (see Overlay: Layering). For your own panel, <code class="cui-code">calc(var(--cui-z-overlay, 9990) + 8)</code> sits above a page and below a toast,
           so a consumer who re-layers the library moves your panel with it.
         </li>
       </ul>
