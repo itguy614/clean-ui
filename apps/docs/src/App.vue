@@ -99,7 +99,6 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
 
           <CuiNavbarActions>
             <CuiButton
-              class="max-sm:[--cui-button-px:0.125rem]"
               variant="ghost"
               size="sm"
               aria-label="Search documentation"
@@ -145,9 +144,6 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
                 </CuiDropdownRadioGroup>
               </CuiDropdownMenu>
             </CuiDropdown>
-            <CuiButton variant="ghost" size="sm" @click="showDebug = !showDebug">
-              {{ showDebug ? "Hide Debug" : "Show Debug" }}
-            </CuiButton>
             <CuiButton
               variant="ghost"
               size="sm"

@@ -43,7 +43,7 @@ describe("the site palette", () => {
   it("offers the site's actions: color mode, debug overlays and every theme", async () => {
     await mountPalette();
     const ids = useCommandPalette().commands.value.map((c) => c.id);
-    expect(ids).toEqual(expect.arrayContaining(["site.color-mode", "site.debug", "site.theme.default", "site.theme.forest"]));
+    expect(ids).toEqual(expect.arrayContaining(["site.color-mode", "site.theme.default", "site.theme.forest"]));
   });
 
   it("keeps Mod-K beside a page palette that has a registry and a shortcut of its own", async () => {

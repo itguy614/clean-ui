@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
   CuiCommandPalette,
@@ -9,7 +8,6 @@ import {
   type CuiCommand,
   type CuiCommandGroup,
 } from "@itguy614/clean-ui";
-import { ShowDebugKey } from "../keys";
 import { PAGES } from "../navigation/pages";
 
 // The docs site's one command palette (#531): mounted once, in the app shell, so every route has
@@ -20,7 +18,6 @@ const router = useRouter();
 const colorMode = useColorMode();
 const { theme, presets, setTheme } = useTheme();
 const palette = useCommandPalette();
-const showDebug = inject(ShowDebugKey, ref(false));
 
 // Actions first, then one group per navigation group, in the order the sidebar lists them.
 const pageGroups = [...new Set(PAGES.map((p) => p.group))];
@@ -44,7 +41,7 @@ palette.register(
   ),
 );
 
-// A getter, so labels and icons follow the color mode, the debug switch and the current theme.
+// A getter, so labels and icons follow the color mode, and the current theme.
 palette.register(() => [
   {
     id: "site.color-mode",
@@ -54,14 +51,6 @@ palette.register(() => [
     group: "site",
     icon: colorMode.isDark.value ? "sun" : "moon",
     action: () => colorMode.toggle(),
-  },
-  {
-    id: "site.debug",
-    label: showDebug.value ? "Hide debug overlays" : "Show debug overlays",
-    keywords: ["grid", "layout", "outline"],
-    group: "site",
-    icon: "eye",
-    action: () => (showDebug.value = !showDebug.value),
   },
   ...presets.map(
     (preset): CuiCommand => ({

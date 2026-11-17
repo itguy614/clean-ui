@@ -353,7 +353,7 @@ const hotkeyCode = `<!-- Rebind it -->
           This documentation site uses the palette as its search: one <code>CuiCommandPalette</code> in
           the app shell, with every page from the page list registered once (matched on each page's
           keywords, grouped as the sidebar groups them), plus the site's own actions: toggle color
-          mode, switch theme, show or hide debug overlays. The header's <em>Search</em> button opens it, and so
+          mode and switch theme. The header's <em>Search</em> button opens it, and so
           does <CuiKbd>Mod</CuiKbd> + <CuiKbd>K</CuiKbd> from any page.
         </p>
         <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
