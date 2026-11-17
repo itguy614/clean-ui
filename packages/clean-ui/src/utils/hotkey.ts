@@ -56,3 +56,23 @@ export function matchesHotkey(e: KeyboardEvent, hotkey: Hotkey): boolean {
   const code = e.code.toLowerCase();
   return code === `key${hotkey.key}` || code === `digit${hotkey.key}`;
 }
+
+const claims: Hotkey[] = [];
+
+/**
+ * Several palettes may listen for one shortcut; the most recently claimed one that matches
+ * handles it (#530), so a palette that mounts over another (in a drawer) takes the key while
+ * it is there and hands it back when it goes. Returns `owns(e)` and `release()`.
+ */
+export function claimHotkey(hotkey: Hotkey) {
+  claims.push(hotkey);
+  return {
+    owns(e: KeyboardEvent) {
+      for (let i = claims.length - 1; i >= 0; i--) if (matchesHotkey(e, claims[i])) return claims[i] === hotkey;
+      return false;
+    },
+    release() {
+      claims.splice(claims.indexOf(hotkey), 1);
+    },
+  };
+}

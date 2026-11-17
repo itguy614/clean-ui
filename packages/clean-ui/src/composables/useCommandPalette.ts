@@ -1,5 +1,6 @@
-import { computed, getCurrentScope, onScopeDispose, ref, shallowRef, toValue, type Component, type MaybeRefOrGetter } from "vue";
+import { computed, getCurrentScope, hasInjectionContext, inject, onScopeDispose, provide, ref, shallowRef, toValue, type Component, type MaybeRefOrGetter } from "vue";
 import type { CuiColor } from "../types/common";
+import { CuiCommandPaletteKey } from "./command-palette-context";
 
 /**
  * The command registry behind CuiCommandPalette (#197): register commands from anywhere,
@@ -14,9 +15,15 @@ import type { CuiColor } from "../types/common";
  * when it unmounts: a route that contributes commands loses them on leave, with nothing to
  * clean up. Registered anywhere else (an app's entry file), they stay until `withdraw()`.
  *
- * There is one registry per page, and the palette reads it. Several registrations may use
- * the same command id: the latest wins, and withdrawing it brings the earlier one back, so
- * a route can override a global command for as long as it is mounted.
+ * Several registrations may use the same command id: the latest wins, and withdrawing it
+ * brings the earlier one back, so a route can override a global command for as long as it
+ * is mounted.
+ *
+ * A registry holds the commands, the open state and the recents. Code that provides none
+ * shares one default registry per page, which is all a single palette needs (#197). An app,
+ * or a subtree such as a palette inside a drawer, gets its own with
+ * `useCommandPaletteProvider()` or `app.provide(CuiCommandPaletteKey, createCommandPalette())`
+ * (#530): `useCommandPalette()` then answers with the nearest one.
  */
 
 /** A group of commands under one heading. Commands name it by `id` in `group`. */
@@ -118,14 +125,43 @@ function createRegistry() {
   };
 }
 
-const registry = createRegistry();
+/** The registry the palette itself uses: `UseCommandPalette` plus `remember`. */
+export type CuiCommandRegistry = ReturnType<typeof createRegistry>;
 
 /** What `useCommandPalette()` returns. */
-export type UseCommandPalette = Omit<typeof registry, "remember">;
+export type UseCommandPalette = Omit<CuiCommandRegistry, "remember">;
 
-/** The palette's own use of the registry: also records a command as recently run. */
-export function useCommandRegistry() {
+/** The registry for code that never provides one. */
+const defaultRegistry = createRegistry();
+
+/**
+ * A registry of its own: commands, open state and recents shared with nothing else. Provide
+ * it app-wide with `app.provide(CuiCommandPaletteKey, createCommandPalette())`, or hand it
+ * to a palette's `registry` prop and to whatever registers into it.
+ */
+export function createCommandPalette(): UseCommandPalette {
+  return createRegistry();
+}
+
+/**
+ * Gives this component's subtree its own registry, so a palette inside it (a drawer's, say)
+ * shares nothing with a global one. Pass one from `createCommandPalette()` to provide that
+ * instead. Returns what `useCommandPalette()` returns for the subtree.
+ */
+export function useCommandPaletteProvider(registry: UseCommandPalette = createRegistry()): UseCommandPalette {
+  provide(CuiCommandPaletteKey, registry);
   return registry;
+}
+
+/**
+ * The nearest provided registry, else the default one. Outside a component or an app
+ * context (an entry file, a router guard) that is the default, and nothing warns: unlike a
+ * family context it does not throw outside a provider, since the default is the usage that
+ * never needed one. The palette's own use also records a command as recently run.
+ */
+export function useCommandPaletteContext(): CuiCommandRegistry {
+  // Every registry is made by createRegistry, so `remember` is there whatever the type says.
+  return ((hasInjectionContext() && inject(CuiCommandPaletteKey, null)) || defaultRegistry) as CuiCommandRegistry;
 }
 
 /**
@@ -137,7 +173,10 @@ export function useCommandRegistry() {
  * - `commands` is everything registered now. `visible` is whether the palette is open, a
  *   ref you may also write. `open()`, `close()` and `toggle()` set it.
  * - `recents` is the ids of the commands run most recently, newest first.
+ *
+ * It answers with the registry the calling component's ancestors provided, and with the
+ * page-wide default where there is none.
  */
 export function useCommandPalette(): UseCommandPalette {
-  return registry;
+  return useCommandPaletteContext();
 }
