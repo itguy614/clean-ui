@@ -52,6 +52,13 @@ const meta: ComponentMeta = {
           description: "Block closing via Escape and backdrop click. The X button still closes",
         },
         { name: "noCloseButton", type: "boolean", default: "false", description: "Hide the X close button in simple mode" },
+        {
+          name: "noDrag",
+          type: "boolean",
+          default: "false",
+          description:
+            "Turn off touch and pen drag-to-dismiss: dragging the panel toward its edge closes it, or springs back. A mouse never drags it. Also off while persistent",
+        },
         ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,

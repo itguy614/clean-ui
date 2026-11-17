@@ -211,6 +211,11 @@ const router = createRouter({
       component: () => import('../pages/ModalPage.vue'),
     },
     {
+      path: '/components/drawer',
+      name: 'drawer',
+      component: () => import('../pages/DrawerPage.vue'),
+    },
+    {
       path: '/components/slideover',
       name: 'slideover',
       component: () => import('../pages/SlideoverPage.vue'),

@@ -989,13 +989,16 @@
   [data-cui-panel="hidden"],
   .cui-toast-enter-from,
   .cui-toast-leave-to,
-  [data-cui-exit],
+  /* An open slideover or drawer is skipped: a drag still follows the finger (#268), which is
+     direct manipulation, not animation, and a snap point is a resting place. */
+  [data-cui-exit]:not(.cui-slideover__panel--visible, .cui-drawer__panel--visible),
   [class*="cui-alert--entrance-slide"] {
     transform: none !important;
   }
 
   /* A slideover's panel only slid: standing still, it fades instead. */
-  .cui-slideover__panel:not(.cui-slideover__panel--visible) {
+  .cui-slideover__panel:not(.cui-slideover__panel--visible),
+  .cui-drawer__panel:not(.cui-drawer__panel--visible) {
     opacity: 0;
   }
 

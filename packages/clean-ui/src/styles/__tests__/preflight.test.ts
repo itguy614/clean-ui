@@ -165,6 +165,7 @@ describe("every component root is inside the scope", () => {
     "CuiListboxPanel.vue": "teleports .cui-listbox-panel",
     "CuiModal.vue": "teleports .cui-modal-overlay",
     "CuiSlideover.vue": "teleports .cui-slideover-overlay",
+    "CuiDrawer.vue": "teleports .cui-drawer-overlay",
     // <Transition> is not an element either; the bar it wraps carries the class.
     "CuiDataGridBulkBar.vue": "wraps .cui-data-grid-bulk-bar in a <Transition>",
     "CuiAlert.vue": "wraps .cui-alert in a <Transition>, for its exit (#263)",
@@ -182,7 +183,7 @@ describe("every component root is inside the scope", () => {
    * editor's UrlDialog are rooted at CuiModal (#228). The chain is followed: a root at a
    * component that is itself rooted at a class-dropping one is out of scope too.
    */
-  const FORWARDING = ["CuiModal", "CuiSlideover"];
+  const FORWARDING = ["CuiModal", "CuiSlideover", "CuiDrawer"];
 
   /** A root tag carrying a static `cui-*` class. */
   const hasStaticCuiClass = (root: string) => /\sclass="[^"]*\bcui-/.test(root);

@@ -70,6 +70,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiColorPicker.vue", issue: "#467" },
   { file: "CuiModal.vue", issue: "#407" },
   { file: "CuiSlideover.vue", issue: "#407" },
+  { file: "CuiDrawer.vue", issue: "#268" },
   { file: "CuiTransferList.vue", issue: "#469" },
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
@@ -506,6 +507,11 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
   "CuiContextMenu.vue": { "context-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDateRangePicker.vue": { "date-range-picker-field-width": `the start and end fields are as wide as the \`format\` prop's text (${GEOMETRY})` },
+  "CuiDrawer.vue": {
+    "drawer-snap-offset": `the resting position follows the active snap point (${GEOMETRY})`,
+    "drawer-keyboard-inset": `the sheet is anchored above the soft keyboard (${GEOMETRY})`,
+    "drawer-max-height": `the sheet is held to the room the soft keyboard leaves (${GEOMETRY})`,
+  },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
   // TODO(#454): CuiDataGrid is being reworked in #474; this is a sticky offset, so it likely stays.

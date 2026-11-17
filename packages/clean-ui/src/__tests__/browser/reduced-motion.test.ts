@@ -16,6 +16,7 @@ import CuiAccordion from "../../components/CuiAccordion.vue";
 import CuiAccordionItem from "../../components/CuiAccordionItem.vue";
 import CuiSkeleton from "../../components/CuiSkeleton.vue";
 import CuiSlideover from "../../components/CuiSlideover.vue";
+import CuiDrawer from "../../components/CuiDrawer.vue";
 
 /**
  * #265 — under `prefers-reduced-motion: reduce` the library clamped every animation and
@@ -145,6 +146,23 @@ describe("reduced motion (real browser)", () => {
     await wait(motionDuration("slow") + 100);
     const panel = document.querySelector<HTMLElement>(".cui-slideover__panel")!;
     expect(Number(getComputedStyle(panel).opacity)).toBe(1);
+    await w.setProps({ visible: false });
+    await wait(60);
+    const style = getComputedStyle(panel);
+    expect(style.transform).toBe("none");
+    expect(Number(style.opacity), "mid-fade").toBeGreaterThan(0);
+    expect(Number(style.opacity)).toBeLessThan(1);
+  });
+
+  it("fades a drawer's sheet where it stands, but a drag still follows the finger (#268)", async () => {
+    const w = mount(CuiDrawer, { props: { visible: true, title: "Sheet" } });
+    mounted.push(w);
+    await wait(motionDuration("slow") * 2 + 100);
+    const panel = document.querySelector<HTMLElement>(".cui-drawer__panel")!;
+    // Direct manipulation, not animation: the transform the drag writes is not cancelled.
+    panel.style.transform = "translateY(40px)";
+    expect(getComputedStyle(panel).transform).not.toBe("none");
+    panel.style.transform = "";
     await w.setProps({ visible: false });
     await wait(60);
     const style = getComputedStyle(panel);
