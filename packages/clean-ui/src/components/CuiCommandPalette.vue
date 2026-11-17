@@ -13,9 +13,9 @@ import { useEventListener } from "../composables/useEventListener";
 import { followHighlight, useListbox } from "../composables/useListbox";
 import { firstIndex } from "../composables/useListNavigation";
 import { useMessages } from "../composables/useMessages";
-import { useCommandRegistry, type CuiCommand, type CuiCommandGroup } from "../composables/useCommandPalette";
+import { useCommandPaletteContext, type CuiCommand, type CuiCommandGroup, type UseCommandPalette } from "../composables/useCommandPalette";
 import { fuzzyMatch, highlightSegments, type FuzzyMatch, type HighlightSegment } from "../utils/fuzzy";
-import { matchesHotkey, parseHotkey } from "../utils/hotkey";
+import { claimHotkey, matchesHotkey, parseHotkey } from "../utils/hotkey";
 import type { ColorableProps, CuiColor, HideableProps, OverlayFocusProps } from "../types/common";
 
 export interface CuiCommandPaletteProps extends HideableProps, ColorableProps, OverlayFocusProps {
@@ -24,6 +24,12 @@ export interface CuiCommandPaletteProps extends HideableProps, ColorableProps, O
    * `useCommandPalette().visible` is, which the hotkey and `open()` drive.
    */
   visible?: boolean;
+  /**
+   * The registry to list, open and remember in, from `createCommandPalette()`. Unset, the
+   * nearest provided one (`useCommandPaletteProvider()`, `app.provide(CuiCommandPaletteKey, …)`),
+   * else the page-wide default.
+   */
+  registry?: UseCommandPalette;
   /** Commands listed besides the registered ones. One with the same id as a registered command replaces it. */
   commands?: CuiCommand[];
   /** Headings and their order. A command's `group` that is not listed here is headed by its id. */
@@ -35,7 +41,8 @@ export interface CuiCommandPaletteProps extends HideableProps, ColorableProps, O
   /**
    * The shortcut that opens and closes it, `"mod+k"` by default (Command on a Mac, Control
    * elsewhere). `false` turns it off, and the palette is then opened by `v-model:visible` or
-   * `useCommandPalette().open()`.
+   * `useCommandPalette().open()`. Where several palettes listen for the same shortcut, the one
+   * mounted last handles it, so a palette inside a drawer takes it while the drawer is open.
    */
   hotkey?: string | false;
   /** How many recently run commands to list before anything is typed. 0 for none. */
@@ -91,11 +98,16 @@ defineSlots<{
   empty?(props: { query: string }): unknown;
 }>();
 
-const registry = useCommandRegistry();
+const injected = useCommandPaletteContext();
+// Of the prop, whose object came from createCommandPalette() and so carries `remember`.
+const registry = computed(() => (props.registry as typeof injected | undefined) ?? injected);
 const messages = useMessages();
 
 // --- Open state: the registry's, so a button elsewhere can open it, and v-model follows ---
-const open = registry.visible;
+const open = computed({
+  get: () => registry.value.visible.value,
+  set: (v) => (registry.value.visible.value = v),
+});
 watch(() => props.visible, (v) => { if (v !== undefined) open.value = v; }, { immediate: true });
 watch(open, (v) => emit("update:visible", v));
 
@@ -117,7 +129,7 @@ const activeIndex = ref(-1);
 
 // --- The commands ---
 const all = computed<CuiCommand[]>(() => {
-  const byId = new Map(registry.commands.value.map((c) => [c.id, c]));
+  const byId = new Map(registry.value.commands.value.map((c) => [c.id, c]));
   for (const c of props.commands ?? []) byId.set(c.id, c);
   return [...byId.values()];
 });
@@ -181,7 +193,7 @@ const sections = computed<Section[]>(() => {
   // in its own group.
   const recentIds = new Set<string>();
   if (!q && props.recent > 0) {
-    const recent = registry.recents.value
+    const recent = registry.value.recents.value
       .map((id) => hits.find((h) => h.command.id === id))
       .filter((h): h is (typeof hits)[number] => !!h && !h.command.disabled)
       .slice(0, props.recent);
@@ -305,7 +317,7 @@ watch(open, (isOpen) => {
 function choose(i: number) {
   const command = rows.value[i]?.command;
   if (!command || command.disabled) return;
-  registry.remember(command.id);
+  registry.value.remember?.(command.id);
   emit("select", command);
   // Run it after the exit, once focus is back with the opener: a command that opens a dialog
   // or moves focus would otherwise lose it to the palette's restore.
@@ -337,6 +349,16 @@ function onUpdateVisible(v: boolean) {
 
 // --- Hotkey: toggles, also from inside a field or over another overlay ---
 const parsedHotkey = computed(() => (props.hotkey ? parseHotkey(props.hotkey) : null));
+// Claimed from mount to unmount; with several palettes the last to mount claims the key.
+let claim: ReturnType<typeof claimHotkey> | undefined;
+onMounted(() => {
+  claim = claimHotkey();
+  watch(() => (props.hidden ? null : parsedHotkey.value), (hotkey) => claim?.set(hotkey), { immediate: true });
+});
+onBeforeUnmount(() => {
+  claim?.release();
+  claim = undefined;
+});
 useEventListener(
   "document",
   "keydown",
@@ -345,8 +367,9 @@ useEventListener(
     // Something nearer already took the key (an editor with its own use for it); a held key
     // would otherwise flicker the palette; an IME composition is not a shortcut.
     if (!hotkey || e.defaultPrevented || e.repeat || e.isComposing || !matchesHotkey(e, hotkey)) return;
+    if (!claim?.owns(e)) return;
     e.preventDefault();
-    registry.toggle();
+    registry.value.toggle();
   },
   { enabled: () => !!parsedHotkey.value && !props.hidden },
 );
@@ -357,12 +380,12 @@ onMounted(() => {
   if (!key) return;
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
-    if (Array.isArray(stored)) registry.recents.value = stored.filter((s): s is string => typeof s === "string").slice(0, 20);
+    if (Array.isArray(stored)) registry.value.recents.value = stored.filter((s): s is string => typeof s === "string").slice(0, 20);
   } catch {
     /* storage unavailable or not ours */
   }
 });
-watch(registry.recents, (ids) => {
+watch(() => registry.value.recents.value, (ids) => {
   if (!props.recentsStorageKey) return;
   try {
     localStorage.setItem(props.recentsStorageKey, JSON.stringify(ids));
@@ -412,9 +435,9 @@ const iconProps = (icon: NonNullable<CuiCommand["icon"]>) => (typeof icon === "s
 
 defineExpose({
   /** Opens the palette. */
-  open: () => registry.open(),
+  open: () => registry.value.open(),
   /** Closes it. */
-  close: () => registry.close(),
+  close: () => registry.value.close(),
   /** Focuses the search field, if the palette is open. */
   focus: () => document.getElementById(`${id}-input`)?.focus(),
 });

@@ -7,7 +7,7 @@ import { installTokens } from "../../../../../config/test/browser-helpers";
 import { motionDuration } from "../../utils/motion";
 import CuiCommandPalette from "../../components/CuiCommandPalette.vue";
 import CuiModal from "../../components/CuiModal.vue";
-import { useCommandPalette } from "../../composables/useCommandPalette";
+import { useCommandPalette, useCommandPaletteProvider } from "../../composables/useCommandPalette";
 
 /**
  * #197 — what jsdom cannot show: real keystrokes (the shortcut from inside a field, arrows,
@@ -308,5 +308,69 @@ describe("CuiCommandPalette (real browser)", () => {
       document.documentElement.classList.remove("dark");
       steps.remove();
     }
+  });
+});
+
+// #530: a palette with its own registry inside a modal, beside the page's.
+describe("two palettes on one page (real browser)", () => {
+  const dialogs = () => [...document.querySelectorAll<HTMLElement>(".cui-command-palette")];
+
+  function twoPalettes() {
+    const scope = effectScope();
+    stops.push(() => scope.stop());
+    scope.run(() => palette.register({ id: "global.cmd", label: "Global command" }));
+    const inModal = ref(true);
+    let mine!: ReturnType<typeof useCommandPalette>;
+    const Inner = defineComponent({
+      setup() {
+        mine = useCommandPaletteProvider();
+        mine.register({ id: "scoped.cmd", label: "Scoped command" });
+        return () => h(CuiCommandPalette, { label: "Scoped palette" });
+      },
+    });
+    const Host = defineComponent({
+      setup: () => () => [
+        h("input", { "data-t": "field" }),
+        h(CuiCommandPalette, { label: "Global palette" }),
+        h(CuiModal, { visible: true, title: "Holds a palette" }, () => (inModal.value ? h(Inner) : null)),
+      ],
+    });
+    wrapper = mount(Host, { attachTo: document.body });
+    return { inModal, mine: () => mine };
+  }
+
+  it("Mod-K opens only the one mounted last; the other has its own state and gets the key back when it goes", async () => {
+    const t = twoPalettes();
+    await settle();
+    await userEvent.keyboard(`{${MOD}>}k{/${MOD}}`);
+    await settle();
+    expect(dialogs().map((d) => d.getAttribute("aria-label"))).toEqual(["Scoped palette"]);
+    expect(labels()).toEqual(["Scoped command"]);
+    expect(document.activeElement, "focus is in the scoped palette's field").toBe(input());
+    expect(palette.visible.value).toBe(false);
+
+    await userEvent.keyboard("{Escape}");
+    await settle();
+    expect(dialogs()).toEqual([]);
+
+    t.inModal.value = false;
+    await settle();
+    await userEvent.keyboard(`{${MOD}>}k{/${MOD}}`);
+    await settle();
+    expect(dialogs().map((d) => d.getAttribute("aria-label"))).toEqual(["Global palette"]);
+    expect(labels()).toEqual(["Global command"]);
+    expect(palette.visible.value).toBe(true);
+  });
+
+  it("running a scoped command remembers it in the scoped registry only, and closes that palette", async () => {
+    const t = twoPalettes();
+    await settle();
+    await userEvent.keyboard(`{${MOD}>}k{/${MOD}}`);
+    await settle();
+    await userEvent.keyboard("{Enter}");
+    await settle();
+    expect(t.mine().recents.value).toEqual(["scoped.cmd"]);
+    expect(palette.recents.value).toEqual([]);
+    expect(dialogs()).toEqual([]);
   });
 });

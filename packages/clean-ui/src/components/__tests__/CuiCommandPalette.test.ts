@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { effectScope, nextTick, ref } from "vue";
+import { defineComponent, effectScope, h, nextTick, ref } from "vue";
 import { mount, flushPromises, enableAutoUnmount } from "@vue/test-utils";
 import CuiCommandPalette from "../CuiCommandPalette.vue";
-import { useCommandPalette, type CuiCommand } from "../../composables/useCommandPalette";
+import { createCommandPalette, useCommandPalette, useCommandPaletteProvider, type CuiCommand } from "../../composables/useCommandPalette";
 
 // The palette wraps CuiModal, which teleports into <body> and flips its entry on a
 // requestAnimationFrame: query through `document` after `settle()`.
@@ -801,5 +801,116 @@ describe("CuiCommandPalette badge", () => {
     await settle();
     expect(badges()).toEqual(["12"]);
     wrapper.unmount();
+  });
+});
+
+describe("CuiCommandPalette scoped registries (#530)", () => {
+  it("lists, opens and remembers in the registry it is given, apart from the default", async () => {
+    const mine = createCommandPalette();
+    mine.register([{ id: "mine", label: "Only mine" }]);
+    registerScoped([{ id: "theirs", label: "Only default" }]);
+    const wrapper = mount(CuiCommandPalette, { props: { registry: mine, hotkey: false } });
+    mine.open();
+    await settle();
+    expect(labels()).toEqual(["Only mine"]);
+    expect(palette.visible.value).toBe(false);
+    options()[0].click();
+    await settle();
+    expect(mine.recents.value).toEqual(["mine"]);
+    expect(palette.recents.value).toEqual([]);
+    wrapper.unmount();
+  });
+
+  it("uses the registry a parent provides, and two palettes keep their own open state", async () => {
+    const inner = createCommandPalette();
+    inner.register({ id: "inner", label: "Inside" });
+    registerScoped([{ id: "outer", label: "Outside" }]);
+    const Scoped = defineComponent({
+      setup() {
+        useCommandPaletteProvider(inner);
+        return () => h(CuiCommandPalette, { hotkey: false });
+      },
+    });
+    const a = mount(CuiCommandPalette, { props: { hotkey: false } });
+    const b = mount(Scoped);
+    inner.open();
+    await settle();
+    expect(labels()).toEqual(["Inside"]);
+    expect(palette.visible.value).toBe(false);
+    inner.close();
+    palette.open();
+    await settle();
+    expect(labels()).toEqual(["Outside"]);
+    expect(inner.visible.value).toBe(false);
+    a.unmount();
+    b.unmount();
+  });
+
+  it("hotkey: the palette mounted last handles a shared shortcut, and gives it back when it goes", async () => {
+    const other = createCommandPalette();
+    registerScoped(COMMANDS);
+    const first = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k" } });
+    const second = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k", registry: other } });
+    await settle();
+    key({ key: "k", ctrlKey: true }, document.body);
+    await settle();
+    expect(other.visible.value).toBe(true);
+    expect(palette.visible.value).toBe(false);
+    other.close();
+    await settle();
+    second.unmount();
+    key({ key: "k", ctrlKey: true }, document.body);
+    await settle();
+    expect(palette.visible.value).toBe(true);
+    first.unmount();
+  });
+
+  it("hotkey: a palette with the hotkey off, or hidden, does not claim the key", async () => {
+    const other = createCommandPalette();
+    registerScoped(COMMANDS);
+    const first = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k" } });
+    const off = mount(CuiCommandPalette, { props: { hotkey: false, registry: other } });
+    const hidden = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k", hidden: true, registry: createCommandPalette() } });
+    await settle();
+    key({ key: "k", ctrlKey: true }, document.body);
+    await settle();
+    expect(palette.visible.value).toBe(true);
+    expect(other.visible.value).toBe(false);
+    first.unmount();
+    off.unmount();
+    hidden.unmount();
+  });
+});
+
+describe("CuiCommandPalette hotkey claims (#530)", () => {
+  it("keeps its place in line when it is hidden and shown again, or its shortcut changes", async () => {
+    const other = createCommandPalette();
+    registerScoped(COMMANDS);
+    const first = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k" } });
+    const second = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k", registry: other } });
+    await settle();
+    await first.setProps({ hidden: true });
+    await first.setProps({ hidden: false });
+    await first.setProps({ hotkey: "ctrl+k" });
+    key({ key: "k", ctrlKey: true }, document.body);
+    await settle();
+    expect(other.visible.value).toBe(true);
+    expect(palette.visible.value).toBe(false);
+    first.unmount();
+    second.unmount();
+  });
+
+  it("releasing a claim twice does not take another palette's", async () => {
+    const { claimHotkey } = await import("../../utils/hotkey");
+    const { parseHotkey } = await import("../../utils/hotkey");
+    const a = claimHotkey();
+    const b = claimHotkey();
+    a.set(parseHotkey("ctrl+k"));
+    b.set(parseHotkey("ctrl+k"));
+    a.release();
+    a.release();
+    const e = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
+    expect(b.owns(e)).toBe(true);
+    b.release();
   });
 });

@@ -11,6 +11,12 @@ const meta: ComponentMeta = {
   props: [
     visibleProp(),
     {
+      name: "registry",
+      type: "UseCommandPalette",
+      description:
+        "The registry to list, open and remember in, from createCommandPalette(). Unset, the nearest one provided by useCommandPaletteProvider() or app.provide(CuiCommandPaletteKey, …), else the page-wide default. Register commands into the same object",
+    },
+    {
       name: "commands",
       type: "CuiCommand[]",
       default: "[]",
@@ -41,7 +47,7 @@ const meta: ComponentMeta = {
       type: "string | false",
       default: "mod+k",
       description:
-        "The shortcut that opens and closes it: + separated, one key with mod (Command on a Mac, Control elsewhere), ctrl, meta, alt, shift. Exact: mod+k ignores mod+shift+k. false turns it off. A key another handler already took with preventDefault() is left alone",
+        "The shortcut that opens and closes it: + separated, one key with mod (Command on a Mac, Control elsewhere), ctrl, meta, alt, shift. Exact: mod+k ignores mod+shift+k. false turns it off. A key another handler already took with preventDefault() is left alone. Where several palettes listen for the same shortcut, the one mounted last handles it",
     },
     {
       name: "recent",
