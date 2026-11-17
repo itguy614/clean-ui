@@ -1,4 +1,4 @@
-import { onScopeDispose, ref, watchPostEffect } from "vue";
+import { nextTick, onScopeDispose, ref, watch, watchPostEffect } from "vue";
 import { layoutStack } from "../utils/stackLayout";
 import { motionDuration, prefersReducedMotion } from "../utils/motion";
 import { BREAKPOINT_ORDER, useBreakpoint } from "./useBreakpoint";
@@ -81,10 +81,23 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     const horizontal = stack.entries.filter((e) => e.side() === "left" || e.side() === "right");
     const side = horizontal[0]?.side();
     const items: HTMLElement[] = [];
+    let snap = false;
     for (const entry of horizontal) {
       const el = entry.panel();
-      // Not laid out (the consumer's `hidden`) it measures nothing, and takes no part.
-      if (el && el.offsetWidth > 0 && entry.side() === side) items.push(el);
+      // `hidden` is read here, so the layout re-runs when it changes: while it leaves it still
+      // measures a width, and clearing it is no other trigger. A panel that is not laid out
+      // either measures nothing; it takes no part.
+      if (entry.hidden?.()) {
+        // It vanishes at once, with no slide-out, so the others snap into the space (a FLIP
+        // would leave the page showing through the hole), and it is a fresh entry when shown.
+        if (el && given.delete(el)) snap = true;
+        // One that has never been laid out would draw a lone panel's shadow for the instant it
+        // is measured (shown, nothing set), and then fade it out to its real one: set none.
+        if (el && !el.style.getPropertyValue("--_stack-shadow")) {
+          el.style.setProperty("--_stack-shadow", "0");
+          el.style.setProperty("--_stack-seam", "0");
+        }
+      } else if (el && el.offsetWidth > 0 && entry.side() === side) items.push(el);
     }
 
     // A panel that left the stack keeps the geometry it had, so it exits from where it stood
@@ -125,7 +138,7 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     // A resize snaps: panels follow the window, they do not trail it.
     const resized = vw !== lastWidth;
     lastWidth = vw;
-    if (!moved.length || resized || prefersReducedMotion() || typeof moved[0].animate !== "function") return;
+    if (!moved.length || resized || snap || prefersReducedMotion() || typeof moved[0].animate !== "function") return;
     // Read every new rect, and the easing once, before the first animate() dirties style.
     const right = side === "right";
     const easing = getComputedStyle(moved[0]).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
@@ -144,6 +157,17 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
   }
 
   watchPostEffect(relayout);
+  // The effect above runs before the panel's own `v-show` has put its display back, so a panel
+  // that was just shown still measures nothing there: one more pass, once the DOM has settled
+  // (the same task, before a frame paints). Only a reveal needs it: a hide is read directly, and
+  // a pass that moves nothing would cancel the slide the first one just started.
+  watch(
+    () => stack.entries.filter((e) => e.hidden?.()),
+    (now, was) => {
+      if (was.some((e) => !now.includes(e) && stack.entries.includes(e))) void nextTick(relayout);
+    },
+    { flush: "post" },
+  );
   onScopeDispose(() => {
     for (const el of managed) clear(el);
     managed.clear();

@@ -105,6 +105,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   onClosed: () => emit("after-leave"),
   join: joinStack({
     modal: () => props.modal,
+    hidden: () => props.hidden,
     backdrop: () => backdropOf(props),
   }),
 });

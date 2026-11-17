@@ -34,9 +34,13 @@ describe("CuiSlideoverStack (real browser)", () => {
     size?: string;
     modal?: boolean;
     side?: string;
+    /** Starts `hidden` (the consumer's prop); flip it through `hid[i]`. */
+    hidden?: boolean;
   }
+  let hid: boolean[] = [];
   function stack(specs: Spec[], props: Record<string, unknown> = {}, panelProps: Record<string, unknown> = {}) {
     const open = reactive(specs.map(() => false));
+    hid = reactive(specs.map((s) => !!s.hidden));
     const w = mount(
       defineComponent({
         render: () =>
@@ -52,6 +56,7 @@ describe("CuiSlideoverStack (real browser)", () => {
                     size: s.size ?? "md",
                     ...(s.modal === undefined ? {} : { modal: s.modal }),
                     side: s.side ?? "right",
+                    hidden: hid[i],
                     ...panelProps,
                     "data-testid": `p${i}`,
                   },
@@ -834,21 +839,22 @@ describe("CuiSlideoverStack (real browser)", () => {
       }
 
       /** Closes the panel under test over several cycles, so a one-frame gap has several chances to show. */
-      async function expectNoGap(reopen: () => Promise<void>, close: () => void) {
+      async function expectNoGap(reopen: () => Promise<void>, close: () => void, minFrames = 20) {
         const bad: [number, number][] = [];
         let total = 0;
-        for (let cycle = 0; cycle < 5 && total < 30; cycle++) {
+        for (let cycle = 0; cycle < 5 && total < minFrames + 10; cycle++) {
           const frames_ = await screencast(close, 400);
           total += frames_.length;
           const counts = await Promise.all(frames_.map(async (f) => (await whiteRuns(f)).length));
           counts.forEach((n, i) => n > 1 && bad.push([cycle * 1000 + i, n]));
           await reopen();
         }
-        expect(total, "the screencast delivered frames").toBeGreaterThan(20);
+        expect(total, "the screencast delivered frames").toBeGreaterThan(minFrames);
         expect(bad, `frames showing the page between the panels (cycle*1000+frame, runs): ${JSON.stringify(bad)}`).toEqual([]);
       }
 
       beforeAll(() => page.viewport(1100, 600));
+      afterEach(() => page.viewport(1100, 600));
 
       it("a child panel closing alone, declared inside its parent", async () => {
         const st = reactive({ edit: false, hist: false });
@@ -861,6 +867,23 @@ describe("CuiSlideoverStack (real browser)", () => {
         st.hist = true;
         await settle();
         await expectNoGap(async () => { st.hist = true; await settle(); }, () => void (st.hist = false));
+      });
+
+      // #529: `hidden` is the other way a panel leaves the layout; no hole may show while it does.
+      it("a middle panel being hidden, and shown again", async () => {
+        // Wide enough to stay attached throughout: a peek-to-attach change fades a shadow, which is not a gap.
+        await page.viewport(1400, 600);
+        const open = stack([{ size: "md" }, { size: "sm", modal: false }, { size: "sm", modal: false }], {}, { title: "T" });
+        await openN(open, 3);
+        // The panel vanishes at once and the rest snap, so there are few frames to see: a hole would show in them.
+        await expectNoGap(async () => { hid[1] = false; await settle(); }, () => void (hid[1] = true), 4);
+      });
+
+      it("a panel being revealed", async () => {
+        await page.viewport(1400, 600);
+        const open = stack([{ size: "md" }, { size: "sm", modal: false, hidden: true }], {}, { title: "T" });
+        await openN(open, 2);
+        await expectNoGap(async () => { hid[1] = true; await settle(); }, () => void (hid[1] = false));
       });
 
       it("a sibling panel closing alone", async () => {
@@ -1132,6 +1155,119 @@ describe("CuiSlideoverStack (real browser)", () => {
       expect(log).toEqual(["grand", "child", "parent"]);
       expect(st.child).toBe(false);
       expect(st.grand).toBe(false);
+    });
+  });
+
+  /**
+   * #529 - `hidden` on a stacked panel. A hidden panel sits out of the layout, so clearing it
+   * must put the panel in its place with nothing else prompting a re-layout, and setting it
+   * must close the gap, without the shared backdrop noticing either.
+   */
+  describe("hidden panels", () => {
+    beforeAll(() => page.viewport(1400, 800));
+
+    it("clearing `hidden` on an open panel attaches it in its place, with no other trigger", async () => {
+      const open = stack([{ size: "lg" }, { size: "md", hidden: true }]);
+      await openN(open, 2);
+      // Alone in the layout: the hidden one is not part of it.
+      expect(rect(0).right).toBeCloseTo(1400, 0);
+      hid[1] = false;
+      await settle();
+      expect(rect(1).right).toBeCloseTo(1400, 0);
+      expect(rect(1).width).toBeCloseTo(448, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
+      expect(rect(0).width).toBeCloseTo(576, 0);
+    });
+
+    it("the revealed panel obeys the fit rules: three large panels narrow to fill the viewport minus the gap", async () => {
+      const open = stack([{ size: "lg" }, { size: "lg" }, { size: "lg", hidden: true }]);
+      await openN(open, 3);
+      hid[2] = false;
+      await settle();
+      expect(rect(2).right).toBeCloseTo(1400, 0);
+      expect(rect(1).right).toBeCloseTo(rect(2).left, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
+      expect(rect(0).left).toBeCloseTo(32, 0);
+      expect(rect(0).width).toBeGreaterThanOrEqual(320);
+    });
+
+    it("re-flows the others as an ordinary move: the transform-only FLIP, not a snap", async () => {
+      const open = stack([{ size: "lg" }, { size: "md", hidden: true }]);
+      await openN(open, 2);
+      hid[1] = false;
+      await frames(2);
+      const flip = panel(0).getAnimations().find((a) => a.id === "cui-stack-flip");
+      expect(flip, "the first panel slides").toBeDefined();
+      const kf = (flip!.effect as KeyframeEffect).getKeyframes();
+      expect(kf[0].translate).toBeDefined();
+      await settle();
+    });
+
+    it("setting `hidden` takes the panel out and the rest re-flow, with no FLIP trail", async () => {
+      const open = stack([{ size: "lg" }, { size: "md" }, { size: "md" }]);
+      await openN(open, 3);
+      hid[1] = true;
+      await frames(2);
+      // The vanished panel does not slide out, so the others snap rather than leave a gap.
+      expect(panel(0).getAnimations().filter((a) => a.id === "cui-stack-flip")).toHaveLength(0);
+      await settle();
+      expect(rect(2).right).toBeCloseTo(1400, 0);
+      expect(rect(0).right).toBeCloseTo(rect(2).left, 0);
+      hid[1] = false;
+      await settle();
+      expect(rect(1).right).toBeCloseTo(rect(2).left, 0);
+      expect(rect(0).right).toBeCloseTo(rect(1).left, 0);
+    });
+
+    it("hiding the top modal panel hands the active set back: nothing beneath is inert or covered", async () => {
+      const open = stack([{}, {}]);
+      await openN(open, 2);
+      const covered = () => panel(0).hasAttribute("data-cui-covered");
+      const inert = () => panel(0).closest(".cui-slideover-overlay")!.hasAttribute("inert");
+      expect(covered() && inert()).toBe(true);
+      hid[1] = true;
+      await settle();
+      expect(covered(), "not covered by a hidden panel").toBe(false);
+      expect(inert(), "not inert beneath a hidden panel").toBe(false);
+      hid[1] = false;
+      await settle();
+      expect(covered() && inert()).toBe(true);
+    });
+
+    it("a hidden panel beneath the active one is not dimmed as covered, and is again once shown", async () => {
+      const open = stack([{}, {}]);
+      await openN(open, 2);
+      hid[0] = true;
+      await settle();
+      expect(panel(0).hasAttribute("data-cui-covered"), "a hidden panel is not covered").toBe(false);
+      hid[0] = false;
+      await settle();
+      expect(panel(0).hasAttribute("data-cui-covered")).toBe(true);
+    });
+
+    it("the shared backdrop never dips or remounts while a panel is hidden and revealed, even the last one", async () => {
+      const open = stack([{}, {}]);
+      await openN(open, 2);
+      document.querySelectorAll<HTMLElement>(".cui-backdrop").forEach((e) => (e.dataset.probe = "1"));
+      const bad: string[] = [];
+      let running = true;
+      const tick = () => {
+        const els = [...document.querySelectorAll<HTMLElement>(".cui-backdrop")].filter((e) => getComputedStyle(e).display !== "none");
+        const dim = 1 - els.reduce((acc, e) => acc * (1 - Number(getComputedStyle(e).opacity)), 1);
+        if (els.length !== 1 || els[0].dataset.probe !== "1" || Math.abs(dim - 0.5) > 0.002) bad.push(`${els.length}:${dim.toFixed(3)}`);
+        if (running) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      for (const [a, b] of [[false, true], [true, true], [false, false]]) {
+        hid[0] = a;
+        hid[1] = b;
+        await settle();
+        hid[0] = false;
+        hid[1] = false;
+        await settle();
+      }
+      running = false;
+      expect(bad).toEqual([]);
     });
   });
 });
