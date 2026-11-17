@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
-import { ShowDebugKey } from "../keys";
 import { CuiCard, CuiCardBody, CuiGrid } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/grid";
-
-const showDebugRef = inject(ShowDebugKey);
-const showDebug = computed(() => showDebugRef?.value ?? false);
 
 const codeExamples = {
   grid3Col: `<CuiGrid :cols="3" gap="4">
@@ -34,7 +29,7 @@ const codeExamples = {
   <DocPage :meta="meta">
     <template #usage>
       <Example code-open :code="codeExamples.grid3Col">
-        <CuiGrid :cols="3" gap="4" :debug="showDebug">
+        <CuiGrid :cols="3" gap="4">
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 1</div>
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 2</div>
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 3</div>
@@ -68,7 +63,7 @@ const codeExamples = {
 
     <template #examples>
       <Example title="Responsive Grid (1 → 2 → 3 columns)" :code="codeExamples.gridResponsive">
-        <CuiGrid :cols="{ sm: 1, md: 2, lg: 3 }" gap="4" :debug="showDebug">
+        <CuiGrid :cols="{ sm: 1, md: 2, lg: 3 }" gap="4">
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 1</div>
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 2</div>
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 3</div>
@@ -76,9 +71,9 @@ const codeExamples = {
       </Example>
 
       <Example title="Nested Grids" :code="codeExamples.gridNested">
-        <CuiGrid :cols="2" gap="4" :debug="showDebug">
+        <CuiGrid :cols="2" gap="4">
           <div class="rounded-lg bg-secondary-500 p-4 text-white">Item 1</div>
-          <CuiGrid :cols="2" gap="2" :debug="showDebug">
+          <CuiGrid :cols="2" gap="2">
             <div class="rounded-lg bg-secondary-300 p-2 text-white">Nested 1</div>
             <div class="rounded-lg bg-secondary-300 p-2 text-white">Nested 2</div>
             <div class="rounded-lg bg-secondary-300 p-2 text-white">Nested 3</div>

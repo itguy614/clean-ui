@@ -1,13 +1,8 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
-import { ShowDebugKey } from "../keys";
 import { CuiFlex } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/flex";
-
-const showDebugRef = inject(ShowDebugKey);
-const showDebug = computed(() => showDebugRef?.value ?? false);
 </script>
 
 <template>
@@ -21,7 +16,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
   <div>Item 3</div>
 </CuiFlex>`"
       >
-        <CuiFlex gap="4" :debug="showDebug">
+        <CuiFlex gap="4">
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 1</div>
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 2</div>
           <div class="rounded-lg bg-primary-500 p-4 text-white">Item 3</div>
@@ -37,7 +32,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
 <div>Item 2</div>
 </CuiFlex>`"
       >
-        <CuiFlex direction="col" gap="4" :debug="showDebug">
+        <CuiFlex direction="col" gap="4">
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 1</div>
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 2</div>
           <div class="rounded-lg bg-info-500 p-4 text-white">Item 3</div>
@@ -51,7 +46,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
 <div>Tall item</div>
 </CuiFlex>`"
       >
-        <CuiFlex align="center" gap="4" :debug="showDebug">
+        <CuiFlex align="center" gap="4">
           <div class="rounded-lg bg-success-500 p-2 text-white">Short</div>
           <div class="rounded-lg bg-success-500 p-6 text-white">Tall item</div>
           <div class="rounded-lg bg-success-500 p-4 text-white">Medium</div>
@@ -66,7 +61,7 @@ const showDebug = computed(() => showDebugRef?.value ?? false);
 <div>Item 3</div>
 </CuiFlex>`"
       >
-        <CuiFlex justify="between" gap="4" :debug="showDebug">
+        <CuiFlex justify="between" gap="4">
           <div class="rounded-lg bg-warning-500 p-4 text-white">Item 1</div>
           <div class="rounded-lg bg-warning-500 p-4 text-white">Item 2</div>
           <div class="rounded-lg bg-warning-500 p-4 text-white">Item 3</div>
