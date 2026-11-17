@@ -317,7 +317,7 @@ watch(open, (isOpen) => {
 function choose(i: number) {
   const command = rows.value[i]?.command;
   if (!command || command.disabled) return;
-  registry.value.remember(command.id);
+  registry.value.remember?.(command.id);
   emit("select", command);
   // Run it after the exit, once focus is back with the opener: a command that opens a dialog
   // or moves focus would otherwise lose it to the palette's restore.
@@ -349,22 +349,16 @@ function onUpdateVisible(v: boolean) {
 
 // --- Hotkey: toggles, also from inside a field or over another overlay ---
 const parsedHotkey = computed(() => (props.hotkey ? parseHotkey(props.hotkey) : null));
-// Claimed while mounted and listening: with several palettes the last one claims the key.
+// Claimed from mount to unmount; with several palettes the last to mount claims the key.
 let claim: ReturnType<typeof claimHotkey> | undefined;
-onMounted(() =>
-  watch(
-    () => (props.hidden ? null : parsedHotkey.value),
-    (hotkey, _, onCleanup) => {
-      if (!hotkey) return;
-      const mine = (claim = claimHotkey(hotkey));
-      onCleanup(() => {
-        mine.release();
-        if (claim === mine) claim = undefined;
-      });
-    },
-    { immediate: true },
-  ),
-);
+onMounted(() => {
+  claim = claimHotkey();
+  watch(() => (props.hidden ? null : parsedHotkey.value), (hotkey) => claim?.set(hotkey), { immediate: true });
+});
+onBeforeUnmount(() => {
+  claim?.release();
+  claim = undefined;
+});
 useEventListener(
   "document",
   "keydown",

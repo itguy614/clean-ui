@@ -146,7 +146,9 @@ export function createCommandPalette(): UseCommandPalette {
 /**
  * Gives this component's subtree its own registry, so a palette inside it (a drawer's, say)
  * shares nothing with a global one. Pass one from `createCommandPalette()` to provide that
- * instead. Returns what `useCommandPalette()` returns for the subtree.
+ * instead. Returns what `useCommandPalette()` returns for the subtree. Descendants see it
+ * through `useCommandPalette()`; the providing component does not (a component cannot inject
+ * its own provide), so it uses the returned object.
  */
 export function useCommandPaletteProvider(registry: UseCommandPalette = createRegistry()): UseCommandPalette {
   provide(CuiCommandPaletteKey, registry);
@@ -157,7 +159,9 @@ export function useCommandPaletteProvider(registry: UseCommandPalette = createRe
  * The nearest provided registry, else the default one. Outside a component or an app
  * context (an entry file, a router guard) that is the default, and nothing warns: unlike a
  * family context it does not throw outside a provider, since the default is the usage that
- * never needed one. The palette's own use also records a command as recently run.
+ * never needed one. It must run synchronously in `setup()`: after an `await` or in a
+ * callback it also answers with the default. The palette's own use also records a command as
+ * recently run.
  */
 export function useCommandPaletteContext(): CuiCommandRegistry {
   // Every registry is made by createRegistry, so `remember` is there whatever the type says.

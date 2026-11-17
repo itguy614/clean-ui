@@ -328,11 +328,11 @@ const hotkeyCode = `<!-- Rebind it -->
           or a subtree such as a drawer, its own and its palette shares nothing with the rest.
         </p>
         <ul class="mb-4 list-disc pl-5 text-surface-700 dark:text-surface-300">
-          <li><code>useCommandPaletteProvider()</code>, in a component's setup, gives that component's descendants a new registry and returns it. <code>useCommandPalette()</code> and <code>CuiCommandPalette</code> below it use that one. Pass it a registry from <code>createCommandPalette()</code> to provide that instead.</li>
+          <li><code>useCommandPaletteProvider()</code>, in a component's setup, gives that component's descendants a new registry and returns it. <code>useCommandPalette()</code> and <code>CuiCommandPalette</code> below it use that one; the providing component itself, and any call after an <code>await</code> in setup, must use the returned object or it gets the default. Pass it a registry from <code>createCommandPalette()</code> to provide that instead.</li>
           <li><code>app.provide(CuiCommandPaletteKey, createCommandPalette())</code> does the same for a whole app, which is what separates two apps on one page.</li>
           <li><code>CuiCommandPalette</code>'s <code>registry</code> prop points one palette at an explicit registry, whatever is provided. Register into the same object.</li>
           <li><code>useCommandPalette()</code> answers with the nearest registry, and with the default outside a component, where nothing is provided.</li>
-          <li>Several palettes may listen for one shortcut. The palette mounted last handles it, so one inside a drawer takes <kbd>Mod</kbd>+<kbd>K</kbd> while the drawer is mounted and hands it back when it goes. A palette with its hotkey off, or <code>hidden</code>, never takes it; give each a shortcut of its own to keep both reachable.</li>
+          <li>Several palettes may listen for one shortcut. The palette mounted last handles it, so one inside a drawer takes <kbd>Mod</kbd>+<kbd>K</kbd> while it is mounted and hands it back when it goes. A palette that stays mounted but out of sight keeps the key, so mount it with <code>v-if</code> or set <code>hidden</code>. A palette with its hotkey off, or <code>hidden</code>, never takes it; give each a shortcut of its own to keep both reachable.</li>
           <li>Registrations still withdraw when the component that made them unmounts, and the latest registration of an id wins within its own registry. On the server <code>register</code> does nothing in every registry.</li>
         </ul>
         <Example title="Two palettes, two registries" code-open :code="scopedCode">

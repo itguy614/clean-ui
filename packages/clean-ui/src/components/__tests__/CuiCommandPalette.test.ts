@@ -881,3 +881,36 @@ describe("CuiCommandPalette scoped registries (#530)", () => {
     hidden.unmount();
   });
 });
+
+describe("CuiCommandPalette hotkey claims (#530)", () => {
+  it("keeps its place in line when it is hidden and shown again, or its shortcut changes", async () => {
+    const other = createCommandPalette();
+    registerScoped(COMMANDS);
+    const first = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k" } });
+    const second = mount(CuiCommandPalette, { props: { hotkey: "ctrl+k", registry: other } });
+    await settle();
+    await first.setProps({ hidden: true });
+    await first.setProps({ hidden: false });
+    await first.setProps({ hotkey: "ctrl+k" });
+    key({ key: "k", ctrlKey: true }, document.body);
+    await settle();
+    expect(other.visible.value).toBe(true);
+    expect(palette.visible.value).toBe(false);
+    first.unmount();
+    second.unmount();
+  });
+
+  it("releasing a claim twice does not take another palette's", async () => {
+    const { claimHotkey } = await import("../../utils/hotkey");
+    const { parseHotkey } = await import("../../utils/hotkey");
+    const a = claimHotkey();
+    const b = claimHotkey();
+    a.set(parseHotkey("ctrl+k"));
+    b.set(parseHotkey("ctrl+k"));
+    a.release();
+    a.release();
+    const e = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
+    expect(b.owns(e)).toBe(true);
+    b.release();
+  });
+});
