@@ -27,7 +27,7 @@ const colorMode = useColorMode();
 const { toast } = useToast();
 // The site's own palette (the header's Search button, Mod-K) lists the whole page list from the app
 // shell. This page's demo gets a registry of its own so its commands and recents stay out of that
-// one, and its own shortcut (Mod-/) so the two never fight over Mod-K.
+// one, and its own shortcut (Mod-E) so the two never fight over Mod-K.
 const palette = useCommandPaletteProvider();
 
 const lastRan = ref("(nothing yet)");
@@ -71,7 +71,7 @@ const groups: CuiCommandGroup[] = [
 ];
 
 // Registered from setup, so they are withdrawn when this page unmounts: leave for another
-// page, press Cmd/Ctrl-K there, and these are gone (the palette on this page is gone too).
+// page, and they are gone with the demo palette that lists them.
 palette.register([
   {
     id: "demo.dark-mode",
@@ -245,7 +245,7 @@ const hotkeyCode = `<!-- Rebind it -->
         <CuiFlex gap="3" align="center" wrap="wrap">
           <CuiButton variant="outline" @click="palette.open()">Search commands</CuiButton>
           <span>
-            or press <CuiKbd>Ctrl</CuiKbd> <CuiKbd>/</CuiKbd> (<CuiKbd>⌘</CuiKbd> <CuiKbd>/</CuiKbd> on a Mac). <CuiKbd>Ctrl</CuiKbd> <CuiKbd>K</CuiKbd> is this site's own search.
+            or press <CuiKbd>Ctrl</CuiKbd> <CuiKbd>E</CuiKbd> (<CuiKbd>⌘</CuiKbd> <CuiKbd>E</CuiKbd> on a Mac). <CuiKbd>Ctrl</CuiKbd> <CuiKbd>K</CuiKbd> is this site's own search.
           </span>
         </CuiFlex>
         <p style="margin: 0.75rem 0 0">Last run: <CuiBadge>{{ lastRan }}</CuiBadge></p>
@@ -256,7 +256,7 @@ const hotkeyCode = `<!-- Rebind it -->
           <li v-for="(line, i) in searchLog" :key="i + line">{{ line }}</li>
         </ol>
 
-        <CuiCommandPalette hotkey="mod+/" label="Demo command palette" :groups="groups" :max-results="30" :recent="3" :fetch-commands="searchRecords" @select="lastRan = $event.label">
+        <CuiCommandPalette hotkey="mod+e" label="Demo command palette" :groups="groups" :max-results="30" :recent="3" :fetch-commands="searchRecords" @select="lastRan = $event.label">
           <template v-if="customRows" #item="{ command, active, segments }">
             <span style="flex: 1 1 auto">
               <template v-for="(s, i) in segments" :key="i">
@@ -354,10 +354,10 @@ const hotkeyCode = `<!-- Rebind it -->
           the app shell, with every page from the page list registered once (matched on each page's
           keywords, grouped as the sidebar groups them), plus the site's own actions: toggle color
           mode, switch theme, show or hide debug overlays. The header's <em>Search</em> button opens it, and so
-          does <kbd>Mod</kbd>+<kbd>K</kbd> from any page.
+          does <CuiKbd>Mod</CuiKbd> + <CuiKbd>K</CuiKbd> from any page.
         </p>
         <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
-          <li>The demo palette above is separate: it provides a registry of its own with <code>useCommandPaletteProvider()</code> and listens for <kbd>Mod</kbd>+<kbd>/</kbd>, so on this page <kbd>Mod</kbd>+<kbd>K</kbd> still opens the site's search and the demo's commands and recents never mix into it.</li>
+          <li>The demo palette above is separate: it provides a registry of its own with <code>useCommandPaletteProvider()</code> and listens for <CuiKbd>Mod</CuiKbd> + <CuiKbd>E</CuiKbd>, so on this page <CuiKbd>Mod</CuiKbd> + <CuiKbd>K</CuiKbd> still opens the site's search and the demo's commands and recents never mix into it.</li>
           <li>The sidebar's <em>Filter pages</em> box stays. It does a different job: it narrows the navigation in place, so you can see where a page sits among its neighbors, while the palette jumps straight to one page and runs actions. Both read the same page list.</li>
         </ul>
       </div>

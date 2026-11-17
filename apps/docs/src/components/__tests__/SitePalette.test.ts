@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { createMemoryHistory, createRouter } from "vue-router";
-import { useCommandPalette } from "@itguy614/clean-ui";
+import { defineComponent, h, nextTick } from "vue";
+import { CuiCommandPalette, useCommandPalette, useCommandPaletteProvider, type UseCommandPalette } from "@itguy614/clean-ui";
 import SitePalette from "../SitePalette.vue";
 import { PAGES } from "../../navigation/pages";
 
@@ -43,6 +44,29 @@ describe("the site palette", () => {
     await mountPalette();
     const ids = useCommandPalette().commands.value.map((c) => c.id);
     expect(ids).toEqual(expect.arrayContaining(["site.color-mode", "site.debug", "site.theme.default", "site.theme.forest"]));
+  });
+
+  it("keeps Mod-K beside a page palette that has a registry and a shortcut of its own", async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:pathMatch(.*)*", component: Blank }] });
+    await router.push("/");
+    let scoped!: UseCommandPalette;
+    const Page = defineComponent({
+      setup() {
+        scoped = useCommandPaletteProvider();
+        return () => h(CuiCommandPalette, { hotkey: "mod+e", label: "Demo" });
+      },
+    });
+    wrapper = mount({ render: () => [h(SitePalette), h(Page)] }, { attachTo: document.body, global: { plugins: [router] } });
+    const press = async (key: string) => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey: true, bubbles: true, cancelable: true }));
+      await nextTick();
+    };
+    const site = useCommandPalette();
+    await press("k");
+    expect([site.visible.value, scoped.visible.value]).toEqual([true, false]);
+    await press("k");
+    await press("e");
+    expect([site.visible.value, scoped.visible.value]).toEqual([false, true]);
   });
 
   it("withdraws its commands when it unmounts", async () => {

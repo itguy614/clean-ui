@@ -25,7 +25,7 @@ const showDebug = inject(ShowDebugKey, ref(false));
 // Actions first, then one group per navigation group, in the order the sidebar lists them.
 const pageGroups = [...new Set(PAGES.map((p) => p.group))];
 const groups: CuiCommandGroup[] = [
-  { id: "actions", label: "Actions", priority: 1000 },
+  { id: "site", label: "Site", priority: 1000 },
   { id: "theme", label: "Theme", priority: 999 },
   ...pageGroups.map((id, i): CuiCommandGroup => ({ id, label: id, priority: pageGroups.length - i })),
 ];
@@ -51,7 +51,7 @@ palette.register(() => [
     label: "Toggle color mode",
     description: colorMode.isDark.value ? "Switch to light" : "Switch to dark",
     keywords: ["dark", "light", "appearance", "night"],
-    group: "actions",
+    group: "site",
     icon: colorMode.isDark.value ? "sun" : "moon",
     action: () => colorMode.toggle(),
   },
@@ -59,7 +59,7 @@ palette.register(() => [
     id: "site.debug",
     label: showDebug.value ? "Hide debug overlays" : "Show debug overlays",
     keywords: ["grid", "layout", "outline"],
-    group: "actions",
+    group: "site",
     icon: "eye",
     action: () => (showDebug.value = !showDebug.value),
   },
@@ -78,5 +78,5 @@ palette.register(() => [
 </script>
 
 <template>
-  <CuiCommandPalette :groups="groups" :max-results="40" :recent="3" label="Search documentation" />
+  <CuiCommandPalette :groups="groups" :max-results="200" :recent="3" label="Search documentation" />
 </template>
