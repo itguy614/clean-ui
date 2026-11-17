@@ -14,7 +14,7 @@ interface Printer {
 const printers: Printer[] = [
   { name: "Front Desk LaserJet", status: "ready" },
   { name: "Warehouse Label Printer", status: "printing" },
-  { name: "Finance Colour MFP — Second Floor, East Wing", status: "low" },
+  { name: "Finance Color MFP — Second Floor, East Wing", status: "low" },
   { name: "Shipping Dock Zebra", status: "offline" },
 ];
 
@@ -94,10 +94,10 @@ const bluetooth = ref(false);
         </li>
         <li>
           The chevron and a decorative <code>CuiStatusDot</code> are <code>aria-hidden</code>,
-          so a status is announced through the subtitle text, never by colour alone.
+          so a status is announced through the subtitle text, never by color alone.
         </li>
         <li>
-          The default subtitle colour holds WCAG AAA (7:1) on the list fill and under the hover
+          The default subtitle color holds WCAG AAA (7:1) on the list fill and under the hover
           fill, in light and dark mode and in every theme.
         </li>
         <li>

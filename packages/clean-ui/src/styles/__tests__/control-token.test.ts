@@ -26,7 +26,7 @@ const COMPONENTS = new Map(COMPONENT_FILES.map((f) => [basename(f), f]));
  *
  * #211 measured the drift: 22 components emitted a private token but only 10 were listed,
  * so 14 — CuiInput and CuiSelect among them — could quietly regain a bare declaration. All
- * 22 are listed now (CuiTooltip had to finish its colours first). The check reads the
+ * 22 are listed now (CuiTooltip had to finish its colors first). The check reads the
  * `<script>` and the template's `:style` bindings (#333): a bare key in a binding outranks
  * the stylesheet exactly as one in a computed style does.
  */
@@ -217,7 +217,7 @@ const CONVERTED_STYLESHEETS: Array<{ file: string; component: string; part: stri
 /** The properties a themeable slot paints. */
 const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-color)?)\s*:/;
 
-/** CLAUDE.md's slot vocabulary — a closed set, like the colour-role slots. */
+/** CLAUDE.md's slot vocabulary — a closed set, like the color-role slots. */
 const SLOTS = new Set([
   ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
@@ -286,12 +286,12 @@ describe("converted stylesheets read every private property through its public t
  * var(--_input-height)`), so a consumer's container token or plain `.cui-input` rule could
  * not win. A listed component must read EVERY private token as the fallback of its public
  * one — `var(--cui-<c>-<slot>, var(--_<c>-<slot>))`, or nested in a fallback of one, as
- * CuiBanner's border colour is inside `--cui-banner-border`'s — and wherever it does,
+ * CuiBanner's border color is inside `--cui-banner-border`'s — and wherever it does,
  * inside a rule wrapped whole in `:where()`, so a consumer's plain rule at (0,1,0) wins too.
  *
  * `privateOnly` lists slots with no public layer ON PURPOSE, each with its reason: a size
  * preset's geometry (a toggle's knob), a value that follows the data (a progress fill's
- * position), a floating label's offset, a part's own colour that the closed slot vocabulary
+ * position), a floating label's offset, a part's own color that the closed slot vocabulary
  * has no name for. They may be read bare, anywhere. An entry the stylesheet no longer reads
  * is stale and fails.
  *
@@ -302,7 +302,7 @@ describe("converted stylesheets read every private property through its public t
 const TRANSFORM_ORIGIN =
   "a floating panel scales from its trigger: a private value only, with no public token, since a consumer has nothing to restyle (CLAUDE.md, Motion)";
 const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the form field" };
-const PART_COLOUR = "a part's own colour has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
+const PART_COLOR = "a part's own color has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
 const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
@@ -333,7 +333,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   {
     file: "CuiAlert.vue",
     component: "alert",
-    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR },
+    privateOnly: { "icon-color": PART_COLOR, "dismiss-color": PART_COLOR },
     issue: "#454",
   },
   { file: "CuiBanner.vue", component: "banner", privateOnly: {}, issue: "#454" },
@@ -352,7 +352,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   {
     file: "CuiCommandPalette.vue",
     component: "command-palette",
-    privateOnly: { match: PART_COLOUR, tint: PART_COLOUR, heading: PART_COLOUR },
+    privateOnly: { match: PART_COLOR, tint: PART_COLOR, heading: PART_COLOR },
     issue: "#197",
   },
   { file: "CuiDivider.vue", component: "divider", privateOnly: { spacing: "follows the `spacing` prop: margin geometry from the data, with no slot in the vocabulary (#489)" }, issue: "#489" },
@@ -361,14 +361,14 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   {
     file: "CuiToast.vue",
     component: "toast",
-    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR, "progress-bg": PART_COLOUR, "progress-bar": PART_COLOUR },
+    privateOnly: { "icon-color": PART_COLOR, "dismiss-color": PART_COLOR, "progress-bg": PART_COLOR, "progress-bar": PART_COLOR },
     issue: "#454",
   },
   { file: "CuiTabs.vue", component: "tabs", privateOnly: {}, issue: "#454" },
   {
     file: "CuiBadge.vue",
     component: "badge",
-    privateOnly: { "dot-bg": "the dot and its ping ring paint in the role's colour, a part's own with no slot in the closed vocabulary; the rule is whole :where(), so a consumer's plain rule wins" },
+    privateOnly: { "dot-bg": "the dot and its ping ring paint in the role's color, a part's own with no slot in the closed vocabulary; the rule is whole :where(), so a consumer's plain rule wins" },
     issue: "#294",
   },
   { file: "CuiFieldset.vue", component: "fieldset", privateOnly: {}, issue: "#294" },
@@ -514,7 +514,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     [
       "label-color",
       ...["px", "inset", "lead", "end", "color", "room", "scale", "fs", "origin-y", "drop", "rest-color"].map((s) => `float-${s}`),
-    ].map((slot) => [`form-field-${slot}`, "the floating label's geometry and colour state, declared and read inside this stylesheet"]),
+    ].map((slot) => [`form-field-${slot}`, "the floating label's geometry and color state, declared and read inside this stylesheet"]),
   ),
   "CuiIcon.vue": {
     "icon-width": `follows the \`size\` prop (${GEOMETRY})`,
@@ -534,7 +534,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
       `color-picker-${s}`,
       "the size preset's geometry, with no public token (see CuiColorPicker's rootVars comment)",
     ]).concat(
-      ["hue", "value"].map((s) => [`color-picker-${s}`, "a colour that follows the picked value (the data), not a theme colour"]),
+      ["hue", "value"].map((s) => [`color-picker-${s}`, "a color that follows the picked value (the data), not a theme color"]),
     ),
   ),
   "CuiTreeNode.vue": {

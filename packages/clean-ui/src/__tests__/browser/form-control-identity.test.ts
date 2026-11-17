@@ -23,7 +23,7 @@ import baseline from "./form-control-identity.baseline.json";
  * dark, focus, hover, error, disabled, checked and density states that move paint. Real
  * browser: jsdom computes none of this.
  *
- * Intentional change: an invalid, focused Input and Textarea show the error-coloured focus ring
+ * Intentional change: an invalid, focused Input and Textarea show the error-colored focus ring
  * (`input-md-error-focus`, `textarea-md-error-focus`), as Select and Combobox do. Until #454 they
  * showed the primary ring: the red one was declared but lost the cascade.
  *
@@ -247,7 +247,7 @@ function snapshot(kind: string, host: ParentNode) {
   return out;
 }
 
-/** Distinct, deterministic colours for every step of the scale, so a wrong slot shows up. */
+/** Distinct, deterministic colors for every step of the scale, so a wrong slot shows up. */
 function colourScale() {
   const full = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   const condensed = [100, 300, 500, 700, 900];

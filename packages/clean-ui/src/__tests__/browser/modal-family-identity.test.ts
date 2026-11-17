@@ -14,8 +14,8 @@ import baselineJson from "./modal-family-identity.baseline.json";
  * conversion: the header with and without actions, a custom slot, no close button and the
  * close button's hover; the body padded, flush and scrolling (and its focusable region); the
  * footer in each alignment; the confirm dialog in each variant, with a confirm word, a custom
- * confirm colour, no icon, a slot message and the loading spinner; each in light and dark
- * where it has colour, and in compact and spacious density. Real browser: jsdom computes none
+ * confirm color, no icon, a slot message and the loading spinner; each in light and dark
+ * where it has color, and in compact and spacious density. Real browser: jsdom computes none
  * of this.
  */
 describe("the modal family renders as it did before the stylesheet conversion (#489)", () => {

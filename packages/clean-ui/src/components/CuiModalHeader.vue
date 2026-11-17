@@ -57,7 +57,7 @@ const messages = useMessages();
  * Every themeable rule is a whole :where(), so a consumer's plain `.cui-modal-header { … }` at
  * (0,1,0) wins without !important; structure (display, position, flex) keeps normal
  * specificity. The close button's hover was written from mouseenter and mouseleave handlers
- * (an inline background and colour); it is a :hover rule now.
+ * (an inline background and color); it is a :hover rule now.
  */
 .cui-modal-header {
   display: flex;

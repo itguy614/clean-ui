@@ -113,7 +113,7 @@ const stickyData = [
         <li>
           <code>selected</code> only tints a row. If selection is a state the user controls,
           put a real checkbox in the row and set <code>aria-selected</code> yourself —
-          a colour is not a state.
+          a color is not a state.
         </li>
         <li>
           Use <code>ariaRowcount</code> only for a windowed table, where the DOM holds a

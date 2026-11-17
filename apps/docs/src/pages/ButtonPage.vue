@@ -26,7 +26,7 @@ function toggle(set: Set<string>, id: string) {
   if (!set.delete(id)) set.add(id);
 }
 
-// pressed: one toggle per variant, in two colours.
+// pressed: one toggle per variant, in two colors.
 const variants = ["solid", "outline", "dash", "ghost"] as const;
 const pressedVariants = reactive(new Set(["primary-outline", "primary-ghost", "success-outline", "success-ghost"]));
 
@@ -326,7 +326,7 @@ const toolbarCode = `<CuiToolbar label="Quick switch">
             </CuiFlex>
             <p class="text-sm text-surface-600 dark:text-surface-400">
               <strong>Try:</strong> click each to toggle it. A pressed button takes the tinted
-              fill, a coloured edge and stronger text (solid takes its darker shade), restyled
+              fill, a colored edge and stronger text (solid takes its darker shade), restyled
               with <code>--cui-button-pressed-bg</code>, <code>-color</code> and
               <code>-border</code>.
             </p>

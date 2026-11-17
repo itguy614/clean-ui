@@ -227,7 +227,7 @@ const rowPlan = ref<string | null>(null);
             A control's own <code>placeholder</code> stays hidden until focus, so it only shows
             once the label has floated. A leading icon keeps the resting label after it. Prefix
             text such as <code>https://</code> is part of the value, so it keeps the label
-            floated, as a stepper does. The error colour applies resting and floated. A
+            floated, as a stepper does. The error color applies resting and floated. A
             textarea reserves the label's room all the time, so its text never moves.
           </p>
           <CuiFormField label="Email" label-position="floating" help-text="Has a placeholder: focus to see it" v-slot="f">

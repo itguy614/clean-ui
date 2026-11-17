@@ -15,7 +15,7 @@ main :is(h1, h2, h3)[id] {
 }
 
 /* Docs search (#516): the matched stretch of a result's label. A surface tint plus weight and an
-   underline, so it reads without relying on colour; semantic tokens, so both modes follow. */
+   underline, so it reads without relying on color; semantic tokens, so both modes follow. */
 .docs-search-mark {
   background: var(--cui-primary-bg);
   color: inherit;

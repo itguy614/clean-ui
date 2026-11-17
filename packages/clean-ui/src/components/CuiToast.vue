@@ -237,7 +237,7 @@ const messages = useMessages();
   border-radius: var(--cui-toast-radius, var(--cui-radius-md, 0.375rem));
 }
 
-/* A part's own colour has no slot in the vocabulary, so it stays a private token, but each
+/* A part's own color has no slot in the vocabulary, so it stays a private token, but each
    rule is zero specificity: a consumer's plain `.cui-toast__icon { color }` wins. */
 :where(.cui-toast__icon) {
   color: var(--_toast-icon-color, currentColor);

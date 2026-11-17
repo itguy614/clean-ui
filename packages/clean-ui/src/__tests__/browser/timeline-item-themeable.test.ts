@@ -9,7 +9,7 @@ import CuiTimelineItem from "../../components/CuiTimelineItem.vue";
  * #489 — a consumer restyles CuiTimelineItem without `!important`: a plain class rule at
  * (0,1,0), or a public `--cui-timeline-item-*` token on a container. The paint sits in the
  * component's stylesheet at zero specificity; the only inline values are the dot's private
- * `--_timeline-item-*` colours, which follow the `color` prop and whether there is an icon.
+ * `--_timeline-item-*` colors, which follow the `color` prop and whether there is an icon.
  */
 describe("CuiTimelineItem is themeable (real browser, #489)", () => {
   let removeTokens: () => void;

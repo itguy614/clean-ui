@@ -45,7 +45,7 @@ const meta: ComponentMeta = {
           name: "action",
           type: "{ label: string; onClick: () => void; dismissOnClick?: boolean }",
           description:
-            "A button in the toast (Undo, Retry, View), rendered as a small ghost CuiButton in the toast's colour (a solid one matching the fill on a solid toast). The toast is dismissed after onClick unless dismissOnClick is false",
+            "A button in the toast (Undo, Retry, View), rendered as a small ghost CuiButton in the toast's color (a solid one matching the fill on a solid toast). The toast is dismissed after onClick unless dismissOnClick is false",
         },
         { name: "pauseOnHover", type: "boolean", default: "true", description: "Pause auto-dismiss while the pointer is over the toast" },
         { name: "pauseOnFocus", type: "boolean", default: "true", description: "Pause auto-dismiss while focus is inside the toast" },
@@ -74,10 +74,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-toast-bg", default: "per variant: the role's -bg (subtle), surface-base (outline), solid", description: "Background" },
-    { name: "--cui-toast-color", default: "per variant", description: "Text colour" },
+    { name: "--cui-toast-color", default: "per variant", description: "Text color" },
     { name: "--cui-toast-border", default: "1px solid, the role's -border (none when solid)", description: "Border" },
     { name: "--cui-toast-radius", default: "var(--cui-radius-md)", description: "Corner radius" },
-    { name: "--cui-toast-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon, dismiss and progress colours have no token: a plain `.cui-toast__icon`, `__dismiss`, `__progress` or `__progress-bar` rule wins" },
+    { name: "--cui-toast-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon, dismiss and progress colors have no token: a plain `.cui-toast__icon`, `__dismiss`, `__progress` or `__progress-bar` rule wins" },
   ],
 };
 

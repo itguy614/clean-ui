@@ -188,7 +188,7 @@ describe("CuiSidebar default look (real browser)", () => {
     return value;
   }
 
-  it("light: fills with the tinted surface (not transparent, not the page colour) and a surface border", () => {
+  it("light: fills with the tinted surface (not transparent, not the page color) and a surface border", () => {
     const el = mountDefault().querySelector(".cui-sidebar") as HTMLElement;
     const style = getComputedStyle(el);
     expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");

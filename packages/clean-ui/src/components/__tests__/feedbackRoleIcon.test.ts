@@ -13,7 +13,7 @@ import { IconWarningOctagon } from "../../icons/generated/warning-octagon";
 import { COLOR_ICON_MAP, registerRoleIcons, __clearRoleIcons } from "../../utils/colorIconMap";
 
 /**
- * #119 — the role icon was welded to the colour, and `noIcon` could suppress it but not
+ * #119 — the role icon was welded to the color, and `noIcon` could suppress it but not
  * replace it. All three feedback components now take the same `icon` prop and an `#icon`
  * slot.
  */
@@ -86,7 +86,7 @@ describe("feedback components: the role icon can be replaced", () => {
 describe("COLOR_ICON_MAP", () => {
   it("gives error its own glyph, not a cross and not the warning one", () => {
     // A cross reads as "close", and beside a dismissible component's own ✕ it renders as
-    // a second close button. Reusing `warning-circle` would instead leave colour as the
+    // a second close button. Reusing `warning-circle` would instead leave color as the
     // only thing separating error from warning (WCAG 1.4.1).
     expect(COLOR_ICON_MAP.error).toBe(IconWarningOctagon);
     expect(COLOR_ICON_MAP.error).not.toBe(COLOR_ICON_MAP.warning);
@@ -99,8 +99,8 @@ describe("registerRoleIcons", () => {
   afterEach(() => __clearRoleIcons());
 
   it("overrides a role's icon app-wide, not per call site", () => {
-    // #119 unwelded the icon from the colour per call site; this is the other half —
-    // role → icon is a theme concern the same way role → colour is (#140).
+    // #119 unwelded the icon from the color per call site; this is the other half —
+    // role → icon is a theme concern the same way role → color is (#140).
     registerRoleIcons({ error: "check-circle" });
 
     for (const component of [CuiBanner, CuiAlert, CuiToast]) {

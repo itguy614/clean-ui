@@ -8,7 +8,7 @@ import CuiPopover from "../../components/CuiPopover.vue";
 import { installTokens } from "../../../../../config/test/browser-helpers";
 
 /**
- * #294 — Badge, Fieldset and Popover wrote background, border, colour and radius as inline
+ * #294 — Badge, Fieldset and Popover wrote background, border, color and radius as inline
  * declarations, so restyling one meant `!important`. Same two routes as CuiButton now: set the
  * `--cui-<component>-<slot>` token, or write a plain rule.
  *
@@ -18,7 +18,7 @@ import { installTokens } from "../../../../../config/test/browser-helpers";
  * Real browser: the cascade and `var()` resolution are the subject.
  */
 describe("Badge, Fieldset and Popover themeable properties (real browser)", () => {
-  // The colour scale is stubbed: an unresolved `var()` voids a whole `border` shorthand.
+  // The color scale is stubbed: an unresolved `var()` voids a whole `border` shorthand.
   let teardown: () => void;
   beforeAll(() => (teardown = installTokens(main)));
   afterAll(() => teardown());

@@ -81,10 +81,10 @@ describe("CuiButton themeable properties (real browser)", () => {
     consumer.remove();
   });
 
-  it("keeps the solid variant's own text colour on hover", async () => {
-    // Regression: the hover rule fell back to `inherit` when a variant set no hover colour,
+  it("keeps the solid variant's own text color on hover", async () => {
+    // Regression: the hover rule fell back to `inherit` when a variant set no hover color,
     // which only solid does. On a page with dark body text that meant dark-on-dark the
-    // moment you pointed at a solid button. Invisible while the resting colour was an
+    // moment you pointed at a solid button. Invisible while the resting color was an
     // inline style, because that outranked the hover rule (#114).
     const el = render({ variant: "solid" }, "color: rgb(200, 100, 50)");
     const resting = paint(el, "color");
@@ -134,7 +134,7 @@ describe("CuiButton themeable properties (real browser)", () => {
   describe("inside a .cui-typography scope", () => {
     // Zero-specificity rules lose to any *other* rule that matches the element, and the
     // typography layer styles bare `a`. A solid link button drew its label in exactly its
-    // own background colour until the link rule learned to skip `cui-*` elements.
+    // own background color until the link rule learned to skip `cui-*` elements.
     function proseHost(html: string) {
       const host = document.createElement("div");
       host.className = "cui-typography";
@@ -144,7 +144,7 @@ describe("CuiButton themeable properties (real browser)", () => {
       return host;
     }
 
-    it("a link button keeps its own colour and no underline", () => {
+    it("a link button keeps its own color and no underline", () => {
       const host = proseHost("");
       const wrapper = mount(CuiButton, {
         props: { href: "/x", variant: "solid" },

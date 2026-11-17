@@ -442,7 +442,7 @@ defineExpose({
  * at (0,1,0) wins without !important; structure (display, flex, overflow) keeps normal specificity.
  * The panel is CuiModal's: its width is --cui-command-palette-width, its look --cui-modal-*.
  * Rows are CuiListboxOption, painted through the --_listbox-* properties set on the body; the
- * highlighted row changes colour with no transition, since the keyboard crosses rows.
+ * highlighted row changes color with no transition, since the keyboard crosses rows.
  */
 :where(.cui-command-palette__search) {
   gap: var(--cui-command-palette-gap, calc(0.625rem * var(--cui-density-scale, 1)));

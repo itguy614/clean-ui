@@ -94,7 +94,7 @@ type-level.
 
 ---
 
-### Group 1.2: Colour-scheme signal
+### Group 1.2: Color-scheme signal
 
 #### Task 1.2.1: `useColorScheme` composable
 

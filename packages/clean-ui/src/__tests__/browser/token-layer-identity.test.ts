@@ -18,7 +18,7 @@ import baseline from "./token-layer-identity.baseline.json";
  * `--_<c>-<slot>` token through its public `--cui-<c>-<slot>` layer, inside zero-specificity
  * rules. Nothing about how they look may change. `token-layer-identity.baseline.json` holds
  * the computed styles of each part, recorded from develop BEFORE the conversion: each size,
- * variant and colour role that exists, plus the dark, hover, focus, error and glow states
+ * variant and color role that exists, plus the dark, hover, focus, error and glow states
  * that move paint. Real browser: jsdom computes none of this.
  *
  * To re-record, empty the baseline: each missing scenario prints its snapshot before failing.
@@ -178,7 +178,7 @@ function snapshot(kind: string, host: ParentNode) {
   return out;
 }
 
-/** Distinct, deterministic colours for every step of the scale, so a wrong slot shows up. */
+/** Distinct, deterministic colors for every step of the scale, so a wrong slot shows up. */
 function colourScale() {
   const full = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
   const condensed = [100, 300, 500, 700, 900];

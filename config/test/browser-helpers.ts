@@ -24,7 +24,7 @@ export async function settleScroll(el: HTMLElement): Promise<void> {
 
 /**
  * Inject the library's tokens into the document, for suites that measure laid-out
- * geometry or resolved colours.
+ * geometry or resolved colors.
  *
  * The `--color-*` scale normally comes from the Tailwind `@theme` in theme.css, which
  * only exists once the engine has processed it. These suites inject raw CSS, so the

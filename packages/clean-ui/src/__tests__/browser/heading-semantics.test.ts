@@ -12,7 +12,7 @@ import CuiCardHeader from "../../components/CuiCardHeader.vue";
  * are zero-specificity, and `.cui-typography h1–h6` is (0,1,1), so a real heading would
  * take the prose size and margin unless the typography layer skips `cui-*` elements — the
  * same exclusion the prose link rule needed when a solid link button drew its label in its
- * own background colour (#114).
+ * own background color (#114).
  *
  * The tag-level assertions (default, chosen level, `div` opt-out) need no layout engine and
  * live in `components/__tests__/headingSemantics.test.ts`. Everything here measures.

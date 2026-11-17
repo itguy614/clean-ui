@@ -259,7 +259,7 @@ const GUARANTEES = [
   },
   {
     id: "color-mode-tree-shakes",
-    name: "an app that never uses the colour mode composable bundles none of it (#487)",
+    name: "an app that never uses the color mode composable bundles none of it (#487)",
     check(distDir) {
       // useColorMode's storage key as a string literal, which only that module has. No
       // fixture page uses it, so a hit means the module was kept: a sideEffects entry for

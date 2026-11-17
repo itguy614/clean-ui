@@ -365,7 +365,7 @@ export {
   setIconFallbackResolver,
   type IconFallbackResolver,
 } from "./icons/registry";
-// Role → icon for the feedback components. Overridable app-wide, the same way colours
+// Role → icon for the feedback components. Overridable app-wide, the same way colors
 // are, rather than only per call site (#140).
 export { registerRoleIcons, COLOR_ICON_MAP } from "./utils/colorIconMap";
 export { configureCleanUI, type CleanUIConfig, type CuiHeadingLevels } from "./utils/configure";

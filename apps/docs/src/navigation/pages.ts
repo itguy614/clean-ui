@@ -26,7 +26,7 @@ export const PAGES: readonly DocPage[] = [
   { id: "changelog", label: "Changelog", path: "/changelog", group: "Getting Started", keywords: ["releases", "release notes", "versions", "history", "what's new", "breaking changes", "migration"] },
 
   // Foundations
-  { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations", keywords: ["colours", "palette", "tokens", "roles", "scale", "contrast", "semantic"] },
+  { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations", keywords: ["colors", "palette", "tokens", "roles", "scale", "contrast", "semantic"] },
   { id: "icons", label: "Icons", path: "/foundations/icons", group: "Foundations", keywords: ["phosphor", "svg", "glyph", "register icons", "icon names"] },
   { id: "themes", label: "Themes", path: "/foundations/themes", group: "Foundations", keywords: ["theme", "dark mode", "presets", "navy", "forest", "branding", "customise", "customize", "css variables", "custom properties"] },
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations", keywords: ["fonts", "headings", "text", "prose", "type", "font size", "code text"] },
@@ -51,7 +51,7 @@ export const PAGES: readonly DocPage[] = [
 
   // Form Controls
   { id: "checkbox", label: "Checkbox", path: "/components/checkbox", group: "Form Controls", keywords: ["check", "tick", "checkbox group", "multi select", "indeterminate", "boolean"] },
-  { id: "color-picker", label: "Color Picker", path: "/components/color-picker", group: "Form Controls", keywords: ["colour picker", "swatch", "hex", "hue", "eyedropper", "palette"] },
+  { id: "color-picker", label: "Color Picker", path: "/components/color-picker", group: "Form Controls", keywords: ["color picker", "swatch", "hex", "hue", "eyedropper", "palette"] },
   { id: "combobox", label: "Combobox", path: "/components/combobox", group: "Form Controls", keywords: ["autocomplete", "autosuggest", "typeahead", "search select", "dropdown", "select", "async search", "listbox"] },
   { id: "date-picker", label: "Date Picker", path: "/components/date-picker", group: "Form Controls", keywords: ["calendar", "date", "day", "month", "year"] },
   { id: "date-range-picker", label: "Date Range", path: "/components/date-range-picker", group: "Form Controls", keywords: ["date range picker", "range", "calendar", "from to", "start end", "period", "date picker"] },

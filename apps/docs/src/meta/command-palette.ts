@@ -55,7 +55,7 @@ const meta: ComponentMeta = {
       description: "A localStorage key to keep the recents under, across visits. Unset, they last until the page unloads",
     },
     { name: "maxResults", type: "number", default: "100", description: "The most results listed, across groups" },
-    colorProp("Colour role of the highlighted row, the match underline and the focus ring"),
+    colorProp("Color role of the highlighted row, the match underline and the focus ring"),
     ...overlayFocusProps.map((p) =>
       p.name === "initialFocus"
         ? { ...p, default: "the search field", description: "Element focused on open. Unset, the search field" }
@@ -103,7 +103,7 @@ const meta: ComponentMeta = {
     { name: "--cui-command-palette-py", default: "0.5rem–0.75rem (density)", description: "Vertical padding of the search field and the rows" },
     { name: "--cui-command-palette-gap", default: "0.625rem (density)", description: "Space between the search icon and the field" },
     { name: "--cui-command-palette-font-size", default: "0.9375rem / 1rem", description: "Text size of the rows, and of the search field" },
-    { name: "--cui-command-palette-color", default: "var(--cui-text-body)", description: "Text colour of a row" },
+    { name: "--cui-command-palette-color", default: "var(--cui-text-body)", description: "Text color of a row" },
     { name: "--cui-command-palette-radius", default: "var(--cui-radius-md, 0.375rem)", description: "Corner radius of a row" },
     { name: "--cui-command-palette-hover-bg", default: "var(--cui-<color>-bg)", description: "Fill of the highlighted row" },
     { name: "--cui-command-palette-border", default: "1px solid var(--cui-border)", description: "The line under the search field" },

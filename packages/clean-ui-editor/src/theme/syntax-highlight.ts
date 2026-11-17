@@ -8,7 +8,7 @@ import { tags } from "@lezer/highlight";
  * module load (e.g. `HeaderMark`/`EmphasisMark`/`CodeMark`/`LinkMark` all
  * tag as `tags.processingInstruction`, `StrongEmphasis` as `tags.strong`,
  * GFM's `Strikethrough` as `tags.strikethrough`) — so this only needs to
- * supply colours per tag, not re-derive the node-to-tag mapping.
+ * supply colors per tag, not re-derive the node-to-tag mapping.
  */
 export const cuiMarkdownHighlightStyle = HighlightStyle.define([
   // Individual entries (not one shared [] of all six heading tags) so each

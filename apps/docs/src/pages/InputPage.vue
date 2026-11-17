@@ -39,7 +39,7 @@ const sized = ref("Hello");
         <li>
           <code>error</code> sets <code>aria-invalid</code> on the native input and recolors
           the border. The message below carries the reason, so the failure is never
-          signalled by colour alone.
+          signalled by color alone.
         </li>
         <li>
           <code>id</code>, <code>name</code>, <code>autocomplete</code>,

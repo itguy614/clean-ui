@@ -186,7 +186,7 @@ defineExpose({ el: elRef, open, toggle: toggleDrawer, toggleAttrs });
 }
 
 /* Solid again where a frosted bar can't be drawn or isn't wanted: it is an ordinary solid bar
-   then, with its line once scrolled (and the page's edge needs it, in forced colours no shadow
+   then, with its line once scrolled (and the page's edge needs it, in forced colors no shadow
    is drawn). After the border rule above, so it wins. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :where(.cui-navbar--translucent) {

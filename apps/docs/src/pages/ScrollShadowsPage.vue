@@ -204,7 +204,7 @@ const styles = [
         positioned, 36px deep, <code class="cui-code">pointer-events: none</code> and
         <code class="cui-code">border-radius: inherit</code>, and fades from
         <code class="cui-code">var(--cui-surface-base, white)</code> to transparent. Give the scroll
-        area that same background, or the fade shows as a band of a different colour.
+        area that same background, or the fade shows as a band of a different color.
       </p>
       <PropTable :props="styles" />
     </div>
@@ -223,7 +223,7 @@ const styles = [
           window, call it from your own <code class="cui-code">ResizeObserver</code>.
         </li>
         <li>
-          <strong>Not over a non-surface background.</strong> The fade colour is fixed to
+          <strong>Not over a non-surface background.</strong> The fade color is fixed to
           <code class="cui-code">--cui-surface-base</code>. On a tinted panel, spread the style and
           replace <code class="cui-code">background</code> with your own gradient.
         </li>

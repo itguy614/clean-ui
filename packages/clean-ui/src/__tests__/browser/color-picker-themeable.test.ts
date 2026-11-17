@@ -115,7 +115,7 @@ describe("CuiColorPicker is themeable (real browser)", () => {
     expect(css(q(".cui-color-picker"), "pointer-events")).toBe("none");
   });
 
-  it("paints the picked colour through private properties on the element that uses it", async () => {
+  it("paints the picked color through private properties on the element that uses it", async () => {
     const q = await render("", { modelValue: "#336699" });
     expect(css(q(".cui-color-picker__preview-fill"), "background-color")).toBe("rgb(51, 102, 153)");
     expect(q(".cui-color-picker__preview-fill").style.getPropertyValue("--_color-picker-value")).toBe("#336699");

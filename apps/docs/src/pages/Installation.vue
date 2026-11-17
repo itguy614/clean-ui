@@ -83,7 +83,7 @@ app.use(createCleanUI({
           (<code>h3</code>).
         </li>
         <li>
-          <code>roleIcons</code>: the icon each colour role shows in CuiAlert, CuiToast and
+          <code>roleIcons</code>: the icon each color role shows in CuiAlert, CuiToast and
           CuiBanner.
         </li>
         <li>

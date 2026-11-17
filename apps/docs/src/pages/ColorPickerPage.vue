@@ -46,7 +46,7 @@ const utilFormats = computed(() => {
 });
 
 const conversions = [
-  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha digit or byte is read as 0–1, unrounded (#…80 is 128/255). Hex with a non-hex character is null, and so is anything else — named colours, space-separated syntax." },
+  { fn: "parseColor(input: string)", returns: "RGBA | null", notes: "Hex (#rgb, #rgba, #rrggbb, #rrggbbaa), rgb()/rgba() and hsl()/hsla() in comma syntax. Alpha defaults to 1; a hex alpha digit or byte is read as 0–1, unrounded (#…80 is 128/255). Hex with a non-hex character is null, and so is anything else — named colors, space-separated syntax." },
   { fn: "formatColor(r, g, b, a, format: ColorFormat)", returns: "string", notes: "format is \"hex\" | \"rgb\" | \"hsl\". When a < 1, hex appends the alpha byte (#rrggbbaa; an alpha that rounds to ff stays #rrggbb), and rgb and hsl switch to rgba()/hsla() with alpha to two decimals, unless it rounds to 1.00." },
   { fn: "rgbToHex(r, g, b)", returns: "string", notes: "Lowercase #rrggbb; channels are rounded." },
   { fn: "hexToRgb(hex: string)", returns: "RGB | null", notes: "3, 4, 6 or 8 hex digits, leading # optional; the alpha of a 4- or 8-digit value is discarded (parseColor keeps it). Any other length or character is null." },
@@ -122,8 +122,8 @@ function onHexInput(val: string | number) {
         <li>
           The swatches are a <code>role="radiogroup"</code> with one tab stop: the arrow keys
           move between them and select, as radios do. Each is named by its hex value, since a
-          colour alone is not a name. Where a fixed set of <em>named</em> colours is the real
-          choice — a label colour, a calendar colour — a <code>CuiRadioGroup</code> or
+          color alone is not a name. Where a fixed set of <em>named</em> colors is the real
+          choice — a label color, a calendar color — a <code>CuiRadioGroup</code> or
           <code>CuiSelect</code> of named options announces the name instead.
         </li>
         <li>
@@ -149,7 +149,7 @@ function onHexInput(val: string | number) {
           <CuiCard variant="outline">
             <CuiCardBody>
               <p class="mb-3 text-surface-600 dark:text-surface-400">
-                The picker's colour maths is exported for use on its own — to normalise a value
+                The picker's color maths is exported for use on its own — to normalise a value
                 before storing it, to show it in another format, or to build a palette. Every
                 channel is 0–255; <code class="cui-code">RGB</code>, <code class="cui-code">RGBA</code>, <code class="cui-code">HSL</code>,
                 <code class="cui-code">HSV</code> and <code class="cui-code">ColorFormat</code> are exported as types.
@@ -196,7 +196,7 @@ formatColor(c.r, c.g, c.b, c.a, &quot;rgb&quot;);
 formatColor(c.r, c.g, c.b, c.a, &quot;hsl&quot;);`">
             <CuiFlex gap="4" class="items-start flex-wrap">
               <div style="width: 18rem;">
-                <CuiInput v-model="utilInput" label="Any colour string" />
+                <CuiInput v-model="utilInput" label="Any color string" />
               </div>
               <div class="text-sm" style="color: var(--cui-text-secondary); padding-top: 1.5rem;">
                 <template v-if="utilFormats">
@@ -220,7 +220,7 @@ formatColor(c.r, c.g, c.b, c.a, &quot;hsl&quot;);`">
                 <div v-for="p in palettes" :key="p.name">
                   <div class="mb-1 text-sm">
                     <code class="cui-code">{{ p.name }}</code>
-                    <span style="color: var(--cui-text-secondary);"> — preset-palette="{{ p.preset }}", {{ p.colors.length }} colours</span>
+                    <span style="color: var(--cui-text-secondary);"> — preset-palette="{{ p.preset }}", {{ p.colors.length }} colors</span>
                   </div>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                     <div
@@ -236,7 +236,7 @@ formatColor(c.r, c.g, c.b, c.a, &quot;hsl&quot;);`">
                 <code>getThemePalette(): string[]</code> is what <code>preset-palette="theme"</code>
                 uses. It reads the live <code>--cui-{role}</code>, <code>-bg</code>,
                 <code>-border</code>, <code>-hover</code> and <code>-active</code> tokens of the six
-                colour roles, plus six steps of the surface scale, resolves each to hex through a
+                color roles, plus six steps of the surface scale, resolves each to hex through a
                 hidden element, and returns them de-duplicated. Because it reads computed style,
                 the result reflects the theme and mode in force when you call it — call it again
                 after a theme switch — and it returns <code>[]</code> during server rendering.

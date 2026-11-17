@@ -21,7 +21,7 @@ export interface CuiHeadingLevels {
 export interface CleanUIConfig {
   /** The heading level each titled component renders at, unless its `titleAs` says otherwise. */
   headingLevels?: Partial<CuiHeadingLevels>;
-  /** The icon each colour role renders in CuiAlert, CuiToast and CuiBanner. */
+  /** The icon each color role renders in CuiAlert, CuiToast and CuiBanner. */
   roleIcons?: Partial<Record<CuiColor, CuiRoleIcon>>;
   /**
    * The locale dates, month and weekday names, file sizes and AM/PM labels are formatted in

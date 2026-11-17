@@ -395,7 +395,7 @@ setTheme('teal')
           <p class="mb-3 text-surface-600 dark:text-surface-400">
             Create your own theme by defining a CSS class that overrides the color variables.
             Name it <code>cui-theme-*</code>: the library recognises a theme scope by that
-            prefix, and re-resolves its semantic colours there, so a theme class on part of a
+            prefix, and re-resolves its semantic colors there, so a theme class on part of a
             page re-themes that part.
           </p>
           <pre class="cui-pre"><code>.cui-theme-brand {

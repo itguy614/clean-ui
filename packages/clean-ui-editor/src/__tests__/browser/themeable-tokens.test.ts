@@ -91,7 +91,7 @@ describe("the editor's themeable tokens (real browser)", () => {
     }
   });
 
-  it("keeps the error colour when a container rethemes the border", async () => {
+  it("keeps the error color when a container rethemes the border", async () => {
     // A container restyling its editors must not hide which one is invalid.
     const { control, content } = await editor(`${TOKENS} --cui-error: ${ERROR};`, { error: true });
     const s = getComputedStyle(control);
@@ -102,7 +102,7 @@ describe("the editor's themeable tokens (real browser)", () => {
     expect(s.boxShadow).not.toContain(FOCUS_RING);
   });
 
-  it("keeps the error colour over a consumer's plain border rule", async () => {
+  it("keeps the error color over a consumer's plain border rule", async () => {
     // The error state is at normal specificity, as CuiInput's is, so restyling the
     // border with a plain rule doesn't erase it either.
     const remove = injectStyle(".cui-markdown-editor__control { border-color: rgb(10, 11, 12); }");

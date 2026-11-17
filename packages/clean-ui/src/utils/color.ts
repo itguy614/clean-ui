@@ -181,7 +181,7 @@ export type ColorFormat = "hex" | "rgb" | "hsl";
 
 export function formatColor(r: number, g: number, b: number, a: number, format: ColorFormat): string {
   if (format === "hex") {
-    // #rrggbbaa only when the alpha byte is below ff: an opaque colour keeps six digits.
+    // #rrggbbaa only when the alpha byte is below ff: an opaque color keeps six digits.
     const alpha = Math.round(Math.max(0, Math.min(1, a)) * 255);
     return rgbToHex(r, g, b) + (alpha < 255 ? hexByte(alpha) : "");
   }

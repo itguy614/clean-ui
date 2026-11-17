@@ -144,7 +144,7 @@ defineExpose({ el: elRef, focus, blur });
 
 /**
  * A pressed toggle's look (#396). Subtle-first like every other selected state: the tinted
- * fill, a role-coloured edge and the stronger text colour. A toggle's hover is a neutral fill
+ * fill, a role-colored edge and the stronger text color. A toggle's hover is a neutral fill
  * (see `togglePaint`), so pressed and hover differ in hue and edge, not only in strength,
  * and a toggle switched on under the pointer reads as pressed at once. Solid is already
  * filled: it takes the darker shade its hover uses.
@@ -316,12 +316,12 @@ const buttonStyle = computed(() => {
   position: relative;
 }
 
-/* The hover colour falls back to the RESTING colour, not to `inherit`. Only the outline,
-   dash and ghost variants change colour on hover; solid keeps its own. With `inherit` the
-   solid variant took the surrounding text colour on hover — dark text on a dark fill —
+/* The hover color falls back to the RESTING color, not to `inherit`. Only the outline,
+   dash and ghost variants change color on hover; solid keeps its own. With `inherit` the
+   solid variant took the surrounding text color on hover — dark text on a dark fill —
    because both rules are stylesheet rules now and this one comes later. It was masked
-   while the resting colour was an inline declaration, which outranked this rule outright
-   (#114). Falling back to the resting value means a variant that omits a hover colour
+   while the resting color was an inline declaration, which outranked this rule outright
+   (#114). Falling back to the resting value means a variant that omits a hover color
    simply keeps the one it has. */
 :where(.cui-button:hover:not(.cui-button--disabled)) {
   background: var(--cui-button-hover-bg, var(--_button-hover-bg));
@@ -344,7 +344,7 @@ const buttonStyle = computed(() => {
   transform: scale(var(--cui-press-scale, 0.97));
 }
 
-/* Pressing a pressed toggle mixes a little of its text colour into its fill. The variant's
+/* Pressing a pressed toggle mixes a little of its text color into its fill. The variant's
    active fill can't be used: it is drawn for the unpressed button's text (a ghost's pale tint
    would take the white text of a solid pressed look), and for solid it is the pressed shade's
    neighbour. */

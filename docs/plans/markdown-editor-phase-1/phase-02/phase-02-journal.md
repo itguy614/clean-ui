@@ -69,7 +69,7 @@ a task — the tasks file tracks status, this file records why things happened.
   mapping baked into their node sets at module load (confirmed by reading the compiled package
   source directly) — e.g. `HeaderMark`/`EmphasisMark`/`CodeMark`/`LinkMark` all tag as
   `tags.processingInstruction`, `StrongEmphasis` as `tags.strong`, GFM's `Strikethrough` as
-  `tags.strikethrough`. This file only supplies colours per tag.
+  `tags.strikethrough`. This file only supplies colors per tag.
 - Added `src/theme/editor-theme.ts` — `editorThemeExtension(dark: boolean)`, an `EditorView.theme()`
   overriding `.cm-cursor`/`.cm-dropCursor` and `.cm-selectionBackground` (plain + focused variant)
   with `var(--cui-primary)` / `var(--cui-primary-bg)`.
@@ -100,7 +100,7 @@ a task — the tasks file tracks status, this file records why things happened.
   on top of the view's built-in defaults) settles the tie. One CSS var value covers both light and
   dark because the var itself already flips under an ancestor `.dark` class — the reactive `dark`
   flag on `editorThemeExtension` still matters for the `EditorView.darkTheme` facet other CodeMirror
-  internals (and future plugins) may read, not for these two colours specifically.
+  internals (and future plugins) may read, not for these two colors specifically.
 - Reused existing clean-ui semantic tokens throughout (`--cui-primary`, `--cui-text-emphasis`,
   `--cui-text-tertiary`, `--cui-text-link`, `--cui-text-code`, `--cui-text-secondary`) rather than
   introducing new ones — all are already covered by `scripts/check-contrast.mjs`'s audit, so no
@@ -108,24 +108,24 @@ a task — the tasks file tracks status, this file records why things happened.
 
 **Verification:**
 - jsdom unit tests (`src/theme/__tests__/theme.test.ts`, 4 tests): `editorThemeExtension` builds for
-  both `dark` values without throwing, every `HighlightStyle` colour is a `var(--cui-*)` reference
+  both `dark` values without throwing, every `HighlightStyle` color is a `var(--cui-*)` reference
   (no literal), `drawSelection()`'s `.cm-cursorLayer`/`.cm-selectionLayer` DOM layers exist post-
   mount, and a document covering heading/strong/emphasis/code/link produces highlighted `<span
   class="...">` output for each construct's node type.
 - **Real-browser verification** (temporary `.dev-harness/`, Playwright + Chromium, deleted after
   use): two editors, one under a `.dark`-scoped ancestor `<div>`, one plain. Confirmed (1) the two
-  editors' `.cm-cursor` border colour and (focused, forced-selection) `.cm-selectionBackground`
+  editors' `.cm-cursor` border color and (focused, forced-selection) `.cm-selectionBackground`
   differ, and neither equals CodeMirror's hardcoded black cursor default; (2) toggling `.dark` off
-  the *already-mounted* dark-scope editor's ancestor updates its cursor colour live, with the same
+  the *already-mounted* dark-scope editor's ancestor updates its cursor color live, with the same
   `EditorView` object reference and the same `.cm-cursor` DOM node before and after (no remount),
   and an unflushed in-flight document edit made immediately before the toggle survives it; (3) the
-  sibling (light-scope) editor's cursor colour is unaffected by that toggle. A separate check
-  confirmed heading/strong/inline-code text renders in distinct colours from body text once the
+  sibling (light-scope) editor's cursor color is unaffected by that toggle. A separate check
+  confirmed heading/strong/inline-code text renders in distinct colors from body text once the
   harness's default persisted theme ("Mono" — `useTheme.ts`'s own documented default, deliberately
-  near-zero chroma) was swapped for the colourful default, resolving to the exact expected token
+  near-zero chroma) was swapped for the colorful default, resolving to the exact expected token
   values (`--color-primary-500`, `--color-primary-700` for code, etc.).
 - Grepped `src/` for hex/rgb/hsl/oklch literals and inspected the built `dist/clean-ui-editor.css`
-  directly — no colour literal anywhere outside a code comment.
+  directly — no color literal anywhere outside a code comment.
 
 ### 2026-07-29 - Tasks 2.3.1/2.3.2: Verification debt from the spike
 **Status:** Deferred

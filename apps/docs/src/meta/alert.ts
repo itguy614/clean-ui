@@ -3,7 +3,7 @@ import { colorProp, hiddenProp, liveProp, roleIconProps, roleIconSlot, roundedPr
 
 const meta: ComponentMeta = {
   name: "Alert",
-  description: "An inline message with a role colour, an optional title, actions and attention animations.",
+  description: "An inline message with a role color, an optional title, actions and attention animations.",
   interactive: true,
 
   props: [
@@ -35,10 +35,10 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-alert-bg", default: "per variant: the role's -bg (subtle), transparent (outline), solid", description: "Background" },
-    { name: "--cui-alert-color", default: "per variant", description: "Text colour" },
+    { name: "--cui-alert-color", default: "per variant", description: "Text color" },
     { name: "--cui-alert-border", default: "1px solid, the role's -border", description: "Border" },
     { name: "--cui-alert-radius", default: "the rounded prop's radius", description: "Corner radius" },
-    { name: "--cui-alert-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon and dismiss colours have no token: a plain `.cui-alert__icon` or `.cui-alert__dismiss` rule wins" },
+    { name: "--cui-alert-focus-ring", default: "the role's -focus-ring", description: "The ring of the `glow` animation. The icon and dismiss colors have no token: a plain `.cui-alert__icon` or `.cui-alert__dismiss` rule wins" },
   ],
 };
 

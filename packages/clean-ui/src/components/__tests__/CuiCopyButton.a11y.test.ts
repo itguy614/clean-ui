@@ -31,7 +31,7 @@ describe("CuiCopyButton is announced", () => {
     expect(w.find("button").text()).toContain("Copy");
   });
 
-  it("announces the copy through a live region, not just colour and an icon", async () => {
+  it("announces the copy through a live region, not just color and an icon", async () => {
     const w = mount(CuiCopyButton, { props: { value: "x", copiedTooltip: "Copied!" } });
     const status = w.find(".cui-copy-button__status");
 

@@ -37,7 +37,7 @@ const props = defineProps<{
   anchor: HTMLElement | null | undefined;
   /** The component whose public tokens style the panel. */
   tokenPrefix: "combobox" | "tag-input" | "select";
-  /** The component's colour role: the highlighted and selected rows take its tint. */
+  /** The component's color role: the highlighted and selected rows take its tint. */
   color?: CuiColor;
   /** Upper bound for the panel's height, in px, when `maxVisible` doesn't decide it. */
   maxHeight: number;

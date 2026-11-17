@@ -113,7 +113,7 @@ describe("CuiConfirmDialog", () => {
       ["warning", "warning", IconWarning],
       ["info", "info", IconInfo],
       ["primary", "primary", IconSealQuestion],
-    ] as const)("variant %s sets the tile and confirm button colour and the icon", async (variant, color, icon) => {
+    ] as const)("variant %s sets the tile and confirm button color and the icon", async (variant, color, icon) => {
       const wrapper = await open(variant ? { variant } : {});
       expect(tile()).not.toBeNull();
       // Decorative: the title and message carry the meaning.
@@ -150,10 +150,10 @@ describe("CuiConfirmDialog", () => {
       component.unmount();
     });
 
-    it.each(VARIANTS)("confirmColor overrides only the confirm button's colour (%s)", async (variant) => {
+    it.each(VARIANTS)("confirmColor overrides only the confirm button's color (%s)", async (variant) => {
       const wrapper = await open({ variant, confirmColor: "success" });
       expect(findButtonByText(wrapper, "Go").props("color")).toBe("success");
-      // The tile keeps the variant's colour.
+      // The tile keeps the variant's color.
       expect(tile()!.getAttribute("style")).not.toContain("--cui-success");
       wrapper.unmount();
     });

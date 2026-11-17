@@ -40,7 +40,7 @@ wrong, because truncating markdown corrupts it.
 
 **Description:**
 Label, description, error, error message, required, readonly and disabled, following the library's
-error convention — the wrapper's own border recoloured with the message below — plus `aria-invalid`.
+error convention — the wrapper's own border recolored with the message below — plus `aria-invalid`.
 Note the boundary discovered during review: `required` is presentational throughout clean-ui, since
 `CuiForm` validates only through a resolver and has no field registration. Do not build a private
 validation path here to fake it.

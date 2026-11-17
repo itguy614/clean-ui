@@ -29,12 +29,12 @@ const showPulse = ref(true);
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         An alert announces itself: <code>error</code> becomes an assertive
-        <code>role="alert"</code>, every other colour a polite <code>role="status"</code>.
+        <code>role="alert"</code>, every other color a polite <code>role="status"</code>.
         Set <code>live="off"</code> where the message is decorative.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The role icon is decorative and the text carries the meaning, so colour is never
+          The role icon is decorative and the text carries the meaning, so color is never
           the only signal. <code>error</code> uses an octagon rather than an <code>✕</code>,
           which reads as "close" — and is distinct from the warning glyph, so the two are
           tellable apart without hue.
@@ -55,13 +55,13 @@ const showPulse = ref(true);
             <p class="mb-3 text-surface-600 dark:text-surface-400">
               The announcement rule above is <code class="cui-code">resolveLiveRegion(color, override?)</code>,
               shared by <code class="cui-code">CuiAlert</code>, <code class="cui-code">CuiToast</code> and
-              <code class="cui-code">CuiBanner</code>. It maps a colour role to ARIA attributes —
+              <code class="cui-code">CuiBanner</code>. It maps a color role to ARIA attributes —
               <code class="cui-code">error</code> to an assertive <code class="cui-code">role="alert"</code>,
               anything else to a polite <code class="cui-code">role="status"</code>, both with
               <code class="cui-code">aria-atomic="true"</code> — and an explicit
               <code class="cui-code">LiveRegionMode</code> (<code class="cui-code">"assertive"</code>,
               <code class="cui-code">"polite"</code> or <code class="cui-code">"off"</code>) wins over the
-              colour. A feedback component of your own can use it to announce the same way.
+              color. A feedback component of your own can use it to announce the same way.
             </p>
             <pre class="cui-pre"><code class="cui-code">&lt;script setup lang="ts"&gt;
 import { computed } from "vue";

@@ -221,11 +221,11 @@ describe("template bindings are themeable (real browser)", () => {
   const SLOTS: Slot[] = [
     // --- #454, part 2: the alert, toast, tab, banner, list and tag-input slots ---
     { name: "alert focus-ring (glow)", component: CuiAlert, props: { animation: "glow", entrance: "none" }, part: ".cui-alert", pseudo: "::after", prop: "box-shadow", token: "--cui-alert-focus-ring", value: "rgb(7, 8, 9)", contains: true },
-    { name: "alert icon colour (no token)", component: CuiAlert, props: { entrance: "none" }, part: ".cui-alert__icon", prop: "color", value: "rgb(5, 6, 7)" },
-    { name: "alert dismiss colour (no token)", component: CuiAlert, props: { entrance: "none", dismissible: true }, part: ".cui-alert__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "alert icon color (no token)", component: CuiAlert, props: { entrance: "none" }, part: ".cui-alert__icon", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "alert dismiss color (no token)", component: CuiAlert, props: { entrance: "none", dismissible: true }, part: ".cui-alert__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
     { name: "toast focus-ring (glow)", component: CuiToast, props: { animation: "glow" }, part: ".cui-toast", pseudo: "::after", prop: "box-shadow", token: "--cui-toast-focus-ring", value: "rgb(7, 8, 9)", contains: true },
-    { name: "toast icon colour (no token)", component: CuiToast, props: {}, part: ".cui-toast__icon", prop: "color", value: "rgb(5, 6, 7)" },
-    { name: "toast dismiss colour (no token)", component: CuiToast, props: {}, part: ".cui-toast__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "toast icon color (no token)", component: CuiToast, props: {}, part: ".cui-toast__icon", prop: "color", value: "rgb(5, 6, 7)" },
+    { name: "toast dismiss color (no token)", component: CuiToast, props: {}, part: ".cui-toast__dismiss", prop: "color", value: "rgb(5, 6, 7)" },
     { name: "toast progress track (no token)", component: CuiToast, props: {}, part: ".cui-toast__progress", prop: "background-color", value: "rgb(2, 3, 4)", plain: "background" },
     { name: "toast progress bar (no token)", component: CuiToast, props: {}, part: ".cui-toast__progress-bar", prop: "background-color", value: "rgb(2, 3, 4)", plain: "background" },
     { name: "tabs color (underline text)", component: tabsOf(), props: {}, part: ".cui-tabs__tab--active", prop: "color", token: "--cui-tabs-color", value: "rgb(2, 3, 4)" },
@@ -282,7 +282,7 @@ describe("template bindings are themeable (real browser)", () => {
     { name: "progress color (circle fill)", component: CuiProgress, props: { value: 5, variant: "circle" }, part: ".cui-progress-circle__fill", prop: "stroke", token: "--cui-progress-color", value: "rgb(5, 6, 7)" },
   ];
 
-  it("an invalid field keeps its error colours under a border token (#454)", async () => {
+  it("an invalid field keeps its error colors under a border token (#454)", async () => {
     const host = "--cui-input-border: rgb(1, 2, 3); --cui-combobox-border: rgb(1, 2, 3); --cui-combobox-focus-border: rgb(1, 2, 3)";
     const error = getComputedStyle(await render(CuiInput, { modelValue: "", error: true }, ".cui-input", host)).borderTopColor;
     expect(error).not.toBe("rgb(1, 2, 3)");
@@ -304,7 +304,7 @@ describe("template bindings are themeable (real browser)", () => {
     expect(getComputedStyle(combo).boxShadow).not.toContain("rgb(1, 2, 3)");
   });
 
-  it("an invalid CuiTagInput keeps its error colour under a border token (#454)", async () => {
+  it("an invalid CuiTagInput keeps its error color under a border token (#454)", async () => {
     const border = (props: Record<string, unknown>) => render(CuiTagInput, { modelValue: [], ...props }, ".cui-tag-input__control", "--cui-tag-input-border: rgb(1, 2, 3)");
     expect(getComputedStyle(await border({})).borderTopColor).toBe("rgb(1, 2, 3)");
     const error = getComputedStyle(await border({ error: true })).borderTopColor;
@@ -329,7 +329,7 @@ describe("template bindings are themeable (real browser)", () => {
     }
   });
 
-  /** Finite transitions finish at once, so a colour is read at its target. */
+  /** Finite transitions finish at once, so a color is read at its target. */
   const settle = () =>
     document.documentElement.getAnimations({ subtree: true }).forEach((a) => a.effect?.getComputedTiming().iterations !== Infinity && a.finish());
 
@@ -338,7 +338,7 @@ describe("template bindings are themeable (real browser)", () => {
       const host = newHost(hostStyle);
       wrappers.push(mount(slot.component, { props: slot.props, attachTo: host }));
       await nextTick();
-      // An alert's glow starts on the next frame. Only there: waiting lets a colour transition
+      // An alert's glow starts on the next frame. Only there: waiting lets a color transition
       // of the form controls begin before `settle()` can finish it.
       if (slot.pseudo) await new Promise((r) => requestAnimationFrame(() => r(null)));
       if (slot.state) {

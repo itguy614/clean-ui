@@ -230,7 +230,7 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Confirm color -->
-        <Example title="Confirm button colour (confirmColor)" :code="`<!-- the tile keeps the variant's colour; only the button changes -->
+        <Example title="Confirm button color (confirmColor)" :code="`<!-- the tile keeps the variant's color; only the button changes -->
 <CuiConfirmDialog
   v-model:visible=&quot;show&quot;
   title=&quot;Publish changes?&quot;

@@ -214,7 +214,7 @@ const hotkeyCode = `<!-- Rebind it -->
         <li>The dialog traps Tab, takes focus on open and gives it back to what had it (a field you were typing in, or a button) on close, and Escape closes it, topmost layer first.</li>
         <li>The number of results is announced through a polite live region as the list narrows, once typing pauses, and so is an empty result.</li>
         <li>The shortcut is a convenience, never the only way in: <code>v-model:visible</code>, <code>useCommandPalette().open()</code> and the exposed <code>open()</code> all open it. <code>shortcut</code> on a command is shown but hidden from assistive tech, since it binds nothing.</li>
-        <li>The match underline sits on text that is already high contrast: the highlight is bold and underlined, not a colour change alone.</li>
+        <li>The match underline sits on text that is already high contrast: the highlight is bold and underlined, not a color change alone.</li>
       </ul>
     </template>
 

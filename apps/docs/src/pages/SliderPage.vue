@@ -53,7 +53,7 @@ const temp = ref(72);
         </li>
         <li>
           When the input has keyboard focus the thumb draws a focus ring in the slider's
-          colour. Override it with <code>--cui-slider-focus-ring</code> on the slider or any
+          color. Override it with <code>--cui-slider-focus-ring</code> on the slider or any
           ancestor.
         </li>
         <li>

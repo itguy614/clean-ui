@@ -74,7 +74,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
       </template>
       <span v-if="showLabel">{{ copied ? messages.copyButton.copied : messages.copyButton.copy }}</span>
     </CuiButton>
-    <!-- The copied state is otherwise conveyed by colour, an icon swap and a tooltip, none
+    <!-- The copied state is otherwise conveyed by color, an icon swap and a tooltip, none
          of which reach assistive tech — a success a screen reader never hears about (#150). -->
     <span class="cui-copy-button__status cui-sr-only" role="status" aria-live="polite">{{ copied ? copiedText : "" }}</span>
   </CuiTooltip>

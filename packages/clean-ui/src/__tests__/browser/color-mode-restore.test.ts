@@ -24,7 +24,7 @@ function classBeforeMount(): Promise<string> {
   });
 }
 
-describe("colour mode restore (real browser)", () => {
+describe("color mode restore (real browser)", () => {
   afterEach(() => {
     localStorage.removeItem(COLOR_MODE_STORAGE_KEY);
     document.documentElement.classList.remove("dark");

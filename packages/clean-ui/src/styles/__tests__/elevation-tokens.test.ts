@@ -8,7 +8,7 @@ import { sourceFiles, where } from "./css-helpers";
  * card, popover, listbox panel, toast, slideover and bulk bar hardcoded a black shadow that
  * stayed as faint on a dark surface; they read the tokens now.
  *
- * The guard keys on any colour literal in a shadow declaration (hex, `black`, `rgb()`,
+ * The guard keys on any color literal in a shadow declaration (hex, `black`, `rgb()`,
  * `hsl()`, `oklch()`, ...), counted by file, so a new shadow in one of these files still
  * fails, with why. What is left is the tokens themselves, a fallback for an older clean-ui,
  * inset edge fades and control affordances: light-mode only and shaped for their control.
@@ -29,8 +29,8 @@ const EXEMPT: Record<string, { count: number; why: string }> = {
 // (`PINNED_EDGE_SHADOW = "..."`): the rest of its line, and the next
 // while a line ends in a comma and the next starts a layer (a length or `inset`), so layers split over several lines count.
 const SHADOW = /[\w-]*shadow[\w-]*["']?\s*[:=]([^;\n]*(?:(?<=,[ \t]*)\n(?=\s*(?:-?[\d.]|inset\b))[^;\n]*)*)/gi;
-// A colour written out in it, whatever its notation — `color-mix()` of black has its black.
-// A `var(--…)` colour isn't one: it resolves through the theme.
+// A color written out in it, whatever its notation — `color-mix()` of black has its black.
+// A `var(--…)` color isn't one: it resolves through the theme.
 const LITERAL = /#[0-9a-f]{3,8}\b|\bblack\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/gi;
 const literals = (source: string) =>
   [...source.matchAll(SHADOW)].reduce((n, [, value]) => n + (value.match(LITERAL) ?? []).length, 0);
@@ -47,7 +47,7 @@ describe("shadows come from the elevation tokens (#224)", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("sees every notation of a shadow colour", () => {
+  it("sees every notation of a shadow color", () => {
     const sample = [
       "box-shadow: 0 1px #000;",
       "box-shadow: 0 1px black;",

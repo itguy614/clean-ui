@@ -55,7 +55,7 @@ function resetTags() {
       <p class="text-surface-700 dark:text-surface-300">
         A badge is a <code>&lt;span&gt;</code> with no role of its own — it reads as the
         text inside it, in document order. That is usually what you want, and it is also
-        the thing to watch: a badge carries meaning through colour, and colour alone is
+        the thing to watch: a badge carries meaning through color, and color alone is
         never conveyed.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">

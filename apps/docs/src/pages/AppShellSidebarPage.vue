@@ -262,7 +262,7 @@ const skipCode = `<body>
         <li>
           <strong><code>aria-current</code>.</strong> The current page's link carries
           <code>aria-current="page"</code>; a <code>router-link</code> sets it itself. It is shown by a
-          fill and border, not colour alone. A breadcrumb's last item is the current page too.
+          fill and border, not color alone. A breadcrumb's last item is the current page too.
         </li>
         <li>
           <strong>Focus order.</strong> It follows the markup: sidebar, then bar, then content. Below the

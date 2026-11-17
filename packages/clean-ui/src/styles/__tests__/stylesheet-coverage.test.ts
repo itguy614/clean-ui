@@ -15,7 +15,7 @@ import { sourceFiles } from "./css-helpers";
  * inline, which the scan below enforces, so nothing that styles itself can hide there, and
  * it fails as stale once the component gains a `<style>` block.
  *
- * Paint here is colour, surface, shape and type: `background`, `color`, `border*`,
+ * Paint here is color, surface, shape and type: `background`, `color`, `border*`,
  * `box-shadow`, `font-size`, `font-weight`, `text-transform`, `letter-spacing`, `opacity`.
  * Geometry (`padding`, `gap`, `width`, `display`, `position`) is layout, not scanned.
  */

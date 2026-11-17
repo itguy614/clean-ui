@@ -309,7 +309,7 @@ const messages = useMessages();
   padding: calc(0.75rem * var(--cui-density-scale, 1)) calc(0.875rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1));
 }
 
-/* A part's own text colour: a plain rule wins. */
+/* A part's own text color: a plain rule wins. */
 :where(.cui-popover__title) {
   font-size: 0.875rem;
   font-weight: 600;

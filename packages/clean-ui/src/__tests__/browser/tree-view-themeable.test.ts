@@ -121,7 +121,7 @@ describe("CuiTreeView is themeable (real browser)", () => {
   describe("rendering is what it was before the stylesheet conversion", () => {
     // Computed styles captured from the 1.9.0 build, when every one of these was an inline
     // declaration (`tree-view-baseline.json`). The tokens are stubbed above, so a wrong slot
-    // reads as a wrong colour, light and dark.
+    // reads as a wrong color, light and dark.
     const baseline = baselineJson as Record<string, unknown>;
 
     for (const dark of [false, true]) {
