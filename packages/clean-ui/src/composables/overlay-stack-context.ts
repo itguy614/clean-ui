@@ -1,0 +1,49 @@
+import { inject, type InjectionKey } from "vue";
+
+/**
+ * What an overlay (CuiSlideover, CuiDrawer) tells the stack about itself when it opens. Every
+ * member is a getter, so the stack always reads the overlay's current props and elements.
+ */
+export interface OverlayStackEntry {
+  /** A modal panel makes everything beneath it inert; a co-active one (`false`) does not. */
+  modal: () => boolean;
+  /** The edge the panel docks to ("left", "right", "top", "bottom"), or "" for one with none (a drawer sheet). */
+  side: () => string;
+  /** The dialog element, where focus lives. */
+  panel: () => HTMLElement | null | undefined;
+  /** The teleported overlay root holding the panel and its backdrop: what `inert` goes on. */
+  root: () => HTMLElement | null | undefined;
+  /** Close this panel, unless it is `persistent`. */
+  requestClose: () => void;
+}
+
+/** The shared coordinator behind a stack of overlays (#41). Entries are in open order. */
+export interface OverlayStackContext {
+  /** The open overlays, bottom first. Reactive. */
+  readonly entries: readonly OverlayStackEntry[];
+  register: (entry: OverlayStackEntry) => void;
+  unregister: (entry: OverlayStackEntry) => void;
+  /** 0 for the bottom overlay; -1 when the entry is not registered (not open). */
+  depth: (entry: OverlayStackEntry) => number;
+  /** Interactive: in the active set (see `activeStart`). A closed entry reports true. */
+  isActive: (entry: OverlayStackEntry) => boolean;
+  /** The CSS `z-index` of the entry's overlay root: one step above the entry beneath it. */
+  zIndex: (entry: OverlayStackEntry) => string;
+  /** Whether this entry draws the one shared backdrop: the lowest active one. */
+  ownsBackdrop: (entry: OverlayStackEntry) => boolean;
+  /** Backdrop click: closes the topmost panel, if it is not `persistent`. */
+  closeTop: () => void;
+  /** Escape: closes the topmost active panel, or the focused one in a co-active group. */
+  escape: () => void;
+}
+
+export const OverlayStackKey: InjectionKey<OverlayStackContext> = Symbol("cui-overlay-stack");
+
+/**
+ * The stack the calling overlay sits in, or `null` outside one. Unlike most `useXContext()`
+ * hooks it does not throw: an overlay with no stack is the normal case, and it must cost
+ * nothing, so this is a bare optional inject.
+ */
+export function useOverlayStackContext(): OverlayStackContext | null {
+  return inject(OverlayStackKey, null);
+}

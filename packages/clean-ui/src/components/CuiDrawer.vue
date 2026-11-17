@@ -6,7 +6,6 @@ import { useOverlay } from "../composables/useOverlay";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
 import { useVisualViewport } from "../composables/useVisualViewport";
-import { OVERLAY_Z_INDEX } from "../utils/position";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
@@ -21,6 +20,12 @@ export interface CuiDrawerProps extends BackdropGradientProps, HideableProps, Ti
   visible?: boolean;
   /** Title text (rendered in header) */
   title?: string;
+  /**
+   * A modal overlay (the default) traps focus and, inside a `CuiSlideoverStack`, makes the
+   * overlays beneath it inert. `false` opens it co-active: the ones beneath stay interactive,
+   * focus moves freely and nothing is trapped. Bind it, `:modal="false"` (#41)
+   */
+  modal?: boolean;
   /** Prevent closing via Escape, backdrop click and dragging down. The X button still closes */
   persistent?: boolean;
   /** Hide the X close button */
@@ -54,6 +59,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<CuiDrawerProps>(), {
   visible: false,
+  modal: true,
   persistent: false,
   noCloseButton: false,
   noHandle: false,
@@ -83,7 +89,7 @@ const overlayRef = useTemplateRef<HTMLElement>("overlayEl");
 const panelRef = useTemplateRef<HTMLElement>("panelEl");
 const handleRef = useTemplateRef<HTMLElement>("handleEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown } = useOverlay({
+const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropClick, onKeydown, zIndex, ownsBackdrop, stacked } = useOverlay({
   open: () => props.visible,
   dialogRef: panelRef,
   persistent: () => props.persistent,
@@ -94,6 +100,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, closeOverlay, onBackdropC
   returnFocus: () => props.returnFocus,
   onOpened: () => emit("after-enter"),
   onClosed: () => emit("after-leave"),
+  modal: () => props.modal,
 });
 
 watch(isVisible, (visible) => {
@@ -198,13 +205,14 @@ const themeScope = useScopedTheme(() => mounted.value);
         v-show="isVisible && !hidden"
         ref="overlayEl"
         class="cui-drawer-overlay"
-        :class="themeScope"
-        :style="{ position: 'fixed', inset: '0', zIndex: OVERLAY_Z_INDEX }"
+        :class="[themeScope, { 'cui-drawer-overlay--stacked': stacked }]"
+        :style="{ position: 'fixed', inset: '0', zIndex }"
         @keydown="onKeydown"
       >
         <CuiBackdrop
           data-cui-exit
-          :visible="isAnimating"
+          :visible="isAnimating && ownsBackdrop"
+          :class="{ 'cui-drawer__backdrop--live': ownsBackdrop }"
           :opacity="backdropOpacity"
           :blur="backdropBlur"
           :color="backdropColor"
@@ -225,7 +233,7 @@ const themeScope = useScopedTheme(() => mounted.value);
           :class="panelClass"
           :style="panelVars"
           role="dialog"
-          aria-modal="true"
+          :aria-modal="modal ? 'true' : 'false'"
           :aria-labelledby="title ? titleId : undefined"
           tabindex="-1"
           v-bind="$attrs"
@@ -264,6 +272,17 @@ const themeScope = useScopedTheme(() => mounted.value);
 </template>
 
 <style scoped>
+/* In a stack (#41) every overlay root is full-screen, and the ones above would block the
+   panels beneath them. The root lets pointer events through; the panel and the one backdrop
+   that is drawn (the lowest active overlay's) take them. */
+.cui-drawer-overlay--stacked {
+  pointer-events: none;
+}
+.cui-drawer-overlay--stacked .cui-drawer__panel,
+.cui-drawer-overlay--stacked .cui-drawer__backdrop--live {
+  pointer-events: auto;
+}
+
 /* --- Panel --- */
 /* Themeable: zero specificity, so a class forwarded onto the panel or a consumer's own
    `.cui-drawer__panel { … }` wins without `!important`. */

@@ -1,7 +1,9 @@
-import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { computed, ref, watch, onMounted, onScopeDispose, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack } from "./useLayerStack";
+import { useOverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
+import { OVERLAY_Z_INDEX } from "../utils/position";
 import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
@@ -41,6 +43,13 @@ export interface UseOverlayOptions {
   onOpened?: () => void;
   /** Called once the exit has finished and focus has been returned (`after-leave`). */
   onClosed?: () => void;
+  /**
+   * Whether the overlay is modal (default true). A co-active one (`false`) leaves the overlays
+   * beneath it interactive when it sits in a stack, and never traps focus (#41).
+   */
+  modal?: () => boolean;
+  /** The edge the overlay docks to, for a stack that checks its panels agree (#41). None by default. */
+  side?: () => string;
 }
 
 export function useOverlay(options: UseOverlayOptions) {
@@ -55,6 +64,8 @@ export function useOverlay(options: UseOverlayOptions) {
     returnFocus: getReturnFocus,
     onOpened,
     onClosed,
+    modal: getModal = () => true,
+    side: getSide = () => "",
   } = options;
 
   const isVisible = ref(false);
@@ -190,17 +201,37 @@ export function useOverlay(options: UseOverlayOptions) {
   }
 
   function onBackdropClick() {
-    requestClose();
+    if (stack) stack.closeTop();
+    else requestClose();
+  }
+
+  // Inside a stack (#41) the overlay joins the shared coordinator while open: it supplies
+  // depth, z-order, the one backdrop and `inert`, and routes Escape and backdrop clicks. With
+  // no stack this is a bare inject returning null, and nothing below changes.
+  const stack = useOverlayStackContext();
+  let stackEntry: OverlayStackEntry | null = null;
+  if (stack) {
+    stackEntry = { modal: getModal, side: getSide, panel: () => dialogRef.value, root: () => rootRef.value, requestClose };
+    const joined = stackEntry;
+    watch(isOpen, (now) => (now ? stack.register(joined) : stack.unregister(joined)), { flush: "sync" });
+    onScopeDispose(() => stack.unregister(joined));
   }
 
   // Escape comes from the shared layer stack, so only the topmost overlay closes (#278).
-  // A persistent overlay still takes the Escape and declines it.
-  useLayerStack({ active: isOpen, onEscape: requestClose, modal: true });
+  // A persistent overlay still takes the Escape and declines it. In a stack the coordinator
+  // picks which panel: the topmost active one, or the focused one in a co-active group.
+  useLayerStack({ active: isOpen, onEscape: stack ? () => stack.escape() : requestClose, modal: true });
 
-  // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339).
+  /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
+  const zIndex = computed(() => (stack && stackEntry ? stack.zIndex(stackEntry) : OVERLAY_Z_INDEX));
+  /** Whether this overlay draws the backdrop: the lowest active one in a stack, else always. */
+  const ownsBackdrop = computed(() => (stack && stackEntry ? stack.ownsBackdrop(stackEntry) : true));
+
+  // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
+  // focus move on to its siblings.
   function onKeydown(e: KeyboardEvent) {
     const dialog = dialogRef.value;
-    if (e.key !== "Tab" || !dialog) return;
+    if (e.key !== "Tab" || !dialog || !getModal()) return;
     const items = tabbableIn(dialog);
     // Nothing to tab to: focus stays on the dialog rather than leaving it.
     if (!items.length) {
@@ -250,5 +281,9 @@ export function useOverlay(options: UseOverlayOptions) {
     requestClose,
     onBackdropClick,
     onKeydown,
+    zIndex,
+    ownsBackdrop,
+    /** Whether the overlay sits in a stack: its root then lets pointer events through. */
+    stacked: !!stack,
   };
 }
