@@ -140,7 +140,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
 
   function onPointerdown(e: PointerEvent) {
     const el = panel.value;
-    // A widget that tracks its own pointer (a colour picker) prevents the default: not ours.
+    // A widget that tracks its own pointer (a color picker) prevents the default: not ours.
     if (!el || !enabled() || drag.active.value || e.isPrimary === false || e.defaultPrevented) return;
     const target = e.target as HTMLElement | null;
     if (!target || target.closest(NO_DRAG)) return;
