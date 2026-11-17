@@ -363,12 +363,15 @@ const themeScope = useScopedTheme(() => mounted.value);
   pointer-events: none;
   background: var(--_stack-scrim, black);
   opacity: 0;
-  /* Out of the covered state it leaves with the panel above, faster than it came. */
-  transition: opacity var(--cui-duration-fast) var(--cui-ease-drawer);
+  /* Out of the covered state it clears over the exit of the panel above (--cui-duration-fast, the
+     same as its slide-out), but on plain `ease`, the colour-change curve: the drawer curve is
+     front-loaded, and a fade on it is a step in the first 40ms, which reads as a flash. */
+  transition: opacity var(--cui-duration-fast) ease;
 }
 [data-cui-covered] > .cui-slideover__scrim {
   opacity: var(--_stack-dim, 0.5);
   transition-duration: var(--cui-duration-slow);
+  transition-timing-function: var(--cui-ease-drawer);
 }
 .cui-slideover__panel--stacked::after,
 .cui-slideover__panel--stacked::before {

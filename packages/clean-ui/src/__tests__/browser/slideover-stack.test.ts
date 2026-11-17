@@ -622,6 +622,160 @@ describe("CuiSlideoverStack (real browser)", () => {
       });
     });
 
+    /**
+     * Closing a panel while others stay: the closing one slides off through the dock edge at full
+     * opacity, the one that becomes active again un-dims over the same close, and nothing else
+     * changes in a single frame.
+     */
+    describe("closing a panel in a stack is one slide, not a fade and a flash", () => {
+      const durationOf = () => motionDuration("fast");
+      interface Frame { t: number; left: number; opacity: number; scrim: number; shadow: number; seam: number; present: boolean }
+
+      function record(leaver: number, stays: number) {
+        const frames_: Frame[] = [];
+        const t0 = performance.now();
+        let running = true;
+        const tick = () => {
+          const el = panel(leaver);
+          const keep = panel(stays);
+          const scrim = keep?.querySelector<HTMLElement>(".cui-slideover__scrim");
+          frames_.push({
+            t: performance.now() - t0,
+            present: !!el,
+            left: el ? el.getBoundingClientRect().left : Infinity,
+            opacity: el ? Number(getComputedStyle(el).opacity) : 0,
+            scrim: scrim ? Number(getComputedStyle(scrim).opacity) : 0,
+            shadow: el ? Number(getComputedStyle(el, "::after").opacity) : 0,
+            seam: el ? Number(getComputedStyle(el, "::before").opacity) : 0,
+          });
+          if (running) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        return { frames: frames_, stop: () => (running = false) };
+      }
+
+      function expectOneMotion(fr: Frame[], opts: { scrimFrom: number }) {
+        const live = fr.filter((f) => f.present);
+        expect(live.length).toBeGreaterThan(4);
+        // The panel leaves at full opacity, never fades out.
+        expect(Math.min(...live.map((f) => f.opacity)), "leaver stays opaque").toBe(1);
+        // Toward the dock edge, never back.
+        const lefts = live.map((f) => f.left);
+        expect(lefts.slice(1).every((l, i) => l >= lefts[i] - 0.5), "moves monotonically to the edge").toBe(true);
+        expect(lefts.at(-1)!, "reaches the edge").toBeGreaterThan(1300);
+        // Its shadow and seam travel with it: neither pops at the first frame.
+        expect(new Set(live.map((f) => f.shadow)).size, "leaver's shadow does not change").toBe(1);
+        expect(new Set(live.map((f) => f.seam)).size, "leaver's seam does not change").toBe(1);
+        // The one that becomes active again un-dims as a ramp spread over the exit.
+        const sc = fr.map((f) => f.scrim);
+        const steps = sc.slice(1).map((v, i) => v - sc[i]);
+        expect(Math.max(...steps), "monotone").toBeLessThan(0.0005);
+        expect(Math.min(...steps), "no big jump in a frame").toBeGreaterThan(-0.3);
+        const hi = opts.scrimFrom * 0.9;
+        const lo = opts.scrimFrom * 0.1;
+        const tHi = fr.find((f) => f.scrim <= hi)?.t ?? 0;
+        const tLo = fr.find((f) => f.scrim <= lo)?.t ?? 0;
+        expect(tLo - tHi, "the visible fade takes a good share of the exit, not a few frames").toBeGreaterThan(durationOf() * 0.4);
+        // And it is done when the leaver is, give or take a frame or two.
+        const gone = fr.find((f) => !f.present || f.left >= 1399)?.t ?? Infinity;
+        expect(tLo, "scrim has cleared by the time the leaver is gone").toBeLessThan(gone + 40);
+      }
+
+      async function run(open: boolean[], leaver: number, stays: number, trigger: () => void | Promise<void>) {
+        const rec = record(leaver, stays);
+        await trigger();
+        await wait(durationOf() + 250);
+        rec.stop();
+        expectOneMotion(rec.frames, { scrimFrom: 0.5 });
+      }
+
+      it("by programmatic close", async () => {
+        const open = stack([{}, {}]);
+        await openN(open, 2);
+        await run(open, 1, 0, () => void (open[1] = false));
+      });
+
+      it("by Escape", async () => {
+        const open = stack([{}, {}]);
+        await openN(open, 2);
+        await run(open, 1, 0, () => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+      });
+
+      it("by the X button", async () => {
+        const open = stack([{}, {}], {}, { title: "T" });
+        await openN(open, 2);
+        await run(open, 1, 0, () => panel(1).querySelector<HTMLElement>("button")!.click());
+      });
+
+      it("by a click on the backdrop", async () => {
+        const open = stack([{}, {}]);
+        await openN(open, 2);
+        await run(open, 1, 0, () => document.querySelector<HTMLElement>(".cui-backdrop")!.click());
+      });
+
+      it("closing the top of three: the middle one becomes active", async () => {
+        const open = stack([{}, {}, {}]);
+        await openN(open, 3);
+        await run(open, 2, 1, () => void (open[2] = false));
+      });
+
+      it("with push outward, the group's outer shadow passes to the remaining panel", async () => {
+        const open = stack([{}, {}], { push: "outward" });
+        await openN(open, 2);
+        const rec = record(1, 0);
+        open[1] = false;
+        await wait(durationOf() + 250);
+        rec.stop();
+        const live = rec.frames.filter((f) => f.present);
+        expect(Math.min(...live.map((f) => f.opacity))).toBe(1);
+        expect(new Set(live.map((f) => f.shadow)).size).toBe(1);
+      });
+
+      it("the remaining panels' reflow takes the exit's duration, not the entry's", async () => {
+        const open = stack([{ size: "lg" }, { size: "md" }]);
+        await openN(open, 2);
+        open[1] = false;
+        await frames(2);
+        const flip = panel(0).getAnimations().find((a) => a.id === "cui-stack-flip")!;
+        expect(flip).toBeDefined();
+        expect(Number(flip.effect!.getTiming().duration)).toBe(durationOf());
+      });
+
+      it("the remaining panel's z-order and inert state do not change mid-close", async () => {
+        const open = stack([{}, {}]);
+        await openN(open, 2);
+        const z = panel(0).parentElement!.style.zIndex;
+        open[1] = false;
+        await frames(3);
+        expect(panel(0).parentElement!.style.zIndex).toBe(z);
+        expect(panel(0).parentElement!.hasAttribute("inert")).toBe(false);
+      });
+
+      it("under reduced motion nothing moves, the fade stays, and the un-dimming is still a ramp", async () => {
+        const set = (reduce: boolean) =>
+          cdp().send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: reduce ? "reduce" : "" }] });
+        await set(true);
+        try {
+          const open = stack([{}, {}]);
+          await openN(open, 2);
+          const rec = record(1, 0);
+          open[1] = false;
+          await wait(durationOf() + 250);
+          rec.stop();
+          const live = rec.frames.filter((f) => f.present);
+          // No sliding: it fades where it stands.
+          expect(new Set(live.map((f) => Math.round(f.left))).size).toBe(1);
+          expect(Math.min(...live.map((f) => f.opacity))).toBeLessThan(0.5);
+          const sc = rec.frames.map((f) => f.scrim);
+          const steps = sc.slice(1).map((v, i) => v - sc[i]);
+          expect(Math.min(...steps)).toBeGreaterThan(-0.3);
+          expect(sc.at(-1)).toBeCloseTo(0, 2);
+        } finally {
+          await set(false);
+        }
+      });
+    });
+
     it("fades in once with the first panel and out once with the last", async () => {
       const open = stack([{}, {}]);
       const rec = sampler();

@@ -40,6 +40,7 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
   // What each panel was last given, to know which ones moved.
   const given = new WeakMap<HTMLElement, { width: number; offset: number }>();
   let managed = new Set<HTMLElement>();
+  let count = 0;
 
   /** Natural width: what the panel measures with no stack width forced on it. */
   function naturalWidth(el: HTMLElement) {
@@ -79,6 +80,9 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
     // A panel that left the stack keeps the geometry it had, so it exits from where it stood
     // (through the docked edge) rather than jumping; its element goes when its exit ends.
     managed = new Set(items.map((i) => i.el));
+    // A panel leaving: the others slide back over its exit (the fast duration), not an entry's.
+    const leaving = items.length < count;
+    count = items.length;
     if (!items.length || typeof window === "undefined") return;
 
     // Where each is drawn now, running animations included, before anything changes.
@@ -119,7 +123,7 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
       const easing = getComputedStyle(el).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
       el.animate(
         [{ transform: `translateX(${dx}px) scaleX(${sx})` }, { transform: "translateX(0) scaleX(1)" }],
-        { id: FLIP, duration: motionDuration("slow", el), easing, composite: "add" },
+        { id: FLIP, duration: motionDuration(leaving ? "fast" : "slow", el), easing, composite: "add" },
       );
     }
   }
