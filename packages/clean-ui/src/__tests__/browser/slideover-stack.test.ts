@@ -7,6 +7,8 @@ import { installTokens, frames } from "../../../../../config/test/browser-helper
 import { motionDuration } from "../../utils/motion";
 import CuiSlideover from "../../components/CuiSlideover.vue";
 import CuiSlideoverStack from "../../components/CuiSlideoverStack.vue";
+import CuiInput from "../../components/CuiInput.vue";
+import CuiTextarea from "../../components/CuiTextarea.vue";
 
 /**
  * #41 — the stack's layout, measured: panels attach edge to edge from the docked side, narrow
@@ -96,7 +98,8 @@ describe("CuiSlideoverStack (real browser)", () => {
       const flip = panel(0).getAnimations().find((a) => a.id === "cui-stack-flip")!;
       expect(flip, "the first panel slides").toBeDefined();
       const frames_ = (flip.effect as KeyframeEffect).getKeyframes();
-      expect(String(frames_[0].transform)).toMatch(/translateX\(-?[\d.]+px\) scaleX\(1\)/);
+      expect(String(frames_[0].translate)).toMatch(/^-?[\d.]+px( 0(px)?)?$/);
+      expect(String(frames_[0].scale)).toMatch(/^1( 1)?$/);
       await settle();
       expect(rect(0).right).toBeCloseTo(before - 448, 0);
       expect(rect(0).width).toBeCloseTo(576, 0);
@@ -773,6 +776,103 @@ describe("CuiSlideoverStack (real browser)", () => {
         } finally {
           await set(false);
         }
+      });
+    });
+
+    /**
+     * Real pixels (a CDP screencast), not computed styles: styles said everything was in step while
+     * a one-frame lag on the compositor opened a dim gap between the panels that remain and the one
+     * leaving, which reads as a flash. On every painted frame, the white of the panels along a row
+     * through their blank middle must be one unbroken run: nothing between them but a hairline.
+     */
+    describe("no gap opens between the panels while one closes (painted frames)", () => {
+      async function screencast(run: () => void, ms: number) {
+        const c = cdp();
+        const frames_: string[] = [];
+        const handler = (e: { data: string; sessionId: number }) => {
+          frames_.push(e.data);
+          void c.send("Page.screencastFrameAck", { sessionId: e.sessionId });
+        };
+        c.on("Page.screencastFrame", handler);
+        await c.send("Page.startScreencast", { format: "png", everyNthFrame: 1 });
+        // No decoy painting: an idle page is what a user closes a panel on, and the compositor's
+        // wake-up is part of what is being measured.
+        await wait(150);
+        run();
+        await wait(ms);
+        await c.send("Page.stopScreencast");
+        return frames_;
+      }
+
+      /** Separate runs of near-white along a row, ignoring gaps of a hairline or two. */
+      async function whiteRuns(data: string) {
+        const img = new Image();
+        img.src = "data:image/png;base64," + data;
+        await img.decode();
+        const cv = document.createElement("canvas");
+        cv.width = img.width;
+        cv.height = img.height;
+        const cx = cv.getContext("2d")!;
+        cx.drawImage(img, 0, 0);
+        const w = Math.min(img.width, window.innerWidth);
+        const row = cx.getImageData(0, 300, w, 1).data;
+        const runs: [number, number][] = [];
+        let start = -1;
+        let gap = 0;
+        for (let x = 0; x < w; x++) {
+          const white = row[x * 4] > 240 && row[x * 4 + 1] > 240 && row[x * 4 + 2] > 240;
+          if (white) {
+            if (start < 0) start = x;
+            gap = 0;
+          } else if (start >= 0 && ++gap > 3) {
+            runs.push([start, x - gap]);
+            start = -1;
+          }
+        }
+        if (start >= 0) runs.push([start, w]);
+        return runs.filter(([a, b]) => b - a > 30);
+      }
+
+      /** Closes the panel under test over several cycles, so a one-frame gap has several chances to show. */
+      async function expectNoGap(reopen: () => Promise<void>, close: () => void) {
+        const bad: [number, number][] = [];
+        let total = 0;
+        for (let cycle = 0; cycle < 5 && total < 30; cycle++) {
+          const frames_ = await screencast(close, 400);
+          total += frames_.length;
+          const counts = await Promise.all(frames_.map(async (f) => (await whiteRuns(f)).length));
+          counts.forEach((n, i) => n > 1 && bad.push([cycle * 1000 + i, n]));
+          await reopen();
+        }
+        expect(total, "the screencast delivered frames").toBeGreaterThan(20);
+        expect(bad, `frames showing the page between the panels (cycle*1000+frame, runs): ${JSON.stringify(bad)}`).toEqual([]);
+      }
+
+      beforeAll(() => page.viewport(1100, 600));
+
+      it("a child panel closing alone, declared inside its parent", async () => {
+        const st = reactive({ edit: false, hist: false });
+        const hist = () => h(CuiSlideover, { visible: st.hist, "onUpdate:visible": (v: boolean) => (st.hist = v), modal: false, title: "History", size: "sm", "data-testid": "p1" }, { default: () => h("p", "h") });
+        mounted.push(
+          mount(defineComponent({ render: () => h(CuiSlideoverStack, null, { default: () => h(CuiSlideover, { visible: st.edit, "onUpdate:visible": (v: boolean) => (st.edit = v), title: "Edit report", size: "md", "data-testid": "p0" }, { default: () => [h("div", { style: "padding:1rem" }, [h(CuiInput, { modelValue: "x" }), h(CuiTextarea, { modelValue: "y" })]), hist()] }) }) }), { attachTo: document.body }),
+        );
+        st.edit = true;
+        await settle();
+        st.hist = true;
+        await settle();
+        await expectNoGap(async () => { st.hist = true; await settle(); }, () => void (st.hist = false));
+      });
+
+      it("a sibling panel closing alone", async () => {
+        const open = stack([{ size: "md" }, { size: "sm", modal: false }], {}, { title: "T" });
+        await openN(open, 2);
+        await expectNoGap(async () => { open[1] = true; await settle(); }, () => void (open[1] = false));
+      });
+
+      it("the top of a modal stack of three", async () => {
+        const open = stack([{ size: "sm" }, { size: "sm" }, { size: "sm" }]);
+        await openN(open, 3);
+        await expectNoGap(async () => { open[2] = true; await settle(); }, () => void (open[2] = false));
       });
     });
 

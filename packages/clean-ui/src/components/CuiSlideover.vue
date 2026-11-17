@@ -384,6 +384,9 @@ const themeScope = useScopedTheme(() => mounted.value);
   inset: 0;
   z-index: -1;
   border-radius: inherit;
+  /* Cast to the open side only: with push="outward" the outer panel is the topmost layer, and a
+     shadow all round would fall on the panel beside it. */
+  clip-path: inset(-100px 0 -100px -100px);
   box-shadow: var(--_stack-shadow-val, var(--cui-shadow-lg));
   opacity: var(--_stack-shadow, 1);
 }
@@ -400,6 +403,9 @@ const themeScope = useScopedTheme(() => mounted.value);
 }
 .cui-slideover__panel--stacked.cui-slideover__panel--left::before {
   right: 0;
+}
+.cui-slideover__panel--stacked.cui-slideover__panel--left::after {
+  clip-path: inset(-100px -100px -100px 0);
 }
 
 /* After the side rules, which it overrides at the same specificity. */

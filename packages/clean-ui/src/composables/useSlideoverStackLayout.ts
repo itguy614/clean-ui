@@ -28,7 +28,10 @@ const FLIP = "cui-stack-flip";
  * Layout properties don't animate (see "Motion"), so a change that moves or resizes a panel
  * that is already open is played FLIP-style instead, on `transform` alone: the new layout is
  * applied at once, then each panel is animated from where it was drawn to where it now is, as
- * a translate and a scale about its docked edge. A panel that is entering or leaving is not
+ * a translate and a scale about its docked edge. These are the individual `translate` and `scale`
+ * properties, not `transform` with an additive composite: an additive `transform` animation starts
+ * a painted frame later than the CSS transition that slides a closing panel out, which opened a dim
+ * gap between the two for a frame (a flash). The individual properties start with it. A panel that is entering or leaving is not
  * part of this: it keeps the slideover's own slide. Under reduced motion the layout simply
  * snaps.
  */
@@ -122,8 +125,8 @@ export function useSlideoverStackLayout(stack: OverlayStackContext, options: Sli
       if (Math.abs(dx) < 0.5 && Math.abs(sx - 1) < 0.001) continue;
       const easing = getComputedStyle(el).getPropertyValue("--cui-ease-drawer").trim() || "cubic-bezier(0.32, 0.72, 0, 1)";
       el.animate(
-        [{ transform: `translateX(${dx}px) scaleX(${sx})` }, { transform: "translateX(0) scaleX(1)" }],
-        { id: FLIP, duration: motionDuration(leaving ? "fast" : "slow", el), easing, composite: "add" },
+        [{ translate: `${dx}px 0`, scale: `${sx} 1` }, { translate: "0 0", scale: "1 1" }],
+        { id: FLIP, duration: motionDuration(leaving ? "fast" : "slow", el), easing },
       );
     }
   }
