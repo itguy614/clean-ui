@@ -1,164 +1,243 @@
 <script setup lang="ts">
-import { CuiBadge } from "@itguy614/clean-ui";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from "vue";
+import { useRouter } from "vue-router";
+import {
+  CuiBadge,
+  CuiInput,
+  CuiList,
+  CuiListItem,
+  CuiSidebar,
+  CuiSidebarContent,
+  CuiSidebarGroup,
+  CuiSidebarHeader,
+} from "@itguy614/clean-ui";
 import versionRaw from "../../../../VERSION?raw";
+import { PAGES, STANDALONE_GROUP, type DocPage } from "../navigation/pages";
+import {
+  groupResults,
+  hasQuery,
+  highlightSegments,
+  isSearchShortcut,
+  resultsMessage,
+  searchPages,
+} from "../navigation/search";
 
-defineEmits<{ navigate: [] }>();
+/** Whether the mobile drawer is open (`v-model:open`): the header's menu button drives it. */
+const open = defineModel<boolean>("open", { default: false });
+
+// The header's menu button binds these (aria-expanded, aria-controls and the translated menu
+// name) instead of hard-coding them.
+const sidebar = useTemplateRef("sidebar");
+defineExpose({ toggleAttrs: computed(() => sidebar.value?.toggleAttrs) });
 
 const version = versionRaw.trim();
+const router = useRouter();
 
-const sections = [
-  // Getting Started
-  { id: "overview", label: "Overview", path: "/", group: "Getting Started" },
-  { id: "installation", label: "Installation", path: "/installation", group: "Getting Started" },
-  { id: "changelog", label: "Changelog", path: "/changelog", group: "Getting Started" },
+// The docs site is English-only: its few strings live here, together.
+const TEXT = {
+  searchName: "Search documentation",
+  inputLabel: "Filter pages",
+  placeholder: "Filter pages",
+  noMatches: "No matches",
+  noMatchesHint: "Try a component name or what it does, such as select, dialog or calendar.",
+};
 
-  // Foundations (alphabetical)
-  { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations" },
-  { id: "icons", label: "Icons", path: "/foundations/icons", group: "Foundations" },
-  { id: "themes", label: "Themes", path: "/foundations/themes", group: "Foundations" },
-  { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations" },
-  { id: "localization", label: "Localization", path: "/foundations/localization", group: "Foundations" },
-  { id: "motion", label: "Motion", path: "/foundations/motion", group: "Foundations" },
-  { id: "density", label: "Density", path: "/foundations/density", group: "Foundations" },
-  { id: "utilities", label: "Utilities", path: "/foundations/utilities", group: "Foundations" },
+// Links outside any group stand alone at the top; everything else is a collapsible group.
+const standalone = PAGES.filter((p) => p.group === STANDALONE_GROUP);
+const groups: Array<{ label: string; items: DocPage[] }> = [];
+for (const page of PAGES) {
+  if (page.group === STANDALONE_GROUP) continue;
+  const group = groups.find((g) => g.label === page.group);
+  if (group) group.items.push(page);
+  else groups.push({ label: page.group, items: [page] });
+}
 
-  // Layout (alphabetical)
-  { id: "container", label: "Container", path: "/components/container", group: "Layout" },
-  { id: "divider", label: "Divider", path: "/components/divider", group: "Layout" },
-  { id: "flex", label: "Flex", path: "/components/flex", group: "Layout" },
-  { id: "flex-item", label: "Flex Item", path: "/components/flex-item", group: "Layout" },
-  { id: "grid", label: "Grid", path: "/components/grid", group: "Layout" },
-  { id: "grid-item", label: "Grid Item", path: "/components/grid-item", group: "Layout" },
-  { id: "resizable-panels", label: "Resizable Panels", path: "/components/resizable-panels", group: "Layout" },
-  { id: "scroll-area", label: "Scroll Area", path: "/components/scroll-area", group: "Layout" },
-  { id: "spacer", label: "Spacer", path: "/components/spacer", group: "Layout" },
-  { id: "stack", label: "Stack", path: "/components/stack", group: "Layout" },
+// --- Search (#516) -----------------------------------------------------------------------
+//
+// While a query is typed the filtered results replace the navigation. The navigation itself
+// stays mounted underneath, only hidden, so clearing the box brings it back exactly as it was:
+// which groups were open, and what the user toggled by hand. The results are their own groups,
+// each open until the user shuts it, and all open again when the query changes.
 
-  // Form Controls (alphabetical)
-  { id: "checkbox", label: "Checkbox", path: "/components/checkbox", group: "Form Controls" },
-  { id: "color-picker", label: "Color Picker", path: "/components/color-picker", group: "Form Controls" },
-  { id: "combobox", label: "Combobox", path: "/components/combobox", group: "Form Controls" },
-  { id: "date-picker", label: "Date Picker", path: "/components/date-picker", group: "Form Controls" },
-  { id: "date-range-picker", label: "Date Range", path: "/components/date-range-picker", group: "Form Controls" },
-  { id: "fieldset", label: "Fieldset", path: "/components/fieldset", group: "Form Controls" },
-  { id: "file-upload", label: "File Upload", path: "/components/file-upload", group: "Form Controls" },
-  { id: "form", label: "Form", path: "/components/form", group: "Form Controls" },
-  { id: "form-field", label: "Form Field", path: "/components/form-field", group: "Form Controls" },
-  { id: "input", label: "Input", path: "/components/input", group: "Form Controls" },
-  { id: "input-stepper", label: "Input Stepper", path: "/components/input-stepper", group: "Form Controls" },
-  { id: "masked-input", label: "Masked Input", path: "/components/masked-input", group: "Form Controls" },
-  { id: "pin-input", label: "Pin Input", path: "/components/pin-input", group: "Form Controls" },
-  { id: "radio", label: "Radio", path: "/components/radio", group: "Form Controls" },
-  { id: "rating", label: "Rating", path: "/components/rating", group: "Form Controls" },
-  { id: "select", label: "Select", path: "/components/select", group: "Form Controls" },
-  { id: "slider", label: "Slider", path: "/components/slider", group: "Form Controls" },
-  { id: "tag-input", label: "Tag Input", path: "/components/tag-input", group: "Form Controls" },
-  { id: "textarea", label: "Textarea", path: "/components/textarea", group: "Form Controls" },
-  { id: "time-picker", label: "Time Picker", path: "/components/time-picker", group: "Form Controls" },
-  { id: "toggle", label: "Toggle", path: "/components/toggle", group: "Form Controls" },
-  { id: "transfer-list", label: "Transfer List", path: "/components/transfer-list", group: "Form Controls" },
+const query = ref("");
+const searching = computed(() => hasQuery(query.value));
+const results = computed(() => searchPages(PAGES, query.value));
+const resultGroups = computed(() => (searching.value ? groupResults(results.value) : []));
 
-  // Actions (alphabetical)
-  { id: "button", label: "Button", path: "/components/button", group: "Actions" },
-  { id: "button-group", label: "Button Group", path: "/components/button-group", group: "Actions" },
-  { id: "copy-button", label: "Copy Button", path: "/components/copy-button", group: "Actions" },
-  { id: "toolbar", label: "Toolbar", path: "/components/toolbar", group: "Actions" },
+const shutGroups = ref(new Set<string>());
 
-  // Feedback (alphabetical)
-  { id: "alert", label: "Alert", path: "/components/alert", group: "Feedback" },
-  { id: "banner", label: "Banner", path: "/components/banner", group: "Feedback" },
-  { id: "empty-state", label: "Empty State", path: "/components/empty-state", group: "Feedback" },
-  { id: "skeleton", label: "Skeleton", path: "/components/skeleton", group: "Feedback" },
-  { id: "spinner", label: "Spinner", path: "/components/spinner", group: "Feedback" },
-  { id: "status-dot", label: "Status Dot", path: "/components/status-dot", group: "Feedback" },
-  { id: "toast", label: "Toast", path: "/components/toast", group: "Feedback" },
+function setGroupOpen(label: string, value: boolean) {
+  const next = new Set(shutGroups.value);
+  if (value) next.delete(label);
+  else next.add(label);
+  shutGroups.value = next;
+}
 
-  // Data Display (alphabetical)
-  { id: "accordion", label: "Accordion", path: "/components/accordion", group: "Data Display" },
-  { id: "avatar", label: "Avatar", path: "/components/avatar", group: "Data Display" },
-  { id: "badge", label: "Badge", path: "/components/badge", group: "Data Display" },
-  { id: "card", label: "Card", path: "/components/card", group: "Data Display" },
-  { id: "code-block", label: "Code Block", path: "/components/code-block", group: "Data Display" },
-  { id: "data-grid", label: "Data Grid", path: "/components/data-grid", group: "Data Display" },
-  { id: "kbd", label: "Kbd", path: "/components/kbd", group: "Data Display" },
-  { id: "list", label: "List", path: "/components/list", group: "Data Display" },
-  { id: "progress", label: "Progress", path: "/components/progress", group: "Data Display" },
-  { id: "table", label: "Table", path: "/components/table", group: "Data Display" },
-  { id: "timeline", label: "Timeline", path: "/components/timeline", group: "Data Display" },
-  { id: "tree-view", label: "Tree View", path: "/components/tree-view", group: "Data Display" },
+// A screen reader hears the count once typing pauses, not on every keystroke.
+const announcement = ref("");
+let announceTimer: ReturnType<typeof setTimeout> | undefined;
+watch(query, () => {
+  shutGroups.value = new Set();
+  clearTimeout(announceTimer);
+  // Emptied first, so a count equal to the last one still changes the region and is spoken.
+  announcement.value = "";
+  if (!searching.value) return;
+  announceTimer = setTimeout(() => (announcement.value = resultsMessage(results.value.length)), 500);
+});
+onBeforeUnmount(() => clearTimeout(announceTimer));
 
-  // Navigation (alphabetical)
-  { id: "breadcrumb", label: "Breadcrumb", path: "/components/breadcrumb", group: "Navigation" },
-  { id: "pagination", label: "Pagination", path: "/components/pagination", group: "Navigation" },
-  { id: "stepper", label: "Stepper", path: "/components/stepper", group: "Navigation" },
-  { id: "tabs", label: "Tabs", path: "/components/tabs", group: "Navigation" },
+// A drawer opens on a fresh search. (Not cleared on close: the results would reflow while the
+// drawer is still sliding out.)
+watch(open, (isOpen) => {
+  if (isOpen) query.value = "";
+});
 
-  // Overlay (alphabetical)
-  { id: "confirm-dialog", label: "Confirm Dialog", path: "/components/confirm-dialog", group: "Overlay" },
-  { id: "context-menu", label: "Context Menu", path: "/components/context-menu", group: "Overlay" },
-  { id: "dropdown", label: "Dropdown", path: "/components/dropdown", group: "Overlay" },
-  { id: "modal", label: "Modal", path: "/components/modal", group: "Overlay" },
-  { id: "popover", label: "Popover", path: "/components/popover", group: "Overlay" },
-  { id: "slideover", label: "Slideover", path: "/components/slideover", group: "Overlay" },
-  { id: "tooltip", label: "Tooltip", path: "/components/tooltip", group: "Overlay" },
+// --- Keyboard ----------------------------------------------------------------------------
 
-  // Composables (#296) — interaction, positioning, responsive, forms
-  { id: "click-outside", label: "Click Outside", path: "/composables/click-outside", group: "Composables" },
-  { id: "color-mode", label: "Color Mode", path: "/composables/color-mode", group: "Composables" },
-  { id: "roving-focus", label: "Roving Focus", path: "/composables/roving-focus", group: "Composables" },
-  { id: "locale", label: "Locale", path: "/composables/locale", group: "Composables" },
-  { id: "overlay", label: "Overlay", path: "/composables/overlay", group: "Composables" },
-  { id: "floating-panels", label: "Floating Panels", path: "/composables/floating-panels", group: "Composables" },
-  { id: "scroll-shadows", label: "Scroll Shadows", path: "/composables/scroll-shadows", group: "Composables" },
-  { id: "scroll-spy", label: "Scroll Spy", path: "/composables/scroll-spy", group: "Composables" },
-  { id: "breakpoint", label: "Breakpoint & Layout Context", path: "/composables/breakpoint", group: "Composables" },
-  { id: "color-scheme", label: "Color Scheme", path: "/composables/color-scheme", group: "Composables" },
-  { id: "field-aria", label: "Field ARIA", path: "/composables/field-aria", group: "Composables" },
-];
+const input = useTemplateRef("input");
+const resultsEl = useTemplateRef<HTMLElement>("resultsEl");
 
-const groupedSections = sections.reduce((acc, section) => {
-  if (!acc[section.group]) {
-    acc[section.group] = [];
+// Links in a group the user shut are inert: focus() on them does nothing, so arrows skip them.
+const resultLinks = () =>
+  Array.from(resultsEl.value?.querySelectorAll<HTMLAnchorElement>("a[href]") ?? []).filter(
+    (a) => !a.closest("[inert], [hidden]"),
+  );
+
+// Below the sidebar's breakpoint it is a drawer, and the box exists only while that is open:
+// `/` opens it, and the box takes focus when it appears.
+let focusWhenMounted = false;
+function focusSearch() {
+  if (input.value) {
+    input.value.focus();
+    input.value.el?.select();
+    return;
   }
-  acc[section.group].push(section);
-  return acc;
-}, {} as Record<string, typeof sections>);
+  focusWhenMounted = true;
+  open.value = true;
+}
+watch(input, async (field) => {
+  if (!field || !focusWhenMounted) return;
+  focusWhenMounted = false;
+  await nextTick();
+  field.focus();
+});
+
+function onWindowKeydown(event: KeyboardEvent) {
+  if (!isSearchShortcut(event)) return;
+  event.preventDefault();
+  focusSearch();
+}
+onMounted(() => window.addEventListener("keydown", onWindowKeydown));
+onBeforeUnmount(() => window.removeEventListener("keydown", onWindowKeydown));
+
+function openFirstMatch() {
+  const first = resultGroups.value[0]?.results[0];
+  if (!first) return;
+  void router.push(first.page.path);
+  open.value = false;
+}
+
+function onSearchKeydown(event: KeyboardEvent) {
+  const target = event.target as HTMLElement;
+  const inField = target === input.value?.el;
+  const links = resultLinks();
+  // From the box, index -1 makes "next" the first result.
+  const index = inField ? -1 : links.indexOf(target as HTMLAnchorElement);
+
+  if (event.key === "Escape") {
+    // Clearing is this keystroke's whole job: say so, or the drawer closes around it.
+    if (query.value) {
+      event.preventDefault();
+      query.value = "";
+      input.value?.focus();
+    } else if (inField) {
+      input.value?.blur();
+    }
+  } else if (event.key === "Enter" && inField && !event.isComposing) {
+    event.preventDefault();
+    openFirstMatch();
+  } else if (event.key === "ArrowDown" && (inField ? links.length : index !== -1)) {
+    event.preventDefault();
+    links[index + 1]?.focus();
+  } else if (event.key === "ArrowUp" && index !== -1) {
+    event.preventDefault();
+    if (index === 0) input.value?.focus();
+    else links[index - 1]?.focus();
+  }
+}
 </script>
 
 <template>
-  <nav
-    class="cui-scrollbar bg-surface-50 dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800"
-    :style="{ height: '100%', overflowY: 'auto', padding: '1.5rem' }"
-  >
-    <div style="margin-bottom: 1.5rem;">
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--cui-text-emphasis);">Clean UI</h2>
-        <CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge>
-      </div>
-      <p style="margin-top: 0.25rem; font-size: 0.875rem; color: var(--cui-text-secondary);">Vue Component Library</p>
+  <CuiSidebar ref="sidebar" v-model:open="open" label="Documentation" :toggle="false" :style="{ width: '100%' }">
+    <CuiSidebarHeader title="Clean UI" subtitle="Vue Component Library">
+      <template #suffix><CuiBadge color="primary" size="sm">v{{ version }}</CuiBadge></template>
+    </CuiSidebarHeader>
+
+    <!-- The same handler is on the results below: arrows and Escape work from a result link too. -->
+    <div role="search" :aria-label="TEXT.searchName" class="px-3 pb-2" @keydown="onSearchKeydown">
+      <span id="docs-search-label" class="cui-sr-only">{{ TEXT.inputLabel }}</span>
+      <CuiInput
+        ref="input"
+        v-model="query"
+        id="docs-search"
+        type="text"
+        size="sm"
+        clearable
+        autocomplete="off"
+        aria-labelledby="docs-search-label"
+        :placeholder="TEXT.placeholder"
+      />
+      <div role="status" class="cui-sr-only">{{ announcement }}</div>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-      <div v-for="(items, group) in groupedSections" :key="group">
-        <h3 :style="{ marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--cui-text-tertiary)' }">
-          {{ group }}
-        </h3>
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.125rem;">
-          <li v-for="section in items" :key="section.id">
-            <router-link
-              :to="section.path"
-              :class="[
-                'block w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
-                'text-surface-700 hover:bg-surface-200 dark:text-surface-300 dark:hover:bg-surface-800'
-              ]"
-              active-class="[color:var(--cui-primary-text)]! [background:var(--cui-primary-solid,var(--cui-primary))] hover:[background:var(--cui-primary-solid-hover,var(--cui-primary-hover))]"
-              @click="$emit('navigate')"
-            >
-              {{ section.label }}
-            </router-link>
-          </li>
-        </ul>
+    <CuiSidebarContent>
+      <div v-show="!searching" data-docs-nav class="flex flex-col gap-3">
+        <CuiList>
+          <CuiListItem v-for="page in standalone" :key="page.id" :to="page.path" :title="page.label" />
+        </CuiList>
+
+        <!-- The group holding the current page opens by itself, and follows the route. -->
+        <CuiSidebarGroup v-for="group in groups" :key="group.label" :label="group.label">
+          <CuiList>
+            <CuiListItem v-for="page in group.items" :key="page.id" :to="page.path" :title="page.label" />
+          </CuiList>
+        </CuiSidebarGroup>
       </div>
-    </div>
-  </nav>
+
+      <div v-if="searching" ref="resultsEl" data-docs-search-results class="flex flex-col gap-3" @keydown="onSearchKeydown">
+        <template v-if="resultGroups.length">
+          <CuiSidebarGroup
+            v-for="group in resultGroups"
+            :key="group.label"
+            :label="group.label"
+            :expanded="!shutGroups.has(group.label)"
+            @update:expanded="setGroupOpen(group.label, $event)"
+          >
+            <CuiList>
+              <CuiListItem
+                v-for="result in group.results"
+                :key="result.page.id"
+                :to="result.page.path"
+              >
+                <span class="cui-list-item__title">
+                  <template v-for="(segment, i) in highlightSegments(result.page.label, result.ranges)" :key="i">
+                    <mark v-if="segment.match" class="docs-search-mark">{{ segment.text }}</mark>
+                    <template v-else>{{ segment.text }}</template>
+                  </template>
+                </span>
+                <span v-if="result.keyword" class="cui-list-item__subtitle">
+                  <span class="cui-list-item__subtitle-text">{{ result.keyword }}</span>
+                </span>
+              </CuiListItem>
+            </CuiList>
+          </CuiSidebarGroup>
+        </template>
+
+        <div v-else class="px-2.5 py-3 text-sm">
+          <p class="font-medium">{{ TEXT.noMatches }}</p>
+          <p class="mt-1">{{ TEXT.noMatchesHint }}</p>
+        </div>
+      </div>
+    </CuiSidebarContent>
+  </CuiSidebar>
 </template>

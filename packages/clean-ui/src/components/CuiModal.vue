@@ -8,12 +8,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, CuiRounded, TitleAsProps, OverlayFocusProps } from "../types/common";
+import type { BackdropGradientProps, HideableProps, CuiRounded, TitleAsProps, OverlayFocusProps } from "../types/common";
 import { RADIUS_SCALE } from "../utils/sizing";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiModalProps extends HideableProps, TitleAsProps, OverlayFocusProps {
+export interface CuiModalProps extends BackdropGradientProps, HideableProps, TitleAsProps, OverlayFocusProps {
   /** Controls modal visibility (v-model:visible) */
   visible?: boolean;
   /**
@@ -40,8 +40,6 @@ export interface CuiModalProps extends HideableProps, TitleAsProps, OverlayFocus
   backdropColor?: string;
   /** Backdrop image URL */
   backdropImage?: string;
-  /** Backdrop gradient */
-  backdropGradient?: string;
   /** Border radius */
   rounded?: CuiRounded;
 }
@@ -143,6 +141,11 @@ const themeScope = useScopedTheme(() => mounted.value);
         :color="backdropColor"
         :image="backdropImage"
         :gradient="backdropGradient"
+        :from="backdropFrom"
+        :via="backdropVia"
+        :to="backdropTo"
+        :angle="backdropAngle"
+        :smooth="backdropSmooth"
         @click="onBackdropClick"
       />
 

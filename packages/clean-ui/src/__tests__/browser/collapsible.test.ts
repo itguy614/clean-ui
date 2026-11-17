@@ -9,9 +9,10 @@ import CuiAccordion from "../../components/CuiAccordion.vue";
 import CuiAccordionItem from "../../components/CuiAccordionItem.vue";
 import CuiFieldset from "../../components/CuiFieldset.vue";
 import CuiTreeView from "../../components/CuiTreeView.vue";
+import CuiSidebarGroup from "../../components/CuiSidebarGroup.vue";
 
 /**
- * #270 / #176 / #162 — Accordion, Fieldset and TreeNode collapse with
+ * #270 / #176 / #162 — Accordion, Fieldset, TreeNode and SidebarGroup (#193) collapse with
  * `grid-template-rows: 0fr → 1fr`, and the content of a shut one is hidden
  * (`hidden="until-found"`) so it is out of the tab order and the accessibility tree. The old
  * `max-height: 0` left every field and link inside a closed section tabbable and announced.
@@ -63,6 +64,13 @@ const CASES: Case[] = [
     open: async (w) => void (await w.find(".cui-fieldset__toggle").trigger("click")),
     close: async (w) => void (await w.find(".cui-fieldset__toggle").trigger("click")),
     panel: (w) => w.element.querySelector<HTMLElement>(".cui-fieldset__body")!,
+  },
+  {
+    name: "CuiSidebarGroup",
+    mount: (host) => mount({ render: () => h(CuiSidebarGroup, { label: "Section" }, inner) }, { attachTo: host }),
+    open: async (w) => void (await w.find(".cui-sidebar-group__trigger").trigger("click")),
+    close: async (w) => void (await w.find(".cui-sidebar-group__trigger").trigger("click")),
+    panel: (w) => w.element.querySelector<HTMLElement>(".cui-sidebar-group__panel")!,
   },
   {
     name: "CuiTreeNode",

@@ -54,6 +54,11 @@ const router = createRouter({
       component: () => import('../pages/ContainerPage.vue'),
     },
     {
+      path: '/components/panel',
+      name: 'panel',
+      component: () => import('../pages/PanelPage.vue'),
+    },
+    {
       path: '/components/spacer',
       name: 'spacer',
       component: () => import('../pages/SpacerPage.vue'),
@@ -369,6 +374,36 @@ const router = createRouter({
       path: '/components/scroll-area',
       name: 'scroll-area',
       component: () => import('../pages/ScrollAreaPage.vue'),
+    },
+    {
+      path: '/app-shells/sidebar',
+      name: 'app-shell-sidebar',
+      component: () => import('../pages/AppShellSidebarPage.vue'),
+    },
+    {
+      path: '/app-shells/navbar',
+      name: 'app-shell-navbar',
+      component: () => import('../pages/AppShellNavbarPage.vue'),
+    },
+    {
+      path: '/app-shells/navbar-sidebar',
+      name: 'app-shell-navbar-sidebar',
+      component: () => import('../pages/AppShellNavbarSidebarPage.vue'),
+    },
+    {
+      path: '/app-shells/detail-drawer',
+      name: 'app-shell-detail-drawer',
+      component: () => import('../pages/AppShellDetailDrawerPage.vue'),
+    },
+    {
+      path: '/components/navbar',
+      name: 'navbar',
+      component: () => import('../pages/NavbarPage.vue'),
+    },
+    {
+      path: '/components/sidebar',
+      name: 'sidebar',
+      component: () => import('../pages/SidebarPage.vue'),
     },
     {
       path: '/components/resizable-panels',

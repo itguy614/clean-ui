@@ -62,6 +62,7 @@ export const ICONS = {
   funnel: REGULAR,
   image: REGULAR,
   info: REGULAR,
+  list: REGULAR, // CuiSidebar's menu button
   lock: REGULAR,
   "magnifying-glass": REGULAR,
   minus: ["regular", "bold"], // bold: CuiCheckbox's indeterminate dash

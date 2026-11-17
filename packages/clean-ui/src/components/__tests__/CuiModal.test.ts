@@ -214,3 +214,61 @@ describe("CuiModal", () => {
     wrapper.unmount();
   });
 });
+
+describe.each([
+  { name: "CuiModal", component: CuiModal },
+  { name: "CuiSlideover", component: CuiSlideover },
+])("$name forwards the flat gradient props to its backdrop (#509)", ({ component }) => {
+  const bg = (modern = false) =>
+    document.body
+      .querySelector<HTMLElement>(".cui-backdrop")!
+      .style.getPropertyValue(modern ? "--_backdrop-bg-modern" : "--_backdrop-bg");
+
+  it("paints a gradient from backdropFrom/Via/To/Angle", async () => {
+    const wrapper = mount(component, {
+      props: { visible: true, backdropFrom: "primary", backdropVia: "#fff", backdropTo: "info", backdropAngle: 45 },
+    });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toContain("linear-gradient(45deg");
+    expect(bg()).toContain("var(--cui-primary)");
+    expect(bg()).toContain("#fff");
+    expect(bg()).toContain("var(--cui-info)");
+    expect(bg(true)).toContain("in oklch");
+    wrapper.unmount();
+  });
+
+  it("lets backdropSmooth add the grain layer, as a bare attribute too", async () => {
+    // A bare `backdrop-smooth` arrives as "": it only counts as true if the prop is typed boolean.
+    const wrapper = mount(component, {
+      props: { visible: true, backdropFrom: "primary", backdropTo: "info", backdropSmooth: "" as unknown as boolean },
+    });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toContain("data:image/svg+xml");
+    wrapper.unmount();
+  });
+
+  it("keeps an angle of 0 (up) rather than the default", async () => {
+    const wrapper = mount(component, { props: { visible: true, backdropFrom: "primary", backdropTo: "info", backdropAngle: 0 } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toContain("linear-gradient(0deg");
+    wrapper.unmount();
+  });
+
+  it("backdropGradient still wins over the flat props", async () => {
+    const wrapper = mount(component, {
+      props: { visible: true, backdropGradient: "radial-gradient(red, blue)", backdropFrom: "primary", backdropTo: "info" },
+    });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toContain("radial-gradient(red, blue)");
+    expect(bg()).not.toContain("var(--cui-primary)");
+    wrapper.unmount();
+  });
+
+  it("paints no gradient by default", async () => {
+    const wrapper = mount(component, { props: { visible: true } });
+    await vi.runOnlyPendingTimersAsync();
+    expect(bg()).toBe("black");
+    expect(bg(true)).toBe("initial");
+    wrapper.unmount();
+  });
+});

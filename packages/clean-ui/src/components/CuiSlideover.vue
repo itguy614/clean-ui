@@ -9,12 +9,12 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
 import CuiModalBody from "./CuiModalBody.vue";
 import type { BackdropBlur } from "./CuiBackdrop.vue";
-import type { HideableProps, TitleAsProps, OverlayFocusProps } from "../types/common";
+import type { BackdropGradientProps, HideableProps, TitleAsProps, OverlayFocusProps } from "../types/common";
 
 export type SlideoverSide = "right" | "left" | "top" | "bottom";
 export type SlideoverSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface CuiSlideoverProps extends HideableProps, TitleAsProps, OverlayFocusProps {
+export interface CuiSlideoverProps extends BackdropGradientProps, HideableProps, TitleAsProps, OverlayFocusProps {
   /** Controls slideover visibility (v-model:visible) */
   visible?: boolean;
   /** Which edge the panel slides from */
@@ -35,8 +35,6 @@ export interface CuiSlideoverProps extends HideableProps, TitleAsProps, OverlayF
   backdropColor?: string;
   /** Backdrop image URL */
   backdropImage?: string;
-  /** Backdrop gradient */
-  backdropGradient?: string;
 }
 
 // The root is a <Teleport>, which can't take fallthrough attributes: Vue would drop a class
@@ -159,6 +157,11 @@ const themeScope = useScopedTheme(() => mounted.value);
         :color="backdropColor"
         :image="backdropImage"
         :gradient="backdropGradient"
+        :from="backdropFrom"
+        :via="backdropVia"
+        :to="backdropTo"
+        :angle="backdropAngle"
+        :smooth="backdropSmooth"
         @click="onBackdropClick"
       />
 

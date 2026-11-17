@@ -28,6 +28,7 @@ const withFooter = ref(false);
 const scrolling = ref(false);
 const persistent = ref(false);
 const blurred = ref(false);
+const flatGradient = ref(false);
 const formPanel = ref(false);
 const settingsPanel = ref(false);
 
@@ -283,6 +284,30 @@ const formAgree = ref(false);
             :backdrop-opacity="0.3"
           >
             <p>The page content behind is blurred and dimmed for focus.</p>
+          </CuiSlideover>
+        </Example>
+
+        <!-- Backdrop: from / to props -->
+        <Example title="Gradient Backdrop" :code="`<CuiSlideover
+  v-model:visible=&quot;show&quot;
+  title=&quot;Gradient Backdrop&quot;
+  backdrop-from=&quot;primary&quot;
+  backdrop-to=&quot;info&quot;
+  :backdrop-angle=&quot;135&quot;
+  backdrop-smooth
+>
+  <p>Color roles as gradient stops.</p>
+</CuiSlideover>`">
+          <CuiButton variant="outline" size="sm" @click="flatGradient = true">Gradient Overlay</CuiButton>
+          <CuiSlideover
+            v-model:visible="flatGradient"
+            title="Gradient Backdrop"
+            backdrop-from="primary"
+            backdrop-to="info"
+            :backdrop-angle="135"
+            backdrop-smooth
+          >
+            <p>The stops are color roles, so the backdrop follows the theme. backdrop-gradient still wins if both are set.</p>
           </CuiSlideover>
         </Example>
 
