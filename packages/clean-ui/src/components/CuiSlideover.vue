@@ -250,7 +250,7 @@ const themeScope = useScopedTheme(() => mounted.value);
 }
 
 :where(.cui-slideover__panel--left, .cui-slideover__panel--right) {
-  width: var(--cui-slideover-width, var(--_slideover-width));
+  width: var(--_stack-width, var(--cui-slideover-width, var(--_slideover-width)));
 }
 
 :where(.cui-slideover__panel--top, .cui-slideover__panel--bottom) {
@@ -276,7 +276,8 @@ const themeScope = useScopedTheme(() => mounted.value);
 .cui-slideover__panel--right {
   top: 0;
   height: 100%;
-  max-width: calc(100vw - 2rem);
+  /* In a stack the layout sets the width itself and lifts this cap (--_stack-*, #41). */
+  max-width: var(--_stack-max-width, calc(100vw - 2rem));
 }
 
 .cui-slideover__panel--top,
@@ -293,14 +294,19 @@ const themeScope = useScopedTheme(() => mounted.value);
 }
 
 /* Off-screen until visible. */
+/* In a stack a panel sits --_stack-offset in from the edge, beside the ones beneath it, and
+   leaves past all of them. Alone the offset is 0. Its edge is also where a re-flow scales
+   from (useSlideoverStackLayout). */
 .cui-slideover__panel--right {
-  right: 0;
-  transform: translateX(100%);
+  right: var(--_stack-offset, 0px);
+  transform: translateX(calc(100% + var(--_stack-offset, 0px)));
+  transform-origin: right center;
 }
 
 .cui-slideover__panel--left {
-  left: 0;
-  transform: translateX(-100%);
+  left: var(--_stack-offset, 0px);
+  transform: translateX(calc(-100% - var(--_stack-offset, 0px)));
+  transform-origin: left center;
 }
 
 .cui-slideover__panel--top {

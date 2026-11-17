@@ -221,6 +221,11 @@ const router = createRouter({
       component: () => import('../pages/SlideoverPage.vue'),
     },
     {
+      path: '/components/slideover-stack',
+      name: 'slideover-stack',
+      component: () => import('../pages/SlideoverStackPage.vue'),
+    },
+    {
       path: '/components/toast',
       name: 'toast',
       component: () => import('../pages/ToastPage.vue'),
