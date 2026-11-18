@@ -4,7 +4,8 @@ import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
 import { computeDropdownPosition } from "../utils/position";
-import type { CuiColor } from "../types/common";
+import type { CuiColor, CuiRounded } from "../types/common";
+import { RADIUS_SCALE } from "../utils/sizing";
 import { useEventListener } from "../composables/useEventListener";
 
 /**
@@ -39,6 +40,12 @@ const props = defineProps<{
   tokenPrefix: "combobox" | "tag-input" | "select";
   /** The component's color role: the highlighted and selected rows take its tint. */
   color?: CuiColor;
+  /**
+   * The field's `rounded`, so the panel matches its corners (#522): `none` squares the
+   * panel and its rows, `sm`/`md`/`lg` use that step, and `full` (a pill field) gives the
+   * panel `lg`, since a pill-shaped panel isn't one.
+   */
+  rounded?: CuiRounded;
   /** Upper bound for the panel's height, in px, when `maxVisible` doesn't decide it. */
   maxHeight: number;
   /**
@@ -161,16 +168,19 @@ const tokens = computed(() => {
   const p = props.tokenPrefix;
   const role = props.color ?? "primary";
   const token = (slot: string, fallback: string) => `var(--cui-${p}-${slot}, ${fallback})`;
+  const rounded = props.rounded ?? "md";
+  const panelRadius = RADIUS_SCALE[rounded === "full" ? "lg" : rounded];
+  const itemRadius = rounded === "none" ? "0" : "0.25rem";
   return {
     "--_listbox-panel-bg": token("panel-bg", "var(--cui-surface-base)"),
     "--_listbox-panel-border": token("panel-border", "1px solid var(--cui-border)"),
-    "--_listbox-panel-radius": token("panel-radius", "var(--cui-radius-lg, 0.5rem)"),
+    "--_listbox-panel-radius": token("panel-radius", panelRadius),
     "--_listbox-panel-shadow": token("panel-shadow", "var(--cui-shadow-md)"),
     "--_listbox-panel-padding": token("panel-padding", "calc(0.25rem * var(--cui-density-scale, 1))"),
     "--_listbox-font-size": token("font-size", props.fontSize),
     "--_listbox-item-padding": token("item-padding", props.itemPadding),
     "--_listbox-item-color": token("item-color", "var(--cui-text-body)"),
-    "--_listbox-item-radius": token("item-radius", "0.25rem"),
+    "--_listbox-item-radius": token("item-radius", itemRadius),
     "--_listbox-item-selected-bg": token("item-selected-bg", `color-mix(in srgb, var(--cui-${role}-bg) 50%, transparent)`),
     "--_listbox-item-focus-bg": token("item-focus-bg", `var(--cui-${role}-bg)`),
     "--_listbox-item-disabled-color": token("item-disabled-color", "var(--cui-text-tertiary)"),

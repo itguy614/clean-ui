@@ -352,6 +352,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
     <!-- Dropdown: the shared listbox panel, teleported to body (#216) -->
     <CuiListboxPanel
       ref="panelRef"
+      :rounded="rounded"
       :open="isOpen"
       :anchor="triggerRef"
       token-prefix="select"
