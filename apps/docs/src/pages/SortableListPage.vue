@@ -201,7 +201,8 @@ const frozen = ref(["One", "Two", "Three"]);
               </li>
               <li>
                 Not included: dragging between lists, and scrolling a scrollable ancestor when an
-                item is dragged near its edge. In a long scrolling list, reorder with the keyboard
+                item is dragged near its edge. Scrolling by wheel during a drag also moves the
+                dragged item off the pointer. In a long scrolling list, reorder with the keyboard
                 or the move buttons.
               </li>
             </ul>

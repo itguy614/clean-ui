@@ -133,6 +133,19 @@ describe("CuiSortableList (real browser)", () => {
       expect(status()).toBe("Alpha dropped at position 2 of 4.");
     });
 
+    it("does not replay a slide for the dropped item once it has settled", async () => {
+      mountList();
+      await frames(2);
+      const start = center(handle("Alpha"));
+      const dy = 2 * itemEl("Bravo").getBoundingClientRect().height + 20;
+      await dragBy("Alpha", dy);
+      pointer(document, "pointerup", start.x, start.y + dy);
+      for (let i = 0; i < 60 && placeholder(); i++) await frames(1);
+      expect(placeholder()).toBeNull();
+      const slides = itemEl("Alpha").getAnimations().filter((a) => (a.effect as KeyframeEffect).getKeyframes().some((k) => "transform" in k));
+      expect(slides).toHaveLength(0);
+    });
+
     it("takes several slots when the pointer moves far at once", async () => {
       const { model } = mountList();
       await frames(2);

@@ -152,6 +152,24 @@ describe("CuiSortableList", () => {
       expect(handle(wrapper, 0).attributes("aria-pressed")).toBe("false");
     });
 
+    it("ignores a held key's repeats: the grab is not dropped by its own auto-repeat", async () => {
+      const { wrapper } = setup();
+      await handle(wrapper, 0).trigger("keydown", { key: " " });
+      await handle(wrapper, 0).trigger("keydown", { key: " ", repeat: true });
+      expect(handle(wrapper, 0).attributes("aria-pressed")).toBe("true");
+    });
+
+    it("drops the grab, emitting nothing, when the parent replaces the items under it", async () => {
+      const { wrapper, model, list } = setup();
+      await press(handle(wrapper, 0), " ");
+      await press(handle(wrapper, 0), "ArrowDown");
+      model.value = [{ id: 2, label: "Grace" }, { id: 3, label: "Linus" }];
+      await nextTick();
+      expect(labels(wrapper)).toEqual(["Grace", "Linus"]);
+      expect(list().emitted("update:modelValue")).toBeUndefined();
+      expect(wrapper.find('[aria-pressed="true"]').exists()).toBe(false);
+    });
+
     it("leaves a drop with no move silent", async () => {
       const { wrapper, list } = setup();
       await press(handle(wrapper, 1), " ");

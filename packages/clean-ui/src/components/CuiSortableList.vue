@@ -9,7 +9,7 @@ import { useMessages } from "../composables/useMessages";
 import { usePointerDrag } from "../composables/usePointerDrag";
 import { useRovingFocus } from "../composables/useRovingFocus";
 import { useListNavigation } from "../composables/useListNavigation";
-import { sortableKey } from "./sortable-list-key";
+import { sortableKey, warnNoLabel } from "./sortable-list-key";
 import { motionDuration, prefersReducedMotion } from "../utils/motion";
 import { IconCaretDown } from "../icons/generated/caret-down";
 import { IconCaretLeft } from "../icons/generated/caret-left";
@@ -78,6 +78,7 @@ function labelOf(item: T, i: number): string {
       const v = (item as Record<string, unknown>)[name];
       if (typeof v === "string") return v;
     }
+    warnNoLabel();
     return String(i + 1);
   }
   return String(item);
@@ -110,7 +111,8 @@ const setPlaceholder = (el: unknown) => {
 };
 
 const announce = (text: string) => (announcement.value = text);
-const positionOf = (key: string | number, list = rows.value) => list.findIndex((it, i) => keyOf(it, i) === key);
+const keys = computed(() => rows.value.map(keyOf));
+const positionOf = (key: string | number, list?: T[]) => (list ? list.map(keyOf) : keys.value).indexOf(key);
 
 function commit(next: T[], item: T, from: number, to: number) {
   if (from === to) return;
@@ -141,7 +143,9 @@ let reordering = false;
 
 function measure() {
   const out = new Map<string | number | symbol, DOMRect>();
-  for (const [key, el] of itemEls) if (key !== dragKey.value) out.set(key, el.getBoundingClientRect());
+  // Not the ghost, found by its class: at the end of a drag `dragKey` is already null, and the
+  // ghost is by then where it settled, not where the layout will put it.
+  for (const [key, el] of itemEls) if (!el.classList.contains("cui-sortable-list__item--dragging")) out.set(key, el.getBoundingClientRect());
   if (placeholderEl) out.set(PLACEHOLDER, placeholderEl.getBoundingClientRect());
   return out;
 }
@@ -238,7 +242,7 @@ function onHandleKeydown(e: KeyboardEvent, item: T, i: number) {
   if (props.disabled || e.ctrlKey || e.altKey || e.metaKey || dragKey.value !== null) return;
   const key = keyOf(item, i);
   if (grabbedKey.value !== key) {
-    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null) {
+    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null && !e.repeat) {
       e.preventDefault();
       grab(item, i);
     }
@@ -246,7 +250,8 @@ function onHandleKeydown(e: KeyboardEvent, item: T, i: number) {
   }
   if (e.key === " " || e.key === "Enter") {
     e.preventDefault();
-    finish(true);
+    // A held key repeats: the grab's own press must not drop it again.
+    if (!e.repeat) finish(true);
   } else if (e.key !== "Escape" && e.key !== "Tab") {
     const to = nav.indexForKey(e, i, { count: rows.value.length });
     if (to === null) return;
@@ -261,7 +266,9 @@ function onHandleKeydown(e: KeyboardEvent, item: T, i: number) {
 function onFocusout(e: FocusEvent) {
   const key = grabbedKey.value;
   if (key === null || reordering || e.target !== handleOf(key)) return;
-  if (e.relatedTarget !== e.target) finish(false);
+  // The window losing focus (alt-tab, a dialog) is not the user leaving the item.
+  if (!e.relatedTarget && !document.hasFocus()) return;
+  finish(false);
 }
 
 // ---- buttons ---------------------------------------------------------------------------
@@ -343,7 +350,7 @@ async function reslot() {
   const ghostCenter = (horizontal() ? box.value.left + pointer.x - s.x0 + box.value.width / 2 : box.value.top + pointer.y - s.y0 + box.value.height / 2);
   const here = center(placeholderEl);
   for (const to of [d + 1, d - 1]) {
-    const neighbor = rows.value[to] !== undefined ? itemEls.get(keyOf(rows.value[to], to)) : undefined;
+    const neighbor = rows.value[to] !== undefined ? itemEls.get(keys.value[to]) : undefined;
     if (!neighbor) continue;
     const at = center(neighbor);
     const toward = Math.sign(at - here);
@@ -386,11 +393,37 @@ async function settle(save: boolean) {
     const running = typeof el.getAnimations === "function" ? el.getAnimations() : [];
     await Promise.allSettled(running.map((a) => a.finished));
   }
-  if (el) el.style.transform = "";
+  if (gone) return;
   finish(save);
+  // After the render has taken the settling class off, in the same frame: cleared before, it
+  // would start a transition back from the slot the ghost just reached.
+  await nextTick();
+  if (el) el.style.transform = "";
 }
 
+/** The list is no more: a glide that ends now must not emit into the parent. */
+let gone = false;
+
+/**
+ * The parent replaced the items under a grab or drag. Its list wins: the draft would commit a
+ * stale copy of it (resurrecting a deleted item), so the grab or drag is dropped without a word.
+ */
+watch(
+  () => props.modelValue,
+  () => {
+    if (activeKey.value === null || settling.value) return;
+    drag.end();
+    session = null;
+    const el = dragKey.value === null ? undefined : itemEls.get(dragKey.value);
+    if (el) el.style.transform = "";
+    grabbedKey.value = null;
+    dragKey.value = null;
+    draft.value = null;
+  },
+);
+
 onBeforeUnmount(() => {
+  gone = true;
   drag.end();
   session = null;
   itemEls.clear();
@@ -411,7 +444,12 @@ function focus() {
   (handles?.[Math.min(activeIndex.value, (handles?.length ?? 1) - 1)] ?? handles?.[0])?.focus();
 }
 
-defineExpose({ el: rootEl, focus });
+function blur() {
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && listEl.value?.contains(active)) active.blur();
+}
+
+defineExpose({ el: rootEl, focus, blur });
 </script>
 
 <template>
@@ -434,23 +472,23 @@ defineExpose({ el: rootEl, focus });
       @focusin="roving.onFocusin"
       @focusout="onFocusout"
     >
-      <template v-for="(item, i) in rows" :key="keyOf(item, i)">
+      <template v-for="(item, i) in rows" :key="keys[i]">
         <li
-          v-if="dragKey === keyOf(item, i)"
+          v-if="dragKey === keys[i]"
           :ref="setPlaceholder"
           class="cui-sortable-list__placeholder"
           aria-hidden="true"
           :style="boxStyle"
         />
         <li
-          :ref="(el) => setItemEl(keyOf(item, i), el)"
+          :ref="(el) => setItemEl(keys[i], el)"
           class="cui-sortable-list__item"
           :class="{
-            'cui-sortable-list__item--grabbed': grabbedKey === keyOf(item, i),
-            'cui-sortable-list__item--dragging': dragKey === keyOf(item, i),
-            'cui-sortable-list__item--settling': settling && dragKey === keyOf(item, i),
+            'cui-sortable-list__item--grabbed': grabbedKey === keys[i],
+            'cui-sortable-list__item--dragging': dragKey === keys[i],
+            'cui-sortable-list__item--settling': settling && dragKey === keys[i],
           }"
-          :style="dragKey === keyOf(item, i) ? boxStyle : undefined"
+          :style="dragKey === keys[i] ? boxStyle : undefined"
         >
           <button
             type="button"
@@ -458,7 +496,7 @@ defineExpose({ el: rootEl, focus });
             :tabindex="roving.tabIndex(i)"
             :disabled="disabled"
             :aria-label="m.handle(labelOf(item, i))"
-            :aria-pressed="grabbedKey === keyOf(item, i)"
+            :aria-pressed="grabbedKey === keys[i]"
             :aria-describedby="helpId"
             @keydown="onHandleKeydown($event, item, i)"
             @pointerdown="onHandlePointerdown($event, item, i)"
@@ -472,8 +510,8 @@ defineExpose({ el: rootEl, focus });
               name="item"
               :item="item"
               :index="i"
-              :grabbed="grabbedKey === keyOf(item, i)"
-              :dragging="dragKey === keyOf(item, i)"
+              :grabbed="grabbedKey === keys[i]"
+              :dragging="dragKey === keys[i]"
             >
               {{ labelOf(item, i) }}
             </slot>
@@ -521,7 +559,7 @@ defineExpose({ el: rootEl, focus });
 }
 
 :where(.cui-sortable-list__item) {
-  gap: var(--cui-sortable-list-gap, calc(0.5rem * var(--cui-density-scale, 1)));
+  gap: calc(0.5rem * var(--cui-density-scale, 1));
   padding: var(--cui-sortable-list-py, calc(0.5rem * var(--cui-density-scale, 1)))
     var(--cui-sortable-list-px, calc(0.5rem * var(--cui-density-scale, 1)));
   background: var(--cui-sortable-list-bg, var(--cui-surface-base));
