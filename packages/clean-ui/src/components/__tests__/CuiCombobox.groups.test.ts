@@ -95,6 +95,12 @@ describe("CuiCombobox groups (#445)", () => {
     expect(document.querySelector('[role="group"]')!.getAttribute("aria-labelledby")).toBeTruthy();
   });
 
+  it("treats a non-string group (consumer slot data) as no group", async () => {
+    await openWith({ options: [{ value: "a", label: "A", group: 3 }, { value: "b", label: "B", group: { id: 1 } }] });
+    expect(document.querySelector('[role="group"]')).toBeNull();
+    expect(optionTexts()).toEqual(["A", "B"]);
+  });
+
   it("selects by the flat index across groups", async () => {
     const { w, input } = await openWith({ options: GROUPED });
     for (let i = 0; i < 3; i++) await input.trigger("keydown", { key: "ArrowDown" });
@@ -218,6 +224,31 @@ describe("CuiCombobox optionActions (#445)", () => {
     expect(triggered).toEqual([]);
     warn.mockRestore();
     __clearWarned();
+  });
+
+  it("runs once for a held key: auto-repeat is swallowed, not repeated", async () => {
+    const { input } = await open();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "d", ctrlKey: true });
+    const e = new KeyboardEvent("keydown", { key: "d", ctrlKey: true, repeat: true, cancelable: true, bubbles: true });
+    input.element.dispatchEvent(e);
+    expect(triggered).toEqual(["del:apple"]);
+    expect(e.defaultPrevented).toBe(true);
+  });
+
+  it("matches the key's own character, not its physical position, without Alt or Shift", async () => {
+    const { input } = await open();
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "q", code: "KeyD", ctrlKey: true }); // another layout's Q on D's spot
+    expect(triggered).toEqual([]);
+  });
+
+  it("writes code-form keys as aria-keyshortcuts takes them", async () => {
+    const { input } = await open({
+      optionActions: [{ key: "KeyD", modifiers: ["ctrl"], label: "x", onTrigger: () => {} }, { key: " ", modifiers: ["alt"], label: "y", onTrigger: () => {} }],
+    });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    expect(active().getAttribute("aria-keyshortcuts")).toBe("Control+D Alt+Space");
   });
 
   it("does not warn for valid actions", async () => {

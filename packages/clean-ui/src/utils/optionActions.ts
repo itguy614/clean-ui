@@ -16,7 +16,10 @@ function keyMatches(key: string, e: KeyboardEvent): boolean {
   if (key.length !== 1) return false;
   const k = key.toLowerCase();
   if (e.key.toLowerCase() === k) return true;
-  // By physical key too: Option+D types "∂" on macOS, and Shift+1 types "!".
+  // By physical key too, but only where Alt or Shift rewrites the character (Option+D types
+  // "∂" on macOS, Shift+1 types "!"). Otherwise the label on the key decides, so a
+  // non-QWERTY layout does not match two keys for one shortcut.
+  if (!e.altKey && !e.shiftKey) return false;
   if (/[a-z]/.test(k)) return e.code === `Key${k.toUpperCase()}`;
   if (/[0-9]/.test(k)) return e.code === `Digit${k}`;
   return false;
@@ -40,6 +43,8 @@ export function findOptionAction<T extends KeyedAction>(actions: readonly T[] | 
 /** The action as `aria-keyshortcuts` writes it: "Control+Shift+D". */
 export function optionActionShortcut(action: KeyedAction): string {
   const names: Record<ActionModifier, string> = { ctrl: "Control", alt: "Alt", shift: "Shift", meta: "Meta" };
-  const key = action.key.length === 1 ? action.key.toUpperCase() : action.key;
+  // `code` forms ("KeyD", "Digit1") and the space key, written as aria-keyshortcuts takes them.
+  const named = action.key.replace(/^(?:Key|Digit)(?=[A-Z0-9]$)/, "");
+  const key = named === " " ? "Space" : named.length === 1 ? named.toUpperCase() : named;
   return [...ACTION_MODIFIERS.filter((m) => action.modifiers.includes(m)).map((m) => names[m]), key].join("+");
 }

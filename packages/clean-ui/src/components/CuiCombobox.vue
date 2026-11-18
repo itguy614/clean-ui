@@ -199,7 +199,8 @@ const filteredOptions = computed(() => {
 const sections = computed(() => {
   const out: { label: string | undefined; items: { option: ComboboxOption; index: number }[] }[] = [];
   filteredOptions.value.forEach((option, index) => {
-    const label = option.group || undefined;
+    // Only a string is a heading: `group` was a free key under the index signature before.
+    const label = typeof option.group === "string" && option.group ? option.group : undefined;
     const last = out[out.length - 1];
     if (last && last.label === label) last.items.push({ option, index });
     else out.push({ label, items: [{ option, index }] });
@@ -308,9 +309,10 @@ function onKeydown(e: KeyboardEvent) {
     // A declared shortcut (#445), after that veto. Modified keys only, so Enter, Escape and
     // the arrows (which the listbox ignores once modified) are never taken from it.
     const action = findOptionAction(props.optionActions, e);
-    if (action && !highlighted.disabled) {
+    if (action) {
       e.preventDefault();
-      action.onTrigger(highlighted);
+      // A held key repeats: one press runs it once, not once per repeat.
+      if (!e.repeat) action.onTrigger(highlighted);
       return;
     }
   }
@@ -369,7 +371,7 @@ watch(
         warnOnce(`[clean-ui] CuiCombobox: optionActions "${a.key}" has unknown modifier(s) ${unknown.join(", ")}; use ${ACTION_MODIFIERS.join(", ")}.`);
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 
 // The option the highlight is on, or null: nothing highlighted, or the list isn't showing.
@@ -549,7 +551,7 @@ function optionClass(index: number, option: ComboboxOption) {
            role="group", or a bare presentational one for ungrouped options (#445). -->
       <CuiListboxGroup
         v-for="(section, s) in sections"
-        :key="s"
+        :key="`${s}:${section.label ?? ''}`"
         :label="section.label"
         :label-id="groupLabelId(s)"
         class="cui-combobox__group"
