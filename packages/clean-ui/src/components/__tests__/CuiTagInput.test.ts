@@ -167,7 +167,7 @@ describe("CuiTagInput panel radius (#522)", () => {
     w.find("input").element.dispatchEvent(new FocusEvent("focus"));
     await nextTick();
     const panel = document.querySelector<HTMLElement>(".cui-tag-input__dropdown")!;
-    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-tag-input-panel-radius, 0)");
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-tag-input-panel-radius, var(--cui-tag-input-radius, 0))");
     expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe("var(--cui-tag-input-item-radius, 0)");
     w.unmount();
   });

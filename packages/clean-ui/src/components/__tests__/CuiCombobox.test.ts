@@ -377,7 +377,7 @@ describe("CuiCombobox panel radius (#522)", () => {
     await w.find("input").trigger("focus");
     await nextTick();
     const panel = document.querySelector<HTMLElement>(".cui-combobox__dropdown")!;
-    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-combobox-panel-radius, 0)");
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-combobox-panel-radius, var(--cui-combobox-radius, 0))");
     expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe("var(--cui-combobox-item-radius, 0)");
   });
 });

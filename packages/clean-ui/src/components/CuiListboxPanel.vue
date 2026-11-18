@@ -183,7 +183,8 @@ const tokens = computed(() => {
   return {
     "--_listbox-panel-bg": token("panel-bg", "var(--cui-surface-base)"),
     "--_listbox-panel-border": token("panel-border", "1px solid var(--cui-border)"),
-    "--_listbox-panel-radius": token("panel-radius", panelRadius),
+    // The explicit panel token, then the field's own radius token, then the `rounded` step.
+    "--_listbox-panel-radius": token("panel-radius", `var(--cui-${p}-radius, ${panelRadius})`),
     "--_listbox-panel-shadow": token("panel-shadow", "var(--cui-shadow-md)"),
     "--_listbox-panel-padding": token("panel-padding", "calc(0.25rem * var(--cui-density-scale, 1))"),
     "--_listbox-font-size": token("font-size", props.fontSize),

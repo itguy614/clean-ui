@@ -100,7 +100,7 @@ describe("CuiSelect panel review fixes", () => {
     const { trigger } = mountSelect({ rounded: "none" });
     await press(trigger, "ArrowDown");
     const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
-    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-select-panel-radius, 0)");
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-select-panel-radius, var(--cui-select-radius, 0))");
     expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe("var(--cui-select-item-radius, 0)");
   });
 

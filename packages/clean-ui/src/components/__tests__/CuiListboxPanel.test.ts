@@ -42,7 +42,7 @@ describe("CuiListboxPanel", () => {
     mountPanel(rounded ? { rounded } : {});
     await nextTick();
     const panel = document.querySelector<HTMLElement>(".cui-listbox-panel")!;
-    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe(`var(--cui-combobox-panel-radius, ${panelRadius})`);
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe(`var(--cui-combobox-panel-radius, var(--cui-combobox-radius, ${panelRadius}))`);
     expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe(`var(--cui-combobox-item-radius, ${itemRadius})`);
   });
 
