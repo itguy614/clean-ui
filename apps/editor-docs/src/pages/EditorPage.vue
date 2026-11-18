@@ -99,7 +99,7 @@ type ThemePreset = "default" | "success" | "info" | "quiet";
 const themePreset = ref<ThemePreset>("success");
 const themeRounded = ref(false);
 const themedDoc = ref("Click in here to see the **focus** border and ring.");
-/** A colour role's own border, colour and focus ring, as the editor's three tokens. */
+/** A color role's own border, color and focus ring, as the editor's three tokens. */
 const rolePreset = (role: string) => ({
   "--cui-markdown-editor-border": `var(--cui-${role}-border)`,
   "--cui-markdown-editor-focus-border": `var(--cui-${role})`,

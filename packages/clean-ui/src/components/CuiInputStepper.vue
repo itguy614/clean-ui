@@ -354,7 +354,7 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* Floating label (#191): the label sits in the top of the box, the buttons and number below
-   it (the offset is only set then), centred in what is left. The number's dividers would
+   it (the offset is only set then), centered in what is left. The number's dividers would
    run up through the label. */
 :where(.cui-input-stepper__control) {
   padding-top: var(--_input-stepper-float-offset, 0);

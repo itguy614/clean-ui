@@ -50,7 +50,7 @@ describe("CuiSlider focus ring (real browser)", () => {
     expect(getComputedStyle(thumb).outlineStyle).toBe("none");
   });
 
-  it("takes its colour from the slider's colour role, overridable by token", async () => {
+  it("takes its color from the slider's color role, overridable by token", async () => {
     const { thumb } = await tabToSlider({ color: "success" });
     const ring = getComputedStyle(thumb).outlineColor;
     thumb.closest<HTMLElement>(".cui-slider")!.style.setProperty("--cui-slider-focus-ring", "rgb(255, 0, 0)");

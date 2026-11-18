@@ -113,7 +113,7 @@ concealed from assistive technology. Plus a width-adjustable demo showing toolba
 touch reveal granularity.
 
 **Acceptance Criteria:**
-- [X] The screen-reader behaviour is documented as a deliberate characteristic, not omitted
+- [X] The screen-reader behavior is documented as a deliberate characteristic, not omitted
 - [X] Keyboard shortcuts are listed in full
 - [X] The narrow-viewport demo shows the toolbar scrolling rather than clipping
 

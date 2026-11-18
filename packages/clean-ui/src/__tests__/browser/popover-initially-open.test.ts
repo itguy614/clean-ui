@@ -35,7 +35,7 @@ describe("CuiPopover open at mount (real browser)", () => {
     const trigger = el.querySelector("button")!.getBoundingClientRect();
     const rect = panel.getBoundingClientRect();
     expect(rect.top).toBeGreaterThanOrEqual(trigger.bottom - 1);
-    // placement "bottom" centres the panel on its trigger.
+    // placement "bottom" centers the panel on its trigger.
     const center = (r: DOMRect) => r.left + r.width / 2;
     expect(Math.abs(center(rect) - center(trigger))).toBeLessThan(4);
   });

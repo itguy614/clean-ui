@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<CuiCopyButtonProps>(), {
   hidden: false,
 });
 
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const messages = useMessages();
 const tooltipText = computed(() => props.tooltip ?? messages.value.copyButton.copy);
 const copiedText = computed(() => props.copiedTooltip ?? messages.value.copyButton.copiedTooltip);
@@ -74,7 +74,7 @@ const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
       </template>
       <span v-if="showLabel">{{ copied ? messages.copyButton.copied : messages.copyButton.copy }}</span>
     </CuiButton>
-    <!-- The copied state is otherwise conveyed by colour, an icon swap and a tooltip, none
+    <!-- The copied state is otherwise conveyed by color, an icon swap and a tooltip, none
          of which reach assistive tech — a success a screen reader never hears about (#150). -->
     <span class="cui-copy-button__status cui-sr-only" role="status" aria-live="polite">{{ copied ? copiedText : "" }}</span>
   </CuiTooltip>

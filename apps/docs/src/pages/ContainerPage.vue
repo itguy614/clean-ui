@@ -11,13 +11,13 @@ import meta from "../meta/container";
       <Example
         code-open
         :code="`<CuiContainer max-width=&quot;lg&quot;>
-  <p>Page content, capped at 1024px and centred.</p>
+  <p>Page content, capped at 1024px and centered.</p>
 </CuiContainer>`"
       >
         <div class="rounded-lg bg-surface-200 py-4 dark:bg-surface-800">
           <CuiContainer max-width="lg">
             <div class="rounded-lg bg-primary-500 p-4 text-white">
-              Capped at 1024px, centred, with 1rem of side padding.
+              Capped at 1024px, centered, with 1rem of side padding.
             </div>
           </CuiContainer>
         </div>

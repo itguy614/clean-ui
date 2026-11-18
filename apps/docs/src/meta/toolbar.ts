@@ -67,7 +67,7 @@ const meta: ComponentMeta = {
     { name: "--cui-toolbar-bg", default: "transparent", description: "Background" },
     { name: "--cui-toolbar-border", default: "none", description: "Border shorthand, e.g. `1px solid var(--cui-border)`" },
     { name: "--cui-toolbar-radius", default: "0", description: "Corner radius. The scroll area's fades follow it" },
-    { name: "--cui-toolbar-separator-bg", default: "var(--cui-border)", description: "CuiToolbarSeparator's colour" },
+    { name: "--cui-toolbar-separator-bg", default: "var(--cui-border)", description: "CuiToolbarSeparator's color" },
   ],
 
   parts: [

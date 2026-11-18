@@ -8,9 +8,9 @@ export type ButtonGroupPosition = "first" | "middle" | "last" | "only";
 /** What one button learns from its group: where it sits, and which corners and edges merge. */
 export interface ButtonGroupSlot {
   position: ComputedRef<ButtonGroupPosition>;
-  /** The leading corners are square: a painted neighbour comes before it. */
+  /** The leading corners are square: a painted neighbor comes before it. */
   flatStart: ComputedRef<boolean>;
-  /** The trailing corners are square: a painted neighbour comes after it. */
+  /** The trailing corners are square: a painted neighbor comes after it. */
   flatEnd: ComputedRef<boolean>;
   /** The classes the button wears for all of that, which `styles/components-shared.css` styles. */
   classes: ComputedRef<string[]>;

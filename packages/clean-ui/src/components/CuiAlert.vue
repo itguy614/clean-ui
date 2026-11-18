@@ -187,7 +187,7 @@ const messages = useMessages();
   border-radius: var(--cui-alert-radius, var(--_alert-radius));
 }
 
-/* A part's own colour has no slot in the vocabulary, so it stays a private token, but the
+/* A part's own color has no slot in the vocabulary, so it stays a private token, but the
    rule is zero specificity: a consumer's plain `.cui-alert__icon { color }` wins. */
 :where(.cui-alert__icon) {
   color: var(--_alert-icon-color);

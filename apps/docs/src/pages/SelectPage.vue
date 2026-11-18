@@ -252,7 +252,7 @@ const dynamicField = ref({
 
       <!-- Disabled Options -->
       <Example title="Disabled Options" :code="`<CuiSelect v-model=&quot;multi&quot; :options=&quot;permissionOptions&quot; multiple />
-<!-- options with disabled: true are greyed out and skipped by the keyboard -->`">
+<!-- options with disabled: true are grayed out and skipped by the keyboard -->`">
         <CuiStack spacing="2" class="max-w-sm">
           <CuiSelect
             v-model="multi"

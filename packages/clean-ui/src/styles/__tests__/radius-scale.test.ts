@@ -67,6 +67,7 @@ describe("rounded scale", () => {
   // moving a step and changing how the component looks.
   const LITERAL: Record<string, { count: number; reason: string }> = {
     "CuiConfirmDialog.vue": { count: 1, reason: "the icon tile's 0.625rem sits between md and lg: its own --cui-confirm-dialog-icon-radius" },
+    "CuiCommandPalette.vue": { count: 1, reason: "the dialog's 1rem corner is deliberately larger than the scale's lg: its own --cui-command-palette-radius" },
     "CuiFileUpload.vue": { count: 1, reason: "the drop zone's 0.625rem sits between md and lg: its own --cui-file-upload-radius" },
     "main.css": { count: 2, reason: "the .cui-typography prose layer styles consumer HTML (pre blocks, 0.5rem), not a component: its own fixed values, with no token to hang them on" },
   };

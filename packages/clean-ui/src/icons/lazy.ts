@@ -6,7 +6,7 @@
  * ```
  *
  * Installs a fallback resolver so ANY Phosphor icon name works without being
- * registered, matching clean-ui ≤1.0.1 behaviour. Convenient for prototypes and
+ * registered, matching clean-ui ≤1.0.1 behavior. Convenient for prototypes and
  * for apps whose icon names are data-driven and unbounded.
  *
  * The cost is the whole point of keeping this in its own module: the dynamic

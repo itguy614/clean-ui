@@ -124,7 +124,7 @@ const area = useScrollArea({
 /*
  * Every themeable rule is a whole :where(), so a consumer's plain `.cui-code-block { … }` at
  * (0,1,0) wins without !important; structure (display, overflow, white-space) keeps normal
- * specificity. The block is a dark panel in light and dark mode alike, so its colours read
+ * specificity. The block is a dark panel in light and dark mode alike, so its colors read
  * the surface scale and fixed white tints rather than the mode-swapping semantic slots.
  */
 .cui-code-block {
@@ -165,8 +165,8 @@ const area = useScrollArea({
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-/* Kept as it was inline: this colours the copy button's wrapper (what the status text inherits),
-   not the button, which paints itself from --cui-button-color. Greying the button would change
+/* Kept as it was inline: this colors the copy button's wrapper (what the status text inherits),
+   not the button, which paints itself from --cui-button-color. Graying the button would change
    how the block looks, so it is left for a deliberate change. */
 :where(.cui-code-block__copy) {
   color: var(--color-surface-400, #999);

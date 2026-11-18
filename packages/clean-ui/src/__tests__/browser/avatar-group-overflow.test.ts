@@ -8,7 +8,7 @@ import CuiAvatar from "../../components/CuiAvatar.vue";
 
 /**
  * #164 — the "+N" avatar closes the stack at its visual right end. The group is `row-reverse`,
- * so that is the first child in the DOM; it overlaps its neighbour like the others do.
+ * so that is the first child in the DOM; it overlaps its neighbor like the others do.
  */
 describe("CuiAvatarGroup overflow avatar (real browser)", () => {
   let removeTokens: () => void;
@@ -45,7 +45,7 @@ describe("CuiAvatarGroup overflow avatar (real browser)", () => {
     }
   });
 
-  it("overlaps its neighbour as the other avatars do, and paints beneath it", () => {
+  it("overlaps its neighbor as the other avatars do, and paints beneath it", () => {
     const { all, rect } = mountGroup();
     const overlaps = all.slice(0, -1).map((el, i) => rect(el).left - rect(all[i + 1]).right);
     // Every adjacent pair overlaps by the same amount (the overflow pair included).

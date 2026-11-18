@@ -72,7 +72,7 @@ const badgeStyle = computed(() => {
   return base;
 });
 
-// The dot and its ping ring are a part of their own, painted in the role's colour.
+// The dot and its ping ring are a part of their own, painted in the role's color.
 const dotStyle = computed(() => ({
   "--_badge-dot-bg": `var(--cui-${props.color})`,
 }));
@@ -133,7 +133,7 @@ const messages = useMessages();
   border-radius: var(--cui-badge-radius, var(--_badge-radius));
 }
 
-/* The dot's fill is the role's colour, not a slot: a part's own colour (a plain rule wins). */
+/* The dot's fill is the role's color, not a slot: a part's own color (a plain rule wins). */
 :where(.cui-badge__dot, .cui-badge__ping) {
   background: var(--_badge-dot-bg);
 }

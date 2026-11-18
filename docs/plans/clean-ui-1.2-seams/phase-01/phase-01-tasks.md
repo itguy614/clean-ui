@@ -49,7 +49,7 @@ passes unknown keys through at runtime, so this is a type-level change only.
 - [x] A separate package can augment `CuiMessageNamespaces` and have its namespace type-check
       inside `CuiConfigProvider`'s messages prop
 - [x] Existing message keys keep their exact types; nothing becomes loosely typed
-- [x] `defaultMessages` and `mergeMessages` behaviour is unchanged
+- [x] `defaultMessages` and `mergeMessages` behavior is unchanged
 
 ---
 
@@ -94,7 +94,7 @@ type-level.
 
 ---
 
-### Group 1.2: Colour-scheme signal
+### Group 1.2: Color-scheme signal
 
 #### Task 1.2.1: `useColorScheme` composable
 

@@ -5,6 +5,7 @@ import {
   CuiCard,
   CuiCardBody,
   CuiFlex,
+  CuiScrollArea,
   CuiStack,
   CuiStepper,
   type StepDef,
@@ -68,7 +69,9 @@ const verticalStep = ref(1);
 // ]`"
       >
         <CuiStack spacing="4">
-          <CuiStepper :steps="basicSteps" v-model="usageStep" />
+          <CuiScrollArea orientation="horizontal">
+            <CuiStepper :steps="basicSteps" v-model="usageStep" />
+          </CuiScrollArea>
           <CuiFlex gap="2">
             <CuiButton size="sm" variant="outline" :disabled="usageStep === 0" @click="usageStep--">Back</CuiButton>
             <CuiButton
@@ -100,10 +103,10 @@ const verticalStep = ref(1);
           stepper is the way back.
         </li>
         <li>
-          Status is not carried by colour alone: a completed step swaps its number for a check
+          Status is not carried by color alone: a completed step swaps its number for a check
           icon and a failed one for a warning icon, and a screen reader hears “completed” or
           “error” after the label (<code>stepper.complete</code> / <code>stepper.error</code>).
-          Current and upcoming steps differ visually only by ring colour and label weight, so
+          Current and upcoming steps differ visually only by ring color and label weight, so
           keep the labels themselves meaningful.
         </li>
       </ul>
@@ -117,7 +120,9 @@ const verticalStep = ref(1);
 //   { label: 'Personal Info', description: 'Name, email, and phone' },
 // ]`">
         <CuiStack spacing="4">
-          <CuiStepper :steps="detailSteps" v-model="detailStep" />
+          <CuiScrollArea orientation="horizontal">
+            <CuiStepper :steps="detailSteps" v-model="detailStep" />
+          </CuiScrollArea>
           <CuiFlex gap="2">
             <CuiButton size="sm" variant="outline" :disabled="detailStep === 0" @click="detailStep--">Back</CuiButton>
             <CuiButton size="sm" variant="solid" :disabled="detailStep === detailSteps.length - 1" @click="detailStep++">Next</CuiButton>
@@ -133,7 +138,9 @@ const verticalStep = ref(1);
 // ]
 <CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
         <CuiStack spacing="4">
-          <CuiStepper :steps="iconSteps" v-model="iconStep" />
+          <CuiScrollArea orientation="horizontal">
+            <CuiStepper :steps="iconSteps" v-model="iconStep" />
+          </CuiScrollArea>
           <CuiFlex gap="2">
             <CuiButton size="sm" variant="outline" :disabled="iconStep === 0" @click="iconStep--">Back</CuiButton>
             <CuiButton size="sm" variant="solid" :disabled="iconStep === iconSteps.length - 1" @click="iconStep++">Next</CuiButton>
@@ -148,15 +155,21 @@ const verticalStep = ref(1);
         <CuiStack spacing="6">
           <div>
             <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Small:</div>
-            <CuiStepper :steps="basicSteps" :model-value="2" size="sm" :clickable="false" />
+            <CuiScrollArea orientation="horizontal">
+              <CuiStepper :steps="basicSteps" :model-value="2" size="sm" :clickable="false" />
+            </CuiScrollArea>
           </div>
           <div>
             <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Medium (default):</div>
-            <CuiStepper :steps="basicSteps" :model-value="2" size="md" :clickable="false" />
+            <CuiScrollArea orientation="horizontal">
+              <CuiStepper :steps="basicSteps" :model-value="2" size="md" :clickable="false" />
+            </CuiScrollArea>
           </div>
           <div>
             <div class="mb-2 text-sm font-medium" style="color: var(--cui-text-secondary);">Large:</div>
-            <CuiStepper :steps="basicSteps" :model-value="2" size="lg" :clickable="false" />
+            <CuiScrollArea orientation="horizontal">
+              <CuiStepper :steps="basicSteps" :model-value="2" size="lg" :clickable="false" />
+            </CuiScrollArea>
           </div>
         </CuiStack>
       </Example>
@@ -169,7 +182,9 @@ const verticalStep = ref(1);
 // ]
 <CuiStepper :steps=&quot;steps&quot; v-model=&quot;step&quot; />`">
         <CuiStack spacing="4">
-          <CuiStepper :steps="errorSteps" v-model="errorStep" />
+          <CuiScrollArea orientation="horizontal">
+            <CuiStepper :steps="errorSteps" v-model="errorStep" />
+          </CuiScrollArea>
           <p class="text-sm" style="color: var(--cui-error);">Verification failed — please try again.</p>
         </CuiStack>
       </Example>
@@ -193,7 +208,9 @@ const verticalStep = ref(1);
 
       <!-- All complete -->
       <Example title="All Complete" :code="`<CuiStepper :steps=&quot;steps&quot; :model-value=&quot;steps.length&quot; :clickable=&quot;false&quot; />`">
-        <CuiStepper :steps="basicSteps" :model-value="basicSteps.length" :clickable="false" />
+        <CuiScrollArea orientation="horizontal">
+          <CuiStepper :steps="basicSteps" :model-value="basicSteps.length" :clickable="false" />
+        </CuiScrollArea>
       </Example>
     </template>
   </DocPage>

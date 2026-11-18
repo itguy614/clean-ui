@@ -65,7 +65,7 @@ let restored = false;
 let scope: EffectScope | null = null;
 
 /**
- * Read the stored colour mode and apply the resolved scheme to `<html>`'s `dark` class,
+ * Read the stored color mode and apply the resolved scheme to `<html>`'s `dark` class,
  * once; later calls do nothing. `useColorMode()` calls it, so an app that uses the
  * composable never needs to. Call it yourself at startup only if the scheme must apply
  * before anything renders it (or use `ssrColorModeInitScript`, which does it before first
@@ -114,7 +114,7 @@ export function disposeColorMode(): void {
 }
 
 /**
- * Colour mode composable: light, dark, or follow the system. Shared singleton, mirrors
+ * Color mode composable: light, dark, or follow the system. Shared singleton, mirrors
  * `useTheme`. Restores the stored mode on first use (browser only; see `restoreColorMode`).
  * It owns the `dark` class on `<html>`; `useColorScheme()` still just observes it.
  */

@@ -5,11 +5,11 @@ import type { CuiColor, HideableProps } from "../types/common";
 export type StatusDotTone = "success" | "info" | "warning" | "error" | "neutral";
 
 export interface CuiStatusDotProps extends HideableProps {
-  /** Status the dot shows, mapped to a colour role (`neutral` → `surface-dark`). */
+  /** Status the dot shows, mapped to a color role (`neutral` → `surface-dark`). */
   tone?: StatusDotTone;
   /**
    * Accessible name, for a dot that stands alone. Without one the dot is `aria-hidden`:
-   * decorative, with the status spelled out in text beside it — never by colour alone.
+   * decorative, with the status spelled out in text beside it — never by color alone.
    */
   label?: string;
 }
@@ -54,7 +54,7 @@ const dotStyle = computed(() => ({ "--_status-dot-bg": `var(--cui-${TONE_ROLE[pr
   border-radius: 9999px;
 }
 
-/* Forced colours repaint backgrounds as Canvas, which would erase the dot. */
+/* Forced colors repaint backgrounds as Canvas, which would erase the dot. */
 @media (forced-colors: active) {
   .cui-status-dot {
     forced-color-adjust: none;

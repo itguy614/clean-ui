@@ -80,15 +80,15 @@ const meta: ComponentMeta = {
     { name: "--cui-list-radius", default: radiusDefault, description: "Inset outer corner radius, and the hover fill's" },
     { name: "--cui-list-hover-bg", default: "var(--cui-surface-bg)", description: "Fill under a hovered interactive row" },
     { name: "--cui-list-active-bg", default: "var(--cui-list-hover-bg)", description: "Fill under a pressed row" },
-    { name: "--cui-list-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Row focus ring colour" },
+    { name: "--cui-list-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Row focus ring color" },
     { name: "--cui-list-px", default: "1rem", description: "Row horizontal padding, and the divider inset (density-scaled)" },
     { name: "--cui-list-py", default: "0.75rem", description: "Row vertical padding (density-scaled)" },
     { name: "--cui-list-gap", default: "0.75rem", description: "Gap between icon, text and trailing content (density-scaled)" },
     { name: "--cui-list-color", default: "var(--cui-text-emphasis)", description: "Row text, and so the title" },
     { name: "--cui-list-font-size", default: "inherit", description: "Title size" },
-    { name: "--cui-list-subtitle-color", default: "var(--cui-text-body)", description: "Subtitle colour — 7:1 on the fill and the hover fill" },
+    { name: "--cui-list-subtitle-color", default: "var(--cui-text-body)", description: "Subtitle color — 7:1 on the fill and the hover fill" },
     { name: "--cui-list-subtitle-font-size", default: "0.8125rem", description: "Subtitle size" },
-    { name: "--cui-list-divider-color", default: "var(--cui-border)", description: "Divider colour" },
+    { name: "--cui-list-divider-color", default: "var(--cui-border)", description: "Divider color" },
   ],
 };
 

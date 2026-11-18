@@ -263,7 +263,7 @@ const choice = useChoiceLabelling(props);
   z-index: 1;
 }
 
-/* The knob is the accent colour; one token recolours it with the track's border. */
+/* The knob is the accent color; one token recolors it with the track's border. */
 :where(.cui-toggle__knob) {
   background: var(--cui-toggle-color, var(--_toggle-color));
 }

@@ -126,7 +126,7 @@ export type FloatingLabelSize = "md" | "lg" | "xl";
  *
  * - `height` — the control's outer height, density-scaled like every control height.
  * - `offset` — the floated label's line box (its 12px, 13px at xl, × line-height 1.25): the
- *   control's `padding-top` above its value, so label and value sit centred as a pair. Type,
+ *   control's `padding-top` above its value, so label and value sit centered as a pair. Type,
  *   so it is not density-scaled. The label is the value's size at rest and CuiFormField
  *   scales it down to that.
  *

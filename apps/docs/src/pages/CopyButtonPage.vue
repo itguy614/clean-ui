@@ -37,7 +37,7 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
       </p>
       <p class="text-sm text-surface-700 dark:text-surface-300">
         A successful copy is announced through a polite live region carrying
-        <code>copiedTooltip</code>. Without it the only confirmation is the colour change,
+        <code>copiedTooltip</code>. Without it the only confirmation is the color change,
         the icon swap and the tooltip — all of them visual, which is a
         <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 1.4.1 problem as
         well as a usability one.
@@ -54,7 +54,7 @@ const codeSnippet = `npm install @itguy614/clean-ui`;
       <div>
         <h2 id="usecopytoclipboard" class="mb-4 text-2xl font-semibold">useCopyToClipboard</h2>
         <p class="mb-4 text-surface-600 dark:text-surface-400">
-          The composable behind the button, for when you want the behaviour without this
+          The composable behind the button, for when you want the behavior without this
           button — a copy action in a dropdown, a whole row that copies on click.
         </p>
         <Example

@@ -101,7 +101,7 @@ describe("form controls line up (real browser)", () => {
       // CuiInput used to put the height on its inner element, so the borders sat outside
       // it and every input was 2px taller than the select beside it (#123).
       ["select", CuiSelect, true, true],
-      // The stepper centres its value between the +/- buttons, so indent does not apply.
+      // The stepper centers its value between the +/- buttons, so indent does not apply.
       ["stepper", CuiInputStepper, false, false],
       // It ignored `size` and drew a fixed, roughly-md box (#349). Its text starts after a
       // calendar icon, so indent does not apply; its text size does.
@@ -139,7 +139,7 @@ describe("form controls line up (real browser)", () => {
   describe("a required field beside an optional one", () => {
     // CuiFormField's label is a flex row, so its height is its tallest child. The required
     // marker inherited a taller line-height from the surrounding prose, growing the label
-    // by ~1.4px and pushing a required field's control that much lower than its neighbour.
+    // by ~1.4px and pushing a required field's control that much lower than its neighbor.
     // Small, but plainly visible on any two-column form row.
     function field(required: boolean) {
       const host = document.createElement("div");

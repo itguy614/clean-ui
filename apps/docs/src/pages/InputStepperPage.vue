@@ -33,7 +33,7 @@ const minutes = ref(30);
       </p>
       <PropTable
         :props="[
-          { name: 'Up / Down', type: 'key', description: 'Step by one step. Honours wrap, min and max' },
+          { name: 'Up / Down', type: 'key', description: 'Step by one step. Honors wrap, min and max' },
           { name: 'PageUp / PageDown', type: 'key', description: 'Step by ten steps, clamped to the range' },
           { name: 'Home / End', type: 'key', description: 'Jump to min or max, when they are set' },
         ]"

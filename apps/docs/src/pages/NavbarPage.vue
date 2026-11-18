@@ -164,7 +164,7 @@ const shellCode = `<CuiNavbar sticky>
         <li>
           The current page's link carries <code>aria-current="page"</code> (a
           <code>router-link</code> sets it itself when exactly active) and is marked by a subtle
-          fill and border, never by colour alone.
+          fill and border, never by color alone.
         </li>
         <li>
           A <code>CuiNavbarMenu</code> in the bar is a <code>CuiDropdown</code>: its trigger is a
@@ -361,7 +361,7 @@ const shellCode = `<CuiNavbar sticky>
           <code>CuiNavbarNav</code> and no menu button of its own. Put a button in the bar and bind
           it to the sidebar's <code>toggleAttrs</code> and <code>toggle()</code>: below the
           sidebar's breakpoint it opens the sidebar's drawer. This site works that way, and its
-          theme switcher, colour-mode button and debug toggle are plain
+          theme switcher and color-mode button are plain
           <code>CuiNavbarActions</code> content.
         </p>
       </Example>

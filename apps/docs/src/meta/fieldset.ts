@@ -9,8 +9,8 @@ const meta: ComponentMeta = {
   props: [
     { name: "legend", type: "string", description: "Legend text. Required — the group's name" },
     { name: "description", type: "string", description: "Explanatory line under the legend. Hidden while collapsed" },
-    { name: "variant", type: "outline | subtle | ghost", default: "outline", description: "outline is a border only, subtle adds the colour's tinted fill, ghost drops both and the padding with them" },
-    colorProp("Border colour, and the fill under variant=subtle. surface is the neutral default; surface-light/dark are its other two intensities", "surface"),
+    { name: "variant", type: "outline | subtle | ghost", default: "outline", description: "outline is a border only, subtle adds the color's tinted fill, ghost drops both and the padding with them" },
+    colorProp("Border color, and the fill under variant=subtle. surface is the neutral default; surface-light/dark are its other two intensities", "surface"),
     roundedProp,
     { name: "collapsible", type: "boolean", default: "false", description: "Put a toggle button (aria-expanded, aria-controls) in the legend, with a chevron. Off, the legend is plain text" },
     { name: "v-model:expanded", type: "boolean", default: "true", description: "Whether the content is showing. Only meaningful with collapsible" },

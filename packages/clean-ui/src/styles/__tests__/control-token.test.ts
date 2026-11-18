@@ -26,7 +26,7 @@ const COMPONENTS = new Map(COMPONENT_FILES.map((f) => [basename(f), f]));
  *
  * #211 measured the drift: 22 components emitted a private token but only 10 were listed,
  * so 14 — CuiInput and CuiSelect among them — could quietly regain a bare declaration. All
- * 22 are listed now (CuiTooltip had to finish its colours first). The check reads the
+ * 22 are listed now (CuiTooltip had to finish its colors first). The check reads the
  * `<script>` and the template's `:style` bindings (#333): a bare key in a binding outranks
  * the stylesheet exactly as one in a computed style does.
  */
@@ -70,6 +70,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiColorPicker.vue", issue: "#467" },
   { file: "CuiModal.vue", issue: "#407" },
   { file: "CuiSlideover.vue", issue: "#407" },
+  { file: "CuiDrawer.vue", issue: "#268" },
   { file: "CuiTransferList.vue", issue: "#469" },
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
@@ -80,6 +81,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiModalBody.vue", issue: "#489" },
   { file: "CuiModalFooter.vue", issue: "#489" },
   { file: "CuiConfirmDialog.vue", issue: "#489" },
+  { file: "CuiCommandPalette.vue", issue: "#197" },
   { file: "CuiDataGridColumnManager.vue", issue: "#489" },
   { file: "CuiDataGridViewManager.vue", issue: "#489" },
   { file: "CuiTimePicker.vue", issue: "#489" },
@@ -188,7 +190,7 @@ describe("converted components emit themeable properties as tokens (#114)", () =
           new RegExp(`(^|[{,\\s])${prop}\\s*:\\s*[\`"']`, "m").test(script) ||
           // Or an assignment onto a style object, `base.background = …` (#211: CuiAlert, CuiToast
           // and CuiBackdrop built their paint that way, and passed). A direct DOM write —
-          // `el.style.height = …`, CuiTextarea's autosize — is behaviour, not a binding.
+          // `el.style.height = …`, CuiTextarea's autosize — is behavior, not a binding.
           new RegExp(`(?<!\\.style)\\.${prop}\\s*=[^=]`, "m").test(script),
       );
 
@@ -216,7 +218,7 @@ const CONVERTED_STYLESHEETS: Array<{ file: string; component: string; part: stri
 /** The properties a themeable slot paints. */
 const PAINT = /(?:^|[;\s])(border(?:-color|-radius)?|box-shadow|background(?:-color)?)\s*:/;
 
-/** CLAUDE.md's slot vocabulary — a closed set, like the colour-role slots. */
+/** CLAUDE.md's slot vocabulary — a closed set, like the color-role slots. */
 const SLOTS = new Set([
   ...["bg", "color", "border", "height", "px", "py", "gap", "font-size", "radius"],
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
@@ -285,12 +287,12 @@ describe("converted stylesheets read every private property through its public t
  * var(--_input-height)`), so a consumer's container token or plain `.cui-input` rule could
  * not win. A listed component must read EVERY private token as the fallback of its public
  * one — `var(--cui-<c>-<slot>, var(--_<c>-<slot>))`, or nested in a fallback of one, as
- * CuiBanner's border colour is inside `--cui-banner-border`'s — and wherever it does,
+ * CuiBanner's border color is inside `--cui-banner-border`'s — and wherever it does,
  * inside a rule wrapped whole in `:where()`, so a consumer's plain rule at (0,1,0) wins too.
  *
  * `privateOnly` lists slots with no public layer ON PURPOSE, each with its reason: a size
  * preset's geometry (a toggle's knob), a value that follows the data (a progress fill's
- * position), a floating label's offset, a part's own colour that the closed slot vocabulary
+ * position), a floating label's offset, a part's own color that the closed slot vocabulary
  * has no name for. They may be read bare, anywhere. An entry the stylesheet no longer reads
  * is stale and fails.
  *
@@ -301,7 +303,7 @@ describe("converted stylesheets read every private property through its public t
 const TRANSFORM_ORIGIN =
   "a floating panel scales from its trigger: a private value only, with no public token, since a consumer has nothing to restyle (CLAUDE.md, Motion)";
 const FLOAT_OFFSET = { "float-offset": "a floating label's line box, from the form field" };
-const PART_COLOUR = "a part's own colour has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
+const PART_COLOR = "a part's own color has no slot in the closed vocabulary; its rule is whole :where(), so a consumer's plain rule wins";
 const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privateOnly: Record<string, string>; issue: string }> = [
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
@@ -332,7 +334,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   {
     file: "CuiAlert.vue",
     component: "alert",
-    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR },
+    privateOnly: { "icon-color": PART_COLOR, "dismiss-color": PART_COLOR },
     issue: "#454",
   },
   { file: "CuiBanner.vue", component: "banner", privateOnly: {}, issue: "#454" },
@@ -348,20 +350,26 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
     issue: "#484",
   },
   { file: "CuiConfirmDialog.vue", component: "confirm-dialog", privateOnly: {}, issue: "#489" },
+  {
+    file: "CuiCommandPalette.vue",
+    component: "command-palette",
+    privateOnly: { match: PART_COLOR },
+    issue: "#197",
+  },
   { file: "CuiDivider.vue", component: "divider", privateOnly: { spacing: "follows the `spacing` prop: margin geometry from the data, with no slot in the vocabulary (#489)" }, issue: "#489" },
   { file: "CuiKbd.vue", component: "kbd", privateOnly: { "min-width": "the size preset's key width, with no slot in the vocabulary and no public token (#489)" }, issue: "#489" },
   { file: "CuiTimelineItem.vue", component: "timeline-item", privateOnly: {}, issue: "#489" },
   {
     file: "CuiToast.vue",
     component: "toast",
-    privateOnly: { "icon-color": PART_COLOUR, "dismiss-color": PART_COLOUR, "progress-bg": PART_COLOUR, "progress-bar": PART_COLOUR },
+    privateOnly: { "icon-color": PART_COLOR, "dismiss-color": PART_COLOR, "progress-bg": PART_COLOR, "progress-bar": PART_COLOR },
     issue: "#454",
   },
   { file: "CuiTabs.vue", component: "tabs", privateOnly: {}, issue: "#454" },
   {
     file: "CuiBadge.vue",
     component: "badge",
-    privateOnly: { "dot-bg": "the dot and its ping ring paint in the role's colour, a part's own with no slot in the closed vocabulary; the rule is whole :where(), so a consumer's plain rule wins" },
+    privateOnly: { "dot-bg": "the dot and its ping ring paint in the role's color, a part's own with no slot in the closed vocabulary; the rule is whole :where(), so a consumer's plain rule wins" },
     issue: "#294",
   },
   { file: "CuiFieldset.vue", component: "fieldset", privateOnly: {}, issue: "#294" },
@@ -499,6 +507,24 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
   "CuiContextMenu.vue": { "context-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDateRangePicker.vue": { "date-range-picker-field-width": `the start and end fields are as wide as the \`format\` prop's text (${GEOMETRY})` },
+  "CuiDrawer.vue": {
+    "stack-dim": `a covered sheet's scrim takes the backdrop's opacity, set by the stack (${GEOMETRY}) (#41)`,
+    "stack-scrim": `a covered sheet's scrim takes the backdrop's color, set by the stack (${GEOMETRY}) (#41)`,
+    "drawer-snap-offset": `the resting position follows the active snap point (${GEOMETRY})`,
+    "drawer-keyboard-inset": `the sheet is anchored above the soft keyboard (${GEOMETRY})`,
+    "drawer-max-height": `the sheet is held to the room the soft keyboard leaves (${GEOMETRY})`,
+  },
+  "CuiSlideover.vue": {
+    "stack-width": `a stacked panel's width is set by the stack's layout (${GEOMETRY}); alone, the public --cui-slideover-width applies (#41)`,
+    "stack-max-width": `lifted by the stack's layout so a narrowed or peeking panel is not capped (${GEOMETRY}) (#41)`,
+    "stack-dim": `a covered panel's scrim takes the backdrop's opacity, set by the stack (${GEOMETRY}) (#41)`,
+    "stack-scrim": `a covered panel's scrim takes the backdrop's color, set by the stack (${GEOMETRY}) (#41)`,
+    "stack-shadow": `which panel of a stack casts the group's shadow follows the layout (${GEOMETRY}) (#41)`,
+    "stack-seam": `which panels of a stack draw a seam hairline follows the layout (${GEOMETRY}) (#41)`,
+    "stack-shadow-val": `a stack's shadow is the lg step on the group's edge and md on each peeking panel (${GEOMETRY}) (#41)`,
+    "stack-offset": `a stacked panel's distance from the docked edge, from the stack's layout (${GEOMETRY}) (#41)`,
+  },
+  "CuiModal.vue": { "overlay-step": `its z-index step above the overlays open before it, from the shared counter (${GEOMETRY}) (#541)` },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
   // TODO(#454): CuiDataGrid is being reworked in #474; this is a sticky offset, so it likely stays.
@@ -507,7 +533,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     [
       "label-color",
       ...["px", "inset", "lead", "end", "color", "room", "scale", "fs", "origin-y", "drop", "rest-color"].map((s) => `float-${s}`),
-    ].map((slot) => [`form-field-${slot}`, "the floating label's geometry and colour state, declared and read inside this stylesheet"]),
+    ].map((slot) => [`form-field-${slot}`, "the floating label's geometry and color state, declared and read inside this stylesheet"]),
   ),
   "CuiIcon.vue": {
     "icon-width": `follows the \`size\` prop (${GEOMETRY})`,
@@ -527,7 +553,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
       `color-picker-${s}`,
       "the size preset's geometry, with no public token (see CuiColorPicker's rootVars comment)",
     ]).concat(
-      ["hue", "value"].map((s) => [`color-picker-${s}`, "a colour that follows the picked value (the data), not a theme colour"]),
+      ["hue", "value"].map((s) => [`color-picker-${s}`, "a color that follows the picked value (the data), not a theme color"]),
     ),
   ),
   "CuiTreeNode.vue": {

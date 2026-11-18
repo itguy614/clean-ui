@@ -9,8 +9,8 @@ import baselineJson from "./divider-kbd-timeline-identity.baseline.json";
  * stylesheets. Nothing about how they look may change. The baseline holds the computed style
  * and geometry of every element of each scenario, recorded from the inline-style build
  * (the tip of #492's branch) BEFORE the conversion: every Divider orientation, line style,
- * label position and colour (each role, a raw CSS colour), every Kbd size inside and outside
- * `.cui-typography`, every TimelineItem colour with a dot or an icon, first and last, in light
+ * label position and color (each role, a raw CSS color), every Kbd size inside and outside
+ * `.cui-typography`, every TimelineItem color with a dot or an icon, first and last, in light
  * and dark and at both densities. Real browser: jsdom computes none of this.
  */
 describe("CuiDivider, CuiKbd and CuiTimelineItem render as they did before the stylesheet conversion (#489)", () => {

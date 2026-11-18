@@ -32,13 +32,13 @@ const tones = [
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        Colour alone does not carry meaning. By default the dot is
+        Color alone does not carry meaning. By default the dot is
         <code>aria-hidden="true"</code> and the status is written beside it, as above. A dot
         with nothing beside it — in a dense table, say — takes a <code>label</code>, which makes
         it <code>role="img"</code> with that accessible name.
       </p>
       <p class="text-surface-700 dark:text-surface-300">
-        In Windows forced-colours mode the dot keeps its colour rather than vanishing into the
+        In Windows forced-colors mode the dot keeps its color rather than vanishing into the
         background.
       </p>
     </template>

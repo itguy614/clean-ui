@@ -47,7 +47,7 @@ describe("CuiTimeline + CuiTimelineItem", () => {
   it("applies the per-item color to the dot background", () => {
     const wrapper = mount(makeHost({ secondExtra: 'color="success"' }));
     const items = wrapper.findAll('[role="listitem"]');
-    // first item defaults to primary; the dot carries its colours as private properties (#489)
+    // first item defaults to primary; the dot carries its colors as private properties (#489)
     const firstDot = items[0].find(".cui-timeline-item__dot");
     const secondDot = items[1].find(".cui-timeline-item__dot");
     expect(firstDot.attributes("style")).toContain("--_timeline-item-bg: var(--cui-primary)");

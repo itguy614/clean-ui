@@ -323,7 +323,7 @@ describe.each(OVERLAYS)("%s focus and lifecycle events (real browser)", (_, Over
     const asked: string[] = [];
     const listen = (e: CustomEvent<string>) => asked.push(e.detail);
     document.addEventListener(RESTORE_FOCUS_EVENT, listen);
-    opener.remove(); // the row scrolled out of a virtualised grid
+    opener.remove(); // the row scrolled out of a virtualized grid
     t.visible.value = false;
     await settle();
     document.removeEventListener(RESTORE_FOCUS_EVENT, listen);

@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-18
+
+### Added
+
+- `CuiDrawer`: a draggable bottom sheet for touch. Drag it down to dismiss it (a flick closes it
+  even below the distance threshold), pull it up past fully open and it resists, and scrolling its
+  content to the top and pulling on closes it only once the content is at the top. `snapPoints`
+  (viewport fractions or `"NNNpx"`) with `v-model:active-snap-point` rest it at several heights.
+  It stays above the on-screen keyboard (`visualViewport`), `persistent` and `noDrag` opt out of
+  dismissal and dragging, `noHandle` hides the grab handle, and a `title` or the
+  `CuiModalHeader` / `CuiModalBody` / `CuiModalFooter` sub-components fill it. The backdrop fades
+  with the drag. It opens over 500 ms on `--cui-ease-drawer`, a documented exception to the 300 ms
+  ceiling. A mouse drags it from the handle only. Closing it is always possible by Escape, the
+  backdrop and the close button.
+- Touch and pen drag-to-dismiss on `CuiSlideover` (toward its edge). A mouse never drags it, it is
+  off while `persistent`, and `noDrag` turns it off.
+- `CuiSlideoverStack`: several slideovers open at once as one stack. Panels attach edge to edge
+  and narrow together to fit, then peek behind the top panel on a narrow viewport. `push`
+  (`inward` by default: the newest panel enters at the docked edge and the others slide in;
+  `outward`: the others stay put), `mode`, `gap`, `minWidth`, `peekOffset`, `maxPeek` and
+  `peekBelow` tune the layout. One shared backdrop stays on screen for as long as any panel is
+  open, a panel covered by another dims on a ramp instead of popping, and attached panels share a
+  seam with the soft shadow on the group's outer edge only. Left and right stacks only; a mixed
+  stack coordinates but warns in development.
+- A slideover or drawer declared inside another panel's content is its child: closing the parent
+  closes the child with it (children first), and a sibling stays independent.
+- `modal` on `CuiSlideover` and `CuiDrawer` (and on `CuiSlideoverStack`, as the default for its
+  panels): `false` makes a panel co-active, with no inert on the panels below it and no focus
+  trap, so a form and its history can both stay usable.
+- `CuiCommandPalette` and `useCommandPalette()`: a command palette over `CuiModal`. Commands
+  register from anywhere (`register` takes a command, an array, a ref or a getter, returns
+  `withdraw()`, and withdraws itself when the registering scope unmounts), with groups, recents
+  (`recentsStorageKey` persists them) and a `badge` on a command (a count or a `{ label, color }`).
+  Matching is fuzzy with the matched letters highlighted, and focus stays in the input
+  (`aria-activedescendant`, a live result count). Cmd/Ctrl-K opens it by default (`hotkey`), and
+  it is always reachable without the key through `v-model:visible` and `open()`. `fetchCommands`
+  (with `debounce` and `minChars`) adds results from a server under their own group, cancelling
+  earlier searches. Slots: `item`, `heading`, `empty`.
+- Scoped registries for the palette: `useCommandPaletteProvider()`, `createCommandPalette()`,
+  `CuiCommandPaletteKey` and a `registry` prop give an app or a subtree its own commands, open
+  state and recents. With several palettes on one shortcut, the most recently mounted one that has
+  a shortcut set claims it.
+- `messages.commandPalette` for the palette's labels.
+- `useOverlay()` returns `zStep` and `isModal`.
+
+### Changed
+
+- **Layering.** Overlays (`CuiModal`, `CuiConfirmDialog`, `CuiSlideover`, `CuiDrawer`,
+  `CuiCommandPalette`) and the panels anchored to a trigger (popover, dropdown menu and sub-menu,
+  select, combobox, tag input, context menu) share one open-order sequence at `--cui-z-overlay`
+  + 0 to 39, so the newest layer is on top and a panel opened inside an overlay is above it. The
+  toast region is at +48 and tooltips at +49, above the whole sequence. It used to be one fixed z-index
+  for every overlay, so an overlay that mounted early (the palette) opened behind one that mounted
+  later, and a dropdown inside a second modal opened behind it.
+- Opening an overlay now closes a popover, dropdown, select, combobox or context menu that was
+  already open (outside-press behavior), through its own close, so `v-model` and events follow. A
+  panel opened from inside the overlay is not affected. A popover is now behind a newer overlay
+  where it used to be above it (+8 above every overlay).
+  **If you hand-roll a floating panel**, put it at `calc(var(--cui-z-overlay, 9990) + 40)` or
+  above (tooltips and toasts are at +49 and +48), or take a step from `useOverlay()`'s `zStep`.
+  The old advice of "+8 above a modal" no longer holds.
+- Slideover and drawer panels: the snap offset is a CSS `translate`, so a consumer's own
+  `translate` on a panel stacks with it.
+
+### Fixed
+
+- Under `prefers-reduced-motion`, dragging a sheet partway and dismissing it no longer snaps it
+  back to fully open before the fade, and a consumer's own `transform` on an open slideover or
+  drawer is neutralized again when it is not being dragged.
+- A panel in a slideover stack that starts `hidden` while open takes its place when it is
+  revealed, and hiding one re-flows the others; a hidden panel no longer dims the panels below it
+  or takes Escape.
+- The command palette no longer opens behind an open modal or slideover.
+
+### Documentation
+
+- New pages: Drawer, Slideover Stack and Command Palette (with scoped registries and an async
+  search demo).
+- The docs site has a site-wide search: Cmd/Ctrl-K or the header Search button opens a command
+  palette over every page, with commands for color mode and each theme.
+- Every docs page fits a 390px viewport (the header's action buttons made every page wider than a
+  phone), and the title-id note on the Modal and Slideover pages now matches the code: the dialog
+  is named by its title through `aria-labelledby`.
+- Prose, comments and docs use American spelling (behavior, center, neighbor, color, ...).
+
 ## [2.1.0] - 2026-11-16
 
 ### Added
@@ -22,8 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and collapsible groups in the drawer. Links take an `icon` and a `#suffix`. Opt-in `sticky`
   keeps focus from hiding under the bar and sets `--cui-navbar-height`; opt-in `translucent`
   frosts a sticky bar (`--cui-navbar-blur`), with solid fallbacks.
-- `CuiPanel`: a background primitive with a colour, an image and gradients. A gradient takes
-  `from`, `via`, `to` (roles or CSS colours) and `angle`, interpolates in oklch with an sRGB
+- `CuiPanel`: a background primitive with a color, an image and gradients. A gradient takes
+  `from`, `via`, `to` (roles or CSS colors) and `angle`, interpolates in oklch with an sRGB
   fallback, and has an optional `smooth` grain. `gradient` takes a raw CSS string.
 - Gradient props on `CuiBackdrop`, and `backdropFrom`, `backdropVia`, `backdropTo`,
   `backdropAngle` and `backdropSmooth` on `CuiModal` and `CuiSlideover`.
@@ -147,7 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   replacement (#398).
 
 - **Form controls now take their shared props from `FormControlProps`** (#180). No action: every
-  prop name, type, default and runtime behaviour is unchanged (checked by diffing each
+  prop name, type, default and runtime behavior is unchanged (checked by diffing each
   component's resolved props before and after). A control still has only the props it had; it
   `Pick`s them.
 
@@ -270,7 +355,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changes unless you set one, apart from the invalid-field ring below. Geometry that follows
   the size preset (a toggle's track and knob, a progress circle's box) stays private.
   `--cui-select-font-size` now sizes the trigger as well as the options, as
-  `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error colour on its border (and an invalid `CuiInput`'s
+  `--cui-combobox-font-size` and `--cui-tag-input-font-size` do. An invalid field keeps the error color on its border (and an invalid `CuiInput`'s
   attached-button separators) whatever the token says.
 
 - **The rest of the components read their private tokens through the public layer, and a guard
@@ -279,13 +364,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tokens inside zero-specificity rules, so a container token or a plain class rule wins:
   `--cui-alert-focus-ring` and `--cui-toast-focus-ring` (the `glow` ring),
   `--cui-tabs-color` (the active tab's text and underline bar), `--cui-tabs-focus-ring` and
-  `--cui-tag-input-border`. An icon's, a dismiss button's and a progress bar's own colours have
+  `--cui-tag-input-border`. An icon's, a dismiss button's and a progress bar's own colors have
   no slot in the vocabulary: they stay private, but their rules are zero specificity too, so a
   plain `.cui-alert__icon { color }` wins. `CuiBanner`, `CuiListItem` and `CuiTooltip` already
   read through the public layer. Nothing changes unless you set one: rendering is identical in
-  every variant, colour, state and mode. `CuiTabs` now emits its colour once on its root
+  every variant, color, state and mode. `CuiTabs` now emits its color once on its root
   instead of on each tab, and an invalid `CuiTagInput` carries `cui-tag-input__control--error`
-  and keeps the error colour whatever `--cui-tag-input-border` says. In `control-token.test.ts`
+  and keeps the error color whatever `--cui-tag-input-border` says. In `control-token.test.ts`
   the guard now covers every component: a stylesheet that reads a `--_x-y` outside a public
   token's fallback fails unless it is listed with a reason.
 
@@ -303,7 +388,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Ten more components paint from a stylesheet (#489):** `CuiDivider`, `CuiKbd`,
   `CuiTimelineItem`, `CuiModalHeader`, `CuiModalBody`, `CuiModalFooter`, `CuiConfirmDialog`,
-  `CuiTimePicker`, `CuiDataGridColumnManager` and `CuiDataGridViewManager` wrote their colours,
+  `CuiTimePicker`, `CuiDataGridColumnManager` and `CuiDataGridViewManager` wrote their colors,
   borders and type in style objects and style attributes, so none could be restyled without
   `!important`. The paint is now zero-specificity rules in each component's stylesheet, so a plain
   class rule or a `--cui-*` token wins. Nothing about how they look changes. The time picker's
@@ -311,10 +396,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `:root` or `<body>`. Two details: the `.cui-kbd` typography helper in `main.css` now skips
   `CuiKbd` (`.cui-kbd:where(:not(.cui-kbd--keycap))`, same specificity), which paints itself; and
   `CuiModalHeader`'s close-button hover is a CSS `:hover` rule, not `mouseenter` and `mouseleave`
-  handlers that wrote inline colours.
+  handlers that wrote inline colors.
 
 - **`CuiCodeBlock` paints from a stylesheet (#484).** Its padding, background, border and text
-  colours were inline style objects, so none could be restyled without `!important`. They are
+  colors were inline style objects, so none could be restyled without `!important`. They are
   now zero-specificity rules in its stylesheet, with the size preset passed as private
   properties, and a highlighted line or number is a modifier class. Nothing about how it looks
   changes. New tokens: `--cui-code-block-bg`, `-border`, `-radius`, `-color`, `-font-size`,
@@ -342,10 +427,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-border` / `-radius` for the range trigger. The panel is teleported to `<body>`, so a
   `pressed-*` token has to be set on `:root` or `<body>`.
 
-- **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-coloured focus ring** (#454),
+- **A focused, invalid `CuiInput` or `CuiTextarea` shows the error-colored focus ring** (#454),
   as `CuiSelect` and `CuiCombobox` do. It showed the primary ring with a red border: the red
   ring was declared but lost the cascade. `--cui-error-focus-ring` is its slot; a themed
-  `--cui-input-focus-ring` / `--cui-textarea-focus-ring` recolours the normal ring only.
+  `--cui-input-focus-ring` / `--cui-textarea-focus-ring` recolors the normal ring only.
 
 - **`CuiCodeBlock`'s code area is `<pre><code>`** (#163), where it was nested `div`s, with
   new `cui-code-block__pre`, `cui-code-block__code` and `cui-code-block__gutter` classes.
@@ -406,7 +491,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   2.1.1), and adds no tab stop while the code fits. The line-number gutter is
   `aria-hidden`, so a screen reader no longer reads the numbers into the code.
 
-- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighbouring tab. A disabled tab can no longer be closed.
+- **`CuiTabs`: a closeable tab's close button is no longer nested inside the tab button** (#153). A button inside a button is invalid HTML that browsers unnest while parsing. The close button is now a sibling, named "Close <tab label>", and `Delete` or `Backspace` on a focused closeable tab emits `close` and moves focus to the neighboring tab. A disabled tab can no longer be closed.
 
 ### Tooling
 
@@ -601,7 +686,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   long-press still reach a wrapping CuiContextMenu. It keeps its place in a CuiToolbar's
   arrow-key order, as the WAI-ARIA toolbar pattern asks, and a CuiDropdownTrigger around it
   doesn't open from the keyboard while it is disabled. `pressed` renders `aria-pressed` and a
-  selected look for every variant and colour (the tinted fill, a coloured edge and stronger
+  selected look for every variant and color (the tinted fill, a colored edge and stronger
   text; solid takes its darker shade). A toggle's hover is a
   neutral fill, pressed or not, so a toggle switched on under the pointer reads as pressed
   at once. The look is themeable through the new `--cui-button-pressed-bg`,
@@ -624,7 +709,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is exported as `CuiFocusTarget`.
 - **Toast actions and pause opt-outs through `useToast()`** (#345). `ToastOptions` (and the
   `toast.success/error/warning/info` helpers) take `action: { label, onClick, dismissOnClick? }`,
-  which `CuiToastProvider` renders as a small ghost `CuiButton` in the toast's colour (on a
+  which `CuiToastProvider` renders as a small ghost `CuiButton` in the toast's color (on a
   `variant: "solid"` toast, a solid button matching its fill, so the label stays legible), a real
   `<button>` inside its live region (`role="status"`/`"alert"` unchanged). The toast is
   dismissed after `onClick` unless `dismissOnClick: false`. In `stackMode="collapsed"` a click
@@ -661,7 +746,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   notice: `variant="primary"` gives a primary confirm button and a question icon. `icon`
   takes `false` to render no icon tile, with the title flush left and no gap where the tile
   was, and now also accepts an icon component as well as a registered name. `confirmColor`
-  overrides only the confirm button's colour role, for any variant; the tile and the
+  overrides only the confirm button's color role, for any variant; the tile and the
   type-to-confirm prompt keep the variant's. The default is still `danger`, and existing
   dialogs render as before. The primary icon is a sealed question mark rather than the plain
   `?`, which is CuiIcon's glyph for an unknown icon name.
@@ -694,7 +779,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CuiTagInput's are, so the three fields' chips now look and theme alike: tinted in the
   select's `color`, one size step below the control. The hand-rolled `.cui-select__chip`
   markup and styles are gone, and with them that class as a styling hook: CuiBadge paints
-  its colours inline, so chip colour now follows the select's `color` prop, as it does in
+  its colors inline, so chip color now follows the select's `color` prop, as it does in
   the other two. A long label is cut short with an ellipsis instead of wrapping. Removing a
   chip still leaves the panel closed. Enter or Space on a chip's remove button now removes
   it (it used to open the panel), and focus returns to the trigger. Backspace on the
@@ -703,20 +788,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CuiColorPicker keeps opacity in hex** (#309). With `show-alpha` and the default
   `format="hex"`, the picker used to emit `#rrggbb` and throw the opacity away: 50% red came
   out as `#ff0000`. It now emits the 8-digit form, `#ff000080`, whenever opacity is below
-  100%; a fully opaque colour is still `#rrggbb`. **Check before upgrading** if you store
+  100%; a fully opaque color is still `#rrggbb`. **Check before upgrading** if you store
   the picker's hex value in a 7-character column, validate it with a 6-digit pattern, or
-  compare it as a string: translucent colours now have two more digits. The change comes from
+  compare it as a string: translucent colors now have two more digits. The change comes from
   `formatColor(r, g, b, a, "hex")`, which now appends the alpha byte when `a < 1` (an alpha
   that rounds to `ff` stays six digits). `parseColor` now reads the alpha of `#rrggbbaa` and
   `#rgba` instead of ignoring it, so the picker, its text field and an 8-digit `v-model` value
-  round-trip; a colour passed in with an alpha keeps it even without `show-alpha`, as an
+  round-trip; a color passed in with an alpha keeps it even without `show-alpha`, as an
   `rgba()` value already did. Also:
   - `parseColor` and `hexToRgb` return `null` for hex containing a non-hex character
     (`#12345z` used to read as `#123405`). `hexToRgb` also accepts 4 digits, and still
-    returns the colour without its alpha.
+    returns the color without its alpha.
   - `formatColor`'s `rgb` and `hsl` formats treat an alpha that rounds to `1.00` as opaque,
     so they no longer emit `rgba(…, 1.00)`.
-  - A swatch reads as selected only when its alpha matches the picker's as well as its colour.
+  - A swatch reads as selected only when its alpha matches the picker's as well as its color.
 - **The markdown editor's peer floor is `@itguy614/clean-ui@^1.8.0`**, since its toolbar's
   formatting buttons use CuiButton's `pressed` (#396) and its dialogs take a scoped theme
   through the host's clean-ui context (#418).
@@ -730,7 +815,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unwired `mask`, `inputRaw`, `togglePeriod` and `onApply`, CuiDatePicker's `onDayHover`,
   CuiTooltip's always-truthy `hasContent` and CuiMaskedInput's `prevEditablePos`. The unused
   `CuiMaskedInput`, `CuiIcon` and `CuiBadge` imports of CuiTimePicker, CuiColorPicker,
-  CuiDataGridActiveFilters and CuiFileUpload went too. No behaviour changes. Also dropped:
+  CuiDataGridActiveFilters and CuiFileUpload went too. No behavior changes. Also dropped:
   the `.cui-button--active` entry in CuiButtonGroup's stacking rule (nothing sets that
   class), and the private custom properties CuiInput, CuiTextarea, CuiSelect, CuiRadio and
   CuiTabs emitted inline that no stylesheet reads.
@@ -789,7 +874,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   too, with no event to listen for. The label stays the same `<label>` throughout, with its
   association, required marker, help and error text unchanged. It is `--cui-text-secondary`
   at rest and `--cui-text-tertiary` floated (4.5:1 in every theme), `--cui-error` on error,
-  and is not recoloured by focus. It moves by transform on the motion tokens, and snaps
+  and is not recolored by focus. It moves by transform on the motion tokens, and snaps
   under reduced motion. A control's own placeholder stays hidden until focus. A leading icon
   keeps the resting label after it; prefix text or a suffix keeps it floated. CuiInput
   (number included), CuiTextarea (whose label's room is always reserved), CuiMaskedInput and
@@ -824,7 +909,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   marks a clicked entry at once and holds it while the smooth scroll passes the sections in
   between. `targets` (ids or elements) can be a ref or getter. SSR-safe. The docs site's
   "On this page" rail is rebuilt on it, and is now labelled by its title, marks the current
-  entry with `aria-current="location"` and a heavier bar and weight rather than colour alone,
+  entry with `aria-current="location"` and a heavier bar and weight rather than color alone,
   and lets a modified click open an entry in a new tab.
 - **`CommandContext.lookupConstruct(nodeName)`** in the markdown editor's plugin API (#405).
   It returns `{ status: "inside", range }`, `{ status: "outside" }` or
@@ -1106,7 +1191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Modals, slideovers, backdrops and alerts now close faster than they open, as floating
     panels and toasts already did. A modal's backdrop took 250ms to fade out on every close.
   - Menu items, listbox options, tree nodes, date cells and transfer-list rows change
-    colour at once instead of fading. With key repeat a fade left a trail of half-lit rows.
+    color at once instead of fading. With key repeat a fade left a trail of half-lit rows.
   - CuiSlider glides only when a click on the track jumps the thumb. A drag follows the
     pointer and a keyboard step lands at once, as before for a drag and newly for keys.
 - **Layout properties no longer animate** (#266). These used to animate `width` or `left`, which lays out and repaints the page on every frame. They move by `transform` now, on the compositor, and land exactly where they did:
@@ -1124,7 +1209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **In a right-to-left page,** the progress bar and the countdown fill and drain from the inline-start edge, as they did when they were width-based.
   - **`cui-glow-fade`** is a new shared keyframe.
 - **Reduced motion keeps fades** (#265). Under `prefers-reduced-motion: reduce`:
-  - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colours change instantly.
+  - **Fades instead of nothing:** the library used to clamp every animation and transition to 1ms, so nothing faded. Now it removes movement only. Opacity still transitions over its usual duration, so overlays, slideovers and sliding tab panels fade in and out where they stand, and JS waits still match. Colors change instantly.
   - **Only the library's own elements:** the old rule matched every element on the page (`*`), the consumer's own included. It now reaches only the library's components and what they contain, not content the consumer wraps in `.cui-typography`, a theme or a density.
   - **Indeterminate progress, spinners' moving parts and the avatar's pulsing status** now stop too.
   - **Hover-only scales and lifts** (CuiRating, the CuiColorPicker swatches, CuiAvatarGroup) now run only with a fine pointer, so a tap on a touch screen no longer leaves them stuck.
@@ -1138,7 +1223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`useOverlay`** gains `exit: "transition"`, with `mounted` and `onAfterLeave`. The timer stays the default.
   - **`afterAnimations(el, done)`** is exported.
   - **Deprecated:** the dropdown context's `isClosing` is now always false.
-- Floating panels grow out of their trigger instead of their centre (#262). Popover,
+- Floating panels grow out of their trigger instead of their center (#262). Popover,
   Tooltip, DropdownMenu, DropdownSub, ContextMenu and the Select/Combobox/TagInput listbox
   set `transform-origin` from the side they opened on after flipping: their edge facing
   the trigger, at the end they are aligned to. A context menu grows from the corner at the
@@ -1157,7 +1242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CLAUDE.md gains a Motion section that the guard enforces.
 - Enter and exit motion uses the `--cui-ease-out` curve instead of plain `ease`, and
   movement on screen (a toggle knob, a chevron turning) uses `--cui-ease-in-out` (#261).
-  Colour changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
+  Color changes keep `ease`. Menus and popovers open over 200ms and close over 150ms;
   CuiAlert's and toasts' 300ms motion is now 250ms, and Progress's 400ms fill is 250ms.
 
 ### Fixed
@@ -1221,7 +1306,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the markdown editor's mode toggle and autocomplete use them in place of a hardcoded
   shadow restated in a `.dark` rule; their look is unchanged.
 - CuiTooltip, CuiAlert, CuiToast and CuiBackdrop take their paint from tokens, so a plain
-  rule restyles them without `!important` (#211). Their backgrounds, colours and borders
+  rule restyles them without `!important` (#211). Their backgrounds, colors and borders
   were bare inline declarations. New tokens: `--cui-tooltip-bg` (the arrow follows it),
   `--cui-tooltip-color`, `-px`, `-py`, `-radius` and `-font-size`; `--cui-alert-bg`,
   `-color`, `-border` and `-radius`; the same four for `--cui-toast-*`; and
@@ -1247,7 +1332,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`--cui-surface-bg`, `--cui-surface-dark-bg`, `--cui-table-head-bg`) instead of raw surface
   steps restated for dark mode (#210): Accordion, the four dropdown items, Fieldset,
   Pagination, Tabs, Select, Input, Table and DataGrid, and the markdown editor's
-  autocomplete highlight. Same colours in both modes; a consumer's
+  autocomplete highlight. Same colors in both modes; a consumer's
   slot override now reaches them, and their `.dark` twins are gone. New tokens for the fills
   that had none: `--cui-table-stripe-bg`, `--cui-table-row-hover-bg` and
   `--cui-pagination-hover-border`.
@@ -1278,8 +1363,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   held were never the ones the components used, so nothing reading them could have worked.
   Import from the package root.
 - **CuiSelect's dropdown now looks like CuiCombobox's and CuiTagInput's** (#216): 0.5rem
-  corners, the layered drop shadow, a primary-tinted highlight instead of grey, and a tinted
-  selected row instead of coloured bold text. It is the same shared listbox panel, and takes
+  corners, the layered drop shadow, a primary-tinted highlight instead of gray, and a tinted
+  selected row instead of colored bold text. It is the same shared listbox panel, and takes
   the same tokens under the `select` prefix (`--cui-select-panel-*`, `--cui-select-item-*`),
   which are new. Its keyboard navigation now follows the order options are shown in, with
   groups, and adds Home/End and type-ahead.
@@ -1291,7 +1376,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-- `useScrollShadows` and its `scrollShadow*Style` objects, in favour of `useScrollArea` (#143).
+- `useScrollShadows` and its `scrollShadow*Style` objects, in favor of `useScrollArea` (#143).
   Nothing in the library uses them any more; they remain exported until 2.0.
 
 ### Fixed
@@ -1325,7 +1410,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 - A theme class on part of a page now re-themes it (#329). `<div class="cui-theme-forest">`
-  changed only the colour scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,
+  changed only the color scale; every semantic slot (`--cui-primary`, `--cui-surface-bg`,
   `--cui-text-*`, …) was resolved once on `:root`, so components inside kept the page's theme.
   The slots are now declared on every theme scope too, in light and dark mode. Only the slots that read the scale are re-declared, so a container's own value for the
   others (`--cui-error-focus-ring`, …) still reaches inside. A slot override on `:root` (or any
@@ -1390,10 +1475,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   adds a tab stop to every interactive rating, so a focus-order snapshot will change.
 - CuiDataGrid's clickable rows can be used from the keyboard, and plain rows no longer look
   clickable (#232). With a `@row-click` listener (or `rowClickable`), rows are one tab stop:
-  the arrows and Home/End move between them — scrolling a virtualised grid — and Enter or
+  the arrows and Home/End move between them — scrolling a virtualized grid — and Enter or
   Space emits `row-click`, with a focus ring and a pointer cursor. Without one, rows get no
   tab stop and no pointer. An overlay opened from a row returns focus to it on close, even
-  after it scrolled out of the virtualised window (`useOverlay` asks for an unmounted opener
+  after it scrolled out of the virtualized window (`useOverlay` asks for an unmounted opener
   back by key, and so does a row's actions menu). `rowClickable` overrides the detection
   either way. Interactive rows carry an `aria-description` ("Press Enter to open",
   `dataGrid.rowHint`).
@@ -1437,7 +1522,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   top edge (#177).
 - CuiColorPicker no longer re-reads its own emitted value under `v-model`. That value is
   quantized hex, and parsing it back rewound drags and keyboard steps, lost the hue
-  whenever the colour reached grey or black, and turned 360° into 0°. A palette entry in
+  whenever the color reached gray or black, and turned 360° into 0°. A palette entry in
   any format (`#f00`, `rgb(…)`) now shows as selected (#177).
 - CuiDropdown and CuiContextMenu put focus back where it came from when Escape or a chosen
   item closes them: the trigger, or the element the context menu was opened from. A
@@ -1520,7 +1605,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CuiDataGrid's checkbox and row-actions columns are exactly `3rem` wide, with no
   horizontal cell padding. That makes them 4–12px narrower, and the row-actions button
-  is now centred.
+  is now centered.
 - CuiTabs: a tab scrolled into view stops 1.5rem in from an edge that has more tabs
   beyond it, instead of flush against it.
 - CuiPopover's title id is now `cui-popover-title-<id>`, not the fixed
@@ -1552,7 +1637,7 @@ group and nothing else.
 **Things that change which CSS wins**
 
 - **The distributed stylesheet no longer ships Tailwind's preflight.** If you were relying on
-  clean-ui for a global reset without realising it, you now need one of your own. The reset
+  clean-ui for a global reset without realizing it, you now need one of your own. The reset
   still applies inside `cui-*` subtrees (#72).
 - **`CuiButton`'s themeable rules are zero-specificity now,** so your own
   `.cui-button { … }` rule wins where it used to lose. That is the point — plain CSS themes a
@@ -1587,13 +1672,13 @@ the change that was planned to break did not (#119, #120).
 - `titleId` on `CuiModalHeader` and `ariaLabelledby` on `CuiModal`, which is what fixes every dialog in the library being announced unnamed. `CuiModal` and `CuiSlideover` generated a title id, pointed `aria-labelledby` at it and never rendered it on anything; `CuiConfirmDialog` assembles its own header, so the modal had no `title` to name itself from and emitted no `aria-labelledby` at all. Both paths are wired now, and the test asserts the reference *resolves* rather than merely that the attribute is present (#158)
 - Docs site: the Layout, Data Display, Navigation and Overlay groups — 30 pages — converted to the `DocPage` shell, each with an Accessibility section. Modal, Slideover and ConfirmDialog also gained the `titleAs` rows they were missing after #129 (#130)
 - `titleAs` on `CuiEmptyState`, which rendered its title as a `<div>` — the same defect #129 fixed in `CuiCardHeader`, and an empty state's title is a genuine region heading. Defaults to `h3`. The line is that static structural containers get headings, while transient or live-region announcements (`CuiAlert`, `CuiToast`) do not (#148)
-- `CuiCopyButton` is announced properly. Its default is icon-only, so the button had no accessible name at all — empty text, no `aria-label`, no `aria-describedby`, no `title` — and a screen reader read it as just "button". The `tooltip` prop looked like it covered this but did not: `CuiTooltip` never points the trigger at its panel, and a tooltip is a description rather than a name. It now names the button from `tooltip` when there is no visible label, and announces a successful copy through a polite live region — the copied state was otherwise colour, an icon swap and a tooltip, all visual (#150)
+- `CuiCopyButton` is announced properly. Its default is icon-only, so the button had no accessible name at all — empty text, no `aria-label`, no `aria-describedby`, no `title` — and a screen reader read it as just "button". The `tooltip` prop looked like it covered this but did not: `CuiTooltip` never points the trigger at its panel, and a tooltip is a description rather than a name. It now names the button from `tooltip` when there is no visible label, and announces a successful copy through a polite live region — the copied state was otherwise color, an icon swap and a tooltip, all visual (#150)
 - Docs site: Button Group and Copy Button converted to the `DocPage` shell, both with an Accessibility section. The Copy Button page also documents `useCopyToClipboard`, which the page mentioned but never specified (#130)
 - Docs site: Empty State, Skeleton and Spinner converted to the `DocPage` shell, each with an Accessibility section (#130)
 - `titleAs` on `CuiCardHeader`, `CuiModalHeader` and `CuiConfirmDialog`, so the heading level is the consumer's to set — it depends on where the component sits, which the component cannot know. Accepts any heading level or `div` for a decorative title. `CuiModal` and `CuiSlideover` forward it, so simple mode (the `title` prop) can choose its level too. A dialog title's level was previously not the consumer's to choose at all: it was a hardcoded `<h2>` (#129)
 - `CuiTitleAs` and the `TitleAsProps` mixin in `types/common.ts`, so the five components sharing the prop share one vocabulary (#129)
 - `CuiAlert` and `CuiToast` titles stay `<div>`s deliberately: static structural containers get headings, transient or live-region announcements do not. A heading that enters and leaves the document outline as a toast comes and goes is noise, and `role="alert"` / `aria-live` already carries the announcement (#129)
-- `registerRoleIcons()` overrides the icon a color role renders in `CuiAlert`, `CuiToast` and `CuiBanner`, app-wide. Role → icon is a theme concern in the same way role → colour is; #119 made it overridable per call site, which still meant passing `icon` at every feedback component in an application (#140)
+- `registerRoleIcons()` overrides the icon a color role renders in `CuiAlert`, `CuiToast` and `CuiBanner`, app-wide. Role → icon is a theme concern in the same way role → color is; #119 made it overridable per call site, which still meant passing `icon` at every feedback component in an application (#140)
 - A shared radius scale — `--cui-radius-sm`, `-md`, `-lg`. Component radius tokens now fall back to it rather than to each other: `--cui-banner-radius` defaulted to `--cui-card-radius`, and the shared radius map defaulted `md` to `--cui-button-radius`, so a component's corners were defined in terms of another component's. Override the scale to move every component together, or a component token to move one. The component tokens are deliberately not declared on `:root`, so that a container can move the scale for its subtree (#141)
 - `CuiBanner`'s `position` gains an `inline` value: rendered in the flow rather than pinned to a page edge, with no edge rule, a closed box and a radius. For a notice inside a card or panel, where the edge rule has nothing to sit against. It is a value of `position` rather than a second prop beside it, so there is no `inline` + `position="bottom"` combination to define. It composes with `variant`, so an inline banner can still be solid (#120)
 - `CuiBanner`, `CuiAlert` and `CuiToast` all take an `icon` prop and an `#icon` slot. The prop follows one rule across the three: a registered icon name renders that icon, anything else — an emoji, a character — renders as text, which is what `CuiToast`'s `icon` has always done. `noIcon` still suppresses entirely (#119)
@@ -1623,7 +1708,7 @@ the change that was planned to break did not (#119, #120).
   - Movement deliberately does not skip disabled dates: a calendar is a grid whose shape carries meaning, and holes in it make it impossible to navigate. Disabled cells are reachable and carry `aria-disabled`; selection is what refuses
   - `role="grid"` / `role="gridcell"` with `aria-selected`, `aria-disabled` and per-cell labels, and a single roving tab stop
   - `CuiTimePicker`'s trigger is now `role="combobox"` in the tab order, opening on `Enter`/`Space`/`↓` and closing on `Escape`. It therefore also takes `id` / `aria-labelledby` / `aria-describedby`, which #78 had to skip because there was nothing focusable to attach them to — closing that half of #103
-  - `CuiInputStepper` gains keyboard stepping and `role="spinbutton"`: `↑`/`↓` by one step, `PageUp`/`PageDown` by ten, `Home`/`End` to the bounds, all honouring `wrap`/`min`/`max`. It had no keydown handling at all, which is a WCAG 2.1.1 gap in its own right and is also why `CuiTimePicker`'s panel did nothing once opened
+  - `CuiInputStepper` gains keyboard stepping and `role="spinbutton"`: `↑`/`↓` by one step, `PageUp`/`PageDown` by ten, `Home`/`End` to the bounds, all honoring `wrap`/`min`/`max`. It had no keydown handling at all, which is a WCAG 2.1.1 gap in its own right and is also why `CuiTimePicker`'s panel did nothing once opened
   - In `CuiTimePicker`, `Enter` commits the time and closes the panel, matching the calendar; `←`/`→` move between hour, minute and AM/PM, as the segments of a native time input do. `CuiInputStepper`'s `+`/`−` buttons are no longer tab stops — the input is the control and is fully keyboard-operable, which is how native number inputs behave — so `Tab` now goes straight from hour to minute instead of through three intermediate stops
   - `CuiTimePicker` moves focus into its panel on open. The panel is teleported to `<body>`, so it sits nowhere near the trigger in tab order — leaving focus on the trigger meant `Tab` went to whatever follows the component in the document, never into the hours field
   - New `useCalendarKeyboard` composable holds the grid navigation, shared by both date pickers rather than written twice
@@ -1642,10 +1727,10 @@ the change that was planned to break did not (#119, #120).
 - `CuiCoreMessages` is exported — the message keys this package itself ships, as distinct from `CuiMessages`, which is those plus whatever satellite packages have merged into `CuiMessageNamespaces` (#107)
 
 ### Changed
-- **BREAKING:** `CuiEmptyState` renders its `title` as an `<h3>` rather than a `<div>`, for the same reason and with the same consequence as `CuiCardHeader` below: an empty state's title is a genuine region heading, so it now appears in the document outline and an audit may flag its level against its surroundings. Set `titleAs`, or `div` to restore the old behaviour (#148)
-- **BREAKING:** `CuiCardHeader` renders its `title` as an `<h3>` rather than a `<div>`. A card title looks like a heading and now is one, so it is reachable by heading navigation and appears in the document outline; `CuiModalHeader` and `CuiConfirmDialog` already did this. Rendering is unchanged — what changes is the outline, and automated audits may now flag heading order where a card's level does not match its surroundings. Set `titleAs` to the right level, or to `div` to restore the old behaviour (#129)
+- **BREAKING:** `CuiEmptyState` renders its `title` as an `<h3>` rather than a `<div>`, for the same reason and with the same consequence as `CuiCardHeader` below: an empty state's title is a genuine region heading, so it now appears in the document outline and an audit may flag its level against its surroundings. Set `titleAs`, or `div` to restore the old behavior (#148)
+- **BREAKING:** `CuiCardHeader` renders its `title` as an `<h3>` rather than a `<div>`. A card title looks like a heading and now is one, so it is reachable by heading navigation and appears in the document outline; `CuiModalHeader` and `CuiConfirmDialog` already did this. Rendering is unchanged — what changes is the outline, and automated audits may now flag heading order where a card's level does not match its surroundings. Set `titleAs` to the right level, or to `div` to restore the old behavior (#129)
 - The `.cui-typography` heading rules skip elements carrying a `cui-*` class, as the prose link rules already did. A component that renders a heading styles itself, and the prose layer was repainting it — an unexcluded card title took the prose h3 size and margin, including from the mobile responsive block (#129)
-- **BREAKING:** the `error` role's default icon is `warning-octagon`, not `x-circle` — in `CuiAlert`, `CuiToast` and `CuiBanner` alike. A cross reads as "close" far more strongly than it reads as "error", and beside a dismissible component's own ✕ it rendered as a second close button. It is deliberately not `warning-circle` either: error and warning are adjacent severities, and sharing a glyph would leave colour as the only thing telling them apart (#119)
+- **BREAKING:** the `error` role's default icon is `warning-octagon`, not `x-circle` — in `CuiAlert`, `CuiToast` and `CuiBanner` alike. A cross reads as "close" far more strongly than it reads as "error", and beside a dismissible component's own ✕ it rendered as a second close button. It is deliberately not `warning-circle` either: error and warning are adjacent severities, and sharing a glyph would leave color as the only thing telling them apart (#119)
 - `CuiBanner`'s dismiss button carries an accessible name from the localized `dismiss` message; it was an unlabelled icon-only button (#119)
 - **BREAKING:** horizontal padding in `INPUT_SIZE_SCALE` was rebalanced to 8/10/12/14/16px across `xs`–`xl`. `md` was 1rem (16px), equal to its own font size, which read as dead space beside a short value; dropping `md` alone to 12px would have made it identical to `sm`, so the whole curve moved. Affects every form control (#123, #124)
 - **BREAKING:** `CuiInput` applies its height to the bordered element rather than to its inner one, so an input is the height the scale says. The 1px borders used to sit outside it, making every input 2px taller than a `CuiSelect` beside it — they have never lined up (#123)
@@ -1670,7 +1755,7 @@ the change that was planned to break did not (#119, #120).
 - Removed a dead rule in the editor toolbar's stylesheet that set `position: sticky` on the fades: the inline style set `position: absolute`, which wins, so the rule never applied (#125)
 - A required field no longer sits ~1.4px lower than the optional field beside it. `CuiFormField`'s label is a flex row, so its height is its tallest child, and the required marker picked up a taller line-height from the surrounding prose — 21px against the label's 19.6px. Any two-column form row pairing a required field with an optional one was visibly out of line (#134)
 - `CuiFieldset` no longer clips its fields' focus rings. It clips its content with `overflow: hidden` for the collapse animation and the content box had no padding, so a full-width field sat flush against the clip edge: the ring was cut off on the left and right of every field, and on the top and bottom of the first and last. A 4px gutter, cancelled by a negative margin so nothing moves (#135)
-- Solid buttons no longer take the surrounding text colour on hover, which made the label unreadable against the fill. The hover rule fell back to `inherit` when a variant set no hover colour — which only `solid` does — and it now falls back to the button's own resting colour instead. The bug predates #114 but was masked: the resting colour used to be an inline declaration, which outranked the hover rule; once both became stylesheet rules the later one won (#114)
+- Solid buttons no longer take the surrounding text color on hover, which made the label unreadable against the fill. The hover rule fell back to `inherit` when a variant set no hover color — which only `solid` does — and it now falls back to the button's own resting color instead. The bug predates #114 but was masked: the resting color used to be an inline declaration, which outranked the hover rule; once both became stylesheet rules the later one won (#114)
 - Dark-mode tokens are declared on the scoping root rather than on every element, so a subtree can re-theme them. They sat under `:where(.dark, .dark *)`, which set each token on every descendant individually — custom properties inherit, but the library kept overriding the inherited value, so a deliberately-light surface inside a dark panel could only be themed by mirroring the library's own blanket selector. They now use `:root.dark, .dark`: a bare `:where(.dark)` would lose the specificity tie with the `:root` light block on `<html>` and render the whole page light. The same change fixes a second case — with `cui-theme-*` and `dark` on the same element, which is what `useTheme` produces, neither old theme selector matched, so the themed element kept its light surfaces while its descendants went dark (#121)
 - Every component root now carries a `cui-*` class. The scoped base added in #72 only reaches an element with such a class and its descendants, so a component whose own root had none rendered its whole subtree outside it — no `box-sizing: border-box`, no `font: inherit` on form controls. 46 roots across 43 components were in that state (`CuiDivider` alone has four, one per branch of its `v-if`), including `CuiCard`, `CuiTable`, `CuiDivider`, `CuiSpinner`, `CuiTimeline`, `CuiRating`, `CuiDatePicker` and the Card/Modal sub-components. This only misbehaved for consumers not supplying their own global reset, which is exactly the case #72 left without a safety net. Renderless components (`CuiConfigProvider`, `CuiToastProvider`) and those whose root is a `<Teleport>` or `<Transition>` are exempt — the element they wrap already carries the class (#72, #94)
 - Four teleported panels (`CuiCombobox`, `CuiPopover`, `CuiSlideover`, `CuiTagInput`) rendered into `<body>` without a `cui-*` class of their own. They now carry `cui-combobox__dropdown`, `cui-popover__panel`, `cui-slideover-overlay` and `cui-tag-input__dropdown`, which puts them inside the scoped base — and makes them targetable from consumer CSS (#72)
@@ -1706,7 +1791,7 @@ the change that was planned to break did not (#119, #120).
   input, whole-line for touch); `wysiwyg` and `source` are one buffer with decorations on or off.
   Ships a plugin API whose declarative tier every built-in formatting action is written against, a
   slash menu, HTML-to-markdown paste, form-control integration with a `maxLength` that refuses
-  rather than truncates, and a localised message namespace. Joins at the shared version per the
+  rather than truncates, and a localized message namespace. Joins at the shared version per the
   lockstep policy; it is a first release, and its documentation says so (clean-ui-editor)
 - Rendering markdown to HTML is opt-in at `@itguy614/clean-ui-editor/render`, and injectable — a
   consumer can supply the renderer they already use. Nothing in the core entry imports a renderer

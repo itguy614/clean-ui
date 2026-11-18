@@ -5,7 +5,7 @@ import main from "../../styles/main.css?inline";
 import CuiTooltip from "../../components/CuiTooltip.vue";
 
 /**
- * #211 — CuiTooltip wrote a coloured tooltip's `background` and `color` inline, so only
+ * #211 — CuiTooltip wrote a colored tooltip's `background` and `color` inline, so only
  * `!important` could restyle it. Its paint is private `--_tooltip-*` tokens now, read back
  * through `:where()`: a plain `.cui-tooltip` rule wins, and so does a page-level
  * `--cui-tooltip-bg`. (A container's token can't reach it: it teleports to <body>.)
@@ -63,7 +63,7 @@ describe("CuiTooltip themeable properties (real browser)", () => {
     }
   });
 
-  it("paints a coloured tooltip in its role", async () => {
+  it("paints a colored tooltip in its role", async () => {
     const tip = await tooltip({ color: "error" });
     expect(getComputedStyle(tip).backgroundColor).toBe(probe("var(--cui-error)"));
   });

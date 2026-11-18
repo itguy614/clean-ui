@@ -15,7 +15,7 @@ import { sourceFiles } from "./css-helpers";
  * inline, which the scan below enforces, so nothing that styles itself can hide there, and
  * it fails as stale once the component gains a `<style>` block.
  *
- * Paint here is colour, surface, shape and type: `background`, `color`, `border*`,
+ * Paint here is color, surface, shape and type: `background`, `color`, `border*`,
  * `box-shadow`, `font-size`, `font-weight`, `text-transform`, `letter-spacing`, `opacity`.
  * Geometry (`padding`, `gap`, `width`, `display`, `position`) is layout, not scanned.
  */
@@ -27,6 +27,7 @@ const COMPOSES = (parts: string) => `renders only ${parts}, which carry the pain
 const NO_PAINT: Record<string, string> = {
   // Renderless: the template is a slot or a Vue built-in, and the content carries its own paint.
   "CuiConfigProvider.vue": "renders only its slot: provides the message catalogue and defaults",
+  "CuiSlideoverStack.vue": "renders only its slot: provides the stack coordinator; its panels own all paint (#41)",
   "CuiTransition.vue": "wraps Vue's <Transition>; the motion is utils/motion hooks, the content is the consumer's",
   "CuiTransitionGroup.vue": "wraps Vue's <TransitionGroup>; the motion is utils/motion hooks and shared classes in main.css",
   // Composition: another component paints it.

@@ -18,7 +18,7 @@ import {
 const meta: ComponentMeta = {
   name: "Slideover",
   description:
-    "A panel that slides in from any edge of the viewport. Shares CuiModal's overlay behaviour — focus trap, scroll lock, backdrop — and is assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-slideover__panel), the element actually rendered, rather than being dropped at its teleported root.",
+    "A panel that slides in from any edge of the viewport. Shares CuiModal's overlay behavior — focus trap, scroll lock, backdrop — and is assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-slideover__panel), the element actually rendered, rather than being dropped at its teleported root.",
   interactive: true,
 
   parts: [
@@ -31,6 +31,13 @@ const meta: ComponentMeta = {
           type: "right | left | top | bottom",
           default: "right",
           description: "Which edge the panel slides from",
+        },
+        {
+          name: "modal",
+          type: "boolean",
+          default: "the stack's modal (true alone)",
+          description:
+            "Modal panels trap focus and, inside a CuiSlideoverStack, make the panels beneath them inert. Bind :modal=\"false\" for a co-active one: the panels beneath stay interactive and focus moves freely",
         },
         {
           name: "size",
@@ -52,6 +59,13 @@ const meta: ComponentMeta = {
           description: "Block closing via Escape and backdrop click. The X button still closes",
         },
         { name: "noCloseButton", type: "boolean", default: "false", description: "Hide the X close button in simple mode" },
+        {
+          name: "noDrag",
+          type: "boolean",
+          default: "false",
+          description:
+            "Turn off touch and pen drag-to-dismiss: dragging the panel toward its edge closes it, or springs back. A mouse never drags it. Also off while persistent",
+        },
         ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,

@@ -51,7 +51,7 @@ jobs:
       - name: Run tests
         run: pnpm -r --if-present test
 
-      # Real-browser tests for layout/selection/input-method-dependent behaviour
+      # Real-browser tests for layout/selection/input-method-dependent behavior
       # (task 2.3.2) — non-blocking for now. The capability existing and running
       # in CI is what matters today; gating merges on it is a deliberate follow-up
       # once it's proven stable here, not an oversight. Package-specific (not

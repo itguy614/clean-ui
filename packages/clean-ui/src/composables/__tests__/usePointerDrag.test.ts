@@ -63,6 +63,34 @@ describe("usePointerDrag", () => {
     t.scope.stop();
   });
 
+  it.each(["pointerup", "pointercancel"])("calls the end callback with the %s that finished it, once", async (type) => {
+    const t = setup();
+    const done = vi.fn();
+    t.drag.start(pointer("pointerdown", 1), t.move, done);
+    await nextTick();
+    document.dispatchEvent(pointer("pointerup", 2));
+    expect(done).not.toHaveBeenCalled();
+    const ev = pointer(type, 1);
+    document.dispatchEvent(ev);
+    document.dispatchEvent(pointer(type, 1));
+    expect(done).toHaveBeenCalledTimes(1);
+    expect(done).toHaveBeenCalledWith(ev);
+    t.scope.stop();
+  });
+
+  it("does not call the end callback for a drag ended by end() or replaced", async () => {
+    const t = setup();
+    const done = vi.fn();
+    t.drag.start(pointer("pointerdown", 1), t.move, done);
+    await nextTick();
+    t.drag.end();
+    t.drag.start(pointer("pointerdown", 1), t.move);
+    await nextTick();
+    document.dispatchEvent(pointer("pointerup", 1));
+    expect(done).not.toHaveBeenCalled();
+    t.scope.stop();
+  });
+
   it("end() ends the drag", async () => {
     const unremoved = recordDocumentListeners();
     const t = setup();

@@ -2,7 +2,7 @@
  * Focus restore for an opener that has gone (#232). Internal.
  *
  * An overlay hands focus back to the element that opened it. That element can be gone by
- * then: a virtualised grid row that scrolled out of the render window while a slideover was
+ * then: a virtualized grid row that scrolled out of the render window while a slideover was
  * open is unmounted, and focus would fall to <body>. An opener that can be re-rendered
  * carries `data-cui-restore-focus="<key>"`; the overlay remembers the key, and if the
  * element is no longer in the document on close, it dispatches this event with the key on

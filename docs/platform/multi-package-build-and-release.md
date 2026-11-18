@@ -113,7 +113,7 @@ rather than by manual audit.
   documented gates nothing.
 - P10: Test environments match what is under test. Alongside the existing jsdom project:
   a `node`-environment project for server-rendering assertions, which cannot be made in jsdom;
-  and a real-browser runner for behaviour that depends on layout, selection or input method.
+  and a real-browser runner for behavior that depends on layout, selection or input method.
   Shared setup provides the polyfills a DOM-dependent editor needs to mount in jsdom at all
   (`Range.prototype.getBoundingClientRect` and `getClientRects`), because their absence looks
   like "this cannot be tested" rather than a missing stub.

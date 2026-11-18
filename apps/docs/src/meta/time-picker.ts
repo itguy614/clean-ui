@@ -31,7 +31,7 @@ const meta: ComponentMeta = {
     { name: "--cui-time-picker-height", default: "per size", description: "Trigger height" },
     { name: "--cui-time-picker-px", default: "per size", description: "Trigger horizontal padding" },
     { name: "--cui-time-picker-font-size", default: "per size", description: "Trigger font size" },
-    { name: "--cui-time-picker-color", default: "var(--cui-text-body)", description: "Trigger text colour (an empty trigger shows its placeholder in --cui-text-tertiary)" },
+    { name: "--cui-time-picker-color", default: "var(--cui-text-body)", description: "Trigger text color (an empty trigger shows its placeholder in --cui-text-tertiary)" },
     { name: "--cui-time-picker-bg", default: "var(--cui-surface-base)", description: "Trigger background" },
     { name: "--cui-time-picker-border", default: "var(--cui-border-strong)", description: "Trigger border color" },
     { name: "--cui-time-picker-radius", default: "var(--cui-radius-md)", description: "Trigger corner radius" },

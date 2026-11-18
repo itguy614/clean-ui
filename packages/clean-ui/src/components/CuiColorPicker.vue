@@ -88,7 +88,7 @@ const rootVars = computed(() => ({
 // Computed RGB from HSV
 const currentRgb = computed(() => hsvToRgb(hue.value, sat.value, val.value));
 const currentHex = computed(() => rgbToHex(currentRgb.value.r, currentRgb.value.g, currentRgb.value.b));
-// The colour with its alpha, as #rrggbb or #rrggbbaa: the preview's paint, and what a swatch
+// The color with its alpha, as #rrggbb or #rrggbbaa: the preview's paint, and what a swatch
 // has to equal to read as selected.
 const displayColor = computed(() => {
   const { r, g, b } = currentRgb.value;
@@ -99,7 +99,7 @@ const outputValue = computed(() => {
   return formatColor(r, g, b, alpha.value, activeFormat.value);
 });
 
-/** Set the HSV + alpha state from any supported colour string; false if it doesn't parse. */
+/** Set the HSV + alpha state from any supported color string; false if it doesn't parse. */
 function applyColor(color: string): boolean {
   const parsed = parseColor(color);
   if (!parsed) return false;
@@ -114,10 +114,10 @@ function applyColor(color: string): boolean {
 // Sync from modelValue prop — except for the echo of a value this picker just emitted. That
 // string is quantized (hex has 256 steps a channel), and parsing it back would rewrite the
 // HSV state the user is moving: 1% keyboard steps would skip and rewind, the hue would be
-// lost whenever the colour reached grey or black, and 360° would come back as 0°.
+// lost whenever the color reached gray or black, and 360° would come back as 0°.
 let lastEmitted: string | null = null;
 function syncFromProp() {
-  // Once: a later change back to the same string, after something else moved the colour,
+  // Once: a later change back to the same string, after something else moved the color,
   // is the parent's, not an echo.
   const echo = props.modelValue === lastEmitted;
   lastEmitted = null;
@@ -339,7 +339,7 @@ const paletteHex = computed(() =>
 const isSelected = (i: number) => paletteHex.value[i] === displayColor.value;
 const selectedSwatch = computed(() => paletteHex.value.indexOf(displayColor.value));
 const swatchIndex = ref(0);
-// The tab stop follows the selection — unless it is already on a swatch of that colour (a
+// The tab stop follows the selection — unless it is already on a swatch of that color (a
 // palette can repeat one), which would move it out from under focus.
 watch(selectedSwatch, (i) => { if (i !== -1 && !isSelected(swatchIndex.value)) swatchIndex.value = i; }, { immediate: true });
 const roving = useRovingFocus({
@@ -377,7 +377,7 @@ function onSwatchKeydown(e: KeyboardEvent) {
   if (e.defaultPrevented && !isSelected(i)) onSwatchClick(resolvedPalette.value[i]);
 }
 
-// The fully saturated colour at the current hue. This and the colour data after it (`displayColor`,
+// The fully saturated color at the current hue. This and the color data after it (`displayColor`,
 // `currentHex`) change on every drag frame, so each reaches the stylesheet as a private property on
 // the element that paints it, never on the root, where it would restyle every descendant.
 const hueColor = computed(() => {
@@ -533,7 +533,7 @@ defineExpose({ el: rootEl, focus, blur });
         @keydown="onSwatchKeydown"
         @focusin="roving.onFocusin"
       >
-        <!-- Named by the hex value: colour alone is not a name (WCAG 1.4.1) -->
+        <!-- Named by the hex value: color alone is not a name (WCAG 1.4.1) -->
         <button
           v-for="(color, i) in resolvedPalette"
           :key="i"
@@ -567,7 +567,7 @@ defineExpose({ el: rootEl, focus, blur });
 /* --- Themeable: zero specificity, so a consumer's own rule wins (see CuiButton.vue) ---
    Each rule reads the public `--cui-color-picker-<slot>` token and falls back to the private
    `--_color-picker-<slot>` the component emits for its size, or to a plain default. A rule that
-   is the same colour whatever the size has the default only. The whole compound sits inside
+   is the same color whatever the size has the default only. The whole compound sits inside
    `:where()`, so a state or attribute selector stays at zero. */
 :where(.cui-color-picker) {
   width: var(--cui-color-picker-width, var(--_color-picker-width));
@@ -630,7 +630,7 @@ defineExpose({ el: rootEl, focus, blur });
   border-radius: 9999px;
 }
 
-/* A thumb's ring is white on any colour at all, with a shadow for a pale one behind it; the
+/* A thumb's ring is white on any color at all, with a shadow for a pale one behind it; the
    brightness slider is a borderless twin laid over the saturation one. */
 :where(.cui-color-picker__thumb) {
   width: var(--_color-picker-thumb-size);
@@ -665,7 +665,7 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* The gradient's ring goes on the visible thumb whichever of its two sliders has focus. */
-/* A thumb sits on any colour at all, where the theme's translucent ring can vanish, so its
+/* A thumb sits on any color at all, where the theme's translucent ring can vanish, so its
    default is black beside the thumb's white border: one of the two always contrasts. No
    offset: the gradient clips at its edges, and an offset ring would be cut off there first.
    (The gradient's brightness slider is a borderless twin laid over its thumb, so its ring
@@ -733,7 +733,7 @@ defineExpose({ el: rootEl, focus, blur });
   flex-wrap: wrap;
 }
 
-/* The checkerboard under a colour that may be translucent. */
+/* The checkerboard under a color that may be translucent. */
 .cui-color-picker__preview,
 .cui-color-picker__alpha {
   background: repeating-conic-gradient(#d0d0d0 0% 25%, transparent 0% 50%) 0 0 / 12px 12px;
@@ -780,7 +780,7 @@ defineExpose({ el: rootEl, focus, blur });
 }
 
 /* The handles. Where one sits (`left`, and `top` on the gradient) is written inline as the value
-   changes; the centring transform is the same for all of them. */
+   changes; the centering transform is the same for all of them. */
 .cui-color-picker__thumb {
   position: absolute;
   transform: translate(-50%, -50%);

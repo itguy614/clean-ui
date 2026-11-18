@@ -238,7 +238,7 @@ function blur() {
 }
 
 defineExpose({ el: rootEl, focus, blur });
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const dragLabel = computed(() => props.dragText ?? messages.value.fileUpload.drag);
 const browseLabel = computed(() => props.browseText ?? messages.value.fileUpload.browse);
 const uploadLabel = computed(() => props.uploadText ?? messages.value.fileUpload.upload);

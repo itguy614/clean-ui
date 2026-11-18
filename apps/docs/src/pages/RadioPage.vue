@@ -67,7 +67,7 @@ const dynamicField = ref({
           The group handles arrow keys: <kbd>↓</kbd>/<kbd>→</kbd> move to the next radio,
           <kbd>↑</kbd>/<kbd>←</kbd> to the previous, <kbd>Home</kbd>/<kbd>End</kbd> to the
           first and last, wrapping at both ends and skipping disabled radios. Moving also
-          selects, which is the expected behaviour for a radio group. Space and Enter select
+          selects, which is the expected behavior for a radio group. Space and Enter select
           the focused radio.
         </li>
         <li>
@@ -93,7 +93,7 @@ const dynamicField = ref({
         </li>
         <li>
           <code>error</code> sets <code>aria-invalid</code> on the group and wraps the
-          options in a tinted bordered container, so the failure is not signalled by colour
+          options in a tinted bordered container, so the failure is not signalled by color
           alone — the message below it carries the text.
         </li>
         <li>

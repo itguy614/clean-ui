@@ -72,7 +72,7 @@ a task — the tasks file tracks status, this file records why things happened.
   it cannot prove the no-DOM-access property; only a real node-environment render can. The
   composable is written to be SSR-safe by construction (all `document`/`MutationObserver` access
   is inside `onMounted`, which never runs during server rendering) and is covered by jsdom tests
-  for the reactive/scoping/cleanup behaviour now.
+  for the reactive/scoping/cleanup behavior now.
 
 **Files Created/Modified:**
 - `packages/clean-ui/src/composables/useColorScheme.ts` (new)

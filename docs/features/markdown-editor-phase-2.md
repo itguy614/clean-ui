@@ -19,18 +19,18 @@ v1 shipped: markdown-as-truth editing in CodeMirror 6, marker reveal on caret en
 construct granularity for pointer input and line granularity for touch, `wysiwyg` and `source`
 modes over one buffer, the plugin API with its declarative and raw tiers, every built-in
 formatting action written as an ordinary plugin, the slash menu, HTML-to-markdown paste under the
-construct policy, form-control integration with a refusing `maxLength`, a localised message
+construct policy, form-control integration with a refusing `maxLength`, a localized message
 namespace, the opt-in render subpath, and a documentation site.
 
 Two things a successor phase inherits:
 
 - **Deferred verification.** Two v1 tasks were formally deferred because they need hardware and
-  software the implementing environment lacked: touch behaviour on a physical device, and a real
+  software the implementing environment lacked: touch behavior on a physical device, and a real
   screen-reader pass. Automated proxies did cover what they could — real `pointerType: "touch"`
   events switching reveal granularity, and an accessibility-tree extraction confirming the
   markdown including markers is exposed as static text beneath the editor's textbox role — and
   those results should not be re-derived. What remains is device- and assistive-technology
-  specific: selection handles, caret placement by tap, on-screen keyboard behaviour, and how the
+  specific: selection handles, caret placement by tap, on-screen keyboard behavior, and how the
   exposed markers actually sound.
 - **The editor's budget is gated, with little headroom.** Since #226,
   `fixtures/size-budget.json` carries two editor entries, checked in CI: the barrel (measured
@@ -69,7 +69,7 @@ the render subpath now provides.
 
 - Requires a `render` adapter to be supplied or the render subpath imported; the mode must not be
   offered when neither is present, rather than being offered and failing.
-- Scroll synchronisation between source and preview is the substantive design question — line
+- Scroll synchronization between source and preview is the substantive design question — line
   mapping is approximate for any construct that does not render one-to-one, and getting it subtly
   wrong is worse than not syncing at all.
 - The existing mode model is a two-value union with a built-in toggle; adding a third value affects
@@ -85,9 +85,9 @@ screenshot is the most likely first request from the first integration.
 The interaction was designed during v1 specification and deliberately not built; it is recorded
 here so it is not re-litigated.
 
-- An `upload` prop receives the file and resolves with a URL. Its absence keeps v1's behaviour:
-  the file is refused with a localised message.
-- On paste or drop, insert a localised placeholder immediately, then replace exactly that range on
+- An `upload` prop receives the file and resolves with a URL. Its absence keeps v1's behavior:
+  the file is refused with a localized message.
+- On paste or drop, insert a localized placeholder immediately, then replace exactly that range on
   success. The range is mapped through subsequent edits, so the image lands correctly even if the
   user keeps typing — this is the reservation seam the command context anticipated.
 - On failure the placeholder is removed and an error surfaces. Nothing is left orphaned in the
@@ -131,7 +131,7 @@ Inline images, clickable task checkboxes, and syntax-highlighted code fences.
 A plugin tier for new inline or block constructs with their own grammar extension — the third
 option considered and declined for v1.
 
-- Each construct needs a grammar extension plus decoration and serialisation, which is a real jump
+- Each construct needs a grammar extension plus decoration and serialization, which is a real jump
   in authoring difficulty from the declarative tier.
 - The harder question is degradation: a document containing custom syntax is still markdown for
   every other consumer of that content, including a server-side renderer. The tier must define what

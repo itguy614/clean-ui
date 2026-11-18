@@ -193,7 +193,7 @@ Unhandled error during execution of setup function` log, expected).
 
 ---
 
-### 2026-07-29 - Task 2.3.2: Browser runner for layout and input behaviour
+### 2026-07-29 - Task 2.3.2: Browser runner for layout and input behavior
 **Agent:** claude (direct implementation)  **Status:** Completed
 
 **Work Done:**

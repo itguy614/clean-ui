@@ -104,7 +104,7 @@ function onLoadingConfirm() {
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        It renders a <code>CuiModal</code>, so the dialog semantics and the overlay behaviour
+        It renders a <code>CuiModal</code>, so the dialog semantics and the overlay behavior
         are the Modal's: <code>role="dialog"</code>, <code>aria-modal="true"</code>, focus moved
         onto the panel on open and returned to the opener on close, Tab wrapping inside it, and
         a background scroll lock while it is up.
@@ -230,7 +230,7 @@ function onLoadingConfirm() {
         </Example>
 
         <!-- Confirm color -->
-        <Example title="Confirm button colour (confirmColor)" :code="`<!-- the tile keeps the variant's colour; only the button changes -->
+        <Example title="Confirm button color (confirmColor)" :code="`<!-- the tile keeps the variant's color; only the button changes -->
 <CuiConfirmDialog
   v-model:visible=&quot;show&quot;
   title=&quot;Publish changes?&quot;

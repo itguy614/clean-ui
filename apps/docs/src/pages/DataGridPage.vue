@@ -340,7 +340,7 @@ function step(by: number) {
           the arrow keys and Home/End, opened with Enter or Space, with a focus ring and a
           pointer cursor. Keys pressed in a cell's own checkbox, button or link stay theirs, and
           native table semantics stay (no <code>role="grid"</code>). An overlay opened from a
-          row returns focus to it on close, even if it has scrolled out of a virtualised
+          row returns focus to it on close, even if it has scrolled out of a virtualized
           window. <code>rowClickable</code> overrides the detection: <code>false</code> for a
           listener that is only analytics, <code>true</code> without one. Without either, rows
           are plain rows.
@@ -629,7 +629,7 @@ function step(by: number) {
               With a <code>@row-click</code> listener, rows are one tab stop: <kbd>↑</kbd>/<kbd>↓</kbd>,
               <kbd>Home</kbd>/<kbd>End</kbd> move between them, <kbd>Enter</kbd> or <kbd>Space</kbd>
               opens one. <kbd>Esc</kbd> closes the slideover and focus returns to the row — even if
-              it scrolled out of the virtualised window meanwhile.
+              it scrolled out of the virtualized window meanwhile.
             </p>
           </CuiCardBody>
         </CuiCard>
@@ -740,7 +740,7 @@ function step(by: number) {
                 available on its own. <code>useDataGrid(options)</code> returns the same
                 <code>DataGridContext</code> the component renders from — column state, sort,
                 filters, search, pagination, selection, view mode and saved-view config — so you
-                can drive markup of your own with the grid's behaviour (client-side search, sort,
+                can drive markup of your own with the grid's behavior (client-side search, sort,
                 filter and paging, or server-side query params) without its UI.
               </p>
               <ul class="mb-3 list-disc pl-5 text-surface-600 dark:text-surface-400">

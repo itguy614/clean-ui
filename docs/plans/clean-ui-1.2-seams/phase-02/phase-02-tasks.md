@@ -146,7 +146,7 @@ caught here, because the docs app aliases the library to source.
 
 ---
 
-#### Task 2.3.2: Browser runner for layout and input behaviour
+#### Task 2.3.2: Browser runner for layout and input behavior
 
 | Field | Value |
 |-------|-------|
@@ -157,7 +157,7 @@ caught here, because the docs app aliases the library to source.
 
 **Acceptance Criteria:**
 - [x] Runner executes against a built app in CI
-- [x] At least one existing layout-dependent behaviour is covered as a proving case
+- [x] At least one existing layout-dependent behavior is covered as a proving case
 - [x] Documented how to run it locally and how to triage a failure
 
 ---

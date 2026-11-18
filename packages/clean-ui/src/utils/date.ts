@@ -16,7 +16,7 @@ export const YEARS_PER_PAGE = 12;
 /**
  * Calendar arithmetic. Here rather than private to a component so the next
  * picker doesn't hand-roll its own — this file is already the home for
- * `daysInMonth`, `firstDayOfMonth` and friends. Date's constructor normalises
+ * `daysInMonth`, `firstDayOfMonth` and friends. Date's constructor normalizes
  * overflow for us, so adding 1 to 31 January lands on 1 February.
  */
 export const addDays = (date: Date, days: number): Date =>

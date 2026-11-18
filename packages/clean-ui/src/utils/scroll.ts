@@ -5,7 +5,7 @@
  * `Element.scrollIntoView()` brings every scrollable ancestor into line, the window
  * included, so a tab bar or listbox below the fold drags the page down to it (#243). This
  * measures against the scroller alone. Rects are physical, so a right-to-left scroller
- * needs nothing special; `scrollBy` honours the scroller's `scroll-behavior`, smooth or not,
+ * needs nothing special; `scrollBy` honors the scroller's `scroll-behavior`, smooth or not,
  * unless `behavior` says otherwise.
  *
  * Internal.

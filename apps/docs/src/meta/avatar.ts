@@ -17,7 +17,7 @@ const meta: ComponentMeta = {
         { name: "icon", type: "string", default: "user", description: "Icon shown when there is no image and no initials" },
         { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Box size, from 1.5rem at xs to 5rem at xl" },
         { name: "shape", type: "circle | rounded", default: "circle", description: "Circle, or a squircle with a 20% radius" },
-        colorProp("Colour role for the initials/icon fallback — tinted background, coloured glyph. Ignored once an image loads"),
+        colorProp("Color role for the initials/icon fallback — tinted background, colored glyph. Ignored once an image loads"),
         { name: "status", type: "online | offline | away | busy", description: "Status dot in the lower-right corner" },
         { name: "statusAnimation", type: "pulse | ping | none", default: "none", description: "Animate the status dot" },
         hiddenProp,

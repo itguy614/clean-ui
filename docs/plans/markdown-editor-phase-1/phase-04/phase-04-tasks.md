@@ -147,7 +147,7 @@ commands, which the prototype measured as tree-shaking free of that package's HT
 2.3 kB — do not reimplement them, and do not import the whole language.
 
 **Acceptance Criteria:**
-- [x] Each behaviour above verified for bulleted, ordered and task lists
+- [x] Each behavior above verified for bulleted, ordered and task lists
 - [x] Nested lists indent and outdent to the right level
 - [x] The bundle assertion confirms no HTML grammar arrived with the commands
 
@@ -242,7 +242,7 @@ function separately from the CodeMirror-autocomplete wiring, since the latter ne
 focus/layout jsdom's contenteditable support can't reliably provide (`view.hasFocus` stayed `false`
 in jsdom even after an explicit `.focus()` call) — the interactive path (typing, filtering, Enter,
 Escape-leaves-text) is verified in a real browser instead (temporary, deleted harness).
-"Announced per the combobox pattern" is CodeMirror's own `autocompletion()` behaviour
+"Announced per the combobox pattern" is CodeMirror's own `autocompletion()` behavior
 (`aria-autocomplete="list"` on the content element, confirmed present in the real-browser DOM dump
 during debugging), not something built here.
 
@@ -258,11 +258,11 @@ during debugging), not something built here.
 | Dependencies | 4.1.1 |
 
 **Description:**
-HTML paste converts to markdown through the plugins' paste rules, honouring the loaded construct set
+HTML paste converts to markdown through the plugins' paste rules, honoring the loaded construct set
 and degrading to the nearest available representation or plain text. The converter must never emit
-raw HTML: an unrecognised element becomes text, so markup pasted from a hostile page cannot be
+raw HTML: an unrecognized element becomes text, so markup pasted from a hostile page cannot be
 laundered into stored content. A modifier paste inserts plain text. Pasted image files are refused
-with a localised message.
+with a localized message.
 
 **Acceptance Criteria:**
 - [x] Pasting a rendered page preserves headings, emphasis, links, lists and a table
@@ -275,11 +275,11 @@ own tag/outerHTML into the result — an element with no matching `PasteRule` co
 *recursively converted children*, and `SKIP_TAGS` (`script`, `style`, `noscript`, `template`,
 `iframe`, `object`, `embed`) contribute nothing at all — this is what makes "never emit raw HTML"
 true by construction rather than by a keyword blocklist. `resolveRule` follows a `degradeTo` chain
-(construct not authorised → try what it degrades to → ... → `"plainText"`) — real for third-party
+(construct not authorized → try what it degrades to → ... → `"plainText"`) — real for third-party
 plugins that decouple a paste rule's `produces` from their own `constructs` (proven directly in
 `convert-html.test.ts`), but *not* reachable via "exclude a whole built-in plugin," since excluding
 a plugin removes its paste rule along with everything else (FR27) — there is then no rule left to
-even recognise the tag, so it falls through to the generic "no rule matches" path, which already
+even recognize the tag, so it falls through to the generic "no rule matches" path, which already
 lands on plain text (`heading.ts`'s own three plugins were simplified from an illusory
 H1→H2→H3-degrade chain to `degradeTo: "plainText"` directly once this was understood — the chain
 could never fire as originally written and was misleading about what actually happens).

@@ -51,7 +51,7 @@ const time6 = ref("19:00");
       <p class="text-surface-700 dark:text-surface-300">
         <strong>Inside the panel.</strong> <code>↑</code>/<code>↓</code> step by one,
         <code>PageUp</code>/<code>PageDown</code> by ten steps, <code>Home</code>/<code>End</code>
-        jump to that field's bounds — all honouring <code>minuteStep</code> and wrapping at
+        jump to that field's bounds — all honoring <code>minuteStep</code> and wrapping at
         the ends. <code>←</code>/<code>→</code> move between hour, minute and AM/PM the way
         the segments of a native <code>&lt;input type="time"&gt;</code> do, stopping at the
         ends rather than wrapping. <code>Enter</code> commits and closes.

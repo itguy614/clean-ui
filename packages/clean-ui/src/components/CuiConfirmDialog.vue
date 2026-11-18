@@ -26,11 +26,11 @@ export interface CuiConfirmDialogProps extends HideableProps, TitleAsProps, Over
   /** Confirmation message */
   message?: string;
   /**
-   * Variant — picks the icon and the confirm button's colour. `primary` is for a routine,
+   * Variant — picks the icon and the confirm button's color. `primary` is for a routine,
    * non-destructive confirm.
    */
   variant?: ConfirmDialogVariant;
-  /** Confirm button colour, overriding the variant's. The icon tile keeps the variant's colour. */
+  /** Confirm button color, overriding the variant's. The icon tile keeps the variant's color. */
   confirmColor?: CuiColor;
   /** Confirm button text */
   confirmText?: string;
@@ -116,7 +116,7 @@ const accent = computed(() => ({
   "--_confirm-dialog-border": `var(--cui-${cfg.value.role}-border)`,
   "--_confirm-dialog-color": `var(--cui-${cfg.value.role})`,
 }));
-// The prompt is a tinted box with no icon: it has no use for the colour.
+// The prompt is a tinted box with no icon: it has no use for the color.
 const promptAccent = computed(() => ({
   "--_confirm-dialog-bg": accent.value["--_confirm-dialog-bg"],
   "--_confirm-dialog-border": accent.value["--_confirm-dialog-border"],

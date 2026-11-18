@@ -99,7 +99,7 @@ function clearQuery() {
 const inputRef = ref<HTMLInputElement | null>(null);
 const panelRef = ref<InstanceType<typeof CuiListboxPanel> | null>(null);
 const messages = useMessages();
-// The prose props default to the message catalogue, so a localised app localises them (#215).
+// The prose props default to the message catalogue, so a localized app localizes them (#215).
 const placeholderText = computed(() => props.placeholder ?? messages.value.tagInput.placeholder);
 const noSuggestionsLabel = computed(() => props.noSuggestionsText ?? messages.value.tagInput.noSuggestions);
 // `createText`, when given, keeps its old shape: the word, then the quoted value.
@@ -112,7 +112,7 @@ const controlRef = ref<HTMLElement | null>(null);
 const selectedSet = computed(() => new Set(props.modelValue));
 const atMax = computed(() => props.maxTags > 0 && props.modelValue.length >= props.maxTags);
 
-// Every suggestion seen, so a tag keeps its label and colour after the search that found
+// Every suggestion seen, so a tag keeps its label and color after the search that found
 // it is replaced, cleared or fails — as CuiCombobox's allKnownOptions does.
 // Reactive, so a chip re-renders with the label once the search that names it lands.
 const seenSuggestions = reactive(new Map<string, TagOption>());
@@ -384,6 +384,7 @@ defineExpose({ el: wrapperRef, focus, blur });
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="tag-input"
+      @close="isOpen = false"
       :color="color"
       :max-height="240"
       :font-size="cfg.style['--_tag-input-font-size']"
@@ -455,7 +456,7 @@ defineExpose({ el: wrapperRef, focus, blur });
   color: var(--cui-tag-input-color, var(--cui-text-body));
 }
 
-/* An invalid field keeps its error colour whatever a consumer's token says, so a themed
+/* An invalid field keeps its error color whatever a consumer's token says, so a themed
    border cannot hide it. Normal specificity, on purpose. */
 .cui-tag-input__control--error {
   border-color: var(--cui-error);

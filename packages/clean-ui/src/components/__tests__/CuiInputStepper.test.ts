@@ -78,7 +78,7 @@ describe("CuiInputStepper keyboard", () => {
     expect(lastValue(down)).toBe(4);
   });
 
-  it("honours step", async () => {
+  it("honors step", async () => {
     const wrapper = mountStepper({ modelValue: 10, step: 5, max: 100 });
     await wrapper.find("input").trigger("keydown", { key: "ArrowUp" });
     expect(lastValue(wrapper)).toBe(15);

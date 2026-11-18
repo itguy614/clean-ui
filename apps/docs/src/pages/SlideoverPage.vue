@@ -124,6 +124,13 @@ const formAgree = ref(false);
         </li>
         <li>Background scrolling is locked while the panel is open.</li>
         <li>
+          On touch and pen, dragging the panel toward its edge closes it, by distance or by a
+          quick flick, and a released drag short of that springs back. A mouse never drags it, so
+          text selection and clicks are untouched, and it is off while <code>persistent</code>
+          (or with <code>noDrag</code>). It is a convenience only: the X button, Escape and the
+          backdrop always close it too.
+        </li>
+        <li>
           <code>titleAs</code> sets the element the title renders as, defaulting to
           <code>h2</code>. It is forwarded to <code>CuiModalHeader</code>, so it works in simple
           mode and when you assemble the header yourself.
@@ -134,9 +141,9 @@ const formAgree = ref(false);
           trapping focus and locking the scroll.
         </li>
         <li>
-          The panel has no accessible name today: <code>aria-labelledby</code> is emitted, but
-          the id it names is never put on the title element. Add your own
-          <code>aria-label</code> if the name matters to you.
+          With a <code>title</code>, the panel is named by it: <code>aria-labelledby</code>
+          points at the title element. Without one, add your own <code>aria-label</code> (or an
+          <code>aria-labelledby</code> naming your heading), which overrides the panel's.
         </li>
       </ul>
     </template>

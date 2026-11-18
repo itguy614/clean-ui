@@ -111,7 +111,7 @@ describe("exit transitions (real browser)", () => {
     expect(panel()).toBeNull();
   });
 
-  // The state was a class once: a panel whose own `:class` changed mid-exit (a colour, a
+  // The state was a class once: a panel whose own `:class` changed mid-exit (a color, a
   // side flipped) had it stripped by Vue's className rewrite, and vanished at once.
   it("keeps playing a panel's exit when its own class binding changes mid-way", async () => {
     const w = track(mount(CuiTooltip, { props: { text: "Tip", visible: true }, slots: { default: () => h("button", "Tip") }, attachTo: host() }));

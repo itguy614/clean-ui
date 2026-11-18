@@ -49,7 +49,7 @@
 
 /* Declared on every theme scope as well as the root (#329). A custom property's `var()`
    resolves where it is declared, and descendants inherit the result — so declared on
-   `:root` alone, `--cui-primary: var(--color-primary-500)` stayed the page theme's colour
+   `:root` alone, `--cui-primary: var(--color-primary-500)` stayed the page theme's color
    inside a scoped `<div class="cui-theme-forest">`, which changes only the scale. Each
    theme scope re-declares the slots that read its scale — the rest are on `:root` alone,
    below, so a theme scope doesn't reset a container's own value for them. The theme
@@ -183,7 +183,7 @@
   --cui-info-muted:      oklch(0.76 0.04 230);
 }
 
-/* Not a colour, so on the root only: a theme scope must not reset a container's own radii. */
+/* Not a color, so on the root only: a theme scope must not reset a container's own radii. */
 :root {
   /* --- Radius scale ---
      One source for corner radii. Component tokens alias these rather than each other:
@@ -354,7 +354,7 @@
 /* ============================================================
    ELEVATION (#224)
    Drop shadows, stronger in dark mode where a soft one disappears against a dark
-   surface. Black at an alpha, not a colour, so they stay on the root (and `.dark`) and
+   surface. Black at an alpha, not a color, so they stay on the root (and `.dark`) and
    don't re-resolve per theme scope. Override on `:root` or a container.
      xs — a card resting on the page (CuiCard elevated); faint
      sm — a small control floating over content (the editor's mode toggle)
@@ -389,13 +389,13 @@
    `150ms` or `0.2s`: JS can't resolve a `calc()` in a custom property. JS waits read the same values through
    `motionDuration()` (utils/motion.ts), so a timer and its CSS can't drift apart.
      press   — a button press, a toggle knob, a menu row's hover
-     fast    — tooltips, small popovers, colour changes, and every exit
+     fast    — tooltips, small popovers, color changes, and every exit
      base    — dropdowns, selects, popovers
      slow    — modals, slideovers, toasts
    UI motion stays under 300ms, and exits run faster than entries. Easing:
      ease-out    — anything entering or leaving
      ease-in-out — something moving on screen (a knob, a chevron turning)
-     plain `ease` — colour and hover changes; `linear` — constant loops
+     plain `ease` — color and hover changes; `linear` — constant loops
    ============================================================ */
 
 :root {
@@ -496,7 +496,7 @@
    (#147), each under an exclusion: an element carrying a component's `cui-*` class belongs
    to that component, which styles it, and a scope put around components (the docs site's
    `<main>`, a `CuiCardBody`) must not repaint it — a card title's `<h3>` took the prose size
-   (#129), a solid link button its background as its label colour (#114), a breadcrumb's list
+   (#129), a solid link button its background as its label color (#114), a breadcrumb's list
    the prose markers, a table's cells the prose padding whatever its `size`.
 
    Specificity is what each rule had as `.cui-typography <selector>`: the predicates are
@@ -545,7 +545,7 @@
 
 /* The rest of prose. Here the typography layer's own helpers are let through — so
    `<p class="cui-lead">` keeps paragraph spacing and `<pre><code class="cui-code">` loses the
-   inline-code chip, as they did before #147. Their colours lose to the prose ones at (0,1,1),
+   inline-code chip, as they did before #147. Their colors lose to the prose ones at (0,1,1),
    also as before. `cui-kbd` is not among them: it is CuiKbd's root. The list helpers aren't
    either, so `cui-list-unstyled` and `cui-list-inline` now actually remove the prose markers. */
 .cui-typography :where(
@@ -965,7 +965,7 @@
    REDUCED MOTION (#265)
    The OS "Reduce Motion" setting removes movement — translate, scale, rotate, sliding,
    growing — and keeps fades, which don't trigger vestibular symptoms and still show what
-   changed. Only opacity transitions; colour changes are instant (still no motion), and no
+   changed. Only opacity transitions; color changes are instant (still no motion), and no
    transition the author didn't declare is added. Durations are untouched, so JS waits
    (motionDuration, afterAnimations) still match the CSS. (Narrowing the property list
    re-pairs a multi-property transition's durations by index, so a transition that has an
@@ -976,7 +976,7 @@
    ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  /* 1. Only opacity transitions. A transform, a layout change or a colour snaps. */
+  /* 1. Only opacity transitions. A transform, a layout change or a color snaps. */
   :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)),
   :where([class^="cui-"], [class*=" cui-"]):not(:where(.cui-typography, [class*="cui-scrollbar"], [class*="cui-theme-"], [class*="cui-density-"], [class*="cui-list-"], .cui-table-wrapper)) * {
     transition-property: opacity !important;
@@ -989,13 +989,18 @@
   [data-cui-panel="hidden"],
   .cui-toast-enter-from,
   .cui-toast-leave-to,
-  [data-cui-exit],
+  /* A panel being dragged is skipped (#268, #527): following the finger is direct manipulation,
+     not animation, and a dismissal after a drag keeps the drag's offset while it fades (the
+     drag marks it until it is shown again or gone). Only a drag: an open panel's own transform
+     is neutralized like any other, and a drawer's snap point is a `translate`, not this. */
+  [data-cui-exit]:not([data-cui-dragging]),
   [class*="cui-alert--entrance-slide"] {
     transform: none !important;
   }
 
   /* A slideover's panel only slid: standing still, it fades instead. */
-  .cui-slideover__panel:not(.cui-slideover__panel--visible) {
+  .cui-slideover__panel:not(.cui-slideover__panel--visible),
+  .cui-drawer__panel:not(.cui-drawer__panel--visible) {
     opacity: 0;
   }
 

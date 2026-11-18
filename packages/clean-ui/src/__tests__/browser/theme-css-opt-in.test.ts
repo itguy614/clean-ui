@@ -7,7 +7,7 @@ import { useTheme } from "../../composables/useTheme";
 import { __clearWarned } from "../../utils/devWarn";
 
 /**
- * #220 — the non-default palettes are opt-in files. A themed region must resolve its colours
+ * #220 — the non-default palettes are opt-in files. A themed region must resolve its colors
  * from exactly the files loaded: with its file it is that theme in light and dark, in any order
  * relative to the other theme files, and without it the class is inert and the region stays on
  * the page's Navy. Real browser: the cascade and computed values.
@@ -37,7 +37,7 @@ afterEach(() => {
   document.documentElement.className = "";
 });
 
-/** The colour a probe paints with `background: <value>` inside an element of class `className`. */
+/** The color a probe paints with `background: <value>` inside an element of class `className`. */
 function paint(value: string, className: string): string {
   const host = document.createElement("div");
   host.id = "fixture";
@@ -59,7 +59,7 @@ const slot = (className: string, dark = false) => {
 const hex = (value: string) => paint(value, "");
 
 describe("a scoped theme with only its own file loaded (real browser)", () => {
-  it("resolves the theme's colours in light and dark", () => {
+  it("resolves the theme's colors in light and dark", () => {
     loadBase();
     load(themeCss.forest);
     expect(slot("cui-theme-forest")).toBe(hex(FOREST.light));
@@ -94,9 +94,9 @@ describe("a scoped theme with only its own file loaded (real browser)", () => {
     const navy = slot("");
     const seen = new Set<string>();
     for (const name of Object.keys(themeCss)) {
-      const colour = slot(`cui-theme-${name}`);
-      expect(colour, name).not.toBe(navy);
-      seen.add(colour);
+      const color = slot(`cui-theme-${name}`);
+      expect(color, name).not.toBe(navy);
+      seen.add(color);
     }
     expect(seen.size).toBe(Object.keys(themeCss).length);
   });

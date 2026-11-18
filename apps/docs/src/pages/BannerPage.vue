@@ -29,13 +29,13 @@ const show4 = ref(true);
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         A banner announces itself: <code>error</code> becomes an assertive
-        <code>role="alert"</code>, every other colour a polite <code>role="status"</code>.
+        <code>role="alert"</code>, every other color a polite <code>role="status"</code>.
         Set <code>live="off"</code> to silence a promotional banner that should not
         interrupt.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          The role icon is decorative and the message carries the meaning, so colour is
+          The role icon is decorative and the message carries the meaning, so color is
           never the only signal. <code>error</code> uses an octagon rather than an
           <code>✕</code> — a cross reads as "close", and beside the dismiss button it read
           as a second one.

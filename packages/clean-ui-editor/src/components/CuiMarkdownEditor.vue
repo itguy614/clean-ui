@@ -263,7 +263,7 @@ function maxLengthFilter(tr: Transaction) {
 
 // clean-ui's dark mode is a `.dark` class that can land on any ancestor at
 // any time — CodeMirror's own base theme picks its (hardcoded, non-token)
-// caret/selection colours from a `dark` flag fixed when its theme extension
+// caret/selection colors from a `dark` flag fixed when its theme extension
 // was built, so that flag must be re-driven through a compartment whenever
 // this signal changes, not just read once at mount (see src/theme/editor-theme.ts).
 const { isDark } = useColorScheme(rootRef);

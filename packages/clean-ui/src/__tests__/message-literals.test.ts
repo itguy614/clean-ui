@@ -4,7 +4,7 @@ import { join, relative, resolve, sep } from "node:path";
 import { parse } from "vue/compiler-sfc";
 
 /**
- * #215 — a user-facing string belongs in the message catalogue, or a fully localised app
+ * #215 — a user-facing string belongs in the message catalogue, or a fully localized app
  * still shows English: "Filters", "Today", "Save current", a pagination landmark named
  * "Pagination". This fails on any literal a component's template puts in front of a user —
  * a text node, a string literal inside `{{ }}`, or the value of a prose attribute (`aria-*`,

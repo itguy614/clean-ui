@@ -35,7 +35,7 @@ const meta: ComponentMeta = {
     {
       name: "default",
       description:
-        "The buttons. CuiButton, CuiDropdown and CuiRadio's buttons variant are all recognised as members — anything else keeps its own corners",
+        "The buttons. CuiButton, CuiDropdown and CuiRadio's buttons variant are all recognized as members — anything else keeps its own corners",
     },
   ],
 };

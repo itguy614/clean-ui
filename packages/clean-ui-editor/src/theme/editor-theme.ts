@@ -65,7 +65,7 @@ function slashMenuSpec() {
 }
 
 /**
- * `dark` must reflect clean-ui's actual runtime colour-scheme signal (see
+ * `dark` must reflect clean-ui's actual runtime color-scheme signal (see
  * `useColorScheme` in `@itguy614/clean-ui`), not a static guess — it's what
  * flips CodeMirror's internal `.cm-light`/`.cm-dark` class, which every
  * `&light`/`&dark`-scoped selector above (and any future plugin relying on

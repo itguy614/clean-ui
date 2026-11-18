@@ -40,7 +40,7 @@ useButtonGroupProvider({ orientation: () => props.orientation, el: useTemplateRe
 
 <style scoped>
 /* Merged buttons share their borders, so one shrinking on press (#261) would open seams
-   against its neighbours. A token, not a rule, so a group can still opt back in. */
+   against its neighbors. A token, not a rule, so a group can still opt back in. */
 :where(.cui-button-group) {
   --cui-press-scale: 1;
 }

@@ -91,7 +91,7 @@ describe("CuiFormField label click", () => {
     w.unmount();
   });
 
-  it("leaves a native input to the label's own behaviour", async () => {
+  it("leaves a native input to the label's own behavior", async () => {
     const w = mountField((f) => h("input", { id: f.id as string }));
     const input = w.find("input").element as HTMLInputElement;
     let focusCalls = 0;

@@ -103,13 +103,13 @@ export function useDataGrid(options: UseDataGridOptions) {
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        The block is dark in both colour modes on purpose — code is read character by
+        The block is dark in both color modes on purpose — code is read character by
         character, and a fixed palette keeps that contrast the same everywhere rather than
         leaving it to whichever theme is active.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
-          There is no syntax highlighting, so no meaning is ever carried by colour alone.
+          There is no syntax highlighting, so no meaning is ever carried by color alone.
           <code>highlightLines</code> is the one exception, and it marks a line with a left
           edge and a tint rather than by hue — but the reason a line matters still belongs
           in the surrounding prose.

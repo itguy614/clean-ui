@@ -320,8 +320,8 @@ function prefixIsIcon(): boolean {
 /* --- Floating label (#191) ---
    The field's label sits inside the box, above the value: the value (and prefix or suffix
    text beside it, so their baselines match) is pushed down by the floated label's line
-   box, and stays centred in what is left. An icon, like the clear and password buttons,
-   stays centred on the full height. */
+   box, and stays centered in what is left. An icon, like the clear and password buttons,
+   stays centered on the full height. */
 :where(.cui-input--floating .cui-input__native, .cui-input--floating :is(.cui-input__prefix, .cui-input__suffix):not(:has(> .cui-icon:only-child))) {
   align-self: stretch;
   padding-top: var(--_input-float-offset);
@@ -329,7 +329,7 @@ function prefixIsIcon(): boolean {
 
 /* A resting label stands where the placeholder would, so it shows only once the label has
    floated: on focus. A pinned label never rests, so its control's placeholder always shows.
-   Behaviour rather than paint, so at normal specificity, above the placeholder colour. */
+   Behavior rather than paint, so at normal specificity, above the placeholder color. */
 .cui-input__native[data-cui-float-label]:not([data-cui-float-label~="pinned"]):not(:focus)::placeholder {
   color: transparent;
 }
@@ -428,7 +428,7 @@ function prefixIsIcon(): boolean {
   border-left-style: solid;
 }
 
-/* The separators take the field's border colour, so one token recolours both. An invalid
+/* The separators take the field's border color, so one token recolors both. An invalid
    field's stay red whatever the token says, as its outer border does. */
 :where(.cui-input__prefix-button) {
   border-right-color: var(--cui-input-border, var(--_input-border));
@@ -472,7 +472,7 @@ function prefixIsIcon(): boolean {
 .cui-input--error:focus-within {
   border-color: var(--cui-error);
   /* The error ring, at normal specificity so a themed `--cui-input-focus-ring` (which
-     recolours the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
+     recolors the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
      slot, as for CuiSelect and CuiCombobox (#454). */
   box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }

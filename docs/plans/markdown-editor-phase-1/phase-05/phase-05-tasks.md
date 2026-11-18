@@ -2,7 +2,7 @@
 
 ## Overview
 
-Make the editor a form control that behaves like every other clean-ui control, and localise it
+Make the editor a form control that behaves like every other clean-ui control, and localize it
 through the library's catalog. The length limit is the one place copying `CuiTextarea` would be
 wrong, because truncating markdown corrupts it.
 
@@ -40,7 +40,7 @@ wrong, because truncating markdown corrupts it.
 
 **Description:**
 Label, description, error, error message, required, readonly and disabled, following the library's
-error convention — the wrapper's own border recoloured with the message below — plus `aria-invalid`.
+error convention — the wrapper's own border recolored with the message below — plus `aria-invalid`.
 Note the boundary discovered during review: `required` is presentational throughout clean-ui, since
 `CuiForm` validates only through a resolver and has no field registration. Do not build a private
 validation path here to fake it.
@@ -120,7 +120,7 @@ decoration, not a real text node, so "not selectable/never part of the value" ho
 
 **Description:**
 Assert parity with a sibling control rather than asserting the editor's own markup: same label
-association, same error presentation, same resolver behaviour. Parity is the actual requirement, and
+association, same error presentation, same resolver behavior. Parity is the actual requirement, and
 it survives refactors that a markup snapshot would not.
 
 **Acceptance Criteria:**
@@ -138,7 +138,7 @@ real asymmetry found — `CuiTextarea`'s label-`for` target is broken (see 5.1.1
 
 ---
 
-### Group 5.2: Limits and localisation
+### Group 5.2: Limits and localization
 
 #### Task 5.2.1: `maxLength` that refuses rather than truncates
 

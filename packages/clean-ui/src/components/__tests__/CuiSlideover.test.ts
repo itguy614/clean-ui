@@ -36,6 +36,15 @@ describe("CuiSlideover", () => {
     wrapper.unmount();
   });
 
+  it("names the dialog by its title: aria-labelledby resolves to the heading (#524)", async () => {
+    const wrapper = mount(CuiSlideover, { props: { visible: true, title: "Settings" } });
+    await vi.runAllTimersAsync();
+    const dialog = document.body.querySelector('[role="dialog"]')!;
+    const heading = document.getElementById(dialog.getAttribute("aria-labelledby")!);
+    expect(heading?.textContent).toContain("Settings");
+    wrapper.unmount();
+  });
+
   it("closing via v-model emits update:visible=false and removes the dialog after the exit animation", async () => {
     const wrapper = mount(CuiSlideover, { props: { visible: true } });
     await vi.runAllTimersAsync();

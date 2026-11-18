@@ -239,7 +239,7 @@ describe("CuiCombobox highlight when the list changes", () => {
     await input.trigger("keydown", { key: "ArrowDown" });
     await input.trigger("keydown", { key: "ArrowDown" });
     expect(highlighted()).toBe("Banana");
-    options.unshift({ value: "fav", label: "★ Favourite" });
+    options.unshift({ value: "fav", label: "★ Favorite" });
     await nextTick();
     expect(highlighted()).toBe("Banana");
   });

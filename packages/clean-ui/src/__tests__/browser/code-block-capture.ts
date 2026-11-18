@@ -66,7 +66,7 @@ export interface Scenario {
 const settle = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
 export async function capture(scenario: Scenario, hover?: (el: Element) => Promise<void>) {
-  // A hover colour is a transition: measure where it lands, not partway.
+  // A hover color is a transition: measure where it lands, not partway.
   const still = document.createElement("style");
   still.textContent = "*, *::before, *::after { transition: none !important; }";
   document.head.append(still);

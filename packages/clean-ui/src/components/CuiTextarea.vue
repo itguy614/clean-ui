@@ -231,7 +231,7 @@ const floatingLabel = useFloatingLabel(
 .cui-textarea--error:focus-within {
   border-color: var(--cui-error);
   /* The error ring, at normal specificity so a themed `--cui-textarea-focus-ring` (which
-     recolours the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
+     recolors the normal ring) can't hide an invalid field; `--cui-error-focus-ring` is its
      slot, as for CuiSelect and CuiCombobox (#454). */
   box-shadow: 0 0 0 2px var(--cui-error-focus-ring);
 }

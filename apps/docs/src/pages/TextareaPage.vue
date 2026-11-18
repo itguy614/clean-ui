@@ -38,7 +38,7 @@ const errorVal = ref("");
         <li>
           <code>error</code> sets <code>aria-invalid</code> on the native textarea and
           recolors the border. Exceeding <code>maxLength</code> does the same, so the
-          over-limit state is not signalled by the counter's colour alone.
+          over-limit state is not signalled by the counter's color alone.
         </li>
         <li>
           <code>id</code>, <code>name</code>, <code>autocomplete</code>,

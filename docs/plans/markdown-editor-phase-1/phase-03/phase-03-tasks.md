@@ -41,8 +41,8 @@ than just commands.
 
 **Description:**
 The factory and its typed record: `id`, `commands`, and optionally `toolbar`, `keymap`, the
-`constructs` the plugin authorises, `paste` rules with an explicit degrade target, `decorations`
-rules mapping parser nodes to reveal behaviour, and raw CodeMirror `extensions`. Stamp the API
+`constructs` the plugin authorizes, `paste` rules with an explicit degrade target, `decorations`
+rules mapping parser nodes to reveal behavior, and raw CodeMirror `extensions`. Stamp the API
 version so an incompatible plugin is rejected at registration with a named mismatch rather than
 failing later at a missing helper.
 
@@ -150,7 +150,7 @@ Phase 04's task 4.2.2, the seam's first real consumer, exactly as the spec descr
 
 ---
 
-### Group 3.2: Registry behaviour
+### Group 3.2: Registry behavior
 
 #### Task 3.2.1: Registration, precedence and conflicts
 
@@ -265,16 +265,16 @@ over-engineering for a tier with no real raw-extension-using plugin yet (the fir
 **Description:**
 Cover the registry's contract: precedence, conflicts, override, reactivity with state preservation,
 invalid configuration rollback, failure containment, and API version rejection. These are the
-behaviours a third-party plugin author depends on, so they are the ones that must not regress
+behaviors a third-party plugin author depends on, so they are the ones that must not regress
 quietly.
 
 **Acceptance Criteria:**
-- [x] Each behaviour above has a test that fails when the behaviour is removed
+- [x] Each behavior above has a test that fails when the behavior is removed
 - [x] Tests run in the jsdom project where possible, browser project where layout is involved
 
 Note: 32 new tests across four files (`define-plugin.test.ts`, `registry.test.ts`,
 `command-context.test.ts`, `plugin-integration.test.ts`) — all in the jsdom project. No browser
 (Playwright) verification was needed this phase: unlike Phase 02's reveal layer and theming, every
-behaviour here (command dispatch, registry precedence, async `collect()` resolution, reconfigure)
+behavior here (command dispatch, registry precedence, async `collect()` resolution, reconfigure)
 is pure state/JS logic with no layout, CSS cascade, or accessibility-tree dependency — exactly the
 "where layout is involved" carve-out this AC anticipates.

@@ -131,7 +131,7 @@ const formAgree = ref(false);
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
         The panel is a <code>role="dialog"</code> with <code>aria-modal="true"</code>, and the
-        overlay behaviour — focus, trapping, Escape and the scroll lock — lives in the shared
+        overlay behavior — focus, trapping, Escape and the scroll lock — lives in the shared
         <code>useOverlay</code> composable, so Modal, Slideover and Confirm Dialog all behave
         identically.
       </p>
@@ -161,10 +161,9 @@ const formAgree = ref(false);
           <code>h2</code>. Pick the level that fits the page the modal was opened from.
         </li>
         <li>
-          A modal is not announced by its title today: <code>aria-labelledby</code> is emitted,
-          but the id it names is never put on the title element, so the dialog has no accessible
-          name. Until that is fixed, give the panel its own <code>aria-label</code> if the name
-          matters to you.
+          With a <code>title</code>, the dialog is named by it: <code>aria-labelledby</code>
+          points at the title element. Without one, add your own <code>aria-label</code>, or pass
+          <code>aria-labelledby</code> naming your heading, which overrides the panel's.
         </li>
       </ul>
     </template>
@@ -697,7 +696,7 @@ const formAgree = ref(false);
           </CuiModal>
           <p class="mt-3 text-sm text-surface-600 dark:text-surface-400">
             Reach for <code class="cui-code">CuiConfirmDialog</code> before hand-rolling this —
-            it already has the role icon, the matching confirm colour and the type-the-word gate.
+            it already has the role icon, the matching confirm color and the type-the-word gate.
           </p>
         </Example>
     </template>

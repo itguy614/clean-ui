@@ -7,7 +7,7 @@ import CuiButton from "../../components/CuiButton.vue";
 
 /**
  * #120 — `CuiBanner` assumed it was pinned to a page edge: a `border-bottom` with no
- * radius, which inside a padded card renders as a stray coloured line with square corners
+ * radius, which inside a padded card renders as a stray colored line with square corners
  * against rounded surroundings. `inline` takes it out of the sticky flow and closes the
  * box instead.
  *
@@ -75,7 +75,7 @@ describe("CuiBanner inline (real browser)", () => {
     expect(css(el).bottom).toBe("auto");
   });
 
-  it("composes with the colour treatment rather than replacing it", () => {
+  it("composes with the color treatment rather than replacing it", () => {
     // The reason `inline` is a boolean and not a `variant` value: an inline banner must
     // still be able to be solid.
     const solid = banner({ position: "inline", variant: "solid", color: "error" });

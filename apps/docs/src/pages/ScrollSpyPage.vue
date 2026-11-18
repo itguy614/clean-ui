@@ -66,7 +66,7 @@ function go(e, id) {
 </template>`;
 
 const pageCode = `// The whole page scrolls: leave root out. The docs header is 56px tall; the headings' own
-// scroll-margin-top (4.5rem, for #hash links) is larger, and scrollTo honours it.
+// scroll-margin-top (4.5rem, for #hash links) is larger, and scrollTo honors it.
 const { activeId, scrollTo } = useScrollSpy(
   () => headings.value.map((h) => h.id),
   { rootMargin: "0px 0px -80% 0px", offset: 56, initial: () => headings.value[0]?.id },
@@ -241,7 +241,7 @@ const returns = [
           </li>
           <li>With your system set to reduce motion, the clicks jump instead of gliding.</li>
           <li>Press <em>Add a section</em>: the new heading joins the nav and is tracked straight away.</li>
-          <li>The current entry is bold, with a wider bar, and carries <code class="cui-code">aria-current="location"</code>: not colour alone.</li>
+          <li>The current entry is bold, with a wider bar, and carries <code class="cui-code">aria-current="location"</code>: not color alone.</li>
         </ul>
       </CuiCardBody>
     </CuiCard>
@@ -298,7 +298,7 @@ const returns = [
             It doesn't render the nav. Make it real links
             (<code class="cui-code">href="#id"</code>) that call <code class="cui-code">scrollTo</code>
             on a plain click, give it an accessible name, and mark the current entry with
-            <code class="cui-code">aria-current="location"</code> and something besides colour.
+            <code class="cui-code">aria-current="location"</code> and something besides color.
             <code class="cui-code">scrollTo</code> doesn't move focus: give the heading
             <code class="cui-code">tabindex="-1"</code> and focus it with
             <code class="cui-code">preventScroll</code>, as this site's rail does.

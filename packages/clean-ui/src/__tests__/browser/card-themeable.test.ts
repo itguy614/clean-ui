@@ -77,7 +77,7 @@ describe("CuiCard themeable properties (real browser)", () => {
       expect(paint(w.element, "padding-top")).toBe("7px");
     });
 
-    it("still honours noPadding", () => {
+    it("still honors noPadding", () => {
       const w = mount(CuiCardBody, { props: { noPadding: true }, attachTo: host() });
       expect(paint(w.element, "padding-top")).toBe("0px");
     });

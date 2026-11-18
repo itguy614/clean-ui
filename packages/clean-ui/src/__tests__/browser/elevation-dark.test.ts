@@ -7,6 +7,7 @@ import CuiCard from "../../components/CuiCard.vue";
 import CuiPopover from "../../components/CuiPopover.vue";
 import CuiToast from "../../components/CuiToast.vue";
 import CuiSlideover from "../../components/CuiSlideover.vue";
+import CuiDrawer from "../../components/CuiDrawer.vue";
 import CuiSelect from "../../components/CuiSelect.vue";
 import CuiButton from "../../components/CuiButton.vue";
 import CuiDropdown from "../../components/CuiDropdown.vue";
@@ -48,7 +49,7 @@ describe("elevated surfaces strengthen their shadow in dark mode (real browser)"
     probe.remove();
     return resolved;
   }
-  const LEVEL: Record<string, string> = { CuiCard: "xs", CuiPopover: "md", CuiToast: "md", CuiSlideover: "lg", CuiListboxPanel: "md" };
+  const LEVEL: Record<string, string> = { CuiCard: "xs", CuiPopover: "md", CuiToast: "md", CuiSlideover: "lg", CuiDrawer: "lg", CuiListboxPanel: "md" };
 
   const SURFACES: Record<string, () => Promise<HTMLElement>> = {
     async CuiCard() {
@@ -76,6 +77,11 @@ describe("elevated surfaces strengthen their shadow in dark mode (real browser)"
       fixtures.track(mount(CuiSlideover, { props: { visible: true, title: "Sheet" }, slots: { default: "Body" }, attachTo: fixtures.host() }));
       await settle();
       return document.querySelector<HTMLElement>(".cui-slideover__panel")!;
+    },
+    async CuiDrawer() {
+      fixtures.track(mount(CuiDrawer, { props: { visible: true, title: "Sheet" }, slots: { default: "Body" }, attachTo: fixtures.host() }));
+      await settle();
+      return document.querySelector<HTMLElement>(".cui-drawer__panel")!;
     },
     async CuiListboxPanel() {
       const w = fixtures.track(mount(CuiSelect, { props: { options: [{ value: "a", label: "A" }] }, attachTo: fixtures.host() }));

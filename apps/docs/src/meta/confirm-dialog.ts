@@ -84,8 +84,8 @@ const meta: ComponentMeta = {
   tokens: [
     { name: "--cui-confirm-dialog-icon-radius", default: "0.625rem", description: "Corner radius of the icon tile" },
     { name: "--cui-confirm-dialog-bg", default: "var(--cui-<variant>-bg)", description: "Fill of the icon tile and the typed-word prompt. The default is the variant's tint" },
-    { name: "--cui-confirm-dialog-border", default: "var(--cui-<variant>-border)", description: "Border colour of the icon tile and the typed-word prompt" },
-    { name: "--cui-confirm-dialog-color", default: "var(--cui-<variant>)", description: "Icon colour on the tile" },
+    { name: "--cui-confirm-dialog-border", default: "var(--cui-<variant>-border)", description: "Border color of the icon tile and the typed-word prompt" },
+    { name: "--cui-confirm-dialog-color", default: "var(--cui-<variant>)", description: "Icon color on the tile" },
     { name: "--cui-confirm-dialog-gap", default: "0.875rem (density)", description: "Space between the icon tile, the text and the close button" },
     { name: "--cui-confirm-dialog-px", default: "1.5rem (density)", description: "Horizontal padding of the title row" },
     { name: "--cui-modal-width", default: "per size", description: "Panel max-width, shared with CuiModal" },

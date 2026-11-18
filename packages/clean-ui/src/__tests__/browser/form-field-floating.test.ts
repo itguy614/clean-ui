@@ -17,7 +17,7 @@ import CuiIcon from "../../components/CuiIcon.vue";
 /**
  * #191 — `labelPosition="floating"` is an inset label, CSS only: `:placeholder-shown` /
  * `:focus-within` on a control that marked itself, inside a box one size step taller. So it
- * is all laid-out geometry and resolved colour, which only a real browser has; jsdom
+ * is all laid-out geometry and resolved color, which only a real browser has; jsdom
  * evaluates neither `:has()` nor a transform.
  */
 describe("CuiFormField floating label (real browser)", () => {
@@ -25,7 +25,7 @@ describe("CuiFormField floating label (real browser)", () => {
   beforeAll(() => {
     // The real stylesheet, so the theme scales are the shipped ones — the default scale too,
     // which lives in a Tailwind `@theme` that is inert as raw CSS. Without it an undefined
-    // `--color-*` drops the controls' borders and leaves the labels' colours inherited.
+    // `--color-*` drops the controls' borders and leaves the labels' colors inherited.
     // Transitions finish at once, so a measurement is of the state, not a frame on the way.
     removeStyle = injectStyle(`${main}
       ${allThemesCss}
@@ -78,17 +78,17 @@ describe("CuiFormField floating label (real browser)", () => {
     const l = rect(label), b = rect(box);
     return l.top >= b.top - 0.5 && l.bottom <= b.bottom + 0.5 && l.left >= b.left - 0.5 && l.right <= b.right + 0.5;
   }
-  /** The value's line box: centred in the native input's content box, line-height 1.25. */
+  /** The value's line box: centered in the native input's content box, line-height 1.25. */
   function valueLine(native: HTMLElement) {
     const r = rect(native);
     const top = r.top + px(native, "padding-top"), bottom = r.bottom - px(native, "padding-bottom");
     const v = px(native, "font-size") * 1.25;
     return { top: (top + bottom) / 2 - v / 2, bottom: (top + bottom) / 2 + v / 2 };
   }
-  /** Resting: the label is the value's size, centred in the box. */
+  /** Resting: the label is the value's size, centered in the box. */
   const rests = (label: HTMLElement, box: HTMLElement) => Math.abs(mid(rect(label)) - mid(rect(box))) < 1;
 
-  it("rests centred where the text starts, and floats inside the box above the value", async () => {
+  it("rests centered where the text starts, and floats inside the box above the value", async () => {
     const { label, box, native } = field(CuiInput);
     await frames(2);
     expect(rests(label, box)).toBe(true);
@@ -106,7 +106,7 @@ describe("CuiFormField floating label (real browser)", () => {
     // 12px in a 15px line box, at the same start: no translateX.
     expect(floated.height).toBeCloseTo(15, 0);
     expect(Math.abs(floated.left - resting.left)).toBeLessThan(1);
-    // Directly above the value, the two centred in the box as a pair.
+    // Directly above the value, the two centered in the box as a pair.
     const value = valueLine(native);
     expect(Math.abs(floated.bottom - value.top)).toBeLessThan(1);
     expect(Math.abs((floated.top + value.bottom) / 2 - mid(rect(box)))).toBeLessThan(1);
@@ -195,7 +195,7 @@ describe("CuiFormField floating label (real browser)", () => {
     expect(overlaps(rect(label), rect(icon))).toBe(false);
   });
 
-  it("keeps the clear and password buttons centred on the full height, clear of a resting label", async () => {
+  it("keeps the clear and password buttons centered on the full height, clear of a resting label", async () => {
     const long = "Preferred contact email address for receipts and invoices";
     const { root, label, box } = field(CuiInput, { label: long }, { type: "password" });
     await frames(2);
@@ -284,7 +284,7 @@ describe("CuiFormField floating label (real browser)", () => {
     const { label } = field(CuiInput, {}, { modelValue: "ada@example.com" });
     await frames(2);
     const l = rect(label);
-    // What a real click at the label's centre would hit.
+    // What a real click at the label's center would hit.
     const hit = document.elementFromPoint((l.left + l.right) / 2, (l.top + l.bottom) / 2);
     expect(hit?.closest("label")).toBe(label.parentElement);
   });
@@ -319,9 +319,9 @@ describe("CuiFormField floating label (real browser)", () => {
     expect(Math.round(rect(root.querySelector(".cui-form-field__label-text")!).height)).toBeGreaterThan(17);
   });
 
-  // --- Colour ---
+  // --- Color ---
 
-  /** A colour as the browser resolves it, through a probe carrying it. */
+  /** A color as the browser resolves it, through a probe carrying it. */
   function resolved(token: string) {
     const probe = document.createElement("span");
     probe.style.color = `var(${token})`;
@@ -331,7 +331,7 @@ describe("CuiFormField floating label (real browser)", () => {
     return c;
   }
 
-  it("is secondary at rest and tertiary floated, and focus does not recolour it", async () => {
+  it("is secondary at rest and tertiary floated, and focus does not recolor it", async () => {
     const { labelEl, native } = field(CuiInput);
     await frames(2);
     expect(getComputedStyle(labelEl).color).toBe(resolved("--cui-text-secondary"));
@@ -344,7 +344,7 @@ describe("CuiFormField floating label (real browser)", () => {
     expect(getComputedStyle(filled.labelEl).color).toBe(resolved("--cui-text-tertiary"));
   });
 
-  it("is the error colour resting and floated", async () => {
+  it("is the error color resting and floated", async () => {
     const { labelEl, native } = field(CuiInput, { error: true, errorMessage: "Enter an email" });
     await frames(2);
     expect(getComputedStyle(labelEl).color).toBe(resolved("--cui-error"));
@@ -361,7 +361,7 @@ describe("CuiFormField floating label (real browser)", () => {
 
   // --- Contrast: the floated label is 12px text, so it needs 4.5:1, not the 3:1 of large text.
 
-  /** A CSS colour as hex, whatever notation the browser computed it in (oklch included). */
+  /** A CSS color as hex, whatever notation the browser computed it in (oklch included). */
   const ctx = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
   function hex(color: string): string {
     ctx.clearRect(0, 0, 1, 1);
@@ -385,7 +385,7 @@ describe("CuiFormField floating label (real browser)", () => {
       native.focus();
       await frames(2);
       const floated = contrast(getComputedStyle(labelEl).color, bg);
-      // Measuring the label's real colour, not an inherited fallback.
+      // Measuring the label's real color, not an inherited fallback.
       expect(getComputedStyle(labelEl).color).not.toBe(getComputedStyle(document.body).color);
       expect(rest, `resting ${rest.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
       expect(floated, `floated ${floated.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);

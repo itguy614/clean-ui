@@ -7,7 +7,7 @@ import CuiTextarea from "../../components/CuiTextarea.vue";
 // autoResize reads `scrollHeight` and real computed line-height/padding/
 // border to size itself; jsdom's layout engine is a no-op and always reports
 // zero for these, so it cannot verify the resize actually happens. Several
-// other layout/selection/input-method-dependent behaviours in this repo have
+// other layout/selection/input-method-dependent behaviors in this repo have
 // only ever been checked by hand-driving Chrome — this is that capability
 // made standing instead of ad hoc.
 describe("CuiTextarea autoResize (real browser)", () => {

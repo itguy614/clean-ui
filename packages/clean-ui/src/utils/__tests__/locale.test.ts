@@ -79,7 +79,7 @@ describe("locale formatting", () => {
       expect(parseFormattedDate("5 März 2026", "D MMMM YYYY")).toBeNull();
     });
 
-    it("gives a mask that takes the localised names", () => {
+    it("gives a mask that takes the localized names", () => {
       expect(formatToMask("MMM", "ja")).toBe("***");
       expect(formatToMask("MMM")).toBe("AAA");
       expect(formatToMask("MMMM")).toBe("AAAAAAAAAA");

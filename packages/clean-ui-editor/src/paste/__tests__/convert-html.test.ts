@@ -95,7 +95,7 @@ describe("convertHtmlToMarkdown", () => {
 
   it("with the image plugin not loaded, its <img> markup disappears entirely rather than leaving dangling syntax", () => {
     // Excluding a plugin removes its paste rule along with everything
-    // else (FR27) — there is no rule left to even recognise "this was an
+    // else (FR27) — there is no rule left to even recognize "this was an
     // <img>," so this is the "or plain text" (here: nothing, since an
     // image has no text of its own) end of FR28, not a "nearest available
     // representation" case. That case needs the *rule* to still exist
@@ -119,7 +119,7 @@ describe("convertHtmlToMarkdown", () => {
 
   it("degradeTo chains to another construct's own rule when that rule is still present and active", () => {
     // Unlike the whole-plugin-excluded cases above, here BOTH plugins stay
-    // loaded — "special" is simply not authorised, so its own rule exists
+    // loaded — "special" is simply not authorized, so its own rule exists
     // (proving the chain is followed) but resolves to inactive, and control
     // passes to "fallback"'s rule, which IS active.
     const special = definePlugin({

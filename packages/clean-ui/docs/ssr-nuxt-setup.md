@@ -22,7 +22,7 @@ export default defineNuxtConfig({
 
 This reads `cui-theme`, `cui-density` and `cui-color-mode` from `localStorage` and
 applies the matching classes to `<html>` before the first paint — no flash. A
-colour mode of `system` (or none stored) follows `prefers-color-scheme`.
+color mode of `system` (or none stored) follows `prefers-color-scheme`.
 
 Importing the library applies neither setting: the stored theme and density are
 restored on the first `useTheme()` / `useDensity()` / `useColorMode()` call. With

@@ -121,7 +121,7 @@ function onItemsClick(event: MouseEvent, close: () => void) {
   outline: none;
 }
 
-/* A CuiNavbarLink in the panel is a full-width row, in the panel's text colour. */
+/* A CuiNavbarLink in the panel is a full-width row, in the panel's text color. */
 .cui-navbar-menu__items {
   --_navbar-link-color: var(--cui-text-body);
 }

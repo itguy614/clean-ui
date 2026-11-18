@@ -38,7 +38,7 @@ describe("CuiFileUpload keyboard and naming", () => {
     expect(input().labels).toHaveLength(2);
   });
 
-  it("honours a consumer id", () => {
+  it("honors a consumer id", () => {
     w = mount(CuiFileUpload, { props: { id: "docs" }, attachTo: document.body });
     expect(input().id).toBe("docs");
     expect(w.find(".cui-file-upload__zone").attributes("for")).toBe("docs");

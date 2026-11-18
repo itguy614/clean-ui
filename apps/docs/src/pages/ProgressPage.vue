@@ -73,7 +73,7 @@ onUnmounted(() => { if (animInterval) clearInterval(animInterval); });
           consider leaving them off.
         </li>
         <li>
-          Colour alone does not say “failed” or “complete”. Pair
+          Color alone does not say “failed” or “complete”. Pair
           <code>color="error"</code> with text.
         </li>
       </ul>

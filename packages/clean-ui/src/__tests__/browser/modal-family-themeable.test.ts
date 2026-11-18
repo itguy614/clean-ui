@@ -95,7 +95,7 @@ describe("the modal family is themeable (real browser, #489)", () => {
       consumerRule(".cui-modal-header__close { transition: none; }");
       const root = mountHeader("--cui-modal-header-hover-bg: rgb(71, 71, 71); --cui-modal-header-hover-color: rgb(72, 72, 72)");
       const close = root.querySelector<HTMLElement>(".cui-modal-header__close")!;
-      // Not hovered yet: the resting colours.
+      // Not hovered yet: the resting colors.
       expect(css(close, "background-color")).not.toBe("rgb(71, 71, 71)");
       const { userEvent } = await import("@vitest/browser/context");
       await userEvent.hover(close);

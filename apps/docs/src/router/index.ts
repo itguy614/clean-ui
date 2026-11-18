@@ -211,9 +211,19 @@ const router = createRouter({
       component: () => import('../pages/ModalPage.vue'),
     },
     {
+      path: '/components/drawer',
+      name: 'drawer',
+      component: () => import('../pages/DrawerPage.vue'),
+    },
+    {
       path: '/components/slideover',
       name: 'slideover',
       component: () => import('../pages/SlideoverPage.vue'),
+    },
+    {
+      path: '/components/slideover-stack',
+      name: 'slideover-stack',
+      component: () => import('../pages/SlideoverStackPage.vue'),
     },
     {
       path: '/components/toast',
@@ -364,6 +374,11 @@ const router = createRouter({
       path: '/components/timeline',
       name: 'timeline',
       component: () => import('../pages/TimelinePage.vue'),
+    },
+    {
+      path: '/components/command-palette',
+      name: 'command-palette',
+      component: () => import('../pages/CommandPalettePage.vue'),
     },
     {
       path: '/components/confirm-dialog',

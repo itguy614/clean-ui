@@ -52,7 +52,7 @@ describe("CuiToastProvider action", () => {
     expect(button.closest('[role="status"]')).not.toBeNull();
   });
 
-  it("is accepted by the colour helpers, and an error toast keeps role=alert", async () => {
+  it("is accepted by the color helpers, and an error toast keeps role=alert", async () => {
     mountProvider();
     api.toast.error("Upload failed", { action: { label: "Retry", onClick: () => {} } });
     await nextTick();
@@ -68,7 +68,7 @@ describe("CuiToastProvider action", () => {
     expect(button.style.getPropertyValue("--_button-color")).toBe("var(--cui-success)");
   });
 
-  it("matches a solid toast's own fill, so its text stays the toast's text colour", async () => {
+  it("matches a solid toast's own fill, so its text stays the toast's text color", async () => {
     mountProvider();
     api.toast.success("Saved", { variant: "solid", action: { label: "View", onClick: () => {} } });
     await nextTick();

@@ -75,7 +75,7 @@ describe("CuiCodeBlock in a real browser (#163)", () => {
     const inProse = block({ code: tall, copyable: false }, true);
     const outside = block({ code: tall, copyable: false }, false);
     await frames(3);
-    // Font and colour inherit from the scope itself, so they are compared on the lines, which set their own.
+    // Font and color inherit from the scope itself, so they are compared on the lines, which set their own.
     const line = (el: HTMLElement) => getComputedStyle(el.querySelector("code > span")!);
     for (const prop of ["fontSize", "fontFamily", "color", "lineHeight"] as const) {
       expect(line(inProse)[prop], `line ${prop}`).toBe(line(outside)[prop]);

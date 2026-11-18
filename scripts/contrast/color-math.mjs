@@ -61,7 +61,7 @@ export function oklchToHex(L, C, H) {
   );
 }
 
-/** A hex colour in Oklab, for `color-mix(in oklab, …)`. */
+/** A hex color in Oklab, for `color-mix(in oklab, …)`. */
 function hexToOklab(hex) {
   const { r: R, g: G, b: B } = hexToRgb(hex);
   const [r, g, b] = [R, G, B].map((v) => {

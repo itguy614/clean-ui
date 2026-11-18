@@ -28,7 +28,7 @@ const entries = ref<Entry[]>([]);
 // as the nav running ahead of the reader.
 //
 // The offset is the 56px header. A click still lands a heading where a #hash link does,
-// since scrollTo honours the headings' larger `scroll-margin-top` (main.css) on its own.
+// since scrollTo honors the headings' larger `scroll-margin-top` (main.css) on its own.
 const { activeId, scrollTo } = useScrollSpy(
   () => entries.value.map((e) => e.id),
   {
@@ -155,8 +155,8 @@ watch(() => route.fullPath, () => nextTick(collect));
   font-size: 0.78125rem;
 }
 
-/* Not colour alone (WCAG 1.4.1): a bar four times the rail's width and a heavier weight
-   mark the current entry too, so it still reads in greyscale. */
+/* Not color alone (WCAG 1.4.1): a bar four times the rail's width and a heavier weight
+   mark the current entry too, so it still reads in grayscale. */
 .cui-page-nav__link--active {
   color: var(--cui-primary);
   border-left-width: 4px;

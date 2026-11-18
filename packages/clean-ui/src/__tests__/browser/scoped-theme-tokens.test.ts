@@ -8,7 +8,7 @@ import themeCss from "../../styles/theme.css?raw";
  * (`--cui-primary`, `--cui-surface-bg`, `--cui-text-*`, …) were declared on `:root` only, and
  * a custom property's `var()` resolves where it is declared — so inside
  * `<div class="cui-theme-forest">` the scale changed but every slot kept the page theme's
- * colour, and effectively no component followed the scoped theme.
+ * color, and effectively no component followed the scoped theme.
  *
  * Real browser: a cascade and computed-value question. Each check paints a probe with the
  * slot and another with the scale step it should come from, and compares what they render.
@@ -27,7 +27,7 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     document.documentElement.classList.remove("dark");
   });
 
-  /** The colour a probe paints with `background: <value>`, inside `className`. */
+  /** The color a probe paints with `background: <value>`, inside `className`. */
   function paint(value: string, className: string): string {
     const host = document.createElement("div");
     host.id = "fixture";
@@ -41,14 +41,14 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     return out;
   }
 
-  it("takes the scoped theme's colours, light mode", () => {
+  it("takes the scoped theme's colors, light mode", () => {
     expect(paint("var(--cui-primary)", "cui-theme-forest")).toBe(paint("var(--color-primary-500)", "cui-theme-forest"));
     expect(paint("var(--cui-surface-bg)", "cui-theme-forest")).toBe(paint("var(--color-surface-100)", "cui-theme-forest"));
-    // And it really is a different colour from the page's.
+    // And it really is a different color from the page's.
     expect(paint("var(--cui-primary)", "cui-theme-forest")).not.toBe(paint("var(--cui-primary)", ""));
   });
 
-  it("takes the scoped theme's dark colours inside a dark page", () => {
+  it("takes the scoped theme's dark colors inside a dark page", () => {
     document.documentElement.classList.add("dark");
     // Dark --cui-surface-bg is surface-800, and primary-text reads the theme too.
     expect(paint("var(--cui-surface-bg)", "cui-theme-forest")).toBe(paint("var(--color-surface-800)", "cui-theme-forest"));
@@ -57,11 +57,11 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     expect(paint("var(--cui-primary)", "cui-theme-forest")).not.toBe(paint("var(--cui-primary)", ""));
   });
 
-  it("takes the dark colours on a theme element that is itself dark", () => {
+  it("takes the dark colors on a theme element that is itself dark", () => {
     expect(paint("var(--cui-surface-bg)", "cui-theme-forest dark")).toBe(paint("var(--color-surface-800)", "cui-theme-forest dark"));
   });
 
-  it("re-themes the text colours too", () => {
+  it("re-themes the text colors too", () => {
     expect(paint("var(--cui-text-body)", "cui-theme-forest")).toBe(paint("var(--color-surface-900)", "cui-theme-forest"));
   });
 
@@ -90,7 +90,7 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
     expect(getComputedStyle(document.getElementById("p")!).backgroundColor).toBe("rgb(4, 5, 6)");
   });
 
-  it("gives a dark element inside a light themed subtree the theme's dark colours", () => {
+  it("gives a dark element inside a light themed subtree the theme's dark colors", () => {
     const host = document.createElement("div");
     host.id = "fixture";
     host.className = "cui-theme-forest";
@@ -107,7 +107,7 @@ describe("a scoped theme re-themes the semantic slots (real browser)", () => {
 
   // #330 — three slots still kept Navy inside a scoped theme, and nothing could switch a
   // subtree back to Navy.
-  /** The colour a probe paints inside `inner`, inside `outer`. */
+  /** The color a probe paints inside `inner`, inside `outer`. */
   function paintNested(value: string, outer: string, inner: string): string {
     const host = document.createElement("div");
     host.id = "fixture";

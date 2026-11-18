@@ -40,8 +40,8 @@ const hasLabel = () => !!props.label || !!slots.default;
 // on its own; aria-labelledby makes it the separator's name instead (#157).
 const labelId = useCuiId("divider-label");
 
-// What follows the props is per-instance data: the line's style and colour (a role or any
-// CSS colour, so the colour IS the data) and the spacing. They are emitted as private
+// What follows the props is per-instance data: the line's style and color (a role or any
+// CSS color, so the color IS the data) and the spacing. They are emitted as private
 // properties on the root; the stylesheet reads them back through the public tokens, so a
 // consumer's rule or container token still wins (#489).
 const resolvedColor = computed(() => (props.color ? resolveColor(props.color) : undefined));
@@ -97,7 +97,7 @@ const rootVars = computed(() => ({
 /*
  * Every themeable rule is a whole :where(), so a consumer's plain `.cui-divider { … }` at
  * (0,1,0) wins without !important; the structure (display, flex, which side the line is
- * drawn on) keeps normal specificity. The line's style and colour, the label's colour and
+ * drawn on) keeps normal specificity. The line's style and color, the label's color and
  * the spacing arrive as private --_divider-* properties on the root (#489).
  */
 .cui-divider--horizontal {

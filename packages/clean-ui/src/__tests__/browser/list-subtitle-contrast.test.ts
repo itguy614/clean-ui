@@ -10,15 +10,15 @@ import CuiListItem from "../../components/CuiListItem.vue";
 /**
  * #234 — an inset list's subtitle must hold WCAG AAA (7:1) on the list fill and under the
  * hover fill, in light and dark, in every theme. The hand-rolled version this replaces used
- * a surface-600 grey and measured 3.4:1.
+ * a surface-600 gray and measured 3.4:1.
  *
  * Measured from what the browser actually paints — the component's own defaults resolved
  * through each theme's scale — rather than from a copy of the token mapping, so changing the
- * subtitle's default colour, the fill, or the hover fill is caught here.
+ * subtitle's default color, the fill, or the hover fill is caught here.
  */
 const THEMES = ["navy", "forest", "amber", "azure", "teal", "violet", "ruby", "mono"];
 
-/** sRGB bytes of any CSS colour the browser understands (oklch included), via a canvas. */
+/** sRGB bytes of any CSS color the browser understands (oklch included), via a canvas. */
 let canvas: CanvasRenderingContext2D | undefined;
 function rgb(color: string): [number, number, number] {
   const ctx = (canvas ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true })!);

@@ -26,7 +26,7 @@ export const PAGES: readonly DocPage[] = [
   { id: "changelog", label: "Changelog", path: "/changelog", group: "Getting Started", keywords: ["releases", "release notes", "versions", "history", "what's new", "breaking changes", "migration"] },
 
   // Foundations
-  { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations", keywords: ["colours", "palette", "tokens", "roles", "scale", "contrast", "semantic"] },
+  { id: "colors", label: "Colors", path: "/foundations/colors", group: "Foundations", keywords: ["colors", "palette", "tokens", "roles", "scale", "contrast", "semantic"] },
   { id: "icons", label: "Icons", path: "/foundations/icons", group: "Foundations", keywords: ["phosphor", "svg", "glyph", "register icons", "icon names"] },
   { id: "themes", label: "Themes", path: "/foundations/themes", group: "Foundations", keywords: ["theme", "dark mode", "presets", "navy", "forest", "branding", "customise", "customize", "css variables", "custom properties"] },
   { id: "typography", label: "Typography", path: "/foundations/typography", group: "Foundations", keywords: ["fonts", "headings", "text", "prose", "type", "font size", "code text"] },
@@ -51,7 +51,7 @@ export const PAGES: readonly DocPage[] = [
 
   // Form Controls
   { id: "checkbox", label: "Checkbox", path: "/components/checkbox", group: "Form Controls", keywords: ["check", "tick", "checkbox group", "multi select", "indeterminate", "boolean"] },
-  { id: "color-picker", label: "Color Picker", path: "/components/color-picker", group: "Form Controls", keywords: ["colour picker", "swatch", "hex", "hue", "eyedropper", "palette"] },
+  { id: "color-picker", label: "Color Picker", path: "/components/color-picker", group: "Form Controls", keywords: ["color picker", "swatch", "hex", "hue", "eyedropper", "palette"] },
   { id: "combobox", label: "Combobox", path: "/components/combobox", group: "Form Controls", keywords: ["autocomplete", "autosuggest", "typeahead", "search select", "dropdown", "select", "async search", "listbox"] },
   { id: "date-picker", label: "Date Picker", path: "/components/date-picker", group: "Form Controls", keywords: ["calendar", "date", "day", "month", "year"] },
   { id: "date-range-picker", label: "Date Range", path: "/components/date-range-picker", group: "Form Controls", keywords: ["date range picker", "range", "calendar", "from to", "start end", "period", "date picker"] },
@@ -116,12 +116,15 @@ export const PAGES: readonly DocPage[] = [
   { id: "shell-detail-drawer", label: "Sidebar and Detail Drawer", path: "/app-shells/detail-drawer", group: "App Shells", keywords: ["app shell", "layout", "master detail", "inspector", "side panel", "slideover", "inbox", "template", "recipe"] },
 
   // Overlay
+  { id: "command-palette", label: "Command Palette", path: "/components/command-palette", group: "Overlay", keywords: ["cmd k", "ctrl k", "command k", "spotlight", "quick actions", "quick open", "omnibar", "search everything", "hotkey", "shortcut", "fuzzy", "use command palette", "register commands", "command registry", "command menu"] },
   { id: "confirm-dialog", label: "Confirm Dialog", path: "/components/confirm-dialog", group: "Overlay", keywords: ["dialog", "confirm", "confirmation", "are you sure", "alert dialog", "prompt", "delete confirmation", "modal", "popup"] },
   { id: "context-menu", label: "Context Menu", path: "/components/context-menu", group: "Overlay", keywords: ["right click", "menu", "popup menu", "contextual", "dropdown", "long press"] },
+  { id: "drawer", label: "Drawer", path: "/components/drawer", group: "Overlay", keywords: ["bottom sheet", "sheet", "swipe", "drag", "snap points", "mobile", "vaul", "flick", "overlay"] },
   { id: "dropdown", label: "Dropdown", path: "/components/dropdown", group: "Overlay", keywords: ["menu", "dropdown menu", "actions menu", "popup menu", "kebab", "overflow menu", "submenu", "select", "popover"] },
   { id: "modal", label: "Modal", path: "/components/modal", group: "Overlay", keywords: ["dialog", "popup", "overlay", "lightbox", "window", "backdrop", "focus trap", "modal dialog"] },
   { id: "popover", label: "Popover", path: "/components/popover", group: "Overlay", keywords: ["tooltip", "popup", "overlay", "floating", "flyout", "hovercard", "anchored", "bubble"] },
   { id: "slideover", label: "Slideover", path: "/components/slideover", group: "Overlay", keywords: ["drawer", "side panel", "sheet", "off canvas", "flyout", "overlay", "sidebar", "panel"] },
+  { id: "slideover-stack", label: "Slideover Stack", path: "/components/slideover-stack", group: "Overlay", keywords: ["stacked", "nested", "multiple", "cascade", "peek", "co-active", "history panel", "side by side", "panels", "overlay stack", "shared backdrop", "depth", "inert"] },
   { id: "tooltip", label: "Tooltip", path: "/components/tooltip", group: "Overlay", keywords: ["hint", "hover", "title", "popover", "help text", "label on hover", "bubble"] },
 
   // Composables (#296): interaction, positioning, responsive, forms

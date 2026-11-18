@@ -214,7 +214,7 @@ const hiddenUntilPositioned = computed(() => {
   return styles;
 });
 
-// A coloured tooltip's paint, as private tokens the stylesheet reads back (#211); the
+// A colored tooltip's paint, as private tokens the stylesheet reads back (#211); the
 // default tooltip's come from `.cui-tooltip--default`.
 const tooltipStyle = computed(() => ({
   // Grows out of its trigger, whichever side it opened on (#262), over the fast duration.
@@ -311,7 +311,7 @@ const tooltipStyle = computed(() => ({
 
 /* --- Tooltip --- */
 .cui-tooltip {
-  z-index: calc(var(--cui-z-overlay, 9990) + 9); /* TOOLTIP_Z_INDEX in utils/position.ts */
+  z-index: calc(var(--cui-z-overlay, 9990) + 49); /* TOOLTIP_Z_INDEX in utils/position.ts */
   line-height: 1.4;
   max-width: 280px;
   word-wrap: break-word;

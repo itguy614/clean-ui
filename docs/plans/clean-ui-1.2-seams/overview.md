@@ -14,7 +14,7 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
 
 - `docs/platform/multi-package-build-and-release.md` — requirements P1 to P19
 - `docs/features/markdown-editor.md` — NFR2 (peer floor and why), NFR5 (message namespace),
-  NFR6 (colour-scheme signal)
+  NFR6 (color-scheme signal)
 
 ## Status
 
@@ -43,7 +43,7 @@ resolves against the registry, not the workspace, so 1.2.0 must be on npm before
   signature would make every message key `any`-ish and lose the type safety the catalog exists
   for. An empty `CuiMessageNamespaces` interface that `CuiMessages` extends lets a satellite
   package augment it and keep full checking.
-- **The colour-scheme signal observes an ancestor, not the document.** clean-ui's dark mode is a
+- **The color-scheme signal observes an ancestor, not the document.** clean-ui's dark mode is a
   class on any element and may be scoped to a subtree, so a global boolean would be wrong for
   scoped usage. The composable resolves per call site.
 - **Dependencies are externalized by rule, never by a maintained list.** The current

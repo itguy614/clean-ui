@@ -196,7 +196,7 @@ export function useDataGrid(options: UseDataGridOptions) {
    * keep their visibility and order — unless `previous` is given and the definition's
    * own `visible` changed, which is an intentional update; entries for removed
    * definitions drop out; new definitions are inserted after their nearest preceding
-   * neighbour that is already in the state (or first). Unchanged entries are returned
+   * neighbor that is already in the state (or first). Unchanged entries are returned
    * as the same objects, so callers can detect a no-op by identity.
    */
   function reconcileColumnState(

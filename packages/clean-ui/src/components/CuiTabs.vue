@@ -59,7 +59,7 @@ const barRef = ref<HTMLElement | null>(null);
 // at once. A click or a v-model change animates as before. Changed only by a switch: on the
 // panel already showing, a change would add the animation class and replay it.
 const keyed = ref(false);
-// The tab buttons' own colour and underline, which a pointer back over the bar fades again.
+// The tab buttons' own color and underline, which a pointer back over the bar fades again.
 const keyedButtons = ref(false);
 
 /** A click that switches tabs animates; one on the active or a disabled tab changes nothing. */
@@ -180,19 +180,19 @@ function closeFromKey(e: KeyboardEvent): boolean {
   // A held key repeats: one press closes one tab.
   if (e.repeat || list[at].disabled) return true;
   const closing = list[at].value;
-  const neighbour = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
+  const neighbor = [...list.slice(at + 1), ...list.slice(0, at).reverse()].find((t) => !t.disabled);
   close(closing);
-  if (neighbour) {
+  if (neighbor) {
     nextTick(() => {
       // `close` is a request: if the consumer kept the tab (a confirm, a refusal), so does focus.
       if (tabs.value.some((t) => t.value === closing)) return;
-      // The selection went with the tab and nothing took it over: the neighbour does, or the
+      // The selection went with the tab and nothing took it over: the neighbor does, or the
       // bar would be left with no tab stop and arrow keys that do nothing.
       if (!tabs.value.some((t) => t.value === activeTab.value)) {
         keyed.value = keyedButtons.value = true;
-        activate(neighbour.value);
+        activate(neighbor.value);
       }
-      const el = tabElement(neighbour.value);
+      const el = tabElement(neighbor.value);
       el?.focus({ preventScroll: true });
       const scroller = areaRef.value?.el;
       if (el && scroller) scrollIntoViewWithin(scroller, el, "instant");
@@ -409,7 +409,7 @@ const messages = useMessages();
 
 /* --- Scroll buttons (#236): CuiScrollArea's indicators, in the tab bar's own tokens.
    Opaque, since they sit over the tabs: the surface the bar is on by default, the
-   track's own colour on a segmented bar. Declared here, so inside a tab bar these win
+   track's own color on a segmented bar. Declared here, so inside a tab bar these win
    over a --cui-scroll-area-indicator-* set further up. --- */
 :where(.cui-tabs__scroll) {
   --cui-scroll-area-indicator-bg: var(--cui-tabs-scroll-button-bg, var(--cui-surface-base));
@@ -457,10 +457,10 @@ const messages = useMessages();
 }
 
 /* --- Themeable (#454) ---
-   Zero specificity, so a consumer's own rule wins. The resting colour is in here too: the
+   Zero specificity, so a consumer's own rule wins. The resting color is in here too: the
    active rules below are zero specificity as well and win by coming after it, where a normal
-   `.cui-tabs__tab { color }` would outrank them. The hover colour stays at normal
-   specificity, as it always has, so it still beats the active colour. */
+   `.cui-tabs__tab { color }` would outrank them. The hover color stays at normal
+   specificity, as it always has, so it still beats the active color. */
 :where(.cui-tabs__tab) {
   color: var(--cui-text-secondary);
 }
@@ -504,7 +504,7 @@ const messages = useMessages();
   position: relative;
 }
 
-/* Arrowing along the bar moves the selection at once (#269): a colour or underline fading
+/* Arrowing along the bar moves the selection at once (#269): a color or underline fading
    behind each key press leaves a trail of half-selected tabs. A pointer moving over the bar
    brings the fade back. */
 .cui-tabs[data-keyed] .cui-tabs__tab {

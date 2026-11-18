@@ -3,11 +3,11 @@ import { formatColor, hexToRgb, parseColor } from "../color";
 
 /**
  * #309 — `formatColor(…, "hex")` dropped alpha, so a CuiColorPicker with `show-alpha` and
- * the default hex format emitted an opaque colour. Hex now carries an alpha byte
+ * the default hex format emitted an opaque color. Hex now carries an alpha byte
  * (`#rrggbbaa`) whenever it is below ff, and `parseColor` reads it back.
  */
 describe("formatColor hex alpha", () => {
-  it("keeps six digits for an opaque colour", () => {
+  it("keeps six digits for an opaque color", () => {
     expect(formatColor(128, 75, 64, 1, "hex")).toBe("#804b40");
   });
 
@@ -16,7 +16,7 @@ describe("formatColor hex alpha", () => {
     expect(formatColor(128, 75, 64, 0.75, "hex")).toBe("#804b40bf");
   });
 
-  it("writes a fully transparent colour as 00, not as opaque", () => {
+  it("writes a fully transparent color as 00, not as opaque", () => {
     expect(formatColor(255, 0, 0, 0, "hex")).toBe("#ff000000");
   });
 
@@ -77,7 +77,7 @@ describe("formatColor rgb/hsl alpha", () => {
 });
 
 describe("hexToRgb", () => {
-  it("still returns the colour alone, dropping any alpha", () => {
+  it("still returns the color alone, dropping any alpha", () => {
     expect(hexToRgb("#804b4080")).toEqual({ r: 128, g: 75, b: 64 });
     expect(hexToRgb("#f008")).toEqual({ r: 255, g: 0, b: 0 });
     expect(hexToRgb("#12345")).toBeNull();
