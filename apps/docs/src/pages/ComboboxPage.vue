@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import {
   CuiAvatar,
   CuiBadge,
@@ -9,6 +9,7 @@ import {
   CuiStack,
   CuiToggle,
   type ComboboxOption,
+  type ComboboxOptionAction,
 } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import meta from "../meta/combobox";
@@ -92,6 +93,43 @@ function onFavoriteKeydown(e: KeyboardEvent, option: ComboboxOption) {
   }
 }
 
+// Grouped options (#445): consecutive options sharing a `group` render under one heading.
+const grouped: ComboboxOption[] = [
+  { value: "apple", label: "Apple", group: "Pome" },
+  { value: "pear", label: "Pear", group: "Pome" },
+  { value: "cherry", label: "Cherry", group: "Stone" },
+  { value: "peach", label: "Peach", group: "Stone" },
+  { value: "plum", label: "Plum", group: "Stone" },
+  { value: "lemon", label: "Lemon", group: "Citrus" },
+  { value: "orange", label: "Orange", group: "Citrus" },
+];
+const groupedValue = ref<string | null>(null);
+
+// Favorites at the top, moved by an option action (#445). Alt+F toggles the highlighted
+// option, announced as its description.
+const pinned = ref(new Set<string | number>(["plum"]));
+const pinnedValue = ref<string | null>(null);
+const pinnedOptions = computed<ComboboxOption[]>(() => {
+  const mark = (o: ComboboxOption, group: string) => ({ ...o, group });
+  const all = grouped.map((o) => ({ value: o.value, label: o.label }));
+  return [
+    ...all.filter((o) => pinned.value.has(o.value)).map((o) => mark(o, "Favorites")),
+    ...all.filter((o) => !pinned.value.has(o.value)).map((o) => mark(o, "All fruit")),
+  ];
+});
+const pinActions: ComboboxOptionAction[] = [
+  {
+    key: "f",
+    modifiers: ["alt"],
+    label: "Alt+F toggles this option in Favorites",
+    onTrigger: (option) => {
+      const next = new Set(pinned.value);
+      if (!next.delete(option.value)) next.add(option.value);
+      pinned.value = next;
+    },
+  },
+];
+
 // Simulated async search
 const asyncResult = ref<string | null>(null);
 async function fetchCountries(query: string): Promise<ComboboxOption[]> {
@@ -151,6 +189,18 @@ async function fetchCountries(query: string): Promise<ComboboxOption[]> {
           only call it for keys you handle. Match shortcuts on <code>event.code</code>, since
           Option+F types a different character on macOS. A shortcut needs a physical keyboard,
           so keep the pointer route for touch.
+        </li>
+        <li>
+          Grouped options (<code>group</code> on an option) render under a
+          <code>role="group"</code> named by its heading. Headings are not options: the arrow
+          keys and <code>aria-activedescendant</code> skip them, and each option reports its
+          position in the whole list (<code>aria-posinset</code>, <code>aria-setsize</code>).
+        </li>
+        <li>
+          <code>optionActions</code> declare shortcuts for the highlighted option. Modifiers are
+          required, since a bare key would type into the search. Each action's
+          <code>label</code> is read as the option's description, and the shortcuts are listed in
+          its <code>aria-keyshortcuts</code>. Keep a pointer route for touch.
         </li>
       </ul>
     </template>
@@ -314,6 +364,44 @@ function onOptionKeydown(e, option) {
             </CuiCombobox>
             <p id="combobox-fav-hint" :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: '0.25rem' }">
               Press Alt+F to favorite or unfavorite the highlighted option.
+            </p>
+          </div>
+        </Example>
+
+        <!-- Grouped options (#445) -->
+        <Example title="Grouped Options" :code="`<!-- An option's group is a heading. Consecutive options with the same group share one
+     labelled role=&quot;group&quot;; the arrows skip the headings, and filtering drops a
+     group with nothing left. -->
+const options = [
+  { value: 'apple', label: 'Apple', group: 'Pome' },
+  { value: 'cherry', label: 'Cherry', group: 'Stone' },
+  { value: 'lemon', label: 'Lemon', group: 'Citrus' },
+]
+
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; label=&quot;Fruit&quot; />`">
+          <div style="width: 20rem;">
+            <CuiCombobox v-model="groupedValue" :options="grouped" label="Fruit" placeholder="Search fruit..." />
+          </div>
+        </Example>
+
+        <!-- Favorites at the top, with an option action (#445) -->
+        <Example title="Favorites and Option Actions" :code="`<!-- optionActions: modifiers are required, because focus is in a text input and a bare
+     key would type into the search. label is announced as the option's description. -->
+const actions = [
+  {
+    key: 'f',
+    modifiers: ['alt'],
+    label: 'Alt+F toggles this option in Favorites',
+    onTrigger: (option) => toggleFavorite(option.value),
+  },
+]
+
+<!-- favorites first: options with group: 'Favorites' come first in the array -->
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; :option-actions=&quot;actions&quot; />`">
+          <div style="width: 20rem;">
+            <CuiCombobox v-model="pinnedValue" :options="pinnedOptions" :option-actions="pinActions" label="Fruit" placeholder="Search fruit..." />
+            <p :style="{ fontSize: '0.75rem', color: 'var(--cui-text-tertiary)', marginTop: '0.25rem' }">
+              Arrow to an option and press Alt+F to move it in or out of Favorites.
             </p>
           </div>
         </Example>

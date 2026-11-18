@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CuiCombobox` groups options (#445): an optional `group` label on each option, and consecutive
+  options sharing a label render under a `role="group"` named by a heading. Headings are not
+  options (the arrows and `aria-activedescendant` skip them), each option reports its position in
+  the whole list, and a group emptied by filtering is not drawn. Style the heading with
+  `--cui-combobox-group-color`, `-group-font-size` and `-group-padding`.
+- `CuiCombobox` `optionActions` (#445): `{ key, modifiers, label, onTrigger }` shortcuts for the
+  highlighted option. `modifiers` is required and non-empty, because focus is in a text input; an
+  action without any never runs and warns in development. The `label` is the highlighted option's
+  `aria-describedby`, and the shortcuts are its `aria-keyshortcuts`.
+
 ### Changed
 
 - The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
