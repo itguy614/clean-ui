@@ -435,6 +435,7 @@ function optionClass(index: number, option: ComboboxOption) {
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="combobox"
+      @close="isOpen = false"
       :color="color"
       :max-height="320"
       :max-visible="maxVisible"

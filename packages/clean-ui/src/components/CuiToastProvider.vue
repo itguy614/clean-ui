@@ -2,7 +2,7 @@
 import { provide, toRef, computed } from "vue";
 import CuiToast from "./CuiToast.vue";
 import CuiButton from "./CuiButton.vue";
-import { POPOVER_Z_INDEX } from "../utils/position";
+import { TOAST_Z_INDEX } from "../utils/position";
 import { pinOutOfFlow } from "../utils/motion";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import {
@@ -41,7 +41,7 @@ const containerStyle = computed(() => {
   const p = props.position;
   const style: Record<string, string> = {
     position: "fixed",
-    zIndex: POPOVER_Z_INDEX, // above an open modal
+    zIndex: TOAST_Z_INDEX, // above every overlay and panel, whatever their order
     display: "flex",
     flexDirection: "column",
     gap: "calc(0.5rem * var(--cui-density-scale, 1))",

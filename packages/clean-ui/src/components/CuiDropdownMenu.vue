@@ -2,6 +2,8 @@
 import { inject, ref, watch, onUnmounted } from "vue";
 import { useEventListener } from "../composables/useEventListener";
 import { usePresence } from "../composables/usePresence";
+import { useLayerStep } from "../composables/useLayerStep";
+import { overlayZIndex } from "../utils/overlayLayer";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { DropdownContextKey } from "./dropdown-context";
@@ -19,6 +21,8 @@ withDefaults(defineProps<CuiDropdownMenuProps>(), {
 
 const ctx = inject(DropdownContextKey);
 const { present, onAfterLeave } = usePresence(() => !!ctx?.isOpen.value);
+// Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
+const layerStep = useLayerStep(() => !!ctx?.isOpen.value, present, () => ctx?.close());
 // The theme scope around the dropdown, on the teleported menu (#418).
 const themeScope = useScopedTheme(() => present.value);
 const menuRef = ref<HTMLElement>();
@@ -79,7 +83,7 @@ function onKeydown(e: KeyboardEvent) {
       class="cui-dropdown-menu"
       :class="themeScope"
       :data-cui-menu-owner="ctx?.ownerId"
-      :style="{ ...menuStyle, minWidth }"
+      :style="{ ...menuStyle, minWidth, zIndex: overlayZIndex(layerStep) }"
       role="menu"
       @keydown="onKeydown"
     >

@@ -4,6 +4,8 @@ import CuiIcon from "./CuiIcon.vue";
 import { DropdownContextKey, type DropdownTrigger } from "./dropdown-context";
 import { computeDropdownPosition } from "../utils/position";
 import { focusMenuEdge, onMenuKeydown } from "../utils/menu";
+import { useLayerStep } from "../composables/useLayerStep";
+import { overlayZIndex } from "../utils/overlayLayer";
 import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { afterAnimations, panelTransition } from "../utils/motion";
@@ -25,6 +27,8 @@ const isOpen = ref(false);
 // Shown while the parent menu is open too, so the whole stack leaves together (#263).
 const shown = () => isOpen.value && !!parentCtx?.isOpen.value;
 const { present, onAfterLeave } = usePresence(shown);
+// Above the menu it opens from (it opens after it); it goes with its parent, so it has no dismiss of its own (#541).
+const layerStep = useLayerStep(shown, present);
 // The theme scope around the item, inside the parent menu's copy of it (#418).
 const themeScope = useScopedTheme(() => present.value);
 const triggerRef = ref<HTMLElement>();
@@ -155,7 +159,7 @@ function onPanelKeydown(e: KeyboardEvent) {
       class="cui-dropdown-sub__menu"
       :class="themeScope"
       :data-cui-menu-owner="parentCtx?.ownerId"
-      :style="menuStyle"
+      :style="{ ...menuStyle, zIndex: overlayZIndex(layerStep) }"
       role="menu"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"

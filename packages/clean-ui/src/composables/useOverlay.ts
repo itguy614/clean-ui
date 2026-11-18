@@ -1,4 +1,4 @@
-import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { ref, inject, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack, type LayerHandle } from "./useLayerStack";
@@ -6,6 +6,7 @@ import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
+import { dismissPanels, giveBackStep, LayerHostKey, takeLayerStep, type LayerToken } from "../utils/overlayLayer";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -61,6 +62,8 @@ export interface OverlayJoinCore {
   finish: () => void;
   /** Handle of this overlay's layer in the Escape stack. */
   layer: LayerHandle;
+  /** Its z-index step above `--cui-z-overlay`: the newest overlay is on top (#541). */
+  zStep: Ref<number>;
 }
 
 /** The extension points; every one is optional. */
@@ -109,6 +112,16 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   // exit-animation timeout, so both paths go through this guard.
   let holdsScrollLock = false;
 
+  // The z-index step it holds from opening until its exit has finished (#541).
+  const zStep = ref(0);
+  let held: LayerToken | undefined;
+  // The panel this overlay is declared in, if any: it stays open when this opens.
+  const host = inject(LayerHostKey, undefined);
+  const releaseStep = () => {
+    if (held) giveBackStep(held);
+    held = undefined;
+  };
+
   function acquireScrollLock() {
     if (holdsScrollLock) return;
     holdsScrollLock = true;
@@ -130,6 +143,10 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   let entry = 0;
 
   function openOverlay() {
+    // First, so a stack registering on `isOpen` reads the step. Re-opened mid-exit it is the newest.
+    releaseStep();
+    held = takeLayerStep();
+    zStep.value = held.step;
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.
     if (!dialogRef.value?.contains(document.activeElement)) {
@@ -137,6 +154,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
       previousFocusKey = restoreKeyOf(previousFocus.value);
     }
     isVisible.value = true;
+    // A panel open beneath it closes (its own close, so its events follow), now that the opener is noted.
+    dismissPanels(held, host?.());
 
     acquireScrollLock();
 
@@ -185,6 +204,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
     onClose();
 
     releaseScrollLock();
+    releaseStep();
 
     // Return focus — to `returnFocus` if it names an element that takes it (resolved now,
     // after the `close` handlers, so it can pick one they rendered; the closing dialog is
@@ -214,6 +234,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
 
     // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
     isVisible.value = false;
+    // Opened and closed in one tick: nothing was shown, so no exit will give the step back.
+    if (!mounted.value) releaseStep();
   }
 
   /**
@@ -245,7 +267,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
     modal: true,
     onParentClose: () => hooks?.onParentClose?.(),
   });
-  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer });
+  hooks = join?.({ isOpen, dialogRef, rootRef, requestClose, close: closeOverlay, finish: finishClose, layer, zStep });
 
   // Focus trap: Tab and Shift+Tab wrap inside the dialog (#339). A co-active overlay lets
   // focus move on to its siblings.
@@ -289,9 +311,11 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   onUnmounted(() => {
     entry++;
     releaseScrollLock();
+    releaseStep();
   });
 
   return {
+    zStep,
     isVisible,
     isAnimating,
     mounted,

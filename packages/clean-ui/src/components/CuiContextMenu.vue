@@ -7,7 +7,9 @@ import { useLayerStack } from "../composables/useLayerStack";
 import { focusMenuEdge, menuPanels, onMenuKeydown as onSharedMenuKeydown, restoreMenuFocus } from "../utils/menu";
 import { DropdownContextKey, type DropdownTrigger, type DropdownPlacement } from "./dropdown-context";
 import type { HideableProps, DisableableProps } from "../types/common";
-import { OVERLAY_Z_INDEX, PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
+import { PANEL_MAX_HEIGHT, VIEWPORT_PADDING } from "../utils/position";
+import { overlayZIndex } from "../utils/overlayLayer";
+import { useLayerStep } from "../composables/useLayerStep";
 import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
@@ -65,6 +67,8 @@ const emit = defineEmits<{
 
 const isOpen = ref(false);
 const { present, onAfterLeave } = usePresence(() => isOpen.value);
+// Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
+const layerStep = useLayerStep(() => isOpen.value, present, () => close());
 // The theme scope around the target area, on the teleported menu (#418).
 const themeScope = useScopedTheme(() => present.value);
 const wrapperRef = ref<HTMLElement | null>(null);
@@ -120,7 +124,6 @@ function positionAtCursor(x: number, y: number) {
   // transition's opacity picks up from 0 once the panel is placed and this lifts.
   menuStyle.value = {
     position: "fixed",
-    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
     opacity: "0",
@@ -157,7 +160,6 @@ function measure({ x, y }: { x: number; y: number }) {
 
   const adjusted: Record<string, string> = {
     position: "fixed",
-    zIndex: OVERLAY_Z_INDEX,
     left: `${x}px`,
     top: `${y}px`,
   };
@@ -428,7 +430,7 @@ defineExpose({ open, openAt, close, isOpen });
         class="cui-context-menu__panel"
         :class="themeScope"
         :data-cui-menu-owner="contextMenuId"
-        :style="{ ...menuStyle, minWidth }"
+        :style="{ ...menuStyle, minWidth, zIndex: overlayZIndex(layerStep) }"
         role="menu"
         @keydown="onMenuKeydown"
       >

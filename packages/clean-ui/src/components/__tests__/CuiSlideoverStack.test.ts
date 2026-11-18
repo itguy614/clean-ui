@@ -486,12 +486,13 @@ describe("overlay stack core", () => {
   });
 
   describe("outside a stack nothing changes", () => {
-    it("no inert, default z-index, own backdrop, no stacked class", async () => {
+    it("no inert, own backdrop, no stacked class, and the newest on top of the other", async () => {
       const { open } = mountStack([{}, {}], { stack: false });
       await openAll(open);
       expect([isInert(0), isInert(1)]).toEqual([false, false]);
       expect(root(0).style.zIndex).toBe("var(--cui-z-overlay, 9990)");
-      expect(root(1).style.zIndex).toBe("var(--cui-z-overlay, 9990)");
+      // Not a stack, but still one counter: the second opened sits a step above (#541).
+      expect(root(1).style.zIndex).toBe("calc(var(--cui-z-overlay, 9990) + 1)");
       expect(root(0).className).not.toContain("--stacked");
       // Each draws its own, as before.
       expect(document.querySelectorAll(".cui-backdrop")).toHaveLength(2);

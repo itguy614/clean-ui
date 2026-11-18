@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { usePresence } from "../composables/usePresence";
+import { useLayerStep } from "../composables/useLayerStep";
+import { overlayZIndex } from "../utils/overlayLayer";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { panelTransition } from "../utils/motion";
 import { computed, nextTick, onScopeDispose, ref, watch } from "vue";
@@ -62,7 +64,12 @@ const props = withDefaults(defineProps<{
   fontSize: string;
   itemPadding: string;
 }>(), { rounded: "md" });
+const emit = defineEmits<{
+  /** An overlay opened over it: close, as a press outside would (#541). */
+  close: [];
+}>();
 const { present, onAfterLeave } = usePresence(() => props.open);
+const layerStep = useLayerStep(() => props.open, present, () => emit("close"));
 // The theme scope around the field, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
 
@@ -192,7 +199,7 @@ const tokens = computed(() => {
 // One object, changing only with the tokens or the position: the rows render inside this
 // panel, so every arrow key re-renders it, and a fresh style object would re-apply every
 // property each time.
-const style = computed(() => ({ ...tokens.value, ...position.value }));
+const style = computed(() => ({ ...tokens.value, ...position.value, zIndex: overlayZIndex(layerStep.value) }));
 
 defineExpose({ el });
 </script>

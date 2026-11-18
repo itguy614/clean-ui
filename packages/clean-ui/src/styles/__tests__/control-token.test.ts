@@ -524,6 +524,7 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     "stack-shadow-val": `a stack's shadow is the lg step on the group's edge and md on each peeking panel (${GEOMETRY}) (#41)`,
     "stack-offset": `a stacked panel's distance from the docked edge, from the stack's layout (${GEOMETRY}) (#41)`,
   },
+  "CuiModal.vue": { "overlay-step": `its z-index step above the overlays open before it, from the shared counter (${GEOMETRY}) (#541)` },
   "CuiDropdownMenu.vue": { "dropdown-menu-transform-origin": TRANSFORM_ORIGIN },
   "CuiDropdownSub.vue": { "dropdown-sub-transform-origin": TRANSFORM_ORIGIN },
   // TODO(#454): CuiDataGrid is being reworked in #474; this is a sticky offset, so it likely stays.
