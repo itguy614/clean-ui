@@ -130,6 +130,27 @@ describe("useBackgroundScale", () => {
     expect(el.style.transition).toContain("calc(var(--cui-duration-slow) * 2)");
   });
 
+  it("a drag released after the sheet started closing does not scale the page back down", () => {
+    const el = wrapper();
+    const { bg } = setup();
+    bg.show();
+    bg.drag(0.3);
+    bg.hide();
+    bg.dragEnd(false);
+    expect(el.style.transform).toContain("scale(1)");
+  });
+
+  it("looks the wrapper up again when the one it had is gone from the page", () => {
+    const first = wrapper();
+    const { bg } = setup();
+    bg.show();
+    bg.hide();
+    first.remove();
+    const second = wrapper();
+    bg.show();
+    expect(second.style.transform).toContain("scale(0.95)");
+  });
+
   it("nested sheets share one scale: the wrapper stays scaled until the last one closes, and only a sole sheet drives it", () => {
     const el = wrapper("opacity: 0.9");
     const a = setup().bg;

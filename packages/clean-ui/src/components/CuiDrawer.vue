@@ -175,7 +175,8 @@ const keyboardOpen = computed(() => viewport.inset.value > 0);
 
 // --- The page behind (#534) -----------------------------------------------------------
 const background = useBackgroundScale({ enabled: () => props.scaleBackground, selector: () => props.backgroundSelector });
-watch(isAnimating, (open) => (open ? background.show() : background.hide()));
+// A `hidden` sheet draws nothing, so the page is not left scaled under it.
+watch(() => isAnimating.value && !props.hidden, (open) => (open ? background.show() : background.hide()));
 // The exit has played (or there was none): the page gets its own styles back.
 watch(mounted, (present) => !present && background.finish());
 

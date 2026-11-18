@@ -48,6 +48,9 @@ function transition(el: HTMLElement, mode: "enter" | "exit" | "none") {
   el.style.transition = `transform ${duration} var(--cui-ease-drawer), border-radius ${duration} var(--cui-ease-drawer)`;
 }
 
+/** The transitions this writes: a wrapper's own animations (a loop on the app root) are none of its business and may never end. */
+const ours = (a: Animation) => a instanceof CSSTransition && (a.transitionProperty === "transform" || a.transitionProperty === "border-radius");
+
 function restore(el: HTMLElement) {
   const hold = holds.get(el);
   if (!hold || hold.count > 0) return;
@@ -99,7 +102,8 @@ export function useBackgroundScale(options: UseBackgroundScaleOptions) {
   /** The sheet opened. */
   function show() {
     if (counted || !options.enabled() || prefersReducedMotion()) return;
-    const target = el ?? resolve();
+    // A wrapper the app has since re-rendered is looked up again.
+    const target = el?.isConnected ? el : resolve();
     if (!target) return;
     let hold = holds.get(target);
     if (!hold) {
@@ -127,6 +131,7 @@ export function useBackgroundScale(options: UseBackgroundScaleOptions) {
   function hide() {
     if (!counted || !el) return;
     counted = false;
+    dragged = false;
     const hold = holds.get(el);
     if (!hold) return;
     hold.count--;
@@ -141,7 +146,7 @@ export function useBackgroundScale(options: UseBackgroundScaleOptions) {
     const target = el;
     if (counted || !target) return;
     el = null;
-    const running = !immediate && typeof target.getAnimations === "function" ? target.getAnimations() : [];
+    const running = !immediate && typeof target.getAnimations === "function" ? target.getAnimations().filter(ours) : [];
     if (running.length === 0) return restore(target);
     void Promise.allSettled(running.map((a) => a.finished)).then(() => restore(target));
   }
@@ -156,7 +161,7 @@ export function useBackgroundScale(options: UseBackgroundScaleOptions) {
 
   /** The drag let go. A dismissal leaves the page where it is for the exit to carry on from. */
   function dragEnd(dismissed: boolean) {
-    if (!dragged || !el) return;
+    if (!counted || !dragged || !el) return;
     dragged = false;
     // The last drag frame is computed before the timing changes: a transition runs from the last
     // computed value, and a flick can release in the same task as its final move.
