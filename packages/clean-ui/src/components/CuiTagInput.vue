@@ -381,6 +381,7 @@ defineExpose({ el: wrapperRef, focus, blur });
     <!-- Dropdown -->
     <CuiListboxPanel
       ref="panelRef"
+      :rounded="rounded"
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="tag-input"

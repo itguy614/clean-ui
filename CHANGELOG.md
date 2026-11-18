@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
+  `rounded` (#522): `none` squares the panel and its rows, `sm`, `md` and `lg` use that step, and
+  `full` gives the panel `lg`. A default (`md`) panel is now 6px instead of 8px, and no longer
+  reads `--cui-radius-lg` unless `rounded` is `lg` or `full`. To keep the old look:
+
+  ```css
+  :root {
+    --cui-select-panel-radius: var(--cui-radius-lg, 0.5rem);
+    --cui-combobox-panel-radius: var(--cui-radius-lg, 0.5rem);
+    --cui-tag-input-panel-radius: var(--cui-radius-lg, 0.5rem);
+  }
+  ```
+
+  A field's own radius token (`--cui-select-radius`, `--cui-combobox-radius`,
+  `--cui-tag-input-radius`) now restyles its panel too, set on `:root` since the panel renders in
+  `<body>`; the three `-panel-radius` tokens still override it, and `-item-radius` still sets the
+  rows.
+
 ## [2.2.0] - 2026-11-18
 
 ### Added

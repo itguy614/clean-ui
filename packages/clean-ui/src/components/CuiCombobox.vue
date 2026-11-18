@@ -431,6 +431,7 @@ function optionClass(index: number, option: ComboboxOption) {
     <!-- Dropdown (teleported) -->
     <CuiListboxPanel
       ref="panelRef"
+      :rounded="rounded"
       :open="panelOpen"
       :anchor="controlRef"
       token-prefix="combobox"
