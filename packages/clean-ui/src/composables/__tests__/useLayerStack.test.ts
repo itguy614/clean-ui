@@ -144,6 +144,9 @@ describe("useLayerStack across overlays", () => {
     await settle();
     modalOpen.value = true;
     await settle();
+    // The popover beneath light-dismisses as the modal opens (#541): that is its one close.
+    expect(onPopover).toHaveBeenCalledWith(false);
+    onPopover.mockClear();
 
     escape();
     await settle();

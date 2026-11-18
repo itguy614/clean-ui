@@ -11,7 +11,7 @@ const name = ref("");
 const lastClosed = ref("never");
 const dialogEl = useTemplateRef<HTMLElement>("dialogEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { zStep, isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => persistent.value,
@@ -24,7 +24,7 @@ const overlayCode = `<script setup>
 const open = ref(false);
 const dialogEl = useTemplateRef("dialogEl");
 
-const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
+const { zStep, isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClick, closeOverlay } = useOverlay({
   open: () => open.value,
   dialogRef: dialogEl,
   persistent: () => false,
@@ -40,6 +40,7 @@ const { isVisible, isAnimating, mounted, onAfterLeave, onKeydown, onBackdropClic
     <!-- Mounted until the exit has played; shown while open, so a re-open mid-exit reverses -->
     <Transition :css="false" @leave="afterAnimations" @after-leave="onAfterLeave">
     <div v-if="mounted" v-show="isVisible" class="overlay" :class="{ 'is-in': isAnimating }"
+         :style="{ zIndex: 'calc(var(--cui-z-overlay, 9990) + ' + zStep + ')' }"
          @keydown="onKeydown" @click.self="onBackdropClick">
       <div ref="dialogEl" role="dialog" aria-modal="true"
            aria-labelledby="overlay-title" tabindex="-1" class="panel">
@@ -113,7 +114,20 @@ const options = [
   },
 ];
 
+const layers = [
+  { name: "page content", type: "no offset", description: "Component internals and sticky chrome such as table headers, banners and scroll shadows. The navbar is at the base minus one." },
+  { name: "overlays and anchored panels", type: "base + 0 to 39", description: "One open-order sequence: modal, confirm dialog, command palette, slideover, drawer, popover, dropdown menu and sub-menu, select, combobox, tag input, context menu. The newest is on top." },
+  { name: "toast region", type: "base + 48", description: "Above every overlay and panel, whatever their order." },
+  { name: "tooltips", type: "base + 49", description: "Above everything, including toasts." },
+];
+
 const returns = [
+  {
+    name: "zStep",
+    type: "Ref<number>",
+    description:
+      "The overlay's z-index step above --cui-z-overlay, taken when it opens and given back when its exit has finished: 0 with nothing else open, one more than the newest open layer otherwise, up to 39. Add it to the base on your root, as in the example, and the newest overlay is on top. See Layering below.",
+  },
   {
     name: "isVisible",
     type: "Ref<boolean>",
@@ -166,7 +180,6 @@ const returns = [
 const overlayStyle = {
   position: "fixed",
   inset: "0",
-  zIndex: "var(--cui-z-overlay, 9990)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -224,7 +237,7 @@ const panelStyle = {
         v-if="mounted"
         v-show="isVisible"
         class="cui-docs-overlay"
-        :style="{ ...overlayStyle, opacity: isAnimating ? 1 : 0 }"
+        :style="{ ...overlayStyle, zIndex: `calc(var(--cui-z-overlay, 9990) + ${zStep})`, opacity: isAnimating ? 1 : 0 }"
         @keydown="onKeydown"
         @click.self="onBackdropClick"
       >
@@ -330,6 +343,64 @@ const panelStyle = {
             Call it during a component's setup: it registers <code class="cui-code">onMounted</code> /
             <code class="cui-code">onUnmounted</code> hooks, and unmounting releases the scroll lock even
             mid-animation.
+          </li>
+        </ul>
+      </CuiCardBody>
+    </CuiCard>
+
+    <!-- Layering -->
+    <div>
+      <h2>Layering: the newest layer is on top</h2>
+      <p>
+        Overlays (<code class="cui-code">CuiModal</code>, <code class="cui-code">CuiConfirmDialog</code>,
+        <code class="cui-code">CuiCommandPalette</code>, <code class="cui-code">CuiSlideover</code>,
+        <code class="cui-code">CuiDrawer</code>, anything built on <code class="cui-code">useOverlay</code>)
+        and the panels anchored to a trigger (popover, dropdown menu and sub-menu, select, combobox,
+        tag input, context menu) share one sequence in the order they open. A layer takes the next
+        z-index step above the newest one open when it opens and gives it back when its exit has
+        finished, so with nothing open the next one starts at the base again and z-index never
+        climbs. Open order, not where a component sits in your template, decides what is on top:
+        the command palette mounted in your app shell opens over a dialog from any page, and a
+        select opened inside a dialog is above that dialog.
+      </p>
+      <p>
+        Every step is an offset from <code class="cui-code">--cui-z-overlay</code> (default
+        <code class="cui-code">9990</code>), so one property on <code class="cui-code">:root</code>
+        moves the whole library.
+      </p>
+    </div>
+
+    <CuiCard variant="outline">
+      <CuiCardBody>
+        <PropTable :props="layers" />
+      </CuiCardBody>
+    </CuiCard>
+
+    <CuiCard variant="outline">
+      <CuiCardBody>
+        <p><strong>Good to know:</strong></p>
+        <ul style="margin-bottom: 0">
+          <li>
+            <strong>Light dismiss.</strong> A popover, dropdown or select list that is open when an
+            overlay opens closes, as a press outside would: through its own close, so its
+            <code class="cui-code">v-model</code> and events follow, and focus goes to the new
+            overlay. One opened from inside the overlay opens after it and is left alone.
+          </li>
+          <li>
+            <strong>Toasts</strong> sit above the whole sequence, in either order: a "Saved" toast
+            fired from inside a dialog stays readable, and one already on screen stays above a dialog
+            that opens later. <strong>Tooltips</strong> sit above the toasts, since a tooltip can
+            belong to a toast's own button.
+          </li>
+          <li>
+            <strong>Headroom.</strong> The sequence has 40 steps (+0 to +39). Past the last step,
+            layers share it and DOM order decides between them. The toast region and tooltips are
+            fixed above it, so no stack of layers can cover them.
+          </li>
+          <li>
+            Sticky page chrome stays below the base: the navbar sits at the base minus one, and a
+            component's internal stacking (table headers, scroll shadows) stays inside its own
+            stacking context.
           </li>
         </ul>
       </CuiCardBody>

@@ -1,5 +1,5 @@
 import { onScopeDispose, watch } from "vue";
-import { OVERLAY_Z_INDEX } from "../utils/position";
+import { overlayZIndex } from "../utils/overlayLayer";
 import { closeNestedLayers } from "./useLayerStack";
 import { useOverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
 import type { OverlayJoinCore } from "./useOverlay";
@@ -43,6 +43,7 @@ export function joinStack(options: JoinOptions) {
       panel: () => core.dialogRef.value,
       root: () => core.rootRef.value,
       requestClose: core.requestClose,
+      step: () => core.zStep.value,
     };
     if (stack) {
       watch(core.isOpen, (now) => (now ? stack.register(entry) : stack.unregister(entry)), { flush: "sync" });
@@ -52,8 +53,8 @@ export function joinStack(options: JoinOptions) {
     return {
       /** Whether it sits in a stack: its root then lets pointer events through. */
       stacked: !!stack,
-      /** The overlay root's `z-index`: one step above the overlay beneath it in a stack. */
-      zIndex: () => (stack ? stack.zIndex(entry) : OVERLAY_Z_INDEX),
+      /** The overlay root's `z-index`: its step, above every overlay open before it (#541). */
+      zIndex: () => overlayZIndex(core.zStep.value),
       isModal,
       /**
        * The backdrop a drag of this overlay fades (#526). In a stack the backdrop is the

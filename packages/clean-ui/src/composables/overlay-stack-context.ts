@@ -22,6 +22,8 @@ export interface OverlayStackEntry {
   backdrop?: () => Record<string, unknown>;
   /** Close this panel, unless it is `persistent`. */
   requestClose: () => void;
+  /** Its z-index step above `--cui-z-overlay`, from the shared counter (`utils/overlayLayer.ts`). */
+  step: () => number;
 }
 
 /** The shared coordinator behind a stack of overlays (#41). Entries are in open order. */
@@ -32,8 +34,6 @@ export interface OverlayStackContext {
   unregister: (entry: OverlayStackEntry) => void;
   /** The stack's `modal`: what an overlay that sets none of its own inherits. */
   defaultModal: () => boolean;
-  /** The CSS `z-index` of the entry's overlay root: one step above the entry beneath it. */
-  zIndex: (entry: OverlayStackEntry) => string;
   /**
    * The panel whose backdrop props (opacity, blur, gradient) the one shared backdrop takes: the
    * lowest active one. The backdrop itself is drawn once by the stack, not by any panel.
