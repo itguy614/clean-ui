@@ -68,7 +68,7 @@ const meta: ComponentMeta = {
     { name: "--cui-combobox-border-width", default: "1px", description: "Control border width" },
     { name: "--cui-combobox-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
     { name: "--cui-combobox-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
-    { name: "--cui-combobox-panel-radius", default: "per rounded", description: "Dropdown corner radius (follows `rounded`; `full` uses `lg`)" },
+    { name: "--cui-combobox-panel-radius", default: "--cui-combobox-radius, else per rounded", description: "Dropdown corner radius: the field's `--cui-combobox-radius`, else the `rounded` step (none 0, sm, md, lg; full uses lg)" },
     { name: "--cui-combobox-panel-shadow", default: "var(--cui-shadow-md)", description: "Dropdown shadow" },
     { name: "--cui-combobox-panel-padding", default: "0.25rem", description: "Dropdown inner padding" },
     { name: "--cui-combobox-item-padding", default: "per size", description: "Option padding" },

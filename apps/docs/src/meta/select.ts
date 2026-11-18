@@ -119,7 +119,7 @@ const meta: ComponentMeta = {
     { name: "--cui-select-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Trigger focus ring color" },
     { name: "--cui-select-panel-bg", default: "var(--cui-surface-base)", description: "Dropdown background" },
     { name: "--cui-select-panel-border", default: "1px solid var(--cui-border)", description: "Dropdown border" },
-    { name: "--cui-select-panel-radius", default: "per rounded", description: "Dropdown corner radius (follows `rounded`; `full` uses `lg`)" },
+    { name: "--cui-select-panel-radius", default: "--cui-select-radius, else per rounded", description: "Dropdown corner radius: the field's `--cui-select-radius`, else the `rounded` step (none 0, sm, md, lg; full uses lg)" },
     { name: "--cui-select-panel-shadow", default: "var(--cui-shadow-md)", description: "Dropdown shadow" },
     { name: "--cui-select-panel-padding", default: "0.25rem", description: "Dropdown inner padding" },
     { name: "--cui-select-font-size", default: "per size", description: "Trigger and option font size" },
