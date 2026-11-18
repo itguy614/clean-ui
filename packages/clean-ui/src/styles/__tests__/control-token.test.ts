@@ -72,6 +72,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiSlideover.vue", issue: "#407" },
   { file: "CuiDrawer.vue", issue: "#268" },
   { file: "CuiTransferList.vue", issue: "#469" },
+  { file: "CuiSortableList.vue", issue: "#198" },
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
   { file: "CuiPanel.vue", issue: "#406" },
@@ -224,6 +225,9 @@ const SLOTS = new Set([
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
   "width", // an overlay panel's width preset, which is not CuiSize (#407)
   ...["pressed-bg", "pressed-color", "pressed-border"], // a toggle's on state (#396)
+  // The lift of a dragged item (CuiSortableList, #198): motion-like tokens, akin to
+  // --cui-press-scale, not paint, so no paint slot names them.
+  ...["drag-rotate", "drag-scale", "drag-opacity"],
 ]);
 
 /** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */
@@ -561,6 +565,9 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     "tree-view-indent": "the size preset's indent step, with no public token (CuiTreeView emits it)",
     "tree-view-icon-size": "the size preset's glyph size, with no public token (CuiTreeView emits it)",
   },
+  "CuiSortableList.vue": Object.fromEntries(
+    ["left", "top", "width", "height"].map((s) => [`sortable-list-box-${s}`, `the dragged item's box when the drag began: where the ghost stands and what the placeholder holds (${GEOMETRY})`]),
+  ),
   "CuiTransferList.vue": {
     "transfer-list-title-font-size": "a part's own size has no slot in the closed vocabulary (the option rows' font-size is public)",
     "transfer-list-max-height": "follows the `height` prop",

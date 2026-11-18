@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `CuiSortableList` (#198): a reorderable list whose v-model is the array of items. Drag an item by
+  its handle (pointer, touch and pen), or grab it with the keyboard (Space or Enter grabs, the
+  arrow keys, Home and End move it, Space or Enter drops, Escape cancels and restores), or use the
+  Move up / Move down buttons each item carries (`moveButtons`, the single-pointer alternative to
+  dragging that WCAG 2.5.7 asks for). A polite live region announces each step with the position
+  out of the total. The order is committed once, on the drop, with `update:modelValue` and a
+  `reorder` event (`{ item, from, to }`). Items are keyed by `itemKey` (default `id`) and named for
+  assistive tech by `itemLabel`. `orientation` (`vertical` by default), `disabled` and `hidden`;
+  slots `item` and `handle`.
+  - While dragged, an item floats as a ghost that follows the pointer (tilted, lifted and a little
+    see-through, with a soft shadow) over a dimmed placeholder that holds its slot, while the
+    others slide aside on `transform` and the ghost settles on the drop. `--cui-sortable-list-drag-rotate`
+    (2deg), `-drag-scale` (1.02) and `-drag-opacity` (0.9) tune it, and `0deg` / `1` / `1` turn it
+    off. Under `prefers-reduced-motion` nothing tilts or lifts and the others do not slide. Escape
+    cancels a drag or grab without closing an enclosing modal.
+  - Not included: scrolling an ancestor when an item is dragged near its edge, and dragging between
+    lists (`CuiTransferList` covers moving items across).
+- `messages.sortableList` for the list's labels, instructions and announcements.
+
 ### Changed
 
 - The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's

@@ -107,6 +107,7 @@ import CuiDatePicker from "./components/CuiDatePicker.vue";
 import CuiDateRangePicker from "./components/CuiDateRangePicker.vue";
 import CuiCombobox from "./components/CuiCombobox.vue";
 import CuiTransferList from "./components/CuiTransferList.vue";
+import CuiSortableList from "./components/CuiSortableList.vue";
 import CuiTimePicker from "./components/CuiTimePicker.vue";
 import CuiTagInput from "./components/CuiTagInput.vue";
 import CuiFileUpload from "./components/CuiFileUpload.vue";
@@ -130,7 +131,7 @@ import CuiCommandPalette from "./components/CuiCommandPalette.vue";
 import "./styles/main.css";
 
 // Component exports
-export { CuiButton, CuiButtonGroup, CuiToolbar, CuiToolbarSeparator, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiPinInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSlideoverStack, CuiDrawer, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider, CuiTransition, CuiTransitionGroup, CuiSidebar, CuiSidebarHeader, CuiSidebarContent, CuiSidebarFooter, CuiSidebarGroup, CuiNavbar, CuiNavbarBrand, CuiNavbarNav, CuiNavbarActions, CuiNavbarMenu, CuiNavbarLink, CuiPanel, CuiCommandPalette };
+export { CuiButton, CuiButtonGroup, CuiToolbar, CuiToolbarSeparator, CuiGrid, CuiGridItem, CuiFlex, CuiFlexItem, CuiStack, CuiContainer, CuiSpacer, CuiScrollArea, CuiRadio, CuiRadioGroup, CuiCheckbox, CuiCheckboxGroup, CuiToggle, CuiToggleGroup, CuiInput, CuiMaskedInput, CuiPinInput, CuiTextarea, CuiSelect, CuiFormField, CuiForm, CuiFieldset, CuiBadge, CuiAlert, CuiTooltip, CuiToast, CuiToastProvider, CuiIcon, CuiBackdrop, CuiModal, CuiModalHeader, CuiModalBody, CuiModalFooter, CuiTabs, CuiTab, CuiDropdown, CuiDropdownTrigger, CuiDropdownMenu, CuiDropdownItem, CuiDropdownCheckItem, CuiDropdownRadioGroup, CuiDropdownRadioItem, CuiDropdownDivider, CuiDropdownHeader, CuiDropdownSub, CuiProgress, CuiPagination, CuiBreadcrumb, CuiBreadcrumbItem, CuiCard, CuiCardHeader, CuiCardBody, CuiCardFooter, CuiCardMedia, CuiAccordion, CuiAccordionItem, CuiSlideover, CuiSlideoverStack, CuiDrawer, CuiSkeleton, CuiPopover, CuiContextMenu, CuiEmptyState, CuiTable, CuiTableHead, CuiTableBody, CuiTableFoot, CuiTableRow, CuiTableCell, CuiDataGrid, CuiAvatar, CuiAvatarGroup, CuiStepper, CuiInputStepper, CuiSlider, CuiSpinner, CuiBanner, CuiDivider, CuiCopyButton, CuiResizablePanels, CuiConfirmDialog, CuiTimeline, CuiTimelineItem, CuiKbd, CuiColorPicker, CuiDatePicker, CuiDateRangePicker, CuiCombobox, CuiTransferList, CuiSortableList, CuiTimePicker, CuiTagInput, CuiFileUpload, CuiTreeView, CuiCodeBlock, CuiRating, CuiConfigProvider, CuiTransition, CuiTransitionGroup, CuiSidebar, CuiSidebarHeader, CuiSidebarContent, CuiSidebarFooter, CuiSidebarGroup, CuiNavbar, CuiNavbarBrand, CuiNavbarNav, CuiNavbarActions, CuiNavbarMenu, CuiNavbarLink, CuiPanel, CuiCommandPalette };
 export { CuiList, CuiListItem, CuiStatusDot };
 
 // Type exports
@@ -283,6 +284,7 @@ export { formatDate, parseFormattedDate, dateToIso, isoToDate } from "./utils/da
 export type { CuiDateRangePickerProps, DateRangeValue, DateRangePickerValueType } from "./components/CuiDateRangePicker.vue";
 export type { CuiComboboxProps, ComboboxOption } from "./components/CuiCombobox.vue";
 export type { CuiTransferListProps, TransferListItem } from "./components/CuiTransferList.vue";
+export type { CuiSortableListProps } from "./components/CuiSortableList.vue";
 export type { CuiTimePickerProps, TimePickerFormat } from "./components/CuiTimePicker.vue";
 export type { CuiTagInputProps, TagOption } from "./components/CuiTagInput.vue";
 export type { CuiFileUploadProps, FileEntry } from "./components/CuiFileUpload.vue";
@@ -501,6 +503,7 @@ export function createCleanUI(options: CleanUIOptions = {}) {
       app.component("CuiDateRangePicker", CuiDateRangePicker);
       app.component("CuiCombobox", CuiCombobox);
       app.component("CuiTransferList", CuiTransferList);
+      app.component("CuiSortableList", CuiSortableList);
       app.component("CuiTimePicker", CuiTimePicker);
       app.component("CuiTagInput", CuiTagInput);
       app.component("CuiFileUpload", CuiFileUpload);

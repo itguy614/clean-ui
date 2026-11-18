@@ -121,6 +121,25 @@ export interface CuiCoreMessages {
      */
     actions?: string;
   };
+  sortableList: {
+    /** Default `label` of the list, when the consumer gives none. */
+    label: string;
+    /** The drag handle's name, which shows only a grip icon. `item` is the item's label. */
+    handle: (item: string) => string;
+    /** The move buttons' names (WCAG 2.5.7's single-pointer alternative to dragging). */
+    moveUp: (item: string) => string;
+    moveDown: (item: string) => string;
+    /** Horizontal lists name the same buttons by direction. */
+    moveStart: (item: string) => string;
+    moveEnd: (item: string) => string;
+    /** Read when a handle takes focus: how to grab, move, drop and cancel. */
+    instructions: string;
+    /** Live-region announcements. `position` counts from 1, out of `total`. */
+    grabbed: (item: string, position: number, total: number) => string;
+    moved: (item: string, position: number, total: number) => string;
+    dropped: (item: string, position: number, total: number) => string;
+    cancelled: (item: string, position: number, total: number) => string;
+  };
   datePicker: {
     today: string;
     /** The years grid's name: one page of years. */
@@ -386,6 +405,19 @@ export const defaultMessages: CuiCoreMessages = {
     moveDown: "Move down",
     filter: (title) => `Filter ${title}`,
     actions: "Move items",
+  },
+  sortableList: {
+    label: "Reorderable list",
+    handle: (item) => `Reorder ${item}`,
+    moveUp: (item) => `Move ${item} up`,
+    moveDown: (item) => `Move ${item} down`,
+    moveStart: (item) => `Move ${item} earlier`,
+    moveEnd: (item) => `Move ${item} later`,
+    instructions: "Press Space to grab. Use the arrow keys to move, Space to drop, Escape to cancel.",
+    grabbed: (item, position, total) => `${item} grabbed, position ${position} of ${total}.`,
+    moved: (item, position, total) => `${item} moved to position ${position} of ${total}.`,
+    dropped: (item, position, total) => `${item} dropped at position ${position} of ${total}.`,
+    cancelled: (item, position, total) => `Reorder cancelled. ${item} is back at position ${position} of ${total}.`,
   },
   datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
