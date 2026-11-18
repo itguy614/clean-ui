@@ -27,6 +27,7 @@ const persistent = ref(false);
 const noDrag = ref(false);
 const assembled = ref(false);
 const restyled = ref(false);
+const scaled = ref(false);
 
 const rows = Array.from({ length: 30 }, (_, i) => `Item ${i + 1}`);
 const email = ref("");
@@ -44,6 +45,7 @@ const email = ref("");
           <li>Open the scrolling drawer. Scroll the list, back to the top, and keep pulling: it only closes once the list is at the top.</li>
           <li>Open the keyboard drawer on a phone and tap the field: the sheet stays above the keyboard.</li>
           <li>Watch the page behind the sheet while you drag: the backdrop fades as the sheet moves away, comes back to full if it springs back, and finishes fading as it closes.</li>
+          <li>Open the "Background scaling" drawer: the page behind it scales back to about 95% and its corners round, and both follow your drag, reaching full size as the sheet closes.</li>
           <li>Turn on Reduce Motion in your OS: the sheet fades instead of sliding, but a drag still follows your finger. Drag it halfway down and let go past the closing point: it fades out where you left it, with no jump back to the top first.</li>
           <li>Press Escape, click the backdrop or the X, with the mouse or the keyboard: each closes it. Dragging is never the only way.</li>
         </ol>
@@ -124,6 +126,7 @@ const email = ref("");
         <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
           <li><strong>Release:</strong> faster than 0.11 px/ms over the drag closes it (or moves one snap point) however short it was. Slower, it goes to the nearest snap point, or closes once pulled past 40% of the way.</li>
           <li><strong>The backdrop follows the sheet:</strong> its opacity is written straight onto the backdrop as you drag, scaled from its own (<code>backdrop-opacity</code>) to nothing across the distance from the lowest snap point to closed. On release it settles with the sheet: back to full on a spring-back, to zero on a dismissal. Inside a <code>CuiSlideoverStack</code> the backdrop is the stack's, one for the whole group, so only a drawer that is the only panel open fades it; a drawer open with others leaves it alone.</li>
+          <li><strong>The page behind it (<code>scale-background</code>):</strong> opt-in. When the sheet opens it looks up <code>background-selector</code> (default <code>[data-cui-drawer-wrapper]</code>; the library never assumes your app root) and, only if found, scales that element to 95% with <code>--cui-radius-lg</code> corners, over the sheet's own open and exit timing. A drag drives it with the same progress as the backdrop, written straight onto the element's <code>transform</code> and <code>border-radius</code>; its own inline <code>transform</code>, <code>transform-origin</code>, <code>border-radius</code>, <code>overflow</code> and <code>transition</code> are put back after the exit, or at once if the drawer unmounts. Off under reduced motion, since a scale is movement. Edge cases: the wrapper clips (<code>overflow: hidden</code>) so its corners round, so keep <code>position: fixed</code> and <code>position: sticky</code> elements <em>outside</em> it (a transformed ancestor becomes their containing block while it is scaled); a scrolled page scales about the top of what is on screen, so it does not slide away; the top edge keeps <code>env(safe-area-inset-top)</code> plus 14px clear. Nested drawers over one wrapper share one scale rather than scaling the scaled: it stays scaled until the last closes, and only a sole open sheet drives it from its drag.</li>
           <li><strong>Pulling past fully open</strong> is damped: the sheet moves less the further you pull.</li>
           <li><strong>Scroll versus drag:</strong> a drag that starts in scrolled content is a scroll. Only at the top of the content does a pull close the sheet, and for 100ms after the content last scrolled no drag starts, so a fast scroll past the top does not dismiss it.</li>
           <li><strong>One finger:</strong> the pointer is captured once the drag starts, and a second touch is ignored.</li>
@@ -194,6 +197,21 @@ const email = ref("");
             <CuiButton variant="ghost" @click="assembled = false">Cancel</CuiButton>
             <CuiButton variant="solid" color="error" @click="assembled = false">Delete</CuiButton>
           </CuiModalFooter>
+        </CuiDrawer>
+      </Example>
+
+      <Example
+        class="mt-6"
+        title="Background scaling"
+        :code="`<!-- Mark the page wrapper once; keep fixed and sticky elements outside it -->
+<div data-cui-drawer-wrapper>…your app…</div>
+
+<CuiDrawer v-model:visible=&quot;show&quot; scale-background title=&quot;Share&quot;>…</CuiDrawer>
+<!-- or: background-selector=&quot;#app&quot; -->`"
+      >
+        <CuiButton variant="outline" size="sm" @click="scaled = true">Open</CuiButton>
+        <CuiDrawer v-model:visible="scaled" scale-background title="Background scaling">
+          <p>The page behind scales back as this opens and follows your drag. This site marks its <code>main</code> element with <code>data-cui-drawer-wrapper</code>.</p>
         </CuiDrawer>
       </Example>
 
