@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` follows the field's
+  `rounded` (#522). At the default `md` its corners are 6px (`--cui-radius-md`) instead of 8px
+  (`--cui-radius-lg`), so they match the field. `rounded="none"` squares the panel and its
+  rows, and `full` gives the panel `lg`. `--cui-<component>-panel-radius` and
+  `-item-radius` still override it.
+
 ## [2.1.0] - 2026-11-16
 
 ### Added

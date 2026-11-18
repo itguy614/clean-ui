@@ -28,6 +28,8 @@ import { useEventListener } from "../composables/useEventListener";
  */
 defineOptions({ inheritAttrs: false });
 
+// The `rounded: "md"` default mirrors CuiSelect, CuiCombobox and CuiTagInput, which always
+// pass their own; keep them in step.
 const props = withDefaults(defineProps<{
   open: boolean;
   /**
