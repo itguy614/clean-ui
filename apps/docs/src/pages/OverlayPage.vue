@@ -126,7 +126,7 @@ const returns = [
     name: "zStep",
     type: "Ref<number>",
     description:
-      "The overlay's z-index step above --cui-z-overlay, taken when it opens and given back when its exit has finished: 0 with nothing else open, one more than the newest open overlay otherwise, up to 7. Add it to the base on your root, as in the example, and the newest overlay is on top. See Layering below.",
+      "The overlay's z-index step above --cui-z-overlay, taken when it opens and given back when its exit has finished: 0 with nothing else open, one more than the newest open layer otherwise, up to 39. Add it to the base on your root, as in the example, and the newest overlay is on top. See Layering below.",
   },
   {
     name: "isVisible",

@@ -1,3 +1,4 @@
+import type { InjectionKey } from "vue";
 import { OVERLAY_Z_INDEX } from "./position";
 
 /**
@@ -31,23 +32,31 @@ export interface LayerToken {
   step: number;
   /** A panel's own close, called when an overlay opens over it. Overlays have none. */
   dismiss?: () => void;
+  /** The panel this one was opened from, by component tree: it stays open under an overlay it hosts. */
+  parent?: LayerToken | null;
 }
+
+/** Provided by a panel (`useLayerStep`), so an overlay or panel declared inside it knows its host. */
+export const LayerHostKey: InjectionKey<() => LayerToken | undefined> = Symbol("cui-layer-host");
 
 const taken: LayerToken[] = [];
 
 /** The next step above the newest open layer. A panel passes `dismiss` (its own close, called when an overlay opens over it); an overlay and a sub-menu pass none. */
-export function takeLayerStep(dismiss?: () => void): LayerToken {
-  const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss };
+export function takeLayerStep(dismiss?: () => void, parent?: LayerToken | null): LayerToken {
+  const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss, parent };
   taken.push(token);
   return token;
 }
 
 /**
  * Light-dismisses every open panel older than the overlay that just opened: call it after the
- * overlay has noted where focus was, since a closing panel may move it.
+ * overlay has noted where focus was, since a closing panel may move it. The panel the overlay is
+ * declared in (`host`) and the panels that hold it stay open: closing them would unmount it.
  */
-export function dismissPanels(newest: LayerToken): void {
-  taken.slice(0, taken.indexOf(newest)).forEach((t) => t.dismiss?.());
+export function dismissPanels(newest: LayerToken, host?: LayerToken | null): void {
+  const keep = new Set<LayerToken>();
+  for (let t = host; t; t = t.parent) keep.add(t);
+  taken.slice(0, taken.indexOf(newest)).forEach((t) => keep.has(t) || t.dismiss?.());
 }
 
 /** Returns a step taken earlier; the others keep theirs. */

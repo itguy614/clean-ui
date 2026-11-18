@@ -355,7 +355,7 @@ const noOptionsLabel = computed(() => props.noOptionsText ?? messages.value.sele
       :open="isOpen"
       :anchor="triggerRef"
       token-prefix="select"
-      @dismiss="close"
+      @close="close"
       :color="color"
       :max-height="300"
       :font-size="dims.fontSize"

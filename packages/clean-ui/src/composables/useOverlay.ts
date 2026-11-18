@@ -1,4 +1,4 @@
-import { ref, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
+import { ref, inject, watch, onMounted, onUnmounted, nextTick, type Ref, type ShallowRef } from "vue";
 import { focusTook, resolveFocusTarget, restoreKeyOf, returnFocus } from "../utils/focusRestore";
 import { lockBodyScroll, unlockBodyScroll } from "../utils/scrollLock";
 import { useLayerStack, type LayerHandle } from "./useLayerStack";
@@ -6,7 +6,7 @@ import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
-import { dismissPanels, giveBackStep, takeLayerStep, type LayerToken } from "../utils/overlayLayer";
+import { dismissPanels, giveBackStep, LayerHostKey, takeLayerStep, type LayerToken } from "../utils/overlayLayer";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -115,6 +115,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   // The z-index step it holds from opening until its exit has finished (#541).
   const zStep = ref(0);
   let held: LayerToken | undefined;
+  // The panel this overlay is declared in, if any: it stays open when this opens.
+  const host = inject(LayerHostKey, undefined);
   const releaseStep = () => {
     if (held) giveBackStep(held);
     held = undefined;
@@ -153,7 +155,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
     }
     isVisible.value = true;
     // A panel open beneath it closes (its own close, so its events follow), now that the opener is noted.
-    dismissPanels(held);
+    dismissPanels(held, host?.());
 
     acquireScrollLock();
 
@@ -232,6 +234,8 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
 
     // v-show hides it, and its <Transition> plays the exit, then calls onAfterLeave.
     isVisible.value = false;
+    // Opened and closed in one tick: nothing was shown, so no exit will give the step back.
+    if (!mounted.value) releaseStep();
   }
 
   /**

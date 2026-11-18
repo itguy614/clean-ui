@@ -57,10 +57,10 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   /** An overlay opened over it: close, as a press outside would (#541). */
-  dismiss: [];
+  close: [];
 }>();
 const { present, onAfterLeave } = usePresence(() => props.open);
-const layerStep = useLayerStep(() => props.open, present, () => emit("dismiss"));
+const layerStep = useLayerStep(() => props.open, present, () => emit("close"));
 // The theme scope around the field, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
 

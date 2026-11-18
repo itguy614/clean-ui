@@ -149,6 +149,21 @@ describe("a panel open when an overlay opens light-dismisses", () => {
     expect(paintsOnTop(overlays().at(-1))).toBe(true);
   });
 
+  it("a modal declared inside a popover opens without closing the popover that holds it", async () => {
+    const state = reactive({ pop: true, m: false });
+    wrapper = mount(defineComponent({ render: () => [
+      h(CuiPopover, { visible: state.pop, "onUpdate:visible": (v: boolean) => (state.pop = v), trigger: "manual" as never, noArrow: true, width: "12rem" }, {
+        default: () => h("button", "anchor"),
+        content: () => modal(state, "m", () => h("p", "m")),
+      }),
+    ] }), { attachTo: document.body });
+    await settle();
+    state.m = true;
+    await settle();
+    expect(state.pop, "the host popover stays open").toBe(true);
+    expect(paintsOnTop(overlays().at(-1))).toBe(true);
+  });
+
   it("a panel opened from inside the overlay is not touched by it: the overlay was there first", async () => {
     const state = reactive({ m: true, pop: false });
     wrapper = mount(defineComponent({ render: () => [modal(state, "m", () => pop(state, "pop"))] }), { attachTo: document.body });

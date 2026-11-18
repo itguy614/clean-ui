@@ -90,6 +90,18 @@ describe("dismissPanels: an overlay opening light-dismisses the panels beneath i
     expect(calls).toEqual(["a"]);
   });
 
+  it("the panel an overlay is declared in, and the panels holding that one, stay open", () => {
+    const calls: string[] = [];
+    const outer = takeLayerStep(() => calls.push("outer"));
+    held.push(outer);
+    const host = takeLayerStep(() => calls.push("host"), outer);
+    held.push(host);
+    take(true, () => calls.push("other"));
+    const overlay = take();
+    dismissPanels(overlay, host);
+    expect(calls).toEqual(["other"]);
+  });
+
   it("an overlay beneath a panel is not dismissed, and a panel opened over an overlay is left", () => {
     const calls: string[] = [];
     const first = take();
@@ -167,6 +179,24 @@ describe("useLayerStep", () => {
     expect(take().step).toBe(0);
   });
 
+  it("opened and closed in one tick, it never took a step it cannot give back", async () => {
+    const a = mountPanel();
+    a.open.value = true;
+    a.open.value = false;
+    await nextTick();
+    expect(take().step).toBe(0);
+  });
+
+  it("its dismiss does not run for a panel that is already leaving", () => {
+    const dismissed: string[] = [];
+    const a = mountPanel(dismissed);
+    a.open.value = true;
+    a.present.value = true;
+    a.open.value = false; // exiting: still present, still holding its step
+    dismissPanels(take());
+    expect(dismissed).toEqual([]);
+  });
+
   it("its dismiss runs when an overlay opens over it", () => {
     const dismissed: string[] = [];
     const a = mountPanel(dismissed);
@@ -207,7 +237,7 @@ describe("useOverlay and the counter", () => {
       },
     });
     w = mount(defineComponent({ render: () => h("div", open.map((_, i) => h(One, { index: i, key: i }))) }), { attachTo: document.body });
-    return { open, steps: () => exposed.map((o) => o.zStep.value) };
+    return { open, steps: () => exposed.map((o) => o.zStep.value), overlay: (i: number) => exposed[i] };
   }
 
   const flush = async () => {
@@ -252,6 +282,16 @@ describe("useOverlay and the counter", () => {
     t.open[2] = true;
     await flush();
     expect(t.steps()[2]).toBe(1);
+  });
+
+  it("an overlay opened and closed in one tick gives its step back", async () => {
+    const t = mountOverlays(1);
+    t.overlay(0).openOverlay();
+    t.overlay(0).closeOverlay();
+    await flush();
+    const probe = takeLayerStep();
+    expect(probe.step).toBe(0);
+    giveBackStep(probe);
   });
 
   it("an overlay unmounted while open gives its step back", async () => {
