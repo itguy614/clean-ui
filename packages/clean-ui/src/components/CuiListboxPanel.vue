@@ -28,7 +28,7 @@ import { useEventListener } from "../composables/useEventListener";
  */
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean;
   /**
    * What the panel anchors to and matches the width of: the field's control, not its
@@ -59,7 +59,7 @@ const props = defineProps<{
    */
   fontSize: string;
   itemPadding: string;
-}>();
+}>(), { rounded: "md" });
 const { present, onAfterLeave } = usePresence(() => props.open);
 // The theme scope around the field, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
@@ -168,7 +168,7 @@ const tokens = computed(() => {
   const p = props.tokenPrefix;
   const role = props.color ?? "primary";
   const token = (slot: string, fallback: string) => `var(--cui-${p}-${slot}, ${fallback})`;
-  const rounded = props.rounded ?? "md";
+  const rounded = props.rounded;
   const panelRadius = RADIUS_SCALE[rounded === "full" ? "lg" : rounded];
   const itemRadius = rounded === "none" ? "0" : "0.25rem";
   return {

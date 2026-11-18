@@ -157,3 +157,18 @@ describe("CuiTagInput highlight when the suggestions change", () => {
     w.unmount();
   });
 });
+
+describe("CuiTagInput panel radius (#522)", () => {
+  it("the panel takes the field's rounded", async () => {
+    const w = mount(CuiTagInput, {
+      attachTo: document.body,
+      props: { modelValue: [], suggestions: [{ value: "apple" }], rounded: "none" },
+    });
+    w.find("input").element.dispatchEvent(new FocusEvent("focus"));
+    await nextTick();
+    const panel = document.querySelector<HTMLElement>(".cui-tag-input__dropdown")!;
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-tag-input-panel-radius, 0)");
+    expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe("var(--cui-tag-input-item-radius, 0)");
+    w.unmount();
+  });
+});
