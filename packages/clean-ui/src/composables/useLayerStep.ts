@@ -1,5 +1,5 @@
 import { onScopeDispose, ref, watch, type Ref } from "vue";
-import { giveBackStep, takePanelStep, type LayerToken } from "../utils/overlayLayer";
+import { giveBackStep, takeLayerStep, type LayerToken } from "../utils/overlayLayer";
 
 /**
  * The z-index step of a panel anchored to a trigger (#541): taken when it opens, so it is above
@@ -20,7 +20,7 @@ export function useLayerStep(open: () => boolean, present: Ref<boolean>, dismiss
     (now) => {
       if (!now) return;
       release();
-      held = takePanelStep(dismiss);
+      held = takeLayerStep(dismiss);
       step.value = held.step;
     },
     { flush: "sync", immediate: true },

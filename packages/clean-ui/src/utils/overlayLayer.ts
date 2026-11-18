@@ -35,15 +35,11 @@ export interface LayerToken {
 
 const taken: LayerToken[] = [];
 
-function take(dismiss?: () => void): LayerToken {
+/** The next step above the newest open layer. A panel passes `dismiss` (its own close, called when an overlay opens over it); an overlay and a sub-menu pass none. */
+export function takeLayerStep(dismiss?: () => void): LayerToken {
   const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss };
   taken.push(token);
   return token;
-}
-
-/** An overlay's step: the next one. */
-export function takeOverlayStep(): LayerToken {
-  return take();
 }
 
 /**
@@ -52,11 +48,6 @@ export function takeOverlayStep(): LayerToken {
  */
 export function dismissPanels(newest: LayerToken): void {
   taken.slice(0, taken.indexOf(newest)).forEach((t) => t.dismiss?.());
-}
-
-/** A panel's step: the next one. `dismiss` closes it when an overlay opens (none: it goes with its parent). */
-export function takePanelStep(dismiss?: () => void): LayerToken {
-  return take(dismiss);
 }
 
 /** Returns a step taken earlier; the others keep theirs. */

@@ -4,6 +4,7 @@ import CuiBackdrop from "./CuiBackdrop.vue";
 import { usePresence } from "../composables/usePresence";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { subtreeTransition } from "../utils/motion";
+import { overlayZIndex } from "../utils/overlayLayer";
 import type { TailwindBreakpoint } from "../types/grid";
 import { useOverlayStackProvider } from "../composables/useOverlayStack";
 import { useSlideoverStackLayout } from "../composables/useSlideoverStackLayout";
@@ -77,7 +78,7 @@ watchEffect(() => {
   const entry = stack.backdropEntry();
   const bottom = stack.bottomEntry();
   if (entry) lookProps.value = entry.backdrop?.() ?? {};
-  if (bottom) lookZ.value = stack.zIndex(bottom);
+  if (bottom) lookZ.value = overlayZIndex(bottom.step());
 });
 onScopeDispose(() => cancelAnimationFrame(frame));
 // The backdrop's element, for a drawer's drag to fade (#526).

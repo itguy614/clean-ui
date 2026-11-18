@@ -34,8 +34,6 @@ export interface OverlayStackContext {
   unregister: (entry: OverlayStackEntry) => void;
   /** The stack's `modal`: what an overlay that sets none of its own inherits. */
   defaultModal: () => boolean;
-  /** The CSS `z-index` of the entry's overlay root: its step above `--cui-z-overlay`, so above every overlay open before it. */
-  zIndex: (entry: OverlayStackEntry) => string;
   /**
    * The panel whose backdrop props (opacity, blur, gradient) the one shared backdrop takes: the
    * lowest active one. The backdrop itself is drawn once by the stack, not by any panel.

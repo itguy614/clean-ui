@@ -6,7 +6,7 @@ import { usePresence } from "./usePresence";
 import { afterAnimations } from "../utils/motion";
 import type { CuiFocusTarget } from "../types/common";
 import { tabbableIn } from "../utils/focusable";
-import { dismissPanels, giveBackStep, takeOverlayStep, type LayerToken } from "../utils/overlayLayer";
+import { dismissPanels, giveBackStep, takeLayerStep, type LayerToken } from "../utils/overlayLayer";
 
 export interface UseOverlayOptions {
   /** Reactive open prop from the consumer */
@@ -143,7 +143,7 @@ export function useOverlay<J extends OverlayHooks = OverlayHooks>(options: Omit<
   function openOverlay() {
     // First, so a stack registering on `isOpen` reads the step. Re-opened mid-exit it is the newest.
     releaseStep();
-    held = takeOverlayStep();
+    held = takeLayerStep();
     zStep.value = held.step;
     isOpen.value = true;
     // Re-opened mid-exit, focus is still in the dialog: the opener it returns to is the first.

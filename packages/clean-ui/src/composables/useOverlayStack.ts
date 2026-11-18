@@ -1,7 +1,6 @@
 import { onScopeDispose, provide, shallowReactive, shallowRef, watchPostEffect } from "vue";
 import { __DEV__, warnOnce } from "../utils/devWarn";
 import { resolveColor } from "../utils/color";
-import { overlayZIndex } from "../utils/overlayLayer";
 import { OverlayStackKey, type OverlayStackContext, type OverlayStackEntry } from "./overlay-stack-context";
 
 // Module-scoped, so the library doesn't pull Node's global types into its own build.
@@ -79,8 +78,6 @@ export function useOverlayStackProvider(options: { modal?: () => boolean } = {})
     defaultModal: () => options.modal?.() ?? true,
     register,
     unregister,
-    // The shared counter (`utils/overlayLayer.ts`): panels open in stack order, so the order holds.
-    zIndex: (entry) => overlayZIndex(entry.step()),
     backdropEl: shallowRef<HTMLElement | null>(null),
     backdropEntry: () => entries[start()],
     bottomEntry: () => entries[0],

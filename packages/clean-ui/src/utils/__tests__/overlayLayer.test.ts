@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick, reactive, ref, shallowRef, Transition, vShow, withDirectives } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { createSSRApp } from "vue";
-import { dismissPanels, giveBackStep, MAX_LAYER_STEP, overlayZIndex, takeOverlayStep, takePanelStep, type LayerToken } from "../overlayLayer";
+import { dismissPanels, giveBackStep, MAX_LAYER_STEP, overlayZIndex, takeLayerStep, type LayerToken } from "../overlayLayer";
 import { TOAST_Z_INDEX, TOOLTIP_Z_INDEX } from "../position";
 import { useOverlay } from "../../composables/useOverlay";
 import { useLayerStep } from "../../composables/useLayerStep";
@@ -16,7 +16,7 @@ import { subtreeTransition } from "../motion";
  */
 const held: LayerToken[] = [];
 const take = (panel = false, dismiss?: () => void) => {
-  const t = panel ? takePanelStep(dismiss) : takeOverlayStep();
+  const t = takeLayerStep(panel ? dismiss : undefined);
   held.push(t);
   return t;
 };
@@ -26,15 +26,15 @@ const give = (t: LayerToken) => {
 };
 afterEach(() => held.splice(0).forEach(giveBackStep));
 
-describe("takeOverlayStep / takePanelStep / giveBackStep", () => {
+describe("takeLayerStep / giveBackStep", () => {
   it("starts at 0 and takes the next step above the newest, overlays and panels alike", () => {
     expect([take().step, take(true).step, take().step]).toEqual([0, 1, 2]);
   });
 
   it("resets once none is open, so z-index does not climb", () => {
     for (let n = 0; n < 5; n++) {
-      const a = takeOverlayStep();
-      const b = takePanelStep();
+      const a = takeLayerStep();
+      const b = takeLayerStep();
       expect([a.step, b.step]).toEqual([0, 1]);
       giveBackStep(b);
       giveBackStep(a);
@@ -260,7 +260,7 @@ describe("useOverlay and the counter", () => {
     await flush();
     w!.unmount();
     w = undefined;
-    const probe = takeOverlayStep();
+    const probe = takeLayerStep();
     expect(probe.step).toBe(0);
     giveBackStep(probe);
   });
@@ -287,7 +287,7 @@ describe("SSR", () => {
       },
     });
     await renderToString(createSSRApp(Dialog));
-    const probe = takeOverlayStep();
+    const probe = takeLayerStep();
     expect(probe.step).toBe(0);
     giveBackStep(probe);
   });
