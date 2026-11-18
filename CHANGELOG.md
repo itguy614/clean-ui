@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-11-18
+
+### Added
+
+- `CuiDrawer`: a draggable bottom sheet for touch. Drag it down to dismiss it (a flick closes it
+  even below the distance threshold), pull it up past fully open and it resists, and scrolling its
+  content to the top and pulling on closes it only once the content is at the top. `snapPoints`
+  (viewport fractions or `"NNNpx"`) with `v-model:active-snap-point` rest it at several heights.
+  It stays above the on-screen keyboard (`visualViewport`), `persistent` and `noDrag` opt out of
+  dismissal and dragging, `noHandle` hides the grab handle, and a `title` or the
+  `CuiModalHeader` / `CuiModalBody` / `CuiModalFooter` sub-components fill it. The backdrop fades
+  with the drag. It opens over 500 ms on `--cui-ease-drawer`, a documented exception to the 300 ms
+  ceiling. A mouse drags it from the handle only. Closing it is always possible by Escape, the
+  backdrop and the close button.
+- Touch and pen drag-to-dismiss on `CuiSlideover` (toward its edge). A mouse never drags it, it is
+  off while `persistent`, and `noDrag` turns it off.
+- `CuiSlideoverStack`: several slideovers open at once as one stack. Panels attach edge to edge
+  and narrow together to fit, then peek behind the top panel on a narrow viewport. `push`
+  (`inward` by default: the newest panel enters at the docked edge and the others slide in;
+  `outward`: the others stay put), `mode`, `gap`, `minWidth`, `peekOffset`, `maxPeek` and
+  `peekBelow` tune the layout. One shared backdrop stays on screen for as long as any panel is
+  open, a panel covered by another dims on a ramp instead of popping, and attached panels share a
+  seam with the soft shadow on the group's outer edge only. Left and right stacks only; a mixed
+  stack coordinates but warns in development.
+- A slideover or drawer declared inside another panel's content is its child: closing the parent
+  closes the child with it (children first), and a sibling stays independent.
+- `modal` on `CuiSlideover` and `CuiDrawer` (and on `CuiSlideoverStack`, as the default for its
+  panels): `false` makes a panel co-active, with no inert on the panels below it and no focus
+  trap, so a form and its history can both stay usable.
+- `CuiCommandPalette` and `useCommandPalette()`: a command palette over `CuiModal`. Commands
+  register from anywhere (`register` takes a command, an array, a ref or a getter, returns
+  `withdraw()`, and withdraws itself when the registering scope unmounts), with groups, recents
+  (`recentsStorageKey` persists them) and a `badge` on a command (a count or a `{ label, color }`).
+  Matching is fuzzy with the matched letters highlighted, and focus stays in the input
+  (`aria-activedescendant`, a live result count). Cmd/Ctrl-K opens it by default (`hotkey`), and
+  it is always reachable without the key through `v-model:visible` and `open()`. `fetchCommands`
+  (with `debounce` and `minChars`) adds results from a server under their own group, cancelling
+  earlier searches. Slots: `item`, `heading`, `empty`.
+- Scoped registries for the palette: `useCommandPaletteProvider()`, `createCommandPalette()`,
+  `CuiCommandPaletteKey` and a `registry` prop give an app or a subtree its own commands, open
+  state and recents. With several palettes on one shortcut, the most recently mounted one that has
+  a shortcut set claims it.
+- `messages.commandPalette` for the palette's labels.
+- `useOverlay()` returns `zStep` and `isModal`.
+
+### Changed
+
+- **Layering.** Overlays (`CuiModal`, `CuiConfirmDialog`, `CuiSlideover`, `CuiDrawer`,
+  `CuiCommandPalette`) and the panels anchored to a trigger (popover, dropdown menu and sub-menu,
+  select, combobox, tag input, context menu) share one open-order sequence at `--cui-z-overlay`
+  + 0 to 39, so the newest layer is on top and a panel opened inside an overlay is above it. The
+  toast region is at +48 and tooltips at +49, above the whole sequence. It used to be one fixed z-index
+  for every overlay, so an overlay that mounted early (the palette) opened behind one that mounted
+  later, and a dropdown inside a second modal opened behind it.
+- Opening an overlay now closes a popover, dropdown, select, combobox or context menu that was
+  already open (outside-press behavior), through its own close, so `v-model` and events follow. A
+  panel opened from inside the overlay is not affected. A popover is now behind a newer overlay
+  where it used to be above it (+8 above every overlay).
+  **If you hand-roll a floating panel**, put it at `calc(var(--cui-z-overlay, 9990) + 40)` or
+  above (tooltips and toasts are at +49 and +48), or take a step from `useOverlay()`'s `zStep`.
+  The old advice of "+8 above a modal" no longer holds.
+- Slideover and drawer panels: the snap offset is a CSS `translate`, so a consumer's own
+  `translate` on a panel stacks with it.
+
+### Fixed
+
+- Under `prefers-reduced-motion`, dragging a sheet partway and dismissing it no longer snaps it
+  back to fully open before the fade, and a consumer's own `transform` on an open slideover or
+  drawer is neutralized again when it is not being dragged.
+- A panel in a slideover stack that starts `hidden` while open takes its place when it is
+  revealed, and hiding one re-flows the others; a hidden panel no longer dims the panels below it
+  or takes Escape.
+- The command palette no longer opens behind an open modal or slideover.
+
+### Documentation
+
+- New pages: Drawer, Slideover Stack and Command Palette (with scoped registries and an async
+  search demo).
+- The docs site has a site-wide search: Cmd/Ctrl-K or the header Search button opens a command
+  palette over every page, with commands for color mode and each theme.
+- Every docs page fits a 390px viewport (the header's action buttons made every page wider than a
+  phone), and the title-id note on the Modal and Slideover pages now matches the code: the dialog
+  is named by its title through `aria-labelledby`.
+- Prose, comments and docs use American spelling (behavior, center, neighbor, color, ...).
+
 ## [2.1.0] - 2026-11-16
 
 ### Added
