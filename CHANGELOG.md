@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
   panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
   hosts others; Escape still closes the innermost layer first.
+- `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
+  fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
+  line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
 - `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
   (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
   also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
