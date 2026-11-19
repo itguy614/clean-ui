@@ -4,7 +4,9 @@ import type { DataGridQueryParams } from "../types/data-grid";
 
 /** The structural slice of Inertia's `router` these helpers call; no @inertiajs import. */
 export interface DataGridInertiaRouter {
-  get: (url: string, data?: Record<string, unknown>, options?: Record<string, unknown>) => void;
+  // Method syntax, so the parameters are checked bivariantly: Inertia's own `router.get` takes
+  // narrower `data`/`options` types and must still be assignable.
+  get(url: string, data?: Record<string, unknown>, options?: Record<string, unknown>): void;
 }
 
 /** Visit options used unless the caller passes its own. */
@@ -19,8 +21,8 @@ const DEFAULT_VISIT_OPTIONS = { preserveState: true, preserveScroll: true } as c
 export function dataGridQueryData(
   params: DataGridQueryParams,
   extraParams: Record<string, string> = {},
-): Record<string, string | undefined> {
-  const q: Record<string, string | undefined> = { ...extraParams };
+): Record<string, string> {
+  const q: Record<string, string> = { ...extraParams };
 
   if (params.page && params.page > 1) q.page = String(params.page);
   if (params.perPage) q.per_page = String(params.perPage);
@@ -51,7 +53,7 @@ export interface DataGridInertiaVisitOptions {
   router: DataGridInertiaRouter;
   /** Extra query params to include in every navigation */
   extraParams?: Record<string, string>;
-  /** Inertia visit options; replaces the default `{ preserveState: true, preserveScroll: true }` */
+  /** Inertia visit options, merged over the default `{ preserveState: true, preserveScroll: true }` (pass `false` to opt out of one) */
   visitOptions?: Record<string, unknown>;
 }
 
@@ -62,9 +64,10 @@ export interface DataGridInertiaVisitOptions {
 export function dataGridInertiaVisit(
   options: DataGridInertiaVisitOptions,
 ): (params: DataGridQueryParams) => void {
-  const { url, router, extraParams, visitOptions = DEFAULT_VISIT_OPTIONS } = options;
+  const { url, router, extraParams, visitOptions } = options;
+  const merged = { ...DEFAULT_VISIT_OPTIONS, ...visitOptions };
   return (params) => {
-    router.get(url, dataGridQueryData(params, extraParams), { ...visitOptions });
+    router.get(url, dataGridQueryData(params, extraParams), { ...merged });
   };
 }
 
@@ -93,12 +96,10 @@ export function useDataGridInertia(options: UseDataGridInertiaOptions) {
   const { grid, url, router, extraParams = {} } = options;
 
   const buildQueryData = (params: DataGridQueryParams) => dataGridQueryData(params, extraParams);
+  const visit = dataGridInertiaVisit({ url, router, extraParams });
 
   function navigate() {
-    const params = grid.getQueryParams();
-    const data = buildQueryData(params);
-
-    router.get(url, data, { ...DEFAULT_VISIT_OPTIONS });
+    visit(grid.getQueryParams());
   }
 
   // Watch sort, filters, search, page, perPage changes

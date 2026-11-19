@@ -994,8 +994,9 @@ useDataGridInertia({ grid, url: route("users.index"), router, extraParams: { tea
                 event carries a <code>DataGridQueryParams</code>, and
                 <code>dataGridInertiaVisit({ url, router, extraParams?, visitOptions? })</code>
                 returns a handler for it that calls <code>router.get(url, query, visitOptions)</code>
-                (default <code>{ preserveState: true, preserveScroll: true }</code>; passing
-                <code>visitOptions</code> replaces the default).
+                (default <code>{ preserveState: true, preserveScroll: true }</code>;
+                <code>visitOptions</code> is merged over it, so pass
+                <code>preserveScroll: false</code> to opt out of one).
               </p>
               <pre class="cui-pre"><code class="cui-code">&lt;script setup lang="ts"&gt;
 import { router } from "@inertiajs/vue3";

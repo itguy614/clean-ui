@@ -62,7 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
   (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
-  also has filters (applying a filter reset the page to 1) (#554).
+  also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
+  range without both ends and a non-numeric or non-positive `page` in the URL are now ignored
+  instead of applied.
 
 ### Changed
 

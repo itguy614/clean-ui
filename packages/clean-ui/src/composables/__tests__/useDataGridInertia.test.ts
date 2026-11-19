@@ -47,11 +47,22 @@ describe("dataGridQueryData round trip through hydrateFromUrl", () => {
 
   function roundTrip(params: DataGridQueryParams) {
     const q = new URLSearchParams();
-    for (const [k, v] of Object.entries(dataGridQueryData(params))) if (v !== undefined) q.set(k, v);
-    history.replaceState(null, "", `/?${q.toString()}`);
+    for (const [k, v] of Object.entries(dataGridQueryData(params))) q.set(k, v);
+    return hydrate(q.toString());
+  }
+
+  function hydrate(search: string) {
+    history.replaceState(null, "", `/?${search}`);
     const grid = useDataGrid({ columns, data: ref([]), serverSide: true, hydrateFromUrl: true });
     return grid.getQueryParams();
   }
+
+  it("ignores empty or partial filter values and a bad page in a hand-written URL", () => {
+    const back = hydrate("page=abc&filter[role]=&filter[joined]=2024-01-01");
+    expect(back.filters).toBeUndefined();
+    expect(back.page).toBe(1);
+    expect(hydrate("page=-2").page).toBe(1);
+  });
 
   it("restores page, per_page, sort, search and every filter type", () => {
     const params: DataGridQueryParams = {
@@ -97,9 +108,9 @@ describe("dataGridInertiaVisit", () => {
     );
   });
 
-  it("takes the caller's visit options in place of the defaults", () => {
+  it("merges the caller's visit options over the defaults", () => {
     const get = vi.fn();
-    dataGridInertiaVisit({ url: "/u", router: { get }, visitOptions: { replace: true } })(params);
-    expect(get.mock.calls[0]![2]).toEqual({ replace: true });
+    dataGridInertiaVisit({ url: "/u", router: { get }, visitOptions: { replace: true, preserveScroll: false } })(params);
+    expect(get.mock.calls[0]![2]).toEqual({ replace: true, preserveState: true, preserveScroll: false });
   });
 });
