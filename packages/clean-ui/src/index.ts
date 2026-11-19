@@ -321,7 +321,14 @@ export type {
 export type { DataGridContext } from "./components/data-grid-context";
 export { DataGridContextKey } from "./components/data-grid-context";
 export { useDataGrid, provideDataGrid, useDataGridState } from "./composables/useDataGrid";
-export { useDataGridInertia, type UseDataGridInertiaOptions } from "./composables/useDataGridInertia";
+export {
+  useDataGridInertia,
+  dataGridQueryData,
+  dataGridInertiaVisit,
+  type UseDataGridInertiaOptions,
+  type DataGridInertiaVisitOptions,
+  type DataGridInertiaRouter,
+} from "./composables/useDataGridInertia";
 export { useDataGridViews, localStorageViewAdapter, type UseDataGridViewsOptions } from "./composables/useDataGridViews";
 export { AccordionContextKey } from "./components/accordion-context";
 export type { CuiToggleGroupProps } from "./components/CuiToggleGroup.vue";

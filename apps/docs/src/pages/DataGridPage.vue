@@ -971,8 +971,7 @@ const apiAdapter: DataGridViewAdapter = {
                 It takes the grid context, so pair it with a headless <code>useDataGrid</code> (with
                 <code>serverSide</code> and <code>hydrateFromUrl</code>), or call it inside a
                 component in a <code>CuiDataGrid</code> slot with
-                <code>useDataGridState()</code>. With the component on its own, the
-                <code>navigate</code> event carries the same <code>DataGridQueryParams</code>.
+                <code>useDataGridState()</code>.
               </p>
               <pre class="cui-pre"><code class="cui-code">import { computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -987,6 +986,66 @@ const grid = useDataGrid({
 });
 
 useDataGridInertia({ grid, url: route("users.index"), router, extraParams: { team: "7" } });</code></pre>
+
+              <h4 id="inertia-navigate" class="mb-2 mt-6 text-base font-semibold">With the component's navigate event</h4>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                A <code>CuiDataGrid</code> with <code>server-side</code> owns its grid, so there is
+                no context to hand to <code>useDataGridInertia</code>. Its <code>navigate</code>
+                event carries a <code>DataGridQueryParams</code>, and
+                <code>dataGridInertiaVisit({ url, router, extraParams?, visitOptions? })</code>
+                returns a handler for it that calls <code>router.get(url, query, visitOptions)</code>
+                (default <code>{ preserveState: true, preserveScroll: true }</code>;
+                <code>visitOptions</code> is merged over it, so pass
+                <code>preserveScroll: false</code> to opt out of one).
+              </p>
+              <pre class="cui-pre"><code class="cui-code">&lt;script setup lang="ts"&gt;
+import { router } from "@inertiajs/vue3";
+import { CuiDataGrid, dataGridInertiaVisit } from "@itguy614/clean-ui";
+
+const visit = dataGridInertiaVisit({ url: route("users.index"), router });
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;CuiDataGrid
+    :columns="columns"
+    :data="users"
+    server-side
+    hydrate-url
+    @navigate="visit"
+  /&gt;
+&lt;/template&gt;</code></pre>
+              <p class="mb-3 mt-3 text-surface-600 dark:text-surface-400">
+                To call the router yourself, <code>dataGridQueryData(params, extraParams?)</code> is
+                the same mapping as a pure function, returning the query object. Both
+                <code>useDataGridInertia</code> and <code>dataGridInertiaVisit</code> use it, so the
+                keys always match what <code>hydrate-url</code> reads back. Use
+                <code>useDataGridInertia</code> when you own the grid with <code>useDataGrid</code>;
+                use <code>dataGridInertiaVisit</code> (or <code>dataGridQueryData</code> with your own
+                router call) with the component's <code>navigate</code> event.
+              </p>
+
+              <h4 id="inertia-query-format" class="mb-2 mt-6 text-base font-semibold">Query format the server reads</h4>
+              <ul class="mb-3 list-disc pl-6 text-surface-600 dark:text-surface-400">
+                <li><code>page</code> (omitted on page 1) and <code>per_page</code></li>
+                <li><code>sort</code> (the column key) and <code>direction</code> (<code>asc</code> or <code>desc</code>)</li>
+                <li><code>search</code>, and <code>search_field</code> when a field is chosen</li>
+                <li><code>filter[key]=value</code> for a text or select filter</li>
+                <li>
+                  Multi-select: <code>filter[role]=admin,editor</code>, the selected values joined
+                  with a comma. A value that itself contains a comma cannot be told apart from two
+                  values, so the format is ambiguous for those.
+                </li>
+                <li>
+                  Date range: <code>filter[joined]=2024-01-01,2024-02-01</code>, the two
+                  <code>YYYY-MM-DD</code> dates (from, to) joined with a comma. The filter panel
+                  only applies a range with both ends set.
+                </li>
+              </ul>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                On the server, split a multi-select or date-range value on the comma, for example in
+                Laravel <code>explode(',', $request->input('filter.joined'))</code>. The grid reads
+                the same format back from the URL, including after a reload.
+              </p>
             </CuiCardBody>
           </CuiCard>
         </CuiStack>
