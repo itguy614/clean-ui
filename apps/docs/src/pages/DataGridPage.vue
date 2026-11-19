@@ -433,7 +433,9 @@ function step(by: number) {
             <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
               Pinned (this grid starts from a view with <code>filterPanelPinned: true</code>):
               <strong>Filters</strong> shows and hides the panel as a column beside the table, and
-              it stays open until closed. Unpin it to get the popover back.
+              it stays open until closed, in place while the grid loads or a filter leaves no rows,
+              so <strong>Clear all</strong> is always within reach. Unpin it to get the popover back.
+              Without the button (<code>hideFilterPanel</code>) the panel cannot be opened, pinned or not.
             </p>
             <CuiDataGrid
               :columns="columns"

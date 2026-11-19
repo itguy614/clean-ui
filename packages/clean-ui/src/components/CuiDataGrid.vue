@@ -246,6 +246,20 @@ defineExpose({
 });
 const messages = useMessages();
 const filterPanelId = useCuiId("filter-panel");
+
+// The Filters button exists only with a toolbar, filterable columns and no `hideFilterPanel`.
+// Without it an open panel is unreachable, so `filterPanelOpen` is held shut: it never renders as
+// open and leaves no phantom open state, and a saved view with `filterPanelPinned` loads inert (#570).
+const hasFilterButton = computed(
+  () => !props.hideToolbar && !props.hideFilterPanel && grid.filterableColumns.value.length > 0,
+);
+watch(
+  [hasFilterButton, () => grid.filterPanelOpen.value],
+  ([available, open]) => {
+    if (open && !available) grid.toggleFilterPanel();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -274,32 +288,34 @@ const filterPanelId = useCuiId("filter-panel");
     <!-- Active filters -->
     <CuiDataGridActiveFilters />
 
-    <!-- Loading skeleton -->
-    <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
-      <CuiSkeleton :lines="8" />
-    </div>
+    <!-- Content area: loading / empty / table or card, beside the pinned filter panel. The panel
+         sits outside those branches (#570), so it keeps its place while the grid loads or has no
+         rows, and its controls stay reachable to clear the filter that emptied the result. -->
+    <div
+      class="cui-data-grid__content"
+      :style="{ flexDirection: filterPanelSide === 'left' ? 'row-reverse' : 'row' }"
+    >
+      <div style="flex: 1; min-width: 0;">
+        <!-- Loading skeleton -->
+        <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
+          <CuiSkeleton :lines="8" />
+        </div>
 
-    <!-- Empty state -->
-    <div v-else-if="grid.displayData.value.length === 0">
-      <slot name="empty">
-        <CuiEmptyState
-          :icon="IconMagnifyingGlass"
-          :title="messages.dataGrid.noResultsTitle"
-          :description="messages.dataGrid.noResultsDescription"
-          size="md"
-          color="secondary"
-        />
-      </slot>
-    </div>
+        <!-- Empty state -->
+        <div v-else-if="grid.displayData.value.length === 0">
+          <slot name="empty">
+            <CuiEmptyState
+              :icon="IconMagnifyingGlass"
+              :title="messages.dataGrid.noResultsTitle"
+              :description="messages.dataGrid.noResultsDescription"
+              size="md"
+              color="secondary"
+            />
+          </slot>
+        </div>
 
-    <!-- Content area: table/card + filter panel -->
-    <template v-else>
-      <div
-        class="cui-data-grid__content"
-        :style="{ flexDirection: filterPanelSide === 'left' ? 'row-reverse' : 'row' }"
-      >
-        <!-- Table or Card view -->
-        <div style="flex: 1; min-width: 0;">
+        <template v-else>
+          <!-- Table or Card view -->
           <!-- Card view -->
           <CuiDataGridCardView
             v-if="showCards()"
@@ -348,12 +364,12 @@ const filterPanelId = useCuiId("filter-panel");
               </slot>
             </template>
           </CuiDataGridTable>
-        </div>
-
-        <!-- Filter panel -->
-        <CuiDataGridFilterPanel :id="filterPanelId" />
+        </template>
       </div>
-    </template>
+
+      <!-- Filter panel (inline only while pinned and open) -->
+      <CuiDataGridFilterPanel :id="filterPanelId" />
+    </div>
 
     <!-- Pagination -->
     <CuiDataGridPagination
