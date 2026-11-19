@@ -6,6 +6,7 @@ import { useOverlay } from "../composables/useOverlay";
 import { backdropOf, joinStack } from "../composables/useOverlayJoin";
 import { useScopedTheme } from "../composables/useScopedTheme";
 import { useDragDismiss } from "../composables/useDragDismiss";
+import { useBackgroundScale } from "../composables/useBackgroundScale";
 import { useVisualViewport } from "../composables/useVisualViewport";
 import CuiBackdrop from "./CuiBackdrop.vue";
 import CuiModalHeader from "./CuiModalHeader.vue";
@@ -44,6 +45,14 @@ export interface CuiDrawerProps extends BackdropGradientProps, HideableProps, Ti
   snapPoints?: CuiDrawerSnapPoint[];
   /** The snap point the sheet rests at (v-model:active-snap-point); the first of `snapPoints` by default */
   activeSnapPoint?: CuiDrawerSnapPoint | null;
+  /**
+   * Scale the page behind the sheet back to about 95% and round its corners while it is open,
+   * following the drag like the backdrop (#534). The element is `backgroundSelector`'s match,
+   * looked up each time the sheet opens. Off under reduced motion
+   */
+  scaleBackground?: boolean;
+  /** The element `scaleBackground` scales. Mark your page wrapper with the attribute, or name your own selector */
+  backgroundSelector?: string;
   /** Backdrop opacity */
   backdropOpacity?: number;
   /** Backdrop blur */
@@ -69,6 +78,8 @@ const props = withDefaults(defineProps<CuiDrawerProps>(), {
   noDrag: false,
   snapPoints: undefined,
   activeSnapPoint: undefined,
+  scaleBackground: false,
+  backgroundSelector: "[data-cui-drawer-wrapper]",
   backdropOpacity: 0.5,
   backdropBlur: "none",
   backdropColor: "black",
@@ -162,6 +173,13 @@ function settle(index: number) {
 
 const keyboardOpen = computed(() => viewport.inset.value > 0);
 
+// --- The page behind (#534) -----------------------------------------------------------
+const background = useBackgroundScale({ enabled: () => props.scaleBackground, selector: () => props.backgroundSelector });
+// A `hidden` sheet draws nothing, so the page is not left scaled under it.
+watch(() => isAnimating.value && !props.hidden, (open) => (open ? background.show() : background.hide()));
+// The exit has played (or there was none): the page gets its own styles back.
+watch(mounted, (present) => !present && background.finish());
+
 // --- The gesture ----------------------------------------------------------------------
 const gesture = useDragDismiss({
   panel: panelRef,
@@ -175,6 +193,8 @@ const gesture = useDragDismiss({
   stop: () => (keyboardOpen.value ? 0 : stopIndex.value),
   onSettle: settle,
   onDismiss: closeOverlay,
+  onProgress: background.drag,
+  onRelease: background.dragEnd,
   // The backdrop fades with the sheet (#526): its own, or in a stack the shared one, for the
   // one sheet open there.
   fade: () => {

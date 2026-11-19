@@ -37,6 +37,14 @@ export interface UseDragDismissOptions {
    * closed, and handed back to the stylesheet on release, which settles it with the panel.
    */
   fade?: () => HTMLElement | null | undefined;
+  /**
+   * Called with each drag frame's progress, 0 with the panel at its lowest stop and 1 gone: the
+   * same number that drives `fade`, for anything else that follows the drag (the page behind a
+   * sheet, #534). Whatever it moves is its own to write directly, like the panel.
+   */
+  onProgress?: (closed: number) => void;
+  /** The drag was let go; `dismissed` when it is closing the panel. Called once per drag that began. */
+  onRelease?: (dismissed: boolean) => void;
 }
 
 /** A drag short of this is a tap or a click, not a gesture. */
@@ -107,7 +115,7 @@ function scrolledAway(el: HTMLElement, edge: DragEdge): boolean {
  * page instead. Scroll containers inside it keep their own native panning.
  */
 export function useDragDismiss(options: UseDragDismissOptions) {
-  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, dismissible = () => true, onSettle, onDismiss, fade } = options;
+  const { panel, edge, enabled, handle, stops = () => [0], stop = () => 0, dismissible = () => true, onSettle, onDismiss, fade, onProgress, onRelease } = options;
   const drag = usePointerDrag();
 
   let dragging = false;
@@ -123,6 +131,8 @@ export function useDragDismiss(options: UseDragDismissOptions) {
   let offset = 0;
   let pointerId = 0;
   let faded: HTMLElement | null = null;
+  // A drag has begun and `onRelease` is owed.
+  let following = false;
   // A dismissal under reduced motion: the panel keeps where it was let go while it fades out.
   let held = false;
 
@@ -142,11 +152,11 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     el.style.transform = `translate${vertical() ? "Y" : "X"}(${(px - rest) * sign()}px)`;
   }
 
-  /** The fade follows the travel from the lowest stop to closed: full while resting there, 0 when gone. */
-  function writeFade(px: number) {
-    if (!faded) return;
+  /** What the backdrop and anything else following the drag are driven by: the travel from the lowest stop to closed, 0 resting there, 1 gone. */
+  function writeProgress(px: number) {
     const progress = Math.min(Math.max((px - lowest) / Math.max(size - lowest, 1), 0), 1);
-    faded.style.opacity = `calc(var(--_backdrop-opacity, 1) * ${1 - progress})`;
+    if (faded) faded.style.opacity = `calc(var(--_backdrop-opacity, 1) * ${1 - progress})`;
+    onProgress?.(progress);
   }
 
   /**
@@ -155,8 +165,12 @@ export function useDragDismiss(options: UseDragDismissOptions) {
    * until the panel is shown again or gone: the stylesheet would otherwise put it back at rest
    * (it removes movement) and fade it out from there.
    */
-  function release(hold = false) {
+  function release(hold = false, dismissed = false) {
     const el = panel.value;
+    if (following) {
+      following = false;
+      onRelease?.(dismissed);
+    }
     if (faded) {
       faded.style.opacity = "";
       faded.style.transition = "";
@@ -228,6 +242,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
       }
       el.style.transition = "none";
       el.setAttribute("data-cui-dragging", "");
+      following = true;
       faded = fade?.() ?? null;
       if (faded) faded.style.transition = "none";
       // Touch: a cancelable move is the browser's cue to scroll; refuse it.
@@ -238,7 +253,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
     const next = rest + distance;
     offset = next < 0 ? -damp(-next) : Math.min(next, size);
     write(offset);
-    writeFade(offset);
+    writeProgress(offset);
   }
 
   function onEnd(e: PointerEvent) {
@@ -268,7 +283,7 @@ export function useDragDismiss(options: UseDragDismissOptions) {
       // the panel goes from where it was let go to the closed state in one transition. The
       // leave waits on the animations running when it starts, and with the drag's
       // `transition: none` still on it would find none and end at once.
-      release(prefersReducedMotion());
+      release(prefersReducedMotion(), true);
       onDismiss();
     } else {
       onSettle?.(target);

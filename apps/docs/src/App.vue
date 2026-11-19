@@ -154,7 +154,8 @@ const densityLabel = computed(() => densityPresets.find((p) => p.id === density.
 
         <!-- Page Content -->
         <div :style="{ flex: '1', display: 'flex', alignItems: 'flex-start', minWidth: '0' }">
-          <main class="cui-typography" :style="{ flex: '1', minWidth: '0', padding: '1.5rem' }">
+          <!-- data-cui-drawer-wrapper: the element a CuiDrawer with scale-background scales back (the docs demo) -->
+          <main class="cui-typography" data-cui-drawer-wrapper :style="{ flex: '1', minWidth: '0', padding: '1.5rem', background: 'var(--cui-surface-base)' }">
             <div class="lg:px-6 lg:py-6">
               <router-view />
             </div>
