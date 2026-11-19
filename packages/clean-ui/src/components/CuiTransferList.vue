@@ -3,6 +3,7 @@ import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
+import CuiSortableList from "./CuiSortableList.vue";
 import CuiToolbar from "./CuiToolbar.vue";
 import type { HideableProps, DisableableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
@@ -245,21 +246,6 @@ function onDropPanel(e: DragEvent, side: "source" | "target") {
   } else if (from === "target" && side === "source") {
     // Move back to source
     emit("update:modelValue", props.modelValue.filter((v) => v !== value));
-  } else if (from === "target" && side === "target") {
-    // Reorder within target
-    const arr = props.modelValue.filter((v) => v !== value);
-    if (dropTarget.value && dropTarget.value.side === "target") {
-      const targetIdx = arr.indexOf(dropTarget.value.value as any);
-      if (targetIdx >= 0) {
-        const insertIdx = dropTarget.value.position === "after" ? targetIdx + 1 : targetIdx;
-        arr.splice(insertIdx, 0, value);
-      } else {
-        arr.push(value);
-      }
-    } else {
-      arr.push(value);
-    }
-    emit("update:modelValue", arr);
   }
 
   dragItem.value = null;
@@ -282,9 +268,11 @@ function optionClass(marks: Set<string | number>, item: TransferListItem, side: 
 }
 
 // --- Keyboard and ARIA (#170) ---
-// Each list is a multiselectable role="listbox" of role="option"s with one tab stop
+// The source is a multiselectable role="listbox" of role="option"s with one tab stop
 // (useRovingFocus): the arrows and Home/End move between items, Space marks one for
 // transfer, and Enter moves the focused item across at once, as a double-click does.
+// The target is a CuiSortableList (#559): its drag handles are the tab stops, Space/Enter
+// grab, and the marking keys below ride on a handle.
 const baseId = useCuiId("transfer-list");
 const ids = {
   sourceTitle: `${baseId}-source-title`,
@@ -294,47 +282,85 @@ const ids = {
 };
 
 const OPTION = ".cui-transfer-list__option";
+const HANDLE = ".cui-sortable-list__handle";
 const sourceListEl = useTemplateRef<HTMLElement>("sourceListEl");
-const targetListEl = useTemplateRef<HTMLElement>("targetListEl");
+const targetList = useTemplateRef<{ el: HTMLElement | null }>("targetList");
+const targetHandles = () => Array.from(targetList.value?.el?.querySelectorAll<HTMLElement>(HANDLE) ?? []);
 const sourceRoving = useRovingFocus({ container: sourceListEl, itemSelector: OPTION });
-const targetRoving = useRovingFocus({ container: targetListEl, itemSelector: OPTION });
 
-function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, side: "source" | "target", index: number) {
+function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, index: number) {
   // Only a key on the option itself: one in a control inside an #item slot is that control's.
   if (e.target !== e.currentTarget) return;
   if (e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
   if (e.key === " ") {
     e.preventDefault();
-    toggle(side === "source" ? sourceSelected : targetSelected, item.value);
+    toggle(sourceSelected, item.value);
   } else if (e.key === "Enter") {
     e.preventDefault();
-    if (side === "source") dblClickSource(item);
-    else dblClickTarget(item);
-    followMovedItem(side, item, index);
+    dblClickSource(item);
+    followMovedItem("source", item, index);
   }
 }
 
 /**
- * After Enter moves an item across, focus what took its place in the list it left — or, if
+ * Keys on a target row's handle, taken before the sortable's own (capture): Shift+Space marks
+ * the row for transfer, Delete or Backspace returns it to the source list. Space and Enter
+ * alone stay the sortable's grab; a grabbed row keeps all its keys.
+ */
+function onTargetKeydown(e: KeyboardEvent) {
+  const handle = e.target as HTMLElement;
+  if (!handle.matches?.(HANDLE) || handle.getAttribute("aria-pressed") === "true") return;
+  const index = targetHandles().indexOf(handle);
+  const item = filteredTargetItems.value[index];
+  const mark = e.key === " " && e.shiftKey;
+  if (!item || e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
+  if (!mark && e.key !== "Delete" && e.key !== "Backspace") return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (mark) return toggleTarget(item.value);
+  dblClickTarget(item);
+  followMovedItem("target", item, index);
+}
+
+/**
+ * After a key moves an item across, focus what took its place in the list it left — or, if
  * that list is now empty, the item itself where it went — so focus is never dropped on <body>.
  */
 function followMovedItem(from: "source" | "target", item: TransferListItem, index: number) {
-  const [left, leftRoving, arrived, arrivedRoving] =
-    from === "source"
-      ? [sourceListEl, sourceRoving, targetListEl, targetRoving]
-      : [targetListEl, targetRoving, sourceListEl, sourceRoving];
   nextTick(() => {
-    if (left.value?.querySelector(OPTION)) return leftRoving.focusNearest(index);
-    const opts = Array.from(arrived.value?.querySelectorAll<HTMLElement>(OPTION) ?? []);
-    const at = opts.findIndex((o) => o.dataset.value === String(item.value));
-    if (at !== -1) arrivedRoving.focusItem(at, opts);
+    const sourceOpts = () => Array.from(sourceListEl.value?.querySelectorAll<HTMLElement>(OPTION) ?? []);
+    if (from === "source") {
+      if (sourceOpts().length) return sourceRoving.focusNearest(index);
+      targetHandles()[filteredTargetItems.value.findIndex((i) => i.value === item.value)]?.focus();
+    } else {
+      const handles = targetHandles();
+      if (handles.length) return handles[Math.min(index, handles.length - 1)].focus();
+      const opts = sourceOpts();
+      const at = opts.findIndex((o) => o.dataset.value === String(item.value));
+      if (at !== -1) sourceRoving.focusItem(at, opts);
+    }
   });
+}
+
+const itemValue = (item: TransferListItem) => item.value;
+const itemText = (item: TransferListItem) => item.label;
+const itemOff = (item: TransferListItem) => !!item.disabled;
+
+/**
+ * The sortable reorders the items the filter shows: put them back into the full order, in the
+ * slots the shown ones held, so a hidden item stays where it was.
+ */
+function onTargetReorder(next: TransferListItem[]) {
+  if (!targetSearch.value) return emit("update:modelValue", next.map((i) => i.value));
+  const shown = new Set(filteredTargetItems.value.map((i) => i.value));
+  const values = next.map((i) => i.value);
+  emit("update:modelValue", props.modelValue.map((v) => (shown.has(v) ? values.shift()! : v)));
 }
 
 // Expose imperative handle — the source list's tab stop, else the selected list's.
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
 const tabStop = () =>
-  sourceListEl.value?.querySelector<HTMLElement>('[tabindex="0"]') ?? targetListEl.value?.querySelector<HTMLElement>('[tabindex="0"]');
+  sourceListEl.value?.querySelector<HTMLElement>('[tabindex="0"]') ?? targetList.value?.el?.querySelector<HTMLElement>('[tabindex="0"]');
 defineExpose({
   el: rootEl,
   focus: (opts?: FocusOptions) => tabStop()?.focus(opts),
@@ -424,7 +450,7 @@ const rootStyle = computed(() => ({
             :aria-disabled="item.disabled || disabled || undefined"
             :tabindex="sourceRoving.tabIndex(i)"
             :data-value="String(item.value)"
-            @keydown="onOptionKeydown($event, item, 'source', i)"
+            @keydown="onOptionKeydown($event, item, i)"
             :draggable="!item.disabled && !disabled"
             @click="!item.disabled && toggleSource(item.value)"
             @dblclick="dblClickSource(item)"
@@ -487,44 +513,44 @@ const rootStyle = computed(() => ({
         @dragleave="onDragLeavePanel"
         @drop="onDropPanel($event, 'target')"
       >
-        <!-- The listbox holds only its options; the empty message sits beside it. -->
-        <div
-          ref="targetListEl"
-          role="listbox"
-          aria-multiselectable="true"
-          :aria-labelledby="ids.targetTitle"
-          :aria-disabled="disabled || undefined"
-          @keydown="targetRoving.onKeydown"
-          @focusin="targetRoving.onFocusin"
+        <!-- A sortable list of the rows (#559); the empty message sits beside it. -->
+        <CuiSortableList
+          ref="targetList"
+          class="cui-transfer-list__sortable"
+          :model-value="filteredTargetItems"
+          :item-key="itemValue"
+          :item-label="itemText"
+          :item-disabled="itemOff"
+          :label="targetLabel"
+          :move-buttons="false"
+          :disabled="disabled"
+          @update:model-value="onTargetReorder"
+          @keydown.capture="onTargetKeydown"
         >
-          <div
-            v-for="(item, i) in filteredTargetItems"
-            :key="String(item.value)"
-            class="cui-transfer-list__option"
-            :class="optionClass(targetSelected, item, 'target')"
-            role="option"
-            :aria-selected="targetSelected.has(item.value) ? 'true' : 'false'"
-            :aria-disabled="item.disabled || disabled || undefined"
-            :tabindex="targetRoving.tabIndex(i)"
-            :data-value="String(item.value)"
-            @keydown="onOptionKeydown($event, item, 'target', i)"
-            :draggable="!item.disabled && !disabled"
-            @click="!item.disabled && toggleTarget(item.value)"
-            @dblclick="dblClickTarget(item)"
-            @dragstart="onDragStart($event, item.value, 'target')"
-            @dragend="onDragEnd"
-            @dragover="onDragOverItem($event, item.value, 'target')"
-          >
-            <CuiIcon :icon="IconDotsSixVertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
-            <slot name="item" :item="item" :side="'target'">
-              <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
-              <div class="cui-transfer-list__item-body">
-                <div class="cui-transfer-list__label">{{ item.label }}</div>
-                <div v-if="item.description" class="cui-transfer-list__description">{{ item.description }}</div>
-              </div>
-            </slot>
-          </div>
-        </div>
+          <template #item="{ item }">
+            <div
+              class="cui-transfer-list__option"
+              :class="optionClass(targetSelected, item, 'target')"
+              :aria-disabled="item.disabled || disabled || undefined"
+              :data-value="String(item.value)"
+              :draggable="!item.disabled && !disabled"
+              @click="!item.disabled && toggleTarget(item.value)"
+              @dblclick="dblClickTarget(item)"
+              @dragstart="onDragStart($event, item.value, 'target')"
+              @dragend="onDragEnd"
+              @dragover="onDragOverItem($event, item.value, 'target')"
+            >
+              <slot name="item" :item="item" :side="'target'">
+                <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
+                <div class="cui-transfer-list__item-body">
+                  <div class="cui-transfer-list__label">{{ item.label }}</div>
+                  <div v-if="item.description" class="cui-transfer-list__description">{{ item.description }}</div>
+                </div>
+              </slot>
+              <span v-if="targetSelected.has(item.value)" class="cui-sr-only">{{ messages.transferList.marked }}</span>
+            </div>
+          </template>
+        </CuiSortableList>
         <div v-if="filteredTargetItems.length === 0" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
@@ -542,6 +568,23 @@ const rootStyle = computed(() => ({
 
 .cui-transfer-list__actions-gap {
   height: 0.5rem;
+}
+
+/* The selected list's rows are CuiSortableList items that draw as the flat transfer rows: the
+   sortable's card paint is set to nothing here, the row's own padding and font stay on
+   .cui-transfer-list__option inside. Its drag ghost and focus ring are the sortable's. */
+.cui-transfer-list__sortable {
+  --cui-sortable-list-gap: 0;
+  --cui-sortable-list-px: 0;
+  --cui-sortable-list-py: 0;
+  --cui-sortable-list-border: 0 none;
+  --cui-sortable-list-pressed-border: 0 none;
+  --cui-sortable-list-radius: var(--cui-radius-sm, 0.25rem);
+  --cui-sortable-list-bg: var(--cui-transfer-list-bg, var(--cui-surface-base, white));
+}
+
+.cui-transfer-list__sortable .cui-sortable-list__item:has(.cui-transfer-list__option--selected) {
+  background: var(--cui-transfer-list-pressed-bg, var(--cui-primary-bg));
 }
 </style>
 

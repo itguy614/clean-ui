@@ -87,7 +87,7 @@ function locate(root: HTMLElement): Record<string, Element | null> {
     "option-selected": options.find((o) => o.getAttribute("aria-selected") === "true") ?? null,
     "option-disabled": options.find((o) => o.getAttribute("aria-disabled") === "true") ?? null,
     "option-focused": options[0] ?? null,
-    "option-drop": targetScroller.querySelector("[role=option]"),
+    "option-drop": targetScroller.querySelector(".cui-transfer-list__option"),
     grip: withIcon?.children[0] ?? null,
     "item-icon": withIcon && withIcon.children.length > 2 ? withIcon.children[1] : null,
     "item-body": withIcon?.lastElementChild ?? null,
@@ -162,7 +162,7 @@ describe("CuiTransferList looks the same as its inline-style implementation (#46
         await nextTick();
         const targetScroller = target.lastElementChild!;
         targetScroller.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt }));
-        const targetOption = targetScroller.querySelector<HTMLElement>("[role=option]")!;
+        const targetOption = targetScroller.querySelector<HTMLElement>(".cui-transfer-list__option")!;
         const r = targetOption.getBoundingClientRect();
         targetOption.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt, clientY: r.top + 1 }));
         await nextTick();

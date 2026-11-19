@@ -41,6 +41,8 @@ export interface CuiSortableListProps<T = unknown> extends HideableProps, Disabl
    * non-drag way to reorder is offered.
    */
   moveButtons?: boolean;
+  /** Items that stay put: no handle, no move buttons. They can still be passed by a neighbor's move. */
+  itemDisabled?: (item: T) => boolean;
 }
 
 const props = withDefaults(defineProps<CuiSortableListProps<T>>(), {
@@ -494,7 +496,7 @@ defineExpose({ el: rootEl, focus, blur });
             type="button"
             class="cui-sortable-list__handle"
             :tabindex="roving.tabIndex(i)"
-            :disabled="disabled"
+            :disabled="disabled || itemDisabled?.(item)"
             :aria-label="m.handle(labelOf(item, i))"
             :aria-pressed="grabbedKey === keys[i]"
             :aria-describedby="helpId"
@@ -524,7 +526,7 @@ defineExpose({ el: rootEl, focus, blur });
               color="surface"
               tabindex="-1"
               focusable-when-disabled
-              :disabled="disabled || i === 0"
+              :disabled="disabled || i === 0 || itemDisabled?.(item)"
               :aria-label="horizontal() ? m.moveStart(labelOf(item, i)) : m.moveUp(labelOf(item, i))"
               @click="moveBy(item, i, -1)"
             >
@@ -537,7 +539,7 @@ defineExpose({ el: rootEl, focus, blur });
               color="surface"
               tabindex="-1"
               focusable-when-disabled
-              :disabled="disabled || i === rows.length - 1"
+              :disabled="disabled || i === rows.length - 1 || itemDisabled?.(item)"
               :aria-label="horizontal() ? m.moveEnd(labelOf(item, i)) : m.moveDown(labelOf(item, i))"
               @click="moveBy(item, i, 1)"
             >

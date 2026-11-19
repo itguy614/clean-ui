@@ -4,12 +4,12 @@ import { disabledProp, hiddenProp } from "./shared";
 const meta: ComponentMeta = {
   name: "Transfer List",
   description:
-    "Two panels and a column of arrows for moving items between available and selected, with drag-and-drop and ordering on the selected side.",
+    "Two panels and a column of arrows for moving items between available and selected, with drag-and-drop in and a sortable selected side (drag, keyboard grab, move buttons).",
   interactive: true,
 
   props: [
     { name: "items", type: "TransferListItem[]", description: "Every item, on both sides. Required. { value, label, description?, icon?, disabled? }" },
-    { name: "modelValue", type: "(string | number)[]", default: "[]", description: "Values on the right-hand panel (v-model). Order is meaningful and preserved — this is the array the reorder arrows rewrite" },
+    { name: "modelValue", type: "(string | number)[]", default: "[]", description: "Values on the right-hand panel (v-model). Order is meaningful and preserved — this is the array a drag, a keyboard move or the reorder arrows rewrite" },
     { name: "sourceTitle", type: "string", default: "Available (messages.transferList.source)", description: "Heading over the left panel" },
     { name: "targetTitle", type: "string", default: "Selected (messages.transferList.target)", description: "Heading over the right panel" },
     { name: "filterable", type: "boolean", default: "true", description: "Show a search field on each panel. Filtering is on label and description, case-insensitive" },
@@ -22,11 +22,11 @@ const meta: ComponentMeta = {
   ],
 
   slots: [
-    { name: "item", payload: "{ item, side }", description: "Replaces an item's body on both panels. side is 'source' or 'target'. The drag handle stays outside the slot" },
+    { name: "item", payload: "{ item, side }", description: "Replaces an item's body on both panels. side is 'source' or 'target'. On the target the sortable's drag handle stays outside the slot" },
   ],
 
   events: [
-    { name: "update:modelValue", payload: "(string | number)[]", description: "Fires on transfer, reorder and drop. Always the full right-hand array, in display order" },
+    { name: "update:modelValue", payload: "(string | number)[]", description: "Fires on transfer, on a reorder (once per drop, grab or button click) and on a drop between panels. Always the full right-hand array, in display order" },
   ],
 
   tokens: [

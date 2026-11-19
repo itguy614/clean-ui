@@ -120,6 +120,8 @@ export interface CuiCoreMessages {
      * The move buttons' toolbar name (#421). Optional, so an existing catalogue type-checks.
      */
     actions?: string;
+    /** Read after a marked row of the selected list, which has no `aria-selected` (#559). Optional, so an existing catalogue type-checks. */
+    marked?: string;
   };
   sortableList: {
     /** Default `label` of the list, when the consumer gives none. */
@@ -407,6 +409,7 @@ export const defaultMessages: CuiCoreMessages = {
     moveDown: "Move down",
     filter: (title) => `Filter ${title}`,
     actions: "Move items",
+    marked: "selected",
   },
   sortableList: {
     label: "Reorderable list",

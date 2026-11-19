@@ -253,6 +253,17 @@ describe("CuiSortableList", () => {
     });
   });
 
+  it("keeps an item disabled by `itemDisabled` out of the drag and the buttons (#559)", async () => {
+    const { wrapper, model } = setup({ itemDisabled: (p: { id: number }) => p.id === 2 });
+    expect((handle(wrapper, 1).element as HTMLButtonElement).disabled).toBe(true);
+    expect((handle(wrapper, 0).element as HTMLButtonElement).disabled).toBe(false);
+    expect(wrapper.find('button[aria-label="Move Grace down"]').attributes("aria-disabled")).toBe("true");
+    expect(wrapper.find('button[aria-label="Move Grace up"]').attributes("aria-disabled")).toBe("true");
+    // A neighbor can still pass it.
+    await wrapper.find('button[aria-label="Move Ada down"]').trigger("click");
+    expect(model.value.map((p) => p.label)).toEqual(["Grace", "Ada", "Linus"]);
+  });
+
   it("is hidden with `hidden`, and exposes its element and focus", async () => {
     const { wrapper, list } = setup({ hidden: true });
     expect((wrapper.find(".cui-sortable-list").element as HTMLElement).style.display).toBe("none");

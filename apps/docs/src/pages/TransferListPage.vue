@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { CuiTransferList, type TransferListItem } from "@itguy614/clean-ui";
+import { CuiCard, CuiCardBody, CuiTransferList, type TransferListItem } from "@itguy614/clean-ui";
 import DocPage from "../components/DocPage.vue";
 import Example from "../components/Example.vue";
 import meta from "../meta/transfer-list";
@@ -49,9 +49,10 @@ const selectedSimple = ref<string[]>([]);
     <template #intro>
       <p class="text-surface-700 dark:text-surface-300">
         Click an item to mark it, then use the arrows to transfer the marked items;
-        double-click moves one immediately, and dragging moves it to a chosen position.
-        The right-hand array is ordered, so the up/down arrows are a real part of the
-        value, not a view preference.
+        double-click moves one immediately, and dragging a left-hand item onto the right moves
+        it to a chosen position. The right-hand array is ordered, and the selected list is a
+        <code>CuiSortableList</code>: drag a row by its grip, grab it with the keyboard, or
+        use Move up / Move down. The order is part of the value, not a view preference.
       </p>
     </template>
 
@@ -65,18 +66,45 @@ const selectedSimple = ref<string[]>([]);
           Selected (in order): <code class="cui-code">{{ selectedSimple }}</code>
         </div>
       </Example>
+
+      <CuiCard variant="outline" class="mt-4">
+        <CuiCardBody>
+          <p><strong>Try:</strong></p>
+          <ul>
+            <li>Double-click a left-hand item to send it across, then add two or three more.</li>
+            <li>Drag a right-hand row by its grip: it floats, tilted, over a placeholder while the others slide aside. Drop it and the order is committed once. Press <kbd>Esc</kbd> mid-drag and it snaps back.</li>
+            <li>Tab to the right-hand list (one tab stop, on a grip). <kbd>Space</kbd> or <kbd>Enter</kbd> grabs the row, <kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>Home</kbd>/<kbd>End</kbd> move it, <kbd>Space</kbd> drops, <kbd>Esc</kbd> cancels.</li>
+            <li>Click a right-hand row to mark it (or press <kbd>Shift</kbd>+<kbd>Space</kbd> on its grip), then click Move up / Move down in the middle column.</li>
+            <li>Press <kbd>Delete</kbd> on a right-hand grip to send that row back to the left.</li>
+            <li>Type in the right-hand filter and reorder what shows: hidden rows keep their place.</li>
+            <li>With a screen reader on, each grab, move and drop is announced with its position.</li>
+          </ul>
+        </CuiCardBody>
+      </CuiCard>
     </template>
 
     <template #accessibility>
       <p class="text-surface-700 dark:text-surface-300">
-        Each list is a <code>role="listbox"</code> with <code>aria-multiselectable</code>, named
-        by its panel title, and each item a <code>role="option"</code> whose
-        <code>aria-selected</code> says whether it is marked for transfer.
+        The source list is a <code>role="listbox"</code> with <code>aria-multiselectable</code>,
+        named by its panel title, and each item a <code>role="option"</code> whose
+        <code>aria-selected</code> says whether it is marked for transfer. The selected list is
+        a <code>CuiSortableList</code> (a <code>role="list"</code> named by its title) whose rows
+        each carry a drag handle; a row marked for transfer is followed by a hidden “selected”
+        (<code>transferList.marked</code>), since a list row has no <code>aria-selected</code>.
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           Each list is one tab stop. Arrow Up and Down move between items, Home and End jump
-          to the ends, and disabled items are skipped.
+          to the ends, and disabled items are skipped. On the selected list the stop is a
+          row's drag handle.
+        </li>
+        <li>
+          Keyboard model of the selected list: Space or Enter grabs the focused row, the
+          arrows, Home and End move it, Space or Enter drops it, Escape cancels, and each step
+          is announced. Space marks and Enter transfers on the source list, so the selected
+          list has them on other keys: Shift+Space marks or unmarks the focused row, and
+          Delete or Backspace returns it to the source list. A grabbed row keeps all its keys
+          for the move, and a disabled row has no handle.
         </li>
         <li>
           Space marks or unmarks the focused item, which is what enables the arrow buttons.
@@ -100,9 +128,12 @@ const selectedSimple = ref<string[]>([]);
           (<code>transferList.*</code>).
         </li>
         <li>
-          Drag-and-drop has no keyboard equivalent of its own: mark an item, then use the arrow
-          buttons, or Move up / Move down to reorder the selected list. The counts beside the
-          titles are not announced when they change.
+          Dragging is never the only way: the keyboard grab above, or Move up / Move down in the
+          toolbar (mark one row first), reorder the selected list with a single click or tap
+          (WCAG 2.5.7). The rows carry no move buttons of their own, so there is one set. Dragging
+          a source item onto the selected list, or a selected row onto the source, is a pointer
+          shortcut for the transfer buttons. The counts beside the titles are not announced when
+          they change.
         </li>
       </ul>
     </template>

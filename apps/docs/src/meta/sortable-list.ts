@@ -14,6 +14,7 @@ const meta: ComponentMeta = {
     { name: "label", type: "string", default: "Reorderable list (messages.sortableList.label)", description: "The list's accessible name" },
     { name: "orientation", type: "horizontal | vertical", default: "vertical", description: "The axis the items lie along: drag, arrow keys and move buttons follow it" },
     { name: "moveButtons", type: "boolean", default: "true", description: "Show Move up / Move down buttons on each item: the single-pointer alternative to dragging that WCAG 2.5.7 asks for. Turn them off only where another non-drag way to reorder is offered" },
+    { name: "itemDisabled", type: "(item) => boolean", description: "Items that stay put: no handle and no move buttons. A neighbor's move can still pass them" },
     disabledProp,
     hiddenProp,
   ],
