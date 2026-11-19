@@ -134,7 +134,7 @@ const hasAnyValue = computed(() => {
 <template>
   <div
     v-if="popover || (grid.filterPanelOpen.value && grid.filterPanelPinned.value)"
-    :id="id"
+    :id="popover && grid.filterPanelPinned.value ? undefined : id"
     ref="root"
     class="cui-data-grid-filter-panel"
     :class="{ 'cui-data-grid-filter-panel--popover': popover }"
@@ -148,8 +148,7 @@ const hasAnyValue = computed(() => {
           variant="ghost"
           size="xs"
           :aria-label="grid.filterPanelPinned.value ? messages.dataGrid.unpinFilters : messages.dataGrid.pinFilters"
-          :aria-pressed="grid.filterPanelPinned.value"
-          :style="{ color: grid.filterPanelPinned.value ? 'var(--cui-primary)' : undefined }"
+          :pressed="grid.filterPanelPinned.value"
           @click="grid.toggleFilterPanelPin()"
         >
           <CuiIcon :icon="IconPushPin" size="0.875rem" />

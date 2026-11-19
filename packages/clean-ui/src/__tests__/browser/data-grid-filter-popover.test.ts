@@ -211,6 +211,35 @@ describe("CuiDataGrid filter panel: popover unless pinned (real browser)", () =>
     expect(inlinePanel(grid)).not.toBeNull();
   });
 
+  it("does not pull focus to the pin when a pinned view is loaded from elsewhere", async () => {
+    const App = defineComponent({
+      render: () => h("div", [h("button", { id: "elsewhere" }, "x"), h(CuiDataGrid, { ref: "grid", columns, data })]),
+    });
+    const wrapper = track(mount(App, { attachTo: host({ width: "700px" }) }));
+    await frames(2);
+    const grid = wrapper.element as HTMLElement;
+    await open(grid);
+    const other = document.getElementById("elsewhere")!;
+    other.focus();
+    (wrapper.vm.$refs.grid as { loadConfig: (c: DataGridViewConfig) => void }).loadConfig(view(true));
+    await frames(15);
+    expect(inlinePanel(grid)).not.toBeNull();
+    expect(document.activeElement).toBe(other);
+  });
+
+  it("names the button a popover trigger only while unpinned, and the panel's id sits on one element", async () => {
+    const grid = await mountGrid();
+    expect(filtersButton(grid).getAttribute("aria-haspopup")).toBe("dialog");
+    await open(grid);
+    const id = filtersButton(grid).getAttribute("aria-controls")!;
+    await userEvent.click(pinButton());
+    await frames(2);
+    // Mid-exit of the popover, the inline panel already holds the id alone.
+    expect(document.querySelectorAll(`[id="${id}"]`)).toHaveLength(1);
+    await frames(15);
+    expect(filtersButton(grid).hasAttribute("aria-haspopup")).toBe(false);
+  });
+
   it("returns to the popover when unpinned", async () => {
     const grid = await mountGrid({ pinned: true });
     await open(grid);
