@@ -313,7 +313,12 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
   { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
-  { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiCheckbox.vue",
+    component: "checkbox",
+    privateOnly: { "box-offset": "the box's margin, derived from the label size in the themeable rule; a margin stays at normal specificity so a page's own `* { margin: 0 }` cannot undo the centring (#556)" },
+    issue: "#454",
+  },
   { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },
   {
     file: "CuiToggle.vue",

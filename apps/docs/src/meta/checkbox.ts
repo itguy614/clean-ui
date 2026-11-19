@@ -1,5 +1,5 @@
 import type { ComponentMeta, PropRow } from "./types";
-import { COLOR_ROLES, colorProp, disabledProp, hiddenProp, nativeControlProps } from "./shared";
+import { COLOR_ROLES, colorProp, disabledProp, hiddenProp, inputSizeProp, nativeControlProps } from "./shared";
 
 /**
  * `AriaLabelableProps` — the three of `nativeControlProps` that a *group* takes.
@@ -94,6 +94,11 @@ const meta: ComponentMeta = {
           description: "Overrides the group's color for this one checkbox",
         },
         {
+          ...inputSizeProp,
+          description:
+            "Size of the label text, from the shared input scale (xs 12px, sm 13px, md 16px, lg 17px, xl 18px). The 1.25rem box stays the same size at every step and is centred on the label's first line",
+        },
+        {
           name: "indeterminate",
           type: "boolean",
           default: "false",
@@ -126,6 +131,7 @@ const meta: ComponentMeta = {
     { name: "--cui-checkbox-border", default: "per state", description: "Border color of the box (the color role when checked, the neutral border otherwise)" },
     { name: "--cui-checkbox-bg", default: "per state", description: "Fill of the box (the role tint when checked, none otherwise)" },
     { name: "--cui-checkbox-hover-border", default: "var(--cui-primary)", description: "Border color of an unchecked box under the pointer" },
+    { name: "--cui-checkbox-font-size", default: "per size", description: "Font size of the label (a length, not a percentage), whatever the size prop says. Set it on :root or a container, as the grid's column manager does" },
     { name: "--cui-checkbox-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
   ],
 };
