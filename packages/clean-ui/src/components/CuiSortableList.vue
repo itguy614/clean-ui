@@ -134,7 +134,7 @@ const roving = useRovingFocus({
 });
 const nav = useListNavigation({ orientation: () => props.orientation, rtl: () => !!rootEl.value && getComputedStyle(rootEl.value).direction === "rtl" });
 
-const handleOf = (key: string | number) => itemEls.get(key)?.querySelector<HTMLElement>(".cui-sortable-list__handle");
+const handleOf = (key: string | number) => itemEls.get(key)?.querySelector<HTMLElement>(":scope > .cui-sortable-list__handle");
 
 // ---- FLIP: the items that make room slide into place, on transform only ----------------------
 

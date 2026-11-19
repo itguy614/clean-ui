@@ -96,6 +96,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Enter grabs) replaces the dotted grip that was draggable anywhere on the row, the move buttons are
   reached by click or touch rather than the Tab order (the handle is the list's one tab stop), and
   `--cui-data-grid-column-manager-border` now colours the edge of the dragged row, not a drop line.
+  The classes `__row`, `__row--leaf`, `__row--dragging`, `__row--drop` and `__actions` now match only
+  frozen rows (a reorderable row is a `CuiSortableList` item: restyle it with the `--cui-data-grid-column-manager-*`
+  tokens or `--cui-sortable-list-*`), and `--cui-data-grid-column-manager-px` is a reorderable row's own start and
+  end padding rather than the leaf indent. Positions announced and moved among are those of the
+  reorderable columns, after any frozen ones.
 - `CuiSortableList` scopes its roving focus to its own handles, so a sortable list can be nested in
   an item of another (the column manager's groups) without the outer list's arrow keys reaching
   into the inner one. No change for a list that is not nested.

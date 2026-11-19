@@ -54,7 +54,7 @@ const ColumnCheck: FunctionalComponent<{ columnKey: string }> = ({ columnKey }) 
     CuiCheckbox,
     {
       class: "cui-data-grid-column-manager__check",
-      modelValue: grid.columnState.value[indexOfKey(columnKey)].visible,
+      modelValue: grid.columnState.value[indexOfKey(columnKey)]?.visible ?? false,
       "onUpdate:modelValue": () => grid.toggleColumnVisibility(columnKey),
     },
     () => [
@@ -69,7 +69,7 @@ ColumnCheck.props = ["columnKey"];
 const groupIds = new WeakMap<DataGridColumnGroup, string>();
 let groupCount = 0;
 const unitKey = (u: DataGridColumnUnit) => {
-  if (u.type === "column") return u.key;
+  if (u.type === "column") return `column:${u.key}`;
   if (!groupIds.has(u.group)) groupIds.set(u.group, `group:${groupCount++}`);
   return groupIds.get(u.group)!;
 };
@@ -194,8 +194,7 @@ function onLeafReorder(keys: string[], { from, to }: { from: number; to: number 
 }
 /* The lock stands where a handle (1.75rem) would, so a frozen row's checkbox lines up with the rest. */
 .cui-data-grid-column-manager__lock {
-  box-sizing: content-box;
-  padding-inline: 0.4375rem;
+  margin-inline: 0.4375rem;
 }
 
 :where(.cui-data-grid-column-manager__group) {
