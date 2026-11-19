@@ -117,6 +117,63 @@ describe("CuiDrawer", () => {
   });
 });
 
+describe("CuiDrawer scaleBackground (#534)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    document.body.innerHTML = "";
+    document.body.style.overflow = "";
+  });
+  const page = (attrs = "data-cui-drawer-wrapper") => {
+    const el = document.createElement("div");
+    el.innerHTML = `<main ${attrs}>page</main>`;
+    document.body.append(el);
+    return el.firstElementChild as HTMLElement;
+  };
+
+  it("leaves the page alone by default", async () => {
+    const main = page();
+    const w = mount(CuiDrawer, { props: { visible: true } });
+    await vi.runAllTimersAsync();
+    expect(main.style.cssText).toBe("");
+    w.unmount();
+  });
+
+  it("scales the marked wrapper while open and puts it back after the exit", async () => {
+    const main = page();
+    const w = mount(CuiDrawer, { props: { visible: false, scaleBackground: true } });
+    await w.setProps({ visible: true });
+    await vi.runAllTimersAsync();
+    expect(main.style.transform).toContain("scale(0.95)");
+    await w.setProps({ visible: false });
+    await vi.runAllTimersAsync();
+    expect(main.style.cssText).toBe("");
+    w.unmount();
+  });
+
+  it("takes the wrapper from backgroundSelector, looked up when it opens", async () => {
+    const main = page('id="shell"');
+    const w = mount(CuiDrawer, { props: { visible: false, scaleBackground: true, backgroundSelector: "#shell" } });
+    await w.setProps({ visible: true });
+    await vi.runAllTimersAsync();
+    expect(main.style.transform).toContain("scale(0.95)");
+    w.unmount();
+  });
+
+  it("restores the page when unmounted while open", async () => {
+    const main = page();
+    const w = mount(CuiDrawer, { props: { visible: false, scaleBackground: true } });
+    await w.setProps({ visible: true });
+    await vi.runAllTimersAsync();
+    w.unmount();
+    expect(main.style.cssText).toBe("");
+  });
+});
+
 describe("CuiDrawer's motion", () => {
   const css = readFileSync(resolve(__dirname, "../CuiDrawer.vue"), "utf8");
 
