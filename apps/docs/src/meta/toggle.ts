@@ -51,7 +51,7 @@ const meta: ComponentMeta = {
           default: "from group, else primary",
           description: "Color role for the knob, track fill and focus ring. Overrides the group's color",
         },
-        clampedSizeProp("sm, md and lg", "md", "Switch size"),
+        clampedSizeProp("sm, md and lg", "from group, else md", "Switch size. Overrides the group's size"),
         disabledProp,
         { name: "readonly", type: "boolean", default: "false", description: "Readonly state — no toggling, but not dimmed like disabled" },
         hiddenProp,
@@ -83,6 +83,7 @@ const meta: ComponentMeta = {
           description: "The values that are on — a group is always an array, never a boolean",
         },
         colorProp("Color role inherited by every toggle that does not set its own"),
+        { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Size inherited by every toggle that does not set its own (clamped to sm, md or lg, like CuiToggle)" },
         {
           name: "orientation",
           type: "horizontal | vertical | auto",

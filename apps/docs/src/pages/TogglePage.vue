@@ -110,6 +110,18 @@ const dynamicField = ref({
     </template>
 
     <template #examples>
+      <!-- Group size -->
+      <Example title="Group size" :code="`<!-- every toggle inherits the group's size; one can set its own -->
+<CuiToggleGroup v-model=&quot;features&quot; size=&quot;sm&quot; label=&quot;Features&quot;>
+  <CuiToggle value=&quot;analytics&quot; label=&quot;Analytics&quot; />
+  <CuiToggle value=&quot;export&quot; label=&quot;Data Export (size lg)&quot; size=&quot;lg&quot; />
+</CuiToggleGroup>`">
+        <CuiToggleGroup v-model="features" size="sm" label="Features">
+          <CuiToggle value="analytics" label="Analytics" />
+          <CuiToggle value="export" label="Data Export (size lg)" size="lg" />
+        </CuiToggleGroup>
+      </Example>
+
       <!-- Sizes -->
       <Example title="Sizes" :code="`<CuiToggle v-model=&quot;val&quot; size=&quot;sm&quot; label=&quot;Small&quot; />
 <CuiToggle v-model=&quot;val&quot; size=&quot;md&quot; label=&quot;Medium (default)&quot; />

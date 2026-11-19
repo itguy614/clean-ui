@@ -327,6 +327,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
       height: "the track's height follows the size preset, with the knob and the track width (#333)",
       "knob-size": "the knob's box follows the size preset (#333)",
       active: "the pressed border has no slot in the vocabulary",
+      row: "the first-line row the track and the label centre in is the taller of the label line and the track, so it follows the size preset like the track's height",
     },
     issue: "#454",
   },
