@@ -66,7 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   state now fill only the area beside it, with the panel at the same position and width. With the
   Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
   not shown, pinned or not, since the popover is anchored to that button.
-
+- `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
+  fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
+  line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
 - `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
   (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
   also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date

@@ -90,8 +90,11 @@ function onKeydown(e: KeyboardEvent) {
 .cui-dropdown-item__icon {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+  /* One label line tall (the label's line-height is 1.4), so the icon centres on the
+     label's first line whatever the label wraps to, with no fixed offset. */
+  min-height: 1.4em;
   color: var(--cui-text-secondary);
-  margin-top: calc(0.0625rem * var(--cui-density-scale, 1));
 }
 
 .cui-dropdown-item__body {
