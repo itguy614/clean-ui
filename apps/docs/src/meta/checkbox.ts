@@ -96,6 +96,7 @@ const meta: ComponentMeta = {
         },
         {
           ...inputSizeProp,
+          default: "from group, else md",
           description:
             "Size of the label text, from the shared input scale (xs 12px, sm 13px, md 16px, lg 17px, xl 18px). The 1.25rem box stays the same size at every step and is centred on the label's first line",
         },

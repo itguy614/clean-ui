@@ -88,7 +88,7 @@ const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: strin
   lg: { w: "3.5rem", h: "1.875rem", knob: "1.5rem", travel: "1.625rem", labelSize: "0.6875rem" },
 };
 
-const clampedSize = computed(() => clampSize(props.size ?? group?.size.value ?? "md", SUPPORTED_SIZES));
+const clampedSize = computed(() => clampSize(props.size ?? group?.size?.value ?? "md", SUPPORTED_SIZES));
 const dims = computed(() => trackSizes[clampedSize.value]);
 
 // Named by the label, described by the description, not both as one name (#183).

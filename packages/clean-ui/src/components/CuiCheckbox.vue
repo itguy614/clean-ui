@@ -62,7 +62,7 @@ const resolvedColor = computed(() => {
 // The label's text follows `size` (own, else the group's, else md) through the shared input
 // scale (#556, #567). The box stays 1.25rem at every size, so only the label text and the
 // box's offset beside it change.
-const resolvedSize = computed(() => props.size ?? group?.size.value ?? "md");
+const resolvedSize = computed(() => props.size ?? group?.size?.value ?? "md");
 const labelFontSize = computed(() => (INPUT_SIZE_SCALE[resolvedSize.value] ?? INPUT_SIZE_SCALE.md).fontSize);
 
 const elRef = ref<HTMLElement>();
