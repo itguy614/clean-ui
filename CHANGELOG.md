@@ -107,6 +107,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CuiSortableList` `itemDisabled` (#577): a disabled item's handle is now focusable and in the
+  arrow-key order, but inert: `aria-disabled="true"` (and `data-cui-focusable-disabled`) instead of
+  the `disabled` attribute, so keyboard and screen-reader users can reach it and hear that it is
+  unavailable. Space, Enter and a drag do nothing on it, and its move buttons stay disabled. A
+  neighbor's move can still pass it. In `CuiTransferList` a disabled row's handle likewise ignores
+  Shift+Space and Delete.
+- `CuiTransferList` (#577): Shift+Space marking and unmarking is announced through the sortable's
+  live region ("Alpha selected" / "Alpha not selected"), and the handle's instructions now mention
+  Shift+Space and Delete. New optional messages `transferList.markedItem`, `unmarkedItem` and
+  `instructions`; the instructions are provided to the lists beneath the transfer list only.
 - `CuiDataGridColumnManager` reorders with `CuiSortableList` (#560), replacing its own drag handling:
   one tested model for pointer drag (a floating ghost over a placeholder, in place of the drop
   line), keyboard grab / move / drop / cancel, the Move up / Move down buttons and the live-region

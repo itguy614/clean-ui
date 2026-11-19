@@ -323,6 +323,44 @@ describe("CuiSortableList (real browser)", () => {
     });
   });
 
+  describe("an item disabled by itemDisabled (#577)", () => {
+    const disabled = (item: { id: string }) => item.id === "b";
+
+    it("is reached by the arrows, and Space, Enter and a drag do nothing on it", async () => {
+      const { model, events } = mountList({ itemDisabled: disabled });
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      expect(document.activeElement).toBe(handle("Bravo"));
+      expect(handle("Bravo").getAttribute("aria-disabled")).toBe("true");
+      await userEvent.keyboard(" {Enter}");
+      await frames(2);
+      expect(handle("Bravo").getAttribute("aria-pressed")).toBe("false");
+      await userEvent.keyboard("{ArrowDown}");
+      expect(document.activeElement).toBe(handle("Charlie")); // the arrows keep roving past it
+      expect(order()).toEqual(["Alpha", "Bravo", "Charlie", "Delta"]);
+      expect(model.value.map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+      expect(events).toEqual([]);
+      const from = center(handle("Bravo"));
+      pointer(handle("Bravo"), "pointerdown", from.x, from.y);
+      await frames(1);
+      pointer(document, "pointermove", from.x, from.y + 80);
+      await frames(2);
+      expect(document.querySelector(".cui-sortable-list__item--dragging")).toBeNull();
+    });
+
+    it("keeps full strength on focus so the ring shows, and a neighbour's move can pass it", async () => {
+      const { model } = mountList({ itemDisabled: disabled });
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      expect(getComputedStyle(handle("Bravo")).opacity).toBe("1");
+      await userEvent.keyboard("{ArrowUp} {ArrowDown} ");
+      await frames(2);
+      expect(model.value.map((i) => i.id)).toEqual(["b", "a", "c", "d"]);
+    });
+  });
+
   it("can be nested in an item: each list roves over its own handles only (#560)", async () => {
     const outer = [{ id: "g1", label: "Group 1" }, { id: "g2", label: "Group 2" }];
     const inner = [{ id: "a", label: "A" }, { id: "b", label: "B" }];

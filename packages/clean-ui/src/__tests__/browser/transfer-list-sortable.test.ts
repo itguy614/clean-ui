@@ -179,6 +179,55 @@ describe("CuiTransferList selected list (real browser)", () => {
     });
   });
 
+  describe("disabled rows and announcements (#577)", () => {
+    const live = () => document.querySelector<HTMLElement>(".cui-sortable-list [role=status]")!;
+    const disabledB = { items: ITEMS.map((i) => (i.value === "b" ? { ...i, disabled: true } : i)) };
+
+    it("reaches a disabled row by the arrows, and Space, Enter, Shift+Space and Delete do nothing on it", async () => {
+      const { model, emits } = mountList(["a", "b", "c"], disabledB);
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      expect(document.activeElement).toBe(handle("Bravo"));
+      expect(handle("Bravo").getAttribute("aria-disabled")).toBe("true");
+      await userEvent.keyboard(" {Enter}{Shift>} {/Shift}{Delete}{Backspace}");
+      await frames(3);
+      expect(handle("Bravo").getAttribute("aria-pressed")).toBe("false");
+      expect(rowOf("Bravo").querySelector(".cui-transfer-list__option--selected")).toBeNull();
+      expect(model.value).toEqual(["a", "b", "c"]);
+      expect(emits).toEqual([]);
+    });
+
+    it("lets a neighbour's move pass a disabled row", async () => {
+      const { model } = mountList(["a", "b", "c"], disabledB);
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard(" {ArrowDown} ");
+      await frames(2);
+      expect(model.value).toEqual(["b", "a", "c"]);
+    });
+
+    it("announces marking and unmarking through the sortable's one live region", async () => {
+      mountList();
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{Shift>} {/Shift}");
+      await frames(2);
+      expect(live().textContent!.trim()).toBe("Alpha selected");
+      await userEvent.keyboard("{Shift>} {/Shift}");
+      await frames(2);
+      expect(live().textContent!.trim()).toBe("Alpha not selected");
+    });
+
+    it("lists Shift+Space and Delete in the handle's instructions", async () => {
+      mountList();
+      await frames(2);
+      const text = document.getElementById(handle("Alpha").getAttribute("aria-describedby")!)!.textContent!;
+      expect(text).toContain("Shift+Space");
+      expect(text).toContain("Delete");
+    });
+  });
+
   describe("transfer between the lists", () => {
     it("takes a row from the source into the selected list, keyed so the others keep their place", async () => {
       const { model } = mountList(["a", "b"]);

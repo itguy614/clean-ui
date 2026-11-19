@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onBeforeUnmount, useTemplateRef, type Ref } from "vue";
+import { ref, computed, nextTick, onBeforeUnmount, provide, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
@@ -10,6 +10,7 @@ import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
 import { useLayerStack } from "../composables/useLayerStack";
 import { useMessages } from "../composables/useMessages";
+import { CuiConfigKey } from "./config-context";
 import { usePointerDrag } from "../composables/usePointerDrag";
 import { useRovingFocus } from "../composables/useRovingFocus";
 import { IconCaretDoubleLeft } from "../icons/generated/caret-double-left";
@@ -67,6 +68,14 @@ const props = withDefaults(defineProps<CuiTransferListProps>(), {
 
 // The prose props default to the message catalogue, so a localized app localizes them (#215).
 const messages = useMessages();
+// The sortable lists' instructions are this list's: they add Shift+Space and Delete (the keys below).
+provide(
+  CuiConfigKey,
+  computed(() => {
+    const m = messages.value;
+    return { ...m, sortableList: { ...m.sortableList, instructions: m.transferList.instructions ?? m.sortableList.instructions } };
+  }),
+);
 const sourceLabel = computed(() => props.sourceTitle ?? messages.value.transferList.source);
 const targetLabel = computed(() => props.targetTitle ?? messages.value.transferList.target);
 const sourceFilterLabel = computed(() => props.sourcePlaceholder ?? messages.value.transferList.filterPlaceholder);
@@ -388,8 +397,9 @@ const ids = {
 const OPTION = ".cui-transfer-list__option";
 const HANDLE = ".cui-sortable-list__handle";
 const sourceListEl = useTemplateRef<HTMLElement>("sourceListEl");
-const sourceList = useTemplateRef<{ el: HTMLElement | null }>("sourceList");
-const targetList = useTemplateRef<{ el: HTMLElement | null }>("targetList");
+type SortableHandle = { el: HTMLElement | null; announce: (text: string) => void };
+const sourceList = useTemplateRef<SortableHandle>("sourceList");
+const targetList = useTemplateRef<SortableHandle>("targetList");
 const handlesOf = (side: Side) => Array.from((side === "source" ? sourceList : targetList).value?.el?.querySelectorAll<HTMLElement>(HANDLE) ?? []);
 /** A list's focusable rows, in order: the options of the plain left list, else the sortable's handles. */
 const rowsOf = (side: Side) =>
@@ -426,7 +436,14 @@ function onSortableKeydown(e: KeyboardEvent, side: Side) {
   if (!mark && e.key !== "Delete" && e.key !== "Backspace") return;
   e.preventDefault();
   e.stopPropagation();
-  if (mark) return (side === "source" ? toggleSource : toggleTarget)(item.value);
+  if (mark) {
+    const [flip, marks, list] = side === "source" ? [toggleSource, sourceSelected, sourceList] : [toggleTarget, targetSelected, targetList];
+    flip(item.value);
+    // Said through the sortable's own live region: a second one would compete with it.
+    const t = messages.value.transferList;
+    list.value?.announce((marks.value.has(item.value) ? t.markedItem : t.unmarkedItem)?.(item.label) ?? "");
+    return;
+  }
   (side === "source" ? dblClickSource : dblClickTarget)(item);
   followMovedItem(side, item, index);
 }

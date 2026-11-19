@@ -93,6 +93,12 @@ const frozen = ref(["One", "Two", "Three"]);
           under way, Escape goes to the list alone: an enclosing modal stays open.
         </li>
         <li>
+          An item disabled by <code>itemDisabled</code> keeps its grip in the arrow-key order, so
+          assistive tech finds it, but it is inert: <code>aria-disabled="true"</code>, and Space,
+          Enter and a drag do nothing on it. Its move buttons are disabled. A neighbor's move can
+          still pass it, and its grip shows the focus ring when focused.
+        </li>
+        <li>
           A polite live region announces every step, with the position out of the total: “Ada
           grabbed, position 1 of 3”, “Ada moved to position 2 of 3”, “Ada dropped at position 2
           of 3”, “Reorder cancelled. Ada is back at position 1 of 3”. The words come from the

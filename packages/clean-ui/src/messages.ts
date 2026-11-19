@@ -122,6 +122,10 @@ export interface CuiCoreMessages {
     actions?: string;
     /** Read after a marked row of the selected list, which has no `aria-selected` (#559). Optional, so an existing catalogue type-checks. */
     marked?: string;
+    /** Said when Shift+Space marks or unmarks a row of a sortable list, and the handle's instructions there. Optional, so an existing catalogue type-checks. */
+    markedItem?: (item: string) => string;
+    unmarkedItem?: (item: string) => string;
+    instructions?: string;
   };
   sortableList: {
     /** Default `label` of the list, when the consumer gives none. */
@@ -410,6 +414,10 @@ export const defaultMessages: CuiCoreMessages = {
     filter: (title) => `Filter ${title}`,
     actions: "Move items",
     marked: "selected",
+    markedItem: (item) => `${item} selected`,
+    unmarkedItem: (item) => `${item} not selected`,
+    instructions:
+      "Press Space to grab. Use the arrow keys to move, Space to drop, Escape to cancel. Shift+Space selects or deselects the item for transfer. Delete moves it to the other list.",
   },
   sortableList: {
     label: "Reorderable list",

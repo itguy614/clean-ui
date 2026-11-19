@@ -15,7 +15,7 @@ const permissions: TransferListItem[] = [
   { value: "import", label: "Import", description: "Import data" },
   { value: "billing", label: "Billing", description: "Manage billing", disabled: true },
 ];
-const selectedPerms = ref<string[]>(["read"]);
+const selectedPerms = ref<string[]>(["read", "billing"]);
 
 const columns: TransferListItem[] = [
   { value: "name", label: "Name", icon: "user" },
@@ -101,8 +101,8 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           Each list is one tab stop. Arrow Up and Down move between items, Home and End jump
-          to the ends, and disabled items are skipped. On the selected list the stop is a
-          row's drag handle.
+          to the ends, and disabled items are skipped on the source list. On a sortable list the stop is a
+          row's drag handle, and a disabled row's handle is still reached by the arrows.
         </li>
         <li>
           Keyboard model of the selected list: Space or Enter grabs the focused row, the
@@ -110,7 +110,13 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           is announced. Space marks and Enter transfers on the source list, so the selected
           list has them on other keys: Shift+Space marks or unmarks the focused row, and
           Delete or Backspace returns it to the source list. A grabbed row keeps all its keys
-          for the move, and a disabled row has no handle.
+          for the move. Marking and unmarking are announced (“Alpha selected”, “Alpha not
+          selected”, <code>transferList.markedItem</code> / <code>unmarkedItem</code>) through the
+          sortable's one live region, and the handle's instructions
+          (<code>transferList.instructions</code>) name Shift+Space and Delete. A disabled row's
+          handle stays focusable but inert: <code>aria-disabled="true"</code>, so a screen reader
+          finds it and says it is unavailable, and Space, Enter, Shift+Space, Delete and a drag do
+          nothing on it. A neighbor's move can still pass it.
         </li>
         <li>
           Space marks or unmarks the focused item, which is what enables the arrow buttons.
@@ -168,6 +174,10 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           target-title="Granted"
           height="280px"
         />
+        <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
+          Billing is disabled and already granted: arrow onto its handle in Granted, and it is
+          announced as unavailable, with nothing happening on Space, Enter or Delete.
+        </div>
         <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
           Granted: <code class="cui-code">{{ selectedPerms }}</code>
         </div>
