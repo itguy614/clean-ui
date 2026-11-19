@@ -6,7 +6,7 @@ import CuiSelect from "./CuiSelect.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
-import { useFilterDraft } from "./data-grid-filter-draft";
+import { useFilterDraftContext } from "./data-grid-filter-draft";
 import { useMessages } from "../composables/useMessages";
 import { IconPushPin } from "../icons/generated/push-pin";
 import { IconX } from "../icons/generated/x";
@@ -29,7 +29,7 @@ const labelOf = useColumnLabel();
 
 // The edits not yet applied ("Apply" applies them). Held by the grid, not by this instance: the
 // popover and the inline panel are two instances, and pinning swaps one for the other (#552).
-const localFilters = useFilterDraft(grid);
+const localFilters = useFilterDraftContext(grid);
 
 // A popover takes focus on open, like a dialog: the first field, else the panel itself. The
 // toolbar returns it to the Filters button on close. `preventScroll`, since the panel is still
@@ -132,7 +132,7 @@ const hasAnyValue = computed(() => {
           class="cui-data-grid-filter-panel__pin"
           variant="ghost"
           size="xs"
-          :aria-label="grid.filterPanelPinned.value ? messages.dataGrid.unpinFilters : messages.dataGrid.pinFilters"
+          :aria-label="messages.dataGrid.pinFilters"
           :pressed="grid.filterPanelPinned.value"
           @click="grid.toggleFilterPanelPin()"
         >

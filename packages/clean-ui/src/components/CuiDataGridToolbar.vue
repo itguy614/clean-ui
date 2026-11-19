@@ -56,11 +56,13 @@ watch(popoverOpen, async (open, was) => {
   if (open || !was) return;
   // Taken now, before the panel leaves: only a user who was in it has focus to carry over.
   const inPanel = !!document.activeElement?.closest(".cui-data-grid-filter-panel--popover");
+  // Pinned or closed is decided now, not after the waits: it may have been reopened by then.
+  const pinned = grid.filterPanelOpen.value && grid.filterPanelPinned.value;
   await nextTick();
   // A press that closed it is still being handled (the browser moves focus after mousedown): wait it out.
   await new Promise((resolve) => setTimeout(resolve));
   const panel = props.filterPanelId ? document.getElementById(props.filterPanelId) : null;
-  if (grid.filterPanelOpen.value) {
+  if (pinned) {
     // Pinned (by the pin button, or a loaded view): follow focus only if it was in the panel.
     if (inPanel) panel?.querySelector<HTMLElement>(".cui-data-grid-filter-panel__pin")?.focus({ preventScroll: true });
     return;

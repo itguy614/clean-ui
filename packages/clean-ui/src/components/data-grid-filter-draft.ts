@@ -20,7 +20,7 @@ function draftFromGrid(grid: DataGridContext): Record<string, string | string[]>
  * panel opens from closed, and whenever the applied filters change (Apply, Clear all, a chip
  * removed, a saved view loaded), so it is never stale against them. Call in setup, in CuiDataGrid.
  */
-export function provideFilterDraft(grid: DataGridContext): FilterDraft {
+export function useFilterDraftProvider(grid: DataGridContext): FilterDraft {
   const draft: FilterDraft = ref(draftFromGrid(grid));
   watch(() => grid.filterPanelOpen.value, (open) => open && (draft.value = draftFromGrid(grid)));
   watch(() => grid.filters.value, () => (draft.value = draftFromGrid(grid)), { deep: true });
@@ -32,6 +32,6 @@ export function provideFilterDraft(grid: DataGridContext): FilterDraft {
  * The draft the enclosing CuiDataGrid holds. A filter panel used with `provideDataGrid` alone
  * (no CuiDataGrid) has none to share, so it keeps its own, restarted the same ways.
  */
-export function useFilterDraft(grid: DataGridContext): FilterDraft {
-  return inject(FilterDraftKey, null) ?? provideFilterDraft(grid);
+export function useFilterDraftContext(grid: DataGridContext): FilterDraft {
+  return inject(FilterDraftKey, null) ?? useFilterDraftProvider(grid);
 }

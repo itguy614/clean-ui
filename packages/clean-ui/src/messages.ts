@@ -300,9 +300,8 @@ export interface CuiCoreMessages {
     searchLabel?: string;
     /** The toolbar's accessible name (#190). Optional, so an existing catalogue type-checks. */
     toolbar?: string;
-    /** The filter panel's pin button, unpinned and pinned (#552). Optional, so an existing catalogue type-checks. */
+    /** The filter panel's pin button, a toggle: its name stays and `aria-pressed` carries the state (#552). Optional, so an existing catalogue type-checks. */
     pinFilters?: string;
-    unpinFilters?: string;
     /** Placeholder for a per-column filter input. */
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
@@ -488,7 +487,6 @@ export const defaultMessages: CuiCoreMessages = {
     search: "Search…",
     toolbar: "Table controls",
     pinFilters: "Pin filters",
-    unpinFilters: "Unpin filters",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
     bulkActions: "Bulk actions",

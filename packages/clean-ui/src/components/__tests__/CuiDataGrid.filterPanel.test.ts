@@ -98,7 +98,7 @@ describe("CuiDataGrid filter panel presentation", () => {
     expect(button(w).attributes("aria-expanded")).toBe("true");
   });
 
-  it("the pin button says what it does and whether it is on", async () => {
+  it("the pin button is a named toggle", async () => {
     const w = await mountGrid();
     await button(w).trigger("click");
     await flushPromises();
@@ -106,7 +106,8 @@ describe("CuiDataGrid filter panel presentation", () => {
     expect(pin().getAttribute("aria-pressed")).toBe("false");
     pin().click();
     await flushPromises();
-    expect(pin().getAttribute("aria-label")).toBe("Unpin filters");
+    // A toggle keeps its name; aria-pressed carries the state.
+    expect(pin().getAttribute("aria-label")).toBe("Pin filters");
     expect(pin().getAttribute("aria-pressed")).toBe("true");
   });
 

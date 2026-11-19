@@ -77,8 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with `filterPanelPinned: true` (a saved view restores the presentation it was saved with);
   `filterPanelSide` still chooses the side of the pinned panel. The Filters button carries
   `aria-expanded` and `aria-controls`, focus moves into the popover on open and back to the
-  button on close, and the panel's pin and close buttons are named (`messages.dataGrid.pinFilters`
-  and `unpinFilters`, new). Edits typed or ticked in the panel but not yet applied are held by the
+  button on close, and the panel's pin and close buttons are named (`messages.dataGrid.pinFilters`, new). Edits typed or ticked in the panel but not yet applied are held by the
   grid, not the panel, so they survive pinning and unpinning; they restart from the applied filters
   when the panel opens, and when the filters change (Apply, Clear all, a chip removed, a saved view
   loaded). The headless `useDataGrid` state is unchanged.
