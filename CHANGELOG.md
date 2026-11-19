@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `CuiTransferList` (#559): the selected list is a `CuiSortableList`, so it gains pointer drag (a
+  floating ghost over a placeholder), a keyboard grab (Space or Enter grabs, arrows, Home and End
+  move, Space or Enter drops, Escape cancels) and live-region announcements. The same `v-model`,
+  props, slots and events; Move up / Move down stay in the toolbar as the non-drag path (the rows
+  carry no buttons of their own). `messages.transferList.marked` (optional) is read after a marked
+  row of the selected list.
+- `CuiTransferList` drags between the lists with the pointer, in both directions (#559): a
+  floating tilted ghost (the `--cui-sortable-list-drag-*` tokens) follows the pointer while the row
+  stays behind, faint. Over the selected list the sortable's placeholder opens at the insertion
+  point (top, middle, bottom or an empty list) with the rows sliding aside; over the source list
+  the panel is lit. Escape cancels. This replaces the native HTML5 drag and its thin dashed drop
+  line. Touch drags from the grip only.
+- `CuiTransferList` `sourceOrder` (#559, `v-model:sourceOrder`, opt-in): the left list becomes
+  orderable like the right one (drag, keyboard grab, announcements). Items it names come first in
+  its order, the rest follow in `items` order; a reorder, or a selected row dropped into the left
+  list at the placeholder's slot, emits `update:sourceOrder` with every left value in order (before
+  `update:modelValue`, once each). Move up / Move down act on the one marked row of either list
+  (the last marked if both have one). Unset, the left list is unchanged.
+- `CuiSortableList` `itemDisabled`: items that keep their place, with no handle and no move
+  buttons. `insertAt` / `insertSize`: show a placeholder at an index for an item dragged in from
+  elsewhere, the others sliding aside; the parent owns the drag and the drop.
+
 - `CuiSortableList` (#198): a reorderable list whose v-model is the array of items. Drag an item by
   its handle (pointer, touch and pen), or grab it with the keyboard (Space or Enter grabs, the
   arrow keys, Home and End move it, Space or Enter drops, Escape cancels and restores), or use the
@@ -104,6 +126,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CuiSortableList` scopes its roving focus to its own handles, so a sortable list can be nested in
   an item of another (the column manager's groups) without the outer list's arrow keys reaching
   into the inner one. No change for a list that is not nested.
+- `CuiTransferList` selected list (#559): its rows are no longer `role="option"`s in a listbox but
+  items of a named list, each with a drag handle that is the tab stop. On a handle, Space and Enter
+  grab; marking for transfer moved to Shift+Space and returning a row to the source list to Delete
+  or Backspace (click and double-click are unchanged). Dragging a selected row within its own list
+  is the sortable's pointer drag; dragging it onto the source list still returns it.
+
 - `CuiDataGrid`'s filter panel is a popover unless it is pinned (#552). **This changes the default
   presentation:** the Filters button used to open an inline column beside the table, which took
   width from it and made it reflow on every open and close; unpinned (the default) it now opens
