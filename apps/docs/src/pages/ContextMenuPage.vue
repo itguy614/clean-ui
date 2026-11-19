@@ -73,6 +73,10 @@ function openFromButton(e: MouseEvent) {
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
+          A press in a panel opened from inside the menu (a popover, a select or a combobox in an
+          item) does not count as a press outside, so the menu stays open while it is used.
+        </li>
+        <li>
           <code>Shift+F10</code> and the dedicated Menu key open the menu at the focused element,
           as the platform does. This needs no opt-in — but the wrapper is
           <code>display: contents</code>, so it only works if what you wrap is itself focusable.
