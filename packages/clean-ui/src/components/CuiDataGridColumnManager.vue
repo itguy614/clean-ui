@@ -150,7 +150,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
 </script>
 
 <template>
-  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="20rem" :title="messages.dataGrid.columns">
+  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="min(20rem, calc(100vw - 2rem))" :title="messages.dataGrid.columns">
     <CuiButton variant="outline" size="sm">
       <template #prefix><CuiIcon :icon="IconColumns" size="0.875rem" /></template>
       {{ messages.dataGrid.columns }}

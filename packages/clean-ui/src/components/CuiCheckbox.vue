@@ -204,7 +204,7 @@ const choice = useChoiceLabelling(props);
   background: var(--cui-checkbox-bg, var(--_checkbox-bg));
   /* Centres the box on the label's first line (1.5 × its font size, so it follows the token
      too): 0.125rem at md. */
-  --_checkbox-box-offset: calc((var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size)) * 1.5 - 1.25rem) / 2);
+  --_checkbox-box-offset: max(0px, calc((var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size)) * 1.5 - 1.25rem) / 2));
 }
 
 :where(.cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator) {
