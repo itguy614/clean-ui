@@ -47,6 +47,13 @@ export interface CuiTransferListProps extends HideableProps, DisableableProps, S
   targetPlaceholder?: string;
   /** Height of each panel */
   height?: string;
+  /**
+   * The left list's order (v-model:sourceOrder). Unset, the left list is the unselected items in
+   * `items` order and cannot be reordered. Set, it is orderable like the right one: items it names
+   * come first in its order (a value that is not on the left is ignored), the rest follow in
+   * `items` order, and a reorder emits `update:sourceOrder` with every left value in order.
+   */
+  sourceOrder?: (string | number)[];
 }
 
 const props = withDefaults(defineProps<CuiTransferListProps>(), {
@@ -67,6 +74,8 @@ const targetFilterLabel = computed(() => props.targetPlaceholder ?? messages.val
 
 const emit = defineEmits<{
   "update:modelValue": [value: (string | number)[]];
+  /** The left list was reordered, or a row was dropped into it at a chosen slot (before `update:modelValue`, if both). */
+  "update:sourceOrder": [value: (string | number)[]];
 }>();
 
 // State
@@ -78,9 +87,14 @@ const targetSelected = ref(new Set<string | number>());
 const selectedSet = computed(() => new Set(props.modelValue));
 
 // Source items (not in modelValue)
-const sourceItems = computed(() =>
-  props.items.filter((item) => !selectedSet.value.has(item.value)),
-);
+const sourceItems = computed(() => {
+  const rest = props.items.filter((item) => !selectedSet.value.has(item.value));
+  const named = props.sourceOrder;
+  if (!named) return rest;
+  // Named items first, in their order; the rest after, in `items` order (the sort is stable).
+  const rank = new Map(named.map((v, i) => [v, i]));
+  return rest.sort((a, b) => (rank.get(a.value) ?? named.length) - (rank.get(b.value) ?? named.length));
+});
 
 const filteredSourceItems = computed(() => {
   if (!sourceSearch.value) return sourceItems.value;
@@ -116,10 +130,18 @@ const markedShown = (shown: TransferListItem[], marks: Set<string | number>) =>
 const movableToTarget = computed(() => markedShown(filteredSourceItems.value, sourceSelected.value));
 const movableAllToTarget = computed(() => sourceItems.value.filter((i) => !i.disabled).map((i) => i.value));
 const movableToSource = computed(() => markedShown(filteredTargetItems.value, targetSelected.value));
-/** The one marked item's place in the selected list, for Move up / down; -1 unless exactly one. */
-const reorderIndex = computed(() =>
-  targetSelected.value.size === 1 ? props.modelValue.indexOf([...targetSelected.value][0]) : -1,
-);
+/** The list whose one marked row Move up / down move: the last marked of the two, if both have one. */
+const lastMarked = ref<"source" | "target">("target");
+const reorderPick = computed(() => {
+  const picks = [] as { side: "source" | "target"; full: (string | number)[]; index: number }[];
+  const one = (marks: Set<string | number>, side: "source" | "target", full: (string | number)[]) =>
+    marks.size === 1 && picks.push({ side, full, index: full.indexOf([...marks][0]) });
+  one(targetSelected.value, "target", props.modelValue);
+  if (props.sourceOrder) one(sourceSelected.value, "source", sourceItems.value.map((i) => i.value));
+  return picks.find((p) => p.side === lastMarked.value) ?? picks[0] ?? null;
+});
+/** The marked row's place in its list, for Move up / down; -1 unless exactly one. */
+const reorderIndex = computed(() => reorderPick.value?.index ?? -1);
 
 function moveToTarget() {
   if (props.disabled) return;
@@ -150,13 +172,17 @@ function moveAllToSource() {
 
 /** Swap the one marked item with its neighbor `by` places away, if there is one. */
 function reorder(by: -1 | 1) {
-  const idx = reorderIndex.value;
-  const to = idx + by;
-  if (props.disabled || idx === -1 || to < 0 || to >= props.modelValue.length) return;
-  const arr = [...props.modelValue];
-  [arr[idx], arr[to]] = [arr[to], arr[idx]];
-  emit("update:modelValue", arr);
+  const pick = reorderPick.value;
+  const to = (pick?.index ?? -1) + by;
+  if (props.disabled || !pick || pick.index === -1 || to < 0 || to >= pick.full.length) return;
+  const arr = [...pick.full];
+  [arr[pick.index], arr[to]] = [arr[to], arr[pick.index]];
+  emitOrder(pick.side, arr);
 }
+
+/** Emit a list's full order: the selected list's is the v-model, the left list's `sourceOrder`. */
+const emitOrder = (side: "source" | "target", order: (string | number)[]) =>
+  side === "source" ? emit("update:sourceOrder", order) : emit("update:modelValue", order);
 
 type Marks = Ref<Set<string | number>>;
 
@@ -169,8 +195,16 @@ function toggle(marks: Marks, value: string | number, on = !marks.value.has(valu
   marks.value = next;
 }
 
-const toggleSource = (value: string | number) => !props.disabled && toggle(sourceSelected, value);
-const toggleTarget = (value: string | number) => !props.disabled && toggle(targetSelected, value);
+function toggleSource(value: string | number) {
+  if (props.disabled) return;
+  lastMarked.value = "source";
+  toggle(sourceSelected, value);
+}
+function toggleTarget(value: string | number) {
+  if (props.disabled) return;
+  lastMarked.value = "target";
+  toggle(targetSelected, value);
+}
 
 // Double-click (or Enter) to move immediately. The item leaves its list's marks too, or
 // "move selected" would later move it a second time.
@@ -247,10 +281,8 @@ const within = (el: HTMLElement | null, x: number, y: number) => {
   return !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
 };
 
-/** The slot among the selected rows the pointer is at, by the rows' centers with the placeholder taken out. */
-function slotAt(y: number) {
-  const list = targetList.value?.el;
-  if (!list) return 0;
+/** The slot among a sortable's rows the pointer is at, by the rows' centers with the placeholder taken out. */
+function slotAt(y: number, list: HTMLElement) {
   const rel = y - list.getBoundingClientRect().top;
   let shift = 0;
   let slot = 0;
@@ -272,14 +304,15 @@ function onDragMove(e: PointerEvent) {
   s.ghost!.style.transform = `translate3d(${e.clientX - s.x0}px, ${e.clientY - s.y0}px, 0)`;
   const side: Side | null = within(targetScroller.value, e.clientX, e.clientY) ? "target" : within(sourceScroller.value, e.clientX, e.clientY) ? "source" : null;
   overSide.value = side !== s.from ? side : null;
-  insertAt.value = overSide.value === "target" ? slotAt(e.clientY) : null;
+  // Over the left list there is a slot only when it is orderable (`sourceOrder`).
+  const list = overSide.value === "target" ? targetList.value?.el : overSide.value === "source" && props.sourceOrder ? sourceList.value?.el : null;
+  insertAt.value = list ? slotAt(e.clientY, list) : null;
 }
 
-/** Where in the full selected order the shown slot `slot` is: before the row there, or after the last shown. */
-function fullIndex(slot: number) {
-  const shown = filteredTargetItems.value;
-  if (slot < shown.length) return props.modelValue.indexOf(shown[slot].value);
-  return shown.length ? props.modelValue.indexOf(shown[shown.length - 1].value) + 1 : props.modelValue.length;
+/** Where in a list's full order the shown slot `slot` is: before the row there, or after the last shown. */
+function fullIndex(full: (string | number)[], shown: TransferListItem[], slot: number) {
+  if (slot < shown.length) return full.indexOf(shown[slot].value);
+  return shown.length ? full.indexOf(shown[shown.length - 1].value) + 1 : full.length;
 }
 
 function endDrag(commit: boolean) {
@@ -295,10 +328,15 @@ function endDrag(commit: boolean) {
   if (to === "target") {
     toggle(sourceSelected, s.value, false);
     const next = [...props.modelValue];
-    next.splice(fullIndex(slot!), 0, s.value);
+    next.splice(fullIndex(next, filteredTargetItems.value, slot!), 0, s.value);
     emit("update:modelValue", next);
   } else if (to === "source") {
     toggle(targetSelected, s.value, false);
+    if (slot !== null) {
+      const order = sourceItems.value.map((i) => i.value);
+      order.splice(fullIndex(order, filteredSourceItems.value, slot), 0, s.value);
+      emit("update:sourceOrder", order); // the left order first, then the selected list that gave the row up
+    }
     emit("update:modelValue", props.modelValue.filter((v) => v !== s.value));
   }
 }
@@ -334,11 +372,11 @@ function optionClass(marks: Set<string | number>, item: TransferListItem, side: 
 }
 
 // --- Keyboard and ARIA (#170) ---
-// The source is a multiselectable role="listbox" of role="option"s with one tab stop
-// (useRovingFocus): the arrows and Home/End move between items, Space marks one for
+// Without `sourceOrder` the left list is a multiselectable role="listbox" of role="option"s with
+// one tab stop (useRovingFocus): the arrows and Home/End move between items, Space marks one for
 // transfer, and Enter moves the focused item across at once, as a double-click does.
-// The target is a CuiSortableList (#559): its drag handles are the tab stops, Space/Enter
-// grab, and the marking keys below ride on a handle.
+// The selected list, and the left one with `sourceOrder`, are a CuiSortableList (#559): its drag
+// handles are the tab stops, Space/Enter grab, and the keys below ride on a handle.
 const baseId = useCuiId("transfer-list");
 const ids = {
   sourceTitle: `${baseId}-source-title`,
@@ -350,8 +388,13 @@ const ids = {
 const OPTION = ".cui-transfer-list__option";
 const HANDLE = ".cui-sortable-list__handle";
 const sourceListEl = useTemplateRef<HTMLElement>("sourceListEl");
+const sourceList = useTemplateRef<{ el: HTMLElement | null }>("sourceList");
 const targetList = useTemplateRef<{ el: HTMLElement | null }>("targetList");
-const targetHandles = () => Array.from(targetList.value?.el?.querySelectorAll<HTMLElement>(HANDLE) ?? []);
+const handlesOf = (side: Side) => Array.from((side === "source" ? sourceList : targetList).value?.el?.querySelectorAll<HTMLElement>(HANDLE) ?? []);
+/** A list's focusable rows, in order: the options of the plain left list, else the sortable's handles. */
+const rowsOf = (side: Side) =>
+  side === "source" && !props.sourceOrder ? Array.from(sourceListEl.value?.querySelectorAll<HTMLElement>(OPTION) ?? []) : handlesOf(side);
+const shownOf = (side: Side) => (side === "source" ? filteredSourceItems.value : filteredTargetItems.value);
 const sourceRoving = useRovingFocus({ container: sourceListEl, itemSelector: OPTION });
 
 function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, index: number) {
@@ -360,7 +403,7 @@ function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, index: number
   if (e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
   if (e.key === " ") {
     e.preventDefault();
-    toggle(sourceSelected, item.value);
+    toggleSource(item.value);
   } else if (e.key === "Enter") {
     e.preventDefault();
     dblClickSource(item);
@@ -369,42 +412,44 @@ function onOptionKeydown(e: KeyboardEvent, item: TransferListItem, index: number
 }
 
 /**
- * Keys on a target row's handle, taken before the sortable's own (capture): Shift+Space marks
- * the row for transfer, Delete or Backspace returns it to the source list. Space and Enter
- * alone stay the sortable's grab; a grabbed row keeps all its keys.
+ * Keys on a sortable row's handle, taken before the sortable's own (capture): Shift+Space marks
+ * the row for transfer, Delete or Backspace moves it to the other list. Space and Enter alone
+ * stay the sortable's grab; a grabbed row keeps all its keys.
  */
-function onTargetKeydown(e: KeyboardEvent) {
+function onSortableKeydown(e: KeyboardEvent, side: Side) {
   const handle = e.target as HTMLElement;
   if (!handle.matches?.(HANDLE) || handle.getAttribute("aria-pressed") === "true") return;
-  const index = targetHandles().indexOf(handle);
-  const item = filteredTargetItems.value[index];
+  const index = handlesOf(side).indexOf(handle);
+  const item = shownOf(side)[index];
   const mark = e.key === " " && e.shiftKey;
   if (!item || e.altKey || e.ctrlKey || e.metaKey || props.disabled || item.disabled) return;
   if (!mark && e.key !== "Delete" && e.key !== "Backspace") return;
   e.preventDefault();
   e.stopPropagation();
-  if (mark) return toggleTarget(item.value);
-  dblClickTarget(item);
-  followMovedItem("target", item, index);
+  if (mark) return (side === "source" ? toggleSource : toggleTarget)(item.value);
+  (side === "source" ? dblClickSource : dblClickTarget)(item);
+  followMovedItem(side, item, index);
+}
+
+/** The enabled row nearest `index` (the later one on a tie). */
+function nearestEnabled(rows: HTMLElement[], index: number) {
+  for (let d = 0; d < rows.length; d++) {
+    for (const el of [rows[index + d], rows[index - d]]) {
+      if (el && !(el as HTMLButtonElement).disabled && el.getAttribute("aria-disabled") !== "true") return el;
+    }
+  }
 }
 
 /**
  * After a key moves an item across, focus what took its place in the list it left — or, if
  * that list is now empty, the item itself where it went — so focus is never dropped on <body>.
  */
-function followMovedItem(from: "source" | "target", item: TransferListItem, index: number) {
+function followMovedItem(from: Side, item: TransferListItem, index: number) {
   nextTick(() => {
-    const sourceOpts = () => Array.from(sourceListEl.value?.querySelectorAll<HTMLElement>(OPTION) ?? []);
-    if (from === "source") {
-      if (sourceOpts().length) return sourceRoving.focusNearest(index);
-      targetHandles()[filteredTargetItems.value.findIndex((i) => i.value === item.value)]?.focus();
-    } else {
-      const handles = targetHandles();
-      if (handles.length) return handles[Math.min(index, handles.length - 1)].focus();
-      const opts = sourceOpts();
-      const at = opts.findIndex((o) => o.dataset.value === String(item.value));
-      if (at !== -1) sourceRoving.focusItem(at, opts);
-    }
+    const stay = nearestEnabled(rowsOf(from), index);
+    if (stay) return stay.focus();
+    const to = from === "source" ? "target" : "source";
+    rowsOf(to)[shownOf(to).findIndex((i) => i.value === item.value)]?.focus();
   });
 }
 
@@ -413,19 +458,20 @@ const itemText = (item: TransferListItem) => item.label;
 const itemOff = (item: TransferListItem) => !!item.disabled;
 
 /**
- * The sortable reorders the items it shows: put them back into the full order, in the slots the
- * shown ones held, so an item the filter hides (or that has no entry in `items`) stays where it was.
+ * A sortable reorders the items it shows: put them back into the list's full order, in the slots
+ * the shown ones held, so an item the filter hides (or that has no entry in `items`) stays where it was.
  */
-function onTargetReorder(next: TransferListItem[]) {
+function onReorder(side: Side, next: TransferListItem[]) {
   const shown = new Set(next.map((i) => i.value));
   const values = next.map((i) => i.value);
-  emit("update:modelValue", props.modelValue.map((v) => (shown.has(v) ? values.shift()! : v)));
+  const full = side === "source" ? sourceItems.value.map((i) => i.value) : props.modelValue;
+  emitOrder(side, full.map((v) => (shown.has(v) ? values.shift()! : v)));
 }
 
 // Expose imperative handle — the source list's tab stop, else the selected list's.
 const rootEl = useTemplateRef<HTMLElement>("rootEl");
 const tabStop = () =>
-  sourceListEl.value?.querySelector<HTMLElement>('[tabindex="0"]') ?? targetList.value?.el?.querySelector<HTMLElement>('[tabindex="0"]');
+  [sourceListEl.value, sourceList.value?.el, targetList.value?.el].map((el) => el?.querySelector<HTMLElement>('[tabindex="0"]')).find(Boolean);
 defineExpose({
   el: rootEl,
   focus: (opts?: FocusOptions) => tabStop()?.focus(opts),
@@ -439,13 +485,14 @@ defineExpose({
 const moveButtons = computed(() => {
   const t = messages.value.transferList;
   const idx = reorderIndex.value;
+  const len = reorderPick.value?.full.length;
   return [
     { key: "to-target", label: t.moveSelectedTo(targetLabel.value), icon: IconCaretRight, idle: movableToTarget.value.length === 0, run: moveToTarget },
     { key: "all-to-target", label: t.moveAllTo(targetLabel.value), icon: IconCaretDoubleRight, idle: movableAllToTarget.value.length === 0, run: moveAllToTarget },
     { key: "to-source", label: t.moveSelectedTo(sourceLabel.value), icon: IconCaretLeft, idle: movableToSource.value.length === 0, run: moveToSource },
     { key: "all-to-source", label: t.moveAllTo(sourceLabel.value), icon: IconCaretDoubleLeft, idle: targetItems.value.length === 0, run: moveAllToSource },
     { key: "up", label: t.moveUp, icon: IconCaretUp, idle: idx <= 0, run: () => reorder(-1), gapBefore: true },
-    { key: "down", label: t.moveDown, icon: IconCaretDown, idle: idx === -1 || idx === props.modelValue.length - 1, run: () => reorder(1) },
+    { key: "down", label: t.moveDown, icon: IconCaretDown, idle: idx === -1 || idx === len! - 1, run: () => reorder(1) },
   ];
 });
 
@@ -492,10 +539,11 @@ const rootStyle = computed(() => ({
       <div
         ref="sourceScroller"
         class="cui-transfer-list__scroller"
-        :class="{ 'cui-transfer-list__scroller--drop': overSide === 'source' }"
+        :class="{ 'cui-transfer-list__scroller--drop': overSide === 'source' && !sourceOrder }"
       >
         <!-- The listbox holds only its options; the empty message sits beside it. -->
         <div
+          v-if="!sourceOrder"
           ref="sourceListEl"
           role="listbox"
           aria-multiselectable="true"
@@ -529,7 +577,45 @@ const rootStyle = computed(() => ({
             </slot>
           </div>
         </div>
-        <div v-if="filteredSourceItems.length === 0" class="cui-transfer-list__empty">
+        <!-- With `sourceOrder` the left list is orderable: a sortable of rows, as the right one is. -->
+        <CuiSortableList
+          v-else
+          ref="sourceList"
+          class="cui-transfer-list__sortable"
+          :model-value="filteredSourceItems"
+          :item-key="itemValue"
+          :item-label="itemText"
+          :item-disabled="itemOff"
+          :label="sourceLabel"
+          :move-buttons="false"
+          :insert-at="overSide === 'source' ? insertAt : null"
+          :insert-size="insertSize"
+          :disabled="disabled"
+          @update:model-value="onReorder('source', $event)"
+          @keydown.capture="onSortableKeydown($event, 'source')"
+        >
+          <template #item="{ item }">
+            <div
+              class="cui-transfer-list__option"
+              :class="optionClass(sourceSelected, item, 'source')"
+              :aria-disabled="item.disabled || disabled || undefined"
+              :data-value="String(item.value)"
+              @pointerdown="onRowPointerdown($event, item, 'source')"
+              @click="!item.disabled && toggleSource(item.value)"
+              @dblclick="dblClickSource(item)"
+            >
+              <slot name="item" :item="item" :side="'source'">
+                <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
+                <div class="cui-transfer-list__item-body">
+                  <div class="cui-transfer-list__label">{{ item.label }}</div>
+                  <div v-if="item.description" class="cui-transfer-list__description">{{ item.description }}</div>
+                </div>
+              </slot>
+              <span v-if="sourceSelected.has(item.value)" class="cui-sr-only">{{ messages.transferList.marked }}</span>
+            </div>
+          </template>
+        </CuiSortableList>
+        <div v-if="filteredSourceItems.length === 0 && !(sourceOrder && overSide === 'source')" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
       </div>
@@ -581,11 +667,11 @@ const rootStyle = computed(() => ({
           :item-disabled="itemOff"
           :label="targetLabel"
           :move-buttons="false"
-          :insert-at="insertAt"
+          :insert-at="overSide === 'target' ? insertAt : null"
           :insert-size="insertSize"
           :disabled="disabled"
-          @update:model-value="onTargetReorder"
-          @keydown.capture="onTargetKeydown"
+          @update:model-value="onReorder('target', $event)"
+          @keydown.capture="onSortableKeydown($event, 'target')"
         >
           <template #item="{ item }">
             <div
@@ -608,7 +694,7 @@ const rootStyle = computed(() => ({
             </div>
           </template>
         </CuiSortableList>
-        <div v-if="filteredTargetItems.length === 0 && insertAt === null" class="cui-transfer-list__empty">
+        <div v-if="filteredTargetItems.length === 0 && overSide !== 'target'" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
       </div>

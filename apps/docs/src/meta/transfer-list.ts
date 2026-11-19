@@ -10,6 +10,7 @@ const meta: ComponentMeta = {
   props: [
     { name: "items", type: "TransferListItem[]", description: "Every item, on both sides. Required. { value, label, description?, icon?, disabled? }" },
     { name: "modelValue", type: "(string | number)[]", default: "[]", description: "Values on the right-hand panel (v-model). Order is meaningful and preserved — this is the array a drag, a keyboard move or the reorder arrows rewrite" },
+    { name: "sourceOrder", type: "(string | number)[]", description: "Order of the left list (v-model:sourceOrder). Unset, the left list is the unselected items in items order and cannot be reordered. Set, it is orderable: items it names come first in its order (values not on the left are ignored), the rest follow in items order. A reorder, or a row dropped into the left list at a slot, emits update:sourceOrder with every left value in order" },
     { name: "sourceTitle", type: "string", default: "Available (messages.transferList.source)", description: "Heading over the left panel" },
     { name: "targetTitle", type: "string", default: "Selected (messages.transferList.target)", description: "Heading over the right panel" },
     { name: "filterable", type: "boolean", default: "true", description: "Show a search field on each panel. Filtering is on label and description, case-insensitive" },
@@ -26,6 +27,7 @@ const meta: ComponentMeta = {
   ],
 
   events: [
+    { name: "update:sourceOrder", payload: "(string | number)[]", description: "Only with sourceOrder set: the left list was reordered, or a selected row was dropped into it at a slot. The whole left order. When a drop also changes the selected list, this fires first, then update:modelValue, once each" },
     { name: "update:modelValue", payload: "(string | number)[]", description: "Fires on transfer, on a reorder (once per drop, grab or button click) and on a drop between panels. Always the full right-hand array, in display order" },
   ],
 

@@ -42,6 +42,9 @@ const simple: TransferListItem[] = [
   { value: "f", label: "Foxtrot" },
 ];
 const selectedSimple = ref<string[]>([]);
+
+const orderableSelected = ref<string[]>(["d"]);
+const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
 </script>
 
 <template>
@@ -131,6 +134,15 @@ const selectedSimple = ref<string[]>([]);
           (<code>transferList.*</code>).
         </li>
         <li>
+          With <code>sourceOrder</code> set (<code>v-model:source-order</code>), the left list is a
+          <code>CuiSortableList</code> too and has the same keys and announcements: grab with
+          Space or Enter, move, drop, Escape to cancel; Shift+Space marks a row and Delete or
+          Backspace sends it to the other list. Move up / Move down act on the one marked row of
+          either list (the last marked, if both have one). Without it the left list is the
+          unselected items in <code>items</code> order, cannot be reordered, and a row dragged
+          onto it lights the whole panel, since no position could be kept.
+        </li>
+        <li>
           Dragging is never the only way: the keyboard grab above, or Move up / Move down in the
           toolbar (mark one row first), reorder the selected list with a single click or tap
           (WCAG 2.5.7). The rows carry no move buttons of their own, so there is one set. Dragging
@@ -160,6 +172,37 @@ const selectedSimple = ref<string[]>([]);
           Granted: <code class="cui-code">{{ selectedPerms }}</code>
         </div>
       </Example>
+
+      <!-- Orderable source -->
+      <Example title="Orderable source list" :code="`<CuiTransferList
+  :items=&quot;items&quot;
+  v-model=&quot;selected&quot;
+  v-model:source-order=&quot;sourceOrder&quot;
+/>`">
+        <CuiTransferList
+          :items="simple"
+          v-model="orderableSelected"
+          v-model:source-order="orderableSource"
+          :filterable="false"
+          height="240px"
+        />
+        <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
+          Left order: <code class="cui-code">{{ orderableSource }}</code> · Selected:
+          <code class="cui-code">{{ orderableSelected }}</code>
+        </div>
+      </Example>
+
+      <CuiCard variant="outline" class="mt-4">
+        <CuiCardBody>
+          <p><strong>Try:</strong></p>
+          <ul>
+            <li>Drag a left-hand row by its grip: it reorders within the left list, like the right one.</li>
+            <li>Drag a right-hand row (by its body) toward the left list: a placeholder opens at the slot where it would land, and dropping puts it there (<code>sourceOrder</code> then the selected list update).</li>
+            <li>Tab to the left list, press <kbd>Space</kbd> on a grip to grab, <kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>Space</kbd> to drop. <kbd>Shift</kbd>+<kbd>Space</kbd> marks a row, <kbd>Delete</kbd> sends it to the other list.</li>
+            <li>Click a left-hand row to mark it, then Move up / Move down in the middle column moves it in the left list; if both lists have a marked row, the last one marked moves.</li>
+          </ul>
+        </CuiCardBody>
+      </CuiCard>
 
       <!-- Real-world: Column chooser with icons -->
       <Example title="Real-World: Column Chooser" :code="`<CuiTransferList

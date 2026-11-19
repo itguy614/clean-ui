@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   point (top, middle, bottom or an empty list) with the rows sliding aside; over the source list
   the panel is lit. Escape cancels. This replaces the native HTML5 drag and its thin dashed drop
   line. Touch drags from the grip only.
+- `CuiTransferList` `sourceOrder` (#559, `v-model:sourceOrder`, opt-in): the left list becomes
+  orderable like the right one (drag, keyboard grab, announcements). Items it names come first in
+  its order, the rest follow in `items` order; a reorder, or a selected row dropped into the left
+  list at the placeholder's slot, emits `update:sourceOrder` with every left value in order (before
+  `update:modelValue`, once each). Move up / Move down act on the one marked row of either list
+  (the last marked if both have one). Unset, the left list is unchanged.
 - `CuiSortableList` `itemDisabled`: items that keep their place, with no handle and no move
   buttons. `insertAt` / `insertSize`: show a placeholder at an index for an item dragged in from
   elsewhere, the others sliding aside; the parent owns the drag and the drop.

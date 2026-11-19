@@ -31,9 +31,13 @@ describe("CuiTransferList selected list (real browser)", () => {
     { value: "e", label: "Echo" },
   ];
 
-  function mountList(selected = ["a", "b", "c"], props: Record<string, unknown> = {}) {
+  function mountList(selected = ["a", "b", "c"], { sourceOrder: initialOrder, ...props }: Record<string, unknown> = {}) {
     const model = ref<(string | number)[]>(selected);
+    const order = ref<(string | number)[] | undefined>(initialOrder as (string | number)[] | undefined);
     const emits: Array<(string | number)[]> = [];
+    /** Every emit in the order it happened: the left order and the selected list. */
+    const log: string[] = [];
+    const orders: Array<(string | number)[]> = [];
     const App = defineComponent({
       render: () =>
         h(CuiTransferList, {
@@ -42,7 +46,14 @@ describe("CuiTransferList selected list (real browser)", () => {
           filterable: false,
           "onUpdate:modelValue": (v: (string | number)[]) => {
             emits.push(v);
+            log.push("model");
             model.value = v;
+          },
+          sourceOrder: order.value,
+          "onUpdate:sourceOrder": (v: (string | number)[]) => {
+            orders.push(v);
+            log.push("order");
+            order.value = v;
           },
           ...props,
         }),
@@ -51,7 +62,7 @@ describe("CuiTransferList selected list (real browser)", () => {
     host.style.cssText = "width: 520px; padding: 8px";
     document.body.append(host);
     mounted.push(mount(App, { attachTo: host }));
-    return { model, emits };
+    return { model, emits, orders, order, log };
   }
 
   const sortable = () => document.querySelector<HTMLElement>(".cui-transfer-list__sortable")!;
@@ -388,7 +399,7 @@ describe("CuiTransferList selected list (real browser)", () => {
     });
 
     it("drags a selected row's body over the source list: the panel lights, and the drop returns it", async () => {
-      const { model } = mountList(["a", "b", "c"]);
+      const { model, orders } = mountList(["a", "b", "c"]);
       await frames(2);
       const body = rowOf("Bravo").querySelector<HTMLElement>(".cui-transfer-list__option")!;
       const scroller = document.querySelectorAll<HTMLElement>(".cui-transfer-list__scroller")[0];
@@ -402,6 +413,7 @@ describe("CuiTransferList selected list (real browser)", () => {
       await frames(3);
       expect(model.value).toEqual(["a", "c"]);
       expect(scroller.classList.contains("cui-transfer-list__scroller--drop")).toBe(false);
+      expect(orders).toEqual([]); // no sourceOrder: nothing to say about a left order
     });
 
     it("cancels a right-to-left drag on Escape", async () => {
@@ -436,6 +448,131 @@ describe("CuiTransferList selected list (real browser)", () => {
       await frames(2);
       expect(ghost()).toBeNull();
       expect(getComputedStyle(row.querySelector(".cui-transfer-list__grip")!).touchAction).toBe("none");
+    });
+  });
+  describe("an orderable left list (sourceOrder)", () => {
+    const ORDER = ["a", "b", "c", "d", "e"];
+    const leftList = () => document.querySelectorAll<HTMLElement>(".cui-transfer-list__sortable")[0];
+    const leftItems = () => [...leftList().querySelectorAll<HTMLElement>(".cui-sortable-list__item")];
+    const leftOrder = () => leftItems().map((li) => li.querySelector(".cui-transfer-list__label")!.textContent!.trim());
+    const leftHandle = (label: string) => leftItems().find((li) => li.textContent!.includes(label))!.querySelector<HTMLElement>(".cui-sortable-list__handle")!;
+    const leftSlot = () => [...leftList().querySelectorAll(".cui-sortable-list__item, .cui-sortable-list__placeholder")].findIndex((el) => el.classList.contains("cui-sortable-list__placeholder"));
+    // Both lists are sortables here: the helpers above look at the first, which is now the left one.
+    const rightBody = (label: string) =>
+      [...document.querySelectorAll<HTMLElement>(".cui-transfer-list__sortable")[1].querySelectorAll<HTMLElement>(".cui-sortable-list__item")]
+        .find((li) => li.textContent!.includes(label))!
+        .querySelector<HTMLElement>(".cui-transfer-list__option")!;
+    const leftPoint = (frac: number, row: number) => ({ x: rect(leftItems()[0]).left + 40, y: rect(leftItems()[row]).top + rect(leftItems()[row]).height * frac });
+
+    it("drags a left row by its handle within the left list: only the left order is emitted, once", async () => {
+      const { orders, emits, order } = mountList(["d", "e"], { sourceOrder: ORDER });
+      await frames(2);
+      expect(leftOrder()).toEqual(["Alpha", "Bravo", "Charlie"]);
+      const from = center(leftHandle("Alpha"));
+      const dy = rect(leftItems()[1]).height + 14;
+      pointer(leftHandle("Alpha"), "pointerdown", from.x, from.y);
+      await frames(1);
+      pointer(document, "pointermove", from.x, from.y + 8);
+      await frames(2);
+      pointer(document, "pointermove", from.x, from.y + dy);
+      await frames(3);
+      expect(getComputedStyle(leftItems().find((li) => li.textContent!.includes("Alpha"))!).position).toBe("absolute"); // the sortable's own ghost
+      expect(orders).toEqual([]);
+      pointer(document, "pointerup", from.x, from.y + dy);
+      await frames(30);
+      expect(leftOrder()).toEqual(["Bravo", "Alpha", "Charlie"]);
+      expect(orders).toEqual([["b", "a", "c"]]);
+      expect(order.value).toEqual(["b", "a", "c"]);
+      expect(emits).toEqual([]);
+    });
+
+    it("opens the placeholder at the top, middle and bottom of the left list for a right-hand row, and commits there", async () => {
+      for (const [where, slot, expected] of [
+        ["top", 0, ["d", "a", "b", "c"]],
+        ["middle", 2, ["a", "b", "d", "c"]],
+        ["bottom", 3, ["a", "b", "c", "d"]],
+      ] as const) {
+        const { orders, emits, log } = mountList(["d", "e"], { sourceOrder: ["a", "b", "c"] });
+        await frames(2);
+        const last = leftItems().length - 1;
+        const at = await dragRow(rightBody("Delta"), () => (where === "top" ? leftPoint(0.2, 0) : where === "middle" ? leftPoint(0.7, 1) : leftPoint(0.9, last)));
+        await frames(3);
+        expect(leftSlot(), where).toBe(slot);
+        const ph = leftList().querySelector<HTMLElement>(".cui-sortable-list__placeholder")!;
+        expect(Math.abs(rect(ph).height - rect(rightBody("Delta")).height)).toBeLessThan(2);
+        expect(document.querySelector(".cui-transfer-list__scroller--drop"), "no whole-panel outline").toBeNull();
+        expect(orders).toEqual([]);
+        pointer(document, "pointerup", at.x, at.y);
+        await frames(3);
+        expect(orders, where).toEqual([expected]);
+        expect(emits).toEqual([["e"]]);
+        expect(log).toEqual(["order", "model"]); // once each, the left order first
+        mounted.splice(0).forEach((w) => w.unmount());
+        document.body.innerHTML = "";
+      }
+    });
+
+    it("drops into an empty left list", async () => {
+      const { orders, model } = mountList(["a", "b", "c", "d", "e"], { sourceOrder: ORDER });
+      await frames(2);
+      const scroller = document.querySelectorAll<HTMLElement>(".cui-transfer-list__scroller")[0];
+      const at = await dragRow(rightBody("Bravo"), () => ({ x: rect(scroller).left + 20, y: rect(scroller).top + 20 }));
+      expect(leftSlot()).toBe(0);
+      expect(scroller.querySelector(".cui-transfer-list__empty")).toBeNull(); // "No items" steps aside
+      pointer(document, "pointerup", at.x, at.y);
+      await frames(3);
+      expect(orders).toEqual([["b"]]);
+      expect(model.value).toEqual(["a", "c", "d", "e"]);
+    });
+
+    it("cancels a right-to-left drag on Escape: no placeholder, nothing emitted", async () => {
+      const { log } = mountList(["d", "e"], { sourceOrder: ["a", "b", "c"] });
+      await frames(2);
+      await dragRow(rightBody("Delta"), () => leftPoint(0.2, 0));
+      expect(leftSlot()).toBe(0);
+      await userEvent.keyboard("{Escape}");
+      await frames(3);
+      expect(leftList().querySelector(".cui-sortable-list__placeholder")).toBeNull();
+      expect(log).toEqual([]);
+    });
+
+    it("maps a drop in the filtered left list back into the full left order", async () => {
+      const { orders } = mountList(["e"], { sourceOrder: ["a", "b", "c", "d"], filterable: true });
+      await frames(2);
+      const input = document.querySelectorAll<HTMLInputElement>("input")[0];
+      input.value = "l"; // Alpha, Charlie, Delta
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      await frames(3);
+      expect(leftOrder()).toEqual(["Alpha", "Charlie", "Delta"]);
+      const at = await dragRow(rightBody("Echo"), () => leftPoint(0.2, 1)); // before Charlie
+      expect(leftSlot()).toBe(1);
+      pointer(document, "pointerup", at.x, at.y);
+      await frames(3);
+      expect(orders).toEqual([["a", "b", "e", "c", "d"]]);
+    });
+
+    it("grabs, moves and drops a left row from the keyboard", async () => {
+      const { orders, emits } = mountList(["d", "e"], { sourceOrder: ORDER });
+      await frames(2);
+      leftHandle("Alpha").focus();
+      await userEvent.keyboard(" {ArrowDown}{ArrowDown}");
+      expect(orders).toEqual([]);
+      await userEvent.keyboard(" ");
+      await frames(2);
+      expect(orders).toEqual([["b", "c", "a"]]);
+      expect(emits).toEqual([]);
+      expect(document.activeElement).toBe(leftHandle("Alpha"));
+    });
+
+    it("keeps the whole-panel highlight, and no placeholder, when the left list is not orderable", async () => {
+      mountList(["a", "b"]);
+      await frames(2);
+      const scroller = document.querySelectorAll<HTMLElement>(".cui-transfer-list__scroller")[0];
+      await dragRow(rowOf("Alpha").querySelector<HTMLElement>(".cui-transfer-list__option")!, () => ({ x: rect(scroller).left + 40, y: rect(scroller).top + 30 }));
+      expect(scroller.classList.contains("cui-transfer-list__scroller--drop")).toBe(true);
+      expect(document.querySelectorAll(".cui-sortable-list__placeholder")).toHaveLength(0);
+      pointer(document, "pointerup", 0, 0);
+      await frames(3);
     });
   });
 });
