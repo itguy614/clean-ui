@@ -255,10 +255,10 @@ function moveDraft(from: number, to: number) {
 }
 
 function onHandleKeydown(e: KeyboardEvent, item: T, i: number) {
-  if (props.disabled || props.itemDisabled?.(item) || e.ctrlKey || e.altKey || e.metaKey || dragKey.value !== null) return;
+  if (props.disabled || e.ctrlKey || e.altKey || e.metaKey || dragKey.value !== null) return;
   const key = keyOf(item, i);
   if (grabbedKey.value !== key) {
-    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null && !e.repeat) {
+    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null && !e.repeat && !props.itemDisabled?.(item)) {
       e.preventDefault();
       grab(item, i);
     }

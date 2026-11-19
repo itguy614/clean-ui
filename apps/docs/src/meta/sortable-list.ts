@@ -34,6 +34,7 @@ const meta: ComponentMeta = {
   methods: [
     { name: "el", signature: "Ref<HTMLElement | null>", description: "The list's root element" },
     { name: "focus", signature: "() => void", description: "Focuses the list's tab stop: the handle of the item last focused, or the first" },
+    { name: "announce", signature: "(text: string) => void", description: "Says text through the list's own live region, for a parent that adds a keyboard action of its own (CuiTransferList's Shift+Space)" },
   ],
 
   tokens: [

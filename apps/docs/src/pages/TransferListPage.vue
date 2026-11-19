@@ -101,7 +101,7 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           Each list is one tab stop. Arrow Up and Down move between items, Home and End jump
-          to the ends, and disabled items are skipped on the source list. On a sortable list the stop is a
+          to the ends, and disabled items are skipped on the plain source list. On a sortable list the stop is a
           row's drag handle, and a disabled row's handle is still reached by the arrows.
         </li>
         <li>
