@@ -48,7 +48,15 @@ defineProps<{
 .cui-listbox-group__label {
   font-weight: 600;
   line-height: inherit;
-  letter-spacing: 0.02em;
+  /* Small caps-style label, so a heading never reads as another option. */
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: default;
+}
+
+/* A hairline between groups: every labelled group after the first. */
+.cui-listbox-group:not(.cui-listbox-group--bare):not(:first-child) > .cui-listbox-group__label {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--cui-border);
 }
 </style>

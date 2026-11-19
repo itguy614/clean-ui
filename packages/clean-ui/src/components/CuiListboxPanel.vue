@@ -196,7 +196,7 @@ const tokens = computed(() => {
     "--_listbox-item-disabled-color": token("item-disabled-color", "var(--cui-text-tertiary)"),
     // The heading of a CuiListboxGroup (#445), sized from the rows' own font size.
     "--_listbox-group-color": token("group-color", "var(--cui-text-tertiary)"),
-    "--_listbox-group-font-size": token("group-font-size", `calc(${props.fontSize} * 0.8125)`),
+    "--_listbox-group-font-size": token("group-font-size", `calc(${props.fontSize} * 0.75)`),
     "--_listbox-group-padding": token("group-padding", "calc(0.5rem * var(--cui-density-scale, 1)) calc(0.75rem * var(--cui-density-scale, 1)) calc(0.25rem * var(--cui-density-scale, 1))"),
   };
 });

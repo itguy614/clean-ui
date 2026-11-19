@@ -80,7 +80,7 @@ const meta: ComponentMeta = {
     { name: "--cui-combobox-item-selected-bg", default: "50% of the focus tint", description: "Background of a selected option" },
     { name: "--cui-combobox-item-disabled-color", default: "var(--cui-text-tertiary)", description: "Disabled option text color" },
     { name: "--cui-combobox-group-color", default: "var(--cui-text-tertiary)", description: "Group heading text color" },
-    { name: "--cui-combobox-group-font-size", default: "0.8125 x the option font size", description: "Group heading font size" },
+    { name: "--cui-combobox-group-font-size", default: "0.75 x the option font size", description: "Group heading font size. The heading is uppercase, with a hairline above every group after the first" },
     { name: "--cui-combobox-group-padding", default: "0.5rem 0.75rem 0.25rem", description: "Group heading padding" },
   ],
 };
