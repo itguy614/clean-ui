@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `CuiPopover`, `CuiSelect` or `CuiCombobox` opened from inside a `CuiDropdown` menu, a
+  sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
+  panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
+  hosts others; Escape still closes the innermost layer first.
 - `CuiToggle`: the track and the first line of its label now share one centre line at every size
   (the track used to hang from the top by a fixed margin, so the text sat above the control).
   The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's

@@ -359,7 +359,7 @@ useClickOutside(
   // on, it doesn't.
   () => [props.resolveTarget ? openedOn : wrapperRef.value, ...menuPanels(contextMenuId)],
   close,
-  { enabled: isOpen },
+  { enabled: isOpen, inside: layerStep.hosts },
 );
 
 function onScroll() {
