@@ -739,9 +739,6 @@ export function useDataGrid(options: UseDataGridOptions) {
     const urlPerPage = params.get("per_page");
     if (urlPerPage) perPage.value = Number(urlPerPage);
 
-    const urlPage = params.get("page");
-    if (urlPage) page.value = Number(urlPage);
-
     const urlViewMode = params.get("view_mode");
     if (urlViewMode === "card" || urlViewMode === "grid") viewMode.value = urlViewMode;
 
@@ -752,10 +749,14 @@ export function useDataGrid(options: UseDataGridOptions) {
         const filterKey = match[1];
         const col = columns.find((c) => (c.filterKey ?? c.key) === filterKey);
         const type = col?.filterType ?? "text";
-        const value = type === "multi-select" ? v.split(",") : v;
+        const value = type === "multi-select" || type === "date-range" ? v.split(",") : v;
         applyFilter({ key: filterKey, value, type });
       }
     }
+
+    // After the filters: applyFilter resets to page 1, which would drop `?page=` from a filtered link.
+    const urlPage = params.get("page");
+    if (urlPage) page.value = Number(urlPage);
   }
 
   // --- Build context ---
