@@ -39,6 +39,7 @@ const meta: ComponentMeta = {
           description: "The selected values — a group is always an array, never a boolean",
         },
         colorProp("Color role inherited by every checkbox that does not set its own"),
+        { ...inputSizeProp, description: "Size inherited by every checkbox that does not set its own, from the shared input scale (the label's font size)" },
         {
           name: "orientation",
           type: "horizontal | vertical | auto",

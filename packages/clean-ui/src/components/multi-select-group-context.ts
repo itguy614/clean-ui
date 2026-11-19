@@ -1,5 +1,5 @@
 import { inject, provide, type InjectionKey, type Ref } from "vue";
-import type { CuiAutoOrientation, CuiColor, HideableProps, ColorableProps, DisableableProps, AriaLabelableProps, FormControlProps } from "../types/common";
+import type { CuiAutoOrientation, CuiColor, CuiSize, HideableProps, ColorableProps, SizeableProps, DisableableProps, AriaLabelableProps, FormControlProps } from "../types/common";
 
 /**
  * Shared context for multi-select groups (CheckboxGroup, ToggleGroup).
@@ -8,6 +8,8 @@ import type { CuiAutoOrientation, CuiColor, HideableProps, ColorableProps, Disab
 export interface MultiSelectGroupContext {
   modelValue: Ref<Array<string | number>>;
   color: Ref<CuiColor>;
+  /** The group's size, or undefined when it sets none: a control's own `size` wins, then this, then md. */
+  size: Ref<CuiSize | undefined>;
   disabled: Ref<boolean>;
   readonly: Ref<boolean>;
   toggle: (value: string | number) => void;
@@ -25,6 +27,7 @@ export interface MultiSelectGroupProps
   extends AriaLabelableProps,
     HideableProps,
     ColorableProps,
+    SizeableProps,
     DisableableProps,
     Pick<FormControlProps, "readonly" | "error" | "errorMessage" | "label"> {
   /** Array of selected values */

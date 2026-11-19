@@ -31,6 +31,7 @@ useMultiSelectGroupProvider(
   {
     modelValue: toRef(props, "modelValue"),
     color: toRef(props, "color"),
+    size: toRef(props, "size"),
     disabled: toRef(props, "disabled"),
     readonly: toRef(props, "readonly"),
   },

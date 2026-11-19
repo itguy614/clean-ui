@@ -83,6 +83,7 @@ const meta: ComponentMeta = {
           description: "The values that are on — a group is always an array, never a boolean",
         },
         colorProp("Color role inherited by every toggle that does not set its own"),
+        { name: "size", type: "xs | sm | md | lg | xl", default: "md", description: "Size inherited by every toggle that does not set its own (clamped to sm, md or lg, like CuiToggle)" },
         {
           name: "orientation",
           type: "horizontal | vertical | auto",
