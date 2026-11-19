@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
 import { userEvent } from "@vitest/browser/context";
 import CuiCheckbox from "../../components/CuiCheckbox.vue";
+import CuiCheckboxGroup from "../../components/CuiCheckboxGroup.vue";
 import CuiDataGrid from "../../components/CuiDataGrid.vue";
 import type { DataGridColumnDef } from "../../types/data-grid";
 import preflight from "../../styles/preflight.css?inline";
@@ -125,6 +126,43 @@ describe("CuiCheckbox layout (real browser)", () => {
 
     it("--cui-checkbox-font-size restyles the label, from a container", () => {
       expect(getComputedStyle(labelOf("sm", "20px").label).fontSize).toBe("20px");
+    });
+  });
+
+  describe("#567: a group's size reaches its checkboxes", () => {
+    const labels = (groupSize?: string, ownSize?: string) => {
+      const el = host();
+      track(
+        mount(
+          defineComponent({
+            render: () =>
+              h(CuiCheckboxGroup, groupSize ? { size: groupSize } : {}, () => [
+                h(CuiCheckbox, { value: "a", label: "A" }),
+                h(CuiCheckbox, { value: "b", label: "B", ...(ownSize ? { size: ownSize } : {}) }),
+              ]),
+          }),
+          { attachTo: el },
+        ),
+      );
+      return [...el.querySelectorAll<HTMLElement>(".cui-checkbox__label")].map((l) => parseFloat(getComputedStyle(l).fontSize));
+    };
+
+    it.each([
+      ["xs", 12],
+      ["sm", 13],
+      ["md", 16],
+      ["lg", 17],
+      ["xl", 18],
+    ])("group size %s draws every label at %dpx", (size, px) => {
+      expect(labels(size)).toEqual([px, px]);
+    });
+
+    it("a checkbox's own size wins", () => {
+      expect(labels("sm", "xl")).toEqual([13, 18]);
+    });
+
+    it("no size anywhere is 16px, as before", () => {
+      expect(labels()).toEqual([16, 16]);
     });
   });
 

@@ -144,4 +144,32 @@ describe("CuiCheckboxGroup", () => {
     });
     expect(threeChildren.classes()).toContain("cui-checkbox-group--vertical");
   });
+
+  describe("size (#567)", () => {
+    const labelSize = (w: ReturnType<typeof mount>, i: number) =>
+      (w.findAll(".cui-checkbox")[i].element as HTMLElement).style.getPropertyValue("--_checkbox-font-size");
+    const mountGroup = (groupProps: object, boxProps: object[] = [{}, {}]) =>
+      mount(CuiCheckboxGroup, {
+        props: groupProps,
+        slots: { default: () => boxProps.map((p, n) => h(CuiCheckbox, { value: n, label: "L", ...p })) },
+      });
+
+    it("each checkbox inherits the group's size", () => {
+      const w = mountGroup({ size: "sm" });
+      expect(labelSize(w, 0)).toBe("0.8125rem");
+      expect(labelSize(w, 1)).toBe("0.8125rem");
+    });
+
+    it("a checkbox's own size wins over the group's", () => {
+      const w = mountGroup({ size: "sm" }, [{ size: "xl" }, {}]);
+      expect(labelSize(w, 0)).toBe("1.125rem");
+      expect(labelSize(w, 1)).toBe("0.8125rem");
+    });
+
+    it("no size anywhere is md, as before", () => {
+      expect(labelSize(mountGroup({}), 0)).toBe("1rem");
+      const standalone = mount(CuiCheckbox, { props: { label: "L" } });
+      expect((standalone.element as HTMLElement).style.getPropertyValue("--_checkbox-font-size")).toBe("1rem");
+    });
+  });
 });

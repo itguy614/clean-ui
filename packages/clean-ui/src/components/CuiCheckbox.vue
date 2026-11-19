@@ -26,7 +26,6 @@ export interface CuiCheckboxProps
 }
 
 const props = withDefaults(defineProps<CuiCheckboxProps>(), {
-  size: "md",
   indeterminate: false,
   disabled: false,
   readonly: false,
@@ -60,9 +59,11 @@ const resolvedColor = computed(() => {
   return props.color ?? group?.color.value ?? "primary";
 });
 
-// The label's text follows `size` through the shared input scale (#556). The box stays 1.25rem
-// at every size, so only the label text and the box's offset beside it change.
-const labelFontSize = computed(() => (INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md).fontSize);
+// The label's text follows `size` (own, else the group's, else md) through the shared input
+// scale (#556, #567). The box stays 1.25rem at every size, so only the label text and the
+// box's offset beside it change.
+const resolvedSize = computed(() => props.size ?? group?.size?.value ?? "md");
+const labelFontSize = computed(() => (INPUT_SIZE_SCALE[resolvedSize.value] ?? INPUT_SIZE_SCALE.md).fontSize);
 
 const elRef = ref<HTMLElement>();
 

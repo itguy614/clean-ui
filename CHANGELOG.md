@@ -64,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
   panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
   hosts others; Escape still closes the innermost layer first.
+- `CuiToggle`: the track and the first line of its label now share one centre line at every size
+  (the track used to hang from the top by a fixed margin, so the text sat above the control).
+  The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's
+  first line down to meet it.
 - `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
   fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
   line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
@@ -121,6 +125,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (xs 12px, sm 13px, md 16px, lg 17px, xl 18px), where it was fixed at 1rem and `size="sm"` did
   nothing. The default (`md`) draws exactly as before. `--cui-checkbox-font-size` sets it
   directly. `CuiRadio` and `CuiToggle` labels are unchanged.
+- `CuiCheckboxGroup` takes a `size` (#567), passed to its checkboxes like `color`: a checkbox's own
+  `size` wins, then the group's, then `md`, so a group with no size draws as before. `CuiToggleGroup`
+  takes the same prop (the two share their props and context) and its toggles inherit it the same
+  way. `CuiRadioGroup` already had `size`.
 - In `CuiDataGrid`, the filter panel's multi-select options are 13px, like the panel's own
   fields, and the column manager's labels are the table's 0.875rem. The column manager is wider
   (20rem), so two-word labels such as "Correlation ID" sit on one line; a longer label ends in an

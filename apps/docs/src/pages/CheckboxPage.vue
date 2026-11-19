@@ -171,6 +171,20 @@ const dynamicField = ref({
         </CuiStack>
       </Example>
 
+      <!-- Group size -->
+      <Example title="Group size" :code="`<!-- every checkbox inherits the group's size; one can set its own -->
+<CuiCheckboxGroup v-model=&quot;toppings&quot; size=&quot;sm&quot; label=&quot;Pizza toppings&quot;>
+  <CuiCheckbox value=&quot;cheese&quot; label=&quot;Cheese&quot; />
+  <CuiCheckbox value=&quot;pepperoni&quot; label=&quot;Pepperoni&quot; />
+  <CuiCheckbox value=&quot;mushrooms&quot; label=&quot;Mushrooms (size lg)&quot; size=&quot;lg&quot; />
+</CuiCheckboxGroup>`">
+        <CuiCheckboxGroup v-model="toppings" size="sm" label="Pizza toppings">
+          <CuiCheckbox value="cheese" label="Cheese" />
+          <CuiCheckbox value="pepperoni" label="Pepperoni" />
+          <CuiCheckbox value="mushrooms" label="Mushrooms (size lg)" size="lg" />
+        </CuiCheckboxGroup>
+      </Example>
+
       <!-- With Descriptions -->
       <Example title="With Descriptions" :code="`<CuiCheckboxGroup v-model=&quot;permissions&quot;>
   <CuiCheckbox value=&quot;read&quot; label=&quot;Read&quot; description=&quot;View files and folders&quot; />
