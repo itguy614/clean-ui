@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, useTemplateRef, type Ref } from "vue";
+import { ref, computed, nextTick, onBeforeUnmount, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
@@ -8,7 +8,9 @@ import CuiToolbar from "./CuiToolbar.vue";
 import type { HideableProps, DisableableProps, SizeableProps } from "../types/common";
 import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
+import { useLayerStack } from "../composables/useLayerStack";
 import { useMessages } from "../composables/useMessages";
+import { usePointerDrag } from "../composables/usePointerDrag";
 import { useRovingFocus } from "../composables/useRovingFocus";
 import { IconCaretDoubleLeft } from "../icons/generated/caret-double-left";
 import { IconCaretDoubleRight } from "../icons/generated/caret-double-right";
@@ -185,88 +187,150 @@ function dblClickTarget(item: TransferListItem) {
   emit("update:modelValue", props.modelValue.filter((v) => v !== item.value));
 }
 
-// --- Drag and drop ---
-const dragItem = ref<{ value: string | number; from: "source" | "target" } | null>(null);
-const dropTarget = ref<{ value: string | number; side: "source" | "target"; position: "before" | "after" } | null>(null);
-const dropSide = ref<"source" | "target" | null>(null);
+// --- Drag between the lists ---
+// A pointer drag from a row of either list (a source row anywhere, or a selected row's body: its
+// handle is the sortable's own reorder). The row stays put, dimmed, and a ghost of it follows the
+// pointer, tilted as CuiSortableList's is. Over the selected list the sortable shows its
+// placeholder at the insertion point, the rows sliding aside; over the source list the panel is
+// lit. Releasing commits, Escape or a cancelled pointer restores. Touch drags from the grip only
+// (the rest of the row pans the panel).
+type Side = "source" | "target";
+interface Session {
+  value: string | number;
+  from: Side;
+  row: HTMLElement;
+  x0: number;
+  y0: number;
+  ghost: HTMLElement | null;
+}
+const drag = usePointerDrag();
+let session: Session | null = null;
+/** Set when a drag ends, so the click the browser sends after it does not mark the row. */
+let swallowClick = false;
+const dragging = ref<{ value: string | number; from: Side } | null>(null);
+const overSide = ref<Side | null>(null);
+const insertAt = ref<number | null>(null);
+const insertSize = ref(0);
+const DRAG_SLOP = 4;
+const sourceScroller = useTemplateRef<HTMLElement>("sourceScroller");
+const targetScroller = useTemplateRef<HTMLElement>("targetScroller");
 
-function onDragStart(e: DragEvent, value: string | number, from: "source" | "target") {
-  if (props.disabled) { e.preventDefault(); return; }
-  dragItem.value = { value, from };
-  e.dataTransfer!.effectAllowed = "move";
-  e.dataTransfer!.setData("text/plain", String(value));
+function onRowPointerdown(e: PointerEvent, item: TransferListItem, from: Side) {
+  swallowClick = false;
+  const el = e.target as HTMLElement;
+  if (props.disabled || item.disabled || el.closest("button, input, select, textarea, a")) return;
+  if (e.pointerType === "touch" && !el.closest(".cui-transfer-list__grip")) return;
+  const row = e.currentTarget as HTMLElement;
+  if (drag.start(e, onDragMove, onDragEnd)) session = { value: item.value, from, row, x0: e.clientX, y0: e.clientY, ghost: null };
 }
 
-function onDragEnd() {
-  dragItem.value = null;
-  dropTarget.value = null;
-  dropSide.value = null;
-}
-
-function onDragOverItem(e: DragEvent, value: string | number, side: "source" | "target") {
-  // A selected row dragged over the selected list reorders nowhere (the handle does that): no drop line.
-  if (side === "target" && dragItem.value?.from === "target") return;
-  e.preventDefault();
-  e.dataTransfer!.dropEffect = "move";
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-  const midY = rect.top + rect.height / 2;
-  const position = e.clientY < midY ? "before" : "after";
-  dropTarget.value = { value, side, position };
-}
-
-function onDragOverPanel(e: DragEvent, side: "source" | "target") {
-  e.preventDefault();
-  e.dataTransfer!.dropEffect = "move";
-  dropSide.value = side;
-}
-
-function onDragLeavePanel() {
-  dropSide.value = null;
-}
-
-function onDropPanel(e: DragEvent, side: "source" | "target") {
-  e.preventDefault();
-  if (!dragItem.value) return;
-
-  const { value, from } = dragItem.value;
-
-  if (from === "source" && side === "target") {
-    // Move to target — insert at drop position or append
-    const arr = [...props.modelValue];
-    if (dropTarget.value && dropTarget.value.side === "target") {
-      const targetIdx = arr.indexOf(dropTarget.value.value as any);
-      if (targetIdx >= 0) {
-        const insertIdx = dropTarget.value.position === "after" ? targetIdx + 1 : targetIdx;
-        arr.splice(insertIdx, 0, value);
-      } else {
-        arr.push(value);
-      }
-    } else {
-      arr.push(value);
-    }
-    emit("update:modelValue", arr);
-  } else if (from === "target" && side === "source") {
-    // Move back to source
-    emit("update:modelValue", props.modelValue.filter((v) => v !== value));
+function beginDrag(s: Session) {
+  const r = s.row.getBoundingClientRect();
+  const ghost = s.row.cloneNode(true) as HTMLElement;
+  ghost.removeAttribute("tabindex");
+  ghost.removeAttribute("role");
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.classList.add("cui-transfer-list__ghost");
+  for (const [name, px] of Object.entries({ left: r.left, top: r.top, width: r.width, height: r.height })) {
+    ghost.style.setProperty(`--_transfer-list-ghost-${name}`, `${px}px`);
   }
-
-  dragItem.value = null;
-  dropTarget.value = null;
-  dropSide.value = null;
+  rootEl.value?.append(ghost);
+  void ghost.offsetWidth; // the lift eases in from the row's own look
+  ghost.classList.add("cui-transfer-list__ghost--lifted");
+  s.ghost = ghost;
+  insertSize.value = r.height;
+  dragging.value = { value: s.value, from: s.from };
 }
 
-/** The modifier that draws the drop line above or below the row the drag is over. */
-function dropClass(value: string | number, side: "source" | "target"): string | undefined {
-  if (!dropTarget.value || dropTarget.value.value !== value || dropTarget.value.side !== side) return undefined;
-  return `cui-transfer-list__option--drop-${dropTarget.value.position}`;
+const within = (el: HTMLElement | null, x: number, y: number) => {
+  const r = el?.getBoundingClientRect();
+  return !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+};
+
+/** The slot among the selected rows the pointer is at, by the rows' centers with the placeholder taken out. */
+function slotAt(y: number) {
+  const list = targetList.value?.el;
+  if (!list) return 0;
+  const rel = y - list.getBoundingClientRect().top;
+  let shift = 0;
+  let slot = 0;
+  for (const el of list.querySelectorAll<HTMLElement>(".cui-sortable-list__item, .cui-sortable-list__placeholder")) {
+    if (el.classList.contains("cui-sortable-list__placeholder")) shift = el.offsetHeight;
+    else if (el.offsetTop - shift + el.offsetHeight / 2 > rel) break;
+    else slot++;
+  }
+  return slot;
 }
 
-/** A row's state modifiers: marked for transfer, disabled, and the drop line. */
-function optionClass(marks: Set<string | number>, item: TransferListItem, side: "source" | "target") {
-  return [
-    { "cui-transfer-list__option--selected": marks.has(item.value), "cui-transfer-list__option--disabled": item.disabled },
-    dropClass(item.value, side),
-  ];
+function onDragMove(e: PointerEvent) {
+  const s = session;
+  if (!s) return;
+  if (!s.ghost) {
+    if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < DRAG_SLOP) return;
+    beginDrag(s);
+  }
+  s.ghost!.style.transform = `translate3d(${e.clientX - s.x0}px, ${e.clientY - s.y0}px, 0)`;
+  const side: Side | null = within(targetScroller.value, e.clientX, e.clientY) ? "target" : within(sourceScroller.value, e.clientX, e.clientY) ? "source" : null;
+  overSide.value = side !== s.from ? side : null;
+  insertAt.value = overSide.value === "target" ? slotAt(e.clientY) : null;
+}
+
+/** Where in the full selected order the shown slot `slot` is: before the row there, or after the last shown. */
+function fullIndex(slot: number) {
+  const shown = filteredTargetItems.value;
+  if (slot < shown.length) return props.modelValue.indexOf(shown[slot].value);
+  return shown.length ? props.modelValue.indexOf(shown[shown.length - 1].value) + 1 : props.modelValue.length;
+}
+
+function endDrag(commit: boolean) {
+  const s = session;
+  session = null;
+  if (!s?.ghost) return;
+  const to = overSide.value;
+  const slot = insertAt.value;
+  s.ghost.remove();
+  dragging.value = overSide.value = insertAt.value = null;
+  swallowClick = true;
+  if (!commit) return;
+  if (to === "target") {
+    toggle(sourceSelected, s.value, false);
+    const next = [...props.modelValue];
+    next.splice(fullIndex(slot!), 0, s.value);
+    emit("update:modelValue", next);
+  } else if (to === "source") {
+    toggle(targetSelected, s.value, false);
+    emit("update:modelValue", props.modelValue.filter((v) => v !== s.value));
+  }
+}
+
+const onDragEnd = (e: PointerEvent) => endDrag(e.type === "pointerup");
+useLayerStack({
+  active: () => dragging.value !== null,
+  onEscape: () => {
+    drag.end();
+    endDrag(false);
+  },
+});
+onBeforeUnmount(() => {
+  drag.end();
+  session?.ghost?.remove();
+  session = null;
+});
+
+/** The click that follows a drag must not mark or move the row it ended on. */
+function onClickCapture(e: MouseEvent) {
+  if (!swallowClick) return;
+  swallowClick = false;
+  e.stopPropagation();
+}
+
+/** A row's state modifiers: marked for transfer, disabled, and the one being dragged. */
+function optionClass(marks: Set<string | number>, item: TransferListItem, side: Side) {
+  return {
+    "cui-transfer-list__option--selected": marks.has(item.value),
+    "cui-transfer-list__option--disabled": item.disabled,
+    "cui-transfer-list__option--lifted": dragging.value?.value === item.value && dragging.value.from === side,
+  };
 }
 
 // --- Keyboard and ARIA (#170) ---
@@ -408,9 +472,10 @@ const rootStyle = computed(() => ({
   <div
     ref="rootEl"
     class="cui-transfer-list"
-    :class="{ 'cui-transfer-list--disabled': disabled }"
+    :class="{ 'cui-transfer-list--disabled': disabled, 'cui-transfer-list--dragging': dragging }"
     v-show="!hidden"
     :style="rootStyle"
+    @click.capture="onClickCapture"
   >
     <!-- Source panel -->
     <div class="cui-transfer-list__panel">
@@ -425,11 +490,9 @@ const rootStyle = computed(() => ({
         </CuiInput>
       </div>
       <div
+        ref="sourceScroller"
         class="cui-transfer-list__scroller"
-        :class="{ 'cui-transfer-list__scroller--drop': dropSide === 'source' && dragItem?.from === 'target' }"
-        @dragover="onDragOverPanel($event, 'source')"
-        @dragleave="onDragLeavePanel"
-        @drop="onDropPanel($event, 'source')"
+        :class="{ 'cui-transfer-list__scroller--drop': overSide === 'source' }"
       >
         <!-- The listbox holds only its options; the empty message sits beside it. -->
         <div
@@ -452,12 +515,9 @@ const rootStyle = computed(() => ({
             :tabindex="sourceRoving.tabIndex(i)"
             :data-value="String(item.value)"
             @keydown="onOptionKeydown($event, item, i)"
-            :draggable="!item.disabled && !disabled"
+            @pointerdown="onRowPointerdown($event, item, 'source')"
             @click="!item.disabled && toggleSource(item.value)"
             @dblclick="dblClickSource(item)"
-            @dragstart="onDragStart($event, item.value, 'source')"
-            @dragend="onDragEnd"
-            @dragover="onDragOverItem($event, item.value, 'source')"
           >
             <CuiIcon :icon="IconDotsSixVertical" size="0.75rem" aria-hidden="true" class="cui-transfer-list__grip" />
             <slot name="item" :item="item" :side="'source'">
@@ -508,11 +568,8 @@ const rootStyle = computed(() => ({
         </CuiInput>
       </div>
       <div
+        ref="targetScroller"
         class="cui-transfer-list__scroller"
-        :class="{ 'cui-transfer-list__scroller--drop': dropSide === 'target' && dragItem?.from === 'source' }"
-        @dragover="onDragOverPanel($event, 'target')"
-        @dragleave="onDragLeavePanel"
-        @drop="onDropPanel($event, 'target')"
       >
         <!-- A sortable list of the rows (#559); the empty message sits beside it. -->
         <CuiSortableList
@@ -524,6 +581,8 @@ const rootStyle = computed(() => ({
           :item-disabled="itemOff"
           :label="targetLabel"
           :move-buttons="false"
+          :insert-at="insertAt"
+          :insert-size="insertSize"
           :disabled="disabled"
           @update:model-value="onTargetReorder"
           @keydown.capture="onTargetKeydown"
@@ -534,12 +593,9 @@ const rootStyle = computed(() => ({
               :class="optionClass(targetSelected, item, 'target')"
               :aria-disabled="item.disabled || disabled || undefined"
               :data-value="String(item.value)"
-              :draggable="!item.disabled && !disabled"
+              @pointerdown="onRowPointerdown($event, item, 'target')"
               @click="!item.disabled && toggleTarget(item.value)"
               @dblclick="dblClickTarget(item)"
-              @dragstart="onDragStart($event, item.value, 'target')"
-              @dragend="onDragEnd"
-              @dragover="onDragOverItem($event, item.value, 'target')"
             >
               <slot name="item" :item="item" :side="'target'">
                 <CuiIcon v-if="item.icon" :name="item.icon" size="0.875rem" class="cui-transfer-list__item-icon" />
@@ -552,7 +608,7 @@ const rootStyle = computed(() => ({
             </div>
           </template>
         </CuiSortableList>
-        <div v-if="filteredTargetItems.length === 0" class="cui-transfer-list__empty">
+        <div v-if="filteredTargetItems.length === 0 && insertAt === null" class="cui-transfer-list__empty">
           {{ messages.transferList.empty }}
         </div>
       </div>
@@ -662,10 +718,11 @@ const rootStyle = computed(() => ({
   border-radius: 0 0 var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem)) var(--cui-transfer-list-radius, var(--cui-radius-lg, 0.5rem));
 }
 
-/* The dashed drop zone, while a row from the other list is dragged over this one. A drag
-   cue, not paint: at normal specificity, so restyling the scroller can't erase it. */
+/* The source panel, lit while a selected row is dragged over it: a drag cue, not paint, so
+   restyling the scroller can't erase it. The selected list shows the sortable's placeholder. */
 .cui-transfer-list__scroller--drop {
-  outline: 2px dashed var(--cui-primary);
+  outline: 2px solid var(--cui-primary);
+  background: var(--cui-primary-bg);
 }
 
 :where(.cui-transfer-list__empty) {
@@ -706,13 +763,45 @@ const rootStyle = computed(() => ({
   opacity: 0.5;
 }
 
-/* The line where a dragged row would land: a drag cue, at normal specificity. */
-.cui-transfer-list__option--drop-before {
-  border-top: 2px solid var(--cui-primary);
+/* The row a ghost was lifted from stays in place, faint. */
+.cui-transfer-list__option--lifted {
+  opacity: 0.4;
 }
 
-.cui-transfer-list__option--drop-after {
-  border-bottom: 2px solid var(--cui-primary);
+/* The ghost: a clone of the row following the pointer, lifted like CuiSortableList's dragged item
+   (the same `--cui-sortable-list-drag-*` tokens). Its position follows the pointer, so it is
+   geometry written by script, not a themeable slot. */
+.cui-transfer-list__ghost {
+  position: fixed;
+  inset: var(--_transfer-list-ghost-top) auto auto var(--_transfer-list-ghost-left);
+  width: var(--_transfer-list-ghost-width);
+  height: var(--_transfer-list-ghost-height);
+  margin: 0;
+  z-index: var(--cui-z-overlay, 9990);
+  box-sizing: border-box;
+  pointer-events: none;
+  background: var(--cui-transfer-list-bg, var(--cui-surface-base, white));
+  box-shadow: var(--cui-shadow-md);
+  transition: rotate var(--cui-duration-fast) var(--cui-ease-out), scale var(--cui-duration-fast) var(--cui-ease-out);
+}
+
+.cui-transfer-list__ghost--lifted {
+  rotate: var(--cui-sortable-list-drag-rotate, 2deg);
+  scale: var(--cui-sortable-list-drag-scale, 1.02);
+  opacity: var(--cui-sortable-list-drag-opacity, 0.9);
+}
+
+.cui-transfer-list--dragging,
+.cui-transfer-list--dragging * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cui-transfer-list__ghost--lifted {
+    rotate: none;
+    scale: none;
+  }
 }
 
 :where(.cui-transfer-list__option:focus-visible) {
@@ -722,6 +811,7 @@ const rootStyle = computed(() => ({
 
 :where(.cui-transfer-list__grip) {
   flex-shrink: 0;
+  touch-action: none;
   color: var(--cui-text-tertiary);
   cursor: grab;
   opacity: 0.4;

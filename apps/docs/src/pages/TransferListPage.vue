@@ -49,8 +49,8 @@ const selectedSimple = ref<string[]>([]);
     <template #intro>
       <p class="text-surface-700 dark:text-surface-300">
         Click an item to mark it, then use the arrows to transfer the marked items;
-        double-click moves one immediately, and dragging a left-hand item onto the right moves
-        it to a chosen position. The right-hand array is ordered, and the selected list is a
+        double-click moves one immediately, and dragging an item between the lists moves it
+        (to a chosen position on the right), with the same floating ghost both ways. The right-hand array is ordered, and the selected list is a
         <code>CuiSortableList</code>: drag a row by its grip, grab it with the keyboard, or
         use Move up / Move down. The order is part of the value, not a view preference.
       </p>
@@ -71,6 +71,9 @@ const selectedSimple = ref<string[]>([]);
         <CuiCardBody>
           <p><strong>Try:</strong></p>
           <ul>
+            <li>Drag a left-hand row toward the right-hand list: it floats after the pointer, tilted, while the row stays behind, faint. Over the right-hand list a placeholder opens where it would land (top, middle, bottom, or an empty list) and the rows slide aside. Drop to insert it there; press <kbd>Esc</kbd> first and nothing moves.</li>
+            <li>Drag a right-hand row by its body (not its grip) over the left-hand list: the left panel lights up, and dropping returns it.</li>
+            <li>On touch, drag from the grip on a left-hand row; the rest of the row still scrolls the panel.</li>
             <li>Double-click a left-hand item to send it across, then add two or three more.</li>
             <li>Drag a right-hand row by its grip: it floats, tilted, over a placeholder while the others slide aside. Drop it and the order is committed once. Press <kbd>Esc</kbd> mid-drag and it snaps back.</li>
             <li>Tab to the right-hand list (one tab stop, on a grip). <kbd>Space</kbd> or <kbd>Enter</kbd> grabs the row, <kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>Home</kbd>/<kbd>End</kbd> move it, <kbd>Space</kbd> drops, <kbd>Esc</kbd> cancels.</li>
@@ -131,8 +134,8 @@ const selectedSimple = ref<string[]>([]);
           Dragging is never the only way: the keyboard grab above, or Move up / Move down in the
           toolbar (mark one row first), reorder the selected list with a single click or tap
           (WCAG 2.5.7). The rows carry no move buttons of their own, so there is one set. Dragging
-          a source item onto the selected list, or a selected row onto the source, is a pointer
-          shortcut for the transfer buttons. The counts beside the titles are not announced when
+          a source row onto the selected list, or a selected row (by its body) onto the source,
+          is a pointer shortcut for the transfer buttons; Escape cancels it. The counts beside the titles are not announced when
           they change.
         </li>
       </ul>

@@ -15,8 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   props, slots and events; Move up / Move down stay in the toolbar as the non-drag path (the rows
   carry no buttons of their own). `messages.transferList.marked` (optional) is read after a marked
   row of the selected list.
+- `CuiTransferList` drags between the lists with the pointer, in both directions (#559): a
+  floating tilted ghost (the `--cui-sortable-list-drag-*` tokens) follows the pointer while the row
+  stays behind, faint. Over the selected list the sortable's placeholder opens at the insertion
+  point (top, middle, bottom or an empty list) with the rows sliding aside; over the source list
+  the panel is lit. Escape cancels. This replaces the native HTML5 drag and its thin dashed drop
+  line. Touch drags from the grip only.
 - `CuiSortableList` `itemDisabled`: items that keep their place, with no handle and no move
-  buttons.
+  buttons. `insertAt` / `insertSize`: show a placeholder at an index for an item dragged in from
+  elsewhere, the others sliding aside; the parent owns the drag and the drop.
 
 - `CuiSortableList` (#198): a reorderable list whose v-model is the array of items. Drag an item by
   its handle (pointer, touch and pen), or grab it with the keyboard (Space or Enter grabs, the

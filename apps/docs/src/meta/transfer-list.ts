@@ -4,7 +4,7 @@ import { disabledProp, hiddenProp } from "./shared";
 const meta: ComponentMeta = {
   name: "Transfer List",
   description:
-    "Two panels and a column of arrows for moving items between available and selected, with drag-and-drop in and a sortable selected side (drag, keyboard grab, move buttons).",
+    "Two panels and a column of arrows for moving items between available and selected, with pointer drag between the lists (a ghost and a placeholder) and a sortable selected side (drag, keyboard grab, move buttons).",
   interactive: true,
 
   props: [

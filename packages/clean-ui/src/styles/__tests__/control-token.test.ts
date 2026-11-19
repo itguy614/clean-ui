@@ -578,6 +578,9 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiTransferList.vue": {
     "transfer-list-title-font-size": "a part's own size has no slot in the closed vocabulary (the option rows' font-size is public)",
     "transfer-list-max-height": "follows the `height` prop",
+    ...Object.fromEntries(
+      ["left", "top", "width", "height"].map((s) => [`transfer-list-ghost-${s}`, `the dragged row's box when the drag began: where its ghost stands (${GEOMETRY}) (#559)`]),
+    ),
   },
   // Its own token reads (--cui-list-radius, with CuiList's private --_list-radius as the
   // fallback) are already through the public layer; the corner is a derivation of them.

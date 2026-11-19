@@ -43,6 +43,13 @@ export interface CuiSortableListProps<T = unknown> extends HideableProps, Disabl
   moveButtons?: boolean;
   /** Items that stay put: no handle, no move buttons. They can still be passed by a neighbor's move. */
   itemDisabled?: (item: T) => boolean;
+  /**
+   * Show a placeholder at this index (`rows.length` for the end), the others sliding aside: how a
+   * parent previews an item dragged in from elsewhere. The parent owns the drag and the drop.
+   */
+  insertAt?: number | null;
+  /** The placeholder's size along the list, in px: the dragged item's. */
+  insertSize?: number;
 }
 
 const props = withDefaults(defineProps<CuiSortableListProps<T>>(), {
@@ -152,14 +159,14 @@ function measure() {
   return out;
 }
 
-watch(rows, () => {
+watch([rows, () => props.insertAt], () => {
   reordering = true;
   before = measure();
   const active = document.activeElement;
   hadFocus = active instanceof HTMLElement && listEl.value?.contains(active) ? active : null;
 }, { flush: "pre" });
 
-watch(rows, () => {
+watch([rows, () => props.insertAt], () => {
   // Moving a node in the DOM can drop its focus; put it back.
   if (hadFocus?.isConnected && document.activeElement !== hadFocus) hadFocus.focus({ preventScroll: true });
   hadFocus = null;
@@ -433,6 +440,11 @@ onBeforeUnmount(() => {
 
 // The dragged item's box, as private properties the stylesheet places the ghost and sizes the
 // placeholder with (geometry from the pointer, not a themeable slot).
+const insertStyle = computed(() => ({
+  "--_sortable-list-box-width": `${props.insertSize ?? 0}px`,
+  "--_sortable-list-box-height": `${props.insertSize ?? 0}px`,
+}));
+
 const boxStyle = computed(() => ({
   "--_sortable-list-box-left": `${box.value.left}px`,
   "--_sortable-list-box-top": `${box.value.top}px`,
@@ -475,6 +487,7 @@ defineExpose({ el: rootEl, focus, blur });
       @focusout="onFocusout"
     >
       <template v-for="(item, i) in rows" :key="keys[i]">
+        <li v-if="insertAt === i" class="cui-sortable-list__placeholder" aria-hidden="true" :style="insertStyle" />
         <li
           v-if="dragKey === keys[i]"
           :ref="setPlaceholder"
@@ -548,6 +561,7 @@ defineExpose({ el: rootEl, focus, blur });
           </div>
         </li>
       </template>
+      <li v-if="insertAt != null && insertAt >= rows.length" class="cui-sortable-list__placeholder" aria-hidden="true" :style="insertStyle" />
     </ul>
     <span :id="helpId" class="cui-sr-only">{{ m.instructions }}</span>
     <div class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ announcement }}</div>
