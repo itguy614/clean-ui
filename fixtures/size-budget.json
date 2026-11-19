@@ -10,8 +10,8 @@
     {
       "package": "@itguy614/clean-ui",
       "scenario": "grid",
-      "gzipBytes": 102400,
-      "measured": "2026-11-17"
+      "gzipBytes": 103424,
+      "measured": "2026-11-19"
     },
     {
       "package": "@itguy614/clean-ui-editor",

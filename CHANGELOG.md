@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Not included: scrolling an ancestor when an item is dragged near its edge, and dragging between
     lists (`CuiTransferList` covers moving items across).
 - `messages.sortableList` for the list's labels, instructions and announcements.
-
 - `CuiDrawer` `scale-background` (#534, opt-in): the page behind the sheet scales back to 95% and
   rounds its corners while the sheet is open, following the drag with the same progress as the
   backdrop fade. It scales the element `background-selector` matches (default
