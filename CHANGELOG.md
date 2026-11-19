@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CuiToggle`: the track and the first line of its label now share one centre line at every size
+  (the track used to hang from the top by a fixed margin, so the text sat above the control).
+  The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's
+  first line down to meet it.
 - `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
   (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
   also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
