@@ -15,7 +15,7 @@ const permissions: TransferListItem[] = [
   { value: "import", label: "Import", description: "Import data" },
   { value: "billing", label: "Billing", description: "Manage billing", disabled: true },
 ];
-const selectedPerms = ref<string[]>(["read"]);
+const selectedPerms = ref<string[]>(["read", "billing"]);
 
 const columns: TransferListItem[] = [
   { value: "name", label: "Name", icon: "user" },
@@ -75,7 +75,7 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           <p><strong>Try:</strong></p>
           <ul>
             <li>Drag a left-hand row toward the right-hand list: it floats after the pointer, tilted, while the row stays behind, faint. Over the right-hand list a placeholder opens where it would land (top, middle, bottom, or an empty list) and the rows slide aside. Drop to insert it there; press <kbd>Esc</kbd> first and nothing moves.</li>
-            <li>Drag a right-hand row by its body (not its grip) over the left-hand list: the left panel lights up, and dropping returns it.</li>
+            <li>Drag a right-hand row by its body over the left-hand list: the left panel lights up, and dropping returns it. Its grip does the same once the pointer leaves the right-hand list; until then the grip only reorders.</li>
             <li>On touch, drag from the grip on a left-hand row; the rest of the row still scrolls the panel.</li>
             <li>Double-click a left-hand item to send it across, then add two or three more.</li>
             <li>Drag a right-hand row by its grip: it floats, tilted, over a placeholder while the others slide aside. Drop it and the order is committed once. Press <kbd>Esc</kbd> mid-drag and it snaps back.</li>
@@ -101,8 +101,8 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
           Each list is one tab stop. Arrow Up and Down move between items, Home and End jump
-          to the ends, and disabled items are skipped. On the selected list the stop is a
-          row's drag handle.
+          to the ends, and disabled items are skipped on the plain source list. On a sortable list the stop is a
+          row's drag handle, and a disabled row's handle is still reached by the arrows.
         </li>
         <li>
           Keyboard model of the selected list: Space or Enter grabs the focused row, the
@@ -110,7 +110,13 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           is announced. Space marks and Enter transfers on the source list, so the selected
           list has them on other keys: Shift+Space marks or unmarks the focused row, and
           Delete or Backspace returns it to the source list. A grabbed row keeps all its keys
-          for the move, and a disabled row has no handle.
+          for the move. Marking and unmarking are announced (“Alpha selected”, “Alpha not
+          selected”, <code>transferList.markedItem</code> / <code>unmarkedItem</code>) through the
+          sortable's one live region, and the handle's instructions
+          (<code>transferList.instructions</code>) name Shift+Space and Delete. A disabled row's
+          handle stays focusable but inert: <code>aria-disabled="true"</code>, so a screen reader
+          finds it and says it is unavailable, and Space, Enter, Shift+Space, Delete and a drag do
+          nothing on it. A neighbor's move can still pass it.
         </li>
         <li>
           Space marks or unmarks the focused item, which is what enables the arrow buttons.
@@ -146,7 +152,7 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           Dragging is never the only way: the keyboard grab above, or Move up / Move down in the
           toolbar (mark one row first), reorder the selected list with a single click or tap
           (WCAG 2.5.7). The rows carry no move buttons of their own, so there is one set. Dragging
-          a source row onto the selected list, or a selected row (by its body) onto the source,
+          a source row onto the selected list, or a selected row (by its body or its grip) onto the source,
           is a pointer shortcut for the transfer buttons; Escape cancels it. The counts beside the titles are not announced when
           they change.
         </li>
@@ -168,6 +174,10 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           target-title="Granted"
           height="280px"
         />
+        <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
+          Billing is disabled and already granted: arrow onto its handle in Granted, and it is
+          announced as unavailable, with nothing happening on Space, Enter or Delete.
+        </div>
         <div class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
           Granted: <code class="cui-code">{{ selectedPerms }}</code>
         </div>
@@ -196,8 +206,8 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
         <CuiCardBody>
           <p><strong>Try:</strong></p>
           <ul>
-            <li>Drag a left-hand row by its grip: it reorders within the left list, like the right one.</li>
-            <li>Drag a right-hand row (by its body) toward the left list: a placeholder opens at the slot where it would land, and dropping puts it there (<code>sourceOrder</code> then the selected list update).</li>
+            <li>Drag a left-hand row by its grip: it reorders within the left list, like the right one, and carries on into the right-hand list at the slot you drop on.</li>
+            <li>Drag a right-hand row (by its body or its grip) toward the left list: a placeholder opens at the slot where it would land, and dropping puts it there (<code>sourceOrder</code> then the selected list update).</li>
             <li>Tab to the left list, press <kbd>Space</kbd> on a grip to grab, <kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>Space</kbd> to drop. <kbd>Shift</kbd>+<kbd>Space</kbd> marks a row, <kbd>Delete</kbd> sends it to the other list.</li>
             <li>Click a left-hand row to mark it, then Move up / Move down in the middle column moves it in the left list; if both lists have a marked row, the last one marked moves.</li>
           </ul>

@@ -41,7 +41,11 @@ export interface CuiSortableListProps<T = unknown> extends HideableProps, Disabl
    * non-drag way to reorder is offered.
    */
   moveButtons?: boolean;
-  /** Items that stay put: no handle, no move buttons. They can still be passed by a neighbor's move. */
+  /**
+   * Items that stay put: their handle stays in the arrow-key order (so assistive tech finds it) but
+   * is inert, `aria-disabled`: no grab, no drag, and its move buttons are disabled. A neighbor's
+   * move can still pass them.
+   */
   itemDisabled?: (item: T) => boolean;
   /**
    * Show a placeholder at this index (`rows.length` for the end), the others sliding aside: how a
@@ -254,7 +258,7 @@ function onHandleKeydown(e: KeyboardEvent, item: T, i: number) {
   if (props.disabled || e.ctrlKey || e.altKey || e.metaKey || dragKey.value !== null) return;
   const key = keyOf(item, i);
   if (grabbedKey.value !== key) {
-    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null && !e.repeat) {
+    if ((e.key === " " || e.key === "Enter") && grabbedKey.value === null && !e.repeat && !props.itemDisabled?.(item)) {
       e.preventDefault();
       grab(item, i);
     }
@@ -288,7 +292,7 @@ function onFocusout(e: FocusEvent) {
 function moveBy(item: T, i: number, delta: 1 | -1) {
   const to = i + delta;
   const list = props.modelValue;
-  if (props.disabled || to < 0 || to >= list.length) return;
+  if (props.disabled || props.itemDisabled?.(item) || to < 0 || to >= list.length) return;
   commit(reordered(list, i, to), item, i, to);
   announce(m.value.moved(labelOf(item, to), to + 1, list.length));
 }
@@ -311,7 +315,7 @@ const DRAG_SLOP = 4;
 const horizontal = () => props.orientation === "horizontal";
 
 function onHandlePointerdown(e: PointerEvent, item: T, i: number) {
-  if (props.disabled || grabbedKey.value !== null || settling.value) return;
+  if (props.disabled || props.itemDisabled?.(item) || grabbedKey.value !== null || settling.value) return;
   const key = keyOf(item, i);
   if (!drag.start(e, onMove, onEnd)) return;
   session = { key, x0: e.clientX, y0: e.clientY, started: false };
@@ -466,7 +470,7 @@ function blur() {
   if (active instanceof HTMLElement && listEl.value?.contains(active)) active.blur();
 }
 
-defineExpose({ el: rootEl, focus, blur });
+defineExpose({ el: rootEl, focus, blur, announce });
 </script>
 
 <template>
@@ -512,7 +516,9 @@ defineExpose({ el: rootEl, focus, blur });
             type="button"
             class="cui-sortable-list__handle"
             :tabindex="roving.tabIndex(i)"
-            :disabled="disabled || itemDisabled?.(item)"
+            :disabled="disabled"
+            :aria-disabled="itemDisabled?.(item) || undefined"
+            :data-cui-focusable-disabled="itemDisabled?.(item) || undefined"
             :aria-label="m.handle(labelOf(item, i))"
             :aria-pressed="grabbedKey === keys[i]"
             :aria-describedby="helpId"
@@ -670,9 +676,15 @@ defineExpose({ el: rootEl, focus, blur });
   user-select: none;
 }
 
-.cui-sortable-list__handle:disabled {
+.cui-sortable-list__handle:disabled,
+.cui-sortable-list__handle[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* A focused inert handle is at full strength, so its ring shows. */
+.cui-sortable-list__handle[aria-disabled="true"]:focus-visible {
+  opacity: 1;
 }
 
 .cui-sortable-list--dragging,

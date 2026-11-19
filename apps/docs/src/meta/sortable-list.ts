@@ -14,7 +14,7 @@ const meta: ComponentMeta = {
     { name: "label", type: "string", default: "Reorderable list (messages.sortableList.label)", description: "The list's accessible name" },
     { name: "orientation", type: "horizontal | vertical", default: "vertical", description: "The axis the items lie along: drag, arrow keys and move buttons follow it" },
     { name: "moveButtons", type: "boolean", default: "true", description: "Show Move up / Move down buttons on each item: the single-pointer alternative to dragging that WCAG 2.5.7 asks for. Turn them off only where another non-drag way to reorder is offered" },
-    { name: "itemDisabled", type: "(item) => boolean", description: "Items that stay put: no handle and no move buttons. A neighbor's move can still pass them" },
+    { name: "itemDisabled", type: "(item) => boolean", description: "Items that stay put. Their handle stays focusable and in the arrow-key order but is inert (aria-disabled): no grab, no drag, and its move buttons are disabled. A neighbor's move can still pass them" },
     { name: "insertAt", type: "number | null", description: "Show a placeholder at this index (the item count for the end), the others sliding aside: how a parent previews an item dragged in from elsewhere. The parent owns the drag and the drop" },
     { name: "insertSize", type: "number", description: "The placeholder's size along the list, in px: the dragged item's" },
     disabledProp,
@@ -34,6 +34,7 @@ const meta: ComponentMeta = {
   methods: [
     { name: "el", signature: "Ref<HTMLElement | null>", description: "The list's root element" },
     { name: "focus", signature: "() => void", description: "Focuses the list's tab stop: the handle of the item last focused, or the first" },
+    { name: "announce", signature: "(text: string) => void", description: "Says text through the list's own live region, for a parent that adds a keyboard action of its own (CuiTransferList's Shift+Space)" },
   ],
 
   tokens: [

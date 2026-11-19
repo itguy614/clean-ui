@@ -253,10 +253,17 @@ describe("CuiSortableList", () => {
     });
   });
 
-  it("keeps an item disabled by `itemDisabled` out of the drag and the buttons (#559)", async () => {
+  it("keeps an item disabled by `itemDisabled` focusable but inert (#559, #577)", async () => {
     const { wrapper, model } = setup({ itemDisabled: (p: { id: number }) => p.id === 2 });
-    expect((handle(wrapper, 1).element as HTMLButtonElement).disabled).toBe(true);
-    expect((handle(wrapper, 0).element as HTMLButtonElement).disabled).toBe(false);
+    // Reachable, and said to be unavailable: aria-disabled, not the disabled attribute.
+    expect((handle(wrapper, 1).element as HTMLButtonElement).disabled).toBe(false);
+    expect(handle(wrapper, 1).attributes("aria-disabled")).toBe("true");
+    expect(handle(wrapper, 1).attributes("data-cui-focusable-disabled")).toBeDefined();
+    expect(handle(wrapper, 0).attributes("aria-disabled")).toBeUndefined();
+    // Space and Enter do not grab it.
+    for (const key of [" ", "Enter"]) await press(handle(wrapper, 1), key);
+    expect(handle(wrapper, 1).attributes("aria-pressed")).toBe("false");
+    expect(status(wrapper)).toBe("");
     expect(wrapper.find('button[aria-label="Move Grace down"]').attributes("aria-disabled")).toBe("true");
     expect(wrapper.find('button[aria-label="Move Grace up"]').attributes("aria-disabled")).toBe("true");
     // A neighbor can still pass it.

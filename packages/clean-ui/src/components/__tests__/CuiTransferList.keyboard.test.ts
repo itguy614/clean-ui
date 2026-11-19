@@ -153,8 +153,8 @@ describe("CuiTransferList keyboard and ARIA", () => {
     await charlie.trigger("dblclick");
     expect(markedRows()).toEqual([false]);
     expect(w!.emitted("update:modelValue")).toBeUndefined();
-    // Nor does it drag or take a keyboard grab: its handle is off.
-    expect((targetHandles()[0].element as HTMLButtonElement).disabled).toBe(true);
+    // Nor does it drag or take a keyboard grab: its handle is focusable but inert.
+    expect(targetHandles()[0].attributes("aria-disabled")).toBe("true");
   });
 
   it("leaves no tab stop on a list whose items are all disabled", async () => {
@@ -429,10 +429,11 @@ describe("CuiTransferList orderable source list (sourceOrder)", () => {
     expect(document.activeElement).toBe(sourceHandles()[1].element); // Charlie took its place
   });
 
-  it("gives a disabled left item no handle", () => {
+  it("gives a disabled left item an inert, focusable handle", () => {
     mountList({ items, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
     const c = sourceHandles()[2].element as HTMLButtonElement;
-    expect(c.disabled).toBe(true);
+    expect(c.disabled).toBe(false);
+    expect(c.getAttribute("aria-disabled")).toBe("true");
     expect(sourceRows()[2].attributes("aria-disabled")).toBe("true");
   });
 

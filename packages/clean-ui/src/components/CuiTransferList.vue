@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onBeforeUnmount, useTemplateRef, type Ref } from "vue";
+import { ref, computed, nextTick, onBeforeUnmount, provide, useTemplateRef, type Ref } from "vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
 import CuiInput from "./CuiInput.vue";
@@ -10,6 +10,7 @@ import { clampSize } from "../utils/sizing";
 import { useCuiId } from "../composables/useCuiId";
 import { useLayerStack } from "../composables/useLayerStack";
 import { useMessages } from "../composables/useMessages";
+import { CuiConfigKey } from "./config-context";
 import { usePointerDrag } from "../composables/usePointerDrag";
 import { useRovingFocus } from "../composables/useRovingFocus";
 import { IconCaretDoubleLeft } from "../icons/generated/caret-double-left";
@@ -67,6 +68,14 @@ const props = withDefaults(defineProps<CuiTransferListProps>(), {
 
 // The prose props default to the message catalogue, so a localized app localizes them (#215).
 const messages = useMessages();
+// The sortable lists' instructions are this list's: they add Shift+Space and Delete (the keys below).
+provide(
+  CuiConfigKey,
+  computed(() => {
+    const m = messages.value;
+    return { ...m, sortableList: { ...m.sortableList, instructions: m.transferList.instructions ?? m.sortableList.instructions } };
+  }),
+);
 const sourceLabel = computed(() => props.sourceTitle ?? messages.value.transferList.source);
 const targetLabel = computed(() => props.targetTitle ?? messages.value.transferList.target);
 const sourceFilterLabel = computed(() => props.sourcePlaceholder ?? messages.value.transferList.filterPlaceholder);
@@ -222,8 +231,8 @@ function dblClickTarget(item: TransferListItem) {
 }
 
 // --- Drag between the lists ---
-// A pointer drag from a row of either list (a source row anywhere, or a selected row's body: its
-// handle is the sortable's own reorder). The row stays put, dimmed, and a ghost of it follows the
+// A pointer drag from a row of either list (a source row anywhere, or a sortable's row by its body;
+// by its grip the sortable reorders in its list, and this takes over once the pointer is over the other). The row stays put, dimmed, and a ghost of it follows the
 // pointer, tilted as CuiSortableList's is. Over the selected list the sortable shows its
 // placeholder at the insertion point, the rows sliding aside; over the source list the panel is
 // lit. Releasing commits, Escape or a cancelled pointer restores. Touch drags from the grip only
@@ -236,6 +245,8 @@ interface Session {
   x0: number;
   y0: number;
   ghost: HTMLElement | null;
+  /** A drag from a sortable's grip: the row's box at the press. It waits (the sortable reorders) until the pointer is over the other list. */
+  grip?: DOMRect;
 }
 const drag = usePointerDrag();
 let session: Session | null = null;
@@ -258,8 +269,24 @@ function onRowPointerdown(e: PointerEvent, item: TransferListItem, from: Side) {
   if (drag.start(e, onDragMove, onDragEnd)) session = { value: item.value, from, row, x0: e.clientX, y0: e.clientY, ghost: null };
 }
 
+/**
+ * A press on a sortable row's grip. The sortable reorders within its list as ever; this session
+ * only waits, and takes over when the pointer is over the other list (see onDragMove).
+ */
+function onGripPointerdown(e: PointerEvent, from: Side) {
+  swallowClick = false;
+  const handle = (e.target as HTMLElement).closest<HTMLElement>(HANDLE);
+  const item = handle && shownOf(from)[handlesOf(from).indexOf(handle)];
+  const row = handle?.parentElement?.querySelector<HTMLElement>(OPTION);
+  if (!item || !row || props.disabled || item.disabled) return;
+  if (drag.start(e, onDragMove, onDragEnd)) session = { value: item.value, from, row, x0: e.clientX, y0: e.clientY, ghost: null, grip: row.getBoundingClientRect() };
+}
+
+/** True while ending the sortable's own drag, whose pointercancel must not end this one. */
+let handingOver = false;
+
 function beginDrag(s: Session) {
-  const r = s.row.getBoundingClientRect();
+  const r = s.grip ?? s.row.getBoundingClientRect();
   const ghost = s.row.cloneNode(true) as HTMLElement;
   ghost.removeAttribute("tabindex");
   ghost.removeAttribute("role");
@@ -298,7 +325,15 @@ function onDragMove(e: PointerEvent) {
   const s = session;
   if (!s) return;
   if (!s.ghost) {
-    if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < DRAG_SLOP) return;
+    if (s.grip) {
+      if (!within((s.from === "source" ? targetScroller : sourceScroller).value, e.clientX, e.clientY)) return;
+      // Over the other list: the sortable's own drag is cancelled (its row glides home, faint,
+      // under the ghost that takes the same place), and this one carries on.
+      handingOver = true;
+      document.dispatchEvent(new PointerEvent("pointercancel", { pointerId: e.pointerId, bubbles: true }));
+      handingOver = false;
+      drag.start(e, onDragMove, onDragEnd);
+    } else if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < DRAG_SLOP) return;
     beginDrag(s);
   }
   s.ghost!.style.transform = `translate3d(${e.clientX - s.x0}px, ${e.clientY - s.y0}px, 0)`;
@@ -341,7 +376,9 @@ function endDrag(commit: boolean) {
   }
 }
 
-const onDragEnd = (e: PointerEvent) => endDrag(e.type === "pointerup");
+const onDragEnd = (e: PointerEvent) => {
+  if (!handingOver) endDrag(e.type === "pointerup");
+};
 useLayerStack({
   active: () => dragging.value !== null,
   onEscape: () => {
@@ -388,8 +425,9 @@ const ids = {
 const OPTION = ".cui-transfer-list__option";
 const HANDLE = ".cui-sortable-list__handle";
 const sourceListEl = useTemplateRef<HTMLElement>("sourceListEl");
-const sourceList = useTemplateRef<{ el: HTMLElement | null }>("sourceList");
-const targetList = useTemplateRef<{ el: HTMLElement | null }>("targetList");
+type SortableHandle = { el: HTMLElement | null; announce: (text: string) => void };
+const sourceList = useTemplateRef<SortableHandle>("sourceList");
+const targetList = useTemplateRef<SortableHandle>("targetList");
 const handlesOf = (side: Side) => Array.from((side === "source" ? sourceList : targetList).value?.el?.querySelectorAll<HTMLElement>(HANDLE) ?? []);
 /** A list's focusable rows, in order: the options of the plain left list, else the sortable's handles. */
 const rowsOf = (side: Side) =>
@@ -426,7 +464,14 @@ function onSortableKeydown(e: KeyboardEvent, side: Side) {
   if (!mark && e.key !== "Delete" && e.key !== "Backspace") return;
   e.preventDefault();
   e.stopPropagation();
-  if (mark) return (side === "source" ? toggleSource : toggleTarget)(item.value);
+  if (mark) {
+    const [flip, marks, list] = side === "source" ? [toggleSource, sourceSelected, sourceList] : [toggleTarget, targetSelected, targetList];
+    flip(item.value);
+    // Said through the sortable's own live region: a second one would compete with it.
+    const t = messages.value.transferList;
+    list.value?.announce((marks.value.has(item.value) ? t.markedItem : t.unmarkedItem)?.(item.label) ?? "");
+    return;
+  }
   (side === "source" ? dblClickSource : dblClickTarget)(item);
   followMovedItem(side, item, index);
 }
@@ -593,6 +638,7 @@ const rootStyle = computed(() => ({
           :disabled="disabled"
           @update:model-value="onReorder('source', $event)"
           @keydown.capture="onSortableKeydown($event, 'source')"
+          @pointerdown.capture="onGripPointerdown($event, 'source')"
         >
           <template #item="{ item }">
             <div
@@ -672,6 +718,7 @@ const rootStyle = computed(() => ({
           :disabled="disabled"
           @update:model-value="onReorder('target', $event)"
           @keydown.capture="onSortableKeydown($event, 'target')"
+          @pointerdown.capture="onGripPointerdown($event, 'target')"
         >
           <template #item="{ item }">
             <div

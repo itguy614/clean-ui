@@ -179,6 +179,55 @@ describe("CuiTransferList selected list (real browser)", () => {
     });
   });
 
+  describe("disabled rows and announcements (#577)", () => {
+    const live = () => document.querySelector<HTMLElement>(".cui-sortable-list [role=status]")!;
+    const disabledB = { items: ITEMS.map((i) => (i.value === "b" ? { ...i, disabled: true } : i)) };
+
+    it("reaches a disabled row by the arrows, and Space, Enter, Shift+Space and Delete do nothing on it", async () => {
+      const { model, emits } = mountList(["a", "b", "c"], disabledB);
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      expect(document.activeElement).toBe(handle("Bravo"));
+      expect(handle("Bravo").getAttribute("aria-disabled")).toBe("true");
+      await userEvent.keyboard(" {Enter}{Shift>} {/Shift}{Delete}{Backspace}");
+      await frames(3);
+      expect(handle("Bravo").getAttribute("aria-pressed")).toBe("false");
+      expect(rowOf("Bravo").querySelector(".cui-transfer-list__option--selected")).toBeNull();
+      expect(model.value).toEqual(["a", "b", "c"]);
+      expect(emits).toEqual([]);
+    });
+
+    it("lets a neighbour's move pass a disabled row", async () => {
+      const { model } = mountList(["a", "b", "c"], disabledB);
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard(" {ArrowDown} ");
+      await frames(2);
+      expect(model.value).toEqual(["b", "a", "c"]);
+    });
+
+    it("announces marking and unmarking through the sortable's one live region", async () => {
+      mountList();
+      await frames(2);
+      handle("Alpha").focus();
+      await userEvent.keyboard("{Shift>} {/Shift}");
+      await frames(2);
+      expect(live().textContent!.trim()).toBe("Alpha selected");
+      await userEvent.keyboard("{Shift>} {/Shift}");
+      await frames(2);
+      expect(live().textContent!.trim()).toBe("Alpha not selected");
+    });
+
+    it("lists Shift+Space and Delete in the handle's instructions", async () => {
+      mountList();
+      await frames(2);
+      const text = document.getElementById(handle("Alpha").getAttribute("aria-describedby")!)!.textContent!;
+      expect(text).toContain("Shift+Space");
+      expect(text).toContain("Delete");
+    });
+  });
+
   describe("transfer between the lists", () => {
     it("takes a row from the source into the selected list, keyed so the others keep their place", async () => {
       const { model } = mountList(["a", "b"]);
@@ -573,6 +622,93 @@ describe("CuiTransferList selected list (real browser)", () => {
       expect(document.querySelectorAll(".cui-sortable-list__placeholder")).toHaveLength(0);
       pointer(document, "pointerup", 0, 0);
       await frames(3);
+    });
+  });
+
+  describe("dragging by the grip across the lists (#577)", () => {
+    const lists = () => document.querySelectorAll<HTMLElement>(".cui-transfer-list__sortable");
+    const leftScroller = () => document.querySelectorAll<HTMLElement>(".cui-transfer-list__scroller")[0];
+    const inList = (list: HTMLElement, label: string) =>
+      [...list.querySelectorAll<HTMLElement>(".cui-sortable-list__item")].find((li) => li.textContent!.includes(label))!.querySelector<HTMLElement>(".cui-sortable-list__handle")!;
+    const leftSlotOf = () => [...lists()[0].querySelectorAll(".cui-sortable-list__item, .cui-sortable-list__placeholder")].findIndex((el) => el.classList.contains("cui-sortable-list__placeholder"));
+
+    it("takes a selected row to the left list by its grip: the panel lights, one ghost, the drop transfers", async () => {
+      const { model, orders } = mountList(["a", "b", "c"]);
+      await frames(2);
+      const to = { x: rect(leftScroller()).left + 40, y: rect(leftScroller()).top + 30 };
+      const at = await dragRow(handle("Bravo"), () => to);
+      expect(document.querySelectorAll(".cui-transfer-list__ghost")).toHaveLength(1);
+      expect(leftScroller().classList.contains("cui-transfer-list__scroller--drop")).toBe(true);
+      expect(order()).toEqual(["Alpha", "Bravo", "Charlie"]); // the sortable's own reorder was undone
+      pointer(document, "pointerup", at.x, at.y);
+      await frames(30);
+      expect(model.value).toEqual(["a", "c"]);
+      expect(orders).toEqual([]);
+      expect(ghost()).toBeNull();
+    });
+
+    it("takes it to a slot of an orderable left list", async () => {
+      const { model, orders, log } = mountList(["d", "e"], { sourceOrder: ["a", "b", "c"] });
+      await frames(2);
+      const items = [...lists()[0].querySelectorAll<HTMLElement>(".cui-sortable-list__item")];
+      const at = await dragRow(inList(lists()[1], "Delta"), () => ({ x: rect(items[0]).left + 40, y: rect(items[1]).top + rect(items[1]).height * 0.7 }));
+      expect(leftSlotOf()).toBe(2);
+      expect(document.querySelector(".cui-transfer-list__scroller--drop")).toBeNull();
+      pointer(document, "pointerup", at.x, at.y);
+      await frames(30);
+      expect(orders).toEqual([["a", "b", "d", "c"]]);
+      expect(model.value).toEqual(["e"]);
+      expect(log).toEqual(["order", "model"]);
+    });
+
+    it("takes a left row by its grip to the selected list at the slot", async () => {
+      const { model, orders } = mountList(["d", "e"], { sourceOrder: ["a", "b", "c"] });
+      await frames(2);
+      const items = [...lists()[1].querySelectorAll<HTMLElement>(".cui-sortable-list__item")];
+      const at = await dragRow(inList(lists()[0], "Bravo"), () => ({ x: rect(items[0]).left + 40, y: rect(items[1]).top + rect(items[1]).height * 0.7 }));
+      expect(document.querySelectorAll(".cui-transfer-list__ghost")).toHaveLength(1);
+      pointer(document, "pointerup", at.x, at.y);
+      await frames(30);
+      expect(model.value).toEqual(["d", "e", "b"]);
+      expect(orders).toEqual([]);
+    });
+
+    it("still reorders by the grip within its own list", async () => {
+      const { model, emits } = mountList(["a", "b", "c"]);
+      await frames(2);
+      await dragBy("Alpha", 100);
+      expect(ghost()).toBeNull();
+      const from = center(handle("Alpha"));
+      pointer(document, "pointerup", from.x, from.y);
+      await frames(30);
+      expect(emits).toHaveLength(1);
+      expect(model.value).not.toEqual(["a", "b", "c"]);
+      expect(model.value.slice().sort()).toEqual(["a", "b", "c"]);
+    });
+
+    it("restores both lists on Escape after leaving", async () => {
+      const { model, log } = mountList(["a", "b", "c"], { sourceOrder: ["d", "e"] });
+      await frames(2);
+      const items = [...lists()[0].querySelectorAll<HTMLElement>(".cui-sortable-list__item")];
+      await dragRow(inList(lists()[1], "Bravo"), () => ({ x: rect(items[0]).left + 40, y: rect(items[0]).top + 5 }));
+      expect(leftSlotOf()).toBe(0);
+      await userEvent.keyboard("{Escape}");
+      await frames(30);
+      expect(leftSlotOf()).toBe(-1);
+      expect(ghost()).toBeNull();
+      expect([...lists()[1].querySelectorAll(".cui-transfer-list__label")].map((l) => l.textContent!.trim())).toEqual(["Alpha", "Bravo", "Charlie"]);
+      expect(model.value).toEqual(["a", "b", "c"]);
+      expect(log).toEqual([]);
+    });
+
+    it("does not drag a disabled row by its grip", async () => {
+      const { model } = mountList(["a", "b", "c"], { items: ITEMS.map((i) => (i.value === "b" ? { ...i, disabled: true } : i)) });
+      await frames(2);
+      await dragRow(handle("Bravo"), () => ({ x: rect(leftScroller()).left + 40, y: rect(leftScroller()).top + 30 }));
+      expect(ghost()).toBeNull();
+      pointer(document, "pointerup", 0, 0);
+      await frames(5);
+      expect(model.value).toEqual(["a", "b", "c"]);
     });
   });
 });
