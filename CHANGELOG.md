@@ -136,6 +136,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The saved views menu of `CuiDataGrid` draws its action icons ("Save as…", "Save current",
+  "Reset to defaults") in the item's `#icon` slot, so they sit on the label's centre line with the
+  standard gap instead of above it (#557).
+- `CuiModalHeader` with an `#actions` slot centres the title, the actions and Close on one line,
+  and Close is as tall as a small button (2rem, the control scale's floor and density included).
+  A title-only header looks as before. The row's alignment and Close's size are zero-specificity
+  rules now, so a plain `.cui-modal-header { align-items: center }` wins (that is how a larger
+  title is centred), and Close's size reads `--cui-modal-header-width` and `-height`. The slideover
+  and drawer headers follow (#558).
 - Under `prefers-reduced-motion`, dragging a sheet partway and dismissing it no longer snaps it
   back to fully open before the fade, and a consumer's own `transform` on an open slideover or
   drawer is neutralized again when it is not being dragged.
