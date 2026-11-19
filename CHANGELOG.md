@@ -23,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   action without any never runs and warns in development. The `label` is the highlighted option's
   `aria-describedby`, and the shortcuts are its `aria-keyshortcuts`.
 
+- `CuiDrawer` `scale-background` (#534, opt-in): the page behind the sheet scales back to 95% and
+  rounds its corners while the sheet is open, following the drag with the same progress as the
+  backdrop fade. It scales the element `background-selector` matches (default
+  `[data-cui-drawer-wrapper]`, looked up when the sheet opens; the library never assumes your app
+  root, and a missing match only warns in development). Only `transform` and `border-radius` are
+  animated, the wrapper's own inline styles are restored after the exit (or at once on unmount),
+  nested drawers share one scale, and reduced motion turns it off. Keep `position: fixed` and
+  `sticky` elements outside the wrapper: a transformed ancestor becomes their containing block.
+
 ### Changed
 
 - The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
