@@ -281,7 +281,7 @@ export type { CuiDatePickerProps, DatePickerMode, DatePickerValueType, DatePicke
 export type { DisabledDateRange } from "./utils/date";
 export { formatDate, parseFormattedDate, dateToIso, isoToDate } from "./utils/date";
 export type { CuiDateRangePickerProps, DateRangeValue, DateRangePickerValueType } from "./components/CuiDateRangePicker.vue";
-export type { CuiComboboxProps, ComboboxOption } from "./components/CuiCombobox.vue";
+export type { CuiComboboxProps, ComboboxOption, ComboboxOptionAction, ComboboxActionModifier } from "./components/CuiCombobox.vue";
 export type { CuiTransferListProps, TransferListItem } from "./components/CuiTransferList.vue";
 export type { CuiTimePickerProps, TimePickerFormat } from "./components/CuiTimePicker.vue";
 export type { CuiTagInputProps, TagOption } from "./components/CuiTagInput.vue";

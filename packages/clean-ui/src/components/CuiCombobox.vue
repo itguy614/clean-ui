@@ -17,6 +17,12 @@ import CuiListboxStatus from "./CuiListboxStatus.vue";
 import CuiFormValues from "./CuiFormValues.vue";
 import { IconCaretDown } from "../icons/generated/caret-down";
 import { IconCheck } from "../icons/generated/check";
+import CuiListboxGroup from "./CuiListboxGroup.vue";
+import { __DEV__, warnOnce } from "../utils/devWarn";
+import { findOptionAction, optionActionShortcut, ACTION_MODIFIERS, type ActionModifier } from "../utils/optionActions";
+
+// Module-scoped: the bundler replaces `process.env.NODE_ENV`, and Node's types stay out of the build.
+declare const process: { env: { NODE_ENV?: string } };
 
 export interface ComboboxOption {
   /** Unique value */
@@ -31,8 +37,34 @@ export interface ComboboxOption {
   image?: string;
   /** Disabled */
   disabled?: boolean;
+  /**
+   * Heading to list this option under (#445). Consecutive options with the same label share
+   * one labelled group; options with none sit outside any group. Order is yours: put a
+   * "Favorites" section first by listing its options first.
+   */
+  group?: string;
   /** Any extra data the consumer wants to access in slots */
   [key: string]: unknown;
+}
+
+export type ComboboxActionModifier = ActionModifier;
+
+/**
+ * A keyboard shortcut for the highlighted option (#445). The modifiers are required: focus
+ * is in a text input, so a bare printable key would type into the search.
+ */
+export interface ComboboxOptionAction {
+  /**
+   * The key: a `KeyboardEvent.key` ("Delete", "d") or `code` ("KeyD"). A single character
+   * also matches by physical key, since Option+D types another character on macOS.
+   */
+  key: string;
+  /** Modifiers that must all be held, and no others. At least one. */
+  modifiers: [ComboboxActionModifier, ...ComboboxActionModifier[]];
+  /** What the shortcut does, announced as the highlighted option's description. */
+  label: string;
+  /** Runs with the highlighted option. The key's default is prevented. */
+  onTrigger: (option: ComboboxOption) => void;
 }
 
 export interface CuiComboboxProps
@@ -64,6 +96,14 @@ export interface CuiComboboxProps
   noResultsText?: string;
   /** Border radius */
   rounded?: CuiRounded;
+  /**
+   * Group options that share a `group` label even when other options come between them, in
+   * order of first appearance, as CuiSelect does (#445). Off, only consecutive options group.
+   * The keyboard order, option ids and `aria-posinset` follow the grouped order.
+   */
+  mergeGroups?: boolean;
+  /** Keyboard shortcuts for the highlighted option (#445), announced via `aria-describedby`. */
+  optionActions?: ComboboxOptionAction[];
 }
 
 const props = withDefaults(defineProps<CuiComboboxProps>(), {
@@ -79,6 +119,7 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   error: false,
   rounded: "md",
   hidden: false,
+  mergeGroups: false,
 });
 
 // Link our own error message into aria-describedby (#175).
@@ -157,6 +198,30 @@ const filteredOptions = computed(() => {
     (o.description && o.description.toLowerCase().includes(q)),
   );
 });
+
+// The list as the panel draws it (#445): runs of consecutive options with the same `group`,
+// each option keeping its index in the flat list, which is what the highlight, the option ids
+// and aria-activedescendant count. Headings never take an index. A group with no option left
+// after filtering has no run, so it is not drawn.
+//
+// With `mergeGroups` a label seen again joins its first group, so groups come in order of
+// first appearance and the options are reordered. The indexes are assigned after that, so
+// they follow what is drawn, never the order of the data.
+const sections = computed(() => {
+  const runs: { label: string | undefined; options: ComboboxOption[] }[] = [];
+  for (const option of filteredOptions.value) {
+    // Only a string is a heading: `group` was a free key under the index signature before.
+    const label = typeof option.group === "string" && option.group ? option.group : undefined;
+    const run = props.mergeGroups && label ? runs.find((r) => r.label === label) : runs[runs.length - 1];
+    if (run && run.label === label) run.options.push(option);
+    else runs.push({ label, options: [option] });
+  }
+  let index = 0;
+  return runs.map((r) => ({ label: r.label, items: r.options.map((option) => ({ option, index: index++ })) }));
+});
+// Every option in the order drawn: what the highlight, option ids, Enter and the shortcuts count.
+const listedOptions = computed(() => sections.value.flatMap((s) => s.items.map((i) => i.option)));
+const hasGroups = computed(() => sections.value.some((s) => s.label));
 
 // The debounce counts as loading: the panel says "searching" rather than show an empty box.
 const isLoading = computed(() => props.loading || asyncSearch.pending.value);
@@ -255,6 +320,15 @@ function onKeydown(e: KeyboardEvent) {
     const prevented = e.defaultPrevented;
     emit("option-keydown", e, highlighted);
     if (!prevented && e.defaultPrevented) return;
+    // A declared shortcut (#445), after that veto. Modified keys only, so Enter, Escape and
+    // the arrows (which the listbox ignores once modified) are never taken from it.
+    const action = findOptionAction(props.optionActions, e);
+    if (action) {
+      e.preventDefault();
+      // A held key repeats: one press runs it once, not once per repeat.
+      if (!e.repeat) action.onTrigger(highlighted);
+      return;
+    }
   }
   if (listbox.onKeydown(e)) return;
   if (e.key === "Backspace" && !query.value && props.multiple && selectedOptions.value.length > 0) {
@@ -273,11 +347,11 @@ const listbox = useListbox({
   id: props.id ?? generatedId,
   mode: "editable",
   count: () => filteredOptions.value.length,
-  isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
+  isDisabled: (i) => !!listedOptions.value[i]?.disabled,
   activeIndex: focusedIndex,
   isOpen: () => panelOpen.value,
   open: openDropdown,
-  select: (i) => selectOption(filteredOptions.value[i]),
+  select: (i) => selectOption(listedOptions.value[i]),
   close: () => (isOpen.value = false),
   hasLabel: () => !!props.label,
   labelledby: () => props.ariaLabelledby,
@@ -292,9 +366,31 @@ const listbox = useListbox({
   },
 });
 
+// Group headings and shortcut descriptions are named from the control's id, like the options.
+const groupLabelId = (section: number) => `${props.id ?? generatedId}-group-${section}`;
+const actionId = (i: number) => `${props.id ?? generatedId}-action-${i}`;
+const actions = computed(() => props.optionActions ?? []);
+// On the highlighted option only, so the label read out belongs to the row the user is on.
+const actionDescribedby = computed(() => (actions.value.length ? actions.value.map((_, i) => actionId(i)).join(" ") : undefined));
+const actionShortcuts = computed(() => (actions.value.length ? actions.value.map(optionActionShortcut).join(" ") : undefined));
+
+watch(
+  actions,
+  (list) => {
+    for (const a of list) {
+      if (!a.modifiers?.length && __DEV__ && process.env.NODE_ENV !== "production")
+        warnOnce(`[clean-ui] CuiCombobox: optionActions "${a.key}" has no modifiers, so it never runs. Focus is in a text input, where a bare key types into the search: add at least one of ${ACTION_MODIFIERS.join(", ")}.`);
+      const unknown = (a.modifiers ?? []).filter((m) => !ACTION_MODIFIERS.includes(m));
+      if (unknown.length && __DEV__ && process.env.NODE_ENV !== "production")
+        warnOnce(`[clean-ui] CuiCombobox: optionActions "${a.key}" has unknown modifier(s) ${unknown.join(", ")}; use ${ACTION_MODIFIERS.join(", ")}.`);
+    }
+  },
+  { immediate: true, deep: true },
+);
+
 // The option the highlight is on, or null: nothing highlighted, or the list isn't showing.
 const highlightedOption = computed<ComboboxOption | null>(
-  () => (panelOpen.value ? filteredOptions.value[focusedIndex.value] : undefined) ?? null,
+  () => (panelOpen.value ? listedOptions.value[focusedIndex.value] : undefined) ?? null,
 );
 
 // The highlight is an index into the list as it is now, and so is the option id the input
@@ -302,7 +398,7 @@ const highlightedOption = computed<ComboboxOption | null>(
 // multiple selection, async results arriving) the same index is a different option. Keep it
 // on the option it was on, found again by value, or clear it when that option has gone (#346).
 watch(
-  () => filteredOptions.value.slice(),
+  () => listedOptions.value.slice(),
   (next, prev) => {
     focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
     // Pushed down (or up) by the change: keep it in sight.
@@ -428,6 +524,10 @@ function optionClass(index: number, option: ComboboxOption) {
 
     <span class="cui-sr-only" role="status" aria-live="polite" aria-atomic="true">{{ listbox.announcement.value }}</span>
 
+    <!-- What each shortcut does (#445): the highlighted option's aria-describedby names these.
+         Outside the listbox, which holds only options and groups. -->
+    <span v-for="(action, i) in actions" :id="actionId(i)" :key="i" class="cui-sr-only">{{ action.label }}</span>
+
     <!-- Dropdown (teleported) -->
     <CuiListboxPanel
       ref="panelRef"
@@ -461,44 +561,57 @@ function optionClass(index: number, option: ComboboxOption) {
         {{ messages.combobox.typeMore(minChars - query.length) }}
       </CuiListboxStatus>
 
-      <!-- Options list -->
-      <CuiListboxOption
-        v-for="(option, i) in filteredOptions"
-        :key="String(option.value)"
-        :id="listbox.optionId(i)"
-        :active="focusedIndex === i"
-        :selected="selectedSet.has(option.value)"
-        :disabled="!!option.disabled"
-        :class="optionClass(i, option)"
-        @select="selectOption(option)"
-        @hover="focusedIndex = i"
+      <!-- Options list. One wrapper per run of options sharing a `group`: a labelled
+           role="group", or a bare presentational one for ungrouped options (#445). -->
+      <CuiListboxGroup
+        v-for="(section, s) in sections"
+        :key="`${s}:${section.label ?? ''}`"
+        :label="section.label"
+        :label-id="groupLabelId(s)"
+        class="cui-combobox__group"
       >
-        <slot name="option" :option="option" :selected="selectedSet.has(option.value)" :highlighted="focusedIndex === i">
-          <img
-            v-if="option.image"
-            :src="option.image as string"
-            class="cui-combobox__option-image"
-          />
-          <CuiIcon v-else-if="option.icon" :name="option.icon" size="1rem" class="cui-combobox__option-icon" />
+        <CuiListboxOption
+          v-for="{ option, index: i } in section.items"
+          :key="String(option.value)"
+          :id="listbox.optionId(i)"
+          :active="focusedIndex === i"
+          :selected="selectedSet.has(option.value)"
+          :disabled="!!option.disabled"
+          :class="optionClass(i, option)"
+          :aria-setsize="hasGroups ? filteredOptions.length : undefined"
+          :aria-posinset="hasGroups ? i + 1 : undefined"
+          :aria-describedby="focusedIndex === i ? actionDescribedby : undefined"
+          :aria-keyshortcuts="focusedIndex === i ? actionShortcuts : undefined"
+          @select="selectOption(option)"
+          @hover="focusedIndex = i"
+        >
+          <slot name="option" :option="option" :selected="selectedSet.has(option.value)" :highlighted="focusedIndex === i">
+            <img
+              v-if="option.image"
+              :src="option.image as string"
+              class="cui-combobox__option-image"
+            />
+            <CuiIcon v-else-if="option.icon" :name="option.icon" size="1rem" class="cui-combobox__option-icon" />
 
-          <div class="cui-combobox__option-text">
-            <div class="cui-combobox__option-label" :class="{ 'cui-combobox__option-label--selected': selectedSet.has(option.value) }">
-              {{ option.label }}
+            <div class="cui-combobox__option-text">
+              <div class="cui-combobox__option-label" :class="{ 'cui-combobox__option-label--selected': selectedSet.has(option.value) }">
+                {{ option.label }}
+              </div>
+              <div v-if="option.description" class="cui-combobox__option-description">
+                {{ option.description }}
+              </div>
             </div>
-            <div v-if="option.description" class="cui-combobox__option-description">
-              {{ option.description }}
-            </div>
-          </div>
 
-          <CuiIcon
-            v-if="selectedSet.has(option.value)"
-            :icon="IconCheck"
-            size="0.875rem"
-            :color="color"
-            class="cui-combobox__option-check"
-          />
-        </slot>
-      </CuiListboxOption>
+            <CuiIcon
+              v-if="selectedSet.has(option.value)"
+              :icon="IconCheck"
+              size="0.875rem"
+              :color="color"
+              class="cui-combobox__option-check"
+            />
+          </slot>
+        </CuiListboxOption>
+      </CuiListboxGroup>
     </CuiListboxPanel>
   </div>
 </template>

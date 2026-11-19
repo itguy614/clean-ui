@@ -8,7 +8,9 @@ const meta: ComponentMeta = {
 
   props: [
     { name: "modelValue", type: "string | number | array | null", default: "null", description: "Selected value(s)" },
-    { name: "options", type: "ComboboxOption[]", default: "[]", description: "Static options array" },
+    { name: "options", type: "ComboboxOption[]", default: "[]", description: "Static options array. An option's optional `group` is a heading: consecutive options with the same `group` render under one labelled `role=\"group\"`, and options with none sit outside any group. Headings are not options, so the arrows and `aria-activedescendant` skip them; filtering drops a group left with no option. List the \"Favorites\" options first for a section at the top" },
+    { name: "mergeGroups", type: "boolean", default: "false", description: "Group options that share a `group` label even when other options come between them, in order of first appearance, as CuiSelect does. Off, only consecutive options group. The keyboard order, option ids and `aria-posinset` follow the grouped order, not the order of `options`. Ungrouped options stay where they are" },
+    { name: "optionActions", type: "ComboboxOptionAction[]", default: "[]", description: "Keyboard shortcuts for the highlighted option, each `{ key, modifiers, label, onTrigger }`. `modifiers` is required and non-empty (`alt`, `ctrl`, `meta`, `shift`; exactly those must be held), because focus is in a text input and a bare key would type into the search: an action without modifiers never runs, and warns in development. `onTrigger` receives the option, and the key's default is prevented. `label` is read out as the highlighted option's description (`aria-describedby`). An `option-keydown` handler that calls `preventDefault()` goes first and stops the action" },
     { name: "multiple", type: "boolean", default: "false", description: "Allow multiple selection" },
     { name: "fetchOptions", type: "(query, { signal }) => Promise<Option[]>", description: "Async search function. Debounced; only the latest search's results are shown. `signal` is aborted when a newer search, or unmount, supersedes it." },
     { name: "debounce", type: "number", default: "300", description: "Debounce delay for search (ms)" },
@@ -77,6 +79,9 @@ const meta: ComponentMeta = {
     { name: "--cui-combobox-item-focus-bg", default: "var(--cui-primary-bg)", description: "Background of the keyboard-focused option" },
     { name: "--cui-combobox-item-selected-bg", default: "50% of the focus tint", description: "Background of a selected option" },
     { name: "--cui-combobox-item-disabled-color", default: "var(--cui-text-tertiary)", description: "Disabled option text color" },
+    { name: "--cui-combobox-group-color", default: "var(--cui-text-tertiary)", description: "Group heading text color" },
+    { name: "--cui-combobox-group-font-size", default: "0.75 x the option font size", description: "Group heading font size. The heading is uppercase, with a hairline above every group after the first" },
+    { name: "--cui-combobox-group-padding", default: "0.5rem 0.75rem 0.25rem", description: "Group heading padding" },
   ],
 };
 

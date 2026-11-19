@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `CuiCombobox` groups options (#445): an optional `group` label on each option, and consecutive
+  options sharing a label render under a `role="group"` named by a heading. Headings are not
+  options (the arrows and `aria-activedescendant` skip them), each option reports its position in
+  the whole list, and a group emptied by filtering is not drawn. Arrowing up to a group's first
+  option scrolls its heading into view. Style the heading with `--cui-combobox-group-color`,
+  `-group-font-size` and `-group-padding`. Opt-in `mergeGroups` gathers every option sharing a
+  label under one group, in order of first appearance, as `CuiSelect` does; the keyboard order,
+  option ids and `aria-posinset` follow the grouped order. Off by default, so only consecutive
+  options group.
+- `CuiCombobox` `optionActions` (#445): `{ key, modifiers, label, onTrigger }` shortcuts for the
+  highlighted option. `modifiers` is required and non-empty, because focus is in a text input; an
+  action without any never runs and warns in development. The `label` is the highlighted option's
+  `aria-describedby`, and the shortcuts are its `aria-keyshortcuts`.
+
 - `CuiDrawer` `scale-background` (#534, opt-in): the page behind the sheet scales back to 95% and
   rounds its corners while the sheet is open, following the drag with the same progress as the
   backdrop fade. It scales the element `background-selector` matches (default
