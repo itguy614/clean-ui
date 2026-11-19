@@ -104,6 +104,14 @@ const grouped: ComboboxOption[] = [
   { value: "orange", label: "Orange", group: "Citrus" },
 ];
 const groupedValue = ref<string | null>(null);
+// The same labels, interleaved: with merge-groups each still gets one heading.
+const interleavedFruits: ComboboxOption[] = [
+  { value: "apple", label: "Apple", group: "Pome" },
+  { value: "cherry", label: "Cherry", group: "Stone" },
+  { value: "pear", label: "Pear", group: "Pome" },
+  { value: "peach", label: "Peach", group: "Stone" },
+];
+const mergedValue = ref<string | null>(null);
 
 // Favorites at the top, moved by an option action (#445). Alt+F toggles the highlighted
 // option, announced as its description.
@@ -381,6 +389,16 @@ const options = [
 <CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; label=&quot;Fruit&quot; />`">
           <div style="width: 20rem;">
             <CuiCombobox v-model="groupedValue" :options="grouped" label="Fruit" placeholder="Search fruit..." />
+          </div>
+        </Example>
+
+        <!-- Merged groups (#445) -->
+        <Example title="Merged Groups" :code="`<!-- Data order: Pome, Stone, Pome, Stone. By default only consecutive options group, so
+     that is four groups. merge-groups gathers each label under one heading, in order of
+     first appearance; the arrows follow what is drawn. -->
+<CuiCombobox v-model=&quot;value&quot; :options=&quot;options&quot; merge-groups />`">
+          <div style="width: 20rem;">
+            <CuiCombobox v-model="mergedValue" :options="interleavedFruits" merge-groups label="Fruit" placeholder="Search fruit..." />
           </div>
         </Example>
 

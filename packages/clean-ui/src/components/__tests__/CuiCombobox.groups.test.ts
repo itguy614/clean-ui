@@ -121,6 +121,79 @@ describe("CuiCombobox groups (#445)", () => {
   });
 });
 
+describe("CuiCombobox mergeGroups (#445)", () => {
+  // Data order: x1 y1 x2 plain y2. Drawn with mergeGroups: x1 x2 | y1 y2 | plain.
+  const INTERLEAVED: ComboboxOption[] = [
+    { value: "x1", label: "X1", group: "X" },
+    { value: "y1", label: "Y1", group: "Y" },
+    { value: "x2", label: "X2", group: "X" },
+    { value: "p", label: "Plain" },
+    { value: "y2", label: "Y2", group: "Y" },
+  ];
+  const groups = () => [...document.querySelectorAll<HTMLElement>('[role="group"]')];
+  const headingOf = (g: HTMLElement) => document.getElementById(g.getAttribute("aria-labelledby")!)?.textContent;
+  const active = (input: { attributes: (n: string) => string | undefined }) => document.getElementById(input.attributes("aria-activedescendant")!)!;
+
+  it("is off by default: a repeated label is its own group", async () => {
+    await openWith({ options: INTERLEAVED });
+    expect(groups().map(headingOf)).toEqual(["X", "Y", "X", "Y"]);
+  });
+
+  it("puts every option of a label under one group, in order of first appearance", async () => {
+    await openWith({ options: INTERLEAVED, mergeGroups: true });
+    expect(groups().map((g) => [headingOf(g), [...g.querySelectorAll('[role="option"]')].map((o) => o.textContent?.trim())])).toEqual([
+      ["X", ["X1", "X2"]],
+      ["Y", ["Y1", "Y2"]],
+    ]);
+    expect(optionTexts()).toEqual(["X1", "X2", "Y1", "Y2", "Plain"]);
+  });
+
+  it("numbers options, ids and the arrow order by what is drawn, not the data order", async () => {
+    const { input } = await openWith({ options: INTERLEAVED, mergeGroups: true });
+    expect([...document.querySelectorAll('[role="option"]')].map((o) => [o.getAttribute("aria-posinset"), o.id])).toEqual([
+      ["1", "cb-option-0"], ["2", "cb-option-1"], ["3", "cb-option-2"], ["4", "cb-option-3"], ["5", "cb-option-4"],
+    ]);
+    const seen: (string | undefined)[] = [];
+    for (let i = 0; i < 5; i++) {
+      await input.trigger("keydown", { key: "ArrowDown" });
+      seen.push(active(input).textContent?.trim());
+    }
+    expect(seen).toEqual(["X1", "X2", "Y1", "Y2", "Plain"]);
+  });
+
+  it("selects and shortcuts act on the drawn option at the highlighted index", async () => {
+    const hits: string[] = [];
+    const { w, input } = await openWith({
+      options: INTERLEAVED,
+      mergeGroups: true,
+      optionActions: [{ key: "d", modifiers: ["ctrl"], label: "Del", onTrigger: (o: ComboboxOption) => hits.push(String(o.value)) }],
+    });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" }); // X2: data index 2, drawn index 1
+    await input.trigger("keydown", { key: "d", ctrlKey: true });
+    expect(hits).toEqual(["x2"]);
+    expect((w.vm as unknown as { highlightedOption: ComboboxOption }).highlightedOption.value).toBe("x2");
+    await input.trigger("keydown", { key: "Enter" });
+    expect(w.emitted("update:modelValue")![0]).toEqual(["x2"]);
+  });
+
+  it("keeps the highlight on its option when the list is regrouped under it", async () => {
+    const { w, input } = await openWith({ options: INTERLEAVED, mergeGroups: true });
+    await input.trigger("keydown", { key: "ArrowDown" });
+    await input.trigger("keydown", { key: "ArrowDown" }); // X2: drawn index 1, data index 2
+    // First in the data, but drawn after both X options: X2 keeps its drawn index.
+    await w.setProps({ options: [{ value: "y0", label: "Y0", group: "Y" }, ...INTERLEAVED] });
+    expect(active(input).textContent?.trim()).toBe("X2");
+  });
+
+  it("drops a merged group that filtering empties", async () => {
+    const { input } = await openWith({ options: INTERLEAVED, mergeGroups: true });
+    await input.setValue("y");
+    expect(groups().map(headingOf)).toEqual(["Y"]);
+    expect(optionTexts()).toEqual(["Y1", "Y2"]);
+  });
+});
+
 describe("CuiCombobox optionActions (#445)", () => {
   const triggered: string[] = [];
   const actions: ComboboxOptionAction[] = [

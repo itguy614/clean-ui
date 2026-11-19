@@ -50,6 +50,43 @@ describe("CuiCombobox groups and optionActions (real browser)", () => {
     expect(activeText(input)).toBe("Beta");
   });
 
+  it("mergeGroups: real arrows walk the drawn order, and Enter picks the drawn option", async () => {
+    const interleaved: ComboboxOption[] = [
+      { value: "x1", label: "X1", group: "X" },
+      { value: "y1", label: "Y1", group: "Y" },
+      { value: "x2", label: "X2", group: "X" },
+    ];
+    const el = host({ position: "fixed", left: "20px", top: "20px", width: "240px" });
+    let picked: unknown;
+    track(mount(CuiCombobox, { attachTo: el, props: { options: interleaved, mergeGroups: true, "onUpdate:modelValue": (v: unknown) => (picked = v) } }));
+    const input = el.querySelector("input")!;
+    await userEvent.click(input);
+    await frames(4);
+    expect(document.querySelectorAll('[role="group"]')).toHaveLength(2);
+    const seen: (string | undefined)[] = [];
+    for (let i = 0; i < 3; i++) {
+      await userEvent.keyboard("{ArrowDown}");
+      seen.push(activeText(input));
+    }
+    expect(seen).toEqual(["X1", "X2", "Y1"]);
+    await userEvent.keyboard("{Enter}");
+    expect(picked).toBe("y1");
+  });
+
+  it("scrolls a group's heading into view when arrowing up to its first option", async () => {
+    const many: ComboboxOption[] = ["A", "B", "C"].flatMap((g) =>
+      [1, 2, 3, 4].map((n) => ({ value: `${g}${n}`, label: `${g}${n}`, group: `Group ${g}` })),
+    );
+    const input = await openList({ options: many, maxVisible: 4 });
+    for (let i = 0; i < 12; i++) await userEvent.keyboard("{ArrowDown}");
+    for (let i = 0; i < 7; i++) await userEvent.keyboard("{ArrowUp}"); // back up to B1, the first of its group
+    await frames(2);
+    expect(activeText(input)).toBe("B1");
+    const panel = document.querySelector<HTMLElement>('[role="listbox"]')!;
+    const heading = [...document.querySelectorAll<HTMLElement>(".cui-listbox-group__label")].find((h) => h.textContent === "Group B")!;
+    expect(heading.getBoundingClientRect().top).toBeGreaterThanOrEqual(panel.getBoundingClientRect().top - 1);
+  });
+
   it("restyles the heading through the public group tokens", async () => {
     await openList({});
     const heading = document.querySelector<HTMLElement>(".cui-listbox-group__label")!;

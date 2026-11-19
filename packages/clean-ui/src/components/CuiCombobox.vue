@@ -96,6 +96,12 @@ export interface CuiComboboxProps
   noResultsText?: string;
   /** Border radius */
   rounded?: CuiRounded;
+  /**
+   * Group options that share a `group` label even when other options come between them, in
+   * order of first appearance, as CuiSelect does (#445). Off, only consecutive options group.
+   * The keyboard order, option ids and `aria-posinset` follow the grouped order.
+   */
+  mergeGroups?: boolean;
   /** Keyboard shortcuts for the highlighted option (#445), announced via `aria-describedby`. */
   optionActions?: ComboboxOptionAction[];
 }
@@ -113,6 +119,7 @@ const props = withDefaults(defineProps<CuiComboboxProps>(), {
   error: false,
   rounded: "md",
   hidden: false,
+  mergeGroups: false,
 });
 
 // Link our own error message into aria-describedby (#175).
@@ -196,17 +203,24 @@ const filteredOptions = computed(() => {
 // each option keeping its index in the flat list, which is what the highlight, the option ids
 // and aria-activedescendant count. Headings never take an index. A group with no option left
 // after filtering has no run, so it is not drawn.
+//
+// With `mergeGroups` a label seen again joins its first group, so groups come in order of
+// first appearance and the options are reordered. The indexes are assigned after that, so
+// they follow what is drawn, never the order of the data.
 const sections = computed(() => {
-  const out: { label: string | undefined; items: { option: ComboboxOption; index: number }[] }[] = [];
-  filteredOptions.value.forEach((option, index) => {
+  const runs: { label: string | undefined; options: ComboboxOption[] }[] = [];
+  for (const option of filteredOptions.value) {
     // Only a string is a heading: `group` was a free key under the index signature before.
     const label = typeof option.group === "string" && option.group ? option.group : undefined;
-    const last = out[out.length - 1];
-    if (last && last.label === label) last.items.push({ option, index });
-    else out.push({ label, items: [{ option, index }] });
-  });
-  return out;
+    const run = props.mergeGroups && label ? runs.find((r) => r.label === label) : runs[runs.length - 1];
+    if (run && run.label === label) run.options.push(option);
+    else runs.push({ label, options: [option] });
+  }
+  let index = 0;
+  return runs.map((r) => ({ label: r.label, items: r.options.map((option) => ({ option, index: index++ })) }));
 });
+// Every option in the order drawn: what the highlight, option ids, Enter and the shortcuts count.
+const listedOptions = computed(() => sections.value.flatMap((s) => s.items.map((i) => i.option)));
 const hasGroups = computed(() => sections.value.some((s) => s.label));
 
 // The debounce counts as loading: the panel says "searching" rather than show an empty box.
@@ -333,11 +347,11 @@ const listbox = useListbox({
   id: props.id ?? generatedId,
   mode: "editable",
   count: () => filteredOptions.value.length,
-  isDisabled: (i) => !!filteredOptions.value[i]?.disabled,
+  isDisabled: (i) => !!listedOptions.value[i]?.disabled,
   activeIndex: focusedIndex,
   isOpen: () => panelOpen.value,
   open: openDropdown,
-  select: (i) => selectOption(filteredOptions.value[i]),
+  select: (i) => selectOption(listedOptions.value[i]),
   close: () => (isOpen.value = false),
   hasLabel: () => !!props.label,
   labelledby: () => props.ariaLabelledby,
@@ -376,7 +390,7 @@ watch(
 
 // The option the highlight is on, or null: nothing highlighted, or the list isn't showing.
 const highlightedOption = computed<ComboboxOption | null>(
-  () => (panelOpen.value ? filteredOptions.value[focusedIndex.value] : undefined) ?? null,
+  () => (panelOpen.value ? listedOptions.value[focusedIndex.value] : undefined) ?? null,
 );
 
 // The highlight is an index into the list as it is now, and so is the option id the input
@@ -384,7 +398,7 @@ const highlightedOption = computed<ComboboxOption | null>(
 // multiple selection, async results arriving) the same index is a different option. Keep it
 // on the option it was on, found again by value, or clear it when that option has gone (#346).
 watch(
-  () => filteredOptions.value.slice(),
+  () => listedOptions.value.slice(),
   (next, prev) => {
     focusedIndex.value = followHighlight(next, prev, focusedIndex.value);
     // Pushed down (or up) by the change: keep it in sight.

@@ -98,7 +98,12 @@ export function useListbox(options: UseListboxOptions) {
     nextTick(() => {
       const option = document.getElementById(optionId(i));
       const list = document.getElementById(listboxId);
-      if (option && list) scrollIntoViewWithin(list, option);
+      if (!option || !list) return;
+      // The first option of a group brings its heading with it (#445), so arrowing up to it
+      // doesn't leave the group's name above the edge. The heading sits right before it.
+      const heading = option.previousElementSibling;
+      if (heading?.classList.contains("cui-listbox-group__label")) scrollIntoViewWithin(list, heading);
+      scrollIntoViewWithin(list, option);
     });
   }
 
