@@ -187,13 +187,13 @@ describe("the grid managers look the same as their inline-style implementation (
       items.forEach((it, i) => {
         Object.assign(out, {
           [`item${i}`]: [it, ["display", "align-items", "color", "background-color", "padding-left"]],
-          [`item${i}-row`]: [it.querySelector("div"), VM_ROW],
-          [`item${i}-label`]: [it.querySelector("div > span"), ["display", "align-items", "column-gap"]],
-          [`item${i}-check`]: [it.querySelector("div > span > .cui-icon"), ["color", "width"]],
+          [`item${i}-row`]: [it.querySelector(".cui-data-grid-view-manager__view"), VM_ROW],
+          [`item${i}-label`]: [it.querySelector(".cui-dropdown-item__body"), ["display", "align-items", "column-gap"]],
+          [`item${i}-check`]: [it.querySelector(".cui-data-grid-view-manager__view-name > .cui-icon"), ["color", "width"]],
           [`item${i}-delete`]: [it.querySelector("button"), VM_DELETE],
           [`item${i}-delete-icon`]: [it.querySelector("button .cui-icon"), ["width", "color"]],
-          // The icon of an action item (save, save as, reset): the ones with no row of their own.
-          [`item${i}-icon`]: [it.querySelector("div") ? null : it.querySelector(".cui-icon"), ["color", "width"]],
+          // The icon of an action item (save, save as, reset), in the item's #icon slot (#557).
+          [`item${i}-icon`]: [it.querySelector(".cui-dropdown-item__icon .cui-icon"), ["color", "width"]],
         });
       });
       return out;
