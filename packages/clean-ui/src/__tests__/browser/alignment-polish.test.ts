@@ -5,6 +5,7 @@ import { userEvent } from "@vitest/browser/context";
 import main from "../../styles/main.css?inline";
 import CuiModalHeader from "../../components/CuiModalHeader.vue";
 import CuiButton from "../../components/CuiButton.vue";
+import CuiDropdownItem from "../../components/CuiDropdownItem.vue";
 import CuiDataGrid from "../../components/CuiDataGrid.vue";
 import type { DataGridViewAdapter } from "../../types/data-grid";
 import { frames, injectStyle, installTokens, mountHosts } from "../../../../../config/test/browser-helpers";
@@ -95,14 +96,39 @@ describe("alignment polish (real browser, #557 #558)", () => {
       for (const item of items) {
         const icon = item.querySelector(".cui-dropdown-item__icon svg, .cui-dropdown-item__icon .cui-icon")!;
         const label = item.querySelector(".cui-dropdown-item__label")!;
-        // The label's first line is 1.4 x the font size tall; the icon centres on it, within the
-        // 1px nudge the item gives its icon column.
+        // The label's first line is 1.4 x the font size tall; the icon centres on it (#568).
         const lineHeight = parseFloat(getComputedStyle(label).lineHeight);
         const lineCentre = label.getBoundingClientRect().top + lineHeight / 2;
-        expect(Math.abs(centreY(icon) - lineCentre)).toBeLessThanOrEqual(1.5);
+        expect(Math.abs(centreY(icon) - lineCentre)).toBeLessThan(0.5);
         const gap = label.getBoundingClientRect().left - icon.getBoundingClientRect().right;
         expect(gap).toBeGreaterThanOrEqual(6);
       }
     });
+  });
+
+  describe("CuiDropdownItem #icon (#568)", () => {
+    const icon = () => h("svg", { class: "probe", width: 12, height: 12, viewBox: "0 0 12 12" });
+    const sizes: Array<[string, string]> = [["compact", "0.75"], ["default", "1"], ["comfortable", "1.25"]];
+
+    for (const [name, scale] of sizes) {
+      for (const [kind, label, width] of [
+        ["single-line", "Save view", "260px"],
+        ["wrapped", "A much longer label that has to wrap onto several lines in a narrow menu", "160px"],
+      ] as const) {
+        it(`centres the icon on the label's first line: ${name} density, ${kind}`, async () => {
+          const host = dom.host();
+          host.style.width = width;
+          host.style.setProperty("--cui-density-scale", scale);
+          mount(CuiDropdownItem, { attachTo: host, global: { config: { warnHandler: () => {} } }, slots: { default: () => label, icon } });
+          await frames(3);
+          const probe = host.querySelector(".probe")!;
+          const text = host.querySelector(".cui-dropdown-item__label")!;
+          const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
+          const lineCentre = text.getBoundingClientRect().top + lineHeight / 2;
+          expect(Math.abs(centreY(probe) - lineCentre)).toBeLessThan(0.5);
+          if (kind === "wrapped") expect(text.getBoundingClientRect().height).toBeGreaterThan(lineHeight * 1.5);
+        });
+      }
+    }
   });
 });
