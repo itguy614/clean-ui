@@ -42,6 +42,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListboxPanel.vue", issue: "#137" },
   { file: "CuiListboxOption.vue", issue: "#137" },
   { file: "CuiListboxStatus.vue", issue: "#212" },
+  { file: "CuiListboxGroup.vue", issue: "#445" },
   { file: "CuiInputStepper.vue", issue: "#123" },
   { file: "CuiBanner.vue", issue: "#119" },
   { file: "CuiScrollArea.vue", issue: "#143" },
@@ -505,7 +506,7 @@ describe("converted component stylesheets with no dynamic part still read public
  */
 const GEOMETRY = "geometry or state computed by the component from a prop or the data; no slot in the vocabulary to name it";
 const LISTBOX_BY_DESIGN =
-  "CuiListboxPanel and CuiListboxOption read their consumer's public tokens by tokenPrefix and map them onto --_listbox-* ON PURPOSE (#137)";
+  "CuiListboxPanel, CuiListboxGroup and CuiListboxOption read their consumer's public tokens by tokenPrefix and map them onto --_listbox-* ON PURPOSE (#137)";
 const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiAvatarGroup.vue": { "avatar-group-spacing": `the overlap follows the \`spacing\` prop (${GEOMETRY})` },
   "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
@@ -579,6 +580,9 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   },
   "CuiListboxPanel.vue": Object.fromEntries(
     ["transform-origin", "bg", "border", "radius", "shadow", "padding"].map((s) => [`listbox-panel-${s}`, s === "transform-origin" ? TRANSFORM_ORIGIN : LISTBOX_BY_DESIGN]),
+  ),
+  "CuiListboxGroup.vue": Object.fromEntries(
+    ["group-padding", "group-font-size", "group-color"].map((s) => [`listbox-${s}`, LISTBOX_BY_DESIGN]),
   ),
   "CuiListboxOption.vue": Object.fromEntries(
     ["item-padding", "font-size", "item-color", "item-radius", "item-selected-bg", "item-focus-bg", "item-disabled-color"].map((s) => [`listbox-${s}`, LISTBOX_BY_DESIGN]),
