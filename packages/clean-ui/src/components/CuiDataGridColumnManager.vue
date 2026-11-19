@@ -150,7 +150,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
 </script>
 
 <template>
-  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="240px" :title="messages.dataGrid.columns">
+  <CuiPopover class="cui-data-grid-column-manager" placement="bottom" width="20rem" :title="messages.dataGrid.columns">
     <CuiButton variant="outline" size="sm">
       <template #prefix><CuiIcon :icon="IconColumns" size="0.875rem" /></template>
       {{ messages.dataGrid.columns }}
@@ -194,7 +194,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
             @update:model-value="grid.toggleColumnVisibility(row.key)"
           >
             <!-- The plain label is what shows; the checkbox is named with its group -->
-            <span aria-hidden="true">{{ getLabel(row.key) }}</span>
+            <span class="cui-data-grid-column-manager__name" aria-hidden="true" :title="getLabel(row.key)">{{ getLabel(row.key) }}</span>
             <span class="cui-sr-only">{{ nameOf(row) }}</span>
           </CuiCheckbox>
           <span v-if="!isFrozenRow(row)" class="cui-data-grid-column-manager__actions">
@@ -278,6 +278,19 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
 .cui-data-grid-column-manager__group,
 .cui-data-grid-column-manager__check {
   flex: 1;
+  /* A long label gives way to the move buttons and ends in an ellipsis; its title has the rest (#556). */
+  min-width: 0;
+}
+.cui-data-grid-column-manager__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The label reads at the grid's own cell size (0.875rem, a default-size table), not the
+   checkbox's 1rem. */
+:where(.cui-data-grid-column-manager__check) {
+  --cui-checkbox-label-font-size: 0.875rem;
 }
 
 .cui-data-grid-column-manager__actions {

@@ -3,7 +3,8 @@ import { computed, ref } from "vue";
 import { useChoiceLabelling } from "../composables/useChoiceLabelling";
 import { CheckboxGroupKey, useOptionalMultiSelectGroupContext } from "./multi-select-group-context";
 import CuiIcon from "./CuiIcon.vue";
-import type { HideableProps, ColorableProps, DisableableProps, FormControlProps, NativeControlProps } from "../types/common";
+import { INPUT_SIZE_SCALE } from "../utils/sizing";
+import type { HideableProps, ColorableProps, SizeableProps, DisableableProps, FormControlProps, NativeControlProps } from "../types/common";
 import { IconCheck } from "../icons/generated/check";
 import { IconMinus } from "../icons/generated/minus";
 
@@ -11,6 +12,7 @@ export interface CuiCheckboxProps
   extends NativeControlProps,
     HideableProps,
     ColorableProps,
+    SizeableProps,
     DisableableProps,
     Pick<FormControlProps, "label" | "description" | "readonly"> {
   /** The value this checkbox represents (group mode) */
@@ -24,6 +26,7 @@ export interface CuiCheckboxProps
 }
 
 const props = withDefaults(defineProps<CuiCheckboxProps>(), {
+  size: "md",
   indeterminate: false,
   disabled: false,
   readonly: false,
@@ -57,6 +60,10 @@ const resolvedColor = computed(() => {
   return props.color ?? group?.color.value ?? "primary";
 });
 
+// The label's text follows `size` through the shared input scale (#556). The box stays 1.25rem
+// at every size, so only the label text and the box's offset beside it change.
+const labelFontSize = computed(() => (INPUT_SIZE_SCALE[props.size] ?? INPUT_SIZE_SCALE.md).fontSize);
+
 const elRef = ref<HTMLElement>();
 
 function toggle() {
@@ -86,7 +93,7 @@ const choice = useChoiceLabelling(props);
     ref="elRef"
     v-show="!hidden"
     class="cui-checkbox"
-    :style="{ '--_checkbox-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
+    :style="{ '--_checkbox-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`, '--_checkbox-label-font-size': labelFontSize }"
     :class="{
       'cui-checkbox--checked': isChecked,
       'cui-checkbox--indeterminate': indeterminate && !isChecked,
@@ -180,7 +187,13 @@ const choice = useChoiceLabelling(props);
   border-width: 1px;
   border-style: solid;
   transition: border-color var(--cui-duration-fast) ease, background var(--cui-duration-fast) ease;
-  margin-top: 0.125rem;
+  /* Set in the themeable rule below, from the label's size. A margin stays at normal
+     specificity, so a zero-specificity `* { margin: 0 }` of the page cannot undo it. */
+  margin-top: var(--_checkbox-box-offset);
+  /* The mark is drawn over the box, not laid out in it (#553): an empty box and a ticked one
+     then give the checkbox the same baseline, so a line holding an unlabeled checkbox keeps its
+     height when it is checked. */
+  position: relative;
 }
 
 /* Themeable (#454): zero specificity, so a consumer's plain `.cui-checkbox__indicator { … }`
@@ -189,6 +202,9 @@ const choice = useChoiceLabelling(props);
 :where(.cui-checkbox__indicator) {
   border-color: var(--cui-checkbox-border, var(--_checkbox-border));
   background: var(--cui-checkbox-bg, var(--_checkbox-bg));
+  /* Centres the box on the label's first line (1.5 × its font size, so it follows the token
+     too): 0.125rem at md. */
+  --_checkbox-box-offset: calc((var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size)) * 1.5 - 1.25rem) / 2);
 }
 
 :where(.cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator) {
@@ -208,6 +224,9 @@ const choice = useChoiceLabelling(props);
 
 /* --- Icon --- */
 .cui-checkbox__icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
   animation: cui-check-pop var(--cui-duration-fast) var(--cui-ease-out);
 }
 
@@ -220,14 +239,20 @@ const choice = useChoiceLabelling(props);
 
 /* --- Label --- */
 .cui-checkbox__label-wrap {
+  /* Shrinks below its content, so a consumer can truncate a long label (#556). */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: calc(0.125rem * var(--cui-density-scale, 1));
 }
 
 .cui-checkbox__label {
-  font-size: 1rem;
   line-height: 1.5;
+}
+
+/* Themeable (#556): the size follows the checkbox `size`; the token restyles it. */
+:where(.cui-checkbox__label) {
+  font-size: var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size));
   color: var(--cui-text-body);
 }
 
