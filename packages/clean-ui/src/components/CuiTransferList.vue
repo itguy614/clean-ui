@@ -231,8 +231,8 @@ function dblClickTarget(item: TransferListItem) {
 }
 
 // --- Drag between the lists ---
-// A pointer drag from a row of either list (a source row anywhere, or a selected row's body: its
-// handle is the sortable's own reorder). The row stays put, dimmed, and a ghost of it follows the
+// A pointer drag from a row of either list (a source row anywhere, or a sortable's row by its body;
+// by its grip the sortable reorders in its list, and this takes over once the pointer is over the other). The row stays put, dimmed, and a ghost of it follows the
 // pointer, tilted as CuiSortableList's is. Over the selected list the sortable shows its
 // placeholder at the insertion point, the rows sliding aside; over the source list the panel is
 // lit. Releasing commits, Escape or a cancelled pointer restores. Touch drags from the grip only
@@ -245,6 +245,8 @@ interface Session {
   x0: number;
   y0: number;
   ghost: HTMLElement | null;
+  /** A drag from a sortable's grip: the row's box at the press. It waits (the sortable reorders) until the pointer is over the other list. */
+  grip?: DOMRect;
 }
 const drag = usePointerDrag();
 let session: Session | null = null;
@@ -267,8 +269,24 @@ function onRowPointerdown(e: PointerEvent, item: TransferListItem, from: Side) {
   if (drag.start(e, onDragMove, onDragEnd)) session = { value: item.value, from, row, x0: e.clientX, y0: e.clientY, ghost: null };
 }
 
+/**
+ * A press on a sortable row's grip. The sortable reorders within its list as ever; this session
+ * only waits, and takes over when the pointer is over the other list (see onDragMove).
+ */
+function onGripPointerdown(e: PointerEvent, from: Side) {
+  swallowClick = false;
+  const handle = (e.target as HTMLElement).closest<HTMLElement>(HANDLE);
+  const item = handle && shownOf(from)[handlesOf(from).indexOf(handle)];
+  const row = handle?.parentElement?.querySelector<HTMLElement>(OPTION);
+  if (!item || !row || props.disabled || item.disabled) return;
+  if (drag.start(e, onDragMove, onDragEnd)) session = { value: item.value, from, row, x0: e.clientX, y0: e.clientY, ghost: null, grip: row.getBoundingClientRect() };
+}
+
+/** True while ending the sortable's own drag, whose pointercancel must not end this one. */
+let handingOver = false;
+
 function beginDrag(s: Session) {
-  const r = s.row.getBoundingClientRect();
+  const r = s.grip ?? s.row.getBoundingClientRect();
   const ghost = s.row.cloneNode(true) as HTMLElement;
   ghost.removeAttribute("tabindex");
   ghost.removeAttribute("role");
@@ -307,7 +325,15 @@ function onDragMove(e: PointerEvent) {
   const s = session;
   if (!s) return;
   if (!s.ghost) {
-    if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < DRAG_SLOP) return;
+    if (s.grip) {
+      if (!within((s.from === "source" ? targetScroller : sourceScroller).value, e.clientX, e.clientY)) return;
+      // Over the other list: the sortable's own drag is cancelled (its row glides home, faint,
+      // under the ghost that takes the same place), and this one carries on.
+      handingOver = true;
+      document.dispatchEvent(new PointerEvent("pointercancel", { pointerId: e.pointerId, bubbles: true }));
+      handingOver = false;
+      drag.start(e, onDragMove, onDragEnd);
+    } else if (Math.hypot(e.clientX - s.x0, e.clientY - s.y0) < DRAG_SLOP) return;
     beginDrag(s);
   }
   s.ghost!.style.transform = `translate3d(${e.clientX - s.x0}px, ${e.clientY - s.y0}px, 0)`;
@@ -350,7 +376,9 @@ function endDrag(commit: boolean) {
   }
 }
 
-const onDragEnd = (e: PointerEvent) => endDrag(e.type === "pointerup");
+const onDragEnd = (e: PointerEvent) => {
+  if (!handingOver) endDrag(e.type === "pointerup");
+};
 useLayerStack({
   active: () => dragging.value !== null,
   onEscape: () => {
@@ -610,6 +638,7 @@ const rootStyle = computed(() => ({
           :disabled="disabled"
           @update:model-value="onReorder('source', $event)"
           @keydown.capture="onSortableKeydown($event, 'source')"
+          @pointerdown.capture="onGripPointerdown($event, 'source')"
         >
           <template #item="{ item }">
             <div
@@ -689,6 +718,7 @@ const rootStyle = computed(() => ({
           :disabled="disabled"
           @update:model-value="onReorder('target', $event)"
           @keydown.capture="onSortableKeydown($event, 'target')"
+          @pointerdown.capture="onGripPointerdown($event, 'target')"
         >
           <template #item="{ item }">
             <div

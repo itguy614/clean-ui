@@ -75,7 +75,7 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           <p><strong>Try:</strong></p>
           <ul>
             <li>Drag a left-hand row toward the right-hand list: it floats after the pointer, tilted, while the row stays behind, faint. Over the right-hand list a placeholder opens where it would land (top, middle, bottom, or an empty list) and the rows slide aside. Drop to insert it there; press <kbd>Esc</kbd> first and nothing moves.</li>
-            <li>Drag a right-hand row by its body (not its grip) over the left-hand list: the left panel lights up, and dropping returns it.</li>
+            <li>Drag a right-hand row by its body over the left-hand list: the left panel lights up, and dropping returns it. Its grip does the same once the pointer leaves the right-hand list; until then the grip only reorders.</li>
             <li>On touch, drag from the grip on a left-hand row; the rest of the row still scrolls the panel.</li>
             <li>Double-click a left-hand item to send it across, then add two or three more.</li>
             <li>Drag a right-hand row by its grip: it floats, tilted, over a placeholder while the others slide aside. Drop it and the order is committed once. Press <kbd>Esc</kbd> mid-drag and it snaps back.</li>
@@ -152,7 +152,7 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
           Dragging is never the only way: the keyboard grab above, or Move up / Move down in the
           toolbar (mark one row first), reorder the selected list with a single click or tap
           (WCAG 2.5.7). The rows carry no move buttons of their own, so there is one set. Dragging
-          a source row onto the selected list, or a selected row (by its body) onto the source,
+          a source row onto the selected list, or a selected row (by its body or its grip) onto the source,
           is a pointer shortcut for the transfer buttons; Escape cancels it. The counts beside the titles are not announced when
           they change.
         </li>
@@ -206,8 +206,8 @@ const orderableSource = ref<string[]>(["a", "b", "c", "e", "f"]);
         <CuiCardBody>
           <p><strong>Try:</strong></p>
           <ul>
-            <li>Drag a left-hand row by its grip: it reorders within the left list, like the right one.</li>
-            <li>Drag a right-hand row (by its body) toward the left list: a placeholder opens at the slot where it would land, and dropping puts it there (<code>sourceOrder</code> then the selected list update).</li>
+            <li>Drag a left-hand row by its grip: it reorders within the left list, like the right one, and carries on into the right-hand list at the slot you drop on.</li>
+            <li>Drag a right-hand row (by its body or its grip) toward the left list: a placeholder opens at the slot where it would land, and dropping puts it there (<code>sourceOrder</code> then the selected list update).</li>
             <li>Tab to the left list, press <kbd>Space</kbd> on a grip to grab, <kbd>↑</kbd>/<kbd>↓</kbd> to move, <kbd>Space</kbd> to drop. <kbd>Shift</kbd>+<kbd>Space</kbd> marks a row, <kbd>Delete</kbd> sends it to the other list.</li>
             <li>Click a left-hand row to mark it, then Move up / Move down in the middle column moves it in the left list; if both lists have a marked row, the last one marked moves.</li>
           </ul>

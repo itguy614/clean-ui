@@ -113,6 +113,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unavailable. Space, Enter and a drag do nothing on it, and its move buttons stay disabled. A
   neighbor's move can still pass it. In `CuiTransferList` a disabled row's handle likewise ignores
   Shift+Space and Delete.
+- `CuiTransferList` (#577): a row's grip now also drags between the lists. It reorders within its own
+  list as before; once the pointer is over the other list the sortable's own drag is cancelled and the
+  cross-list ghost, placeholder (or panel highlight) and drop take over, so a selected row can be
+  dragged back to the source by its grip as well as its body.
 - `CuiTransferList` (#577): Shift+Space marking and unmarking is announced through the sortable's
   live region ("Alpha selected" / "Alpha not selected"), and the handle's instructions now mention
   Shift+Space and Delete. New optional messages `transferList.markedItem`, `unmarkedItem` and
