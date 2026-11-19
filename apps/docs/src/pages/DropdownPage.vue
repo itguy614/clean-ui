@@ -73,6 +73,10 @@ const theme = ref("system");
       </p>
       <ul class="list-disc pl-5 text-surface-700 dark:text-surface-300">
         <li>
+          A press in a panel opened from inside the menu (a popover, a select or a combobox in an
+          item) does not count as a press outside, so the menu stays open while it is used.
+        </li>
+        <li>
           On open, focus moves to the first enabled item — an action, a check item or a radio
           item. Arrow Down and Arrow Up move between items and wrap at the ends; Home and End
           jump to the first and last. Enter and Space activate.
