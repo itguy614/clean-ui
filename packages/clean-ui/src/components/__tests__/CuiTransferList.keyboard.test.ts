@@ -321,6 +321,18 @@ describe("CuiTransferList selected list as a sortable list", () => {
     expect(w!.emitted("update:modelValue")).toEqual([[["c", "b", "d", "a"]]]);
   });
 
+  it("keeps a v-model value that has no item when the shown rows are reordered", async () => {
+    mountList({ items: abc, modelValue: ["a", "ghost", "b"] });
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    pressWith(handle, "ArrowDown");
+    await nextTick();
+    pressWith(handle, " ");
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toEqual([[["b", "ghost", "a"]]]);
+  });
+
   it("still takes a row from the source into the selected list by Enter", async () => {
     mountList({ items: abc, modelValue: ["a"] });
     const bravo = options("Available")[0].element as HTMLElement;

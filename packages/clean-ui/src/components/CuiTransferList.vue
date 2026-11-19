@@ -204,6 +204,8 @@ function onDragEnd() {
 }
 
 function onDragOverItem(e: DragEvent, value: string | number, side: "source" | "target") {
+  // A selected row dragged over the selected list reorders nowhere (the handle does that): no drop line.
+  if (side === "target" && dragItem.value?.from === "target") return;
   e.preventDefault();
   e.dataTransfer!.dropEffect = "move";
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -347,12 +349,11 @@ const itemText = (item: TransferListItem) => item.label;
 const itemOff = (item: TransferListItem) => !!item.disabled;
 
 /**
- * The sortable reorders the items the filter shows: put them back into the full order, in the
- * slots the shown ones held, so a hidden item stays where it was.
+ * The sortable reorders the items it shows: put them back into the full order, in the slots the
+ * shown ones held, so an item the filter hides (or that has no entry in `items`) stays where it was.
  */
 function onTargetReorder(next: TransferListItem[]) {
-  if (!targetSearch.value) return emit("update:modelValue", next.map((i) => i.value));
-  const shown = new Set(filteredTargetItems.value.map((i) => i.value));
+  const shown = new Set(next.map((i) => i.value));
   const values = next.map((i) => i.value);
   emit("update:modelValue", props.modelValue.map((v) => (shown.has(v) ? values.shift()! : v)));
 }
@@ -580,6 +581,7 @@ const rootStyle = computed(() => ({
   --cui-sortable-list-border: 0 none;
   --cui-sortable-list-pressed-border: 0 none;
   --cui-sortable-list-radius: var(--cui-radius-sm, 0.25rem);
+  --cui-sortable-list-focus-ring: var(--cui-transfer-list-focus-ring, var(--cui-primary-focus-ring));
   --cui-sortable-list-bg: var(--cui-transfer-list-bg, var(--cui-surface-base, white));
 }
 
