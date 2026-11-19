@@ -93,7 +93,7 @@ function onKeydown(e: KeyboardEvent) {
   align-items: center;
   /* One label line tall (the label's line-height is 1.4), so the icon centres on the
      label's first line whatever the label wraps to, with no fixed offset. */
-  height: 1.4em;
+  min-height: 1.4em;
   color: var(--cui-text-secondary);
 }
 

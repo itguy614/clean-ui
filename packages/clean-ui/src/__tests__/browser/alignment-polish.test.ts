@@ -15,7 +15,7 @@ import { frames, injectStyle, installTokens, mountHosts } from "../../../../../c
  * line with the standard gap, and a modal header with actions centres title, actions and Close
  * on one line, with Close at a small button's height. Layout claims, so a real browser.
  */
-describe("alignment polish (real browser, #557 #558)", () => {
+describe("alignment polish (real browser, #557 #558 #568)", () => {
   let removeTokens: () => void;
   beforeAll(() => (removeTokens = installTokens(`${main} .cui-button { transition: none !important; }`)));
   afterAll(() => removeTokens());
@@ -23,7 +23,9 @@ describe("alignment polish (real browser, #557 #558)", () => {
   const dom = mountHosts();
   const rules: Array<() => void> = [];
   let grid: VueWrapper | undefined;
+  const items: VueWrapper[] = [];
   afterEach(() => {
+    items.splice(0).forEach((w) => w.unmount());
     grid?.unmount();
     grid = undefined;
     dom.cleanup();
@@ -119,7 +121,7 @@ describe("alignment polish (real browser, #557 #558)", () => {
           const host = dom.host();
           host.style.width = width;
           host.style.setProperty("--cui-density-scale", scale);
-          mount(CuiDropdownItem, { attachTo: host, global: { config: { warnHandler: () => {} } }, slots: { default: () => label, icon } });
+          items.push(mount(CuiDropdownItem, { attachTo: host, global: { config: { warnHandler: () => {} } }, slots: { default: () => label, icon } }));
           await frames(3);
           const probe = host.querySelector(".probe")!;
           const text = host.querySelector(".cui-dropdown-item__label")!;
