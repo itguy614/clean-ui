@@ -134,12 +134,14 @@ describe("the grid managers' themeable properties (real browser)", () => {
 
     it("lets a plain consumer rule win, with no !important", async () => {
       extra = injectStyle(`.cui-data-grid-view-manager__delete { opacity: 1; color: rgb(1, 2, 3); padding: 5px; }
-        .cui-data-grid-view-manager__active { color: rgb(4, 5, 6); }`);
+        .cui-data-grid-view-manager__active { color: rgb(4, 5, 6); }
+        .cui-data-grid-view-manager__action-icon { color: rgb(7, 8, 9); }`);
       await openViews(true);
       expect(paint(document.querySelector(".cui-data-grid-view-manager__delete"), "opacity")).toBe("1");
       expect(paint(document.querySelector(".cui-data-grid-view-manager__delete"), "color")).toBe("rgb(1, 2, 3)");
       expect(paint(document.querySelector(".cui-data-grid-view-manager__delete"), "padding-top")).toBe("5px");
       expect(paint(document.querySelector(".cui-data-grid-view-manager__active"), "color")).toBe("rgb(4, 5, 6)");
+      expect(paint(document.querySelector(".cui-data-grid-view-manager__action-icon"), "color")).toBe("rgb(7, 8, 9)");
     });
 
     it("lets a token on <body> win on the loaded view's check", async () => {

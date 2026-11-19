@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, useSlots } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -32,10 +33,12 @@ const emit = defineEmits<{
   close: [];
 }>();
 const messages = useMessages();
+const slots = useSlots();
+const hasActions = computed(() => !!slots.actions);
 </script>
 
 <template>
-  <div class="cui-modal-header" :class="{ 'cui-modal-header--has-actions': $slots.actions }" v-show="!hidden">
+  <div class="cui-modal-header" :class="{ 'cui-modal-header--has-actions': hasActions }" v-show="!hidden">
     <div class="cui-modal-header__main">
       <slot>
         <component :is="headingTag" v-if="title" :id="titleId" class="cui-modal-header__title">
@@ -43,7 +46,7 @@ const messages = useMessages();
         </component>
       </slot>
     </div>
-    <div v-if="$slots.actions" class="cui-modal-header__actions">
+    <div v-if="hasActions" class="cui-modal-header__actions">
       <slot name="actions" />
     </div>
     <button v-if="!noCloseButton" type="button" class="cui-modal-header__close" :aria-label="messages.close" @click="emit('close')">
@@ -113,7 +116,7 @@ const messages = useMessages();
   cursor: pointer;
 }
 :where(.cui-modal-header__close) {
-  width: var(--cui-modal-header-width, 1.75rem);
+  width: var(--cui-modal-header-width, var(--cui-modal-header-height, 1.75rem));
   height: var(--cui-modal-header-height, 1.75rem);
   padding: 0;
   border: none;
@@ -128,7 +131,7 @@ const messages = useMessages();
 }
 /* The height of a size="sm" button (BUTTON_SIZE_SCALE), floor and density included. */
 :where(.cui-modal-header--has-actions .cui-modal-header__close) {
-  width: var(--cui-modal-header-width, max(var(--cui-control-min-target, 24px), calc(2rem * var(--cui-density-scale, 1))));
+  width: var(--cui-modal-header-width, var(--cui-modal-header-height, max(var(--cui-control-min-target, 24px), calc(2rem * var(--cui-density-scale, 1)))));
   height: var(--cui-modal-header-height, max(var(--cui-control-min-target, 24px), calc(2rem * var(--cui-density-scale, 1))));
   margin-top: 0;
 }

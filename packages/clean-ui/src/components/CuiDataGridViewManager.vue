@@ -142,12 +142,12 @@ function onReset() {
         :close-on-select="false"
         @select="onSaveCurrent"
       >
-        <template #icon><CuiIcon :icon="IconFloppyDisk" size="0.875rem" /></template>
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" /></template>
         {{ messages.dataGrid.saveCurrent }}
       </CuiDropdownItem>
 
       <CuiDropdownItem :close-on-select="false" @select="showSaveAs = !showSaveAs">
-        <template #icon><CuiIcon :icon="IconFloppyDisk" size="0.875rem" /></template>
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" /></template>
         {{ messages.dataGrid.saveAs }}
       </CuiDropdownItem>
 
@@ -173,7 +173,7 @@ function onReset() {
 
       <CuiDropdownDivider />
       <CuiDropdownItem @select="onReset">
-        <template #icon><CuiIcon :icon="IconArrowCounterClockwise" size="0.875rem" /></template>
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconArrowCounterClockwise" size="0.875rem" /></template>
         {{ messages.dataGrid.resetViews }}
       </CuiDropdownItem>
     </CuiDropdownMenu>
@@ -215,6 +215,10 @@ function onReset() {
 }
 .cui-data-grid-view-manager__delete {
   cursor: pointer;
+}
+
+:where(.cui-data-grid-view-manager__action-icon) {
+  color: var(--cui-text-secondary);
 }
 
 .cui-data-grid-view-manager__save {
