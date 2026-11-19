@@ -107,6 +107,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CuiDataGridColumnManager` reorders with `CuiSortableList` (#560), replacing its own drag handling:
+  one tested model for pointer drag (a floating ghost over a placeholder, in place of the drop
+  line), keyboard grab / move / drop / cancel, the Move up / Move down buttons and the live-region
+  announcements. A leaf moves within its group's own list, a group or ungrouped column among the
+  units, as a block. Frozen columns and groups are listed first, outside the sortable list, with
+  their lock and no handle. The grid's calls (`reorderColumns`, `reorderUnit`), saved views and
+  events are unchanged, and the buttons and announcements still read `messages.dataGrid`
+  (`moveUp`, `moveDown`, `moved`). Visible differences: a handle button (arrows reach it; Space or
+  Enter grabs) replaces the dotted grip that was draggable anywhere on the row, the move buttons are
+  reached by click or touch rather than the Tab order (the handle is the list's one tab stop), and
+  `--cui-data-grid-column-manager-border` now colours the edge of the dragged row, not a drop line.
+  The classes `__row`, `__row--leaf`, `__row--dragging`, `__row--drop` and `__actions` now match only
+  frozen rows (a reorderable row is a `CuiSortableList` item: restyle it with the `--cui-data-grid-column-manager-*`
+  tokens or `--cui-sortable-list-*`), and `--cui-data-grid-column-manager-px` is a reorderable row's own start and
+  end padding rather than the leaf indent. Positions announced and moved among are those of the
+  reorderable columns, after any frozen ones.
+- `CuiSortableList` scopes its roving focus to its own handles, so a sortable list can be nested in
+  an item of another (the column manager's groups) without the outer list's arrow keys reaching
+  into the inner one. No change for a list that is not nested.
 - `CuiTransferList` selected list (#559): its rows are no longer `role="option"`s in a listbox but
   items of a named list, each with a drag handle that is the tab stop. On a handle, Space and Enter
   grab; marking for transfer moved to Shift+Space and returning a row to the source list to Delete

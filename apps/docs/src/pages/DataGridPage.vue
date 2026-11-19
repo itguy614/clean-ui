@@ -568,8 +568,9 @@ function step(by: number) {
             A rule marks where each group after the first begins, through the header and body.
             Sorting, filtering and saved
             views work on the leaves. Open <strong>Columns</strong>: groups list with their leaves
-            indented; drag a leaf within its group, drag a group header to move the whole block,
-            or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
+            indented; drag a leaf by its handle within its group, drag a group&rsquo;s handle to move
+            the whole block, grab either with the keyboard (Space, then the arrow keys, then Space
+            to drop, Escape to cancel), or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
             group goes. Screen readers announce a leaf with its group (&ldquo;Reads, A1&rdquo;).
           </p>
           <CuiDataGrid :columns="groupedColumns" :data="tagData" max-height="320px" size="sm" />
@@ -602,7 +603,8 @@ function step(by: number) {
             <strong>Reading</strong> is declared first but sits after the frozen EPC and Tag
             group, and scrolling right pins the group&rsquo;s header cell over both its
             columns. Open <strong>Columns</strong>: frozen columns show a lock instead of a
-            drag handle, have no move buttons, and nothing can be dropped among them. The
+            drag handle, have no move buttons, and sit outside the reorderable list, so nothing can
+            be dropped among them. The
             <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not): switch it on
             and the grid unfreezes it, and in development warns in the console. Give frozen
             columns a <code>width</code>: it is what the columns after it pin against. Without one the

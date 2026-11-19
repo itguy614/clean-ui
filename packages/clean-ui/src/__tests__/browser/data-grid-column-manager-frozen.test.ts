@@ -49,30 +49,42 @@ describe("CuiDataGrid column manager: frozen columns (real browser)", () => {
     expect(row("Frozen1").querySelector("button")).toBeNull();
   });
 
-  it("does not move a frozen column when it is dragged", async () => {
+  const handle = (name: string) => document.body.querySelector<HTMLElement>(`button[aria-label="Reorder ${name}"]`);
+  function pointer(target: EventTarget, type: string, x: number, y: number) {
+    target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, isPrimary: true, pointerType: "mouse", clientX: x, clientY: y, button: 0 }));
+  }
+  /** Drag a normal column's handle `dy` pixels (negative: up, toward the frozen block), and drop. */
+  async function dragBy(name: string, dy: number) {
+    const r = handle(name)!.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    pointer(handle(name)!, "pointerdown", x, y);
+    await frames(1);
+    pointer(document, "pointermove", x, y + Math.sign(dy) * 8);
+    await frames(2);
+    pointer(document, "pointermove", x, y + dy);
+    await frames(6);
+    pointer(document, "pointerup", x, y + dy);
+    await frames(30);
+  }
+
+  it("gives a frozen column no handle, so it cannot be dragged", async () => {
     const grid = await openManager();
-    await userEvent.dragAndDrop(row("Frozen1"), row("Gamma"));
-    await frames(2);
-    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Alpha", "Beta", "Gamma"]);
-    await userEvent.dragAndDrop(row("Frozen2"), row("Frozen1"));
-    await frames(2);
+    expect(handle("Frozen1")).toBeNull();
+    expect(handle("Frozen2")).toBeNull();
     expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Alpha", "Beta", "Gamma"]);
   });
 
-  it("refuses a drop of a normal column onto the frozen block", async () => {
+  it("refuses a drop of a normal column onto the frozen block: it stops at the first normal place", async () => {
     const grid = await openManager();
-    await userEvent.dragAndDrop(row("Gamma"), row("Frozen1"));
-    await frames(2);
-    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Alpha", "Beta", "Gamma"]);
-    await userEvent.dragAndDrop(row("Gamma"), row("Frozen2"));
-    await frames(2);
-    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Alpha", "Beta", "Gamma"]);
+    await dragBy("Gamma", -400);
+    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Gamma", "Alpha", "Beta"]);
   });
 
   it("still moves normal columns among themselves", async () => {
     const grid = await openManager();
-    await userEvent.dragAndDrop(row("Gamma"), row("Alpha"));
-    await frames(2);
-    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Gamma", "Alpha", "Beta"]);
+    const gap = handle("Beta")!.getBoundingClientRect().top - handle("Alpha")!.getBoundingClientRect().top;
+    await dragBy("Gamma", -(gap + 10));
+    expect(order(grid)).toEqual(["Frozen1", "Frozen2", "Alpha", "Gamma", "Beta"]);
   });
 });

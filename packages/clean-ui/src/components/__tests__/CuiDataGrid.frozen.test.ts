@@ -38,42 +38,32 @@ async function openManager(cols: DataGridColumnDef[] = columns) {
 }
 
 describe("the column manager and frozen columns", () => {
-  it("lists the frozen column first, with a named lock, no handle, no move buttons, not draggable", async () => {
+  it("lists the frozen column first, with a named lock, no handle, no move buttons", async () => {
     await openManager();
     expect(rows().map((r) => r.textContent?.trim().replace(/\s+/g, " "))[0]).toContain("EPC");
     const epc = rowOf("EPC");
     const lock = epc.querySelector<HTMLElement>(".cui-data-grid-column-manager__lock")!;
     expect(lock.getAttribute("aria-label")).toBe("EPC is frozen and stays in place");
-    expect(epc.getAttribute("draggable")).toBe("false");
     expect(epc.querySelector("button")).toBeNull();
     // a normal row keeps its handle and buttons
-    const name = rowOf("Name");
-    expect(name.getAttribute("draggable")).toBe("true");
+    const name = [...document.body.querySelectorAll<HTMLElement>(".cui-sortable-list__item")].find((r) => r.textContent?.includes("Name"))!;
     expect(name.querySelector(".cui-data-grid-column-manager__lock")).toBeNull();
-    expect(name.querySelectorAll("button").length).toBe(2);
+    expect(name.querySelectorAll("button").length).toBe(3);
   });
 
   it("stops the first normal row moving up into the frozen block", async () => {
     await openManager();
-    expect(document.body.querySelector<HTMLButtonElement>('button[aria-label="Move Name up"]')!.disabled).toBe(true);
-    expect(document.body.querySelector<HTMLButtonElement>('button[aria-label="Move Name down"]')!.disabled).toBe(false);
+    const disabled = (label: string) => document.body.querySelector<HTMLElement>(`button[aria-label="${label}"]`)!.getAttribute("aria-disabled");
+    expect(disabled("Move Name up")).toBe("true");
+    expect(disabled("Move Name down")).not.toBe("true");
   });
 
-  it("refuses a drop onto a frozen row (no indicator, dropEffect none)", async () => {
+  it("keeps a frozen row out of the reorderable list, so nothing is dropped among them", async () => {
     await openManager();
-    const dt = { effectAllowed: "", dropEffect: "", setData() {} };
-    const fire = (el: HTMLElement, type: string) => {
-      const e = new Event(type, { bubbles: true, cancelable: true });
-      (e as unknown as { dataTransfer: unknown }).dataTransfer = dt;
-      el.dispatchEvent(e);
-      return e;
-    };
-    fire(rowOf("Name"), "dragstart");
-    const over = fire(rowOf("EPC"), "dragover");
-    expect(dt.dropEffect).toBe("none");
-    expect(over.defaultPrevented).toBe(false);
-    await nextTick();
-    expect(rowOf("EPC").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
+    const list = document.body.querySelector(".cui-data-grid-column-manager__units")!;
+    expect(list.textContent).not.toContain("EPC");
+    expect(list.querySelector(".cui-data-grid-column-manager__lock")).toBeNull();
+    expect(document.body.querySelector('button[aria-label="Reorder EPC"]')).toBeNull();
   });
 
   it("freezes a group wholly: lock on the group and its leaves, none movable", async () => {
