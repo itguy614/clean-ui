@@ -35,6 +35,14 @@ const listbox = (name: string) => {
   return box!;
 };
 const options = (name: string) => listbox(name).findAll('[role="option"]');
+// The selected list is a CuiSortableList (#559): rows are its items, each with a drag handle.
+const targetList = () => w!.find(".cui-transfer-list__sortable");
+const targetRows = () => targetList().findAll(".cui-transfer-list__option");
+const targetHandles = () => targetList().findAll(".cui-sortable-list__handle");
+const targetOrder = () => targetRows().map((r) => r.text().replace("selected", "").trim());
+const markedRows = () => targetRows().map((r) => r.classes().includes("cui-transfer-list__option--selected"));
+const pressWith = (el: Element, key: string, init: KeyboardEventInit = {}) =>
+  el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
 const press = (el: Element, key: string) =>
   el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
 
@@ -46,7 +54,8 @@ describe("CuiTransferList keyboard and ARIA", () => {
     expect(options("Available").map((o) => o.text())).toEqual(["Alpha", "Bravo", "Charlie"]);
     expect(options("Available").map((o) => o.attributes("tabindex"))).toEqual(["0", "-1", "-1"]);
     expect(options("Available")[2].attributes("aria-disabled")).toBe("true");
-    expect(options("Selected").map((o) => o.text())).toEqual(["Delta"]);
+    expect(targetOrder()).toEqual(["Delta"]);
+    expect(targetList().find("ul").attributes("aria-label")).toBe("Selected");
   });
 
   it("names the six transfer and reorder buttons", () => {
@@ -76,7 +85,7 @@ describe("CuiTransferList keyboard and ARIA", () => {
     const moveSelected = w!.find('button[aria-label="Move selected to Selected"]');
     expect(moveSelected.attributes("aria-disabled")).toBeUndefined();
     await moveSelected.trigger("click");
-    expect(options("Selected").map((o) => o.text())).toEqual(["Alpha", "Bravo"]);
+    expect(targetOrder()).toEqual(["Alpha", "Bravo"]);
   });
 
   it("moves the focused item across with Enter and keeps focus in the list", async () => {
@@ -86,7 +95,7 @@ describe("CuiTransferList keyboard and ARIA", () => {
     press(bravo, "Enter");
     await nextTick();
     await nextTick();
-    expect(options("Selected").map((o) => o.text())).toEqual(["Bravo"]);
+    expect(targetOrder()).toEqual(["Bravo"]);
     // Charlie, now at Bravo's position, is disabled: the nearest enabled item takes focus.
     expect(document.activeElement?.textContent).toBe("Delta");
   });
@@ -133,17 +142,19 @@ describe("CuiTransferList keyboard and ARIA", () => {
     press(alpha, "Enter");
     await nextTick();
     await nextTick();
-    expect(document.activeElement).toBe(options("Selected")[0].element);
+    expect(document.activeElement).toBe(targetHandles()[0].element);
   });
 
   it("treats a disabled item in the selected list as disabled for the mouse too", async () => {
     mountList({ modelValue: ["c"] });
-    const charlie = options("Selected")[0];
+    const charlie = targetRows()[0];
     expect(charlie.attributes("aria-disabled")).toBe("true");
     await charlie.trigger("click");
     await charlie.trigger("dblclick");
-    expect(charlie.attributes("aria-selected")).toBe("false");
+    expect(markedRows()).toEqual([false]);
     expect(w!.emitted("update:modelValue")).toBeUndefined();
+    // Nor does it drag or take a keyboard grab: its handle is off.
+    expect((targetHandles()[0].element as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("leaves no tab stop on a list whose items are all disabled", async () => {
@@ -176,6 +187,284 @@ describe("CuiTransferList keyboard and ARIA", () => {
     const inputs = w!.findAll("input");
     const names = inputs.map((i) => document.getElementById(i.attributes("aria-labelledby")!)?.textContent);
     expect(names).toEqual(["Filter Available", "Filter Selected"]);
+  });
+});
+
+/**
+ * #559 — the selected list is a CuiSortableList: drag handles are its tab stops, Space/Enter
+ * grab and move, and marking and returning an item to the source ride on the handle.
+ */
+describe("CuiTransferList selected list as a sortable list", () => {
+  const abc = [{ value: "a", label: "Alpha" }, { value: "b", label: "Bravo" }, { value: "c", label: "Charlie" }, { value: "d", label: "Delta" }];
+
+  it("reorders by keyboard grab: Space grabs, an arrow moves, Space drops, committing once", async () => {
+    mountList({ items: abc, modelValue: ["a", "b", "c"] });
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    await nextTick();
+    pressWith(handle, "ArrowDown");
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toBeUndefined(); // held, not committed
+    pressWith(handle, " ");
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toEqual([[["b", "a", "c"]]]);
+    expect(targetOrder()).toEqual(["Bravo", "Alpha", "Charlie"]);
+  });
+
+  it("Escape restores a grab and emits nothing", async () => {
+    mountList({ items: abc, modelValue: ["a", "b", "c"] });
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, "Enter");
+    pressWith(handle, "End");
+    await nextTick();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await nextTick();
+    expect(targetOrder()).toEqual(["Alpha", "Bravo", "Charlie"]);
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("keeps Move up and Move down as the one set of buttons: the rows carry none of their own", async () => {
+    mountList({ items: abc, modelValue: ["a", "b", "c"] });
+    expect(targetList().findAll(".cui-sortable-list__actions")).toHaveLength(0);
+    expect(w!.findAll("button.cui-button")).toHaveLength(6);
+    await targetRows()[1].trigger("click");
+    await w!.find('button[aria-label="Move up"]').trigger("click");
+    expect(w!.emitted("update:modelValue")).toEqual([[["b", "a", "c"]]]);
+  });
+
+  it("marks the focused row with Shift+Space, and tells assistive tech", async () => {
+    mountList({ items: abc, modelValue: ["a", "b"] });
+    const handle = targetHandles()[1].element as HTMLElement;
+    pressWith(handle, " ", { shiftKey: true });
+    await nextTick();
+    expect(markedRows()).toEqual([false, true]);
+    expect(targetRows()[1].text()).toContain("selected");
+    expect(w!.find('button[aria-label="Move up"]').attributes("aria-disabled")).toBeUndefined();
+    // Shift+Space did not grab.
+    expect(handle.getAttribute("aria-pressed")).toBe("false");
+    pressWith(handle, " ", { shiftKey: true });
+    await nextTick();
+    expect(markedRows()).toEqual([false, false]);
+  });
+
+  it("returns the focused row to the source with Delete, and focuses its neighbor", async () => {
+    mountList({ items: abc, modelValue: ["a", "b", "c"] });
+    const handle = targetHandles()[1].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, "Delete");
+    await nextTick();
+    await nextTick();
+    expect(w!.props("modelValue")).toEqual(["a", "c"]);
+    expect(document.activeElement).toBe(targetHandles()[1].element); // Charlie took its place
+  });
+
+  it("follows the last selected row back to the source list", async () => {
+    mountList({ items: abc, modelValue: ["b"] });
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, "Backspace");
+    await nextTick();
+    await nextTick();
+    expect(w!.props("modelValue")).toEqual([]);
+    expect(document.activeElement?.textContent).toContain("Bravo");
+    expect(document.activeElement?.closest('[role="listbox"]')).toBeTruthy();
+  });
+
+  it("leaves Delete, and Shift+Space, alone while a row is grabbed or the row is disabled", async () => {
+    mountList({ items: abc.map((i) => (i.value === "c" ? { ...i, disabled: true } : i)), modelValue: ["a", "c"] });
+    const [a] = targetHandles().map((h) => h.element as HTMLElement);
+    a.focus();
+    pressWith(a, " ");
+    await nextTick();
+    pressWith(a, "Delete");
+    pressWith(a, " ", { shiftKey: true });
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+    expect(markedRows()).toEqual([false, false]);
+  });
+
+  it("does nothing on a disabled transfer list", async () => {
+    mountList({ items: abc, modelValue: ["a", "b"], disabled: true });
+    expect(targetHandles().every((h) => (h.element as HTMLButtonElement).disabled)).toBe(true);
+    pressWith(targetHandles()[0].element, "Delete");
+    pressWith(targetHandles()[0].element, " ", { shiftKey: true });
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+    expect(markedRows()).toEqual([false, false]);
+  });
+
+  it("does not mark or return a disabled item, even if its handle's keys arrive", async () => {
+    mountList({ items: abc.map((i) => (i.value === "c" ? { ...i, disabled: true } : i)), modelValue: ["c"] });
+    const handle = targetHandles()[0].element;
+    pressWith(handle, " ", { shiftKey: true });
+    pressWith(handle, "Delete");
+    await nextTick();
+    expect(markedRows()).toEqual([false]);
+    expect(w!.emitted("update:modelValue")).toBeUndefined();
+  });
+
+  it("reorders only the rows the filter shows, leaving a hidden one in its slot", async () => {
+    mountList({ items: abc, modelValue: ["a", "b", "c", "d"] });
+    await w!.findAll("input")[1].setValue("a"); // Alpha, Charlie and... Delta all contain "a"; Bravo too
+    await w!.findAll("input")[1].setValue("l"); // Alpha, Charlie, Delta
+    expect(targetOrder()).toEqual(["Alpha", "Charlie", "Delta"]);
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    pressWith(handle, "End");
+    await nextTick();
+    pressWith(handle, " ");
+    await nextTick();
+    // Bravo stays second; the three shown rotate through the other slots.
+    expect(w!.emitted("update:modelValue")).toEqual([[["c", "b", "d", "a"]]]);
+  });
+
+  it("keeps a v-model value that has no item when the shown rows are reordered", async () => {
+    mountList({ items: abc, modelValue: ["a", "ghost", "b"] });
+    const handle = targetHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    pressWith(handle, "ArrowDown");
+    await nextTick();
+    pressWith(handle, " ");
+    await nextTick();
+    expect(w!.emitted("update:modelValue")).toEqual([[["b", "ghost", "a"]]]);
+  });
+
+  it("still takes a row from the source into the selected list by Enter", async () => {
+    mountList({ items: abc, modelValue: ["a"] });
+    const bravo = options("Available")[0].element as HTMLElement;
+    bravo.focus();
+    press(bravo, "Enter");
+    await nextTick();
+    expect(w!.props("modelValue")).toEqual(["a", "b"]);
+    expect(targetOrder()).toEqual(["Alpha", "Bravo"]);
+  });
+});
+
+/**
+ * #559 — `sourceOrder` makes the left list orderable too. Unset, nothing about it changes.
+ */
+describe("CuiTransferList orderable source list (sourceOrder)", () => {
+  const abcd = [{ value: "a", label: "Alpha" }, { value: "b", label: "Bravo" }, { value: "c", label: "Charlie" }, { value: "d", label: "Delta" }];
+  const sourceList = () => w!.findAll(".cui-transfer-list__sortable")[0];
+  const sourceRows = () => sourceList().findAll(".cui-transfer-list__option");
+  const sourceOrderNow = () => sourceRows().map((r) => r.text().replace("selected", "").trim());
+  const sourceHandles = () => sourceList().findAll(".cui-sortable-list__handle");
+  const modelEmits = () => w!.emitted("update:modelValue");
+  const orderEmits = () => w!.emitted("update:sourceOrder");
+
+  it("leaves the left list exactly as it was without sourceOrder: a listbox, and no sourceOrder emit", async () => {
+    mountList({ items: abcd, modelValue: [] });
+    expect(w!.findAll(".cui-transfer-list__sortable")).toHaveLength(1); // the selected list only
+    expect(options("Available").map((o) => o.text())).toEqual(["Alpha", "Bravo", "Charlie", "Delta"]);
+    const bravo = options("Available")[1].element as HTMLElement;
+    press(bravo, "Enter");
+    await nextTick();
+    await w!.find('button[aria-label="Move all to Available"]').trigger("click");
+    await w!.find('button[aria-label="Move all to Selected"]').trigger("click");
+    expect(orderEmits()).toBeUndefined();
+    expect(w!.props("modelValue")).toEqual(["a", "b", "c", "d"]);
+    // A marked left row gives Move up / Move down nothing to move.
+    await w!.find('button[aria-label="Move all to Available"]').trigger("click");
+    await options("Available")[1].trigger("click");
+    expect(w!.find('button[aria-label="Move up"]').attributes("aria-disabled")).toBe("true");
+    expect(w!.find('button[aria-label="Move down"]').attributes("aria-disabled")).toBe("true");
+  });
+
+  it("orders the left list by sourceOrder: named first in its order, the rest after in items order, others ignored", () => {
+    mountList({ items: abcd, modelValue: ["d"], sourceOrder: ["c", "zzz", "d", "a"] });
+    expect(sourceOrderNow()).toEqual(["Charlie", "Alpha", "Bravo"]);
+    expect(sourceList().find("ul").attributes("aria-label")).toBe("Available");
+  });
+
+  it("reorders by keyboard grab and emits the whole left order once, and no model change", async () => {
+    mountList({ items: abcd, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
+    const handle = sourceHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    pressWith(handle, "ArrowDown");
+    await nextTick();
+    pressWith(handle, " ");
+    await nextTick();
+    expect(orderEmits()).toEqual([[["b", "a", "c", "d"]]]);
+    expect(modelEmits()).toBeUndefined();
+  });
+
+  it("maps a reorder of the filtered left list back into the full left order", async () => {
+    mountList({ items: abcd, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
+    await w!.findAll("input")[0].setValue("l"); // Alpha, Charlie, Delta
+    expect(sourceOrderNow()).toEqual(["Alpha", "Charlie", "Delta"]);
+    const handle = sourceHandles()[0].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ");
+    pressWith(handle, "End");
+    await nextTick();
+    pressWith(handle, " ");
+    await nextTick();
+    expect(orderEmits()).toEqual([[["c", "b", "d", "a"]]]);
+  });
+
+  it("puts an item returned without a slot where sourceOrder places it, else after the rest", async () => {
+    mountList({ items: abcd, modelValue: ["a", "c"], sourceOrder: ["c", "b", "d"] });
+    expect(sourceOrderNow()).toEqual(["Bravo", "Delta"]);
+    await w!.find('button[aria-label="Move all to Available"]').trigger("click");
+    expect(sourceOrderNow()).toEqual(["Charlie", "Bravo", "Delta", "Alpha"]); // Charlie is named, Alpha is not
+    expect(orderEmits()).toBeUndefined();
+  });
+
+  it("marks with Shift+Space and moves to the other list with Delete, from the left handle", async () => {
+    mountList({ items: abcd, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
+    const handle = sourceHandles()[1].element as HTMLElement;
+    handle.focus();
+    pressWith(handle, " ", { shiftKey: true });
+    await nextTick();
+    expect(sourceRows()[1].classes()).toContain("cui-transfer-list__option--selected");
+    pressWith(handle, "Delete");
+    await nextTick();
+    await nextTick();
+    expect(w!.props("modelValue")).toEqual(["b"]);
+    expect(document.activeElement).toBe(sourceHandles()[1].element); // Charlie took its place
+  });
+
+  it("gives a disabled left item no handle", () => {
+    mountList({ items, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
+    const c = sourceHandles()[2].element as HTMLButtonElement;
+    expect(c.disabled).toBe(true);
+    expect(sourceRows()[2].attributes("aria-disabled")).toBe("true");
+  });
+
+  it("moves the marked left row with the toolbar's Move up / Move down, emitting sourceOrder", async () => {
+    mountList({ items: abcd, modelValue: [], sourceOrder: ["a", "b", "c", "d"] });
+    await sourceRows()[2].trigger("click");
+    expect(w!.find('button[aria-label="Move up"]').attributes("aria-disabled")).toBeUndefined();
+    await w!.find('button[aria-label="Move up"]').trigger("click");
+    expect(orderEmits()).toEqual([[["a", "c", "b", "d"]]]);
+    expect(modelEmits()).toBeUndefined();
+  });
+
+  it("moves the list that was marked last when both have one marked row", async () => {
+    mountList({ items: abcd, modelValue: ["c", "d"], sourceOrder: ["a", "b"] });
+    await sourceRows()[1].trigger("click"); // Bravo on the left
+    await w!.findAll(".cui-transfer-list__sortable")[1].findAll(".cui-transfer-list__option")[1].trigger("click"); // Delta on the right
+    await w!.find('button[aria-label="Move up"]').trigger("click");
+    expect(modelEmits()).toEqual([[["d", "c"]]]);
+    await sourceRows()[1].trigger("click"); // unmark and re-mark Bravo: now it is the last
+    await sourceRows()[1].trigger("click");
+    await w!.find('button[aria-label="Move up"]').trigger("click");
+    expect(orderEmits()).toEqual([[["b", "a"]]]);
+  });
+
+  it("leaves the left list alone when disabled", async () => {
+    mountList({ items: abcd, modelValue: [], sourceOrder: ["a", "b", "c", "d"], disabled: true });
+    expect(sourceHandles().every((h) => (h.element as HTMLButtonElement).disabled)).toBe(true);
+    pressWith(sourceHandles()[0].element, "Delete");
+    pressWith(sourceHandles()[0].element, " ", { shiftKey: true });
+    await nextTick();
+    expect(modelEmits()).toBeUndefined();
+    expect(orderEmits()).toBeUndefined();
   });
 });
 
@@ -244,11 +533,10 @@ describe("CuiTransferList move buttons as a toolbar", () => {
 
   it("disables Move up on the first item and Move down on the last", async () => {
     mountList({ modelValue: ["a", "b"] });
-    press(options("Selected")[0].element, " ");
-    await nextTick();
+    await targetRows()[0].trigger("click");
     expect([ariaDisabled("Move up"), ariaDisabled("Move down")]).toEqual(["true", undefined]);
-    press(options("Selected")[0].element, " ");
-    press(options("Selected")[1].element, " ");
+    await targetRows()[0].trigger("click");
+    await targetRows()[1].trigger("click");
     await nextTick();
     expect([ariaDisabled("Move up"), ariaDisabled("Move down")]).toEqual([undefined, "true"]);
     await w!.find('button[aria-label="Move up"]').trigger("click");
