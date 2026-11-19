@@ -93,7 +93,7 @@ const choice = useChoiceLabelling(props);
     ref="elRef"
     v-show="!hidden"
     class="cui-checkbox"
-    :style="{ '--_checkbox-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`, '--_checkbox-label-font-size': labelFontSize }"
+    :style="{ '--_checkbox-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`, '--_checkbox-font-size': labelFontSize }"
     :class="{
       'cui-checkbox--checked': isChecked,
       'cui-checkbox--indeterminate': indeterminate && !isChecked,
@@ -204,7 +204,7 @@ const choice = useChoiceLabelling(props);
   background: var(--cui-checkbox-bg, var(--_checkbox-bg));
   /* Centres the box on the label's first line (1.5 × its font size, so it follows the token
      too): 0.125rem at md. */
-  --_checkbox-box-offset: max(0px, calc((var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size)) * 1.5 - 1.25rem) / 2));
+  --_checkbox-box-offset: max(0px, calc((var(--cui-checkbox-font-size, var(--_checkbox-font-size)) * 1.5 - 1.25rem) / 2));
 }
 
 :where(.cui-checkbox:hover:not(.cui-checkbox--disabled):not(.cui-checkbox--readonly) .cui-checkbox__indicator) {
@@ -252,7 +252,7 @@ const choice = useChoiceLabelling(props);
 
 /* Themeable (#556): the size follows the checkbox `size`; the token restyles it. */
 :where(.cui-checkbox__label) {
-  font-size: var(--cui-checkbox-label-font-size, var(--_checkbox-label-font-size));
+  font-size: var(--cui-checkbox-font-size, var(--_checkbox-font-size));
   color: var(--cui-text-body);
 }
 

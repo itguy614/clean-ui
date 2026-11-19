@@ -131,7 +131,7 @@ const meta: ComponentMeta = {
     { name: "--cui-checkbox-border", default: "per state", description: "Border color of the box (the color role when checked, the neutral border otherwise)" },
     { name: "--cui-checkbox-bg", default: "per state", description: "Fill of the box (the role tint when checked, none otherwise)" },
     { name: "--cui-checkbox-hover-border", default: "var(--cui-primary)", description: "Border color of an unchecked box under the pointer" },
-    { name: "--cui-checkbox-label-font-size", default: "per size", description: "Font size of the label (a length, not a percentage), whatever the size prop says. Set it on :root or a container, as the grid's column manager does" },
+    { name: "--cui-checkbox-font-size", default: "per size", description: "Font size of the label (a length, not a percentage), whatever the size prop says. Set it on :root or a container, as the grid's column manager does" },
     { name: "--cui-checkbox-focus-ring", default: "var(--cui-primary-focus-ring)", description: "Focus ring color" },
   ],
 };

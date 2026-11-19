@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of laid out in it, so the checkbox has the same baseline checked, unchecked and indeterminate.
 - `CuiCheckbox` takes a `size` (#556), and its label follows it through the shared input scale
   (xs 12px, sm 13px, md 16px, lg 17px, xl 18px), where it was fixed at 1rem and `size="sm"` did
-  nothing. The default (`md`) draws exactly as before. `--cui-checkbox-label-font-size` sets it
+  nothing. The default (`md`) draws exactly as before. `--cui-checkbox-font-size` sets it
   directly. `CuiRadio` and `CuiToggle` labels are unchanged.
 - In `CuiDataGrid`, the filter panel's multi-select options are 13px, like the panel's own
   fields, and the column manager's labels are the table's 0.875rem. The column manager is wider

@@ -89,7 +89,7 @@ describe("CuiCheckbox layout (real browser)", () => {
   describe("#556: the label follows the size", () => {
     const labelOf = (size?: string, token?: string) => {
       const el = host();
-      if (token) el.style.setProperty("--cui-checkbox-label-font-size", token);
+      if (token) el.style.setProperty("--cui-checkbox-font-size", token);
       track(mount(CuiCheckbox, { attachTo: el, props: { label: "Label", ...(size ? { size } : {}) } }));
       const root = el.querySelector<HTMLElement>(".cui-checkbox")!;
       const label = el.querySelector<HTMLElement>(".cui-checkbox__label")!;
@@ -123,7 +123,7 @@ describe("CuiCheckbox layout (real browser)", () => {
       expect(root.getBoundingClientRect().height).toBeGreaterThanOrEqual(l.height);
     });
 
-    it("--cui-checkbox-label-font-size restyles the label, from a container", () => {
+    it("--cui-checkbox-font-size restyles the label, from a container", () => {
       expect(getComputedStyle(labelOf("sm", "20px").label).fontSize).toBe("20px");
     });
   });

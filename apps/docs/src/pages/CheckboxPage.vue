@@ -160,14 +160,14 @@ const dynamicField = ref({
 <CuiCheckbox v-model=&quot;agree&quot; label=&quot;Medium (16px label, the default)&quot; />
 
 <!-- or set the label size directly, on the checkbox or a container -->
-.compact { --cui-checkbox-label-font-size: 0.875rem; }`">
+.compact { --cui-checkbox-font-size: 0.875rem; }`">
         <CuiStack spacing="3">
           <CuiCheckbox v-model="agree" size="xs" label="Extra small (12px label)" />
           <CuiCheckbox v-model="agree" size="sm" label="Small (13px label)" />
           <CuiCheckbox v-model="agree" label="Medium (16px label, the default)" />
           <CuiCheckbox v-model="agree" size="lg" label="Large (17px label)" />
           <CuiCheckbox v-model="agree" size="xl" label="Extra large (18px label)" />
-          <CuiCheckbox v-model="agree" label="Set by --cui-checkbox-label-font-size" style="--cui-checkbox-label-font-size: 0.875rem" />
+          <CuiCheckbox v-model="agree" label="Set by --cui-checkbox-font-size" style="--cui-checkbox-font-size: 0.875rem" />
         </CuiStack>
       </Example>
 

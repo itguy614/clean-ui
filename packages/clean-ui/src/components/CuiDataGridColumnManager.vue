@@ -290,7 +290,7 @@ const isLast = (row: Row) => place(row)[0] === place(row)[1];
 /* The label reads at the grid's own cell size (0.875rem, a default-size table), not the
    checkbox's 1rem. */
 :where(.cui-data-grid-column-manager__check) {
-  --cui-checkbox-label-font-size: 0.875rem;
+  --cui-checkbox-font-size: 0.875rem;
 }
 
 .cui-data-grid-column-manager__actions {
