@@ -21,6 +21,8 @@ export type PopoverTrigger = "click" | "hover" | "focus" | "hover-focus";
 export interface CuiPopoverProps extends HideableProps, DisableableProps {
   /** Optional header title — renders header bar with close button */
   title?: string;
+  /** The dialog's accessible name when it has no header (`title` or `#header`) to name it. */
+  label?: string;
   /** Preferred placement */
   placement?: PopoverPlacement;
   /** How the popover is triggered */
@@ -64,7 +66,7 @@ const slots = useSlots();
 const isVisible = ref(false);
 const { present, onAfterLeave } = usePresence(() => isVisible.value);
 // Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
-const layerStep = useLayerStep(() => isVisible.value, present, () => hideNow());
+const layerStep = useLayerStep(() => isVisible.value, present, () => hideNow(), () => floatingRef.value);
 // The theme scope around the trigger, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
 let showTimer: ReturnType<typeof setTimeout> | null = null;
@@ -91,7 +93,9 @@ const { referenceRef, floatingRef, arrowRef, floatingStyles, arrowStyle, current
 const wrapperRef = ref<HTMLElement | null>(null);
 
 // At once, like Escape: a dismissal doesn't wait out hideDelay.
+// A press in a panel opened from inside this one (a select's list) is not outside it.
 useClickOutside(() => [wrapperRef.value, floatingRef.value], hideNow, {
+  inside: (target) => layerStep.hosts(target),
   enabled: () => isVisible.value && props.trigger === "click",
 });
 
@@ -223,6 +227,7 @@ const messages = useMessages();
         :style="{ ...floatingStyles, ...panelStyle, ...hiddenUntilPositioned }"
         role="dialog"
         :aria-labelledby="hasHeader() ? headerId : undefined"
+        :aria-label="hasHeader() ? undefined : label"
         @mouseenter="onPopoverMouseEnter"
         @mouseleave="onPopoverMouseLeave"
       >

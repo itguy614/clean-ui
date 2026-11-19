@@ -74,8 +74,8 @@ const meta: ComponentMeta = {
       description: "The search box's accessible name. Name what's searched (\"Search tags\") when a page has more than one grid",
     },
     { name: "hideColumnManager", type: "boolean", default: "false", description: "Hide the show/hide-columns menu" },
-    { name: "hideFilterPanel", type: "boolean", default: "false", description: "Hide the filter-panel toggle" },
-    { name: "filterPanelSide", type: "left | right", default: "right", description: "Which side the filter panel slides in from" },
+    { name: "hideFilterPanel", type: "boolean", default: "false", description: "Hide the Filters button. Unpinned, the filter panel is a popover from that button (it closes on a press outside or Escape, and focus returns to the button); pinned from its header, or from a saved view's filterPanelPinned, it is an inline column beside the table that stays open" },
+    { name: "filterPanelSide", type: "left | right", default: "right", description: "Which side the pinned, inline filter panel sits on. An unpinned panel is a popover from the Filters button and has no side" },
     { name: "gridId", type: "string", default: "—", description: "Identifier under which saved views are persisted. Setting it turns the view manager on" },
     { name: "viewAdapter", type: "DataGridViewAdapter", default: "localStorage", description: "Where saved views are read and written — swap it to persist them server-side" },
     { name: "initialView", type: "DataGridViewConfig", default: "—", description: "Sort, filters, search and visible columns to start from" },
@@ -85,7 +85,7 @@ const meta: ComponentMeta = {
 
   tokens: [
     { name: "--cui-data-grid-bulk-bar-radius", default: "var(--cui-radius-md)", description: "Corner radius of the bulk-action bar" },
-    { name: "--cui-data-grid-filter-panel-radius", default: "var(--cui-radius-md)", description: "Corner radius of the filter panel" },
+    { name: "--cui-data-grid-filter-panel-radius", default: "var(--cui-radius-md)", description: "Corner radius of the pinned, inline filter panel. The popover takes the popover's own tokens (--cui-popover-*), set on :root or <body> since it is teleported" },
     { name: "--cui-data-grid-view-toggle-radius", default: "var(--cui-radius-md)", description: "Corner radius of the table/card view toggle" },
     { name: "--cui-data-grid-group-border", default: "var(--cui-border)", description: "The rule on the left of each column group's first leaf (all but the first group), through the header and body" },
     { name: "--cui-data-grid-column-manager-gap", default: "0.5rem × density", description: "Gap between a column manager row's handle, label and move buttons. The column manager is a teleported popover, so set the --cui-data-grid-column-manager-* tokens on :root or <body>, not on the grid's container" },

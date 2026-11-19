@@ -68,7 +68,12 @@ const emit = defineEmits<{
 const isOpen = ref(false);
 const { present, onAfterLeave } = usePresence(() => isOpen.value);
 // Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
-const layerStep = useLayerStep(() => isOpen.value, present, () => close());
+const layerStep = useLayerStep(
+  () => isOpen.value,
+  present,
+  () => close(),
+  () => menuRef.value,
+);
 // The theme scope around the target area, on the teleported menu (#418).
 const themeScope = useScopedTheme(() => present.value);
 const wrapperRef = ref<HTMLElement | null>(null);

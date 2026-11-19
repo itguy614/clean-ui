@@ -69,7 +69,12 @@ const emit = defineEmits<{
   close: [];
 }>();
 const { present, onAfterLeave } = usePresence(() => props.open);
-const layerStep = useLayerStep(() => props.open, present, () => emit("close"));
+const layerStep = useLayerStep(
+  () => props.open,
+  present,
+  () => emit("close"),
+  () => el.value,
+);
 // The theme scope around the field, on the teleported panel (#418).
 const themeScope = useScopedTheme(() => present.value);
 
