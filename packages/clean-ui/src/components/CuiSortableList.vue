@@ -43,6 +43,8 @@ export interface CuiSortableListProps<T = unknown> extends HideableProps, Disabl
   moveButtons?: boolean;
 }
 
+const OWN_HANDLES = ":scope > .cui-sortable-list__item > .cui-sortable-list__handle";
+
 const props = withDefaults(defineProps<CuiSortableListProps<T>>(), {
   orientation: "vertical",
   moveButtons: true,
@@ -125,7 +127,8 @@ function commit(next: T[], item: T, from: number, to: number) {
 const activeIndex = ref(0);
 const roving = useRovingFocus({
   container: listEl,
-  itemSelector: ".cui-sortable-list__handle",
+  // This list's own handles: a list nested in an item (the column manager's groups) has its own.
+  itemSelector: OWN_HANDLES,
   orientation: () => props.orientation,
   activeIndex,
 });
@@ -440,7 +443,7 @@ const boxStyle = computed(() => ({
 
 /** Focuses the list's tab stop: the handle of the item last focused, or the first. */
 function focus() {
-  const handles = listEl.value?.querySelectorAll<HTMLElement>(".cui-sortable-list__handle");
+  const handles = listEl.value?.querySelectorAll<HTMLElement>(OWN_HANDLES);
   (handles?.[Math.min(activeIndex.value, (handles?.length ?? 1) - 1)] ?? handles?.[0])?.focus();
 }
 

@@ -323,6 +323,36 @@ describe("CuiSortableList (real browser)", () => {
     });
   });
 
+  it("can be nested in an item: each list roves over its own handles only (#560)", async () => {
+    const outer = [{ id: "g1", label: "Group 1" }, { id: "g2", label: "Group 2" }];
+    const inner = [{ id: "a", label: "A" }, { id: "b", label: "B" }];
+    const host = document.createElement("div");
+    document.body.append(host);
+    mounted.push(
+      mount(
+        defineComponent({
+          render: () =>
+            h(CuiSortableList, { modelValue: outer }, {
+              item: ({ item }: { item: { id: string } }) => (item.id === "g1" ? h(CuiSortableList, { modelValue: inner, label: "Inner" }) : undefined),
+            }),
+        }),
+        { attachTo: host },
+      ),
+    );
+    await frames(2);
+    const byLabel = (name: string) => document.querySelector<HTMLElement>(`button[aria-label="Reorder ${name}"]`)!;
+    // One tab stop per list: the inner handles are not among the outer list's.
+    expect([...document.querySelectorAll<HTMLElement>(".cui-sortable-list__handle")].filter((h) => h.tabIndex === 0)).toHaveLength(2);
+    byLabel("Group 1").focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(byLabel("Group 2")); // not into Group 1's own items
+    byLabel("A").focus();
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(byLabel("B"));
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(byLabel("B")); // the end of its list: the outer one does not take the key
+  });
+
   describe("move buttons", () => {
     const button = (label: string, name: string) => itemEl(label).querySelector<HTMLElement>(`button[aria-label="${name}"]`)!;
 

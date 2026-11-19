@@ -214,8 +214,9 @@ describe("CuiCheckbox layout (real browser)", () => {
       expect(getComputedStyle(long).textOverflow).toBe("ellipsis");
       expect(long.title).toBe(long.textContent);
       // The move buttons were not pushed out of the popover.
-      const row = long.closest(".cui-data-grid-column-manager__row")!.getBoundingClientRect();
-      const move = long.closest(".cui-data-grid-column-manager__row")!.querySelector("button")!.getBoundingClientRect();
+      const item = long.closest(".cui-sortable-list__item")!;
+      const row = item.getBoundingClientRect();
+      const move = item.querySelector(".cui-sortable-list__actions button:last-child")!.getBoundingClientRect();
       expect(move.right).toBeLessThanOrEqual(row.right + 0.5);
     });
 

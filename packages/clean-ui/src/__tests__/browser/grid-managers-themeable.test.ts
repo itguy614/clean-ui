@@ -62,13 +62,34 @@ describe("the grid managers' themeable properties (real browser)", () => {
   const paint = (el: Element | null, prop: string) => getComputedStyle(el!).getPropertyValue(prop);
 
   describe("CuiDataGridColumnManager", () => {
+    // A frozen column and group lead the list as the manager's own rows; the rest is
+    // CuiSortableList's, which takes the manager's tokens (#560).
+    const FROZEN: DataGridColumnDef[] = [
+      { key: "f", label: "Frozen", sticky: true, width: "100px" },
+      { label: "Pinned", children: [{ key: "p1", label: "P1", sticky: true, width: "80px" }] },
+      ...columns,
+    ];
+    async function openFrozen() {
+      host = document.createElement("div");
+      host.style.width = "700px";
+      document.body.append(host);
+      wrapper = mount(CuiDataGrid, {
+        attachTo: host,
+        props: { columns: FROZEN, data: [{ id: "1", a: 1, c: 3, f: 0, p1: 1, r1: 4, r2: 5 }] },
+      });
+      await frames(4);
+      await userEvent.click(host.querySelector<HTMLElement>(".cui-data-grid-column-manager button")!);
+      await frames(12);
+    }
+    const items = () => [...document.querySelectorAll<HTMLElement>(".cui-data-grid-column-manager__units .cui-sortable-list__item")];
+
     it("lets a plain consumer rule win, with no !important", async () => {
       extra = injectStyle(`.cui-data-grid-column-manager__row { border-radius: 9px; padding-block: 11px; column-gap: 13px; }
         .cui-data-grid-column-manager__handle { color: rgb(1, 2, 3); }
         .cui-data-grid-column-manager__group { font-weight: 300; }
         .cui-data-grid-column-manager__row--leaf { padding-inline-start: 31px; }
         .cui-data-grid-column-manager__list { row-gap: 7px; }`);
-      await openColumns();
+      await openFrozen();
       const [first, group, leaf] = rows();
       expect(paint(first, "border-top-left-radius")).toBe("9px");
       expect(paint(first, "padding-top")).toBe("11px");
@@ -79,42 +100,35 @@ describe("the grid managers' themeable properties (real browser)", () => {
       expect(paint(document.querySelector(".cui-data-grid-column-manager__list"), "row-gap")).toBe("7px");
     });
 
-    it("lets a plain rule restyle the dragging row and the drop target", async () => {
-      extra = injectStyle(`.cui-data-grid-column-manager__row--dragging { opacity: 0.2; }
-        .cui-data-grid-column-manager__row--drop { border-top-color: rgb(4, 5, 6); }`);
-      await openColumns();
-      // A loose column drops among the units: onto the last one, not into the group's leaves.
-      const from = rows()[0];
-      const to = rows().at(-1)!;
-      const dataTransfer = new DataTransfer();
-      const fire = (el: HTMLElement, type: string) => el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
-      fire(from, "dragstart");
-      fire(to, "dragover");
-      await frames(3);
-      expect(paint(from, "opacity")).toBe("0.2");
-      expect(paint(to, "border-top-color")).toBe("rgb(4, 5, 6)");
-    });
-
-    it("lets a token on <body> win", async () => {
+    it("lets a token on <body> win, on the manager's own rows and on the reorderable ones", async () => {
       document.body.style.setProperty("--cui-data-grid-column-manager-gap", "17px");
       document.body.style.setProperty("--cui-data-grid-column-manager-radius", "10px");
       document.body.style.setProperty("--cui-data-grid-column-manager-px", "27px");
       document.body.style.setProperty("--cui-data-grid-column-manager-border", "rgb(7, 8, 9)");
-      await openColumns();
-      const [first, , leaf, , ] = rows();
+      await openFrozen();
+      const [first, , leaf] = rows();
       expect(paint(first, "column-gap")).toBe("17px");
       expect(paint(first, "border-top-left-radius")).toBe("10px");
       // The token is the row's indent, over the leaf's own.
       expect(paint(first, "padding-left")).toBe("27px");
       expect(paint(leaf, "padding-left")).toBe("27px");
-
-      const dataTransfer = new DataTransfer();
-      const fire = (el: HTMLElement, type: string) => el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
-      const last = rows().at(-1)!;
-      fire(first, "dragstart");
-      fire(last, "dragover");
-      await frames(3);
-      expect(paint(last, "border-top-color")).toBe("rgb(7, 8, 9)");
+      // A reorderable row takes the same gap, radius and start padding ...
+      const row = items()[0];
+      expect(paint(row, "column-gap")).toBe("17px");
+      expect(paint(row, "border-top-left-radius")).toBe("10px");
+      expect(paint(row, "padding-left")).toBe("27px");
+      // ... and the border is the colour of the row while it is dragged.
+      const handle = row.querySelector<HTMLElement>(".cui-sortable-list__handle")!;
+      const r = handle.getBoundingClientRect();
+      const fire = (target: EventTarget, type: string, y: number) =>
+        target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, isPrimary: true, pointerType: "mouse", clientX: r.left + 4, clientY: y, button: 0 }));
+      fire(handle, "pointerdown", r.top + 4);
+      await frames(1);
+      fire(document, "pointermove", r.top + 14);
+      await frames(4);
+      expect(paint(row, "border-top-color")).toBe("rgb(7, 8, 9)");
+      fire(document, "pointerup", r.top + 14);
+      await frames(30);
     });
   });
 

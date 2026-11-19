@@ -85,6 +85,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CuiDataGridColumnManager` reorders with `CuiSortableList` (#560), replacing its own drag handling:
+  one tested model for pointer drag (a floating ghost over a placeholder, in place of the drop
+  line), keyboard grab / move / drop / cancel, the Move up / Move down buttons and the live-region
+  announcements. A leaf moves within its group's own list, a group or ungrouped column among the
+  units, as a block. Frozen columns and groups are listed first, outside the sortable list, with
+  their lock and no handle. The grid's calls (`reorderColumns`, `reorderUnit`), saved views and
+  events are unchanged, and the buttons and announcements still read `messages.dataGrid`
+  (`moveUp`, `moveDown`, `moved`). Visible differences: a handle button (arrows reach it; Space or
+  Enter grabs) replaces the dotted grip that was draggable anywhere on the row, the move buttons are
+  reached by click or touch rather than the Tab order (the handle is the list's one tab stop), and
+  `--cui-data-grid-column-manager-border` now colours the edge of the dragged row, not a drop line.
+- `CuiSortableList` scopes its roving focus to its own handles, so a sortable list can be nested in
+  an item of another (the column manager's groups) without the outer list's arrow keys reaching
+  into the inner one. No change for a list that is not nested.
 - `CuiDataGrid`'s filter panel is a popover unless it is pinned (#552). **This changes the default
   presentation:** the Filters button used to open an inline column beside the table, which took
   width from it and made it reflow on every open and close; unpinned (the default) it now opens
