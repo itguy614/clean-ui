@@ -28,6 +28,11 @@ const layerStep = useLayerStep(
   () => ctx?.close(),
   () => menuRef.value,
 );
+// The dropdown counts a press in a panel opened from inside this menu as inside.
+if (ctx?.layerHosts) {
+  ctx.layerHosts.value = layerStep.hosts;
+  onUnmounted(() => (ctx.layerHosts!.value = undefined));
+}
 // The theme scope around the dropdown, on the teleported menu (#418).
 const themeScope = useScopedTheme(() => present.value);
 const menuRef = ref<HTMLElement>();

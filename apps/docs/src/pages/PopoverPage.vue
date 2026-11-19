@@ -47,6 +47,9 @@ import meta from "../meta/popover";
         <li>
           With <code>trigger="click"</code> a click outside the trigger or the panel closes it
           too.
+          A press in a panel opened from inside it (a select, a combobox, a menu) does not count
+          as outside, and a popover opened from inside a dropdown or context menu keeps that
+          menu open the same way.
         </li>
         <li>
           The wrapper adds no role and does not make its contents focusable — put a real
