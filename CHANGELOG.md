@@ -63,10 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CuiDataGrid`'s pinned inline filter panel stays in place while the grid is loading, has no rows,
   or a filter matched nothing (#570). It was drawn inside the table branch, so it vanished with it
   and took the controls to clear the filter that emptied the result; the skeleton and the empty
-  state now fill only the area beside it, with the panel at the same position and width. An
-  unpinned panel is a popover from the Filters button, so with the button absent (`hideFilterPanel`,
-  `hideToolbar`, or no filterable column) the panel can no longer be left open, by a saved view or
-  otherwise.
+  state now fill only the area beside it, with the panel at the same position and width. With the
+  Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
+  not shown, pinned or not, since the popover is anchored to that button.
 
 - `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
   (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL

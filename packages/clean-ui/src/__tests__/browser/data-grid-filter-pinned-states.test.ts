@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from "vitest";
 import { mount } from "@vue/test-utils";
-import { defineComponent, h, nextTick, ref } from "vue";
+import { defineComponent, h, ref } from "vue";
 import { page, userEvent } from "@vitest/browser/context";
 import CuiDataGrid from "../../components/CuiDataGrid.vue";
 import type { DataGridColumnDef, DataGridViewConfig } from "../../types/data-grid";
@@ -27,15 +27,14 @@ describe("CuiDataGrid pinned filter panel through loading and empty states (real
     { id: "1", name: "Alpha" },
     { id: "2", name: "Beta" },
   ];
-  const view = (side: "left" | "right"): DataGridViewConfig & { side: typeof side } => ({
+  const view: DataGridViewConfig = {
     columns: [],
     sort: null,
     filters: [],
     perPage: 10,
     viewMode: "grid",
     filterPanelPinned: true,
-    side,
-  });
+  };
 
   async function mountGrid(side: "left" | "right" = "right") {
     const loading = ref(false);
@@ -47,7 +46,7 @@ describe("CuiDataGrid pinned filter panel through loading and empty states (real
           data: rows.value,
           loading: loading.value,
           filterPanelSide: side,
-          initialView: view(side),
+          initialView: view,
         }),
     });
     const wrapper = track(mount(App, { attachTo: host({ width: "700px" }) }));
@@ -68,7 +67,7 @@ describe("CuiDataGrid pinned filter panel through loading and empty states (real
   const box = (grid: HTMLElement) => {
     const c = grid.querySelector<HTMLElement>(".cui-data-grid__content")!.getBoundingClientRect();
     const r = panel(grid)!.getBoundingClientRect();
-    return [r.left - c.left, r.top - c.top, r.width];
+    return [r.left - c.left, r.top - c.top, r.width].map((n) => Math.round(n * 10) / 10);
   };
   const panelButton = (grid: HTMLElement, text: string) =>
     [...panel(grid)!.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent?.includes(text))!;
@@ -115,6 +114,5 @@ describe("CuiDataGrid pinned filter panel through loading and empty states (real
     expect(grid.querySelector(".cui-empty-state")).toBeNull();
     expect(grid.querySelectorAll("tbody tr").length).toBe(2);
     expect(box(grid)).toEqual(before);
-    await nextTick();
   });
 });

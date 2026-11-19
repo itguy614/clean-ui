@@ -203,7 +203,7 @@ describe("CuiDataGrid pinned filter panel outside the loading and empty states (
     expect(inlinePanel(w)).not.toBeNull();
   });
 
-  it("with hideFilterPanel there is no button and no panel, a pinned loaded view included", async () => {
+  it("with hideFilterPanel there is no button and no panel, pinned or not", async () => {
     const w = await mountGrid(true, { hideFilterPanel: true, data: [] });
     expect(w.findAll(".cui-data-grid-toolbar button").some((b) => b.text().includes("Filters"))).toBe(false);
     expect(inlinePanel(w)).toBeNull();
@@ -213,20 +213,7 @@ describe("CuiDataGrid pinned filter panel outside the loading and empty states (
     expect(popoverPanel()).toBeNull();
   });
 
-  it("with hideFilterPanel the shared open state cannot be left open", async () => {
-    const w = await mountGrid(false);
-    await open(w);
-    expect(popoverPanel()).not.toBeNull();
-    await w.setProps({ hideFilterPanel: true });
-    await flushPromises();
-    expect(popoverPanel()).toBeNull();
-    await w.setProps({ hideFilterPanel: false });
-    await flushPromises();
-    expect(popoverPanel()).toBeNull();
-    expect(button(w).attributes("aria-expanded")).toBe("false");
-  });
-
-  it("hiding the button closes a pinned open panel too, and it stays shut", async () => {
+  it("with the button hidden, an open panel is not shown, in either presentation, and returns with the button", async () => {
     const w = await mountGrid(true);
     await open(w);
     expect(inlinePanel(w)).not.toBeNull();
@@ -235,10 +222,19 @@ describe("CuiDataGrid pinned filter panel outside the loading and empty states (
     expect(inlinePanel(w)).toBeNull();
     await w.setProps({ hideFilterPanel: false });
     await flushPromises();
-    expect(inlinePanel(w)).toBeNull();
+    expect(inlinePanel(w)).not.toBeNull();
   });
 
-  it("hiding the toolbar closes an open panel: no button, so no panel", async () => {
+  it("an open unpinned popover goes with its button", async () => {
+    const w = await mountGrid(false);
+    await open(w);
+    expect(popoverPanel()).not.toBeNull();
+    await w.setProps({ hideFilterPanel: true });
+    await flushPromises();
+    expect(popoverPanel()).toBeNull();
+  });
+
+  it("hiding the toolbar hides an open panel: no button, so no panel", async () => {
     const w = await mountGrid(true);
     await open(w);
     await w.setProps({ hideToolbar: true });
@@ -246,7 +242,7 @@ describe("CuiDataGrid pinned filter panel outside the loading and empty states (
     expect(inlinePanel(w)).toBeNull();
   });
 
-  it("losing the last filterable column closes an open panel", async () => {
+  it("losing the last filterable column hides an open panel", async () => {
     const w = await mountGrid(true);
     await open(w);
     await w.setProps({ columns: [{ key: "name", label: "Name" }] });

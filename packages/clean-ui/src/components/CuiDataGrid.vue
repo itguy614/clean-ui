@@ -247,18 +247,11 @@ defineExpose({
 const messages = useMessages();
 const filterPanelId = useCuiId("filter-panel");
 
-// The Filters button exists only with a toolbar, filterable columns and no `hideFilterPanel`.
-// Without it an open panel is unreachable, so `filterPanelOpen` is held shut: it never renders as
-// open and leaves no phantom open state, and a saved view with `filterPanelPinned` loads inert (#570).
+// The inline panel needs the Filters button (the toolbar's: shown with a toolbar, filterable
+// columns and no `hideFilterPanel`), so `filterPanelOpen` has no effect without it. The state is
+// left alone, not reset: the panel is back as it was when the button returns (#570).
 const hasFilterButton = computed(
   () => !props.hideToolbar && !props.hideFilterPanel && grid.filterableColumns.value.length > 0,
-);
-watch(
-  [hasFilterButton, () => grid.filterPanelOpen.value],
-  ([available, open]) => {
-    if (open && !available) grid.toggleFilterPanel();
-  },
-  { immediate: true },
 );
 </script>
 
@@ -368,7 +361,7 @@ watch(
       </div>
 
       <!-- Filter panel (inline only while pinned and open) -->
-      <CuiDataGridFilterPanel :id="filterPanelId" />
+      <CuiDataGridFilterPanel v-if="hasFilterButton" :id="filterPanelId" />
     </div>
 
     <!-- Pagination -->
