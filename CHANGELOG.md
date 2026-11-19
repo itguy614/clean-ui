@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-19
+
 ### Added
 
 - `CuiTransferList` (#559): the selected list is a `CuiSortableList`, so it gains pointer drag (a
@@ -79,31 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   back (`useDataGridInertia` uses it too). The docs say how multi-select and date-range filter
   values are serialised (comma-joined) so the server can parse them. The router type is structural
   (`DataGridInertiaRouter`), with no @inertiajs dependency.
-
-### Fixed
-
-- `CuiDataGrid`'s pinned inline filter panel stays in place while the grid is loading, has no rows,
-  or a filter matched nothing (#570). It was drawn inside the table branch, so it vanished with it
-  and took the controls to clear the filter that emptied the result; the skeleton and the empty
-  state now fill only the area beside it, with the panel at the same position and width. With the
-  Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
-  not shown, pinned or not, since the popover is anchored to that button.
-- A `CuiPopover`, `CuiSelect` or `CuiCombobox` opened from inside a `CuiDropdown` menu, a
-  sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
-  panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
-  hosts others; Escape still closes the innermost layer first.
-- `CuiToggle`: the track and the first line of its label now share one centre line at every size
-  (the track used to hang from the top by a fixed margin, so the text sat above the control).
-  The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's
-  first line down to meet it.
-- `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
-  fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
-  line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
-- `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
-  (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
-  also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
-  range without both ends and a non-numeric or non-positive `page` in the URL are now ignored
-  instead of applied.
 
 ### Changed
 
@@ -184,6 +161,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CuiDataGrid`'s pinned inline filter panel stays in place while the grid is loading, has no rows,
+  or a filter matched nothing (#570). It was drawn inside the table branch, so it vanished with it
+  and took the controls to clear the filter that emptied the result; the skeleton and the empty
+  state now fill only the area beside it, with the panel at the same position and width. With the
+  Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
+  not shown, pinned or not, since the popover is anchored to that button.
+- A `CuiPopover`, `CuiSelect` or `CuiCombobox` opened from inside a `CuiDropdown` menu, a
+  sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
+  panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
+  hosts others; Escape still closes the innermost layer first.
+- `CuiToggle`: the track and the first line of its label now share one centre line at every size
+  (the track used to hang from the top by a fixed margin, so the text sat above the control).
+  The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's
+  first line down to meet it.
+- `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
+  fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
+  line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
+- `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
+  (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
+  also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
+  range without both ends and a non-numeric or non-positive `page` in the URL are now ignored
+  instead of applied.
+
 - An unlabeled `CuiCheckbox` no longer changes the height of its line when it is checked (#553):
   a `CuiDataGrid` row selector made a checked row a few pixels shorter than an unchecked one in
   fonts whose line box is tighter than the 1.25rem box. The mark is now drawn over the box instead
@@ -200,6 +200,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fields, and the column manager's labels are the table's 0.875rem. The column manager is wider
   (20rem), so two-word labels such as "Correlation ID" sit on one line; a longer label ends in an
   ellipsis and carries a `title`.
+- The saved views menu of `CuiDataGrid` draws its action icons ("Save as…", "Save current",
+  "Reset to defaults") in the item's `#icon` slot, so they sit on the label's centre line with the
+  standard gap instead of above it (#557).
+- `CuiModalHeader` with an `#actions` slot centres the title, the actions and Close on one line,
+  and Close is as tall as a small button (2rem, the control scale's floor and density included).
+  A title-only header looks as before. The row's alignment and Close's size are zero-specificity
+  rules now, so a plain `.cui-modal-header { align-items: center }` wins (that is how a larger
+  title is centred), and Close's size reads `--cui-modal-header-width` and `-height`. The slideover
+  and drawer headers follow (#558).
 
 ## [2.2.0] - 2026-11-18
 
@@ -267,15 +276,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The saved views menu of `CuiDataGrid` draws its action icons ("Save as…", "Save current",
-  "Reset to defaults") in the item's `#icon` slot, so they sit on the label's centre line with the
-  standard gap instead of above it (#557).
-- `CuiModalHeader` with an `#actions` slot centres the title, the actions and Close on one line,
-  and Close is as tall as a small button (2rem, the control scale's floor and density included).
-  A title-only header looks as before. The row's alignment and Close's size are zero-specificity
-  rules now, so a plain `.cui-modal-header { align-items: center }` wins (that is how a larger
-  title is centred), and Close's size reads `--cui-modal-header-width` and `-height`. The slideover
-  and drawer headers follow (#558).
 - Under `prefers-reduced-motion`, dragging a sheet partway and dismissing it no longer snaps it
   back to fully open before the fade, and a consumer's own `transform` on an open slideover or
   drawer is neutralized again when it is not being dragged.
