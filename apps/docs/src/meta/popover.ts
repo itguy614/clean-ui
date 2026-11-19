@@ -34,6 +34,7 @@ const meta: ComponentMeta = {
     },
     { name: "offset", type: "number", default: "10 (4 with noArrow)", description: "Distance from the trigger, in px. An arrowless panel sits the same 4px from its trigger as a Combobox or Select listbox; the arrow needs the larger 10" },
     { name: "noArrow", type: "boolean", default: "false", description: "Hide the arrow" },
+    { name: "label", type: "string", description: "The dialog's accessible name when it has no header (title or #header) to name it" },
     { name: "width", type: "string", description: "Fixed panel width, e.g. \"320px\". Otherwise 12–24rem by content" },
     { ...roundedProp, default: "lg" },
     visibleProp(),

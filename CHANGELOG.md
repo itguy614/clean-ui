@@ -52,6 +52,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `CuiDataGrid`'s filter panel is a popover unless it is pinned (#552). **This changes the default
+  presentation:** the Filters button used to open an inline column beside the table, which took
+  width from it and made it reflow on every open and close; unpinned (the default) it now opens
+  as a popover anchored to the button, floating over the table, closing on a press outside or
+  Escape (an enclosing modal stays open). Pinning it from its header moves it inline, as before,
+  and it stays open; unpinning returns it to the popover. To keep the old look, start from a view
+  with `filterPanelPinned: true` (a saved view restores the presentation it was saved with);
+  `filterPanelSide` still chooses the side of the pinned panel. The Filters button carries
+  `aria-expanded` and `aria-controls`, focus moves into the popover on open and back to the
+  button on close, and the panel's pin and close buttons are named (`messages.dataGrid.pinFilters`
+  and `unpinFilters`, new). The headless `useDataGrid` state is unchanged.
+- `CuiPopover` takes `label`, the dialog's accessible name when it has no header, and a press in a
+  panel opened from inside it (a `CuiSelect`'s list) no longer counts as a press outside, so a
+  popover holding a select stays open while the select is used.
 - The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
   `rounded` (#522): `none` squares the panel and its rows, `sm`, `md` and `lg` use that step, and
   `full` gives the panel `lg`. A default (`md`) panel is now 6px instead of 8px, and no longer

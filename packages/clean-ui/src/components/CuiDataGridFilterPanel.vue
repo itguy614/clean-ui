@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
 import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiSelect from "./CuiSelect.vue";
@@ -10,7 +10,19 @@ import { useMessages } from "../composables/useMessages";
 import { IconPushPin } from "../icons/generated/push-pin";
 import { IconX } from "../icons/generated/x";
 
+const props = defineProps<{
+  /**
+   * Rendered inside the Filters button's popover (#552): always shown while mounted, and the
+   * popover supplies the chrome (border, shadow, radius), so the panel drops its own. Without it
+   * the panel is the inline column beside the table, shown while open and pinned.
+   */
+  popover?: boolean;
+  /** The element id the Filters button's `aria-controls` names. */
+  id?: string;
+}>();
+
 const messages = useMessages();
+const root = useTemplateRef<HTMLElement>("root");
 const grid = useDataGridState();
 const labelOf = useColumnLabel();
 
@@ -25,6 +37,17 @@ watch(
   },
   { immediate: true },
 );
+
+// A popover takes focus on open, like a dialog: the first field, else the panel itself. The
+// toolbar returns it to the Filters button on close. `preventScroll`, since the panel is still
+// being placed.
+onMounted(() => {
+  if (!props.popover || !root.value) return;
+  const first = root.value.querySelector<HTMLElement>(
+    ".cui-data-grid-filter-panel__body :is(input, button, select, textarea, [tabindex]):not([disabled], [tabindex='-1'])",
+  );
+  (first ?? root.value).focus({ preventScroll: true });
+});
 
 function syncFromGrid() {
   const map: Record<string, string | string[]> = {};
@@ -109,19 +132,29 @@ const hasAnyValue = computed(() => {
 </script>
 
 <template>
-  <div v-if="grid.filterPanelOpen.value" class="cui-data-grid-filter-panel">
+  <div
+    v-if="popover || (grid.filterPanelOpen.value && grid.filterPanelPinned.value)"
+    :id="id"
+    ref="root"
+    class="cui-data-grid-filter-panel"
+    :class="{ 'cui-data-grid-filter-panel--popover': popover }"
+    :tabindex="popover ? -1 : undefined"
+  >
     <div class="cui-data-grid-filter-panel__header">
       <span class="cui-data-grid-filter-panel__title">{{ messages.dataGrid.filters }}</span>
       <div style="display: flex; gap: calc(0.25rem * var(--cui-density-scale, 1));">
         <CuiButton
+          class="cui-data-grid-filter-panel__pin"
           variant="ghost"
           size="xs"
+          :aria-label="grid.filterPanelPinned.value ? messages.dataGrid.unpinFilters : messages.dataGrid.pinFilters"
+          :aria-pressed="grid.filterPanelPinned.value"
           :style="{ color: grid.filterPanelPinned.value ? 'var(--cui-primary)' : undefined }"
           @click="grid.toggleFilterPanelPin()"
         >
           <CuiIcon :icon="IconPushPin" size="0.875rem" />
         </CuiButton>
-        <CuiButton variant="ghost" size="xs" @click="grid.toggleFilterPanel()">
+        <CuiButton variant="ghost" size="xs" :aria-label="messages.close" @click="grid.toggleFilterPanel()">
           <CuiIcon :icon="IconX" size="0.875rem" />
         </CuiButton>
       </div>
@@ -200,6 +233,26 @@ const hasAnyValue = computed(() => {
   display: flex;
   flex-direction: column;
   align-self: flex-start;
+}
+
+/* In the Filters popover: the popover draws the border, radius and shadow and sets the width, and
+   a tall panel scrolls inside the viewport (header and footer stay) rather than running off it.
+   The popover body's own padding is cancelled so the header rule runs edge to edge. */
+.cui-data-grid-filter-panel--popover {
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  max-height: min(32rem, calc(100vh - 6rem));
+  outline: none;
+}
+.cui-popover__panel .cui-popover__body:has(> .cui-data-grid-filter-panel--popover) {
+  padding: 0;
+}
+.cui-data-grid-filter-panel--popover .cui-data-grid-filter-panel__body {
+  max-height: none;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .cui-data-grid-filter-panel__header {

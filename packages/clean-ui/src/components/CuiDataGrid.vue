@@ -18,6 +18,7 @@ import CuiDataGridCardView from "./CuiDataGridCardView.vue";
 import CuiDataGridPagination from "./CuiDataGridPagination.vue";
 import CuiDataGridBulkBar from "./CuiDataGridBulkBar.vue";
 import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
+import { useCuiId } from "../composables/useCuiId";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
@@ -242,6 +243,7 @@ defineExpose({
   setPage: (n: number): void => void grid.setPage(n),
 });
 const messages = useMessages();
+const filterPanelId = useCuiId("filter-panel");
 </script>
 
 <template>
@@ -256,6 +258,7 @@ const messages = useMessages();
       :hide-filter-toggle="hideFilterPanel"
       :has-card-slot="hasCardSlot"
       :grid-id="gridId"
+      :filter-panel-id="filterPanelId"
       :view-adapter="viewAdapter"
     >
       <template #toolbar-start>
@@ -346,7 +349,7 @@ const messages = useMessages();
         </div>
 
         <!-- Filter panel -->
-        <CuiDataGridFilterPanel />
+        <CuiDataGridFilterPanel :id="filterPanelId" />
       </div>
     </template>
 

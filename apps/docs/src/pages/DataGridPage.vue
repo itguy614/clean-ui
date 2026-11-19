@@ -45,6 +45,15 @@ const columns: DataGridColumn[] = [
   { key: "salary", label: "Salary", sortable: true, align: "right", nowrap: true },
 ];
 
+const pinnedFilterView = {
+  columns: [],
+  sort: null,
+  filters: [],
+  perPage: 15,
+  viewMode: "grid" as const,
+  filterPanelPinned: true,
+};
+
 const data: DataGridRow[] = [
   { id: "1", name: "Alice Johnson", email: "alice@example.com", role: "Engineering", status: "Active", salary: "$125,000", _actions: [{ key: "edit", label: "Edit" }, { key: "delete", label: "Delete" }] },
   { id: "2", name: "Bob Smith", email: "bob@example.com", role: "Design", status: "Active", salary: "$105,000", _actions: [{ key: "edit", label: "Edit" }, { key: "delete", label: "Delete" }] },
@@ -394,6 +403,48 @@ function step(by: number) {
         <p class="mt-2 text-sm" style="color: var(--cui-text-secondary);">
           Last event: {{ lastEvent }}
         </p>
+      </Example>
+
+      <!-- Filter panel: popover or pinned -->
+      <Example title="Filter Panel: Popover or Pinned" :code="`<!-- Unpinned (the default): the Filters button opens a popover over the table -->
+<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot; />
+
+<!-- Pinned: the panel is a column beside the table and stays open. A saved view
+     remembers it (filterPanelPinned), and filterPanelSide picks the side. -->
+<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;data&quot;
+  filter-panel-side=&quot;left&quot;
+  :initial-view=&quot;{
+    columns: [], sort: null, filters: [], perPage: 15,
+    viewMode: 'grid', filterPanelPinned: true,
+  }&quot;
+/>`">
+        <CuiStack spacing="6">
+          <div>
+            <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
+              Unpinned: <strong>Filters</strong> opens the panel as a popover over the table, which
+              keeps its width. It closes on a press outside or Escape and hands focus back to the
+              button. The pin in its header moves it inline.
+            </p>
+            <CuiDataGrid :columns="columns" :data="data.slice(0, 5)" hide-pagination hide-column-manager />
+          </div>
+          <div>
+            <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
+              Pinned (this grid starts from a view with <code>filterPanelPinned: true</code>):
+              <strong>Filters</strong> shows and hides the panel as a column beside the table, and
+              it stays open until closed. Unpin it to get the popover back.
+            </p>
+            <CuiDataGrid
+              :columns="columns"
+              :data="data.slice(0, 5)"
+              hide-pagination
+              hide-column-manager
+              filter-panel-side="left"
+              :initial-view="pinnedFilterView"
+            />
+          </div>
+        </CuiStack>
       </Example>
 
       <!-- Card view -->

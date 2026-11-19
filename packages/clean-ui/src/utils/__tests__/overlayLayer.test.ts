@@ -3,7 +3,7 @@ import { mount, type VueWrapper } from "@vue/test-utils";
 import { defineComponent, h, nextTick, reactive, ref, shallowRef, Transition, vShow, withDirectives } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { createSSRApp } from "vue";
-import { dismissPanels, giveBackStep, MAX_LAYER_STEP, overlayZIndex, takeLayerStep, type LayerToken } from "../overlayLayer";
+import { dismissPanels, giveBackStep, inChildLayer, MAX_LAYER_STEP, overlayZIndex, takeLayerStep, type LayerToken } from "../overlayLayer";
 import { TOAST_Z_INDEX, TOOLTIP_Z_INDEX } from "../position";
 import { useOverlay } from "../../composables/useOverlay";
 import { useLayerStep } from "../../composables/useLayerStep";
@@ -76,6 +76,37 @@ describe("takeLayerStep / giveBackStep", () => {
     giveBackStep(a);
     held.splice(held.indexOf(a), 1);
     expect(take().step).toBe(b.step + 1);
+  });
+});
+
+describe("inChildLayer: a press in a panel the host opened", () => {
+  const within = () => {
+    const inner = document.createElement("span");
+    const el = document.createElement("div");
+    el.append(inner);
+    return { inner, el };
+  };
+
+  it("is true inside a nested panel and false inside an unrelated one or outside any", () => {
+    const nested = within();
+    const unrelated = within();
+    const host = take(true);
+    held.push(takeLayerStep(undefined, host, () => nested.el), takeLayerStep(undefined, null, () => unrelated.el));
+    expect(inChildLayer(host, nested.inner)).toBe(true);
+    expect(inChildLayer(host, unrelated.inner)).toBe(false);
+    expect(inChildLayer(host, document.body)).toBe(false);
+    expect(inChildLayer(undefined, nested.inner)).toBe(false);
+  });
+
+  it("reaches through a chain of hosts, and ends with the nested panel", () => {
+    const deep = within();
+    const a = take(true);
+    const b = takeLayerStep(undefined, a);
+    const c = takeLayerStep(undefined, b, () => deep.el);
+    held.push(b, c);
+    expect(inChildLayer(a, deep.inner)).toBe(true);
+    give(c);
+    expect(inChildLayer(a, deep.inner)).toBe(false);
   });
 });
 
