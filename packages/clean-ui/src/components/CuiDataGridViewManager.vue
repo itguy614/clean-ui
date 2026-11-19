@@ -142,12 +142,12 @@ function onReset() {
         :close-on-select="false"
         @select="onSaveCurrent"
       >
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" />
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" /></template>
         {{ messages.dataGrid.saveCurrent }}
       </CuiDropdownItem>
 
       <CuiDropdownItem :close-on-select="false" @select="showSaveAs = !showSaveAs">
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" />
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconFloppyDisk" size="0.875rem" /></template>
         {{ messages.dataGrid.saveAs }}
       </CuiDropdownItem>
 
@@ -173,7 +173,7 @@ function onReset() {
 
       <CuiDropdownDivider />
       <CuiDropdownItem @select="onReset">
-        <CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconArrowCounterClockwise" size="0.875rem" />
+        <template #icon><CuiIcon class="cui-data-grid-view-manager__action-icon" :icon="IconArrowCounterClockwise" size="0.875rem" /></template>
         {{ messages.dataGrid.resetViews }}
       </CuiDropdownItem>
     </CuiDropdownMenu>

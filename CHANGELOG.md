@@ -50,6 +50,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nested drawers share one scale, and reduced motion turns it off. Keep `position: fixed` and
   `sticky` elements outside the wrapper: a transformed ancestor becomes their containing block.
 
+- `dataGridQueryData(params, extraParams?)` and
+  `dataGridInertiaVisit({ url, router, extraParams?, visitOptions? })` (#554): use a server-side
+  `CuiDataGrid` with Inertia through its `navigate` event, `@navigate="visit"`.
+  `dataGridQueryData` is the one mapping from a `navigate` payload to the query `hydrate-url` reads
+  back (`useDataGridInertia` uses it too). The docs say how multi-select and date-range filter
+  values are serialised (comma-joined) so the server can parse them. The router type is structural
+  (`DataGridInertiaRouter`), with no @inertiajs dependency.
+
+### Fixed
+
+- `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
+  (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
+  also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
+  range without both ends and a non-numeric or non-positive `page` in the URL are now ignored
+  instead of applied.
+
 ### Changed
 
 - `CuiDataGrid`'s filter panel is a popover unless it is pinned (#552). **This changes the default
@@ -150,6 +166,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The saved views menu of `CuiDataGrid` draws its action icons ("Save as…", "Save current",
+  "Reset to defaults") in the item's `#icon` slot, so they sit on the label's centre line with the
+  standard gap instead of above it (#557).
+- `CuiModalHeader` with an `#actions` slot centres the title, the actions and Close on one line,
+  and Close is as tall as a small button (2rem, the control scale's floor and density included).
+  A title-only header looks as before. The row's alignment and Close's size are zero-specificity
+  rules now, so a plain `.cui-modal-header { align-items: center }` wins (that is how a larger
+  title is centred), and Close's size reads `--cui-modal-header-width` and `-height`. The slideover
+  and drawer headers follow (#558).
 - Under `prefers-reduced-motion`, dragging a sheet partway and dismissing it no longer snaps it
   back to fully open before the fade, and a consumer's own `transform` on an open slideover or
   drawer is neutralized again when it is not being dragged.
