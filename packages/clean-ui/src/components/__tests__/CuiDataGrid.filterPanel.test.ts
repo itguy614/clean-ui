@@ -28,9 +28,9 @@ afterEach(() => {
   wrapper = undefined;
 });
 
-async function mountGrid(pinned?: boolean) {
+async function mountGrid(pinned?: boolean, extra: Record<string, unknown> = {}) {
   wrapper = mount(CuiDataGrid, {
-    props: { columns, data, ...(pinned === undefined ? {} : { initialView: view(pinned) }) },
+    props: { columns, data, ...(pinned === undefined ? {} : { initialView: view(pinned) }), ...extra },
     attachTo: document.body,
   });
   await flushPromises();
@@ -147,5 +147,111 @@ describe("CuiDataGrid filter panel presentation", () => {
     pin().click();
     await flushPromises();
     expect(pinned(w)).toBe(true);
+  });
+});
+
+/**
+ * #570 — a pinned inline panel is not part of the grid's loading or empty branches: it keeps its
+ * place while the grid loads or has no rows, so the filter that emptied the result can be cleared.
+ */
+describe("CuiDataGrid pinned filter panel outside the loading and empty states (#570)", () => {
+  const open = async (w: VueWrapper) => {
+    await button(w).trigger("click");
+    await flushPromises();
+  };
+  const byText = (w: VueWrapper, t: string) =>
+    [...inlinePanel(w)!.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent?.includes(t))!;
+
+  it("stays while loading, beside the skeleton", async () => {
+    const w = await mountGrid(true, { loading: true });
+    await open(w);
+    expect(inlinePanel(w)).not.toBeNull();
+    expect(w.element.querySelector(".cui-data-grid__content .cui-skeleton")).not.toBeNull();
+    await w.setProps({ loading: false });
+    expect(inlinePanel(w)).not.toBeNull();
+  });
+
+  it("stays with no rows at all, beside the empty state", async () => {
+    const w = await mountGrid(true, { data: [] });
+    await open(w);
+    expect(inlinePanel(w)).not.toBeNull();
+    expect(w.element.querySelector(".cui-data-grid__content .cui-empty-state")).not.toBeNull();
+  });
+
+  it("stays when a filter matched nothing, and Clear all brings the rows back", async () => {
+    const w = await mountGrid(true);
+    await open(w);
+    const input = inlinePanel(w)!.querySelector<HTMLInputElement>("input")!;
+    input.value = "zzz";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await flushPromises();
+    byText(w, "Apply").click();
+    await flushPromises();
+    expect(w.element.querySelector(".cui-data-grid__content .cui-empty-state")).not.toBeNull();
+    expect(inlinePanel(w)).not.toBeNull();
+    byText(w, "Clear all").click();
+    await flushPromises();
+    expect(w.element.querySelector(".cui-empty-state")).toBeNull();
+    expect(w.element.querySelector("tbody tr")).not.toBeNull();
+  });
+
+  it("keeps the side while empty", async () => {
+    const w = await mountGrid(true, { filterPanelSide: "left", data: [] });
+    await open(w);
+    const content = w.element.querySelector<HTMLElement>(".cui-data-grid__content")!;
+    expect(content.style.flexDirection).toBe("row-reverse");
+    expect(inlinePanel(w)).not.toBeNull();
+  });
+
+  it("with hideFilterPanel there is no button and no panel, pinned or not", async () => {
+    const w = await mountGrid(true, { hideFilterPanel: true, data: [] });
+    expect(w.findAll(".cui-data-grid-toolbar button").some((b) => b.text().includes("Filters"))).toBe(false);
+    expect(inlinePanel(w)).toBeNull();
+    (w.vm as unknown as { loadConfig: (c: DataGridViewConfig) => void }).loadConfig(view(true));
+    await flushPromises();
+    expect(inlinePanel(w)).toBeNull();
+    expect(popoverPanel()).toBeNull();
+  });
+
+  it("with the button hidden, an open panel is not shown, in either presentation, and returns with the button", async () => {
+    const w = await mountGrid(true);
+    await open(w);
+    expect(inlinePanel(w)).not.toBeNull();
+    await w.setProps({ hideFilterPanel: true });
+    await flushPromises();
+    expect(inlinePanel(w)).toBeNull();
+    await w.setProps({ hideFilterPanel: false });
+    await flushPromises();
+    expect(inlinePanel(w)).not.toBeNull();
+  });
+
+  it("an open unpinned popover goes with its button", async () => {
+    const w = await mountGrid(false);
+    await open(w);
+    expect(popoverPanel()).not.toBeNull();
+    await w.setProps({ hideFilterPanel: true });
+    await flushPromises();
+    expect(popoverPanel()).toBeNull();
+  });
+
+  it("hiding the toolbar hides an open panel: no button, so no panel", async () => {
+    const w = await mountGrid(true);
+    await open(w);
+    await w.setProps({ hideToolbar: true });
+    await flushPromises();
+    expect(inlinePanel(w)).toBeNull();
+  });
+
+  it("losing the last filterable column hides an open panel", async () => {
+    const w = await mountGrid(true);
+    await open(w);
+    await w.setProps({ columns: [{ key: "name", label: "Name" }] });
+    await flushPromises();
+    expect(inlinePanel(w)).toBeNull();
+  });
+
+  it("with no filterable column the panel never renders", async () => {
+    const w = await mountGrid(true, { columns: [{ key: "name", label: "Name" }] });
+    expect(inlinePanel(w)).toBeNull();
   });
 });

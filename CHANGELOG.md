@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CuiDataGrid`'s pinned inline filter panel stays in place while the grid is loading, has no rows,
+  or a filter matched nothing (#570). It was drawn inside the table branch, so it vanished with it
+  and took the controls to clear the filter that emptied the result; the skeleton and the empty
+  state now fill only the area beside it, with the panel at the same position and width. With the
+  Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
+  not shown, pinned or not, since the popover is anchored to that button.
 - A `CuiPopover`, `CuiSelect` or `CuiCombobox` opened from inside a `CuiDropdown` menu, a
   sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
   panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
