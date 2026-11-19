@@ -5,15 +5,16 @@ import { giveBackStep, inChildLayer, LayerHostKey, takeLayerStep, type LayerToke
  * The z-index step of a panel anchored to a trigger (#541): taken when it opens, so it is above
  * its own overlay and everything opened before it, and given back once its exit has finished
  * (`present` turning false). `dismiss` is its own close: an overlay that opens over it calls it.
- * Returns the step as a ref; see `overlayZIndex` for the CSS. Call in setup. A panel that nests
- * others (a popover holding a select) hands over its element with `el` when it is a nested panel
- * itself, and asks `hosts(target)` whether a press landed in a panel it opened.
+ * `el` is the panel's element, required of every panel: a panel is teleported out of the one that
+ * opened it, so a press inside it must not count as a press outside its host (a select's list, a
+ * dropdown menu or a context menu inside a popover). A host asks `hosts(target)` whether a press
+ * landed in a panel it opened. Returns the step as a ref; see `overlayZIndex` for the CSS. Call in setup.
  */
 export function useLayerStep(
   open: () => boolean,
   present: Ref<boolean>,
-  dismiss?: () => void,
-  el?: () => Element | null | undefined,
+  dismiss: (() => void) | undefined,
+  el: () => Element | null | undefined,
 ): Ref<number> & { hosts: (target: Node) => boolean } {
   const step = ref(0);
   let held: LayerToken | undefined;

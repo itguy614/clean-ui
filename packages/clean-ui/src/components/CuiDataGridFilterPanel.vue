@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, useTemplateRef } from "vue";
+import { computed, onMounted, useTemplateRef } from "vue";
 import { useColumnLabel, useDataGridState } from "../composables/useDataGrid";
 import CuiInput from "./CuiInput.vue";
 import CuiSelect from "./CuiSelect.vue";
 import CuiCheckbox from "./CuiCheckbox.vue";
 import CuiButton from "./CuiButton.vue";
 import CuiIcon from "./CuiIcon.vue";
+import { useFilterDraft } from "./data-grid-filter-draft";
 import { useMessages } from "../composables/useMessages";
 import { IconPushPin } from "../icons/generated/push-pin";
 import { IconX } from "../icons/generated/x";
@@ -26,17 +27,9 @@ const root = useTemplateRef<HTMLElement>("root");
 const grid = useDataGridState();
 const labelOf = useColumnLabel();
 
-// Local filter state — applied on "Apply" button
-const localFilters = ref<Record<string, string | string[]>>({});
-
-// Sync from grid on open
-watch(
-  () => grid.filterPanelOpen.value,
-  (open) => {
-    if (open) syncFromGrid();
-  },
-  { immediate: true },
-);
+// The edits not yet applied ("Apply" applies them). Held by the grid, not by this instance: the
+// popover and the inline panel are two instances, and pinning swaps one for the other (#552).
+const localFilters = useFilterDraft(grid);
 
 // A popover takes focus on open, like a dialog: the first field, else the panel itself. The
 // toolbar returns it to the Filters button on close. `preventScroll`, since the panel is still
@@ -48,14 +41,6 @@ onMounted(() => {
   );
   (first ?? root.value).focus({ preventScroll: true });
 });
-
-function syncFromGrid() {
-  const map: Record<string, string | string[]> = {};
-  for (const f of grid.filters.value) {
-    map[f.key] = f.value;
-  }
-  localFilters.value = map;
-}
 
 function getTextValue(key: string): string {
   return String(localFilters.value[key] ?? "");

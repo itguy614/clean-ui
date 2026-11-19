@@ -425,7 +425,7 @@ function step(by: number) {
             <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
               Unpinned: <strong>Filters</strong> opens the panel as a popover over the table, which
               keeps its width. It closes on a press outside or Escape and hands focus back to the
-              button. The pin in its header moves it inline.
+              button. The pin in its header moves it inline, carrying any edits you have not applied yet.
             </p>
             <CuiDataGrid :columns="columns" :data="data.slice(0, 5)" hide-pagination hide-column-manager />
           </div>

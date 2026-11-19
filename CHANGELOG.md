@@ -78,10 +78,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `filterPanelSide` still chooses the side of the pinned panel. The Filters button carries
   `aria-expanded` and `aria-controls`, focus moves into the popover on open and back to the
   button on close, and the panel's pin and close buttons are named (`messages.dataGrid.pinFilters`
-  and `unpinFilters`, new). The headless `useDataGrid` state is unchanged.
+  and `unpinFilters`, new). Edits typed or ticked in the panel but not yet applied are held by the
+  grid, not the panel, so they survive pinning and unpinning; they restart from the applied filters
+  when the panel opens, and when the filters change (Apply, Clear all, a chip removed, a saved view
+  loaded). The headless `useDataGrid` state is unchanged.
 - `CuiPopover` takes `label`, the dialog's accessible name when it has no header, and a press in a
-  panel opened from inside it (a `CuiSelect`'s list) no longer counts as a press outside, so a
-  popover holding a select stays open while the select is used.
+  panel opened from inside it (a `CuiSelect`, `CuiCombobox` or `CuiTagInput` list, a
+  `CuiDropdown` menu and its sub-menus, a `CuiContextMenu`) no longer counts as a press outside,
+  so a popover holding one stays open while it is used. Every panel that takes a layer step now
+  says where it is (an internal requirement of `useLayerStep`), so a new panel is covered too.
 - The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
   `rounded` (#522): `none` squares the panel and its rows, `sm`, `md` and `lg` use that step, and
   `full` gives the panel `lg`. A default (`md`) panel is now 6px instead of 8px, and no longer

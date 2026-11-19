@@ -19,6 +19,7 @@ import CuiDataGridPagination from "./CuiDataGridPagination.vue";
 import CuiDataGridBulkBar from "./CuiDataGridBulkBar.vue";
 import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
 import { useCuiId } from "../composables/useCuiId";
+import { provideFilterDraft } from "./data-grid-filter-draft";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
@@ -200,6 +201,7 @@ function showCards() {
 }
 
 provideDataGrid(grid);
+provideFilterDraft(grid);
 
 // Emit selection changes
 watch(

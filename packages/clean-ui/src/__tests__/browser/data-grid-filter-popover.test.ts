@@ -240,6 +240,83 @@ describe("CuiDataGrid filter panel: popover unless pinned (real browser)", () =>
     expect(filtersButton(grid).hasAttribute("aria-haspopup")).toBe(false);
   });
 
+  describe("the draft (edits not yet applied) is shared by the popover and the inline panel", () => {
+    const withMulti: DataGridColumnDef[] = [
+      ...columns,
+      {
+        key: "tag",
+        label: "Tag",
+        filterable: true,
+        filterType: "multi-select",
+        filterOptions: [
+          { label: "Red", value: "red" },
+          { label: "Blue", value: "blue" },
+        ],
+      },
+    ];
+    const panelEl = (grid: HTMLElement) => popoverPanel() ?? inlinePanel(grid)!;
+    const nameInput = (grid: HTMLElement) => panelEl(grid).querySelector<HTMLInputElement>("input:not([type=checkbox])")!;
+    const checked = (grid: HTMLElement) =>
+      [...panelEl(grid).querySelectorAll<HTMLInputElement>("input[type=checkbox]")].map((c) => c.checked);
+    const pinNow = async () => {
+      await userEvent.click(document.body.querySelector<HTMLButtonElement>(".cui-data-grid-filter-panel__pin")!);
+      await frames(15);
+    };
+
+    it("keeps typed and ticked edits through pin and unpin", async () => {
+      const grid = await mountGrid({ columns: withMulti });
+      await open(grid);
+      await userEvent.type(nameInput(grid), "Al");
+      await userEvent.click([...panelEl(grid).querySelectorAll("label")].find((l) => l.textContent?.includes("Blue"))!);
+      expect(checked(grid)).toEqual([false, true]);
+      await pinNow();
+      expect(inlinePanel(grid)).not.toBeNull();
+      expect(nameInput(grid).value).toBe("Al");
+      expect(checked(grid)).toEqual([false, true]);
+      await pinNow();
+      expect(popoverPanel()).not.toBeNull();
+      expect(nameInput(grid).value).toBe("Al");
+      expect(checked(grid)).toEqual([false, true]);
+    });
+
+    it("holds no stale draft after Apply, Clear all, or closing and reopening", async () => {
+      const grid = await mountGrid({ columns: withMulti });
+      await open(grid);
+      await userEvent.type(nameInput(grid), "Bet");
+      await userEvent.click([...panelEl(grid).querySelectorAll("button")].find((b) => b.textContent?.includes("Apply"))!);
+      await frames(4);
+      await userEvent.type(nameInput(grid), "zzz"); // an edit made after applying, never applied
+      await pinNow();
+      expect(nameInput(grid).value).toBe("Betzzz"); // still the user's draft: nothing reset it
+      await userEvent.click([...panelEl(grid).querySelectorAll("button")].find((b) => b.textContent?.includes("Clear all"))!);
+      await frames(4);
+      expect(nameInput(grid).value).toBe("");
+      await userEvent.type(nameInput(grid), "q");
+      await userEvent.click(filtersButton(grid)); // pinned: closes the inline panel
+      await frames(4);
+      await userEvent.click(filtersButton(grid));
+      await frames(4);
+      expect(nameInput(grid).value).toBe(""); // reopened: back to what is applied
+    });
+
+    it("restarts from a saved view that is loaded while it is open", async () => {
+      const App = defineComponent({
+        render: () => h(CuiDataGrid, { ref: "grid", columns: withMulti, data, initialView: view(false) }),
+      });
+      const wrapper = track(mount(App, { attachTo: host({ width: "700px" }) }));
+      await frames(2);
+      const grid = wrapper.element as HTMLElement;
+      await open(grid);
+      await userEvent.type(nameInput(grid), "draft");
+      (wrapper.vm.$refs.grid as { loadConfig: (c: DataGridViewConfig) => void }).loadConfig({
+        ...view(false),
+        filters: [{ key: "name", value: "Gamma", type: "text" }],
+      });
+      await frames(6);
+      expect(nameInput(grid).value).toBe("Gamma");
+    });
+  });
+
   it("returns to the popover when unpinned", async () => {
     const grid = await mountGrid({ pinned: true });
     await open(grid);

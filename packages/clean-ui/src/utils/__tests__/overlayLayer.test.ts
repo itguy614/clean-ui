@@ -172,7 +172,7 @@ describe("useLayerStep", () => {
     w = mount(
       defineComponent({
         setup() {
-          step = useLayerStep(() => open.value, present, () => dismissed.push("closed"));
+          step = useLayerStep(() => open.value, present, () => dismissed.push("closed"), () => null);
           return () => h("div");
         },
       }),
