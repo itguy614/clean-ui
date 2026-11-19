@@ -4,8 +4,8 @@
     {
       "package": "@itguy614/clean-ui",
       "scenario": "basic",
-      "gzipBytes": 35840,
-      "measured": "2026-11-17"
+      "gzipBytes": 36352,
+      "measured": "2026-11-19"
     },
     {
       "package": "@itguy614/clean-ui",
