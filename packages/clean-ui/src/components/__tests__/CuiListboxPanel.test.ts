@@ -7,14 +7,14 @@ import CuiListboxOption from "../CuiListboxOption.vue";
 enableAutoUnmount(afterEach);
 afterEach(() => vi.restoreAllMocks());
 
-function mountPanel() {
+function mountPanel(extra: Record<string, unknown> = {}) {
   const anchor = document.createElement("div");
   document.body.append(anchor);
   const rect = vi.fn(() => ({ top: 100, bottom: 130, left: 10, right: 210, width: 200, height: 30, x: 10, y: 100, toJSON: () => ({}) }) as DOMRect);
   anchor.getBoundingClientRect = rect;
   mount(CuiListboxPanel, {
     attachTo: document.body,
-    props: { open: true, anchor, tokenPrefix: "combobox", maxHeight: 300, fontSize: "14px", itemPadding: "4px" },
+    props: { open: true, anchor, tokenPrefix: "combobox", maxHeight: 300, fontSize: "14px", itemPadding: "4px", ...extra },
     slots: { default: () => h(CuiListboxOption, { id: "opt-0" }, () => "One") },
   });
   return rect;
@@ -29,6 +29,21 @@ describe("CuiListboxPanel", () => {
     expect(panel.style.width).toBe("200px");
     expect(panel.style.getPropertyValue("--_listbox-panel-bg")).toBe("var(--cui-combobox-panel-bg, var(--cui-surface-base))");
     expect(panel.style.getPropertyValue("--_listbox-item-padding")).toBe("var(--cui-combobox-item-padding, 4px)");
+  });
+
+  // #522: a square field opened a rounded panel.
+  it.each([
+    [undefined, "var(--cui-radius-md, 0.375rem)", "0.25rem"],
+    ["none", "0", "0"],
+    ["sm", "var(--cui-radius-sm, 0.25rem)", "0.25rem"],
+    ["lg", "var(--cui-radius-lg, 0.5rem)", "0.25rem"],
+    ["full", "var(--cui-radius-lg, 0.5rem)", "0.25rem"],
+  ])("follows the field's rounded %s, behind the public tokens", async (rounded, panelRadius, itemRadius) => {
+    mountPanel(rounded ? { rounded } : {});
+    await nextTick();
+    const panel = document.querySelector<HTMLElement>(".cui-listbox-panel")!;
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe(`var(--cui-combobox-panel-radius, var(--cui-combobox-radius, ${panelRadius}))`);
+    expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe(`var(--cui-combobox-item-radius, ${itemRadius})`);
   });
 
   // Review of #137: the capture-phase listener re-measured — and re-rendered the rows — on

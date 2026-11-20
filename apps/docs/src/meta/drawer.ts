@@ -5,7 +5,7 @@ import { backdropProps, modalBodyProps, modalFooterProps, modalHeaderProps, over
 const meta: ComponentMeta = {
   name: "Drawer",
   description:
-    "A bottom sheet you can drag: flick it down to dismiss, drag it between heights, scroll its content without closing it. The backdrop fades with the drag (and settles with the sheet on release); under reduced motion a dismissed sheet fades out where the finger left it. Modal, with CuiModal's focus trap, scroll lock and backdrop, and assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-drawer__panel), the element actually rendered.",
+    "A bottom sheet you can drag: flick it down to dismiss, drag it between heights, scroll its content without closing it. The backdrop fades with the drag (and settles with the sheet on release), and with scale-background the page behind it scales back with it; under reduced motion a dismissed sheet fades out where the finger left it. Modal, with CuiModal's focus trap, scroll lock and backdrop, and assembled from the same header/body/footer sub-components. Attributes you pass — class, style, data-testid and the rest — land on the panel (.cui-drawer__panel), the element actually rendered.",
   interactive: true,
 
   parts: [
@@ -47,6 +47,19 @@ const meta: ComponentMeta = {
         { name: "noCloseButton", type: "boolean", default: "false", description: "Hide the X close button in simple mode" },
         { name: "noHandle", type: "boolean", default: "false", description: "Hide the grab handle. Touch and pen can still drag from the sheet; a mouse can no longer drag at all" },
         { name: "noDrag", type: "boolean", default: "false", description: "Turn dragging off. The sheet closes only by its controls, Escape and the backdrop" },
+        {
+          name: "scaleBackground",
+          type: "boolean",
+          default: "false",
+          description:
+            "Scale the page behind the sheet to about 95% and round its corners while it is open, following the drag like the backdrop (#534). Off under reduced motion. The element is backgroundSelector's match",
+        },
+        {
+          name: "backgroundSelector",
+          type: "string",
+          default: "[data-cui-drawer-wrapper]",
+          description: "CSS selector of the element scaleBackground scales, looked up each time the sheet opens. None found: nothing scales, with a development warning",
+        },
         ...overlayFocusProps,
         ...backdropProps,
         hiddenProp,

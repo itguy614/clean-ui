@@ -98,6 +98,7 @@ export const PAGES: readonly DocPage[] = [
   { id: "kbd", label: "Kbd", path: "/components/kbd", group: "Data Display", keywords: ["keyboard", "key", "shortcut", "hotkey", "keycap", "keystroke"] },
   { id: "list", label: "List", path: "/components/list", group: "Data Display", keywords: ["list item", "rows", "items", "menu list", "listing", "ul"] },
   { id: "progress", label: "Progress", path: "/components/progress", group: "Data Display", keywords: ["progress bar", "meter", "percentage", "loading", "circle", "gauge", "determinate"] },
+  { id: "sortable-list", label: "Sortable List", path: "/components/sortable-list", group: "Data Display", keywords: ["reorder", "drag and drop", "drag", "sortable", "rank", "priority", "order", "move up down"] },
   { id: "table", label: "Table", path: "/components/table", group: "Data Display", keywords: ["grid", "data table", "rows", "columns", "tabular", "thead", "sortable", "datagrid"] },
   { id: "timeline", label: "Timeline", path: "/components/timeline", group: "Data Display", keywords: ["history", "activity", "events", "steps", "feed", "log", "chronology"] },
   { id: "tree-view", label: "Tree View", path: "/components/tree-view", group: "Data Display", keywords: ["tree", "hierarchy", "nested", "file tree", "folders", "expandable", "outline"] },

@@ -7,6 +7,8 @@ export interface UseClickOutsideOptions {
    * holds no document listener (#203).
    */
   enabled?: MaybeRefOrGetter<boolean>;
+  /** Also counts a press as inside when this returns true: a panel teleported out of the targets. */
+  inside?: (target: Node) => boolean;
 }
 
 /**
@@ -40,7 +42,8 @@ export function useClickOutside(
     "mousedown",
     (e) => {
       const elements = typeof targets === "function" ? targets() : targets.map((t) => t.value);
-      if (!elements.some((el) => el?.contains(e.target as Node))) handler();
+      const target = e.target as Node;
+      if (!elements.some((el) => el?.contains(target)) && !options.inside?.(target)) handler();
     },
     { enabled: options.enabled === undefined ? true : armed },
   );

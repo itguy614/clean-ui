@@ -62,18 +62,22 @@ const SCENARIOS: Record<string, Scenario> = {
 
 type Located = Record<string, [Element | null, string[]]>;
 
-const rows = () => [...document.body.querySelectorAll<HTMLElement>(".cui-data-grid-column-manager__row")];
-const rowOf = (text: string) => rows().find((r) => r.textContent?.includes(text))!;
+// A row is a frozen one (the manager's own) or a reorderable one (CuiSortableList's item, #560).
+const rows = () => [...document.body.querySelectorAll<HTMLElement>(".cui-data-grid-column-manager__row, .cui-sortable-list__item")];
+const handleOf = (name: string) => document.body.querySelector<HTMLElement>(`button[aria-label="Reorder ${name}"]`)!;
 
 function locateCm(): Located {
-  const out: Located = { list: [document.querySelector(".cui-data-grid-column-manager__list"), LIST] };
+  const out: Located = {
+    list: [document.querySelector(".cui-data-grid-column-manager__list"), LIST],
+    placeholder: [document.querySelector(".cui-sortable-list__placeholder"), ["display", "opacity"]],
+  };
   rows().forEach((r, i) => {
     Object.assign(out, {
       [`row${i}`]: [r, ROW],
-      [`row${i}-handle`]: [r.querySelector(".cui-icon"), ICON],
+      [`row${i}-handle`]: [r.querySelector(":scope > .cui-icon, :scope > .cui-sortable-list__handle"), ICON],
       [`row${i}-group-label`]: [r.querySelector(".cui-data-grid-column-manager__group"), TEXT],
       [`row${i}-checkbox`]: [r.querySelector(".cui-checkbox"), ["flex-grow"]],
-      [`row${i}-buttons`]: [r.querySelector(":scope > span:last-child"), BOX],
+      [`row${i}-buttons`]: [r.querySelector(":scope > .cui-sortable-list__actions"), BOX],
     });
   });
   return out;
@@ -156,13 +160,20 @@ describe("the grid managers look the same as their inline-style implementation (
       await userEvent.click(host!.querySelector<HTMLElement>(".cui-data-grid-column-manager button")!);
       await frames(14);
       if (sc.drag) {
-        const [from, to] = sc.drag.map(rowOf);
-        const dataTransfer = new DataTransfer();
-        const fire = (el: HTMLElement, type: string) =>
-          el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer }));
-        fire(from, "dragstart");
-        fire(to, "dragover");
-        await frames(3);
+        // A pointer drag of the first handle, held below the second's row: the ghost over its placeholder.
+        const pointer = (target: EventTarget, type: string, x: number, y: number) =>
+          target.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, isPrimary: true, pointerType: "mouse", clientX: x, clientY: y, button: 0 }));
+        const [from, to] = sc.drag.map(handleOf);
+        const a = from.getBoundingClientRect();
+        const b = to.closest<HTMLElement>(".cui-sortable-list__item")!.getBoundingClientRect();
+        const x = a.left + a.width / 2;
+        const y = a.top + a.height / 2;
+        pointer(from, "pointerdown", x, y);
+        await frames(1);
+        pointer(document, "pointermove", x, y + 8);
+        await frames(2);
+        pointer(document, "pointermove", x, b.bottom - 2);
+        await frames(20);
       }
       check(name, snapshot(locateCm()));
     });
@@ -187,13 +198,13 @@ describe("the grid managers look the same as their inline-style implementation (
       items.forEach((it, i) => {
         Object.assign(out, {
           [`item${i}`]: [it, ["display", "align-items", "color", "background-color", "padding-left"]],
-          [`item${i}-row`]: [it.querySelector("div"), VM_ROW],
-          [`item${i}-label`]: [it.querySelector("div > span"), ["display", "align-items", "column-gap"]],
-          [`item${i}-check`]: [it.querySelector("div > span > .cui-icon"), ["color", "width"]],
+          [`item${i}-row`]: [it.querySelector(".cui-data-grid-view-manager__view"), VM_ROW],
+          [`item${i}-label`]: [it.querySelector(".cui-dropdown-item__body"), ["display", "align-items", "column-gap"]],
+          [`item${i}-check`]: [it.querySelector(".cui-data-grid-view-manager__view-name > .cui-icon"), ["color", "width"]],
           [`item${i}-delete`]: [it.querySelector("button"), VM_DELETE],
           [`item${i}-delete-icon`]: [it.querySelector("button .cui-icon"), ["width", "color"]],
-          // The icon of an action item (save, save as, reset): the ones with no row of their own.
-          [`item${i}-icon`]: [it.querySelector("div") ? null : it.querySelector(".cui-icon"), ["color", "width"]],
+          // The icon of an action item (save, save as, reset), in the item's #icon slot (#557).
+          [`item${i}-icon`]: [it.querySelector(".cui-dropdown-item__icon .cui-icon"), ["color", "width"]],
         });
       });
       return out;
@@ -228,7 +239,7 @@ describe("the grid managers look the same as their inline-style implementation (
         await frames(8);
         await userEvent.click(host!.querySelector<HTMLElement>(".cui-data-grid-column-manager button")!);
         await frames(12);
-        await userEvent.click(document.querySelector<HTMLElement>(".cui-data-grid-column-manager__row .cui-checkbox")!);
+        await userEvent.click(document.querySelector<HTMLElement>(".cui-data-grid-column-manager__list .cui-checkbox")!);
         await frames(4);
         await userEvent.keyboard("{Escape}");
         await frames(12);

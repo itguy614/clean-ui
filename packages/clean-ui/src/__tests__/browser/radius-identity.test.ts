@@ -48,7 +48,7 @@ import baseline from "./radius-identity.baseline.json";
  * `var(--cui-button-radius, var(--cui-radius-md, 0.375rem))` chains, must not change a single
  * corner at default settings. `radius-identity.baseline.json` holds the computed border radii
  * of every element each scenario renders, recorded from develop at 1.10.0 BEFORE the change:
- * every `rounded` value of every component that takes the prop (class names were later dropped from the descriptors, mechanically; `tabs-segmented` was added with the Tabs rule rewrite, its 6px track and 4px tabs checked by hand against develop's calc), and the default look of the
+ * every `rounded` value of every component that takes the prop (class names were later dropped from the descriptors, mechanically; `tabs-segmented` was added with the Tabs rule rewrite, its 6px track and 4px tabs checked by hand against develop's calc; the `select-*-open` panels were re-recorded and the `combobox-*-open` / `tag-input-*-open` ones added in #522, when the listbox panel began following the field's `rounded`), and the default look of the
  * other components whose stylesheets carried a radius chain or a literal. Real browser: jsdom
  * computes none of this.
  *
@@ -88,7 +88,9 @@ for (const r of ROUNDED) {
   add(`select-${r}`, { make: () => wrap(CuiSelect, { modelValue: "a", options: opts, rounded: r }) });
   add(`select-${r}-open`, { open: ".cui-select__trigger", make: () => wrap(CuiSelect, { modelValue: "a", options: opts, rounded: r }) });
   add(`combobox-${r}`, { make: () => wrap(CuiCombobox, { modelValue: "a", options: opts, rounded: r }) });
+  add(`combobox-${r}-open`, { open: "input", make: () => wrap(CuiCombobox, { options: opts, rounded: r }) });
   add(`tag-input-${r}`, { make: () => wrap(CuiTagInput, { modelValue: ["a"], rounded: r }) });
+  add(`tag-input-${r}-open`, { open: "input", make: () => wrap(CuiTagInput, { modelValue: [], suggestions: [{ value: "apple" }, { value: "banana" }], rounded: r }) });
   add(`list-inset-${r}`, {
     make: () => wrap(CuiList, { variant: "inset", rounded: r }, { default: () => [h(CuiListItem, text("One")), h(CuiListItem, text("Two"))] }),
   });

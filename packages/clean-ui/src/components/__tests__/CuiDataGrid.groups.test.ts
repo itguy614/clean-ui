@@ -194,41 +194,78 @@ describe("CuiDataGrid column groups", () => {
     await nextTick();
     document.body.querySelector<HTMLButtonElement>('button[aria-label="Runter Reads"]')!.click();
     await nextTick();
-    expect(document.body.querySelector("[role=status]")!.textContent).toBe("Reads: 3/4");
+    expect(document.body.querySelector(".cui-data-grid-column-manager__units > [role=status]")!.textContent).toBe("Reads: 3/4");
   });
 
-  it("refuses a drop outside the group in the column manager, and allows one inside", async () => {
+  // The column manager's reordering is CuiSortableList's (#560): a leaf moves only within its group
+  // (its own list), a group or a loose column among the units, and the grid's calls are unchanged.
+  const handleOf = (name: string) => document.body.querySelector<HTMLElement>(`button[aria-label="Reorder ${name}"]`)!;
+  const key = (el: HTMLElement, k: string) =>
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
+  const escape = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  const leaves = () => cellsOf(1).map((c) => c.text());
+  const units = () => cellsOf(0).map((c) => c.text());
+  async function openManager() {
     mountGrid({ hideToolbar: false });
     await w!.find(".cui-data-grid-column-manager button").trigger("click");
     await nextTick();
-    const row = (text: string) =>
-      [...document.body.querySelectorAll<HTMLElement>(".cui-data-grid-column-manager__row")].find((r) =>
-        r.textContent?.includes(text),
-      )!;
-    const dataTransfer = () => ({ effectAllowed: "", dropEffect: "", setData() {} });
-    const fire = (el: HTMLElement, type: string, dt: unknown) => {
-      const e = new Event(type, { bubbles: true, cancelable: true });
-      (e as unknown as { dataTransfer: unknown }).dataTransfer = dt;
-      el.dispatchEvent(e);
-      return e;
-    };
-    const dt = dataTransfer();
-    fire(row("Reads · A1"), "dragstart", dt);
-    const outside = fire(row("RSSI (dBm) · A1"), "dragover", dt);
-    expect(dt.dropEffect).toBe("none");
-    expect(outside.defaultPrevented).toBe(false);
+  }
+
+  it("moves a leaf within its group by the buttons, with the grid's own reorderColumns", async () => {
+    await openManager();
+    document.body.querySelector<HTMLButtonElement>('button[aria-label="Move Reads · A1 down"]')!.click();
     await nextTick();
-    expect(row("RSSI (dBm) · A1").classList.contains("cui-data-grid-column-manager__row--drop")).toBe(false);
-    // a browser fires no drop on a refused target; a forced one changes nothing either
-    fire(row("RSSI (dBm) · A1"), "drop", dt);
-    expect(cellsOf(1).map((c) => c.text())).toEqual(["A1", "A2", "A3", "A1", "A2"]);
-    fire(row("Reads · A1"), "dragstart", dt);
-    const inside = fire(row("Reads · A3"), "dragover", dt);
-    expect(dt.dropEffect).toBe("move");
-    expect(inside.defaultPrevented).toBe(true);
-    fire(row("Reads · A3"), "drop", dt);
+    expect(leaves()).toEqual(["A2", "A1", "A3", "A1", "A2"]);
+    // the first leaf of a group has no place above it, whatever sits above the group
+    expect(document.body.querySelector('button[aria-label="Move RSSI (dBm) · A1 up"]')!.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("moves a group as a block by its buttons, and a loose column among the units", async () => {
+    await openManager();
+    document.body.querySelector<HTMLButtonElement>('button[aria-label="Move Reads down"]')!.click();
     await nextTick();
-    expect(cellsOf(1).slice(0, 3).map((c) => c.text())).toEqual(["A2", "A3", "A1"]);
+    expect(units()).toEqual(["EPC", "RSSI (dBm)", "Reads", "Note"]);
+    expect(leaves()).toEqual(["A1", "A2", "A1", "A2", "A3"]);
+    document.body.querySelector<HTMLButtonElement>('button[aria-label="Move Note up"]')!.click();
+    await nextTick();
+    expect(units()).toEqual(["EPC", "RSSI (dBm)", "Note", "Reads"]);
+  });
+
+  it("grabs a leaf by keyboard, moves it among its own group's leaves only, and drops", async () => {
+    await openManager();
+    const a1 = handleOf("Reads · A1");
+    key(a1, " ");
+    await nextTick();
+    for (let i = 0; i < 3; i++) {
+      key(a1, "ArrowDown"); // the third is past its group's last leaf: no further
+      await nextTick();
+    }
+    // Nothing is committed until the drop.
+    expect(leaves()).toEqual(["A1", "A2", "A3", "A1", "A2"]);
+    key(a1, " ");
+    await nextTick();
+    expect(leaves()).toEqual(["A2", "A3", "A1", "A1", "A2"]);
+    expect(units()).toEqual(["EPC", "Reads", "RSSI (dBm)", "Note"]);
+  });
+
+  it("grabs a group by keyboard and moves it as a block; Escape puts it back", async () => {
+    await openManager();
+    const reads = handleOf("Reads");
+    key(reads, " ");
+    await nextTick();
+    key(reads, "ArrowDown");
+    await nextTick();
+    escape();
+    await nextTick();
+    expect(units()).toEqual(["EPC", "Reads", "RSSI (dBm)", "Note"]);
+    key(reads, " ");
+    await nextTick();
+    key(reads, "ArrowDown");
+    await nextTick();
+    key(reads, " ");
+    await nextTick();
+    expect(units()).toEqual(["EPC", "RSSI (dBm)", "Reads", "Note"]);
+    expect(leaves()).toEqual(["A1", "A2", "A1", "A2", "A3"]);
   });
 
   it("flattens groups to leaf columns, so state, saved views and filters never see a group", () => {

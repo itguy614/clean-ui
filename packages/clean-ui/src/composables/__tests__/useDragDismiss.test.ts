@@ -9,7 +9,7 @@ import { pointer } from "../../__tests__/pointer";
  * a mouse off the handle, a second finger), and that a drag only ever writes `transform`.
  * jsdom has no layout, so the panel's size is given; real layout is in the browser test.
  */
-function setup(opts: { edge?: DragEdge; stops?: number[]; stop?: number; enabled?: boolean } = {}) {
+function setup(opts: { edge?: DragEdge; stops?: number[]; stop?: number; enabled?: boolean; hooks?: Partial<Parameters<typeof useDragDismiss>[0]> } = {}) {
   const el = document.createElement("div");
   el.innerHTML = `<div class="handle"></div><div class="body"><input /></div>`;
   document.body.append(el);
@@ -29,6 +29,7 @@ function setup(opts: { edge?: DragEdge; stops?: number[]; stop?: number; enabled
       stop: () => opts.stop ?? 0,
       onDismiss,
       onSettle,
+      ...opts.hooks,
     }),
   )!;
   el.addEventListener("pointerdown", gesture.onPointerdown as EventListener);
@@ -341,5 +342,35 @@ describe("useDragDismiss", () => {
     t.scope.stop();
     expect(remove).toHaveBeenCalledWith("touchmove", expect.any(Function));
     expect(t.el.style.transform).toBe("");
+  });
+
+  it("reports progress (0 at rest, 1 gone) and one release per drag, flagged dismissed on a close (#534)", async () => {
+    const onProgress = vi.fn();
+    const onRelease = vi.fn();
+    const t = setup({ hooks: { onProgress, onRelease } });
+    t.send(t.el, "pointerdown", 1, 100, 100);
+    await nextTick();
+    t.send(t.el, "pointermove", 1, 100, 110);
+    expect(onProgress).not.toHaveBeenCalled();
+    t.send(t.el, "pointermove", 1, 100, 210);
+    expect(onProgress).toHaveBeenLastCalledWith(0.25);
+    t.send(t.el, "pointermove", 1, 100, 910);
+    expect(onProgress).toHaveBeenLastCalledWith(1);
+    t.send(t.el, "pointerup", 1, 100, 910);
+    await nextTick();
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    expect(onRelease).toHaveBeenCalledWith(true);
+
+    onRelease.mockClear();
+    await t.swipe(t.el, 140, 600);
+    expect(onRelease).toHaveBeenCalledTimes(1);
+    expect(onRelease).toHaveBeenCalledWith(false);
+
+    onRelease.mockClear();
+    t.send(t.el, "pointerdown", 1, 100, 100);
+    await nextTick();
+    t.send(t.el, "pointerup", 1, 100, 100);
+    t.scope.stop();
+    expect(onRelease).not.toHaveBeenCalled();
   });
 });

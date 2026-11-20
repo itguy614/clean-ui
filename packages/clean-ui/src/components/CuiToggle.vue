@@ -25,7 +25,6 @@ export interface CuiToggleProps
 
 const props = withDefaults(defineProps<CuiToggleProps>(), {
   showLabels: false,
-  size: "md",
   disabled: false,
   readonly: false,
   hidden: false,
@@ -89,7 +88,7 @@ const trackSizes: Record<(typeof SUPPORTED_SIZES)[number], { w: string; h: strin
   lg: { w: "3.5rem", h: "1.875rem", knob: "1.5rem", travel: "1.625rem", labelSize: "0.6875rem" },
 };
 
-const clampedSize = computed(() => clampSize(props.size, SUPPORTED_SIZES));
+const clampedSize = computed(() => clampSize(props.size ?? group?.size?.value ?? "md", SUPPORTED_SIZES));
 const dims = computed(() => trackSizes[clampedSize.value]);
 
 // Named by the label, described by the description, not both as one name (#183).
@@ -101,7 +100,7 @@ const choice = useChoiceLabelling(props);
     ref="elRef"
     v-show="!hidden"
     class="cui-toggle"
-    :style="{ '--_toggle-focus-ring': `var(--cui-${resolvedColor}-focus-ring)` }"
+    :style="{ '--_toggle-focus-ring': `var(--cui-${resolvedColor}-focus-ring)`, '--_toggle-row': `max(1.5rem, ${dims.h})` }"
     :class="{
       'cui-toggle--checked': isChecked,
       'cui-toggle--disabled': isDisabled,
@@ -215,7 +214,9 @@ const choice = useChoiceLabelling(props);
   border-style: solid;
   transition: background var(--cui-duration-base) ease, border-color var(--cui-duration-base) ease;
   padding: calc(0.125rem - 1px);
-  margin-top: 0.125rem;
+  /* The track and the label's first line share one centre line: the row is the taller of the
+     label's 1.5rem line and the track, and the track is centred in it. */
+  margin-top: calc((var(--_toggle-row) - var(--_toggle-height)) / 2);
 }
 
 /* Themeable (#333, #454): zero specificity, so a consumer's plain `.cui-toggle__track { … }`
@@ -299,6 +300,8 @@ const choice = useChoiceLabelling(props);
   font-size: 1rem;
   line-height: 1.5;
   color: var(--cui-text-body);
+  /* A taller track (lg) pushes the first line down so its centre meets the track's. */
+  padding-top: calc((var(--_toggle-row) - 1.5rem) / 2);
 }
 
 .cui-toggle__description {

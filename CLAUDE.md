@@ -112,7 +112,11 @@ three, and CuiButton needed one to beat its *own* inline background on hover (#1
   `hover-border`, `active-bg`, `focus-ring`, `focus-border`, `width` (an overlay
   panel's width preset — CuiModal, a left/right CuiSlideover — which is not `CuiSize`; a
   top/bottom slideover's preset is `height` — #407), and `pressed-bg`, `pressed-color`,
-  `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396). Private prefix matches the
+  `pressed-border` (a toggle's on state — CuiButton's `pressed`, #396), and `drag-rotate`,
+  `drag-scale`, `drag-opacity` (the lift of a dragged item — CuiSortableList, #198: motion-like
+  tokens akin to `--cui-press-scale`, not paint, so `drag-rotate` of `0deg`, `drag-scale` of `1`
+  and `drag-opacity` of `1` mean "no lift"; the ghost's `rotate`/`scale` are CSS properties and
+  its `transform` — the pointer's translate — is written straight onto it). Private prefix matches the
   public one (`--cui-button-bg` ↔ `--_button-bg`); normalize a component's old ad-hoc prefix
   (`--_btn-`, `--_sel-`, `--_ta-`, `--_cb-`, `--_rb-`, `--_check-`) when you convert it.
   The one exception is a shared internal part: `CuiListboxPanel`/`CuiListboxOption` (#137)

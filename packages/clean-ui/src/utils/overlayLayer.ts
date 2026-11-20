@@ -34,6 +34,8 @@ export interface LayerToken {
   dismiss?: () => void;
   /** The panel this one was opened from, by component tree: it stays open under an overlay it hosts. */
   parent?: LayerToken | null;
+  /** The panel's element, so a press inside it can be told from a press outside its host. */
+  el?: () => Element | null | undefined;
 }
 
 /** Provided by a panel (`useLayerStep`), so an overlay or panel declared inside it knows its host. */
@@ -42,8 +44,8 @@ export const LayerHostKey: InjectionKey<() => LayerToken | undefined> = Symbol("
 const taken: LayerToken[] = [];
 
 /** The next step above the newest open layer. A panel passes `dismiss` (its own close, called when an overlay opens over it); an overlay and a sub-menu pass none. */
-export function takeLayerStep(dismiss?: () => void, parent?: LayerToken | null): LayerToken {
-  const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss, parent };
+export function takeLayerStep(dismiss?: () => void, parent?: LayerToken | null, el?: LayerToken["el"]): LayerToken {
+  const token: LayerToken = { step: taken.length ? Math.min(taken[taken.length - 1].step + 1, MAX_LAYER_STEP) : 0, dismiss, parent, el };
   taken.push(token);
   return token;
 }
@@ -57,6 +59,20 @@ export function dismissPanels(newest: LayerToken, host?: LayerToken | null): voi
   const keep = new Set<LayerToken>();
   for (let t = host; t; t = t.parent) keep.add(t);
   taken.slice(0, taken.indexOf(newest)).forEach((t) => keep.has(t) || t.dismiss?.());
+}
+
+/**
+ * Whether `target` is inside a panel that `host` opened (a select's list inside a popover): the
+ * panel is teleported out of its host, so a press on it is a press outside the host's own element
+ * unless the host asks. The nested panels are those holding a step whose `parent` chain reaches `host`.
+ */
+export function inChildLayer(host: LayerToken | undefined, target: Node): boolean {
+  if (!host) return false;
+  return taken.some((t) => {
+    if (!t.el?.()?.contains(target)) return false;
+    for (let p = t.parent; p; p = p.parent) if (p === host) return true;
+    return false;
+  });
 }
 
 /** Returns a step taken earlier; the others keep theirs. */

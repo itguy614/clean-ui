@@ -31,6 +31,7 @@ const props = withDefaults(defineProps<CuiDropdownProps>(), {
 const isOpen = ref(false);
 const triggerEl = ref<HTMLElement | null>(null);
 const focusRequest = shallowRef<{ edge: MenuEdge } | null>(null);
+const layerHosts = shallowRef<((target: Node) => boolean) | undefined>();
 let showTimer: ReturnType<typeof setTimeout> | null = null;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -120,7 +121,7 @@ const wrapperRef = ref<HTMLElement | null>(null);
 useClickOutside(
   () => [wrapperRef.value, ...menuPanels(dropdownId)],
   close,
-  { enabled: isOpen },
+  { enabled: isOpen, inside: (target) => !!layerHosts.value?.(target) },
 );
 
 function reposition() {
@@ -156,6 +157,7 @@ provide(DropdownContextKey, {
   placement: toRef(props, "placement"),
   ownerId: dropdownId,
   focusRequest,
+  layerHosts,
   open,
   close,
   toggle,

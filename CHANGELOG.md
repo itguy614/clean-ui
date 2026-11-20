@@ -7,6 +7,209 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-11-19
+
+### Added
+
+- `CuiTransferList` (#559): the selected list is a `CuiSortableList`, so it gains pointer drag (a
+  floating ghost over a placeholder), a keyboard grab (Space or Enter grabs, arrows, Home and End
+  move, Space or Enter drops, Escape cancels) and live-region announcements. The same `v-model`,
+  props, slots and events; Move up / Move down stay in the toolbar as the non-drag path (the rows
+  carry no buttons of their own). `messages.transferList.marked` (optional) is read after a marked
+  row of the selected list.
+- `CuiTransferList` drags between the lists with the pointer, in both directions (#559): a
+  floating tilted ghost (the `--cui-sortable-list-drag-*` tokens) follows the pointer while the row
+  stays behind, faint. Over the selected list the sortable's placeholder opens at the insertion
+  point (top, middle, bottom or an empty list) with the rows sliding aside; over the source list
+  the panel is lit. Escape cancels. This replaces the native HTML5 drag and its thin dashed drop
+  line. Touch drags from the grip only.
+- `CuiTransferList` `sourceOrder` (#559, `v-model:sourceOrder`, opt-in): the left list becomes
+  orderable like the right one (drag, keyboard grab, announcements). Items it names come first in
+  its order, the rest follow in `items` order; a reorder, or a selected row dropped into the left
+  list at the placeholder's slot, emits `update:sourceOrder` with every left value in order (before
+  `update:modelValue`, once each). Move up / Move down act on the one marked row of either list
+  (the last marked if both have one). Unset, the left list is unchanged.
+- `CuiSortableList` `itemDisabled`: items that keep their place, with no handle and no move
+  buttons. `insertAt` / `insertSize`: show a placeholder at an index for an item dragged in from
+  elsewhere, the others sliding aside; the parent owns the drag and the drop.
+
+- `CuiSortableList` (#198): a reorderable list whose v-model is the array of items. Drag an item by
+  its handle (pointer, touch and pen), or grab it with the keyboard (Space or Enter grabs, the
+  arrow keys, Home and End move it, Space or Enter drops, Escape cancels and restores), or use the
+  Move up / Move down buttons each item carries (`moveButtons`, the single-pointer alternative to
+  dragging that WCAG 2.5.7 asks for). A polite live region announces each step with the position
+  out of the total. The order is committed once, on the drop, with `update:modelValue` and a
+  `reorder` event (`{ item, from, to }`). Items are keyed by `itemKey` (default `id`) and named for
+  assistive tech by `itemLabel`. `orientation` (`vertical` by default), `disabled` and `hidden`;
+  slots `item` and `handle`.
+  - While dragged, an item floats as a ghost that follows the pointer (tilted, lifted and a little
+    see-through, with a soft shadow) over a dimmed placeholder that holds its slot, while the
+    others slide aside on `transform` and the ghost settles on the drop. `--cui-sortable-list-drag-rotate`
+    (2deg), `-drag-scale` (1.02) and `-drag-opacity` (0.9) tune it, and `0deg` / `1` / `1` turn it
+    off. Under `prefers-reduced-motion` nothing tilts or lifts and the others do not slide. Escape
+    cancels a drag or grab without closing an enclosing modal.
+  - Not included: scrolling an ancestor when an item is dragged near its edge, and dragging between
+    lists (`CuiTransferList` covers moving items across).
+- `messages.sortableList` for the list's labels, instructions and announcements.
+- `CuiCombobox` groups options (#445): an optional `group` label on each option, and consecutive
+  options sharing a label render under a `role="group"` named by a heading. Headings are not
+  options (the arrows and `aria-activedescendant` skip them), each option reports its position in
+  the whole list, and a group emptied by filtering is not drawn. Arrowing up to a group's first
+  option scrolls its heading into view. Style the heading with `--cui-combobox-group-color`,
+  `-group-font-size` and `-group-padding`. Opt-in `mergeGroups` gathers every option sharing a
+  label under one group, in order of first appearance, as `CuiSelect` does; the keyboard order,
+  option ids and `aria-posinset` follow the grouped order. Off by default, so only consecutive
+  options group.
+- `CuiCombobox` `optionActions` (#445): `{ key, modifiers, label, onTrigger }` shortcuts for the
+  highlighted option. `modifiers` is required and non-empty, because focus is in a text input; an
+  action without any never runs and warns in development. The `label` is the highlighted option's
+  `aria-describedby`, and the shortcuts are its `aria-keyshortcuts`.
+
+- `CuiDrawer` `scale-background` (#534, opt-in): the page behind the sheet scales back to 95% and
+  rounds its corners while the sheet is open, following the drag with the same progress as the
+  backdrop fade. It scales the element `background-selector` matches (default
+  `[data-cui-drawer-wrapper]`, looked up when the sheet opens; the library never assumes your app
+  root, and a missing match only warns in development). Only `transform` and `border-radius` are
+  animated, the wrapper's own inline styles are restored after the exit (or at once on unmount),
+  nested drawers share one scale, and reduced motion turns it off. Keep `position: fixed` and
+  `sticky` elements outside the wrapper: a transformed ancestor becomes their containing block.
+
+- `dataGridQueryData(params, extraParams?)` and
+  `dataGridInertiaVisit({ url, router, extraParams?, visitOptions? })` (#554): use a server-side
+  `CuiDataGrid` with Inertia through its `navigate` event, `@navigate="visit"`.
+  `dataGridQueryData` is the one mapping from a `navigate` payload to the query `hydrate-url` reads
+  back (`useDataGridInertia` uses it too). The docs say how multi-select and date-range filter
+  values are serialised (comma-joined) so the server can parse them. The router type is structural
+  (`DataGridInertiaRouter`), with no @inertiajs dependency.
+
+### Changed
+
+- `CuiSortableList` `itemDisabled` (#577): a disabled item's handle is now focusable and in the
+  arrow-key order, but inert: `aria-disabled="true"` (and `data-cui-focusable-disabled`) instead of
+  the `disabled` attribute, so keyboard and screen-reader users can reach it and hear that it is
+  unavailable. Space, Enter and a drag do nothing on it, and its move buttons stay disabled. A
+  neighbor's move can still pass it. In `CuiTransferList` a disabled row's handle likewise ignores
+  Shift+Space and Delete.
+- `CuiTransferList` (#577): a row's grip now also drags between the lists. It reorders within its own
+  list as before; once the pointer is over the other list the sortable's own drag is cancelled and the
+  cross-list ghost, placeholder (or panel highlight) and drop take over, so a selected row can be
+  dragged back to the source by its grip as well as its body.
+- `CuiTransferList` (#577): Shift+Space marking and unmarking is announced through the sortable's
+  live region ("Alpha selected" / "Alpha not selected"), and the handle's instructions now mention
+  Shift+Space and Delete. New optional messages `transferList.markedItem`, `unmarkedItem` and
+  `instructions`; the instructions are provided to the lists beneath the transfer list only.
+- `CuiDataGridColumnManager` reorders with `CuiSortableList` (#560), replacing its own drag handling:
+  one tested model for pointer drag (a floating ghost over a placeholder, in place of the drop
+  line), keyboard grab / move / drop / cancel, the Move up / Move down buttons and the live-region
+  announcements. A leaf moves within its group's own list, a group or ungrouped column among the
+  units, as a block. Frozen columns and groups are listed first, outside the sortable list, with
+  their lock and no handle. The grid's calls (`reorderColumns`, `reorderUnit`), saved views and
+  events are unchanged, and the buttons and announcements still read `messages.dataGrid`
+  (`moveUp`, `moveDown`, `moved`). Visible differences: a handle button (arrows reach it; Space or
+  Enter grabs) replaces the dotted grip that was draggable anywhere on the row, the move buttons are
+  reached by click or touch rather than the Tab order (the handle is the list's one tab stop), and
+  `--cui-data-grid-column-manager-border` now colours the edge of the dragged row, not a drop line.
+  The classes `__row`, `__row--leaf`, `__row--dragging`, `__row--drop` and `__actions` now match only
+  frozen rows (a reorderable row is a `CuiSortableList` item: restyle it with the `--cui-data-grid-column-manager-*`
+  tokens or `--cui-sortable-list-*`), and `--cui-data-grid-column-manager-px` is a reorderable row's own start and
+  end padding rather than the leaf indent. Positions announced and moved among are those of the
+  reorderable columns, after any frozen ones.
+- `CuiSortableList` scopes its roving focus to its own handles, so a sortable list can be nested in
+  an item of another (the column manager's groups) without the outer list's arrow keys reaching
+  into the inner one. No change for a list that is not nested.
+- `CuiTransferList` selected list (#559): its rows are no longer `role="option"`s in a listbox but
+  items of a named list, each with a drag handle that is the tab stop. On a handle, Space and Enter
+  grab; marking for transfer moved to Shift+Space and returning a row to the source list to Delete
+  or Backspace (click and double-click are unchanged). Dragging a selected row within its own list
+  is the sortable's pointer drag; dragging it onto the source list still returns it.
+
+- `CuiDataGrid`'s filter panel is a popover unless it is pinned (#552). **This changes the default
+  presentation:** the Filters button used to open an inline column beside the table, which took
+  width from it and made it reflow on every open and close; unpinned (the default) it now opens
+  as a popover anchored to the button, floating over the table, closing on a press outside or
+  Escape (an enclosing modal stays open). Pinning it from its header moves it inline, as before,
+  and it stays open; unpinning returns it to the popover. To keep the old look, start from a view
+  with `filterPanelPinned: true` (a saved view restores the presentation it was saved with);
+  `filterPanelSide` still chooses the side of the pinned panel. The Filters button carries
+  `aria-expanded` and `aria-controls`, focus moves into the popover on open and back to the
+  button on close, and the panel's pin and close buttons are named (`messages.dataGrid.pinFilters`, new). Edits typed or ticked in the panel but not yet applied are held by the
+  grid, not the panel, so they survive pinning and unpinning; they restart from the applied filters
+  when the panel opens, and when the filters change (Apply, Clear all, a chip removed, a saved view
+  loaded). The headless `useDataGrid` state is unchanged.
+- `CuiPopover` takes `label`, the dialog's accessible name when it has no header, and a press in a
+  panel opened from inside it (a `CuiSelect`, `CuiCombobox` or `CuiTagInput` list, a
+  `CuiDropdown` menu and its sub-menus, a `CuiContextMenu`) no longer counts as a press outside,
+  so a popover holding one stays open while it is used. Every panel that takes a layer step now
+  says where it is (an internal requirement of `useLayerStep`), so a new panel is covered too.
+- The dropdown panel of `CuiSelect`, `CuiCombobox` and `CuiTagInput` matches its field's
+  `rounded` (#522): `none` squares the panel and its rows, `sm`, `md` and `lg` use that step, and
+  `full` gives the panel `lg`. A default (`md`) panel is now 6px instead of 8px, and no longer
+  reads `--cui-radius-lg` unless `rounded` is `lg` or `full`. To keep the old look:
+
+  ```css
+  :root {
+    --cui-select-panel-radius: var(--cui-radius-lg, 0.5rem);
+    --cui-combobox-panel-radius: var(--cui-radius-lg, 0.5rem);
+    --cui-tag-input-panel-radius: var(--cui-radius-lg, 0.5rem);
+  }
+  ```
+
+  A field's own radius token (`--cui-select-radius`, `--cui-combobox-radius`,
+  `--cui-tag-input-radius`) now restyles its panel too, set on `:root` since the panel renders in
+  `<body>`; the three `-panel-radius` tokens still override it, and `-item-radius` still sets the
+  rows.
+
+### Fixed
+
+- `CuiDataGrid`'s pinned inline filter panel stays in place while the grid is loading, has no rows,
+  or a filter matched nothing (#570). It was drawn inside the table branch, so it vanished with it
+  and took the controls to clear the filter that emptied the result; the skeleton and the empty
+  state now fill only the area beside it, with the panel at the same position and width. With the
+  Filters button absent (`hideFilterPanel`, `hideToolbar`, or no filterable column) an open panel is
+  not shown, pinned or not, since the popover is anchored to that button.
+- A `CuiPopover`, `CuiSelect` or `CuiCombobox` opened from inside a `CuiDropdown` menu, a
+  sub-menu or a `CuiContextMenu` no longer counts as a press outside it: a press in the child's
+  panel leaves the menu open (#569). The same rule as for a popover (#552), now on every panel that
+  hosts others; Escape still closes the innermost layer first.
+- `CuiToggle`: the track and the first line of its label now share one centre line at every size
+  (the track used to hang from the top by a fixed margin, so the text sat above the control).
+  The default look moves by at most a couple of pixels; a tall `lg` track pushes the label's
+  first line down to meet it.
+- `CuiDropdownItem`'s `#icon` now centres on the label's first line (it sat about 1px high under a
+  fixed `margin-top`), at every density and when the label wraps (#568). The icon column is one label
+  line tall and centres its icon. Items in `CuiContextMenu` and sub-menus share it.
+- `hydrate-url` / `hydrateFromUrl` now reads a `date-range` filter back as its `[from, to]` array
+  (it was left as the string `from,to`, which no filter matched), and keeps `?page=` when the URL
+  also has filters (applying a filter reset the page to 1) (#554). An empty `filter[key]=`, a date
+  range without both ends and a non-numeric or non-positive `page` in the URL are now ignored
+  instead of applied.
+
+- An unlabeled `CuiCheckbox` no longer changes the height of its line when it is checked (#553):
+  a `CuiDataGrid` row selector made a checked row a few pixels shorter than an unchecked one in
+  fonts whose line box is tighter than the 1.25rem box. The mark is now drawn over the box instead
+  of laid out in it, so the checkbox has the same baseline checked, unchecked and indeterminate.
+- `CuiCheckbox` takes a `size` (#556), and its label follows it through the shared input scale
+  (xs 12px, sm 13px, md 16px, lg 17px, xl 18px), where it was fixed at 1rem and `size="sm"` did
+  nothing. The default (`md`) draws exactly as before. `--cui-checkbox-font-size` sets it
+  directly. `CuiRadio` and `CuiToggle` labels are unchanged.
+- `CuiCheckboxGroup` takes a `size` (#567), passed to its checkboxes like `color`: a checkbox's own
+  `size` wins, then the group's, then `md`, so a group with no size draws as before. `CuiToggleGroup`
+  takes the same prop (the two share their props and context) and its toggles inherit it the same
+  way. `CuiRadioGroup` already had `size`.
+- In `CuiDataGrid`, the filter panel's multi-select options are 13px, like the panel's own
+  fields, and the column manager's labels are the table's 0.875rem. The column manager is wider
+  (20rem), so two-word labels such as "Correlation ID" sit on one line; a longer label ends in an
+  ellipsis and carries a `title`.
+- The saved views menu of `CuiDataGrid` draws its action icons ("Save as…", "Save current",
+  "Reset to defaults") in the item's `#icon` slot, so they sit on the label's centre line with the
+  standard gap instead of above it (#557).
+- `CuiModalHeader` with an `#actions` slot centres the title, the actions and Close on one line,
+  and Close is as tall as a small button (2rem, the control scale's floor and density included).
+  A title-only header looks as before. The row's alignment and Close's size are zero-specificity
+  rules now, so a plain `.cui-modal-header { align-items: center }` wins (that is how a larger
+  title is centred), and Close's size reads `--cui-modal-header-width` and `-height`. The slideover
+  and drawer headers follow (#558).
+
 ## [2.2.0] - 2026-11-18
 
 ### Added

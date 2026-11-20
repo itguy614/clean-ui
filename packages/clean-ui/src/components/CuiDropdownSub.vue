@@ -28,7 +28,7 @@ const isOpen = ref(false);
 const shown = () => isOpen.value && !!parentCtx?.isOpen.value;
 const { present, onAfterLeave } = usePresence(shown);
 // Above the menu it opens from (it opens after it); it goes with its parent, so it has no dismiss of its own (#541).
-const layerStep = useLayerStep(shown, present);
+const layerStep = useLayerStep(shown, present, undefined, () => panelRef.value);
 // The theme scope around the item, inside the parent menu's copy of it (#418).
 const themeScope = useScopedTheme(() => present.value);
 const triggerRef = ref<HTMLElement>();

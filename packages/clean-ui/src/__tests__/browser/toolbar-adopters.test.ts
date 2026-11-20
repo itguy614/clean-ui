@@ -55,7 +55,8 @@ describe("CuiTransferList move toolbar (real browser)", () => {
     expect(document.activeElement).toBe(buttons()[0]);
     expect(buttons()[0].getAttribute("aria-disabled")).toBe("true");
     await userEvent.tab();
-    expect(document.activeElement).toBe(option("Delta"));
+    // The selected list's tab stop is its row's drag handle (#559).
+    expect(document.activeElement).toBe(document.querySelector(".cui-transfer-list__sortable .cui-sortable-list__handle"));
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(buttons()[0]);
     await userEvent.tab({ shift: true });

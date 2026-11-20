@@ -34,6 +34,7 @@ const FORM_CONTROLS = [
   "CuiPinInput.vue",
   "CuiDatePicker.vue",
   "CuiDateRangePicker.vue",
+  "CuiCheckbox.vue", // its label text only (#556); the box is a fixed 1.25rem
 ];
 
 /**

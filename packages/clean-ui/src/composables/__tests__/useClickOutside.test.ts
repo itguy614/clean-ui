@@ -33,6 +33,22 @@ describe("useClickOutside", () => {
     expect(onOutside).toHaveBeenCalledOnce();
   });
 
+  it("counts a press as inside when `inside` says so", () => {
+    const onOutside = vi.fn();
+    const target = ref<HTMLElement | null>(null);
+    mount(
+      defineComponent(() => {
+        useClickOutside([target], onOutside, { inside: (t) => (t as Element).id === "teleported" });
+        return () => h("div", [h("button", { ref: target }), h("button", { id: "teleported" }), h("button", { id: "away" })]);
+      }),
+      { attachTo: document.body },
+    );
+    press(document.getElementById("teleported")!);
+    expect(onOutside).not.toHaveBeenCalled();
+    press(document.getElementById("away")!);
+    expect(onOutside).toHaveBeenCalledOnce();
+  });
+
   it("listens only while enabled", async () => {
     const enabled = ref(false);
     const onOutside = setup(enabled);

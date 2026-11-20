@@ -42,6 +42,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiListboxPanel.vue", issue: "#137" },
   { file: "CuiListboxOption.vue", issue: "#137" },
   { file: "CuiListboxStatus.vue", issue: "#212" },
+  { file: "CuiListboxGroup.vue", issue: "#445" },
   { file: "CuiInputStepper.vue", issue: "#123" },
   { file: "CuiBanner.vue", issue: "#119" },
   { file: "CuiScrollArea.vue", issue: "#143" },
@@ -72,6 +73,7 @@ const CONVERTED: Array<{ file: string; issue: string }> = [
   { file: "CuiSlideover.vue", issue: "#407" },
   { file: "CuiDrawer.vue", issue: "#268" },
   { file: "CuiTransferList.vue", issue: "#469" },
+  { file: "CuiSortableList.vue", issue: "#198" },
   { file: "CuiMaskedInput.vue", issue: "#469" },
   { file: "CuiTreeView.vue", issue: "#468" },
   { file: "CuiPanel.vue", issue: "#406" },
@@ -224,6 +226,9 @@ const SLOTS = new Set([
   ...["hover-bg", "hover-color", "hover-border", "active-bg", "focus-ring", "focus-border"],
   "width", // an overlay panel's width preset, which is not CuiSize (#407)
   ...["pressed-bg", "pressed-color", "pressed-border"], // a toggle's on state (#396)
+  // The lift of a dragged item (CuiSortableList, #198): motion-like tokens, akin to
+  // --cui-press-scale, not paint, so no paint slot names them.
+  ...["drag-rotate", "drag-scale", "drag-opacity"],
 ]);
 
 /** `:where(…)` around the whole selector — not `:where(.x):hover`, which is (0,1,0) again. */
@@ -308,7 +313,12 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
   { file: "CuiInput.vue", component: "input", privateOnly: FLOAT_OFFSET, issue: "#454" },
   { file: "CuiSelect.vue", component: "select", privateOnly: {}, issue: "#454" },
   { file: "CuiTextarea.vue", component: "textarea", privateOnly: FLOAT_OFFSET, issue: "#454" },
-  { file: "CuiCheckbox.vue", component: "checkbox", privateOnly: {}, issue: "#454" },
+  {
+    file: "CuiCheckbox.vue",
+    component: "checkbox",
+    privateOnly: { "box-offset": "the box's margin, derived from the label size in the themeable rule; a margin stays at normal specificity so a page's own `* { margin: 0 }` cannot undo the centring (#556)" },
+    issue: "#454",
+  },
   { file: "CuiRadio.vue", component: "radio", privateOnly: {}, issue: "#454" },
   {
     file: "CuiToggle.vue",
@@ -317,6 +327,7 @@ const CONVERTED_SFC_STYLESHEETS: Array<{ file: string; component: string; privat
       height: "the track's height follows the size preset, with the knob and the track width (#333)",
       "knob-size": "the knob's box follows the size preset (#333)",
       active: "the pressed border has no slot in the vocabulary",
+      row: "the first-line row the track and the label centre in is the taller of the label line and the track, so it follows the size preset like the track's height",
     },
     issue: "#454",
   },
@@ -501,7 +512,7 @@ describe("converted component stylesheets with no dynamic part still read public
  */
 const GEOMETRY = "geometry or state computed by the component from a prop or the data; no slot in the vocabulary to name it";
 const LISTBOX_BY_DESIGN =
-  "CuiListboxPanel and CuiListboxOption read their consumer's public tokens by tokenPrefix and map them onto --_listbox-* ON PURPOSE (#137)";
+  "CuiListboxPanel, CuiListboxGroup and CuiListboxOption read their consumer's public tokens by tokenPrefix and map them onto --_listbox-* ON PURPOSE (#137)";
 const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   "CuiAvatarGroup.vue": { "avatar-group-spacing": `the overlap follows the \`spacing\` prop (${GEOMETRY})` },
   "CuiBackdrop.vue": { "backdrop-opacity": `follows the \`opacity\` prop (${GEOMETRY})` },
@@ -561,9 +572,15 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
     "tree-view-indent": "the size preset's indent step, with no public token (CuiTreeView emits it)",
     "tree-view-icon-size": "the size preset's glyph size, with no public token (CuiTreeView emits it)",
   },
+  "CuiSortableList.vue": Object.fromEntries(
+    ["left", "top", "width", "height"].map((s) => [`sortable-list-box-${s}`, `the dragged item's box when the drag began: where the ghost stands and what the placeholder holds (${GEOMETRY})`]),
+  ),
   "CuiTransferList.vue": {
     "transfer-list-title-font-size": "a part's own size has no slot in the closed vocabulary (the option rows' font-size is public)",
     "transfer-list-max-height": "follows the `height` prop",
+    ...Object.fromEntries(
+      ["left", "top", "width", "height"].map((s) => [`transfer-list-ghost-${s}`, `the dragged row's box when the drag began: where its ghost stands (${GEOMETRY}) (#559)`]),
+    ),
   },
   // Its own token reads (--cui-list-radius, with CuiList's private --_list-radius as the
   // fallback) are already through the public layer; the corner is a derivation of them.
@@ -572,6 +589,9 @@ const PRIVATE_ONLY: Record<string, Record<string, string>> = {
   },
   "CuiListboxPanel.vue": Object.fromEntries(
     ["transform-origin", "bg", "border", "radius", "shadow", "padding"].map((s) => [`listbox-panel-${s}`, s === "transform-origin" ? TRANSFORM_ORIGIN : LISTBOX_BY_DESIGN]),
+  ),
+  "CuiListboxGroup.vue": Object.fromEntries(
+    ["group-padding", "group-font-size", "group-color"].map((s) => [`listbox-${s}`, LISTBOX_BY_DESIGN]),
   ),
   "CuiListboxOption.vue": Object.fromEntries(
     ["item-padding", "font-size", "item-color", "item-radius", "item-selected-bg", "item-focus-bg", "item-disabled-color"].map((s) => [`listbox-${s}`, LISTBOX_BY_DESIGN]),

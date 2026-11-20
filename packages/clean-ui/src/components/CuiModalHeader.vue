@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, useSlots } from "vue";
 import CuiIcon from "./CuiIcon.vue";
 import type { HideableProps, TitleAsProps } from "../types/common";
 import { useMessages } from "../composables/useMessages";
@@ -32,10 +33,12 @@ const emit = defineEmits<{
   close: [];
 }>();
 const messages = useMessages();
+const slots = useSlots();
+const hasActions = computed(() => !!slots.actions);
 </script>
 
 <template>
-  <div class="cui-modal-header" v-show="!hidden">
+  <div class="cui-modal-header" :class="{ 'cui-modal-header--has-actions': hasActions }" v-show="!hidden">
     <div class="cui-modal-header__main">
       <slot>
         <component :is="headingTag" v-if="title" :id="titleId" class="cui-modal-header__title">
@@ -43,7 +46,7 @@ const messages = useMessages();
         </component>
       </slot>
     </div>
-    <div v-if="$slots.actions" class="cui-modal-header__actions">
+    <div v-if="hasActions" class="cui-modal-header__actions">
       <slot name="actions" />
     </div>
     <button v-if="!noCloseButton" type="button" class="cui-modal-header__close" :aria-label="messages.close" @click="emit('close')">
@@ -58,18 +61,29 @@ const messages = useMessages();
  * (0,1,0) wins without !important; structure (display, position, flex) keeps normal
  * specificity. The close button's hover was written from mouseenter and mouseleave handlers
  * (an inline background and color); it is a :hover rule now.
+ *
+ * Title only, the row is top-aligned and Close is a 1.75rem square nudged up to the title's
+ * first line. With actions (`--has-actions`) the title, actions and Close share one centre
+ * line and Close takes a small button's height, the shared control scale's 2rem (#558).
+ * Alignment is a bare :where() rule (a consumer's plain `.cui-modal-header { align-items }`
+ * wins, which is also how a larger title is centred): the closed slot vocabulary has no name
+ * for it. Close's size reads the `width` and `height` slots.
  */
 .cui-modal-header {
   display: flex;
-  align-items: flex-start;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
 }
 :where(.cui-modal-header) {
+  align-items: flex-start;
   gap: var(--cui-modal-header-gap, calc(0.75rem * var(--cui-density-scale, 1)));
   padding: calc(1.25rem * var(--cui-density-scale, 1)) var(--cui-modal-header-px, calc(1.5rem * var(--cui-density-scale, 1))) calc(0.25rem * var(--cui-density-scale, 1));
   background: var(--cui-modal-header-bg, var(--cui-surface-base));
+}
+
+:where(.cui-modal-header--has-actions) {
+  align-items: center;
 }
 
 .cui-modal-header__main {
@@ -99,11 +113,11 @@ const messages = useMessages();
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.75rem;
-  height: 1.75rem;
   cursor: pointer;
 }
 :where(.cui-modal-header__close) {
+  width: var(--cui-modal-header-width, var(--cui-modal-header-height, 1.75rem));
+  height: var(--cui-modal-header-height, 1.75rem);
   padding: 0;
   border: none;
   border-radius: var(--cui-radius-md, 0.375rem);
@@ -114,6 +128,12 @@ const messages = useMessages();
   transition:
     color var(--cui-duration-fast) ease,
     background var(--cui-duration-fast) ease;
+}
+/* The height of a size="sm" button (BUTTON_SIZE_SCALE), floor and density included. */
+:where(.cui-modal-header--has-actions .cui-modal-header__close) {
+  width: var(--cui-modal-header-width, var(--cui-modal-header-height, max(var(--cui-control-min-target, 24px), calc(2rem * var(--cui-density-scale, 1)))));
+  height: var(--cui-modal-header-height, max(var(--cui-control-min-target, 24px), calc(2rem * var(--cui-density-scale, 1))));
+  margin-top: 0;
 }
 :where(.cui-modal-header__close:hover) {
   color: var(--cui-modal-header-hover-color, var(--cui-text-body));

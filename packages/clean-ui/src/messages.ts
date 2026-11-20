@@ -120,6 +120,31 @@ export interface CuiCoreMessages {
      * The move buttons' toolbar name (#421). Optional, so an existing catalogue type-checks.
      */
     actions?: string;
+    /** Read after a marked row of the selected list, which has no `aria-selected` (#559). Optional, so an existing catalogue type-checks. */
+    marked?: string;
+    /** Said when Shift+Space marks or unmarks a row of a sortable list, and the handle's instructions there. Optional, so an existing catalogue type-checks. */
+    markedItem?: (item: string) => string;
+    unmarkedItem?: (item: string) => string;
+    instructions?: string;
+  };
+  sortableList: {
+    /** Default `label` of the list, when the consumer gives none. */
+    label: string;
+    /** The drag handle's name, which shows only a grip icon. `item` is the item's label. */
+    handle: (item: string) => string;
+    /** The move buttons' names (WCAG 2.5.7's single-pointer alternative to dragging). */
+    moveUp: (item: string) => string;
+    moveDown: (item: string) => string;
+    /** Horizontal lists name the same buttons by direction. */
+    moveStart: (item: string) => string;
+    moveEnd: (item: string) => string;
+    /** Read when a handle takes focus: how to grab, move, drop and cancel. */
+    instructions: string;
+    /** Live-region announcements. `position` counts from 1, out of `total`. */
+    grabbed: (item: string, position: number, total: number) => string;
+    moved: (item: string, position: number, total: number) => string;
+    dropped: (item: string, position: number, total: number) => string;
+    cancelled: (item: string, position: number, total: number) => string;
   };
   datePicker: {
     today: string;
@@ -281,6 +306,8 @@ export interface CuiCoreMessages {
     searchLabel?: string;
     /** The toolbar's accessible name (#190). Optional, so an existing catalogue type-checks. */
     toolbar?: string;
+    /** The filter panel's pin button, a toggle: its name stays and `aria-pressed` carries the state (#552). Optional, so an existing catalogue type-checks. */
+    pinFilters?: string;
     /** Placeholder for a per-column filter input. */
     filterColumn: (columnLabel: string) => string;
     /** Selection count in the bulk-action bar. */
@@ -386,6 +413,24 @@ export const defaultMessages: CuiCoreMessages = {
     moveDown: "Move down",
     filter: (title) => `Filter ${title}`,
     actions: "Move items",
+    marked: "selected",
+    markedItem: (item) => `${item} selected`,
+    unmarkedItem: (item) => `${item} not selected`,
+    instructions:
+      "Press Space to grab. Use the arrow keys to move, Space to drop, Escape to cancel. Shift+Space selects or deselects the item for transfer. Delete moves it to the other list.",
+  },
+  sortableList: {
+    label: "Reorderable list",
+    handle: (item) => `Reorder ${item}`,
+    moveUp: (item) => `Move ${item} up`,
+    moveDown: (item) => `Move ${item} down`,
+    moveStart: (item) => `Move ${item} earlier`,
+    moveEnd: (item) => `Move ${item} later`,
+    instructions: "Press Space to grab. Use the arrow keys to move, Space to drop, Escape to cancel.",
+    grabbed: (item, position, total) => `${item} grabbed, position ${position} of ${total}.`,
+    moved: (item, position, total) => `${item} moved to position ${position} of ${total}.`,
+    dropped: (item, position, total) => `${item} dropped at position ${position} of ${total}.`,
+    cancelled: (item, position, total) => `Reorder cancelled. ${item} is back at position ${position} of ${total}.`,
   },
   datePicker: { today: "Today", yearRange: (start, end) => `${start} to ${end}` },
   dateRangePicker: { selectStart: "Select start date", selectEnd: "Select end date", start: "Start date", end: "End date" },
@@ -452,6 +497,7 @@ export const defaultMessages: CuiCoreMessages = {
     all: "All",
     search: "Search…",
     toolbar: "Table controls",
+    pinFilters: "Pin filters",
     filterColumn: (columnLabel) => `Filter ${columnLabel}…`,
     selected: (count) => `${count} item${count === 1 ? "" : "s"} selected`,
     bulkActions: "Bulk actions",

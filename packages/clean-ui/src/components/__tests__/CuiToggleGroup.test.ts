@@ -98,4 +98,21 @@ describe("CuiToggleGroup", () => {
 
     expect(wrapper.classes()).toContain("cui-toggle-group--vertical");
   });
+
+  describe("size (#567)", () => {
+    const knob = (w: ReturnType<typeof mount>, i: number) =>
+      (w.findAll(".cui-toggle__track")[i].element as HTMLElement).style.getPropertyValue("--_toggle-height");
+    const mountGroup = (groupProps: object, boxProps: object[] = [{}, {}]) =>
+      mount(CuiToggleGroup, {
+        props: groupProps,
+        slots: { default: () => boxProps.map((p, n) => h(CuiToggle, { value: n, label: "L", ...p })) },
+      });
+
+    it("inherits the group's size, its own wins, none is md", () => {
+      const w = mountGroup({ size: "sm" }, [{}, { size: "lg" }]);
+      expect(knob(w, 0)).toBe("1.125rem");
+      expect(knob(w, 1)).toBe("1.875rem");
+      expect(knob(mountGroup({}), 0)).toBe("1.5rem");
+    });
+  });
 });

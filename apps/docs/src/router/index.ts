@@ -366,6 +366,11 @@ const router = createRouter({
       component: () => import('../pages/ListPage.vue'),
     },
     {
+      path: '/components/sortable-list',
+      name: 'sortable-list',
+      component: () => import('../pages/SortableListPage.vue'),
+    },
+    {
       path: '/components/status-dot',
       name: 'status-dot',
       component: () => import('../pages/StatusDotPage.vue'),

@@ -22,7 +22,18 @@ withDefaults(defineProps<CuiDropdownMenuProps>(), {
 const ctx = inject(DropdownContextKey);
 const { present, onAfterLeave } = usePresence(() => !!ctx?.isOpen.value);
 // Above its own overlay and everything opened before it; closed when an overlay opens over it (#541).
-const layerStep = useLayerStep(() => !!ctx?.isOpen.value, present, () => ctx?.close());
+const layerStep = useLayerStep(
+  () => !!ctx?.isOpen.value,
+  present,
+  () => ctx?.close(),
+  () => menuRef.value,
+);
+// The dropdown counts a press in a panel opened from inside this menu as inside.
+if (ctx?.layerHosts) {
+  const hosts = (ctx.layerHosts.value = layerStep.hosts);
+  // Only its own: a menu swapped for another has already registered the new one.
+  onUnmounted(() => ctx.layerHosts!.value === hosts && (ctx.layerHosts!.value = undefined));
+}
 // The theme scope around the dropdown, on the teleported menu (#418).
 const themeScope = useScopedTheme(() => present.value);
 const menuRef = ref<HTMLElement>();

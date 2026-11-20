@@ -23,6 +23,12 @@ export interface DropdownContext {
    * even while the menu is already open.
    */
   focusRequest?: Ref<{ edge: MenuEdge } | null>;
+  /**
+   * CuiDropdown only. Set by its CuiDropdownMenu: whether a press landed in a panel opened from
+   * inside the menu (a popover or a select in an item), which the dropdown must not count as a
+   * press outside. Optional for the same reason as `ownerId`.
+   */
+  layerHosts?: Ref<((target: Node) => boolean) | undefined>;
   /** Open, then focus the first item — or the last, for Arrow Up on the trigger. */
   open: (edge?: MenuEdge) => void;
   close: () => void;

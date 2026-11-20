@@ -45,6 +45,15 @@ const columns: DataGridColumn[] = [
   { key: "salary", label: "Salary", sortable: true, align: "right", nowrap: true },
 ];
 
+const pinnedFilterView = {
+  columns: [],
+  sort: null,
+  filters: [],
+  perPage: 15,
+  viewMode: "grid" as const,
+  filterPanelPinned: true,
+};
+
 const data: DataGridRow[] = [
   { id: "1", name: "Alice Johnson", email: "alice@example.com", role: "Engineering", status: "Active", salary: "$125,000", _actions: [{ key: "edit", label: "Edit" }, { key: "delete", label: "Delete" }] },
   { id: "2", name: "Bob Smith", email: "bob@example.com", role: "Design", status: "Active", salary: "$105,000", _actions: [{ key: "edit", label: "Edit" }, { key: "delete", label: "Delete" }] },
@@ -396,6 +405,50 @@ function step(by: number) {
         </p>
       </Example>
 
+      <!-- Filter panel: popover or pinned -->
+      <Example title="Filter Panel: Popover or Pinned" :code="`<!-- Unpinned (the default): the Filters button opens a popover over the table -->
+<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot; />
+
+<!-- Pinned: the panel is a column beside the table and stays open. A saved view
+     remembers it (filterPanelPinned), and filterPanelSide picks the side. -->
+<CuiDataGrid
+  :columns=&quot;columns&quot;
+  :data=&quot;data&quot;
+  filter-panel-side=&quot;left&quot;
+  :initial-view=&quot;{
+    columns: [], sort: null, filters: [], perPage: 15,
+    viewMode: 'grid', filterPanelPinned: true,
+  }&quot;
+/>`">
+        <CuiStack spacing="6">
+          <div>
+            <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
+              Unpinned: <strong>Filters</strong> opens the panel as a popover over the table, which
+              keeps its width. It closes on a press outside or Escape and hands focus back to the
+              button. The pin in its header moves it inline, carrying any edits you have not applied yet.
+            </p>
+            <CuiDataGrid :columns="columns" :data="data.slice(0, 5)" hide-pagination hide-column-manager />
+          </div>
+          <div>
+            <p class="mb-2 text-sm" style="color: var(--cui-text-secondary);">
+              Pinned (this grid starts from a view with <code>filterPanelPinned: true</code>):
+              <strong>Filters</strong> shows and hides the panel as a column beside the table, and
+              it stays open until closed, in place while the grid loads or a filter leaves no rows,
+              so <strong>Clear all</strong> is always within reach. Unpin it to get the popover back.
+              Without the button (<code>hideFilterPanel</code>) the panel cannot be opened, pinned or not.
+            </p>
+            <CuiDataGrid
+              :columns="columns"
+              :data="data.slice(0, 5)"
+              hide-pagination
+              hide-column-manager
+              filter-panel-side="left"
+              :initial-view="pinnedFilterView"
+            />
+          </div>
+        </CuiStack>
+      </Example>
+
       <!-- Card view -->
       <Example title="Card View Toggle" :code="`<CuiDataGrid :columns=&quot;columns&quot; :data=&quot;data&quot;>
   <template #card=&quot;{ row }&quot;>
@@ -515,8 +568,9 @@ function step(by: number) {
             A rule marks where each group after the first begins, through the header and body.
             Sorting, filtering and saved
             views work on the leaves. Open <strong>Columns</strong>: groups list with their leaves
-            indented; drag a leaf within its group, drag a group header to move the whole block,
-            or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
+            indented; drag a leaf by its handle within its group, drag a group&rsquo;s handle to move
+            the whole block, grab either with the keyboard (Space, then the arrow keys, then Space
+            to drop, Escape to cancel), or use the arrow buttons. Hide a leaf and its group narrows; hide them all and the
             group goes. Screen readers announce a leaf with its group (&ldquo;Reads, A1&rdquo;).
           </p>
           <CuiDataGrid :columns="groupedColumns" :data="tagData" max-height="320px" size="sm" />
@@ -549,7 +603,8 @@ function step(by: number) {
             <strong>Reading</strong> is declared first but sits after the frozen EPC and Tag
             group, and scrolling right pins the group&rsquo;s header cell over both its
             columns. Open <strong>Columns</strong>: frozen columns show a lock instead of a
-            drag handle, have no move buttons, and nothing can be dropped among them. The
+            drag handle, have no move buttons, and sit outside the reorderable list, so nothing can
+            be dropped among them. The
             <strong>Mixed</strong> group breaks the rule (one frozen leaf, one not): switch it on
             and the grid unfreezes it, and in development warns in the console. Give frozen
             columns a <code>width</code>: it is what the columns after it pin against. Without one the
@@ -971,8 +1026,7 @@ const apiAdapter: DataGridViewAdapter = {
                 It takes the grid context, so pair it with a headless <code>useDataGrid</code> (with
                 <code>serverSide</code> and <code>hydrateFromUrl</code>), or call it inside a
                 component in a <code>CuiDataGrid</code> slot with
-                <code>useDataGridState()</code>. With the component on its own, the
-                <code>navigate</code> event carries the same <code>DataGridQueryParams</code>.
+                <code>useDataGridState()</code>.
               </p>
               <pre class="cui-pre"><code class="cui-code">import { computed } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
@@ -987,6 +1041,66 @@ const grid = useDataGrid({
 });
 
 useDataGridInertia({ grid, url: route("users.index"), router, extraParams: { team: "7" } });</code></pre>
+
+              <h4 id="inertia-navigate" class="mb-2 mt-6 text-base font-semibold">With the component's navigate event</h4>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                A <code>CuiDataGrid</code> with <code>server-side</code> owns its grid, so there is
+                no context to hand to <code>useDataGridInertia</code>. Its <code>navigate</code>
+                event carries a <code>DataGridQueryParams</code>, and
+                <code>dataGridInertiaVisit({ url, router, extraParams?, visitOptions? })</code>
+                returns a handler for it that calls <code>router.get(url, query, visitOptions)</code>
+                (default <code>{ preserveState: true, preserveScroll: true }</code>;
+                <code>visitOptions</code> is merged over it, so pass
+                <code>preserveScroll: false</code> to opt out of one).
+              </p>
+              <pre class="cui-pre"><code class="cui-code">&lt;script setup lang="ts"&gt;
+import { router } from "@inertiajs/vue3";
+import { CuiDataGrid, dataGridInertiaVisit } from "@itguy614/clean-ui";
+
+const visit = dataGridInertiaVisit({ url: route("users.index"), router });
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;CuiDataGrid
+    :columns="columns"
+    :data="users"
+    server-side
+    hydrate-url
+    @navigate="visit"
+  /&gt;
+&lt;/template&gt;</code></pre>
+              <p class="mb-3 mt-3 text-surface-600 dark:text-surface-400">
+                To call the router yourself, <code>dataGridQueryData(params, extraParams?)</code> is
+                the same mapping as a pure function, returning the query object. Both
+                <code>useDataGridInertia</code> and <code>dataGridInertiaVisit</code> use it, so the
+                keys always match what <code>hydrate-url</code> reads back. Use
+                <code>useDataGridInertia</code> when you own the grid with <code>useDataGrid</code>;
+                use <code>dataGridInertiaVisit</code> (or <code>dataGridQueryData</code> with your own
+                router call) with the component's <code>navigate</code> event.
+              </p>
+
+              <h4 id="inertia-query-format" class="mb-2 mt-6 text-base font-semibold">Query format the server reads</h4>
+              <ul class="mb-3 list-disc pl-6 text-surface-600 dark:text-surface-400">
+                <li><code>page</code> (omitted on page 1) and <code>per_page</code></li>
+                <li><code>sort</code> (the column key) and <code>direction</code> (<code>asc</code> or <code>desc</code>)</li>
+                <li><code>search</code>, and <code>search_field</code> when a field is chosen</li>
+                <li><code>filter[key]=value</code> for a text or select filter</li>
+                <li>
+                  Multi-select: <code>filter[role]=admin,editor</code>, the selected values joined
+                  with a comma. A value that itself contains a comma cannot be told apart from two
+                  values, so the format is ambiguous for those.
+                </li>
+                <li>
+                  Date range: <code>filter[joined]=2024-01-01,2024-02-01</code>, the two
+                  <code>YYYY-MM-DD</code> dates (from, to) joined with a comma. The filter panel
+                  only applies a range with both ends set.
+                </li>
+              </ul>
+              <p class="mb-3 text-surface-600 dark:text-surface-400">
+                On the server, split a multi-select or date-range value on the comma, for example in
+                Laravel <code>explode(',', $request->input('filter.joined'))</code>. The grid reads
+                the same format back from the URL, including after a reload.
+              </p>
             </CuiCardBody>
           </CuiCard>
         </CuiStack>

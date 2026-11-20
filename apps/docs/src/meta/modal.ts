@@ -154,6 +154,8 @@ const meta: ComponentMeta = {
     { name: "--cui-modal-header-color", default: "var(--cui-text-emphasis)", description: "The header title's color" },
     { name: "--cui-modal-header-font-size", default: "1.125rem", description: "The header title's size" },
     { name: "--cui-modal-header-hover-bg", default: "var(--cui-primary-bg)", description: "The close button's fill on hover" },
+    { name: "--cui-modal-header-width", default: "1.75rem (2rem with actions)", description: "The close button's width. With an #actions slot it follows a size=\"sm\" button, so the two line up" },
+    { name: "--cui-modal-header-height", default: "1.75rem (2rem with actions)", description: "The close button's height. With an #actions slot it follows a size=\"sm\" button, so the two line up" },
     { name: "--cui-modal-header-hover-color", default: "var(--cui-text-body)", description: "The close button's color on hover" },
     { name: "--cui-modal-body-px", default: "1.5rem (density)", description: "CuiModalBody's horizontal padding. noPadding removes it whatever this says" },
     { name: "--cui-modal-body-py", default: "0.75rem (density)", description: "CuiModalBody's vertical padding" },

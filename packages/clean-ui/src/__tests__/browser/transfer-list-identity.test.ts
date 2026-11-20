@@ -10,7 +10,7 @@ import baseline from "./transfer-list-identity.baseline.json";
  * about how it looks may change. `transfer-list-identity.baseline.json` holds the computed
  * styles of every part, recorded from the inline-style implementation (develop at 1.9.0)
  * BEFORE the conversion: each size in light and dark, plus disabled, compact-density,
- * unfiltered, empty and mid-drag variants. Real browser: jsdom computes none of this.
+ * unfiltered, empty and variants. Real browser: jsdom computes none of this.
  */
 
 const BOX = ["display", "flex-direction", "flex-grow", "flex-shrink", "align-items", "justify-content", "column-gap", "row-gap", "min-width"];
@@ -44,7 +44,7 @@ const PARTS: Record<string, string[]> = {
   gap: ["height"],
 };
 
-type Scenario = { props: Record<string, unknown>; mode: "light" | "dark"; density?: string; drag?: boolean };
+type Scenario = { props: Record<string, unknown>; mode: "light" | "dark"; density?: string };
 const ITEMS = [
   { value: 1, label: "Alpha", description: "First item", icon: "caret-right" },
   { value: 2, label: "Beta" },
@@ -61,8 +61,6 @@ SCENARIOS["disabled-md-light"] = { props: { ...BASE, disabled: true }, mode: "li
 SCENARIOS["density-md-light"] = { props: { ...BASE }, mode: "light", density: "0.75" };
 SCENARIOS["unfiltered-md-light"] = { props: { ...BASE, filterable: false, height: "200px" }, mode: "light" };
 SCENARIOS["empty-md-dark"] = { props: { items: [], modelValue: [] }, mode: "dark" };
-SCENARIOS["drag-md-light"] = { props: { ...BASE }, mode: "light", drag: true };
-SCENARIOS["drag-md-dark"] = { props: { ...BASE }, mode: "dark", drag: true };
 
 function locate(root: HTMLElement): Record<string, Element | null> {
   const [source, actions, target] = [...root.children] as HTMLElement[];
@@ -87,7 +85,7 @@ function locate(root: HTMLElement): Record<string, Element | null> {
     "option-selected": options.find((o) => o.getAttribute("aria-selected") === "true") ?? null,
     "option-disabled": options.find((o) => o.getAttribute("aria-disabled") === "true") ?? null,
     "option-focused": options[0] ?? null,
-    "option-drop": targetScroller.querySelector("[role=option]"),
+    "option-drop": targetScroller.querySelector(".cui-transfer-list__option"),
     grip: withIcon?.children[0] ?? null,
     "item-icon": withIcon && withIcon.children.length > 2 ? withIcon.children[1] : null,
     "item-body": withIcon?.lastElementChild ?? null,
@@ -136,7 +134,7 @@ describe("CuiTransferList looks the same as its inline-style implementation (#46
 
   const recorded = baseline as Record<string, Record<string, Record<string, string>>>;
 
-  for (const [name, { props, mode, density, drag }] of Object.entries(SCENARIOS)) {
+  for (const [name, { props, mode, density }] of Object.entries(SCENARIOS)) {
     it(name, async () => {
       const host = document.createElement("div");
       if (mode === "dark") host.className = "dark";
@@ -147,24 +145,13 @@ describe("CuiTransferList looks the same as its inline-style implementation (#46
       wrappers.push(wrapper);
       await nextTick();
       const root = host.querySelector<HTMLElement>(".cui-transfer-list")!;
-      const [source, , target] = [...root.children] as HTMLElement[];
+      const [source] = [...root.children] as HTMLElement[];
       const sourceOptions = () => [...source.querySelectorAll<HTMLElement>("[role=option]")];
-      if (!drag && !props.disabled && sourceOptions().length) {
+      if (!props.disabled && sourceOptions().length) {
         // Beta (the second option) marked for transfer; Alpha takes keyboard focus.
         sourceOptions()[1].click();
         await nextTick();
         sourceOptions()[0].focus();
-        await nextTick();
-      }
-      if (drag) {
-        const dt = new DataTransfer();
-        sourceOptions()[1].dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: dt }));
-        await nextTick();
-        const targetScroller = target.lastElementChild!;
-        targetScroller.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt }));
-        const targetOption = targetScroller.querySelector<HTMLElement>("[role=option]")!;
-        const r = targetOption.getBoundingClientRect();
-        targetOption.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt, clientY: r.top + 1 }));
         await nextTick();
       }
       const actual = snapshot(root);

@@ -96,6 +96,14 @@ describe("CuiSelect panel review fixes", () => {
     expect(document.querySelector(".cui-select__check svg")?.getAttribute("fill")).toBe("var(--cui-success)");
   });
 
+  it("the panel takes the trigger's rounded (#522)", async () => {
+    const { trigger } = mountSelect({ rounded: "none" });
+    await press(trigger, "ArrowDown");
+    const panel = document.querySelector<HTMLElement>(".cui-select__dropdown")!;
+    expect(panel.style.getPropertyValue("--_listbox-panel-radius")).toBe("var(--cui-select-panel-radius, var(--cui-select-radius, 0))");
+    expect(panel.style.getPropertyValue("--_listbox-item-radius")).toBe("var(--cui-select-item-radius, 0)");
+  });
+
   it("while loading, the keyboard names no option that isn't shown", async () => {
     const { trigger } = mountSelect({ loading: true });
     await press(trigger, "ArrowDown");

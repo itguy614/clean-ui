@@ -18,6 +18,8 @@ import CuiDataGridCardView from "./CuiDataGridCardView.vue";
 import CuiDataGridPagination from "./CuiDataGridPagination.vue";
 import CuiDataGridBulkBar from "./CuiDataGridBulkBar.vue";
 import CuiDataGridFilterPanel from "./CuiDataGridFilterPanel.vue";
+import { useCuiId } from "../composables/useCuiId";
+import { useFilterDraftProvider } from "./data-grid-filter-draft";
 import CuiDataGridActiveFilters from "./CuiDataGridActiveFilters.vue";
 import CuiEmptyState from "./CuiEmptyState.vue";
 import CuiSkeleton from "./CuiSkeleton.vue";
@@ -199,6 +201,7 @@ function showCards() {
 }
 
 provideDataGrid(grid);
+useFilterDraftProvider(grid);
 
 // Emit selection changes
 watch(
@@ -242,6 +245,14 @@ defineExpose({
   setPage: (n: number): void => void grid.setPage(n),
 });
 const messages = useMessages();
+const filterPanelId = useCuiId("filter-panel");
+
+// The inline panel needs the Filters button (the toolbar's: shown with a toolbar, filterable
+// columns and no `hideFilterPanel`), so `filterPanelOpen` has no effect without it. The state is
+// left alone, not reset: the panel is back as it was when the button returns (#570).
+const hasFilterButton = computed(
+  () => !props.hideToolbar && !props.hideFilterPanel && grid.filterableColumns.value.length > 0,
+);
 </script>
 
 <template>
@@ -256,6 +267,7 @@ const messages = useMessages();
       :hide-filter-toggle="hideFilterPanel"
       :has-card-slot="hasCardSlot"
       :grid-id="gridId"
+      :filter-panel-id="filterPanelId"
       :view-adapter="viewAdapter"
     >
       <template #toolbar-start>
@@ -269,32 +281,34 @@ const messages = useMessages();
     <!-- Active filters -->
     <CuiDataGridActiveFilters />
 
-    <!-- Loading skeleton -->
-    <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
-      <CuiSkeleton :lines="8" />
-    </div>
+    <!-- Content area: loading / empty / table or card, beside the pinned filter panel. The panel
+         sits outside those branches (#570), so it keeps its place while the grid loads or has no
+         rows, and its controls stay reachable to clear the filter that emptied the result. -->
+    <div
+      class="cui-data-grid__content"
+      :style="{ flexDirection: filterPanelSide === 'left' ? 'row-reverse' : 'row' }"
+    >
+      <div style="flex: 1; min-width: 0;">
+        <!-- Loading skeleton -->
+        <div v-if="loading" style="padding: calc(1rem * var(--cui-density-scale, 1));">
+          <CuiSkeleton :lines="8" />
+        </div>
 
-    <!-- Empty state -->
-    <div v-else-if="grid.displayData.value.length === 0">
-      <slot name="empty">
-        <CuiEmptyState
-          :icon="IconMagnifyingGlass"
-          :title="messages.dataGrid.noResultsTitle"
-          :description="messages.dataGrid.noResultsDescription"
-          size="md"
-          color="secondary"
-        />
-      </slot>
-    </div>
+        <!-- Empty state -->
+        <div v-else-if="grid.displayData.value.length === 0">
+          <slot name="empty">
+            <CuiEmptyState
+              :icon="IconMagnifyingGlass"
+              :title="messages.dataGrid.noResultsTitle"
+              :description="messages.dataGrid.noResultsDescription"
+              size="md"
+              color="secondary"
+            />
+          </slot>
+        </div>
 
-    <!-- Content area: table/card + filter panel -->
-    <template v-else>
-      <div
-        class="cui-data-grid__content"
-        :style="{ flexDirection: filterPanelSide === 'left' ? 'row-reverse' : 'row' }"
-      >
-        <!-- Table or Card view -->
-        <div style="flex: 1; min-width: 0;">
+        <template v-else>
+          <!-- Table or Card view -->
           <!-- Card view -->
           <CuiDataGridCardView
             v-if="showCards()"
@@ -343,12 +357,12 @@ const messages = useMessages();
               </slot>
             </template>
           </CuiDataGridTable>
-        </div>
-
-        <!-- Filter panel -->
-        <CuiDataGridFilterPanel />
+        </template>
       </div>
-    </template>
+
+      <!-- Filter panel (inline only while pinned and open) -->
+      <CuiDataGridFilterPanel v-if="hasFilterButton" :id="filterPanelId" />
+    </div>
 
     <!-- Pagination -->
     <CuiDataGridPagination
